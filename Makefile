@@ -19,7 +19,7 @@ include $(DEVKITARM)/gba_rules
 TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source
-DATA		:=	
+DATA		:=
 INCLUDES	:=
 
 #---------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ CFLAGS	:=	-g -Wall -O3\
 			-ffast-math \
 			$(ARCH)
 
-CXXFLAGS :=     -Wall -pedantic -O2
+CXXFLAGS :=     -Wall -pedantic -Os
 
 CFLAGS	+=	$(INCLUDE)
 

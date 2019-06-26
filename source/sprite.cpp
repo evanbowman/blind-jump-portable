@@ -3,13 +3,17 @@
 #include <bitset>
 
 
-
 struct alignas(4) ObjectAttributes {
     u16 attribute_0;
     u16 attribute_1;
     u16 attribute_2;
     u16 pad;
 };
+
+namespace attr0_mask {
+    constexpr u16 disabled{2 << 8};
+
+}
 
 
 static volatile ObjectAttributes* const object_attribute_memory = {
@@ -26,13 +30,15 @@ static bool freespace_has_init = []{ oam_freespace.set(); return true; }();
 Sprite::~Sprite()
 {
     if (data_) {
-        const auto offset = (ObjectAttributes*)data_ - object_attribute_memory;
+        const auto oa = (ObjectAttributes*)data_;
+        const auto offset = oa - object_attribute_memory;
         oam_freespace[offset] = true;
+        oa->attribute_0 |= attr0_mask::disabled;
     }
 }
 
 
-bool Sprite::initialize(int x)
+bool Sprite::initialize()
 {
     const auto oa = []() -> volatile ObjectAttributes* {
         for (u32 i = 0; i < oam_freespace.size(); ++i) {
@@ -49,7 +55,7 @@ bool Sprite::initialize(int x)
     }
 
     oa->attribute_0 = 0x2032; // 8bpp tiles, SQUARE shape, at y coord 50
-    oa->attribute_1 = 0x4000 | (0x1FF & x); // 16x16 size when using the SQUARE shape
+    oa->attribute_1 = 0x4000; // 16x16 size when using the SQUARE shape
     oa->attribute_2 = 2;      // Start at the first tile in tile
 
     data_ = oa;
@@ -64,14 +70,21 @@ Sprite::Sprite() : data_(nullptr)
 }
 
 
-void Sprite::set_position(Vec2<float>& position)
+void Sprite::set_position(const Vec2<float>& position)
 {
     const auto oa = (ObjectAttributes*)data_;
-    oa->attribute_0;
+    oa->attribute_0 &= 0xff00;
+    oa->attribute_0 |= (static_cast<int>(position.y)) & 0x00ff;
+    oa->attribute_1 &= 0xfe00;
+    oa->attribute_1 |= (static_cast<int>(position.x)) & 0x01ff;
 }
 
 
-const Vec2<float>& Sprite::get_position() const
+const Vec2<float> Sprite::get_position() const
 {
-
+    const auto oa = (ObjectAttributes*)data_;
+    return {
+        static_cast<float>(oa->attribute_1 & 0x01ff),
+        static_cast<float>(oa->attribute_0 & 0x00ff)
+    };
 }

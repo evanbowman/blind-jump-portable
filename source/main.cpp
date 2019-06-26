@@ -11,18 +11,18 @@ int main()
 
 
     Sprite test;
-    test.initialize(20);
+    test.initialize();
+    test.set_position({50.f, 80.f});
 
-    Sprite test2;
-    test2.initialize(60);
 
     while (true) {
         keyboard.poll();
         screen.clear();
 
         if (keyboard.pressed<Keyboard::Key::left>()) {
-            screen.draw(test);
-        }
+            auto pos2 = test.get_position();
+            test.set_position({pos2.x - 1.f, pos2.y});
+         }
 
         screen.display();
     }
