@@ -33,7 +33,7 @@ CFLAGS	:=	-g -Wall -O3\
 			-ffast-math \
 			$(ARCH)
 
-CXXFLAGS :=     -Wall -pedantic -Os
+CXXFLAGS :=     -Wall -pedantic -Os -D__GBA__
 
 CFLAGS	+=	$(INCLUDE)
 
