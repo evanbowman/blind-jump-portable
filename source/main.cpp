@@ -1,15 +1,13 @@
-#include "context.hpp"
 #include "game.hpp"
-#include "deltaClock.hpp"
+#include "transformGroup.hpp"
 
 
 int main()
 {
-    Context ct;
-    bind_context(&ct);
+    Platform pfrm;
 
-    Screen& screen = ct.platform_.screen();
-    Keyboard& keyboard = ct.platform_.keyboard();
+    Screen& screen = pfrm.screen();
+    Keyboard& keyboard = pfrm.keyboard();
 
     DeltaClock clock;
 
@@ -19,8 +17,8 @@ int main()
         keyboard.poll();
         screen.clear();
 
-        game.update(ct.platform_, clock.reset());
-
+        game.update(pfrm, clock.reset());
+        
         screen.display();
     }
 }

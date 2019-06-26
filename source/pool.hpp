@@ -5,12 +5,11 @@
 #include <new>
 
 
-template <u32 size, u32 count>
+template <u32 size, u32 count, u32 align = size>
 class Pool {
 private:
     struct Cell {
-        // Eh... better overaligned than under I guess.
-        alignas(size) std::array<u8, size> mem_;
+        alignas(align) std::array<u8, size> mem_;
         Cell* next_;
     };
 
@@ -67,9 +66,9 @@ public:
     void post(T* obj)
     {
         obj->~T();
-        pool_.post(obj);
+        pool_.post((u8*)obj);
     }
 
 private:
-    Pool<sizeof(T), count> pool_;
+    Pool<sizeof(T), count, alignof(T)> pool_;
 };
