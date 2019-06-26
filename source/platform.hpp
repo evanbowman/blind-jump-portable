@@ -9,12 +9,9 @@ public:
 
     Platform();
 
-
     Screen& screen();
 
-
     Keyboard& keyboard();
-
 
 private:
     Screen screen_;

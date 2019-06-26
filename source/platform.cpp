@@ -1,10 +1,24 @@
 #include "platform.hpp"
-#include "image_data.hpp"
 #include <string.h>
+
+
+Screen& Platform::screen()
+{
+    return screen_;
+}
+
+
+Keyboard& Platform::keyboard()
+{
+    return keyboard_;
+}
 
 
 using Tile = u32[16];
 using TileBlock = Tile[256];
+
+
+#include "image_data.hpp"
 
 
 void load_sprite_data()
@@ -20,16 +34,4 @@ void load_sprite_data()
 Platform::Platform()
 {
     load_sprite_data();
-}
-
-
-Screen& Platform::screen()
-{
-    return screen_;
-}
-
-
-Keyboard& Platform::keyboard()
-{
-    return keyboard_;
 }
