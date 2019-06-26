@@ -1,4 +1,6 @@
 #include "context.hpp"
+#include "game.hpp"
+#include "deltaClock.hpp"
 
 
 int main()
@@ -9,20 +11,15 @@ int main()
     Screen& screen = ct.platform_.screen();
     Keyboard& keyboard = ct.platform_.keyboard();
 
+    DeltaClock clock;
 
-    Sprite test;
-    test.initialize();
-    test.set_position({50.f, 80.f});
-
+    Game game;
 
     while (true) {
         keyboard.poll();
         screen.clear();
 
-        if (keyboard.pressed<Keyboard::Key::left>()) {
-            auto pos2 = test.get_position();
-            test.set_position({pos2.x - 1.f, pos2.y});
-         }
+        game.update(ct.platform_, clock.reset());
 
         screen.display();
     }
