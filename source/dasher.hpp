@@ -9,9 +9,9 @@ class Game;
 
 class Dasher : public Entity<Dasher, 20> {
 public:
-    
-    void update(const Platform&, Game&, Microseconds)
+
+    inline void update(const Platform&, Game&, Microseconds)
     {
-        
+
     }
 };

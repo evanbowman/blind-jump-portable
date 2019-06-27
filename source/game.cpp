@@ -3,7 +3,7 @@
 
 Game::Game()
 {
-    test_.initialize();
+    test_.initialize(Sprite::Size::tall_16_32, 1);
     test_.set_position({50.f, 80.f});
 }
 
