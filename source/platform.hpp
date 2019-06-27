@@ -4,8 +4,9 @@
 #include "numeric.hpp"
 
 
-// Anything platform specific should be defined here, and implemented in
-// platform.cpp.
+// Anything platform specific should be defined here, and implemented
+// in platform.cpp. Ideally, when porting the game to a new system,
+// this is the only file that should need to change.
 
 
 
@@ -37,9 +38,9 @@ private:
 
 class Keyboard {
 public:
-    
+
     Keyboard();
-    
+
     enum Key {
         action_1,
         action_2,
@@ -50,7 +51,7 @@ public:
         down,
         count
     };
-    
+
     void poll();
 
     template <Key k>
@@ -58,7 +59,7 @@ public:
     {
         return states_[k];
     }
-    
+
 private:
     std::array<bool, Key::count> states_;
 };
@@ -72,21 +73,26 @@ private:
 
 class Sprite {
 public:
-    enum class Shape {
-        square,
-        wide,
-        tall
-    };
-
     enum class Size {
-
+        square_8_8,
+        square_16_16,
+        square_32_32,
+        square_64_64,
+        wide_16_8,
+        wide_32_8,
+        wide_32_16,
+        wide_64_32,
+        tall_8_16,
+        tall_8_32,
+        tall_16_32,
+        tall_32_64,
     };
 
     Sprite();
     Sprite(const Sprite&) = delete;
     ~Sprite();
 
-    bool initialize();
+    bool initialize(Size size, u32 keyframe);
 
     void set_position(const Vec2<float>& position);
 
@@ -113,12 +119,12 @@ public:
     void draw(const Sprite& spr);
 
     void clear();
-    
+
     void display();
 
     const Vec2<u32>& size() const;
-    
-private:    
+
+private:
     void* userdata_;
 };
 
@@ -131,12 +137,18 @@ private:
 
 class Platform {
 public:
-    
+
     Platform();
 
-    Screen& screen();
+    inline Screen& screen()
+    {
+        return screen_;
+    }
 
-    Keyboard& keyboard();
+    inline Keyboard& keyboard()
+    {
+        return keyboard_;
+    }
 
 private:
     Screen screen_;

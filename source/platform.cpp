@@ -4,6 +4,15 @@
 #include "pool.hpp"
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+// Gameboy Advance Platform
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef __GBA__
 
 #define REG_DISPCNT    *(u32*)0x4000000
@@ -111,17 +120,34 @@ Sprite::~Sprite()
 }
 
 
-bool Sprite::initialize()
+bool Sprite::initialize(Size size, u32 keyframe)
 {
-    const auto oa = attribute_pool.get();
+    const auto oa = [this] {
+        if (data_) {
+            return (ObjectAttributes*)data_;
+        } else {
+            return attribute_pool.get();
+        }
+    }();
 
     if (not oa) {
         return false;
     }
 
-    oa->attribute_0 = 0x2032; // 8bpp tiles, SQUARE shape, at y coord 50
-    oa->attribute_1 = 0x4000; // 16x16 size when using the SQUARE shape
-    oa->attribute_2 = 2;      // Start at the first tile in tile
+#define OBJ_SHAPE(m)		((m)<<14)
+#define ATTR0_COLOR_16			(0<<13)
+#define ATTR0_SQUARE		OBJ_SHAPE(0)
+#define ATTR0_TALL		OBJ_SHAPE(2)
+#define ATTR0_WIDE		OBJ_SHAPE(1)
+#define ATTR1_SIZE_16         (1<<14)
+#define ATTR1_SIZE_32         (2<<14)
+#define ATTR1_SIZE_64         (3<<14)
+#define ATTR2_PALETTE(n)      ((n)<<12)
+#define OBJ_CHAR(m)		((m)&0x03ff)
+
+    oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
+    oa->attribute_1 = ATTR1_SIZE_32;
+    oa->attribute_2 = keyframe;//ATTR2_PALETTE(0) | OBJ_CHAR(0);
 
     data_ = oa;
 
@@ -131,7 +157,6 @@ bool Sprite::initialize()
 
 Sprite::Sprite() : data_(nullptr)
 {
-
 }
 
 
@@ -180,7 +205,7 @@ static volatile u16* const scanline = (u16*)0x4000006;
 
 Screen::Screen() : userdata_(nullptr)
 {
-    REG_DISPCNT = MODE_0 | OBJ_MAP_1D | OBJ_ENABLE;
+    REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D;
 }
 
 
@@ -224,23 +249,11 @@ const Vec2<u32>& Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-Screen& Platform::screen()
-{
-    return screen_;
-}
-
-
-Keyboard& Platform::keyboard()
-{
-    return keyboard_;
-}
-
-
 using Tile = u32[16];
 using TileBlock = Tile[256];
 
 
-#include "image_data.hpp"
+#include "spritesheet.h"
 
 
 void load_sprite_data()
@@ -248,8 +261,8 @@ void load_sprite_data()
 #define MEM_TILE      ((TileBlock*)0x6000000 )
 #define MEM_PALETTE   ((u16*)(0x05000200))
 
-    memcpy((void*)MEM_PALETTE, spritePal, 12);
-    memcpy((void*)&MEM_TILE[4][1], spriteTiles, 256);
+    memcpy((void*)MEM_PALETTE, spritesheetPal, spritesheetPalLen);
+    memcpy((void*)&MEM_TILE[4][1], spritesheetTiles, spritesheetTilesLen);
 }
 
 
@@ -258,4 +271,40 @@ Platform::Platform()
     load_sprite_data();
 }
 
-#endif // __GBA__
+
+#else
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+// Desktop Platform
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// DeltaClock
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Keyboard
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Sprite
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Screen
+////////////////////////////////////////////////////////////////////////////////
+
+
+#endif
