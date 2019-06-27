@@ -3,9 +3,13 @@
 
 Game::Game()
 {
-    test_.initialize(Sprite::Size::tall_16_32, 1);
+    test_.initialize(Sprite::Size::tall_16_32, 0);
     test_.set_position({50.f, 80.f});
 }
+
+
+bool last = false;
+u32 frame = 1;
 
 
 void Game::update(Platform& pfrm, Microseconds delta)
@@ -21,6 +25,14 @@ void Game::update(Platform& pfrm, Microseconds delta)
                 (*it)->update(pfrm, *this, delta);
             }
         });
+
+    bool current = pfrm.keyboard().pressed<Keyboard::Key::up>();
+    if (current and not last) {
+        test_.initialize(Sprite::Size::square_32_32, frame);
+        test_.set_position({50.f, 80.f});
+        frame += 1;
+    }
+    last = current;
 
     // TEST
     if (not pfrm.keyboard().pressed<Keyboard::Key::down>()) {

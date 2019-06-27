@@ -136,6 +136,7 @@ bool Sprite::initialize(Size size, u32 keyframe)
 
 #define OBJ_SHAPE(m)		((m)<<14)
 #define ATTR0_COLOR_16			(0<<13)
+#define ATTR0_COLOR_256			(1<<13)
 #define ATTR0_SQUARE		OBJ_SHAPE(0)
 #define ATTR0_TALL		OBJ_SHAPE(2)
 #define ATTR0_WIDE		OBJ_SHAPE(1)
@@ -147,7 +148,7 @@ bool Sprite::initialize(Size size, u32 keyframe)
 
     oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
     oa->attribute_1 = ATTR1_SIZE_32;
-    oa->attribute_2 = keyframe;//ATTR2_PALETTE(0) | OBJ_CHAR(0);
+    oa->attribute_2 = 2 + keyframe * 16; //ATTR2_PALETTE(0) | OBJ_CHAR(0);
 
     data_ = oa;
 
