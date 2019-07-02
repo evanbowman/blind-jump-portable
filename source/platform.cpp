@@ -254,7 +254,7 @@ using Tile = u32[16];
 using TileBlock = Tile[256];
 
 
-#include "spritesheet.h"
+#include "bgr_spritesheet.h"
 
 
 void load_sprite_data()
@@ -262,8 +262,8 @@ void load_sprite_data()
 #define MEM_TILE      ((TileBlock*)0x6000000 )
 #define MEM_PALETTE   ((u16*)(0x05000200))
 
-    memcpy((void*)MEM_PALETTE, spritesheetPal, spritesheetPalLen);
-    memcpy((void*)&MEM_TILE[4][1], spritesheetTiles, spritesheetTilesLen);
+    memcpy((void*)MEM_PALETTE, bgr_spritesheetPal, bgr_spritesheetPalLen);
+    memcpy((void*)&MEM_TILE[4][1], bgr_spritesheetTiles, bgr_spritesheetTilesLen);
 }
 
 
