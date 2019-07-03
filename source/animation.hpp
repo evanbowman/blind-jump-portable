@@ -31,7 +31,7 @@ public:
                 texture_index_ = InitialTexture;
             }
         }
-        sprite.initialize(texture_index_);
+        sprite.set_texture_index(texture_index_);
     }
 
 private:

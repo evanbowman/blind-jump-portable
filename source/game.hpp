@@ -5,6 +5,7 @@
 #include "critter.hpp"
 #include "dasher.hpp"
 #include "player.hpp"
+#include "transientEffect.hpp"
 
 
 template <typename Arg>
@@ -24,4 +25,5 @@ public:
 private:
     Player* player_;
     EntityGroup<Critter, Dasher> enemies_;
+    EntityGroup<> effects_;
 };
