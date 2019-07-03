@@ -6,6 +6,21 @@
 template <typename Impl, u32 SpawnLimit>
 class Entity {
 public:
+    Entity() : kill_flag_(false)
+    {
+
+    }
+
+    void kill()
+    {
+        kill_flag_ = true;
+    }
+
+    bool alive() const
+    {
+        return kill_flag_;
+    }
+
     static constexpr auto spawn_limit()
     {
         return SpawnLimit;
@@ -23,4 +38,7 @@ public:
         static ObjectPool<Impl, SpawnLimit> obj_pool;
         return obj_pool;
     }
+
+private:
+    bool kill_flag_;
 };

@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-using Microseconds = u32;
+using Microseconds = s32;
 
 
 class DeltaClock {
@@ -60,7 +60,20 @@ public:
         return states_[k];
     }
 
+    template <Key k>
+    bool down_transition() const
+    {
+        return states_[k] and not prev_[k];
+    }
+
+    template <Key k>
+    bool up_transition() const
+    {
+        return not states_[k] and prev_[k];
+    }
+
 private:
+    std::array<bool, Key::count> prev_;
     std::array<bool, Key::count> states_;
 };
 
@@ -73,28 +86,16 @@ private:
 
 class Sprite {
 public:
-    enum class Size {
-        square_8_8,
-        square_16_16,
-        square_32_32,
-        square_64_64,
-        wide_16_8,
-        wide_32_8,
-        wide_32_16,
-        wide_64_32,
-        tall_8_16,
-        tall_8_32,
-        tall_16_32,
-        tall_32_64,
-    };
 
     Sprite();
     Sprite(const Sprite&) = delete;
     ~Sprite();
 
-    bool initialize(Size size, u32 keyframe);
+    bool initialize();
 
     void set_position(const Vec2<float>& position);
+
+    void set_texture_index(u32 texture_index);
 
     const Vec2<float> get_position() const;
 

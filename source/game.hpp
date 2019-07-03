@@ -4,6 +4,7 @@
 #include "transformGroup.hpp"
 #include "critter.hpp"
 #include "dasher.hpp"
+#include "player.hpp"
 
 
 template <typename Arg>
@@ -21,7 +22,6 @@ public:
     void update(Platform& platform, Microseconds delta);
 
 private:
+    Player* player_;
     EntityGroup<Critter, Dasher> enemies_;
-
-    Sprite test_;
 };

@@ -72,12 +72,16 @@ Keyboard::Keyboard()
 {
     for (int i = 0; i < Key::count; ++i) {
         states_[i] = false;
+        prev_[i] = false;
     }
 }
 
 
 void Keyboard::poll()
 {
+    for (size_t i = 0; i < Key::count; ++i) {
+        prev_[i] = states_[i];
+    }
     states_[action_1] = ~(*keys) & KEY_A;
     states_[action_2] = ~(*keys) & KEY_B;
     states_[start] = ~(*keys) & KEY_START;
@@ -120,7 +124,7 @@ Sprite::~Sprite()
 }
 
 
-bool Sprite::initialize(Size size, u32 keyframe)
+bool Sprite::initialize()
 {
     const auto oa = [this] {
         if (data_) {
@@ -148,11 +152,17 @@ bool Sprite::initialize(Size size, u32 keyframe)
 
     oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
     oa->attribute_1 = ATTR1_SIZE_32;
-    oa->attribute_2 = 2 + keyframe * 16; //ATTR2_PALETTE(0) | OBJ_CHAR(0);
+    oa->attribute_2 = 2;
 
     data_ = oa;
 
     return true;
+}
+
+
+void Sprite::set_texture_index(u32 texture_index)
+{
+    ((ObjectAttributes*)data_)->attribute_2 = 2 + texture_index * 16;
 }
 
 

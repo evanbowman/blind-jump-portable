@@ -18,7 +18,7 @@ int main()
         screen.clear();
 
         game.update(pfrm, clock.reset());
-        
+
         screen.display();
     }
 }
