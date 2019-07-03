@@ -1,22 +1,23 @@
 #pragma once
 
-#include "platform.hpp"
+#include "numeric.hpp"
+#include "sprite.hpp"
 
 
-template <u32 InitialTexture, u32 Length, Microseconds Interval>
+template <TextureIndex InitialTexture, u32 Length, Microseconds Interval>
 class Animation {
 public:
 
     Animation() :
         timer_(0),
-        texture_index_(0)
+        texture_index_(InitialTexture)
     {
 
     }
 
     bool done() const
     {
-        return texture_index_ == Length - 1;
+        return texture_index_ == (InitialTexture + (Length - 1));
     }
 
     void advance(Sprite& sprite, Microseconds dt)
@@ -36,5 +37,5 @@ public:
 
 private:
     Microseconds timer_;
-    u32 texture_index_;
+    TextureIndex texture_index_;
 };

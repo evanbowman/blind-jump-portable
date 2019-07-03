@@ -15,9 +15,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-using Microseconds = s32;
-
-
 class DeltaClock {
 public:
 
@@ -80,43 +77,20 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Sprite
-////////////////////////////////////////////////////////////////////////////////
-
-
-class Sprite {
-public:
-
-    Sprite();
-    Sprite(const Sprite&) = delete;
-    ~Sprite();
-
-    bool initialize();
-
-    void set_position(const Vec2<float>& position);
-
-    void set_texture_index(u32 texture_index);
-
-    const Vec2<float> get_position() const;
-
-    void* native_handle() const;
-
-private:
-    void* data_;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 // Screen
 ////////////////////////////////////////////////////////////////////////////////
+
+#include "sprite.hpp"
+#include "view.hpp"
 
 
 class Screen {
 public:
-
+    
     Screen();
 
+    static constexpr u32 sprite_limit = 128;
+    
     void draw(const Sprite& spr);
 
     void clear();
@@ -125,7 +99,18 @@ public:
 
     const Vec2<u32>& size() const;
 
+    void set_view(const View& view)
+    {
+        view_ = view;
+    }
+
+    const View& get_view() const
+    {
+        return view_;
+    }
+    
 private:
+    View view_;
     void* userdata_;
 };
 
@@ -150,7 +135,7 @@ public:
     {
         return keyboard_;
     }
-
+    
 private:
     Screen screen_;
     Keyboard keyboard_;

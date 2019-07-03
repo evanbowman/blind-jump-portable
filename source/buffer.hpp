@@ -64,7 +64,11 @@ public:
         end_->~T();
     }
 
-    
+    void clear()
+    {
+        while (not empty()) pop_back();
+    }
+
     u32 size() const
     {
         return end_ - begin_;

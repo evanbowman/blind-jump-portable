@@ -15,6 +15,73 @@ using s64 = int64_t;
 
 template <typename T>
 struct Vec2 {
-    T x;
-    T y;
+    T x = 0;
+    T y = 0;
+
+    template <typename U>
+    Vec2<U> cast() const
+    {
+        // Note: We could have used a uniform initializer here to
+        // prevent narrowing, but there are cases of float->int cast
+        // where one might not worry too much about a narrowing
+        // conversion.
+        Vec2<U> result;
+        result.x = x;
+        result.y = y;
+        return result;
+    }
 };
+
+
+// Note: In case I need to swap in a fixed-point class in the future.
+using Float = float;
+
+
+template <typename T>
+Vec2<T> operator+(const Vec2<T>& lhs, const Vec2<T>& rhs)
+{ return { lhs.x + rhs.x, lhs.y + rhs.y }; }
+
+template <typename T>
+Vec2<T> operator-(const Vec2<T>& lhs, const Vec2<T>& rhs)
+{ return { lhs.x - rhs.x, lhs.y - rhs.y }; }
+
+template <typename T>
+Vec2<T> operator*(const Vec2<T>& lhs, const Vec2<T>& rhs)
+{ return { lhs.x * rhs.x, lhs.y * rhs.y }; }
+
+template <typename T>
+Vec2<T> operator/(const Vec2<T>& lhs, const Vec2<T>& rhs)
+{ return { lhs.x / rhs.x, lhs.y / rhs.y }; }
+
+template <typename T>
+Vec2<T> operator+(const Vec2<T>& lhs, const T& rhs)
+{ return { lhs.x + rhs, lhs.y + rhs }; }
+
+template <typename T>
+Vec2<T> operator-(const Vec2<T>& lhs, const T& rhs)
+{ return { lhs.x - rhs, lhs.y - rhs }; }
+
+template <typename T>
+Vec2<T> operator*(const Vec2<T>& lhs, const T& rhs)
+{ return { lhs.x * rhs, lhs.y * rhs }; }
+
+template <typename T>
+Vec2<T> operator*(const T& rhs, const Vec2<T>& lhs)
+{ return { lhs.x * rhs, lhs.y * rhs }; }
+
+template <typename T>
+Vec2<T> operator/(const Vec2<T>& lhs, const T& rhs)
+{ return { lhs.x / rhs, lhs.y / rhs }; }
+
+template <typename T>
+Vec2<T> operator/(const T& rhs, const Vec2<T>& lhs)
+{ return { lhs.x / rhs, lhs.y / rhs }; }
+
+template <typename T>
+T interpolate(const T& a, const T& b, Float t)
+{
+    return a * t + (1 - t) * b;
+}
+
+
+using Microseconds = s32;
