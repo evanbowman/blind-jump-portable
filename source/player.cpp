@@ -1,4 +1,5 @@
 #include "player.hpp"
+#include "platform.hpp"
 
 
 Player::Player() :
@@ -7,7 +8,6 @@ Player::Player() :
     texture_index_(TextureIndex::still_down),
     anim_timer_(0)
 {
-    sprite_.initialize();
     sprite_.set_position({104.f, 64.f});
 }
 
@@ -20,6 +20,8 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool left = input.pressed<Keyboard::Key::left>();
     const bool right = input.pressed<Keyboard::Key::right>();
 
+    auto pos = sprite_.get_position();
+
     switch (state_) {
     case State::normal:
         if (up) {
@@ -31,6 +33,19 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         } else if (right) {
             texture_index_ = TextureIndex::still_right;
         }
+        if (up) {
+            pos.y -= 0.1;
+        }
+        if (down) {
+            pos.y += 0.1;
+        }
+        if (left) {
+            pos.x -= 0.1;
+        }
+        if (right) {
+            pos.x += 0.1;
+        }
+        sprite_.set_position(pos);
         sprite_.set_texture_index(texture_index_);
         break;
 

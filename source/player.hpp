@@ -1,10 +1,12 @@
 #pragma once
 
-#include "platform.hpp"
+#include "numeric.hpp"
 #include "entity.hpp"
+#include "animation.hpp"
 
 
 class Game;
+class Platform;
 
 
 class Player : public Entity<Player, 1> {
@@ -14,6 +16,11 @@ public:
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     const Sprite& get_sprite() const;
+
+    const Vec2<Float>& get_position() const
+    {
+        return sprite_.get_position();
+    }
 
 private:
     enum class State {

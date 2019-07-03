@@ -6,6 +6,8 @@
 #include "dasher.hpp"
 #include "player.hpp"
 #include "transientEffect.hpp"
+#include "itemChest.hpp"
+#include "camera.hpp"
 
 
 template <typename Arg>
@@ -22,8 +24,13 @@ public:
 
     void update(Platform& platform, Microseconds delta);
 
+    void render(Platform& platform);
+
 private:
+    Buffer<const Sprite*, Screen::sprite_limit> display_buffer;
+    Camera camera_;
     Player* player_;
     EntityGroup<Critter, Dasher> enemies_;
+    EntityGroup<ItemChest> details_;
     EntityGroup<> effects_;
 };

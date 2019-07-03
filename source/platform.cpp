@@ -53,7 +53,7 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 
 Microseconds DeltaClock::reset()
 {
-    // Assumes 60 fps
+    // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) = 16,666.6...
     constexpr Microseconds fixed_step = 16667;
     return fixed_step;
 }
@@ -94,7 +94,7 @@ void Keyboard::poll()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Sprite
+// Screen
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -111,32 +111,16 @@ namespace attr0_mask {
 }
 
 
-constexpr u32 oam_count = 128;
-
-ObjectPool<ObjectAttributes, oam_count> attribute_pool;
+constexpr u32 oam_count = Screen::sprite_limit;
 
 
-Sprite::~Sprite()
-{
-    if (data_) {
-        attribute_pool.post((ObjectAttributes*)data_);
-    }
-}
+static ObjectAttributes* const object_attribute_memory = {
+    (ObjectAttributes*)0x07000000
+};
 
 
-bool Sprite::initialize()
-{
-    const auto oa = [this] {
-        if (data_) {
-            return (ObjectAttributes*)data_;
-        } else {
-            return attribute_pool.get();
-        }
-    }();
+static volatile u16* const scanline = (u16*)0x4000006;
 
-    if (not oa) {
-        return false;
-    }
 
 #define OBJ_SHAPE(m)		((m)<<14)
 #define ATTR0_COLOR_16			(0<<13)
@@ -150,82 +134,39 @@ bool Sprite::initialize()
 #define ATTR2_PALETTE(n)      ((n)<<12)
 #define OBJ_CHAR(m)		((m)&0x03ff)
 
-    oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
-    oa->attribute_1 = ATTR1_SIZE_32;
-    oa->attribute_2 = 2;
 
-    data_ = oa;
-
-    return true;
-}
-
-
-void Sprite::set_texture_index(u32 texture_index)
+Screen::Screen() : userdata_(nullptr)
 {
-    ((ObjectAttributes*)data_)->attribute_2 = 2 + texture_index * 16;
+    REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D;
+
+    // TODO: We can probably preload some object attributes here, seeing as we
+    // know that the sprites will be 32x32 square with 16bit color. Then the
+    // draw() function won't have to initialize the first two attributes each
+    // time, although it's probably not _that_ expensive. Remember to un-disable
+    // attr0 though.
+
+    view_.set_size(this->size().cast<Float>());
 }
-
-
-Sprite::Sprite() : data_(nullptr)
-{
-}
-
-
-void Sprite::set_position(const Vec2<float>& position)
-{
-    const auto oa = (ObjectAttributes*)data_;
-    oa->attribute_0 &= 0xff00;
-    oa->attribute_0 |= (static_cast<int>(position.y)) & 0x00ff;
-    oa->attribute_1 &= 0xfe00;
-    oa->attribute_1 |= (static_cast<int>(position.x)) & 0x01ff;
-}
-
-
-const Vec2<float> Sprite::get_position() const
-{
-    const auto oa = (ObjectAttributes*)data_;
-    return {
-        static_cast<float>(oa->attribute_1 & 0x01ff),
-        static_cast<float>(oa->attribute_0 & 0x00ff)
-    };
-}
-
-
-void* Sprite::native_handle() const
-{
-    return data_;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Screen
-////////////////////////////////////////////////////////////////////////////////
 
 
 static u32 oam_write_index = 0;
 
 
-static ObjectAttributes* const object_attribute_memory = {
-    (ObjectAttributes*)0x07000000
-};
-
-
-static volatile u16* const scanline = (u16*)0x4000006;
-
-
-Screen::Screen() : userdata_(nullptr)
-{
-    REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D;
-}
-
-
 void Screen::draw(const Sprite& spr)
 {
-    *(object_attribute_memory + oam_write_index) =
-        *((ObjectAttributes*)spr.native_handle());
-
-    oam_write_index += 1;
+    const auto& view_center = view_.get_center();
+    if (oam_write_index < oam_count) {
+        auto oa = object_attribute_memory + oam_write_index;
+        auto position = spr.get_position().cast<s32>() - view_center.cast<s32>();
+        oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
+        oa->attribute_1 = ATTR1_SIZE_32;
+        oa->attribute_0 &= 0xff00;
+        oa->attribute_0 |= position.y & 0x00ff;
+        oa->attribute_1 &= 0xfe00;
+        oa->attribute_1 |= position.x & 0x01ff;
+        oa->attribute_2 = 2 + spr.get_texture_index() * 16;
+        oam_write_index += 1;
+    }
 }
 
 

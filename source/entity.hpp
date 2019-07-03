@@ -3,23 +3,33 @@
 #include "pool.hpp"
 
 
-template <typename Impl, u32 SpawnLimit>
-class Entity {
+class EntityBase {
 public:
-    Entity() : kill_flag_(false)
+    EntityBase() : kill_flag_(false)
     {
 
-    }
-
-    void kill()
-    {
-        kill_flag_ = true;
     }
 
     bool alive() const
     {
         return kill_flag_;
     }
+
+protected:
+
+    void kill()
+    {
+        kill_flag_ = true;
+    }
+
+private:
+    bool kill_flag_;
+};
+
+
+template <typename Impl, u32 SpawnLimit>
+class Entity : public EntityBase {
+public:
 
     static constexpr auto spawn_limit()
     {
@@ -38,7 +48,4 @@ public:
         static ObjectPool<Impl, SpawnLimit> obj_pool;
         return obj_pool;
     }
-
-private:
-    bool kill_flag_;
 };
