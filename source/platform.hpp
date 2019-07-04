@@ -2,6 +2,7 @@
 
 #include <array>
 #include "numeric.hpp"
+#include "tileMap.hpp"
 
 
 // Anything platform specific should be defined here, and implemented
@@ -117,18 +118,6 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// TileMap
-////////////////////////////////////////////////////////////////////////////////
-
-
-class TileMap {
-public:
-    void set_tile(u16 x, u16 y, u16 tile_id);
-};
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 // Platform
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -148,13 +137,18 @@ public:
         return keyboard_;
     }
 
-    inline TileMap& tile_map()
-    {
-        return tile_map_;
-    }
+    void push_map(const TileMap& map);
+
+    int random();
 
 private:
     Screen screen_;
-    TileMap tile_map_;
     Keyboard keyboard_;
 };
+
+
+template <u32 N>
+inline int random_choice(Platform& pfrm)
+{
+    return pfrm.random() * N >> 15;
+}

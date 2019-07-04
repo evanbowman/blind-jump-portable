@@ -11,7 +11,7 @@ int main()
 
     DeltaClock clock;
 
-    Game game;
+    Game game(pfrm);
 
     while (true) {
         keyboard.poll();
