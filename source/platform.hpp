@@ -86,11 +86,11 @@ private:
 
 class Screen {
 public:
-    
+
     Screen();
 
-    static constexpr u32 sprite_limit = 128;
-    
+    static constexpr u32 sprite_limit = 256;
+
     void draw(const Sprite& spr);
 
     void clear();
@@ -108,10 +108,22 @@ public:
     {
         return view_;
     }
-    
+
 private:
     View view_;
     void* userdata_;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// TileMap
+////////////////////////////////////////////////////////////////////////////////
+
+
+class TileMap {
+public:
+    void set_tile(u16 x, u16 y, u16 tile_id);
 };
 
 
@@ -135,8 +147,14 @@ public:
     {
         return keyboard_;
     }
-    
+
+    inline TileMap& tile_map()
+    {
+        return tile_map_;
+    }
+
 private:
     Screen screen_;
+    TileMap tile_map_;
     Keyboard keyboard_;
 };
