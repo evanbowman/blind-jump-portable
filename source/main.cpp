@@ -13,10 +13,6 @@ int main()
 
     Game game;
 
-    View view;
-    view.set_center({-42, -42});
-    screen.set_view(view);
-
     while (true) {
         keyboard.poll();
         game.update(pfrm, clock.reset());

@@ -4,13 +4,22 @@
 
 from PIL import Image
 
-im = Image.open('spritesheet.png')
 
-r, g, b, a = im.split()
+def rgb_to_bgr(file_name):
+    """
+    Convert rgb image file to bgr
+    """
+    im = Image.open(file_name)
 
-im = Image.merge('RGBA', (b, g, r, a))
+    r, g, b, a = im.split()
+    im = Image.merge('RGBA', (b, g, r, a))
 
-im.save('bgr_spritesheet.png')
+    im.save('bgr_' + file_name)
+
+
+rgb_to_bgr('spritesheet.png')
+
+rgb_to_bgr('tilesheet.png')
 
 
 # Now the spritesheet just needs to be converted to a tileset. Use:

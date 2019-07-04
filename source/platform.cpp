@@ -133,11 +133,36 @@ static volatile u16* const scanline = (u16*)0x4000006;
 #define ATTR1_SIZE_64         (3<<14)
 #define ATTR2_PALETTE(n)      ((n)<<12)
 #define OBJ_CHAR(m)		((m)&0x03ff)
+#define BG0_ENABLE 0x100
+#define BG1_ENABLE 0x200
+#define BG2_ENABLE 0x400
+#define BG3_ENABLE 0x800
+
+
+volatile u16* bg0_control = (volatile u16*) 0x4000008;
+volatile u16* bg1_control = (volatile u16*) 0x400000a;
+volatile u16* bg2_control = (volatile u16*) 0x400000c;
+volatile u16* bg3_control = (volatile u16*) 0x400000e;
+
+
+volatile short* bg0_x_scroll = (volatile short*) 0x4000010;
+volatile short* bg0_y_scroll = (volatile short*) 0x4000012;
+volatile short* bg1_x_scroll = (volatile short*) 0x4000014;
+volatile short* bg1_y_scroll = (volatile short*) 0x4000016;
+volatile short* bg2_x_scroll = (volatile short*) 0x4000018;
+volatile short* bg2_y_scroll = (volatile short*) 0x400001a;
+volatile short* bg3_x_scroll = (volatile short*) 0x400001c;
+volatile short* bg3_y_scroll = (volatile short*) 0x400001e;
 
 
 Screen::Screen() : userdata_(nullptr)
 {
-    REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D;
+    REG_DISPCNT = MODE_0
+                | OBJ_ENABLE
+                | OBJ_MAP_1D
+                | BG0_ENABLE;
+        //| BG1_ENABLE
+        //| BG2_ENABLE;
 
     // TODO: We can probably preload some object attributes here, seeing as we
     // know that the sprites will be 32x32 square with 16bit color. Then the
@@ -149,6 +174,7 @@ Screen::Screen() : userdata_(nullptr)
 }
 
 
+static u32 last_oam_write_index = 0;
 static u32 oam_write_index = 0;
 
 
@@ -173,18 +199,24 @@ void Screen::draw(const Sprite& spr)
 void Screen::clear()
 {
     while (*scanline < 160); // VSync
-
-    for (u32 i = 0; i < oam_write_index; ++i) {
-        object_attribute_memory[i].attribute_0 |= attr0_mask::disabled;
-    }
-
-    oam_write_index = 0;
 }
 
 
 void Screen::display()
 {
-    // Nothing to do here.
+    // The Sprites are technically already displayed, so all we really
+    // need to do is turn off the sprites in the table if the sprite
+    // draw count dropped since the last draw batch.
+    for (u32 i = oam_write_index; i < last_oam_write_index; ++i) {
+        object_attribute_memory[i].attribute_0 |= attr0_mask::disabled;
+    }
+
+    last_oam_write_index = oam_write_index;
+    oam_write_index = 0;
+
+    auto view_offset = view_.get_center().cast<s32>();
+    *bg0_x_scroll = view_offset.x;
+    *bg0_y_scroll = view_offset.y;
 }
 
 
@@ -203,18 +235,62 @@ const Vec2<u32>& Screen::size() const
 
 using Tile = u32[16];
 using TileBlock = Tile[256];
+using ScreenBlock = u16[1024];
 
 
 #include "bgr_spritesheet.h"
+#include "bgr_tilesheet.h"
+
+#define MEM_TILE         ((TileBlock*)0x6000000 )
+#define MEM_PALETTE      ((u16*)(0x05000200))
+#define MEM_BG_PALETTE   ((u16*)(0x05000000))
+#define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
 
-void load_sprite_data()
+static void set_tile(u16 x, u16 y, u16 tile_id, u8 screen_block)
 {
-#define MEM_TILE      ((TileBlock*)0x6000000 )
-#define MEM_PALETTE   ((u16*)(0x05000200))
+    // NOTE: The game's tiles are 32x24 in size. GBA tiles are each 8x8.
+
+    auto ref = [&](u16 x, u16 y) { return x * 4 + y * 32 * 3; };
+
+    for (u32 i = 0; i < 4; ++i) {
+        MEM_SCREENBLOCKS[screen_block][i + ref(x, y)] = tile_id * 12 + i;
+    }
+    for (u32 i = 0; i < 4; ++i) {
+        MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] = tile_id * 12 + i + 4;
+    }
+    for (u32 i = 0; i < 4; ++i) {
+        MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] = tile_id * 12 + i + 8;
+    }
+}
+
+
+static void load_sprite_data()
+{
 
     memcpy((void*)MEM_PALETTE, bgr_spritesheetPal, bgr_spritesheetPalLen);
+
+    // NOTE: There are four tile blocks, so index four points to the
+    // end of the tile memory.
     memcpy((void*)&MEM_TILE[4][1], bgr_spritesheetTiles, bgr_spritesheetTilesLen);
+
+    memcpy((void*)MEM_BG_PALETTE, bgr_tilesheetPal, bgr_tilesheetPalLen);
+    memcpy((void*)&MEM_TILE[0][0], bgr_tilesheetTiles, bgr_tilesheetTilesLen);
+
+    *bg0_control = 0x0100;
+
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            if (i == 0) {
+                set_tile(i, j, 1, 1);
+            } else {
+                set_tile(i, j, 0, 1);
+            }
+        }
+    }
+
+    // set_tile(0, 1, 0, 32);
+    // set_tile(1, 1, 1, 32);
 }
 
 
@@ -222,6 +298,30 @@ Platform::Platform()
 {
     load_sprite_data();
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// TileMap
+////////////////////////////////////////////////////////////////////////////////
+
+
+// void TileMap::set_tile(u16 x, u16 y, u16 tile_id)
+// {
+//     auto screen_block =
+//         [&] {
+//             if (x > 8 and y > 10) {
+//                 return 3;
+//             } else if (y > 10) {
+//                 return 2;
+//             } else if (x > 8) {
+//                 return 1;
+//             } else {
+//                 return 0;
+//             }
+//         }();
+//     ::set_tile(x % 8, y % 10, tile_id, screen_block);
+// }
 
 
 #else
