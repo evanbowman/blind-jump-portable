@@ -20,7 +20,7 @@ using EntityGroup = TransformGroup<EntityBuffer<Args>...>;
 
 class Game {
 public:
-    Game();
+    Game(Platform& platform);
 
     void update(Platform& platform, Microseconds delta);
 
@@ -28,6 +28,7 @@ public:
 
 private:
     Buffer<const Sprite*, Screen::sprite_limit> display_buffer;
+    TileMap tiles_;
     Camera camera_;
     Player* player_;
     EntityGroup<Critter, Dasher> enemies_;

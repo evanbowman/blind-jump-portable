@@ -2,9 +2,11 @@
 #include "game.hpp"
 
 
-Game::Game() : player_(Player::pool().get())
+Game::Game(Platform& platform) : player_(Player::pool().get())
 {
     details_.get<0>().push_back(ItemChest::pool().get());
+
+    platform.push_map(tiles_);
 }
 
 

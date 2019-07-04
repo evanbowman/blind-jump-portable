@@ -161,7 +161,7 @@ Screen::Screen() : userdata_(nullptr)
                 | OBJ_ENABLE
                 | OBJ_MAP_1D
                 | BG0_ENABLE;
-        //| BG1_ENABLE
+        //| BG1_ENABLE;
         //| BG2_ENABLE;
 
     // TODO: We can probably preload some object attributes here, seeing as we
@@ -233,8 +233,8 @@ const Vec2<u32>& Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-using Tile = u32[16];
-using TileBlock = Tile[256];
+using HardwareTile = u32[16];
+using TileBlock = HardwareTile[256];
 using ScreenBlock = u16[1024];
 
 
@@ -247,20 +247,68 @@ using ScreenBlock = u16[1024];
 #define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
 
-static void set_tile(u16 x, u16 y, u16 tile_id, u8 screen_block)
+static void set_tile(u16 x, u16 y, u16 tile_id)
 {
-    // NOTE: The game's tiles are 32x24 in size. GBA tiles are each 8x8.
+    // NOTE: The game's tiles are 32x24px in size. GBA tiles are each
+    // 8x8. To further complicate things, the GBA's VRAM is
+    // partitioned into 32x32 tile screenblocks, so some 32x24px tiles
+    // cross over screenblocks in the vertical direction, and then the
+    // y-offset is one-tile-greater in the lower quadrants.
+
+    if (y == 10) {
+        // FIXME...
+        return;
+    }
+
+    auto screen_block =
+        [&]() -> u16 {
+            if (x > 7 and y > 9) {
+                x %= 8;
+                y %= 10;
+                return 4;
+            } else if (y > 9) {
+                y %= 10;
+                return 3;
+            } else if (x > 7) {
+                x %= 8;
+                return 2;
+            } else {
+                return 1;
+            }
+        }();
 
     auto ref = [&](u16 x, u16 y) { return x * 4 + y * 32 * 3; };
 
-    for (u32 i = 0; i < 4; ++i) {
-        MEM_SCREENBLOCKS[screen_block][i + ref(x, y)] = tile_id * 12 + i;
+    if (screen_block == 3 or screen_block == 4) {
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] = tile_id * 12 + i;
+        }
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] = tile_id * 12 + i + 4;
+        }
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 96] = tile_id * 12 + i + 8;
+        }
+    } else {
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y)] = tile_id * 12 + i;
+        }
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] = tile_id * 12 + i + 4;
+        }
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] = tile_id * 12 + i + 8;
+        }
     }
-    for (u32 i = 0; i < 4; ++i) {
-        MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] = tile_id * 12 + i + 4;
-    }
-    for (u32 i = 0; i < 4; ++i) {
-        MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] = tile_id * 12 + i + 8;
+}
+
+
+void Platform::push_map(const TileMap& map)
+{
+    for (u32 i = 0; i < TileMap::width; ++i) {
+        for (u32 j = 0; j < TileMap::height; ++j) {
+            set_tile(i, j, static_cast<u16>(map.get_tile(i, j)));
+        }
     }
 }
 
@@ -279,31 +327,30 @@ static void load_sprite_data()
 
     *bg0_control = 0xC100; // 64x64, 0x0100 for 32x32
 
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 10; ++j) {
-            if (i == 0) {
-                set_tile(i, j, 1, 1);
-            } else {
-                set_tile(i, j, 2, 1);
-            }
-        }
-    }
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 10; ++j) {
-            set_tile(i, j, 2, 2);
-        }
-    }
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 10; ++j) {
-            set_tile(i, j, 2, 3);
-        }
-    }
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 10; ++j) {
-            set_tile(i, j, 2, 4);
-        }
-    }
-
+    // for (int i = 0; i < 8; ++i) {
+    //     for (int j = 0; j < 11; ++j) {
+    //         if (i == 0) {
+    //             set_tile(i, j, 1, 1);
+    //         } else {
+    //             set_tile(i, j, 2, 1);
+    //         }
+    //     }
+    // }
+    // for (int i = 0; i < 8; ++i) {
+    //     for (int j = 0; j < 11; ++j) {
+    //         set_tile(i, j, 2, 2);
+    //     }
+    // }
+    // for (int i = 0; i < 8; ++i) {
+    //     for (int j = 0; j < 10; ++j) {
+    //         set_tile(i, j, 2, 3);
+    //     }
+    // }
+    // for (int i = 0; i < 8; ++i) {
+    //     for (int j = 0; j < 10; ++j) {
+    //         set_tile(i, j, 2, 4);
+    //     }
+    // }
     // set_tile(0, 1, 0, 32);
     // set_tile(1, 1, 1, 32);
 }
@@ -315,28 +362,14 @@ Platform::Platform()
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-// TileMap
-////////////////////////////////////////////////////////////////////////////////
+static int random_seed = 42;
 
 
-// void TileMap::set_tile(u16 x, u16 y, u16 tile_id)
-// {
-//     auto screen_block =
-//         [&] {
-//             if (x > 8 and y > 10) {
-//                 return 3;
-//             } else if (y > 10) {
-//                 return 2;
-//             } else if (x > 8) {
-//                 return 1;
-//             } else {
-//                 return 0;
-//             }
-//         }();
-//     ::set_tile(x % 8, y % 10, tile_id, screen_block);
-// }
+int Platform::random()
+{
+    random_seed = 1664525 * random_seed + 1013904223;
+    return (random_seed >> 16) & 0x7FFF;
+}
 
 
 #else
