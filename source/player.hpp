@@ -23,32 +23,37 @@ public:
     }
 
 private:
-    enum class State {
-         inactive,
-         normal
-    };
 
-    enum TextureIndex {
+    enum ResourceLoc {
          still_up    = 11,
          still_down  = 0,
          still_left  = 18,
          still_right = 25,
          walk_up     = 6,
          walk_down   = 1,
-         walk_left   = 26,
+         walk_left   = 12,
          walk_right  = 19,
     };
 
-    template <TextureIndex T>
+    template <ResourceLoc L>
     void key_response(bool k1,
                       bool k2,
                       bool k3,
                       bool k4,
+                      float& speed,
                       bool collision);
+
+    template <Player::ResourceLoc S, uint8_t maxIndx>
+    void on_key_released(bool k2, bool k3, bool k4, bool x);
+
+    void update_animation(Microseconds dt, u8 max_index, Microseconds count);
 
     Sprite sprite_;
     u32 frame_;
-    State state_;
-    TextureIndex texture_index_;
+    ResourceLoc frame_base_;
     Microseconds anim_timer_;
+    float l_speed;
+    float r_speed;
+    float u_speed;
+    float d_speed;
 };

@@ -7,6 +7,9 @@ enum class Tile {
     none,
     plate,
     sand,
+    ledge,
+    damaged_plate,
+    count,
 };
 
 
@@ -17,15 +20,15 @@ public:
 
     TileMap()
     {
-        fill([](int, int) { return Tile::sand; });
+        for_each([](Tile& tile, int, int) { tile = Tile::none; });
     }
 
     template <typename F>
-    void fill(F&& proc)
+    void for_each(F&& proc)
     {
         for (int i = 0; i < width; ++i) {
             for (int j = 0; j < height; ++j) {
-                data_[i][j] = proc(i, j);
+                proc(data_[i][j], i, j);
             }
         }
     }

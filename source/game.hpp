@@ -34,4 +34,6 @@ private:
     EntityGroup<Critter, Dasher> enemies_;
     EntityGroup<ItemChest> details_;
     EntityGroup<> effects_;
+
+    void regenerate_map(Platform& platform);
 };

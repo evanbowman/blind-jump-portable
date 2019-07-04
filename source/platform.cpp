@@ -54,7 +54,7 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 Microseconds DeltaClock::reset()
 {
     // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) = 16,666.6...
-    constexpr Microseconds fixed_step = 16667;
+    constexpr Microseconds fixed_step = 1666;
     return fixed_step;
 }
 
@@ -139,20 +139,20 @@ static volatile u16* const scanline = (u16*)0x4000006;
 #define BG3_ENABLE 0x800
 
 
-volatile u16* bg0_control = (volatile u16*) 0x4000008;
-volatile u16* bg1_control = (volatile u16*) 0x400000a;
-volatile u16* bg2_control = (volatile u16*) 0x400000c;
-volatile u16* bg3_control = (volatile u16*) 0x400000e;
+static volatile u16* bg0_control = (volatile u16*) 0x4000008;
+static volatile u16* bg1_control = (volatile u16*) 0x400000a;
+static volatile u16* bg2_control = (volatile u16*) 0x400000c;
+static volatile u16* bg3_control = (volatile u16*) 0x400000e;
 
 
-volatile short* bg0_x_scroll = (volatile short*) 0x4000010;
-volatile short* bg0_y_scroll = (volatile short*) 0x4000012;
-volatile short* bg1_x_scroll = (volatile short*) 0x4000014;
-volatile short* bg1_y_scroll = (volatile short*) 0x4000016;
-volatile short* bg2_x_scroll = (volatile short*) 0x4000018;
-volatile short* bg2_y_scroll = (volatile short*) 0x400001a;
-volatile short* bg3_x_scroll = (volatile short*) 0x400001c;
-volatile short* bg3_y_scroll = (volatile short*) 0x400001e;
+static volatile short* bg0_x_scroll = (volatile short*) 0x4000010;
+static volatile short* bg0_y_scroll = (volatile short*) 0x4000012;
+static volatile short* bg1_x_scroll = (volatile short*) 0x4000014;
+static volatile short* bg1_y_scroll = (volatile short*) 0x4000016;
+static volatile short* bg2_x_scroll = (volatile short*) 0x4000018;
+static volatile short* bg2_y_scroll = (volatile short*) 0x400001a;
+static volatile short* bg3_x_scroll = (volatile short*) 0x400001c;
+static volatile short* bg3_y_scroll = (volatile short*) 0x400001e;
 
 
 Screen::Screen() : userdata_(nullptr)
@@ -160,8 +160,8 @@ Screen::Screen() : userdata_(nullptr)
     REG_DISPCNT = MODE_0
                 | OBJ_ENABLE
                 | OBJ_MAP_1D
-                | BG0_ENABLE;
-        //| BG1_ENABLE;
+                | BG0_ENABLE
+                | BG1_ENABLE;
         //| BG2_ENABLE;
 
     // TODO: We can probably preload some object attributes here, seeing as we
@@ -217,6 +217,8 @@ void Screen::display()
     auto view_offset = view_.get_center().cast<s32>();
     *bg0_x_scroll = view_offset.x;
     *bg0_y_scroll = view_offset.y;
+    *bg1_x_scroll = view_offset.x * 0.3f;
+    *bg1_y_scroll = view_offset.y * 0.3f;
 }
 
 
@@ -247,6 +249,13 @@ using ScreenBlock = u16[1024];
 #define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
 
+// NOTE: ScreenBlock layout:
+
+// The first screenblock starts at 8, and the game uses four
+// screenblocks for drawing the background maps.
+// The whole first charblock is used up by the tileset image.
+
+
 static void set_tile(u16 x, u16 y, u16 tile_id)
 {
     // NOTE: The game's tiles are 32x24px in size. GBA tiles are each
@@ -256,7 +265,8 @@ static void set_tile(u16 x, u16 y, u16 tile_id)
     // y-offset is one-tile-greater in the lower quadrants.
 
     if (y == 10) {
-        // FIXME...
+        // FIXME: Tiles at y=10 need to jump across a gap between
+        // screen blocks.
         return;
     }
 
@@ -265,21 +275,21 @@ static void set_tile(u16 x, u16 y, u16 tile_id)
             if (x > 7 and y > 9) {
                 x %= 8;
                 y %= 10;
-                return 4;
+                return 11;
             } else if (y > 9) {
                 y %= 10;
-                return 3;
+                return 10;
             } else if (x > 7) {
                 x %= 8;
-                return 2;
+                return 9;
             } else {
-                return 1;
+                return 8;
             }
         }();
 
     auto ref = [&](u16 x, u16 y) { return x * 4 + y * 32 * 3; };
 
-    if (screen_block == 3 or screen_block == 4) {
+    if (screen_block == 10 or screen_block == 11) {
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] = tile_id * 12 + i;
         }
@@ -312,6 +322,23 @@ void Platform::push_map(const TileMap& map)
     }
 }
 
+#define BG_CBB_MASK		0x000C
+#define BG_CBB_SHIFT		 2
+#define BG_CBB(n)		((n)<<BG_CBB_SHIFT)
+
+#define BG_SBB_MASK		0x1F00
+#define BG_SBB_SHIFT		 8
+#define BG_SBB(n)		((n)<<BG_SBB_SHIFT)
+
+#define BG_SIZE_MASK	0xC000
+#define BG_SIZE_SHIFT		14
+#define BG_SIZE(n)		((n)<<BG_SIZE_SHIFT)
+
+#define BG_REG_32x32    0       //!< reg bg, 32x32 (256x256 px)
+#define BG_REG_64x32    0x4000  //!< reg bg, 64x32 (512x256 px)
+#define BG_REG_32x64    0x8000  //!< reg bg, 32x64 (256x512 px)
+#define BG_REG_64x64    0xC000  //!< reg bg, 64x64 (512x512 px)
+
 
 static void load_sprite_data()
 {
@@ -325,40 +352,29 @@ static void load_sprite_data()
     memcpy((void*)MEM_BG_PALETTE, bgr_tilesheetPal, bgr_tilesheetPalLen);
     memcpy((void*)&MEM_TILE[0][0], bgr_tilesheetTiles, bgr_tilesheetTilesLen);
 
-    *bg0_control = 0xC100; // 64x64, 0x0100 for 32x32
-
-    // for (int i = 0; i < 8; ++i) {
-    //     for (int j = 0; j < 11; ++j) {
-    //         if (i == 0) {
-    //             set_tile(i, j, 1, 1);
-    //         } else {
-    //             set_tile(i, j, 2, 1);
-    //         }
-    //     }
-    // }
-    // for (int i = 0; i < 8; ++i) {
-    //     for (int j = 0; j < 11; ++j) {
-    //         set_tile(i, j, 2, 2);
-    //     }
-    // }
-    // for (int i = 0; i < 8; ++i) {
-    //     for (int j = 0; j < 10; ++j) {
-    //         set_tile(i, j, 2, 3);
-    //     }
-    // }
-    // for (int i = 0; i < 8; ++i) {
-    //     for (int j = 0; j < 10; ++j) {
-    //         set_tile(i, j, 2, 4);
-    //     }
-    // }
-    // set_tile(0, 1, 0, 32);
-    // set_tile(1, 1, 1, 32);
+    *bg0_control = BG_SBB(8) | BG_REG_64x64;
+    //        0xC800; // 64x64, 0x0100 for 32x32
+    *bg1_control = BG_SBB(12);
 }
 
 
 Platform::Platform()
 {
     load_sprite_data();
+
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            if (random_choice<8>(*this)) {
+                MEM_SCREENBLOCKS[12][i + j * 32] = 67;
+            } else {
+                if (random_choice<2>(*this)) {
+                    MEM_SCREENBLOCKS[12][i + j * 32] = 70;
+                } else {
+                    MEM_SCREENBLOCKS[12][i + j * 32] = 71;
+                }
+            }
+        }
+    }
 }
 
 
