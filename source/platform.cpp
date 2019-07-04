@@ -277,15 +277,30 @@ static void load_sprite_data()
     memcpy((void*)MEM_BG_PALETTE, bgr_tilesheetPal, bgr_tilesheetPalLen);
     memcpy((void*)&MEM_TILE[0][0], bgr_tilesheetTiles, bgr_tilesheetTilesLen);
 
-    *bg0_control = 0x0100;
+    *bg0_control = 0xC100; // 64x64, 0x0100 for 32x32
 
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 10; ++j) {
             if (i == 0) {
                 set_tile(i, j, 1, 1);
             } else {
-                set_tile(i, j, 0, 1);
+                set_tile(i, j, 2, 1);
             }
+        }
+    }
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            set_tile(i, j, 2, 2);
+        }
+    }
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            set_tile(i, j, 2, 3);
+        }
+    }
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            set_tile(i, j, 2, 4);
         }
     }
 
