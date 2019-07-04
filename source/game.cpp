@@ -6,6 +6,8 @@ Game::Game(Platform& platform) : player_(Player::pool().get())
 {
     details_.get<0>().push_back(ItemChest::pool().get());
 
+    regenerate_map(platform);
+
     platform.push_map(tiles_);
 }
 
@@ -52,4 +54,90 @@ void Game::render(Platform& pfrm)
     }
 
     display_buffer.clear();
+}
+
+
+static void condense(TileMap& map, TileMap& maptemp) {
+    map.for_each([&](const Tile& tile, int x, int y) {
+                     uint8_t count = 0;
+                     if (map.get_tile(x - 1, y - 1) == Tile::none) {
+                         count += 1;
+                     }
+                     if (map.get_tile(x + 1, y - 1) == Tile::none) {
+                         count += 1;
+                     }
+                     if (map.get_tile(x - 1, y + 1) == Tile::none) {
+                         count += 1;
+                     }
+                     if (map.get_tile(x + 1, y + 1) == Tile::none) {
+                         count += 1;
+                     }
+                     if (map.get_tile(x - 1, y) == Tile::none) {
+                         count += 1;
+                     }
+                     if (map.get_tile(x + 1, y) == Tile::none) {
+                         count += 1;
+                     }
+                     if (map.get_tile(x, y - 1) == Tile::none) {
+                         count += 1;
+                     }
+                     if (map.get_tile(x, y + 1) == Tile::none) {
+                         count += 1;
+                     }
+                     if (tile == Tile::none) {
+                         if (count > 3) {
+                             maptemp.set_tile(x, y, Tile::plate);
+                         } else {
+                             maptemp.set_tile(x, y, Tile::none);
+                         }
+                     } else {
+                         if (count > 4) {
+                             maptemp.set_tile(x, y, Tile::none);
+                         } else {
+                             maptemp.set_tile(x, y, Tile::plate);
+                         }
+                     }
+                 });
+    maptemp.for_each([&](const Tile& tile, int x, int y) {
+                         map.set_tile(x, y, tile);
+                     });
+}
+
+
+// Having a whole other tilemap in memory is somewhat costly. But
+// there isn't really any other way...
+TileMap temporary;
+
+
+void Game::regenerate_map(Platform& platform)
+{
+    tiles_.for_each([&](Tile& tile, int, int) {
+                    tile = Tile(random_choice<int(Tile::sand)>(platform));
+                });
+
+    for (int i = 0; i < 3; ++i) {
+        condense(tiles_, temporary);
+    }
+
+    tiles_.for_each([&](Tile& tile, int x, int y) {
+                        if (tile == Tile::plate and
+                            tiles_.get_tile(x - 1, y) not_eq Tile::none and
+                            tiles_.get_tile(x + 1, y) not_eq Tile::none and
+                            tiles_.get_tile(x, y - 1) not_eq Tile::none and
+                            tiles_.get_tile(x, y + 1) not_eq Tile::none) {
+                            tile = Tile::sand;
+                        } else if (tile == Tile::plate) {
+                            if (random_choice<8>(platform) == 0) {
+                                tile = Tile::damaged_plate;
+                            }
+                        }
+                    });
+
+    tiles_.for_each([&](Tile& tile, int x, int y) {
+                        auto above = tiles_.get_tile(x, y - 1);
+                        if (tile == Tile::none and
+                            (above == Tile::plate or above == Tile::damaged_plate)) {
+                            tile = Tile::ledge;
+                        }
+                    });
 }

@@ -141,6 +141,8 @@ public:
 
     int random();
 
+    void collect_entropy();
+
 private:
     Screen screen_;
     Keyboard keyboard_;
