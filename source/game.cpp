@@ -2,7 +2,7 @@
 #include "game.hpp"
 
 
-Game::Game(Platform& platform) : player_(Player::pool().get())
+Game::Game(Platform& platform)
 {
     details_.get<0>().push_back(ItemChest::pool().get());
 
@@ -14,7 +14,7 @@ Game::Game(Platform& platform) : player_(Player::pool().get())
 
 void Game::update(Platform& pfrm, Microseconds delta)
 {
-    player_->update(pfrm, *this, delta);
+    player_.update(pfrm, *this, delta);
 
     auto update_policy = [&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end(); ++it) {
@@ -26,9 +26,9 @@ void Game::update(Platform& pfrm, Microseconds delta)
     details_.transform(update_policy);
     effects_.transform(update_policy);
 
-    camera_.update(pfrm, delta, player_->get_position());
+    camera_.update(pfrm, delta, player_.get_position());
 
-    display_buffer.push_back(&player_->get_sprite());
+    display_buffer.push_back(&player_.get_sprite());
 
     auto render_policy = [&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end(); ++it) {
@@ -39,6 +39,13 @@ void Game::update(Platform& pfrm, Microseconds delta)
     enemies_.transform(render_policy);
     details_.transform(render_policy);
     effects_.transform(render_policy);
+
+    display_buffer.push_back(&transporter_.get_sprite());
+
+    if (pfrm.keyboard().down_transition<Keyboard::Key::action_1>()) {
+        regenerate_map(pfrm);
+        pfrm.push_map(tiles_);
+    }
 
     std::sort(display_buffer.begin(), display_buffer.end(),
               [](const auto& l, const auto& r) {
@@ -60,30 +67,19 @@ void Game::render(Platform& pfrm)
 static void condense(TileMap& map, TileMap& maptemp) {
     map.for_each([&](const Tile& tile, int x, int y) {
                      uint8_t count = 0;
-                     if (map.get_tile(x - 1, y - 1) == Tile::none) {
-                         count += 1;
-                     }
-                     if (map.get_tile(x + 1, y - 1) == Tile::none) {
-                         count += 1;
-                     }
-                     if (map.get_tile(x - 1, y + 1) == Tile::none) {
-                         count += 1;
-                     }
-                     if (map.get_tile(x + 1, y + 1) == Tile::none) {
-                         count += 1;
-                     }
-                     if (map.get_tile(x - 1, y) == Tile::none) {
-                         count += 1;
-                     }
-                     if (map.get_tile(x + 1, y) == Tile::none) {
-                         count += 1;
-                     }
-                     if (map.get_tile(x, y - 1) == Tile::none) {
-                         count += 1;
-                     }
-                     if (map.get_tile(x, y + 1) == Tile::none) {
-                         count += 1;
-                     }
+                     auto collect = [&](int x, int y) {
+                                        if (map.get_tile(x, y) == Tile::none) {
+                                            count++;
+                                        }
+                                    };
+                     collect(x - 1, y - 1);
+                     collect(x + 1, y - 1);
+                     collect(x - 1, y + 1);
+                     collect(x + 1, y + 1);
+                     collect(x - 1, y);
+                     collect(x + 1, y);
+                     collect(x, y - 1);
+                     collect(x, y + 1);
                      if (tile == Tile::none) {
                          if (count > 3) {
                              maptemp.set_tile(x, y, Tile::plate);
@@ -106,7 +102,7 @@ static void condense(TileMap& map, TileMap& maptemp) {
 
 // Having a whole other tilemap in memory is somewhat costly. But
 // there isn't really any other way...
-TileMap temporary;
+static TileMap temporary;
 
 
 void Game::regenerate_map(Platform& platform)

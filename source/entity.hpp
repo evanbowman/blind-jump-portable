@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pool.hpp"
+#include "sprite.hpp"
 
 
 class EntityBase {
@@ -10,9 +11,16 @@ public:
 
     }
 
+    EntityBase(EntityBase&) = delete;
+
     bool alive() const
     {
         return kill_flag_;
+    }
+
+    const Sprite& get_sprite() const
+    {
+        return sprite_;
     }
 
 protected:
@@ -21,6 +29,8 @@ protected:
     {
         kill_flag_ = true;
     }
+
+    Sprite sprite_;
 
 private:
     bool kill_flag_;
@@ -42,6 +52,7 @@ public:
     //
     // The game is designed to run on a wide variety of platforms, including
     // consoles without an OS, so Entities are allocated from fixed pools.
+    //
     template<typename F = void>
     static auto& pool()
     {
