@@ -358,9 +358,25 @@ static void load_sprite_data()
 }
 
 
+
+static int random_seed;
+
+
+int Platform::random()
+{
+    random_seed = 1664525 * random_seed + 1013904223;
+    return (random_seed >> 16) & 0x7FFF;
+}
+
+
 Platform::Platform()
 {
     load_sprite_data();
+
+    // Not sure where else to get a good unpredictable seed value for
+    // the RNG. So I'm using the contents of one of the timer
+    // registers, which seems to work well enough...
+    random_seed = *((volatile u16*)0x4000104);
 
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
@@ -375,16 +391,6 @@ Platform::Platform()
             }
         }
     }
-}
-
-
-static int random_seed = 42;
-
-
-int Platform::random()
-{
-    random_seed = 1664525 * random_seed + 1013904223;
-    return (random_seed >> 16) & 0x7FFF;
 }
 
 

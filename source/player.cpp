@@ -171,9 +171,3 @@ void Player::update_animation(Microseconds dt, u8 max_index, Microseconds count)
         frame_ = 0;
     }
 }
-
-
-const Sprite& Player::get_sprite() const
-{
-    return sprite_;
-}

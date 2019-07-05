@@ -33,6 +33,22 @@ struct Vec2 {
 };
 
 
+template <typename T>
+T abs(const T& val)
+{
+    return (val > 0) ? val : -val;
+}
+
+
+// When you don't need an exact value, this works as a fast distance
+// approximation.
+template <typename T>
+T manhattan_length(const Vec2<T>& a, const Vec2<T>& b)
+{
+    return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
+
 // Note: In case I need to swap in a fixed-point class in the future.
 using Float = float;
 

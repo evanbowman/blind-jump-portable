@@ -9,13 +9,11 @@ class Game;
 class Platform;
 
 
-class Player : public Entity<Player, 1> {
+class Player : public Entity<Player, 0> {
 public:
     Player();
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
-
-    const Sprite& get_sprite() const;
 
     const Vec2<Float>& get_position() const
     {
@@ -48,7 +46,6 @@ private:
 
     void update_animation(Microseconds dt, u8 max_index, Microseconds count);
 
-    Sprite sprite_;
     u32 frame_;
     ResourceLoc frame_base_;
     Microseconds anim_timer_;

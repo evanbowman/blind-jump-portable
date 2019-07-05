@@ -15,12 +15,4 @@ public:
     {
 
     }
-
-    const Sprite& get_sprite() const
-    {
-        return sprite_;
-    }
-
-private:
-    Sprite sprite_;
 };
