@@ -8,7 +8,11 @@ using TextureIndex = u32;
 
 class Sprite {
 public:
-    Sprite() : texture_index_(0)
+
+    enum class Alpha { opaque, translucent };
+
+    Sprite() : texture_index_(0),
+               alpha_(Alpha::opaque)
     {
     }
 
@@ -42,8 +46,19 @@ public:
         return flip_;
     }
 
+    Alpha get_alpha() const
+    {
+        return alpha_;
+    }
+
+    void set_alpha(Alpha alpha)
+    {
+        alpha_ = alpha;
+    }
+
 private:
     Vec2<Float> position_;
     Vec2<bool> flip_;
     TextureIndex texture_index_;
+    Alpha alpha_;
 };
