@@ -31,8 +31,19 @@ public:
     {
         return texture_index_;
     }
-    
+
+    void set_flip(const Vec2<bool>& flip)
+    {
+        flip_ = flip;
+    }
+
+    const Vec2<bool>& get_flip() const
+    {
+        return flip_;
+    }
+
 private:
     Vec2<Float> position_;
+    Vec2<bool> flip_;
     TextureIndex texture_index_;
 };

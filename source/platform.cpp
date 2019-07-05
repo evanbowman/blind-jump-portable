@@ -177,15 +177,26 @@ Screen::Screen() : userdata_(nullptr)
 static u32 last_oam_write_index = 0;
 static u32 oam_write_index = 0;
 
+static bool even_frame = true;
 
-void Screen::draw(const Sprite& spr)
+void Screen::draw(const Sprite& spr, DisplayMode mode)
 {
+    if (__builtin_expect(mode == DisplayMode::translucent and even_frame, false)) {
+        return;
+    }
     const auto& view_center = view_.get_center();
     if (oam_write_index < oam_count) {
         auto oa = object_attribute_memory + oam_write_index;
         auto position = spr.get_position().cast<s32>() - view_center.cast<s32>();
+        const auto& flip = spr.get_flip();
         oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
         oa->attribute_1 = ATTR1_SIZE_32;
+        if (flip.y) {
+            oa->attribute_1 |= (1 << 13);
+        }
+        if (flip.x) {
+            oa->attribute_1 |= (1 << 12);
+        }
         oa->attribute_0 &= 0xff00;
         oa->attribute_0 |= position.y & 0x00ff;
         oa->attribute_1 &= 0xfe00;
@@ -219,6 +230,8 @@ void Screen::display()
     *bg0_y_scroll = view_offset.y;
     *bg1_x_scroll = view_offset.x * 0.3f;
     *bg1_y_scroll = view_offset.y * 0.3f;
+
+    even_frame = not even_frame;
 }
 
 
