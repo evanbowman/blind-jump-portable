@@ -51,6 +51,8 @@ void Game::update(Platform& pfrm, Microseconds delta)
               [](const auto& l, const auto& r) {
                   return l->get_position().y > r->get_position().y;
               });
+
+    display_buffer.push_back(&player_.get_shadow());
 }
 
 

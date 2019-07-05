@@ -15,7 +15,7 @@ void Camera::update(Platform& pfrm,
         (seek_pos.y - screen_size.y / 2) + 16
     };
 
-    view.set_center(interpolate(target, view_center, 0.001));
+    view.set_center(interpolate(target, view_center, dt * 0.0000025f));
 
     pfrm.screen().set_view(view);
 }
