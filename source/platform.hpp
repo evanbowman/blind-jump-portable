@@ -92,7 +92,11 @@ public:
 
     static constexpr u32 sprite_limit = 256;
 
-    void draw(const Sprite& spr);
+    enum class DisplayMode {
+        normal, translucent
+    };
+
+    void draw(const Sprite& spr, DisplayMode mode = DisplayMode::normal);
 
     void clear();
 
