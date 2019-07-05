@@ -128,6 +128,7 @@ static volatile u16* const scanline = (u16*)0x4000006;
 #define ATTR0_SQUARE		OBJ_SHAPE(0)
 #define ATTR0_TALL		OBJ_SHAPE(2)
 #define ATTR0_WIDE		OBJ_SHAPE(1)
+#define ATTR0_BLEND		0x0400
 #define ATTR1_SIZE_16         (1<<14)
 #define ATTR1_SIZE_32         (2<<14)
 #define ATTR1_SIZE_64         (3<<14)
@@ -155,6 +156,18 @@ static volatile short* bg3_x_scroll = (volatile short*) 0x400001c;
 static volatile short* bg3_y_scroll = (volatile short*) 0x400001e;
 
 
+static volatile u16* reg_blendcnt = (volatile u16*)0x04000050;
+static volatile u16* reg_blendalpha = (volatile u16*)0x04000052;
+
+#define BLD_BUILD(top, bot, mode)		\
+    ( (((bot)&63)<<8) | (((mode)&3)<<6) | ((top)&63) )
+#define BLD_OBJ			0x0010
+#define BLD_BG0			0x0001
+#define BLD_BG1			0x0002
+#define BLDA_BUILD(eva, evb)		\
+	( ((eva)&31) | (((evb)&31)<<8) )
+
+
 Screen::Screen() : userdata_(nullptr)
 {
     REG_DISPCNT = MODE_0
@@ -162,13 +175,11 @@ Screen::Screen() : userdata_(nullptr)
                 | OBJ_MAP_1D
                 | BG0_ENABLE
                 | BG1_ENABLE;
-        //| BG2_ENABLE;
 
-    // TODO: We can probably preload some object attributes here, seeing as we
-    // know that the sprites will be 32x32 square with 16bit color. Then the
-    // draw() function won't have to initialize the first two attributes each
-    // time, although it's probably not _that_ expensive. Remember to un-disable
-    // attr0 though.
+    *reg_blendcnt = BLD_BUILD(BLD_OBJ, BLD_BG0 | BLD_BG1, 0);
+
+    *reg_blendalpha = BLDA_BUILD(0x40 / 8, 0x40 / 8);
+
 
     view_.set_size(this->size().cast<Float>());
 }
@@ -177,19 +188,18 @@ Screen::Screen() : userdata_(nullptr)
 static u32 last_oam_write_index = 0;
 static u32 oam_write_index = 0;
 
-static bool even_frame = true;
-
-void Screen::draw(const Sprite& spr, DisplayMode mode)
+void Screen::draw(const Sprite& spr)
 {
-    if (__builtin_expect(mode == DisplayMode::translucent and even_frame, false)) {
-        return;
-    }
     const auto& view_center = view_.get_center();
     if (oam_write_index < oam_count) {
         auto oa = object_attribute_memory + oam_write_index;
         auto position = spr.get_position().cast<s32>() - view_center.cast<s32>();
         const auto& flip = spr.get_flip();
-        oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
+        if (spr.get_alpha() not_eq Sprite::Alpha::translucent) {
+            oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
+        } else {
+            oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE | ATTR0_BLEND;
+        }
         oa->attribute_1 = ATTR1_SIZE_32;
         if (flip.y) {
             oa->attribute_1 |= (1 << 13);
@@ -230,8 +240,6 @@ void Screen::display()
     *bg0_y_scroll = view_offset.y;
     *bg1_x_scroll = view_offset.x * 0.3f;
     *bg1_y_scroll = view_offset.y * 0.3f;
-
-    even_frame = not even_frame;
 }
 
 

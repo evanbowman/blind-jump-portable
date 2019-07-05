@@ -96,7 +96,7 @@ public:
         normal, translucent
     };
 
-    void draw(const Sprite& spr, DisplayMode mode = DisplayMode::normal);
+    void draw(const Sprite& spr);
 
     void clear();
 
