@@ -10,12 +10,14 @@ Player::Player() :
     frame_(0),
     frame_base_(ResourceLoc::still_down),
     anim_timer_(0),
-    l_speed(0.f),
-    r_speed(0.f),
-    u_speed(0.f),
-    d_speed(0.f)
+    l_speed_(0.f),
+    r_speed_(0.f),
+    u_speed_(0.f),
+    d_speed_(0.f)
 {
     sprite_.set_position({104.f, 64.f});
+    shadow_.set_texture_index(33);
+    shadow_.set_alpha(Sprite::Alpha::translucent);
 }
 
 
@@ -107,10 +109,10 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool left = input.pressed<Keyboard::Key::left>();
     const bool right = input.pressed<Keyboard::Key::right>();
 
-    key_response<ResourceLoc::walk_up>(up, down, left, right, u_speed, false);
-    key_response<ResourceLoc::walk_down>(down, up, left, right, d_speed, false);
-    key_response<ResourceLoc::walk_left>(left, right, down, up, l_speed, false);
-    key_response<ResourceLoc::walk_right>(right, left, down, up, r_speed, false);
+    key_response<ResourceLoc::walk_up>(up, down, left, right, u_speed_, false);
+    key_response<ResourceLoc::walk_down>(down, up, left, right, d_speed_, false);
+    key_response<ResourceLoc::walk_left>(left, right, down, up, l_speed_, false);
+    key_response<ResourceLoc::walk_right>(right, left, down, up, r_speed_, false);
 
     if (input.up_transition<Keyboard::Key::up>()) {
         on_key_released<ResourceLoc::still_up, 0>(down, left, right, false);
@@ -155,8 +157,10 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     const auto& position = sprite_.get_position();
-    sprite_.set_position({ position.x - (l_speed + -r_speed),
-                           position.y - (u_speed + -d_speed) });
+    Vec2<Float> new_pos { position.x - (l_speed_ + -r_speed_),
+                          position.y - (u_speed_ + -d_speed_) };
+    sprite_.set_position(new_pos);
+    shadow_.set_position({ new_pos.x + 8, new_pos.y + 25});
 }
 
 

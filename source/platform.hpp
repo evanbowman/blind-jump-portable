@@ -90,7 +90,7 @@ public:
 
     Screen();
 
-    static constexpr u32 sprite_limit = 256;
+    static constexpr u32 sprite_limit = 128;
 
     enum class DisplayMode {
         normal, translucent

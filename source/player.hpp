@@ -20,6 +20,11 @@ public:
         return sprite_.get_position();
     }
 
+    const Sprite& get_shadow() const
+    {
+        return shadow_;
+    }
+
 private:
 
     enum ResourceLoc {
@@ -49,8 +54,9 @@ private:
     u32 frame_;
     ResourceLoc frame_base_;
     Microseconds anim_timer_;
-    float l_speed;
-    float r_speed;
-    float u_speed;
-    float d_speed;
+    float l_speed_;
+    float r_speed_;
+    float u_speed_;
+    float d_speed_;
+    Sprite shadow_;
 };

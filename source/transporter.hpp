@@ -13,7 +13,7 @@ public:
     Transporter()
     {
         sprite_.set_texture_index(32);
-        sprite_.set_position({140, 80});
+        sprite_.set_position({160, 96});
     }
 
     void update(Platform&, Game&, Microseconds)
