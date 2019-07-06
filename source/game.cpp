@@ -83,13 +83,13 @@ static void condense(TileMap& map, TileMap& maptemp) {
                      collect(x, y - 1);
                      collect(x, y + 1);
                      if (tile == Tile::none) {
-                         if (count > 3) {
+                         if (count < 4) {
                              maptemp.set_tile(x, y, Tile::plate);
                          } else {
                              maptemp.set_tile(x, y, Tile::none);
                          }
                      } else {
-                         if (count > 4) {
+                         if (count > 5) {
                              maptemp.set_tile(x, y, Tile::none);
                          } else {
                              maptemp.set_tile(x, y, Tile::plate);
@@ -102,19 +102,29 @@ static void condense(TileMap& map, TileMap& maptemp) {
 }
 
 
-// Having a whole other tilemap in memory is somewhat costly. But
-// there isn't really any other way...
-static TileMap temporary;
-
 
 void Game::regenerate_map(Platform& platform)
 {
-    tiles_.for_each([&](Tile& tile, int, int) {
-                    tile = Tile(random_choice<int(Tile::sand)>(platform));
-                });
+    TileMap temporary;
+
+    tiles_.for_each([&](Tile& t, int, int) {
+                        t = Tile(random_choice<int(Tile::sand)>(platform));
+                    });
 
     for (int i = 0; i < 3; ++i) {
         condense(tiles_, temporary);
+    }
+
+    TileMap grass_overlay([&](Tile& t, int, int) {
+                              if (random_choice<3>(platform)) {
+                                  t = Tile::none;
+                              } else {
+                                  t = Tile::plate;
+                              }
+                          });
+
+    for (int i = 0; i < 3; ++i) {
+        condense(grass_overlay, temporary);
     }
 
     tiles_.for_each([&](Tile& tile, int x, int y) {
@@ -124,10 +134,6 @@ void Game::regenerate_map(Platform& platform)
                             tiles_.get_tile(x, y - 1) not_eq Tile::none and
                             tiles_.get_tile(x, y + 1) not_eq Tile::none) {
                             tile = Tile::sand;
-                        } else if (tile == Tile::plate) {
-                            if (random_choice<8>(platform) == 0) {
-                                tile = Tile::damaged_plate;
-                            }
                         }
                     });
 
@@ -136,6 +142,56 @@ void Game::regenerate_map(Platform& platform)
                         if (tile == Tile::none and
                             (above == Tile::plate or above == Tile::damaged_plate)) {
                             tile = Tile::ledge;
+                        }
+                    });
+
+    tiles_.for_each([&](Tile& tile, int x, int y) {
+                        if (tile == Tile::none) {
+                            grass_overlay.set_tile(x, y, Tile::none);
+                        }
+                    });
+
+    u8 bitmask[TileMap::width][TileMap::height];
+    for (int x = 0; x < TileMap::width; ++x) {
+        for (int y = 0; y < TileMap::height; ++y) {
+            bitmask[x][y] = 0;
+            bitmask[x][y] += 1 * static_cast<int>(grass_overlay.get_tile(x, y - 1));
+            bitmask[x][y] += 2 * static_cast<int>(grass_overlay.get_tile(x + 1, y));
+            bitmask[x][y] += 4 * static_cast<int>(grass_overlay.get_tile(x, y + 1));
+            bitmask[x][y] += 8 * static_cast<int>(grass_overlay.get_tile(x - 1, y));
+        }
+    }
+
+    grass_overlay.for_each([&](Tile& tile, int x, int y) {
+                               if (tile == Tile::plate) {
+                                   auto match = tiles_.get_tile(x, y);
+                                   u8 val;
+                                   switch (match) {
+                                   case Tile::plate:
+                                       val = (int)Tile::grass_plate + bitmask[x][y];
+                                       tiles_.set_tile(x, y, (Tile)val);
+                                       break;
+
+                                   case Tile::sand:
+                                       val = (int)Tile::grass_sand + bitmask[x][y];
+                                       tiles_.set_tile(x, y, (Tile)val);
+                                       break;
+
+                                   case Tile::ledge:
+                                       tiles_.set_tile(x, y, Tile::grass_ledge);
+                                       break;
+
+                                   default:
+                                       break;
+                                   }
+                               }
+                           });
+
+    tiles_.for_each([&](Tile& tile, int, int) {
+                        if (tile == Tile::plate) {
+                            if (random_choice<8>(platform) == 0) {
+                                tile = Tile::damaged_plate;
+                            }
                         }
                     });
 }
