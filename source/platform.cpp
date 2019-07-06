@@ -341,6 +341,22 @@ void Platform::push_map(const TileMap& map)
             set_tile(i, j, static_cast<u16>(map.get_tile(i, j)));
         }
     }
+
+    // Note: we want to reload the space background so that it looks
+    // different with each new map.
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            if (random_choice<8>(*this)) {
+                MEM_SCREENBLOCKS[12][i + j * 32] = 67;
+            } else {
+                if (random_choice<2>(*this)) {
+                    MEM_SCREENBLOCKS[12][i + j * 32] = 70;
+                } else {
+                    MEM_SCREENBLOCKS[12][i + j * 32] = 71;
+                }
+            }
+        }
+    }
 }
 
 #define BG_CBB_MASK		0x000C
@@ -398,20 +414,6 @@ Platform::Platform()
     // the RNG. So I'm using the contents of one of the timer
     // registers, which seems to work well enough...
     random_seed = *((volatile u16*)0x4000104);
-
-    for (int i = 0; i < 32; ++i) {
-        for (int j = 0; j < 32; ++j) {
-            if (random_choice<8>(*this)) {
-                MEM_SCREENBLOCKS[12][i + j * 32] = 67;
-            } else {
-                if (random_choice<2>(*this)) {
-                    MEM_SCREENBLOCKS[12][i + j * 32] = 70;
-                } else {
-                    MEM_SCREENBLOCKS[12][i + j * 32] = 71;
-                }
-            }
-        }
-    }
 }
 
 
