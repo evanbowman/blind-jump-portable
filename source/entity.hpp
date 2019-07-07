@@ -8,7 +8,6 @@ class EntityBase {
 public:
     EntityBase() : kill_flag_(false)
     {
-
     }
 
     EntityBase(EntityBase&) = delete;
@@ -24,7 +23,6 @@ public:
     }
 
 protected:
-
     void kill()
     {
         kill_flag_ = true;
@@ -37,10 +35,8 @@ private:
 };
 
 
-template <typename Impl, u32 SpawnLimit>
-class Entity : public EntityBase {
+template <typename Impl, u32 SpawnLimit> class Entity : public EntityBase {
 public:
-
     static constexpr auto spawn_limit()
     {
         return SpawnLimit;
@@ -53,8 +49,7 @@ public:
     // The game is designed to run on a wide variety of platforms, including
     // consoles without an OS, so Entities are allocated from fixed pools.
     //
-    template<typename F = void>
-    static auto& pool()
+    template <typename F = void> static auto& pool()
     {
         static ObjectPool<Impl, SpawnLimit> obj_pool;
         return obj_pool;

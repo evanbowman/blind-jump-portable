@@ -26,6 +26,12 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::opening:
         animation_.advance(sprite_, dt);
         if (animation_.done()) {
+            state_ = State::settle;
+        }
+        break;
+
+    case State::settle:
+        if (animation_.reverse(sprite_, dt)) {
             state_ = State::opened;
         }
         break;

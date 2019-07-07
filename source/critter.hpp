@@ -1,7 +1,7 @@
 #pragma once
 
-#include "numeric.hpp"
 #include "entity.hpp"
+#include "numeric.hpp"
 #include "sprite.hpp"
 
 
@@ -11,9 +11,7 @@ class Platform;
 
 class Critter : public Entity<Critter, 20> {
 public:
-
     void update(Platform&, Game&, Microseconds)
     {
-
     }
 };

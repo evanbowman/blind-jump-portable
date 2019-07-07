@@ -1,7 +1,7 @@
 #pragma once
 
-#include "entity.hpp"
 #include "animation.hpp"
+#include "entity.hpp"
 
 
 class Game;
@@ -15,7 +15,7 @@ public:
     void update(Platform&, Game&, Microseconds dt);
 
 private:
-    enum class State { closed, opening, opened };
+    enum class State { closed, opening, settle, opened };
 
     Animation<26, 6, Microseconds(50000)> animation_;
     State state_;

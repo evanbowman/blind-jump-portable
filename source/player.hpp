@@ -1,8 +1,8 @@
 #pragma once
 
-#include "numeric.hpp"
-#include "entity.hpp"
 #include "animation.hpp"
+#include "entity.hpp"
+#include "numeric.hpp"
 
 
 class Game;
@@ -26,16 +26,15 @@ public:
     }
 
 private:
-
     enum ResourceLoc {
-         still_up    = 11,
-         still_down  = 0,
-         still_left  = 18,
-         still_right = 25,
-         walk_up     = 6,
-         walk_down   = 1,
-         walk_left   = 12,
-         walk_right  = 19,
+        still_up = 11,
+        still_down = 0,
+        still_left = 18,
+        still_right = 25,
+        walk_up = 6,
+        walk_down = 1,
+        walk_left = 12,
+        walk_right = 19,
     };
 
     template <ResourceLoc L>

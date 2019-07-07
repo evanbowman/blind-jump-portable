@@ -8,11 +8,9 @@ using TextureIndex = u32;
 
 class Sprite {
 public:
-
     enum class Alpha { opaque, translucent };
 
-    Sprite() : texture_index_(0),
-               alpha_(Alpha::opaque)
+    Sprite() : texture_index_(0), alpha_(Alpha::opaque)
     {
     }
 
