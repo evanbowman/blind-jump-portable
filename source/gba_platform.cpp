@@ -1,6 +1,4 @@
 #include "platform.hpp"
-#include "pool.hpp"
-#include <bitset>
 #include <string.h>
 
 
@@ -56,6 +54,11 @@ Microseconds DeltaClock::reset()
     // 16,666.6...
     constexpr Microseconds fixed_step = 1666;
     return fixed_step;
+}
+
+
+DeltaClock::~DeltaClock()
+{
 }
 
 
@@ -286,9 +289,30 @@ static void set_tile(u16 x, u16 y, u16 tile_id)
     // cross over screenblocks in the vertical direction, and then the
     // y-offset is one-tile-greater in the lower quadrants.
 
-    if (y == 10) {
-        // FIXME: Tiles at y=10 need to jump across a gap between
-        // screen blocks.
+    auto ref = [](u16 x_, u16 y_) { return x_ * 4 + y_ * 32 * 3; };
+
+    // Tiles at y=10 need to jump across a gap between screen blocks.
+    if (y == 10 and x > 7) {
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[9][i + ref(x % 8, y)] = tile_id * 12 + i;
+        }
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[9][i + ref(x % 8, y) + 32] = tile_id * 12 + i + 4;
+        }
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[11][i + ref(x % 8, 0)] = tile_id * 12 + i + 8;
+        }
+        return;
+    } else if (y == 10) {
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[8][i + ref(x, y)] = tile_id * 12 + i;
+        }
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[8][i + ref(x, y) + 32] = tile_id * 12 + i + 4;
+        }
+        for (u32 i = 0; i < 4; ++i) {
+            MEM_SCREENBLOCKS[10][i + ref(x, 0)] = tile_id * 12 + i + 8;
+        }
         return;
     }
 
@@ -308,19 +332,17 @@ static void set_tile(u16 x, u16 y, u16 tile_id)
         }
     }();
 
-    auto ref = [](u16 x, u16 y) { return x * 4 + y * 32 * 3; };
-
     if (screen_block == 10 or screen_block == 11) {
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] =
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y - 1) + 32] =
                 tile_id * 12 + i;
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] =
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y - 1) + 64] =
                 tile_id * 12 + i + 4;
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 96] =
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y - 1) + 96] =
                 tile_id * 12 + i + 8;
         }
     } else {
@@ -422,35 +444,4 @@ Platform::Platform()
 }
 
 
-#else
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-// Desktop Platform
-//
-//
-////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
-// DeltaClock
-////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Keyboard
-////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Sprite
-////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Screen
-////////////////////////////////////////////////////////////////////////////////
-
-
-#endif
+#endif // __GBA__

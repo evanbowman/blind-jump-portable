@@ -5,9 +5,7 @@
 #include <array>
 
 
-// Anything platform specific should be defined here, and implemented
-// in platform.cpp. Ideally, when porting the game to a new system,
-// this is the only file that should need to change.
+// Anything platform specific should be defined here.
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,11 +15,19 @@
 
 class DeltaClock {
 public:
-    DeltaClock();
+    static DeltaClock& instance()
+    {
+        static DeltaClock inst;
+        return inst;
+    }
+
+    ~DeltaClock();
 
     Microseconds reset();
 
 private:
+    DeltaClock();
+
     void* impl_;
 };
 
@@ -74,8 +80,6 @@ public:
 
     static constexpr u32 sprite_limit = 128;
 
-    enum class DisplayMode { normal, translucent };
-
     void draw(const Sprite& spr);
 
     void clear();
@@ -123,8 +127,6 @@ public:
 
     int random();
 
-    void collect_entropy();
-
 private:
     Screen screen_;
     Keyboard keyboard_;
@@ -134,4 +136,9 @@ private:
 template <u32 N> inline int random_choice(Platform& pfrm)
 {
     return pfrm.random() * N >> 15;
+}
+
+inline int random_choice(Platform& pfrm, u32 n)
+{
+    return pfrm.random() * n >> 15;
 }

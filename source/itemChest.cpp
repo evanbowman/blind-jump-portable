@@ -3,9 +3,9 @@
 #include "platform.hpp"
 
 
-ItemChest::ItemChest() : state_(State::closed)
+ItemChest::ItemChest(const Vec2<Float>& pos) : state_(State::closed)
 {
-    sprite_.set_position({50.f, 50.f});
+    sprite_.set_position(pos);
     sprite_.set_texture_index(26);
 }
 

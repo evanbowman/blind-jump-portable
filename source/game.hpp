@@ -1,13 +1,12 @@
 #pragma once
 
+#include "camera.hpp"
 #include "critter.hpp"
 #include "dasher.hpp"
+#include "itemChest.hpp"
 #include "platform.hpp"
 #include "player.hpp"
 #include "transformGroup.hpp"
-// #include "transientEffect.hpp"
-#include "camera.hpp"
-#include "itemChest.hpp"
 #include "transporter.hpp"
 
 
@@ -57,6 +56,7 @@ public:
 
 private:
     Buffer<const Sprite*, Screen::sprite_limit> display_buffer;
+    s32 level_;
     TileMap tiles_;
     Camera camera_;
     Player player_;
@@ -65,5 +65,7 @@ private:
     EffectGroup effects_;
     Transporter transporter_;
 
+    void next_level(Platform& platform);
     void regenerate_map(Platform& platform);
+    void respawn_entities(Platform& platform);
 };

@@ -2,16 +2,6 @@
 #include <algorithm>
 
 
-Game::Game(Platform& platform)
-{
-    details_.get<0>().push_back(ItemChest::pool().get());
-
-    regenerate_map(platform);
-
-    platform.push_map(tiles_);
-}
-
-
 void Game::update(Platform& pfrm, Microseconds delta)
 {
     player_.update(pfrm, *this, delta);
@@ -43,8 +33,7 @@ void Game::update(Platform& pfrm, Microseconds delta)
     display_buffer.push_back(&transporter_.get_sprite());
 
     if (pfrm.keyboard().down_transition<Keyboard::Key::action_1>()) {
-        regenerate_map(pfrm);
-        pfrm.push_map(tiles_);
+        Game::next_level(pfrm);
     }
 
     std::sort(display_buffer.begin(),
@@ -100,6 +89,21 @@ static void condense(TileMap& map, TileMap& maptemp)
     });
     maptemp.for_each(
         [&](const Tile& tile, int x, int y) { map.set_tile(x, y, tile); });
+}
+
+
+Game::Game(Platform& pfrm) : level_(-1)
+{
+    Game::next_level(pfrm);
+}
+
+
+void Game::next_level(Platform& pfrm)
+{
+    level_ += 1;
+    Game::regenerate_map(pfrm);
+    Game::respawn_entities(pfrm);
+    pfrm.push_map(tiles_);
 }
 
 
@@ -205,4 +209,47 @@ void Game::regenerate_map(Platform& platform)
             }
         }
     });
+}
+
+
+void Game::respawn_entities(Platform& pfrm)
+{
+    auto clear_entities = [&](auto& buf) { buf.clear(); };
+
+    enemies_.transform(clear_entities);
+    details_.transform(clear_entities);
+    effects_.transform(clear_entities);
+
+    using Coord = Vec2<s8>;
+    Buffer<Coord, TileMap::tile_count> free_spots;
+
+    tiles_.for_each([&](Tile& tile, s8 x, s8 y) {
+        if (tile == Tile::sand or (u8(tile) >= u8(Tile::grass_sand) and
+                                   u8(tile) < u8(Tile::grass_plate))) {
+            free_spots.push_back({x, y});
+        }
+    });
+
+    auto select_coord = [&]() -> Coord* {
+        if (not free_spots.empty()) {
+            auto result = &free_spots[random_choice(pfrm, free_spots.size())];
+            free_spots.erase(result);
+            return result;
+        } else {
+            return nullptr;
+        }
+    };
+
+    auto pos = [&](Coord* c) {
+        return Vec2<float>{static_cast<Float>(c->x * 32),
+                           static_cast<Float>(c->y * 24)};
+    };
+
+    if (const auto c = select_coord()) {
+        details_.get<0>().push_back(ItemChest::pool().get(pos(c)));
+    }
+
+    if (const auto c = select_coord()) {
+        transporter_.set_position(pos(c));
+    }
 }

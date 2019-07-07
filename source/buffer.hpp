@@ -15,6 +15,11 @@ public:
     {
     }
 
+    ~Buffer()
+    {
+        Buffer::clear();
+    }
+
 
     constexpr u32 capacity()
     {
@@ -33,6 +38,13 @@ public:
         return end_;
     }
 
+    template <typename... Args> void emplace_back(Args&&... args)
+    {
+        if (Buffer::size() < Buffer::capacity()) {
+            new (end_) T(std::forward<Args>(args)...);
+            ++end_;
+        }
+    }
 
     void push_back(const T& elem)
     {
@@ -40,6 +52,24 @@ public:
             new (end_) T(elem);
             ++end_;
         }
+    }
+
+    T& operator[](u32 index)
+    {
+        return begin_[index];
+    }
+
+    // FIXME: I wrote this fn in like 30 seconds and it's not great
+    void erase(Iterator slot)
+    {
+        slot->~T();
+        for (; slot not_eq end_; ++slot) {
+            // FIXME: improve this!
+            if (slot + 1 not_eq end_) {
+                new (slot) T(*(slot + 1));
+            }
+        }
+        end_ -= 1;
     }
 
 
@@ -63,8 +93,8 @@ public:
 
     void clear()
     {
-        while (not empty())
-            pop_back();
+        while (not Buffer::empty())
+            Buffer::pop_back();
     }
 
     u32 size() const

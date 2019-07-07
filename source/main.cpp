@@ -9,13 +9,11 @@ int main()
     Screen& screen = pfrm.screen();
     Keyboard& keyboard = pfrm.keyboard();
 
-    DeltaClock clock;
-
     Game game(pfrm);
 
     while (true) {
         keyboard.poll();
-        game.update(pfrm, clock.reset());
+        game.update(pfrm, DeltaClock::instance().reset());
 
         // NOTE: On some platforms, e.g. GBA and other consoles, Screen::clear()
         // performs the vsync, so Game::update() should be called before the
