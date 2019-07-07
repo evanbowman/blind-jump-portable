@@ -1,21 +1,20 @@
 #pragma once
 
-#include "platform.hpp"
-#include "transformGroup.hpp"
 #include "critter.hpp"
 #include "dasher.hpp"
+#include "platform.hpp"
 #include "player.hpp"
+#include "transformGroup.hpp"
 // #include "transientEffect.hpp"
-#include "transporter.hpp"
-#include "itemChest.hpp"
 #include "camera.hpp"
+#include "itemChest.hpp"
+#include "transporter.hpp"
 
 
-template <typename Arg>
-using EntityBuffer = Buffer<Arg*, Arg::spawn_limit()>;
+template <typename Arg> using EntityBuffer = Buffer<Arg*, Arg::spawn_limit()>;
 
 
-template <typename ...Args>
+template <typename... Args>
 using EntityGroup = TransformGroup<EntityBuffer<Args>...>;
 
 

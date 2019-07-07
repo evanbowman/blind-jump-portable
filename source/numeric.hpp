@@ -3,23 +3,21 @@
 #include <stdint.h>
 
 
-using u8  = uint8_t;
+using u8 = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
-using s8  = int8_t;
+using s8 = int8_t;
 using s16 = int16_t;
 using s32 = int32_t;
 using s64 = int64_t;
 
 
-template <typename T>
-struct Vec2 {
+template <typename T> struct Vec2 {
     T x = 0;
     T y = 0;
 
-    template <typename U>
-    Vec2<U> cast() const
+    template <typename U> Vec2<U> cast() const
     {
         // Note: We could have used a uniform initializer here to
         // prevent narrowing, but there are cases of float->int cast
@@ -33,8 +31,7 @@ struct Vec2 {
 };
 
 
-template <typename T>
-T abs(const T& val)
+template <typename T> T abs(const T& val)
 {
     return (val > 0) ? val : -val;
 }
@@ -42,8 +39,7 @@ T abs(const T& val)
 
 // When you don't need an exact value, this works as a fast distance
 // approximation.
-template <typename T>
-T manhattan_length(const Vec2<T>& a, const Vec2<T>& b)
+template <typename T> T manhattan_length(const Vec2<T>& a, const Vec2<T>& b)
 {
     return abs(a.x - b.x) + abs(a.y - b.y);
 }
@@ -53,48 +49,57 @@ T manhattan_length(const Vec2<T>& a, const Vec2<T>& b)
 using Float = float;
 
 
-template <typename T>
-Vec2<T> operator+(const Vec2<T>& lhs, const Vec2<T>& rhs)
-{ return { lhs.x + rhs.x, lhs.y + rhs.y }; }
+template <typename T> Vec2<T> operator+(const Vec2<T>& lhs, const Vec2<T>& rhs)
+{
+    return {lhs.x + rhs.x, lhs.y + rhs.y};
+}
 
-template <typename T>
-Vec2<T> operator-(const Vec2<T>& lhs, const Vec2<T>& rhs)
-{ return { lhs.x - rhs.x, lhs.y - rhs.y }; }
+template <typename T> Vec2<T> operator-(const Vec2<T>& lhs, const Vec2<T>& rhs)
+{
+    return {lhs.x - rhs.x, lhs.y - rhs.y};
+}
 
-template <typename T>
-Vec2<T> operator*(const Vec2<T>& lhs, const Vec2<T>& rhs)
-{ return { lhs.x * rhs.x, lhs.y * rhs.y }; }
+template <typename T> Vec2<T> operator*(const Vec2<T>& lhs, const Vec2<T>& rhs)
+{
+    return {lhs.x * rhs.x, lhs.y * rhs.y};
+}
 
-template <typename T>
-Vec2<T> operator/(const Vec2<T>& lhs, const Vec2<T>& rhs)
-{ return { lhs.x / rhs.x, lhs.y / rhs.y }; }
+template <typename T> Vec2<T> operator/(const Vec2<T>& lhs, const Vec2<T>& rhs)
+{
+    return {lhs.x / rhs.x, lhs.y / rhs.y};
+}
 
-template <typename T>
-Vec2<T> operator+(const Vec2<T>& lhs, const T& rhs)
-{ return { lhs.x + rhs, lhs.y + rhs }; }
+template <typename T> Vec2<T> operator+(const Vec2<T>& lhs, const T& rhs)
+{
+    return {lhs.x + rhs, lhs.y + rhs};
+}
 
-template <typename T>
-Vec2<T> operator-(const Vec2<T>& lhs, const T& rhs)
-{ return { lhs.x - rhs, lhs.y - rhs }; }
+template <typename T> Vec2<T> operator-(const Vec2<T>& lhs, const T& rhs)
+{
+    return {lhs.x - rhs, lhs.y - rhs};
+}
 
-template <typename T>
-Vec2<T> operator*(const Vec2<T>& lhs, const T& rhs)
-{ return { lhs.x * rhs, lhs.y * rhs }; }
+template <typename T> Vec2<T> operator*(const Vec2<T>& lhs, const T& rhs)
+{
+    return {lhs.x * rhs, lhs.y * rhs};
+}
 
-template <typename T>
-Vec2<T> operator*(const T& rhs, const Vec2<T>& lhs)
-{ return { lhs.x * rhs, lhs.y * rhs }; }
+template <typename T> Vec2<T> operator*(const T& rhs, const Vec2<T>& lhs)
+{
+    return {lhs.x * rhs, lhs.y * rhs};
+}
 
-template <typename T>
-Vec2<T> operator/(const Vec2<T>& lhs, const T& rhs)
-{ return { lhs.x / rhs, lhs.y / rhs }; }
+template <typename T> Vec2<T> operator/(const Vec2<T>& lhs, const T& rhs)
+{
+    return {lhs.x / rhs, lhs.y / rhs};
+}
 
-template <typename T>
-Vec2<T> operator/(const T& rhs, const Vec2<T>& lhs)
-{ return { lhs.x / rhs, lhs.y / rhs }; }
+template <typename T> Vec2<T> operator/(const T& rhs, const Vec2<T>& lhs)
+{
+    return {lhs.x / rhs, lhs.y / rhs};
+}
 
-template <typename T>
-T interpolate(const T& a, const T& b, Float t)
+template <typename T> T interpolate(const T& a, const T& b, Float t)
 {
     return a * t + (1 - t) * b;
 }

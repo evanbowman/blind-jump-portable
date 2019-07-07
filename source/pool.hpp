@@ -5,8 +5,7 @@
 #include <new>
 
 
-template <u32 size, u32 count, u32 align = size>
-class Pool {
+template <u32 size, u32 count, u32 align = size> class Pool {
 private:
     struct Cell {
         alignas(align) std::array<u8, size> mem_;
@@ -14,7 +13,6 @@ private:
     };
 
 public:
-
     Pool() : freelist_(nullptr)
     {
         for (decltype(count) i = 0; i < count; ++i) {
@@ -48,11 +46,9 @@ private:
 };
 
 
-template <typename T, u32 count>
-class ObjectPool {
+template <typename T, u32 count> class ObjectPool {
 public:
-    template <typename ...Args>
-    T* get(Args&& ...args)
+    template <typename... Args> T* get(Args&&... args)
     {
         auto mem = pool_.get();
         if (mem) {

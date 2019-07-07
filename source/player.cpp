@@ -6,14 +6,9 @@
 // BlindJump from 2016. This code is kind of a mess.
 
 
-Player::Player() :
-    frame_(0),
-    frame_base_(ResourceLoc::still_down),
-    anim_timer_(0),
-    l_speed_(0.f),
-    r_speed_(0.f),
-    u_speed_(0.f),
-    d_speed_(0.f)
+Player::Player()
+    : frame_(0), frame_base_(ResourceLoc::still_down), anim_timer_(0),
+      l_speed_(0.f), r_speed_(0.f), u_speed_(0.f), d_speed_(0.f)
 {
     sprite_.set_position({104.f, 64.f});
     shadow_.set_texture_index(33);
@@ -49,7 +44,8 @@ void Player::key_response(bool k1,
 
 
 template <Player::ResourceLoc S, uint8_t maxIndx>
-void Player::on_key_released(bool k2, bool k3, bool k4, bool x) {
+void Player::on_key_released(bool k2, bool k3, bool k4, bool x)
+{
     if (not k2 && not k3 && not k4) {
         if (not x) {
             frame_base_ = S;
@@ -84,19 +80,31 @@ void Player::on_key_released(bool k2, bool k3, bool k4, bool x) {
 }
 
 
-static uint8_t remap_vframe(uint8_t index) {
+static uint8_t remap_vframe(uint8_t index)
+{
     switch (index) {
-    case 0: return 1;
-    case 1: return 2;
-    case 2: return 2;
-    case 3: return 1;
-    case 4: return 0;
-    case 5: return 3;
-    case 6: return 4;
-    case 7: return 4;
-    case 8: return 3;
-    case 9: return 0;
-    default: return 0;
+    case 0:
+        return 1;
+    case 1:
+        return 2;
+    case 2:
+        return 2;
+    case 3:
+        return 1;
+    case 4:
+        return 0;
+    case 5:
+        return 3;
+    case 6:
+        return 4;
+    case 7:
+        return 4;
+    case 8:
+        return 3;
+    case 9:
+        return 0;
+    default:
+        return 0;
     }
 }
 
@@ -110,9 +118,12 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool right = input.pressed<Keyboard::Key::right>();
 
     key_response<ResourceLoc::walk_up>(up, down, left, right, u_speed_, false);
-    key_response<ResourceLoc::walk_down>(down, up, left, right, d_speed_, false);
-    key_response<ResourceLoc::walk_left>(left, right, down, up, l_speed_, false);
-    key_response<ResourceLoc::walk_right>(right, left, down, up, r_speed_, false);
+    key_response<ResourceLoc::walk_down>(
+        down, up, left, right, d_speed_, false);
+    key_response<ResourceLoc::walk_left>(
+        left, right, down, up, l_speed_, false);
+    key_response<ResourceLoc::walk_right>(
+        right, left, down, up, r_speed_, false);
 
     if (input.up_transition<Keyboard::Key::up>()) {
         on_key_released<ResourceLoc::still_up, 0>(down, left, right, false);
@@ -157,10 +168,10 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     const auto& position = sprite_.get_position();
-    Vec2<Float> new_pos { position.x - (l_speed_ + -r_speed_),
-                          position.y - (u_speed_ + -d_speed_) };
+    Vec2<Float> new_pos{position.x - (l_speed_ + -r_speed_),
+                        position.y - (u_speed_ + -d_speed_)};
     sprite_.set_position(new_pos);
-    shadow_.set_position({ new_pos.x + 8, new_pos.y + 25});
+    shadow_.set_position({new_pos.x + 8, new_pos.y + 25});
 }
 
 

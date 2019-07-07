@@ -33,7 +33,7 @@ CFLAGS	:=	-g -Wall -O3\
 			-ffast-math \
 			$(ARCH)
 
-CXXFLAGS :=     -Wall -pedantic -Os -D__GBA__ -fno-exceptions
+CXXFLAGS :=     -Wall -pedantic -Os -D__GBA__ -fno-exceptions -nostdlib -std=c++14
 
 CFLAGS	+=	$(INCLUDE)
 

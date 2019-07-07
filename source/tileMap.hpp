@@ -1,7 +1,7 @@
 #pragma once
 
-#include <array>
 #include "numeric.hpp"
+#include <array>
 
 
 enum class Tile : u8 {
@@ -28,14 +28,12 @@ public:
         for_each([](Tile& tile, int, int) { tile = Tile::none; });
     }
 
-    template <typename F>
-    TileMap(F&& init)
+    template <typename F> TileMap(F&& init)
     {
         for_each(init);
     }
 
-    template <typename F>
-    void for_each(F&& proc)
+    template <typename F> void for_each(F&& proc)
     {
         for (int i = 0; i < width; ++i) {
             for (int j = 0; j < height; ++j) {
@@ -44,17 +42,19 @@ public:
         }
     }
 
-    void set_tile(u16 x, u16 y, Tile tile)
+    void set_tile(s32 x, s32 y, Tile tile)
     {
-        x %= width;
-        y %= height;
+        if (x < 0 or y < 0 or x > width - 1 or y > height - 1) {
+            return;
+        }
         data_[index(x, y)] = tile;
     }
 
-    Tile get_tile(u16 x, u16 y) const
+    Tile get_tile(s32 x, s32 y) const
     {
-        x %= width;
-        y %= height;
+        if (x < 0 or y < 0 or x > width - 1 or y > height - 1) {
+            return Tile::none;
+        }
         return data_[index(x, y)];
     }
 

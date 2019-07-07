@@ -1,8 +1,8 @@
 #pragma once
 
-#include <array>
 #include "numeric.hpp"
 #include "tileMap.hpp"
+#include <array>
 
 
 // Anything platform specific should be defined here, and implemented
@@ -10,7 +10,6 @@
 // this is the only file that should need to change.
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
 ////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +17,6 @@
 
 class DeltaClock {
 public:
-
     DeltaClock();
 
     Microseconds reset();
@@ -28,7 +26,6 @@ private:
 };
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Keyboard
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,36 +33,23 @@ private:
 
 class Keyboard {
 public:
-
     Keyboard();
 
-    enum Key {
-        action_1,
-        action_2,
-        start,
-        left,
-        right,
-        up,
-        down,
-        count
-    };
+    enum Key { action_1, action_2, start, left, right, up, down, count };
 
     void poll();
 
-    template <Key k>
-    bool pressed() const
+    template <Key k> bool pressed() const
     {
         return states_[k];
     }
 
-    template <Key k>
-    bool down_transition() const
+    template <Key k> bool down_transition() const
     {
         return states_[k] and not prev_[k];
     }
 
-    template <Key k>
-    bool up_transition() const
+    template <Key k> bool up_transition() const
     {
         return not states_[k] and prev_[k];
     }
@@ -76,7 +60,6 @@ private:
 };
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Screen
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,14 +70,11 @@ private:
 
 class Screen {
 public:
-
     Screen();
 
     static constexpr u32 sprite_limit = 128;
 
-    enum class DisplayMode {
-        normal, translucent
-    };
+    enum class DisplayMode { normal, translucent };
 
     void draw(const Sprite& spr);
 
@@ -120,7 +100,6 @@ private:
 };
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Platform
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +107,6 @@ private:
 
 class Platform {
 public:
-
     Platform();
 
     inline Screen& screen()
@@ -153,8 +131,7 @@ private:
 };
 
 
-template <u32 N>
-inline int random_choice(Platform& pfrm)
+template <u32 N> inline int random_choice(Platform& pfrm)
 {
     return pfrm.random() * N >> 15;
 }

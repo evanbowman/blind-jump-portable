@@ -1,10 +1,9 @@
 #include "platform.hpp"
+#include "pool.hpp"
 #include <bitset>
 #include <string.h>
-#include "pool.hpp"
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -15,31 +14,32 @@
 
 #ifdef __GBA__
 
-#define REG_DISPCNT    *(u32*)0x4000000
+#define REG_DISPCNT *(u32*)0x4000000
 #define MODE_0 0x0
 #define OBJ_MAP_1D 0x40
 #define OBJ_ENABLE 0x1000
 
-#define KEY_A        0x0001
-#define KEY_B        0x0002
-#define KEY_SELECT   0x0004
-#define KEY_START    0x0008
-#define KEY_RIGHT    0x0010
-#define KEY_LEFT     0x0020
-#define KEY_UP       0x0040
-#define KEY_DOWN     0x0080
-#define KEY_R        0x0100
-#define KEY_L        0x0200
+#define KEY_A 0x0001
+#define KEY_B 0x0002
+#define KEY_SELECT 0x0004
+#define KEY_START 0x0008
+#define KEY_RIGHT 0x0010
+#define KEY_LEFT 0x0020
+#define KEY_UP 0x0040
+#define KEY_DOWN 0x0080
+#define KEY_R 0x0100
+#define KEY_L 0x0200
 
 
-#if	defined	( __thumb__ )
-#define	SystemCall(Number)	 __asm ("SWI	  "#Number"\n" :::  "r0", "r1", "r2", "r3")
+#if defined(__thumb__)
+#define SystemCall(Number)                                                     \
+    __asm("SWI	  " #Number "\n" ::: "r0", "r1", "r2", "r3")
 #else
-#define	SystemCall(Number)	 __asm ("SWI	  "#Number"	<< 16\n" :::"r0", "r1", "r2", "r3")
+#define SystemCall(Number)                                                     \
+    __asm("SWI	  " #Number "	<< 16\n" ::: "r0", "r1", "r2", "r3")
 #endif
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,19 +47,18 @@
 
 DeltaClock::DeltaClock() : impl_(nullptr)
 {
-
 }
 
 
 Microseconds DeltaClock::reset()
 {
-    // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) = 16,666.6...
+    // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) =
+    // 16,666.6...
     constexpr Microseconds fixed_step = 1666;
     return fixed_step;
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Keyboard
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +91,6 @@ void Keyboard::poll()
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Screen
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +105,7 @@ struct alignas(4) ObjectAttributes {
 
 
 namespace attr0_mask {
-    constexpr u16 disabled{2 << 8};
+constexpr u16 disabled{2 << 8};
 }
 
 
@@ -115,66 +113,60 @@ constexpr u32 oam_count = Screen::sprite_limit;
 
 
 static ObjectAttributes* const object_attribute_memory = {
-    (ObjectAttributes*)0x07000000
-};
+    (ObjectAttributes*)0x07000000};
 
 
 static volatile u16* const scanline = (u16*)0x4000006;
 
 
-#define OBJ_SHAPE(m)		((m)<<14)
-#define ATTR0_COLOR_16			(0<<13)
-#define ATTR0_COLOR_256			(1<<13)
-#define ATTR0_SQUARE		OBJ_SHAPE(0)
-#define ATTR0_TALL		OBJ_SHAPE(2)
-#define ATTR0_WIDE		OBJ_SHAPE(1)
-#define ATTR0_BLEND		0x0400
-#define ATTR1_SIZE_16         (1<<14)
-#define ATTR1_SIZE_32         (2<<14)
-#define ATTR1_SIZE_64         (3<<14)
-#define ATTR2_PALETTE(n)      ((n)<<12)
-#define OBJ_CHAR(m)		((m)&0x03ff)
+#define OBJ_SHAPE(m) ((m) << 14)
+#define ATTR0_COLOR_16 (0 << 13)
+#define ATTR0_COLOR_256 (1 << 13)
+#define ATTR0_SQUARE OBJ_SHAPE(0)
+#define ATTR0_TALL OBJ_SHAPE(2)
+#define ATTR0_WIDE OBJ_SHAPE(1)
+#define ATTR0_BLEND 0x0400
+#define ATTR1_SIZE_16 (1 << 14)
+#define ATTR1_SIZE_32 (2 << 14)
+#define ATTR1_SIZE_64 (3 << 14)
+#define ATTR2_PALETTE(n) ((n) << 12)
+#define OBJ_CHAR(m) ((m)&0x03ff)
 #define BG0_ENABLE 0x100
 #define BG1_ENABLE 0x200
 #define BG2_ENABLE 0x400
 #define BG3_ENABLE 0x800
 
 
-static volatile u16* bg0_control = (volatile u16*) 0x4000008;
-static volatile u16* bg1_control = (volatile u16*) 0x400000a;
-static volatile u16* bg2_control = (volatile u16*) 0x400000c;
-static volatile u16* bg3_control = (volatile u16*) 0x400000e;
+static volatile u16* bg0_control = (volatile u16*)0x4000008;
+static volatile u16* bg1_control = (volatile u16*)0x400000a;
+static volatile u16* bg2_control = (volatile u16*)0x400000c;
+static volatile u16* bg3_control = (volatile u16*)0x400000e;
 
 
-static volatile short* bg0_x_scroll = (volatile short*) 0x4000010;
-static volatile short* bg0_y_scroll = (volatile short*) 0x4000012;
-static volatile short* bg1_x_scroll = (volatile short*) 0x4000014;
-static volatile short* bg1_y_scroll = (volatile short*) 0x4000016;
-static volatile short* bg2_x_scroll = (volatile short*) 0x4000018;
-static volatile short* bg2_y_scroll = (volatile short*) 0x400001a;
-static volatile short* bg3_x_scroll = (volatile short*) 0x400001c;
-static volatile short* bg3_y_scroll = (volatile short*) 0x400001e;
+static volatile short* bg0_x_scroll = (volatile short*)0x4000010;
+static volatile short* bg0_y_scroll = (volatile short*)0x4000012;
+static volatile short* bg1_x_scroll = (volatile short*)0x4000014;
+static volatile short* bg1_y_scroll = (volatile short*)0x4000016;
+static volatile short* bg2_x_scroll = (volatile short*)0x4000018;
+static volatile short* bg2_y_scroll = (volatile short*)0x400001a;
+static volatile short* bg3_x_scroll = (volatile short*)0x400001c;
+static volatile short* bg3_y_scroll = (volatile short*)0x400001e;
 
 
 static volatile u16* reg_blendcnt = (volatile u16*)0x04000050;
 static volatile u16* reg_blendalpha = (volatile u16*)0x04000052;
 
-#define BLD_BUILD(top, bot, mode)		\
-    ( (((bot)&63)<<8) | (((mode)&3)<<6) | ((top)&63) )
-#define BLD_OBJ			0x0010
-#define BLD_BG0			0x0001
-#define BLD_BG1			0x0002
-#define BLDA_BUILD(eva, evb)		\
-	( ((eva)&31) | (((evb)&31)<<8) )
+#define BLD_BUILD(top, bot, mode)                                              \
+    ((((bot)&63) << 8) | (((mode)&3) << 6) | ((top)&63))
+#define BLD_OBJ 0x0010
+#define BLD_BG0 0x0001
+#define BLD_BG1 0x0002
+#define BLDA_BUILD(eva, evb) (((eva)&31) | (((evb)&31) << 8))
 
 
 Screen::Screen() : userdata_(nullptr)
 {
-    REG_DISPCNT = MODE_0
-                | OBJ_ENABLE
-                | OBJ_MAP_1D
-                | BG0_ENABLE
-                | BG1_ENABLE;
+    REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE;
 
     *reg_blendcnt = BLD_BUILD(BLD_OBJ, BLD_BG0 | BLD_BG1, 0);
 
@@ -190,36 +182,46 @@ static u32 oam_write_index = 0;
 
 void Screen::draw(const Sprite& spr)
 {
-    const auto& view_center = view_.get_center();
-    if (oam_write_index < oam_count) {
-        auto oa = object_attribute_memory + oam_write_index;
-        auto position = spr.get_position().cast<s32>() - view_center.cast<s32>();
-        const auto& flip = spr.get_flip();
-        if (spr.get_alpha() not_eq Sprite::Alpha::translucent) {
-            oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
-        } else {
-            oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE | ATTR0_BLEND;
-        }
-        oa->attribute_1 = ATTR1_SIZE_32;
-        if (flip.y) {
-            oa->attribute_1 |= (1 << 13);
-        }
-        if (flip.x) {
-            oa->attribute_1 |= (1 << 12);
-        }
-        oa->attribute_0 &= 0xff00;
-        oa->attribute_0 |= position.y & 0x00ff;
-        oa->attribute_1 &= 0xfe00;
-        oa->attribute_1 |= position.x & 0x01ff;
-        oa->attribute_2 = 2 + spr.get_texture_index() * 16;
-        oam_write_index += 1;
+    if (oam_write_index == oam_count) {
+        return;
     }
+    const auto position = spr.get_position().cast<s32>();
+    const auto view_center = view_.get_center().cast<s32>();
+    const auto view_half_extent = size().cast<s32>() / s32(2);
+    Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
+                         view_center.y + view_half_extent.y * 2};
+    if (not(position.x > view_center.x and position.x < view_br.x and
+            position.y > view_center.y and position.y < view_br.y)) {
+        return;
+    }
+    auto oa = object_attribute_memory + oam_write_index;
+    if (spr.get_alpha() not_eq Sprite::Alpha::translucent) {
+        oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
+    } else {
+        oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE | ATTR0_BLEND;
+    }
+    oa->attribute_1 = ATTR1_SIZE_32;
+    const auto& flip = spr.get_flip();
+    if (flip.y) {
+        oa->attribute_1 |= (1 << 13);
+    }
+    if (flip.x) {
+        oa->attribute_1 |= (1 << 12);
+    }
+    const auto abs_position = spr.get_position().cast<s32>() - view_center;
+    oa->attribute_0 &= 0xff00;
+    oa->attribute_0 |= abs_position.y & 0x00ff;
+    oa->attribute_1 &= 0xfe00;
+    oa->attribute_1 |= abs_position.x & 0x01ff;
+    oa->attribute_2 = 2 + spr.get_texture_index() * 16;
+    oam_write_index += 1;
 }
 
 
 void Screen::clear()
 {
-    while (*scanline < 160); // VSync
+    while (*scanline < 160)
+        ; // VSync
 }
 
 
@@ -245,12 +247,11 @@ void Screen::display()
 
 const Vec2<u32>& Screen::size() const
 {
-    static const Vec2<u32> gba_widescreen {240, 160};
+    static const Vec2<u32> gba_widescreen{240, 160};
     return gba_widescreen;
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Platform
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,17 +265,17 @@ using ScreenBlock = u16[1024];
 #include "bgr_spritesheet.h"
 #include "bgr_tilesheet.h"
 
-#define MEM_TILE         ((TileBlock*)0x6000000 )
-#define MEM_PALETTE      ((u16*)(0x05000200))
-#define MEM_BG_PALETTE   ((u16*)(0x05000000))
+#define MEM_TILE ((TileBlock*)0x6000000)
+#define MEM_PALETTE ((u16*)(0x05000200))
+#define MEM_BG_PALETTE ((u16*)(0x05000000))
 #define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
 
 // NOTE: ScreenBlock layout:
 
 // The first screenblock starts at 8, and the game uses four
-// screenblocks for drawing the background maps.
-// The whole first charblock is used up by the tileset image.
+// screenblocks for drawing the background maps.  The whole first
+// charblock is used up by the tileset image.
 
 
 static void set_tile(u16 x, u16 y, u16 tile_id)
@@ -291,44 +292,48 @@ static void set_tile(u16 x, u16 y, u16 tile_id)
         return;
     }
 
-    auto screen_block =
-        [&]() -> u16 {
-            if (x > 7 and y > 9) {
-                x %= 8;
-                y %= 10;
-                return 11;
-            } else if (y > 9) {
-                y %= 10;
-                return 10;
-            } else if (x > 7) {
-                x %= 8;
-                return 9;
-            } else {
-                return 8;
-            }
-        }();
+    auto screen_block = [&]() -> u16 {
+        if (x > 7 and y > 9) {
+            x %= 8;
+            y %= 10;
+            return 11;
+        } else if (y > 9) {
+            y %= 10;
+            return 10;
+        } else if (x > 7) {
+            x %= 8;
+            return 9;
+        } else {
+            return 8;
+        }
+    }();
 
-    auto ref = [&](u16 x, u16 y) { return x * 4 + y * 32 * 3; };
+    auto ref = [](u16 x, u16 y) { return x * 4 + y * 32 * 3; };
 
     if (screen_block == 10 or screen_block == 11) {
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] = tile_id * 12 + i;
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] =
+                tile_id * 12 + i;
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] = tile_id * 12 + i + 4;
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] =
+                tile_id * 12 + i + 4;
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 96] = tile_id * 12 + i + 8;
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 96] =
+                tile_id * 12 + i + 8;
         }
     } else {
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[screen_block][i + ref(x, y)] = tile_id * 12 + i;
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] = tile_id * 12 + i + 4;
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] =
+                tile_id * 12 + i + 4;
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] = tile_id * 12 + i + 8;
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] =
+                tile_id * 12 + i + 8;
         }
     }
 }
@@ -359,22 +364,22 @@ void Platform::push_map(const TileMap& map)
     }
 }
 
-#define BG_CBB_MASK		0x000C
-#define BG_CBB_SHIFT		 2
-#define BG_CBB(n)		((n)<<BG_CBB_SHIFT)
+#define BG_CBB_MASK 0x000C
+#define BG_CBB_SHIFT 2
+#define BG_CBB(n) ((n) << BG_CBB_SHIFT)
 
-#define BG_SBB_MASK		0x1F00
-#define BG_SBB_SHIFT		 8
-#define BG_SBB(n)		((n)<<BG_SBB_SHIFT)
+#define BG_SBB_MASK 0x1F00
+#define BG_SBB_SHIFT 8
+#define BG_SBB(n) ((n) << BG_SBB_SHIFT)
 
-#define BG_SIZE_MASK	0xC000
-#define BG_SIZE_SHIFT		14
-#define BG_SIZE(n)		((n)<<BG_SIZE_SHIFT)
+#define BG_SIZE_MASK 0xC000
+#define BG_SIZE_SHIFT 14
+#define BG_SIZE(n) ((n) << BG_SIZE_SHIFT)
 
-#define BG_REG_32x32    0       //!< reg bg, 32x32 (256x256 px)
-#define BG_REG_64x32    0x4000  //!< reg bg, 64x32 (512x256 px)
-#define BG_REG_32x64    0x8000  //!< reg bg, 32x64 (256x512 px)
-#define BG_REG_64x64    0xC000  //!< reg bg, 64x64 (512x512 px)
+#define BG_REG_32x32 0      //!< reg bg, 32x32 (256x256 px)
+#define BG_REG_64x32 0x4000 //!< reg bg, 64x32 (512x256 px)
+#define BG_REG_32x64 0x8000 //!< reg bg, 32x64 (256x512 px)
+#define BG_REG_64x64 0xC000 //!< reg bg, 64x64 (512x512 px)
 
 
 static void load_sprite_data()
@@ -384,7 +389,8 @@ static void load_sprite_data()
 
     // NOTE: There are four tile blocks, so index four points to the
     // end of the tile memory.
-    memcpy((void*)&MEM_TILE[4][1], bgr_spritesheetTiles, bgr_spritesheetTilesLen);
+    memcpy(
+        (void*)&MEM_TILE[4][1], bgr_spritesheetTiles, bgr_spritesheetTilesLen);
 
     memcpy((void*)MEM_BG_PALETTE, bgr_tilesheetPal, bgr_tilesheetPalLen);
     memcpy((void*)&MEM_TILE[0][0], bgr_tilesheetTiles, bgr_tilesheetTilesLen);
@@ -393,7 +399,6 @@ static void load_sprite_data()
     //        0xC800; // 64x64, 0x0100 for 32x32
     *bg1_control = BG_SBB(12);
 }
-
 
 
 static int random_seed;
@@ -418,7 +423,7 @@ Platform::Platform()
 
 
 #else
-
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -428,25 +433,21 @@ Platform::Platform()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Keyboard
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Sprite
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Screen
 ////////////////////////////////////////////////////////////////////////////////

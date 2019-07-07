@@ -1,24 +1,21 @@
 #pragma once
 
+#include "numeric.hpp"
 #include <array>
 #include <new>
-#include "numeric.hpp"
 
 
-template <typename T, u32 Capacity>
-class Buffer {
+template <typename T, u32 Capacity> class Buffer {
 public:
     using Iterator = T*;
     using iterator = Iterator; // (only for stl compatibility)
     using ValueType = T;
-    
-    Buffer() : begin_((Iterator)mem_.data()),
-               end_(begin_)
+
+    Buffer() : begin_((Iterator)mem_.data()), end_(begin_)
     {
-        
     }
 
-    
+
     constexpr u32 capacity()
     {
         return Capacity;
@@ -35,8 +32,8 @@ public:
     {
         return end_;
     }
-    
-    
+
+
     void push_back(const T& elem)
     {
         if (Buffer::size() < Buffer::capacity()) {
@@ -56,8 +53,8 @@ public:
     {
         return *begin_;
     }
-    
-    
+
+
     void pop_back()
     {
         --end_;
@@ -66,7 +63,8 @@ public:
 
     void clear()
     {
-        while (not empty()) pop_back();
+        while (not empty())
+            pop_back();
     }
 
     u32 size() const
@@ -79,8 +77,8 @@ public:
     {
         return Buffer::size() == 0;
     }
-    
-    
+
+
 private:
     alignas(T) std::array<u8, Capacity * sizeof(T)> mem_;
     Iterator begin_;
