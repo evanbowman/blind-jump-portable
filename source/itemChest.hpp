@@ -10,7 +10,7 @@ class Platform;
 
 class ItemChest : public Entity<ItemChest, 4> {
 public:
-    ItemChest();
+    ItemChest(const Vec2<Float>& pos);
 
     void update(Platform&, Game&, Microseconds dt);
 
