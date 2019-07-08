@@ -4,6 +4,12 @@
 
 void Game::update(Platform& pfrm, Microseconds delta)
 {
+    if (pfrm.keyboard().down_transition<Keyboard::Key::action_2>()) {
+        if (manhattan_length(player_.get_position(), transporter_.get_position()) < 32) {
+            Game::next_level(pfrm);
+        }
+    }
+
     player_.update(pfrm, *this, delta);
 
     auto update_policy = [&](auto& entity_buf) {
@@ -31,10 +37,6 @@ void Game::update(Platform& pfrm, Microseconds delta)
     effects_.transform(render_policy);
 
     display_buffer.push_back(&transporter_.get_sprite());
-
-    if (pfrm.keyboard().down_transition<Keyboard::Key::action_1>()) {
-        Game::next_level(pfrm);
-    }
 
     std::sort(display_buffer.begin(),
               display_buffer.end(),

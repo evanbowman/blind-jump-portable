@@ -20,6 +20,11 @@ public:
         sprite_.set_position(pos);
     }
 
+    const Vec2<Float>& get_position() const
+    {
+        return sprite_.get_position();
+    }
+
     void update(Platform&, Game&, Microseconds)
     {
         // ...
