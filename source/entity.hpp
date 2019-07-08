@@ -55,3 +55,16 @@ public:
         return obj_pool;
     }
 };
+
+
+#include <memory>
+
+
+template <typename T> using EntityRef = std::unique_ptr<T, void (*)(T*)>;
+
+
+template <typename T, typename... Args> EntityRef<T> make_entity(Args&&... args)
+{
+    return {T::pool().get(std::forward<Args>(args)...),
+            [](T* mem) { T::pool().post(mem); }};
+}

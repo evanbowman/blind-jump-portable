@@ -10,11 +10,12 @@
 #include "transporter.hpp"
 
 
-template <typename Arg> using EntityBuffer = Buffer<Arg*, Arg::spawn_limit()>;
+template <typename Arg>
+using EntityBuffer = Buffer<Arg, Arg::element_type::spawn_limit()>;
 
 
 template <typename... Args>
-using EntityGroup = TransformGroup<EntityBuffer<Args>...>;
+using EntityGroup = TransformGroup<EntityBuffer<EntityRef<Args>>...>;
 
 
 class Game {

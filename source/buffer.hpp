@@ -54,6 +54,14 @@ public:
         }
     }
 
+    void push_back(T&& elem)
+    {
+        if (Buffer::size() < Buffer::capacity()) {
+            new (end_) T(std::forward<T>(elem));
+            ++end_;
+        }
+    }
+
     T& operator[](u32 index)
     {
         return begin_[index];

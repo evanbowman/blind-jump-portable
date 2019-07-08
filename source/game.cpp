@@ -246,10 +246,14 @@ void Game::respawn_entities(Platform& pfrm)
     };
 
     if (const auto c = select_coord()) {
-        details_.get<0>().push_back(ItemChest::pool().get(pos(c)));
+        details_.get<0>().push_back(make_entity<ItemChest>(pos(c)));
     }
 
     if (const auto c = select_coord()) {
         transporter_.set_position(pos(c));
+    }
+
+    if (const auto c = select_coord()) {
+        player_.set_position(pos(c));
     }
 }
