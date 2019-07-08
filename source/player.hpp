@@ -20,6 +20,11 @@ public:
         return sprite_.get_position();
     }
 
+    void set_position(const Vec2<Float>& pos)
+    {
+        sprite_.set_position(pos);
+    }
+
     const Sprite& get_shadow() const
     {
         return shadow_;
