@@ -33,7 +33,15 @@ CFLAGS	:=	-g -Wall -O3\
 			-ffast-math \
 			$(ARCH)
 
-CXXFLAGS :=     -Wall -pedantic -Os -D__GBA__ -fno-exceptions -nostdlib -std=c++14
+CXXFLAGS :=     -Wall \
+		-pedantic \
+		-Os \
+		-D__GBA__ \
+		-fno-exceptions \
+		-nostdlib \
+		-std=c++14 \
+		-mcpu=arm7tdmi \
+		-mtune=arm7tdmi
 
 CFLAGS	+=	$(INCLUDE)
 
