@@ -13,6 +13,8 @@ Player::Player()
     sprite_.set_position({104.f, 64.f});
     shadow_.set_texture_index(33);
     shadow_.set_alpha(Sprite::Alpha::translucent);
+
+    sprite_.set_mix(ColorMix{ColorConstant::electric_blue, 0.5f});
 }
 
 
