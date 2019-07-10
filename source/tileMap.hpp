@@ -43,6 +43,15 @@ public:
         }
     }
 
+    template <typename F> void for_each(F&& proc) const
+    {
+        for (s8 i = 0; i < width; ++i) {
+            for (s8 j = 0; j < height; ++j) {
+                proc(data_[TileMap::index(i, j)], i, j);
+            }
+        }
+    }
+
     void set_tile(s32 x, s32 y, Tile tile)
     {
         if (x < 0 or y < 0 or x > width - 1 or y > height - 1) {

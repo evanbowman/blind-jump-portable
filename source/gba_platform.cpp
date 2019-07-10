@@ -193,8 +193,8 @@ void Screen::draw(const Sprite& spr)
     const auto view_half_extent = size().cast<s32>() / s32(2);
     Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
                          view_center.y + view_half_extent.y * 2};
-    if (not(position.x > view_center.x and position.x < view_br.x and
-            position.y > view_center.y and position.y < view_br.y)) {
+    if (not(position.x > view_center.x - 32 and position.x < view_br.x and
+            position.y > view_center.y - 32 and position.y < view_br.y)) {
         return;
     }
     auto oa = object_attribute_memory + oam_write_index;
