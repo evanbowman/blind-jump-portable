@@ -18,6 +18,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::closed:
         if (pfrm.keyboard().down_transition<Keyboard::Key::action_2>()) {
             if (manhattan_length(player_pos, pos) < 32) {
+                pfrm.sleep(10);
                 state_ = State::opening;
             }
         }
