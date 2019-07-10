@@ -34,6 +34,18 @@
 #define KEY_R 0x0100
 #define KEY_L 0x0200
 
+using HardwareTile = u32[16];
+using TileBlock = HardwareTile[256];
+using ScreenBlock = u16[1024];
+
+#define MEM_TILE ((TileBlock*)0x6000000)
+#define MEM_PALETTE ((u16*)(0x05000200))
+#define MEM_BG_PALETTE ((u16*)(0x05000000))
+#define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
+
+#define ATTR2_PALBANK_MASK	0xF000
+#define ATTR2_PALBANK_SHIFT		12
+#define ATTR2_PALBANK(n)	((n)<<ATTR2_PALBANK_SHIFT)
 
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
@@ -164,6 +176,28 @@ static volatile u16* reg_blendalpha = (volatile u16*)0x04000052;
 #define BLDA_BUILD(eva, evb) (((eva)&31) | (((evb)&31) << 8))
 
 
+class Color {
+public:
+    Color(u8 r, u8 g, u8 b) : r_(r), g_(g), b_(b)
+    {
+    }
+
+    inline u16 bgr_hex_555() const
+    {
+        return (r_) + ((g_) << 5) + ((b_) << 10);
+    }
+
+    static Color from_bgr_hex_555(u16 val)
+    {
+        return {u8(0x1F & val), u8((0x3E0 & val) >> 5), u8((0x7C00 & val) >> 10)};
+    }
+
+    u8 r_;
+    u8 g_;
+    u8 b_;
+};
+
+
 Screen::Screen() : userdata_(nullptr)
 {
     REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE;
@@ -179,6 +213,50 @@ Screen::Screen() : userdata_(nullptr)
 
 static u32 last_oam_write_index = 0;
 static u32 oam_write_index = 0;
+
+
+using PaletteBank = int;
+constexpr PaletteBank available_palettes = 3;
+
+static PaletteBank palette_counter = available_palettes;
+
+
+// Perform a color mix between the spritesheet palette bank (bank zero), and
+// return the palette bank where the resulting mixture is stored. We can only
+// display 12 mixed colors at a time, because the first four banks are in use.
+static PaletteBank color_mix(const Color& c, float amount)
+{
+    if (palette_counter == 15) {
+        return 0; // Exhausted all the palettes that we have for effects.
+    }
+    for (int i = 0; i < 16; ++i) {
+        auto from = Color::from_bgr_hex_555(MEM_PALETTE[i]);
+        const u32 index = 16 * (palette_counter + 1) + i;
+        MEM_PALETTE[index] = Color(interpolate(c.r_, from.r_, amount),
+                                   interpolate(c.g_, from.g_, amount),
+                                   interpolate(c.b_, from.b_, amount)).bgr_hex_555();
+    }
+    return ++palette_counter;
+}
+
+
+const Color& real_color(ColorConstant k)
+{
+    switch (k) {
+    case ColorConstant::ruby:
+        static const Color ruby(29, 3, 11);
+        return ruby;
+        
+    case ColorConstant::electric_blue:
+        static const Color el_blue(9, 31, 31);
+        return el_blue;
+
+    default:
+        static const Color err(0, 0, 0);
+        return err;
+    }
+}
+
 
 void Screen::draw(const Sprite& spr)
 {
@@ -214,6 +292,13 @@ void Screen::draw(const Sprite& spr)
     oa->attribute_1 &= 0xfe00;
     oa->attribute_1 |= abs_position.x & 0x01ff;
     oa->attribute_2 = 2 + spr.get_texture_index() * 16;
+    
+    const auto& mix = spr.get_mix();
+    if (mix.amount_ not_eq 0.f) {
+        if (const auto pal_bank = color_mix(real_color(mix.color_), mix.amount_)) {
+            oa->attribute_2 |= ATTR2_PALBANK(pal_bank);
+        }
+    }
     oam_write_index += 1;
 }
 
@@ -221,9 +306,6 @@ void Screen::draw(const Sprite& spr)
 void Screen::clear()
 {
     // VSync
-
-    // while (*scanline < 160) ;
-
     VBlankIntrWait();
 }
 
@@ -239,6 +321,7 @@ void Screen::display()
 
     last_oam_write_index = oam_write_index;
     oam_write_index = 0;
+    palette_counter = available_palettes;
 
     auto view_offset = view_.get_center().cast<s32>();
     *bg0_x_scroll = view_offset.x;
@@ -260,18 +343,8 @@ const Vec2<u32>& Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-using HardwareTile = u32[16];
-using TileBlock = HardwareTile[256];
-using ScreenBlock = u16[1024];
-
-
 #include "bgr_spritesheet.h"
 #include "bgr_tilesheet.h"
-
-#define MEM_TILE ((TileBlock*)0x6000000)
-#define MEM_PALETTE ((u16*)(0x05000200))
-#define MEM_BG_PALETTE ((u16*)(0x05000000))
-#define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
 
 // NOTE: ScreenBlock layout:
@@ -406,7 +479,6 @@ void Platform::push_map(const TileMap& map)
 
 static void load_sprite_data()
 {
-
     memcpy((void*)MEM_PALETTE, bgr_spritesheetPal, bgr_spritesheetPalLen);
 
     // NOTE: There are four tile blocks, so index four points to the

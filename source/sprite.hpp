@@ -1,6 +1,7 @@
 #pragma once
 
 #include "numeric.hpp"
+#include "color.hpp"
 
 
 using TextureIndex = u32;
@@ -54,9 +55,20 @@ public:
         alpha_ = alpha;
     }
 
+    const ColorMix& get_mix() const
+    {
+        return mix_;
+    }
+
+    void set_mix(const ColorMix& mix)
+    {
+        mix_ = mix;
+    }
+
 private:
     Vec2<Float> position_;
     Vec2<bool> flip_;
     TextureIndex texture_index_;
     Alpha alpha_;
+    ColorMix mix_;
 };
