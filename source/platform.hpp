@@ -127,6 +127,11 @@ public:
 
     int random();
 
+    // Sleep halts the game for an amount of time equal to some number
+    // of game updates. Given that the game should be running at
+    // 60fps, one update equals 1/60 of a second.
+    void sleep(u32 frames);
+
 private:
     Screen screen_;
     Keyboard keyboard_;

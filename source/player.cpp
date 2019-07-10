@@ -30,9 +30,9 @@ void Player::key_response(bool k1,
         }
         if (not collision) {
             if (k3 || k4) {
-                speed = .170f;
+                speed = 1.00f;
             } else {
-                speed = .220f;
+                speed = 1.50f;
             }
         } else {
             speed = 0.f;
@@ -167,9 +167,11 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
     }
 
+    static const float MOVEMENT_RATE_CONSTANT = 0.000054f;
+
     const auto& position = sprite_.get_position();
-    Vec2<Float> new_pos{position.x - (l_speed_ + -r_speed_),
-                        position.y - (u_speed_ + -d_speed_)};
+    Vec2<Float> new_pos{position.x - ((l_speed_ + -r_speed_) * dt * MOVEMENT_RATE_CONSTANT),
+                        position.y - ((u_speed_ + -d_speed_) * dt * MOVEMENT_RATE_CONSTANT)};
     sprite_.set_position(new_pos);
     shadow_.set_position({new_pos.x + 8, new_pos.y + 25});
 }

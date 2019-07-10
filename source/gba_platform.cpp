@@ -1,6 +1,12 @@
 #include "platform.hpp"
 #include <string.h>
 
+// FIXME: I'm relying on devkit ARM right now for handling
+// interrupts. But it would be more educational to set this stuff up
+// on my own!
+#include "/opt/devkitpro/libgba/include/gba_interrupt.h"
+#include "/opt/devkitpro/libgba/include/gba_systemcalls.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -29,15 +35,6 @@
 #define KEY_L 0x0200
 
 
-#if defined(__thumb__)
-#define SystemCall(Number)                                                     \
-    __asm("SWI	  " #Number "\n" ::: "r0", "r1", "r2", "r3")
-#else
-#define SystemCall(Number)                                                     \
-    __asm("SWI	  " #Number "	<< 16\n" ::: "r0", "r1", "r2", "r3")
-#endif
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +49,7 @@ Microseconds DeltaClock::reset()
 {
     // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) =
     // 16,666.6...
-    constexpr Microseconds fixed_step = 1666;
+    constexpr Microseconds fixed_step = 16667;
     return fixed_step;
 }
 
@@ -223,8 +220,11 @@ void Screen::draw(const Sprite& spr)
 
 void Screen::clear()
 {
-    while (*scanline < 160)
-        ; // VSync
+    // VSync
+
+    // while (*scanline < 160) ;
+
+    VBlankIntrWait();
 }
 
 
@@ -433,8 +433,19 @@ int Platform::random()
 }
 
 
+void Platform::sleep(u32 frames)
+{
+    while (frames--) {
+        VBlankIntrWait();
+    }
+}
+
+
 Platform::Platform()
 {
+    irqInit();
+    irqEnable(IRQ_VBLANK);
+
     load_sprite_data();
 
     // Not sure where else to get a good unpredictable seed value for
