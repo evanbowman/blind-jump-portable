@@ -17,3 +17,13 @@ void Camera::update(Platform& pfrm,
 
     pfrm.screen().set_view(view);
 }
+
+
+void Camera::set_position(Platform& pfrm, const Vec2<Float>& pos)
+{
+    auto view = pfrm.screen().get_view();
+
+    view.set_center(pos);
+
+    pfrm.screen().set_view(view);
+}

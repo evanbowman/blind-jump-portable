@@ -68,5 +68,5 @@ private:
 
     void next_level(Platform& platform);
     void regenerate_map(Platform& platform);
-    void respawn_entities(Platform& platform);
+    bool respawn_entities(Platform& platform);
 };

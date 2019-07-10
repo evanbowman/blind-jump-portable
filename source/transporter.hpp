@@ -17,7 +17,7 @@ public:
 
     void set_position(const Vec2<Float>& pos)
     {
-        sprite_.set_position(pos);
+        sprite_.set_position({pos.x, pos.y - 4});
     }
 
     const Vec2<Float>& get_position() const
