@@ -31,6 +31,14 @@ template <typename T> struct Vec2 {
 };
 
 
+template <typename T, typename U = T> struct Rect {
+    T x_off = 0;
+    T y_off = 0;
+    U w = 0;
+    U h = 0;
+};
+
+
 template <typename T> T abs(const T& val)
 {
     return (val > 0) ? val : -val;

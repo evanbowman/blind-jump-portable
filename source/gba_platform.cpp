@@ -43,9 +43,9 @@ using ScreenBlock = u16[1024];
 #define MEM_BG_PALETTE ((u16*)(0x05000000))
 #define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
-#define ATTR2_PALBANK_MASK	0xF000
-#define ATTR2_PALBANK_SHIFT		12
-#define ATTR2_PALBANK(n)	((n)<<ATTR2_PALBANK_SHIFT)
+#define ATTR2_PALBANK_MASK 0xF000
+#define ATTR2_PALBANK_SHIFT 12
+#define ATTR2_PALBANK(n) ((n) << ATTR2_PALBANK_SHIFT)
 
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
@@ -189,7 +189,8 @@ public:
 
     static Color from_bgr_hex_555(u16 val)
     {
-        return {u8(0x1F & val), u8((0x3E0 & val) >> 5), u8((0x7C00 & val) >> 10)};
+        return {
+            u8(0x1F & val), u8((0x3E0 & val) >> 5), u8((0x7C00 & val) >> 10)};
     }
 
     u8 r_;
@@ -234,7 +235,8 @@ static PaletteBank color_mix(const Color& c, float amount)
         const u32 index = 16 * (palette_counter + 1) + i;
         MEM_PALETTE[index] = Color(interpolate(c.r_, from.r_, amount),
                                    interpolate(c.g_, from.g_, amount),
-                                   interpolate(c.b_, from.b_, amount)).bgr_hex_555();
+                                   interpolate(c.b_, from.b_, amount))
+                                 .bgr_hex_555();
     }
     return ++palette_counter;
 }
@@ -246,7 +248,7 @@ const Color& real_color(ColorConstant k)
     case ColorConstant::ruby:
         static const Color ruby(29, 3, 11);
         return ruby;
-        
+
     case ColorConstant::electric_blue:
         static const Color el_blue(9, 31, 31);
         return el_blue;
@@ -292,10 +294,11 @@ void Screen::draw(const Sprite& spr)
     oa->attribute_1 &= 0xfe00;
     oa->attribute_1 |= abs_position.x & 0x01ff;
     oa->attribute_2 = 2 + spr.get_texture_index() * 16;
-    
+
     const auto& mix = spr.get_mix();
     if (mix.amount_ not_eq 0.f) {
-        if (const auto pal_bank = color_mix(real_color(mix.color_), mix.amount_)) {
+        if (const auto pal_bank =
+                color_mix(real_color(mix.color_), mix.amount_)) {
             oa->attribute_2 |= ATTR2_PALBANK(pal_bank);
         }
     }

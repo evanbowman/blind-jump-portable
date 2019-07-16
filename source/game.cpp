@@ -122,7 +122,7 @@ RETRY:
 }
 
 
-static u32 flood_fill(TileMap& map, Tile replace, s8 x, s8 y)
+static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
 {
     using Coord = Vec2<s8>;
 
@@ -132,9 +132,9 @@ static u32 flood_fill(TileMap& map, Tile replace, s8 x, s8 y)
 
     u32 count = 0;
 
-    const auto action = [&](const Coord& c, s8 x_off, s8 y_off) {
-        const s8 x = c.x + x_off;
-        const s8 y = c.y + y_off;
+    const auto action = [&](const Coord& c, TIdx x_off, TIdx y_off) {
+        const TIdx x = c.x + x_off;
+        const TIdx y = c.y + y_off;
         if (x > 0 and x < TileMap::width and y > 0 and y < TileMap::height) {
             if (map.get_tile(x, y) == target) {
                 map.set_tile(x, y, replace);
@@ -178,7 +178,7 @@ void Game::regenerate_map(Platform& pfrm)
         }
     });
 
-    tiles_.for_each([&](const Tile& tile, s8 x, s8 y) {
+    tiles_.for_each([&](const Tile& tile, TIdx x, TIdx y) {
         if (tile not_eq Tile::none and tile not_eq Tile::ledge and
             tile not_eq Tile::grass_ledge) {
             temporary.set_tile(x, y, Tile(1));
@@ -192,7 +192,7 @@ void Game::regenerate_map(Platform& pfrm)
         const auto y = random_choice(pfrm, TileMap::height);
         if (temporary.get_tile(x, y) not_eq Tile::none) {
             flood_fill(temporary, Tile(2), x, y);
-            temporary.for_each([&](const Tile& tile, s8 x, s8 y) {
+            temporary.for_each([&](const Tile& tile, TIdx x, TIdx y) {
                 if (tile not_eq Tile(2)) {
                     tiles_.set_tile(x, y, Tile::none);
                 }
@@ -285,20 +285,20 @@ void Game::regenerate_map(Platform& pfrm)
 }
 
 
-using MapCoord = Vec2<s8>;
+using MapCoord = Vec2<TIdx>;
 using MapCoordBuf = Buffer<MapCoord, TileMap::tile_count>;
 
 
-static void
-get_free_map_slots(Platform& pfrm, const TileMap& map, MapCoordBuf& output)
+static MapCoordBuf get_free_map_slots(const TileMap& map)
 {
-    map.for_each([&](const Tile& tile, s8 x, s8 y) {
-                     if (tile not_eq Tile::none and
-                         tile not_eq Tile::ledge and
-                         tile not_eq Tile::grass_ledge) {
-                         output.push_back({x, y});
-                     }
-                 });
+    MapCoordBuf output;
+
+    map.for_each([&](const Tile& tile, TIdx x, TIdx y) {
+        if (tile not_eq Tile::none and tile not_eq Tile::ledge and
+            tile not_eq Tile::grass_ledge) {
+            output.push_back({x, y});
+        }
+    });
 
     for (auto it = output.begin(); it not_eq output.end();) {
         const Tile tile = map.get_tile(it->x, it->y);
@@ -309,6 +309,8 @@ get_free_map_slots(Platform& pfrm, const TileMap& map, MapCoordBuf& output)
             ++it;
         }
     }
+
+    return output;
 }
 
 
@@ -320,8 +322,7 @@ bool Game::respawn_entities(Platform& pfrm)
     details_.transform(clear_entities);
     effects_.transform(clear_entities);
 
-    Buffer<MapCoord, TileMap::tile_count> free_spots;
-    get_free_map_slots(pfrm, tiles_, free_spots);
+    auto free_spots = get_free_map_slots(tiles_);
 
     if (free_spots.size() < 6) {
         // The randomly generated map is unacceptably tiny! Try again...
@@ -339,7 +340,7 @@ bool Game::respawn_entities(Platform& pfrm)
     };
 
     auto pos = [&](const MapCoord* c) {
-        return Vec2<float>{static_cast<Float>(c->x * 32),
+        return Vec2<Float>{static_cast<Float>(c->x * 32),
                            static_cast<Float>(c->y * 24)};
     };
 
@@ -360,11 +361,21 @@ bool Game::respawn_entities(Platform& pfrm)
         }
         transporter_.set_position(pos(farthest));
         free_spots.erase(farthest);
+    } else {
+        return false;
     }
 
+    // Now at this point, we'll want to place things on the map based on how
+    // many open slots there are, and what the current level is. As levels
+    // increase, the density of stuff on the map increases, along with the types
+    // of enemies spawned.
     if (const auto c = select_coord()) {
         details_.get<0>().push_back(make_entity<ItemChest>(pos(c)));
     }
+
+    const Float map_capacity =
+        free_spots.size() / Float((TileMap::width - 2) * (TileMap::height - 2));
+
 
     return true;
 }

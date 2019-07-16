@@ -39,7 +39,7 @@ CXXFLAGS :=     -Wall \
 		-D__GBA__ \
 		-fno-exceptions \
 		-nostdlib \
-		-std=c++14 \
+		-std=c++17 \
 		-mcpu=arm7tdmi \
 		-mtune=arm7tdmi
 
