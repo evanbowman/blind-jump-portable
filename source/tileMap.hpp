@@ -20,9 +20,13 @@ enum class Tile : u8 {
 
 class TileMap {
 public:
+    // NOTE: The tilemap constants here are sixteen and twenty, due to limits of
+    // the GBA hardware, but could be bumped up for Desktop releases.
     static constexpr u16 width = 16;
     static constexpr u16 height = 20;
     static constexpr u16 tile_count{width * height};
+
+    using Index = s8;
 
     TileMap()
     {
@@ -36,8 +40,8 @@ public:
 
     template <typename F> void for_each(F&& proc)
     {
-        for (s8 i = 0; i < width; ++i) {
-            for (s8 j = 0; j < height; ++j) {
+        for (Index i = 0; i < width; ++i) {
+            for (Index j = 0; j < height; ++j) {
                 proc(data_[TileMap::index(i, j)], i, j);
             }
         }
@@ -45,8 +49,8 @@ public:
 
     template <typename F> void for_each(F&& proc) const
     {
-        for (s8 i = 0; i < width; ++i) {
-            for (s8 j = 0; j < height; ++j) {
+        for (Index i = 0; i < width; ++i) {
+            for (Index j = 0; j < height; ++j) {
                 proc(data_[TileMap::index(i, j)], i, j);
             }
         }
@@ -76,3 +80,25 @@ private:
 
     std::array<Tile, tile_count> data_;
 };
+
+
+using TIdx = TileMap::Index;
+
+
+template <typename Format = Float>
+inline Vec2<Format> to_world_coord(const Vec2<TIdx>& tc)
+{
+    return Vec2<s32>{
+        tc.x * 32,
+        tc.y * 24
+    }.template cast<Format>();
+}
+
+
+inline Vec2<TIdx> to_tile_coord(const Vec2<s32>& wc)
+{
+    return Vec2<s32>{
+        wc.x / 32,
+        wc.y / 24 // This division by 24 is costly, oh well...
+    }.cast<TIdx>();
+}

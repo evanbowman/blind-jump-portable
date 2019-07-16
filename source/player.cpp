@@ -1,5 +1,7 @@
 #include "player.hpp"
+#include "game.hpp"
 #include "platform.hpp"
+#include "wallCollision.hpp"
 
 
 // NOTE: The player code was ported over from the original version of
@@ -14,7 +16,7 @@ Player::Player()
     shadow_.set_texture_index(33);
     shadow_.set_alpha(Sprite::Alpha::translucent);
 
-    sprite_.set_mix(ColorMix{ColorConstant::electric_blue, 0.5f});
+    // sprite_.set_mix(ColorMix{ColorConstant::electric_blue, 0.5f});
 }
 
 
@@ -119,13 +121,16 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool left = input.pressed<Keyboard::Key::left>();
     const bool right = input.pressed<Keyboard::Key::right>();
 
-    key_response<ResourceLoc::walk_up>(up, down, left, right, u_speed_, false);
+    const auto [up_col, down_col, left_col, right_col] =
+        check_wall_collisions(game.get_tiles(), *this);
+
+    key_response<ResourceLoc::walk_up>(up, down, left, right, u_speed_, up_col);
     key_response<ResourceLoc::walk_down>(
-        down, up, left, right, d_speed_, false);
+        down, up, left, right, d_speed_, down_col);
     key_response<ResourceLoc::walk_left>(
-        left, right, down, up, l_speed_, false);
+        left, right, down, up, l_speed_, left_col);
     key_response<ResourceLoc::walk_right>(
-        right, left, down, up, r_speed_, false);
+        right, left, down, up, r_speed_, right_col);
 
     if (input.up_transition<Keyboard::Key::up>()) {
         on_key_released<ResourceLoc::still_up, 0>(down, left, right, false);
@@ -172,8 +177,9 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     static const float MOVEMENT_RATE_CONSTANT = 0.000054f;
 
     const auto& position = sprite_.get_position();
-    Vec2<Float> new_pos{position.x - ((l_speed_ + -r_speed_) * dt * MOVEMENT_RATE_CONSTANT),
-                        position.y - ((u_speed_ + -d_speed_) * dt * MOVEMENT_RATE_CONSTANT)};
+    Vec2<Float> new_pos{
+        position.x - ((l_speed_ + -r_speed_) * dt * MOVEMENT_RATE_CONSTANT),
+        position.y - ((u_speed_ + -d_speed_) * dt * MOVEMENT_RATE_CONSTANT)};
     sprite_.set_position(new_pos);
     shadow_.set_position({new_pos.x + 8, new_pos.y + 25});
 }
