@@ -1,5 +1,6 @@
 #include "game.hpp"
 #include <algorithm>
+#include <type_traits>
 
 
 void Game::update(Platform& pfrm, Microseconds delta)
@@ -11,17 +12,30 @@ void Game::update(Platform& pfrm, Microseconds delta)
         }
     }
 
+    CollisionSpace collision_vec;
+
     player_.update(pfrm, *this, delta);
+    collision_vec.push_back(&player_);
 
     auto update_policy = [&](auto& entity_buf) {
-        for (auto it = entity_buf.begin(); it not_eq entity_buf.end(); ++it) {
-            (*it)->update(pfrm, *this, delta);
+        for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
+            if (not (*it)->alive()) {
+                entity_buf.erase(it);
+            } else {
+                (*it)->update(pfrm, *this, delta);
+                if constexpr (std::is_base_of<Collidable, decltype(**it)>()) {
+                    collision_vec.push_back(it->get());
+                }
+                ++it;
+            }
         }
     };
 
     enemies_.transform(update_policy);
     details_.transform(update_policy);
     effects_.transform(update_policy);
+
+    check_collisions(collision_vec);
 
     camera_.update(pfrm, delta, player_.get_position());
 

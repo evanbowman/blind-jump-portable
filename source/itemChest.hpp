@@ -2,6 +2,7 @@
 
 #include "animation.hpp"
 #include "entity.hpp"
+#include "collision.hpp"
 
 
 class Game;
