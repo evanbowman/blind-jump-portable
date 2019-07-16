@@ -10,13 +10,29 @@
 
 Player::Player()
     : frame_(0), frame_base_(ResourceLoc::still_down), anim_timer_(0),
-      l_speed_(0.f), r_speed_(0.f), u_speed_(0.f), d_speed_(0.f)
+      l_speed_(0.f), r_speed_(0.f), u_speed_(0.f), d_speed_(0.f), health_(5)
 {
     sprite_.set_position({104.f, 64.f});
     shadow_.set_texture_index(33);
     shadow_.set_alpha(Sprite::Alpha::translucent);
+}
 
-    // sprite_.set_mix(ColorMix{ColorConstant::electric_blue, 0.5f});
+
+void Player::receive_collision(Critter&)
+{
+    // TODO...
+}
+
+
+void Player::receive_collision(Dasher&)
+{
+    // TODO...
+}
+
+
+void Player::receive_collision(Probe&)
+{
+    // TODO...
 }
 
 
@@ -121,16 +137,15 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool left = input.pressed<Keyboard::Key::left>();
     const bool right = input.pressed<Keyboard::Key::right>();
 
-    const auto [up_col, down_col, left_col, right_col] =
-        check_wall_collisions(game.get_tiles(), *this);
+    const auto wc = check_wall_collisions(game.get_tiles(), *this);
 
-    key_response<ResourceLoc::walk_up>(up, down, left, right, u_speed_, up_col);
+    key_response<ResourceLoc::walk_up>(up, down, left, right, u_speed_, wc.up);
     key_response<ResourceLoc::walk_down>(
-        down, up, left, right, d_speed_, down_col);
+        down, up, left, right, d_speed_, wc.down);
     key_response<ResourceLoc::walk_left>(
-        left, right, down, up, l_speed_, left_col);
+        left, right, down, up, l_speed_, wc.left);
     key_response<ResourceLoc::walk_right>(
-        right, left, down, up, r_speed_, right_col);
+        right, left, down, up, r_speed_, wc.right);
 
     if (input.up_transition<Keyboard::Key::up>()) {
         on_key_released<ResourceLoc::still_up, 0>(down, left, right, false);

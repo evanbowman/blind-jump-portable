@@ -3,15 +3,21 @@
 #include "animation.hpp"
 #include "entity.hpp"
 #include "numeric.hpp"
+#include "collision.hpp"
 
 
 class Game;
 class Platform;
 
 
-class Player : public Entity<Player, 0> {
+class Player : public Entity<Player, 0>,
+               public CollidableTemplate<Player> {
 public:
     Player();
+
+    void receive_collision(Critter&) override;
+    void receive_collision(Dasher&) override;
+    void receive_collision(Probe&) override;
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
@@ -63,4 +69,5 @@ private:
     float u_speed_;
     float d_speed_;
     Sprite shadow_;
+    u16 health_;
 };

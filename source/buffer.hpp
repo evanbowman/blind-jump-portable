@@ -74,7 +74,7 @@ public:
         for (; slot not_eq end_; ++slot) {
             // FIXME: improve this!
             if (slot + 1 not_eq end_) {
-                new (slot) T(*(slot + 1));
+                new (slot) T(std::move(*(slot + 1)));
             }
         }
         end_ -= 1;
