@@ -1,8 +1,8 @@
 #pragma once
 
 #include "animation.hpp"
-#include "entity.hpp"
 #include "collision.hpp"
+#include "entity.hpp"
 
 
 class Game;

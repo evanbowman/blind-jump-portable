@@ -88,10 +88,7 @@ using TIdx = TileMap::Index;
 template <typename Format = Float>
 inline Vec2<Format> to_world_coord(const Vec2<TIdx>& tc)
 {
-    return Vec2<s32>{
-        tc.x * 32,
-        tc.y * 24
-    }.template cast<Format>();
+    return Vec2<s32>{tc.x * 32, tc.y * 24}.template cast<Format>();
 }
 
 
@@ -100,5 +97,6 @@ inline Vec2<TIdx> to_tile_coord(const Vec2<s32>& wc)
     return Vec2<s32>{
         wc.x / 32,
         wc.y / 24 // This division by 24 is costly, oh well...
-    }.cast<TIdx>();
+    }
+        .cast<TIdx>();
 }

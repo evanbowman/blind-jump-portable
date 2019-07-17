@@ -1,17 +1,16 @@
 #pragma once
 
 #include "animation.hpp"
+#include "collision.hpp"
 #include "entity.hpp"
 #include "numeric.hpp"
-#include "collision.hpp"
 
 
 class Game;
 class Platform;
 
 
-class Player : public Entity<Player, 0>,
-               public CollidableTemplate<Player> {
+class Player : public Entity<Player, 0>, public CollidableTemplate<Player> {
 public:
     Player();
 
@@ -20,16 +19,6 @@ public:
     void receive_collision(Probe&) override;
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
-
-    const Vec2<Float>& get_position() const
-    {
-        return sprite_.get_position();
-    }
-
-    void set_position(const Vec2<Float>& pos)
-    {
-        sprite_.set_position(pos);
-    }
 
     const Sprite& get_shadow() const
     {

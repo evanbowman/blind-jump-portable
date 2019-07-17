@@ -151,18 +151,18 @@ static volatile u16* const scanline = (u16*)0x4000006;
 
 static volatile u16* bg0_control = (volatile u16*)0x4000008;
 static volatile u16* bg1_control = (volatile u16*)0x400000a;
-static volatile u16* bg2_control = (volatile u16*)0x400000c;
-static volatile u16* bg3_control = (volatile u16*)0x400000e;
+// static volatile u16* bg2_control = (volatile u16*)0x400000c;
+// static volatile u16* bg3_control = (volatile u16*)0x400000e;
 
 
 static volatile short* bg0_x_scroll = (volatile short*)0x4000010;
 static volatile short* bg0_y_scroll = (volatile short*)0x4000012;
 static volatile short* bg1_x_scroll = (volatile short*)0x4000014;
 static volatile short* bg1_y_scroll = (volatile short*)0x4000016;
-static volatile short* bg2_x_scroll = (volatile short*)0x4000018;
-static volatile short* bg2_y_scroll = (volatile short*)0x400001a;
-static volatile short* bg3_x_scroll = (volatile short*)0x400001c;
-static volatile short* bg3_y_scroll = (volatile short*)0x400001e;
+// static volatile short* bg2_x_scroll = (volatile short*)0x4000018;
+// static volatile short* bg2_y_scroll = (volatile short*)0x400001a;
+// static volatile short* bg3_x_scroll = (volatile short*)0x400001c;
+// static volatile short* bg3_y_scroll = (volatile short*)0x400001e;
 
 
 static volatile u16* reg_blendcnt = (volatile u16*)0x04000050;
@@ -265,15 +265,8 @@ void Screen::draw(const Sprite& spr)
     if (oam_write_index == oam_count) {
         return;
     }
-    const auto position = spr.get_position().cast<s32>();
+    const auto position = spr.get_position().cast<s32>() - spr.get_origin();
     const auto view_center = view_.get_center().cast<s32>();
-    const auto view_half_extent = size().cast<s32>() / s32(2);
-    Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
-                         view_center.y + view_half_extent.y * 2};
-    if (not(position.x > view_center.x - 32 and position.x < view_br.x and
-            position.y > view_center.y - 32 and position.y < view_br.y)) {
-        return;
-    }
     auto oa = object_attribute_memory + oam_write_index;
     if (spr.get_alpha() not_eq Sprite::Alpha::translucent) {
         oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
@@ -288,7 +281,7 @@ void Screen::draw(const Sprite& spr)
     if (flip.x) {
         oa->attribute_1 |= (1 << 12);
     }
-    const auto abs_position = spr.get_position().cast<s32>() - view_center;
+    const auto abs_position = position - view_center;
     oa->attribute_0 &= 0xff00;
     oa->attribute_0 |= abs_position.y & 0x00ff;
     oa->attribute_1 &= 0xfe00;

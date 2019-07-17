@@ -16,13 +16,13 @@ public:
     virtual ~Collidable()
     {
     }
-    
+
     virtual void initiate_collision(Collidable&) = 0;
 
     virtual void receive_collision(Critter&)
     {
     }
-    
+
     virtual void receive_collision(Player&)
     {
     }
@@ -37,8 +37,7 @@ public:
 };
 
 
-template <typename Derived>
-class CollidableTemplate : public Collidable {
+template <typename Derived> class CollidableTemplate : public Collidable {
 public:
     void initiate_collision(Collidable& other) override
     {
