@@ -6,15 +6,26 @@
 
 class EntityBase {
 public:
-    EntityBase() : kill_flag_(false)
+    using Health = s32;
+
+    EntityBase() : health_(1)
+    {
+    }
+
+    EntityBase(Health health) : health_(health)
     {
     }
 
     EntityBase(EntityBase&) = delete;
 
+    Health get_health() const
+    {
+        return health_;
+    }
+
     bool alive() const
     {
-        return kill_flag_;
+        return health_ not_eq 0;
     }
 
     const Sprite& get_sprite() const
@@ -22,16 +33,27 @@ public:
         return sprite_;
     }
 
-protected:
-    void kill()
+    void set_position(const Vec2<Float>& position)
     {
-        kill_flag_ = true;
+        position_ = position;
+    }
+
+    const Vec2<Float>& get_position() const
+    {
+        return position_;
+    }
+
+protected:
+    void debit_health(Health amount)
+    {
+        health_ = std::max(Health(0), health_ - amount);
     }
 
     Sprite sprite_;
+    Vec2<Float> position_;
 
 private:
-    bool kill_flag_;
+    Health health_;
 };
 
 
@@ -40,6 +62,12 @@ public:
     static constexpr auto spawn_limit()
     {
         return SpawnLimit;
+    }
+
+    Entity() = default;
+
+    Entity(Health health) : EntityBase(health)
+    {
     }
 
     // Note: Impl is still an incomplete type at this point, so we need to delay

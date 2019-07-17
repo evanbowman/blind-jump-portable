@@ -25,6 +25,16 @@ public:
         return position_;
     }
 
+    void set_origin(const Vec2<s32>& origin)
+    {
+        origin_ = origin;
+    }
+
+    const Vec2<s32>& get_origin() const
+    {
+        return origin_;
+    }
+
     void set_texture_index(TextureIndex texture_index)
     {
         texture_index_ = texture_index;
@@ -67,6 +77,7 @@ public:
 
 private:
     Vec2<Float> position_;
+    Vec2<s32> origin_;
     Vec2<bool> flip_;
     TextureIndex texture_index_;
     Alpha alpha_;

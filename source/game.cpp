@@ -3,6 +3,19 @@
 #include <type_traits>
 
 
+static bool within_view_frustum(const Screen& screen, const Sprite& spr)
+{
+    const auto position =
+        spr.get_position().template cast<s32>() - spr.get_origin();
+    const auto view_center = screen.get_view().get_center().cast<s32>();
+    const auto view_half_extent = screen.size().cast<s32>() / s32(2);
+    Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
+                         view_center.y + view_half_extent.y * 2};
+    return position.x > view_center.x - 32 and position.x < view_br.x and
+           position.y > view_center.y - 32 and position.y < view_br.y;
+}
+
+
 void Game::update(Platform& pfrm, Microseconds delta)
 {
     if (pfrm.keyboard().down_transition<Keyboard::Key::action_2>()) {
@@ -19,7 +32,7 @@ void Game::update(Platform& pfrm, Microseconds delta)
 
     auto update_policy = [&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
-            if (not (*it)->alive()) {
+            if (not(*it)->alive()) {
                 entity_buf.erase(it);
             } else {
                 (*it)->update(pfrm, *this, delta);
@@ -37,21 +50,27 @@ void Game::update(Platform& pfrm, Microseconds delta)
 
     check_collisions(collision_vec);
 
-    camera_.update(pfrm, delta, player_.get_position());
-
     display_buffer.push_back(&player_.get_sprite());
 
-    auto render_policy = [&](auto& entity_buf) {
-        for (auto it = entity_buf.begin(); it not_eq entity_buf.end(); ++it) {
-            display_buffer.push_back(&(*it)->get_sprite());
+    auto show_sprite = [&](const Sprite& spr) {
+        if (within_view_frustum(pfrm.screen(), spr)) {
+            display_buffer.push_back(&spr);
         }
     };
 
-    enemies_.transform(render_policy);
-    details_.transform(render_policy);
-    effects_.transform(render_policy);
+    auto show_sprites = [&](auto& entity_buf) {
+        for (auto it = entity_buf.begin(); it not_eq entity_buf.end(); ++it) {
+            show_sprite((*it)->get_sprite());
+        }
+    };
 
-    display_buffer.push_back(&transporter_.get_sprite());
+    enemies_.transform(show_sprites);
+    details_.transform(show_sprites);
+    effects_.transform(show_sprites);
+
+    camera_.update(pfrm, delta, player_.get_position());
+
+    show_sprite(transporter_.get_sprite());
 
     std::sort(display_buffer.begin(),
               display_buffer.end(),
@@ -373,7 +392,8 @@ bool Game::respawn_entities(Platform& pfrm)
                 farthest = &elem;
             }
         }
-        transporter_.set_position(pos(farthest));
+        const auto target = pos(farthest);
+        transporter_.set_position({target.x + 16, target.y + 16});
         free_spots.erase(farthest);
     } else {
         return false;

@@ -9,10 +9,13 @@
 
 
 Player::Player()
-    : frame_(0), frame_base_(ResourceLoc::still_down), anim_timer_(0),
-      l_speed_(0.f), r_speed_(0.f), u_speed_(0.f), d_speed_(0.f), health_(5)
+    : Entity(Health(4)), frame_(0), frame_base_(ResourceLoc::still_down),
+      anim_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
+      d_speed_(0.f), health_(5)
 {
     sprite_.set_position({104.f, 64.f});
+    sprite_.set_origin({16, 16});
+    shadow_.set_origin({8, -9});
     shadow_.set_texture_index(33);
     shadow_.set_alpha(Sprite::Alpha::translucent);
 }
@@ -20,19 +23,19 @@ Player::Player()
 
 void Player::receive_collision(Critter&)
 {
-    // TODO...
+    debit_health(1);
 }
 
 
 void Player::receive_collision(Dasher&)
 {
-    // TODO...
+    debit_health(1);
 }
 
 
 void Player::receive_collision(Probe&)
 {
-    // TODO...
+    debit_health(1);
 }
 
 
@@ -191,12 +194,12 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
     static const float MOVEMENT_RATE_CONSTANT = 0.000054f;
 
-    const auto& position = sprite_.get_position();
     Vec2<Float> new_pos{
-        position.x - ((l_speed_ + -r_speed_) * dt * MOVEMENT_RATE_CONSTANT),
-        position.y - ((u_speed_ + -d_speed_) * dt * MOVEMENT_RATE_CONSTANT)};
+        position_.x - ((l_speed_ + -r_speed_) * dt * MOVEMENT_RATE_CONSTANT),
+        position_.y - ((u_speed_ + -d_speed_) * dt * MOVEMENT_RATE_CONSTANT)};
+    Entity::set_position(new_pos);
     sprite_.set_position(new_pos);
-    shadow_.set_position({new_pos.x + 8, new_pos.y + 25});
+    shadow_.set_position(new_pos);
 }
 
 

@@ -13,16 +13,13 @@ public:
     Transporter()
     {
         sprite_.set_texture_index(32);
+        sprite_.set_origin({16, 22});
     }
 
-    void set_position(const Vec2<Float>& pos)
+    void set_position(const Vec2<Float>& new_pos)
     {
-        sprite_.set_position({pos.x, pos.y - 4});
-    }
-
-    const Vec2<Float>& get_position() const
-    {
-        return sprite_.get_position();
+        Entity::set_position(new_pos);
+        sprite_.set_position(new_pos);
     }
 
     void update(Platform&, Game&, Microseconds)

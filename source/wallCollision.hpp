@@ -49,20 +49,22 @@ WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
     for (const auto& wall : adjacency_vector) {
         // FIXME: this edge collision code is junk left over from the original
         // codebase.
-        if ((pos.x + 6 < (wall.x + 32) and (pos.x + 6 > (wall.x))) and
-            (abs((pos.y + 16) - wall.y) <= 13)) {
+        if ((pos.x - 16 + 6 < (wall.x + 32) and (pos.x - 16 + 6 > (wall.x))) and
+            (abs((pos.y - 16 + 16) - wall.y) <= 13)) {
             result.left = true;
         }
-        if ((pos.x + 26 > (wall.x) and (pos.x + 26 < (wall.x + 32))) and
-            (abs((pos.y + 16) - wall.y) <= 13)) {
+        if ((pos.x - 16 + 26 > (wall.x) and
+             (pos.x - 16 + 26 < (wall.x + 32))) and
+            (abs((pos.y - 16 + 16) - wall.y) <= 13)) {
             result.right = true;
         }
-        if (((pos.y + 22 < (wall.y + 26)) and (pos.y + 22 > (wall.y))) and
-            (abs((pos.x) - wall.x) <= 16)) {
+        if (((pos.y - 16 + 22 < (wall.y + 26)) and
+             (pos.y - 16 + 22 > (wall.y))) and
+            (abs((pos.x - 16) - wall.x) <= 16)) {
             result.up = true;
         }
-        if (((pos.y + 36 > wall.y) and (pos.y + 36 < wall.y + 26)) and
-            (abs((pos.x) - wall.x) <= 16)) {
+        if (((pos.y - 16 + 36 > wall.y) and (pos.y - 16 + 36 < wall.y + 26)) and
+            (abs((pos.x - 16) - wall.x) <= 16)) {
             result.down = true;
         }
     }

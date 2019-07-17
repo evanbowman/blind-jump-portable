@@ -1,16 +1,15 @@
 #pragma once
 
+#include "collision.hpp"
 #include "entity.hpp"
 #include "sprite.hpp"
-#include "collision.hpp"
 
 
 class Game;
 class Platform;
 
 
-class Dasher : public Entity<Dasher, 20>,
-               public CollidableTemplate<Dasher> {
+class Dasher : public Entity<Dasher, 20>, public CollidableTemplate<Dasher> {
 public:
     Dasher()
     {
