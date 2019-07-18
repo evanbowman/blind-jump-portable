@@ -9,9 +9,12 @@ using TextureIndex = u32;
 
 class Sprite {
 public:
-    enum class Alpha { opaque, translucent };
+    enum class Alpha : u8 { opaque, translucent };
 
-    Sprite() : texture_index_(0), alpha_(Alpha::opaque)
+    enum class Size : u8 { w32_h32, w32_h16 };
+
+    Sprite(Size size = Size::w32_h32)
+        : texture_index_(0), alpha_(Alpha::opaque), size_(size)
     {
     }
 
@@ -75,11 +78,22 @@ public:
         mix_ = mix;
     }
 
+    Size get_size() const
+    {
+        return size_;
+    }
+
+    void set_size(Size size)
+    {
+        size_ = size;
+    }
+
 private:
     Vec2<Float> position_;
     Vec2<s32> origin_;
     Vec2<bool> flip_;
     TextureIndex texture_index_;
     Alpha alpha_;
+    Size size_;
     ColorMix mix_;
 };
