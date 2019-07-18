@@ -8,13 +8,18 @@
 // BlindJump from 2016. This code is kind of a mess.
 
 
+const Vec2<s32> v_origin{8, 16};
+const Vec2<s32> h_origin{16, 16};
+
+
 Player::Player()
     : Entity(Health(4)), frame_(0), frame_base_(ResourceLoc::still_down),
       anim_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
       d_speed_(0.f), health_(5)
 {
     sprite_.set_position({104.f, 64.f});
-    sprite_.set_origin({16, 16});
+    sprite_.set_size(Sprite::Size::w16_h32);
+    sprite_.set_origin({8, 16});
     shadow_.set_origin({8, -9});
     shadow_.set_texture_index(33);
     shadow_.set_alpha(Sprite::Alpha::translucent);
@@ -132,6 +137,20 @@ static uint8_t remap_vframe(uint8_t index)
 }
 
 
+template <u8 StepSize>
+void Player::update_animation(Microseconds dt, u8 max_index, Microseconds count)
+{
+    anim_timer_ += dt;
+    if (anim_timer_ > count) {
+        anim_timer_ -= count;
+        frame_ += 1;
+    }
+    if (frame_ > max_index) {
+        frame_ = 0;
+    }
+}
+
+
 void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto& input = pfrm.keyboard();
@@ -172,23 +191,31 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case ResourceLoc::walk_up:
-        update_animation(dt, 9, 100000);
+        update_animation<1>(dt, 9, 100000);
         sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
+        sprite_.set_size(Sprite::Size::w16_h32);
+        sprite_.set_origin(v_origin);
         break;
 
     case ResourceLoc::walk_down:
-        update_animation(dt, 9, 100000);
+        update_animation<1>(dt, 9, 100000);
         sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
+        sprite_.set_size(Sprite::Size::w16_h32);
+        sprite_.set_origin(v_origin);
         break;
 
     case ResourceLoc::walk_left:
-        update_animation(dt, 5, 100000);
+        update_animation<2>(dt, 5, 100000);
         sprite_.set_texture_index(frame_base_ + frame_);
+        sprite_.set_size(Sprite::Size::w32_h32);
+        sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::walk_right:
-        update_animation(dt, 5, 100000);
+        update_animation<2>(dt, 5, 100000);
         sprite_.set_texture_index(frame_base_ + frame_);
+        sprite_.set_size(Sprite::Size::w32_h32);
+        sprite_.set_origin(h_origin);
         break;
     }
 
@@ -200,17 +227,4 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     Entity::set_position(new_pos);
     sprite_.set_position(new_pos);
     shadow_.set_position(new_pos);
-}
-
-
-void Player::update_animation(Microseconds dt, u8 max_index, Microseconds count)
-{
-    anim_timer_ += dt;
-    if (anim_timer_ > count) {
-        anim_timer_ -= count;
-        frame_ += 1;
-    }
-    if (frame_ > max_index) {
-        frame_ = 0;
-    }
 }
