@@ -29,12 +29,12 @@ private:
     enum ResourceLoc {
         still_up = 11,
         still_down = 0,
-        still_left = 18,
-        still_right = 25,
+        still_left = 15,
+        still_right = 22,
         walk_up = 6,
         walk_down = 1,
-        walk_left = 12,
-        walk_right = 19,
+        walk_left = 9,
+        walk_right = 16,
     };
 
     template <ResourceLoc L>
@@ -48,6 +48,7 @@ private:
     template <Player::ResourceLoc S, uint8_t maxIndx>
     void on_key_released(bool k2, bool k3, bool k4, bool x);
 
+    template <u8 StepSize>
     void update_animation(Microseconds dt, u8 max_index, Microseconds count);
 
     u32 frame_;

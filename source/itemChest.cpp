@@ -5,9 +5,9 @@
 
 ItemChest::ItemChest(const Vec2<Float>& pos) : state_(State::closed)
 {
-    sprite_.set_size(Sprite::Size::w32_h16);
+    sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_position({pos.x + 16, pos.y});
-    sprite_.set_texture_index(26);
+    sprite_.set_texture_index(animation_.initial_texture());
     sprite_.set_origin({8, 16});
 }
 

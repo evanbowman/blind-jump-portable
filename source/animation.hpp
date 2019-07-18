@@ -16,6 +16,11 @@ public:
         return texture_index_ == (InitialTexture + (Length - 1));
     }
 
+    constexpr TextureIndex initial_texture()
+    {
+        return InitialTexture;
+    }
+
     bool advance(Sprite& sprite, Microseconds dt)
     {
         timer_ += dt;

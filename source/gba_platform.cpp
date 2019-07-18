@@ -276,7 +276,7 @@ void Screen::draw(const Sprite& spr)
         }
     }();
 
-    auto draw_sprite = [&](int tex_off, int x_off) {
+    auto draw_sprite = [&](int tex_off, int x_off, int scale) {
         if (oam_write_index == oam_count) {
             return;
         }
@@ -301,7 +301,7 @@ void Screen::draw(const Sprite& spr)
         oa->attribute_0 |= abs_position.y & 0x00ff;
         oa->attribute_1 &= 0xfe00;
         oa->attribute_1 |= (abs_position.x + x_off) & 0x01ff;
-        oa->attribute_2 = 2 + spr.get_texture_index() * 16 + tex_off;
+        oa->attribute_2 = 2 + spr.get_texture_index() * scale + tex_off;
         oa->attribute_2 |= pb;
         oam_write_index += 1;
     };
@@ -318,12 +318,12 @@ void Screen::draw(const Sprite& spr)
         // work with from a art/drawing perspective. Maybe I'll write
         // a script to reorganize the spritesheet into a Nx16 strip,
         // and metatile as 2x2 gba tiles... someday.
-        draw_sprite(0, 0);
-        draw_sprite(8, 16);
+        draw_sprite(0, 0, 16);
+        draw_sprite(8, 16, 16);
         break;
 
-    case Sprite::Size::w32_h16:
-        draw_sprite(0, 0);
+    case Sprite::Size::w16_h32:
+        draw_sprite(0, 0, 8);
         break;
     }
 }

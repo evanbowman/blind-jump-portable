@@ -11,7 +11,7 @@ class Sprite {
 public:
     enum class Alpha : u8 { opaque, translucent };
 
-    enum class Size : u8 { w32_h32, w32_h16 };
+    enum class Size : u8 { w32_h32, w16_h32 };
 
     Sprite(Size size = Size::w32_h32)
         : texture_index_(0), alpha_(Alpha::opaque), size_(size)
