@@ -150,8 +150,7 @@ RETRY:
     const auto player_pos = player_.get_position();
     const auto ssize = pfrm.screen().size();
     camera_.set_position(
-        pfrm,
-        {(player_pos.x + 16) - ssize.x / 2, player_pos.y - float(ssize.y)});
+        pfrm, {player_pos.x - ssize.x / 2, player_pos.y - float(ssize.y)});
 }
 
 

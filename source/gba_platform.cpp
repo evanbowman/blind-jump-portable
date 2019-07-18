@@ -262,40 +262,70 @@ const Color& real_color(ColorConstant k)
 
 void Screen::draw(const Sprite& spr)
 {
-    if (oam_write_index == oam_count) {
-        return;
-    }
-    const auto position = spr.get_position().cast<s32>() - spr.get_origin();
-    const auto view_center = view_.get_center().cast<s32>();
-    auto oa = object_attribute_memory + oam_write_index;
-    if (spr.get_alpha() not_eq Sprite::Alpha::translucent) {
-        oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE;
-    } else {
-        oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_SQUARE | ATTR0_BLEND;
-    }
-    oa->attribute_1 = ATTR1_SIZE_32;
-    const auto& flip = spr.get_flip();
-    if (flip.y) {
-        oa->attribute_1 |= (1 << 13);
-    }
-    if (flip.x) {
-        oa->attribute_1 |= (1 << 12);
-    }
-    const auto abs_position = position - view_center;
-    oa->attribute_0 &= 0xff00;
-    oa->attribute_0 |= abs_position.y & 0x00ff;
-    oa->attribute_1 &= 0xfe00;
-    oa->attribute_1 |= abs_position.x & 0x01ff;
-    oa->attribute_2 = 2 + spr.get_texture_index() * 16;
-
-    const auto& mix = spr.get_mix();
-    if (mix.amount_ not_eq 0.f) {
-        if (const auto pal_bank =
-                color_mix(real_color(mix.color_), mix.amount_)) {
-            oa->attribute_2 |= ATTR2_PALBANK(pal_bank);
+    const auto pb = [&]() -> PaletteBank {
+        const auto& mix = spr.get_mix();
+        if (mix.amount_ not_eq 0.f) {
+            if (const auto pal_bank =
+                    color_mix(real_color(mix.color_), mix.amount_)) {
+                return ATTR2_PALBANK(pal_bank);
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
         }
+    }();
+
+    auto draw_sprite = [&](int tex_off, int x_off) {
+        if (oam_write_index == oam_count) {
+            return;
+        }
+        const auto position = spr.get_position().cast<s32>() - spr.get_origin();
+        const auto view_center = view_.get_center().cast<s32>();
+        auto oa = object_attribute_memory + oam_write_index;
+        if (spr.get_alpha() not_eq Sprite::Alpha::translucent) {
+            oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_TALL;
+        } else {
+            oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_TALL | ATTR0_BLEND;
+        }
+        oa->attribute_1 = ATTR1_SIZE_32;
+        const auto& flip = spr.get_flip();
+        if (flip.y) {
+            oa->attribute_1 |= (1 << 13);
+        }
+        if (flip.x) {
+            oa->attribute_1 |= (1 << 12);
+        }
+        const auto abs_position = position - view_center;
+        oa->attribute_0 &= 0xff00;
+        oa->attribute_0 |= abs_position.y & 0x00ff;
+        oa->attribute_1 &= 0xfe00;
+        oa->attribute_1 |= (abs_position.x + x_off) & 0x01ff;
+        oa->attribute_2 = 2 + spr.get_texture_index() * 16 + tex_off;
+        oa->attribute_2 |= pb;
+        oam_write_index += 1;
+    };
+
+    switch (spr.get_size()) {
+    case Sprite::Size::w32_h32:
+        // In order to fit the spritesheet into VRAM, the game draws
+        // sprites in 32x16 pixel chunks, although several sprites are
+        // really 32x32. 32x16 is easy to meta-tile for 1D texture
+        // mapping, and a 32x32 sprite can be represented as two 32x16
+        // sprites. If all sprites were 32x32, the spritesheet would
+        // not fit into the gameboy advance's video memory. 16x16
+        // would be even more compact, but would be inconvenient to
+        // work with from a art/drawing perspective. Maybe I'll write
+        // a script to reorganize the spritesheet into a Nx16 strip,
+        // and metatile as 2x2 gba tiles... someday.
+        draw_sprite(0, 0);
+        draw_sprite(8, 16);
+        break;
+
+    case Sprite::Size::w32_h16:
+        draw_sprite(0, 0);
+        break;
     }
-    oam_write_index += 1;
 }
 
 
