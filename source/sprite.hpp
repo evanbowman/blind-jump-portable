@@ -97,3 +97,22 @@ private:
     Size size_;
     ColorMix mix_;
 };
+
+
+// NOTE: If you see two texture indices with the same value, don't
+// panic! The program supports both 32px and 16px wide sprites, so two
+// of the same indices might refer to different sprites due to
+// different sprite sizes.
+enum TextureMap : TextureIndex {
+    player_still_down = 0,
+    player_walk_down = 1,
+    player_walk_up = 6,
+    player_still_up = 11,
+    player_walk_left = 12,
+    player_still_left = 18,
+    player_walk_right = 19,
+    player_still_right = 25,
+    item_chest = 12,
+    turret = 18,
+    turret_shadow = 23,
+};

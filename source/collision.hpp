@@ -6,6 +6,7 @@
 
 class ItemChest;
 class Critter;
+class Turret;
 class Player;
 class Dasher;
 class Probe;
@@ -32,6 +33,10 @@ public:
     }
 
     virtual void receive_collision(Probe&)
+    {
+    }
+
+    virtual void receive_collision(Turret&)
     {
     }
 };

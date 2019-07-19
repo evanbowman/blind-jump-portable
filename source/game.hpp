@@ -8,6 +8,7 @@
 #include "player.hpp"
 #include "transformGroup.hpp"
 #include "transporter.hpp"
+#include "turret.hpp"
 
 
 template <typename Arg>
@@ -36,7 +37,7 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup = EntityGroup<Critter, Dasher>;
+    using EnemyGroup = EntityGroup<Turret>;
     using DetailGroup = EntityGroup<ItemChest>;
     using EffectGroup = EntityGroup<>;
 

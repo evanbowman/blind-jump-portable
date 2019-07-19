@@ -1,5 +1,6 @@
 #include "game.hpp"
 #include <algorithm>
+#include <iterator>
 #include <type_traits>
 
 
@@ -64,7 +65,19 @@ void Game::update(Platform& pfrm, Microseconds delta)
         }
     };
 
-    enemies_.transform(show_sprites);
+    Buffer<const Sprite*, 30> shadows_buffer;
+
+    auto show_sprites_and_shadows = [&](auto& entity_buf) {
+        for (auto& entity : entity_buf) {
+            const auto& spr = entity->get_sprite();
+            if (within_view_frustum(pfrm.screen(), spr)) {
+                display_buffer.push_back(&spr);
+                shadows_buffer.push_back(&entity->get_shadow());
+            }
+        }
+    };
+
+    enemies_.transform(show_sprites_and_shadows);
     details_.transform(show_sprites);
     effects_.transform(show_sprites);
 
@@ -77,6 +90,18 @@ void Game::update(Platform& pfrm, Microseconds delta)
               [](const auto& l, const auto& r) {
                   return l->get_position().y > r->get_position().y;
               });
+
+    // My hope is that using a separate buffer and copying back is
+    // cheaper than checking the view frustum all over again. The view
+    // frustum check is actually essential for some platforms. If we
+    // don't check the frustum, the best case scenario, is that the
+    // shadow will draw offscreen (which isn't too bad). But it can be
+    // much worse, e.g. on the Gameboy Advance, sprites auto wrap, so
+    // an offscreen draw can result in a floating sprite when the
+    // sprite's real position translates outside the view.
+    std::copy(shadows_buffer.begin(),
+              shadows_buffer.end(),
+              std::back_inserter(display_buffer));
 
     display_buffer.push_back(&player_.get_shadow());
 }
@@ -406,9 +431,9 @@ bool Game::respawn_entities(Platform& pfrm)
         details_.get<0>().push_back(make_entity<ItemChest>(pos(c)));
     }
 
-    const Float map_capacity =
-        free_spots.size() / Float((TileMap::width - 2) * (TileMap::height - 2));
-
+    if (const auto c = select_coord()) {
+        enemies_.get<0>().push_back(make_entity<Turret>(pos(c)));
+    }
 
     return true;
 }

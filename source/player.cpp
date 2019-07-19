@@ -13,7 +13,7 @@ const Vec2<s32> h_origin{16, 16};
 
 
 Player::Player()
-    : Entity(Health(4)), frame_(0), frame_base_(ResourceLoc::still_down),
+    : Entity(Health(4)), frame_(0), frame_base_(ResourceLoc::player_still_down),
       anim_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
       d_speed_(0.f), health_(5)
 {
@@ -33,6 +33,12 @@ void Player::receive_collision(Critter&)
 
 
 void Player::receive_collision(Dasher&)
+{
+    debit_health(1);
+}
+
+
+void Player::receive_collision(Turret&)
 {
     debit_health(1);
 }
@@ -80,23 +86,23 @@ void Player::on_key_released(bool k2, bool k3, bool k4, bool x)
             frame_ = maxIndx;
         } else {
             switch (frame_base_) {
-            case Player::ResourceLoc::walk_down:
-                frame_base_ = Player::ResourceLoc::still_down;
+            case Player::ResourceLoc::player_walk_down:
+                frame_base_ = Player::ResourceLoc::player_still_down;
                 frame_ = 0;
                 break;
 
-            case Player::ResourceLoc::walk_up:
-                frame_base_ = Player::ResourceLoc::still_up;
+            case Player::ResourceLoc::player_walk_up:
+                frame_base_ = Player::ResourceLoc::player_still_up;
                 frame_ = 0;
                 break;
 
-            case Player::ResourceLoc::walk_left:
-                frame_base_ = Player::ResourceLoc::still_left;
+            case Player::ResourceLoc::player_walk_left:
+                frame_base_ = Player::ResourceLoc::player_still_left;
                 frame_ = 0;
                 break;
 
-            case Player::ResourceLoc::walk_right:
-                frame_base_ = Player::ResourceLoc::still_right;
+            case Player::ResourceLoc::player_walk_right:
+                frame_base_ = Player::ResourceLoc::player_still_right;
                 frame_ = 0;
                 break;
 
@@ -161,57 +167,62 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
     const auto wc = check_wall_collisions(game.get_tiles(), *this);
 
-    key_response<ResourceLoc::walk_up>(up, down, left, right, u_speed_, wc.up);
-    key_response<ResourceLoc::walk_down>(
+    key_response<ResourceLoc::player_walk_up>(
+        up, down, left, right, u_speed_, wc.up);
+    key_response<ResourceLoc::player_walk_down>(
         down, up, left, right, d_speed_, wc.down);
-    key_response<ResourceLoc::walk_left>(
+    key_response<ResourceLoc::player_walk_left>(
         left, right, down, up, l_speed_, wc.left);
-    key_response<ResourceLoc::walk_right>(
+    key_response<ResourceLoc::player_walk_right>(
         right, left, down, up, r_speed_, wc.right);
 
     if (input.up_transition<Keyboard::Key::up>()) {
-        on_key_released<ResourceLoc::still_up, 0>(down, left, right, false);
+        on_key_released<ResourceLoc::player_still_up, 0>(
+            down, left, right, false);
     }
     if (input.up_transition<Keyboard::Key::down>()) {
-        on_key_released<ResourceLoc::still_down, 0>(up, left, right, false);
+        on_key_released<ResourceLoc::player_still_down, 0>(
+            up, left, right, false);
     }
     if (input.up_transition<Keyboard::Key::left>()) {
-        on_key_released<ResourceLoc::still_left, 0>(up, down, right, false);
+        on_key_released<ResourceLoc::player_still_left, 0>(
+            up, down, right, false);
     }
     if (input.up_transition<Keyboard::Key::right>()) {
-        on_key_released<ResourceLoc::still_right, 0>(up, down, left, false);
+        on_key_released<ResourceLoc::player_still_right, 0>(
+            up, down, left, false);
     }
 
     switch (frame_base_) {
-    case ResourceLoc::still_up:
-    case ResourceLoc::still_down:
-    case ResourceLoc::still_left:
-    case ResourceLoc::still_right:
+    case ResourceLoc::player_still_up:
+    case ResourceLoc::player_still_down:
+    case ResourceLoc::player_still_left:
+    case ResourceLoc::player_still_right:
         sprite_.set_texture_index(frame_base_);
         break;
 
-    case ResourceLoc::walk_up:
+    case ResourceLoc::player_walk_up:
         update_animation<1>(dt, 9, 100000);
         sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
         sprite_.set_size(Sprite::Size::w16_h32);
         sprite_.set_origin(v_origin);
         break;
 
-    case ResourceLoc::walk_down:
+    case ResourceLoc::player_walk_down:
         update_animation<1>(dt, 9, 100000);
         sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
         sprite_.set_size(Sprite::Size::w16_h32);
         sprite_.set_origin(v_origin);
         break;
 
-    case ResourceLoc::walk_left:
+    case ResourceLoc::player_walk_left:
         update_animation<2>(dt, 5, 100000);
         sprite_.set_texture_index(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin(h_origin);
         break;
 
-    case ResourceLoc::walk_right:
+    case ResourceLoc::player_walk_right:
         update_animation<2>(dt, 5, 100000);
         sprite_.set_texture_index(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
