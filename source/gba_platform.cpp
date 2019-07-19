@@ -5,8 +5,10 @@
 // interrupts. But it would be more educational to set this stuff up
 // on my own!
 #include "/opt/devkitpro/libgba/include/gba_interrupt.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wregister"
 #include "/opt/devkitpro/libgba/include/gba_systemcalls.h"
-
+#pragma GCC diagnostic pop
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -77,15 +79,6 @@ DeltaClock::~DeltaClock()
 
 
 static volatile u32* keys = (volatile u32*)0x04000130;
-
-
-Keyboard::Keyboard()
-{
-    for (int i = 0; i < Key::count; ++i) {
-        states_[i] = false;
-        prev_[i] = false;
-    }
-}
 
 
 void Keyboard::poll()
@@ -357,7 +350,7 @@ void Screen::display()
 }
 
 
-const Vec2<u32>& Screen::size() const
+Vec2<u32> Screen::size() const
 {
     static const Vec2<u32> gba_widescreen{240, 160};
     return gba_widescreen;
@@ -536,6 +529,14 @@ void Platform::sleep(u32 frames)
     while (frames--) {
         VBlankIntrWait();
     }
+}
+
+
+bool Platform::is_running() const
+{
+    // Unlike the windowed desktop platform, as long as the device is
+    // powered on, the game is running.
+    return true;
 }
 
 

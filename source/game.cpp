@@ -37,7 +37,8 @@ void Game::update(Platform& pfrm, Microseconds delta)
                 entity_buf.erase(it);
             } else {
                 (*it)->update(pfrm, *this, delta);
-                if constexpr (std::is_base_of<Collidable, decltype(**it)>()) {
+                using T = typename std::remove_reference<decltype(**it)>::type;
+                if constexpr (std::is_base_of<Collidable, T>()) {
                     collision_vec.push_back(it->get());
                 }
                 ++it;
@@ -69,7 +70,8 @@ void Game::update(Platform& pfrm, Microseconds delta)
 
     enemies_.transform([&](auto& entity_buf) {
         for (auto& entity : entity_buf) {
-            if constexpr (std::remove_reference<decltype(*entity)>::type::multiface_sprite) {
+            if constexpr (std::remove_reference<decltype(
+                              *entity)>::type::multiface_sprite) {
                 const auto sprs = entity->get_sprites();
                 if (within_view_frustum(pfrm.screen(), *sprs[0])) {
                     for (const auto& spr : sprs) {
@@ -398,7 +400,8 @@ bool Game::respawn_entities(Platform& pfrm)
 
     auto select_coord = [&]() -> MapCoord* {
         if (not free_spots.empty()) {
-            auto result = &free_spots[random_choice(pfrm, free_spots.size())];
+            auto choice = random_choice(pfrm, free_spots.size());
+            auto result = &free_spots[choice];
             free_spots.erase(result);
             return result;
         } else {

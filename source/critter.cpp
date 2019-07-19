@@ -13,7 +13,7 @@ void Critter::update(Platform&, Game&, Microseconds)
 }
 
 
-void Critter::receive_collision(Critter&)
-{
-    // TODO
-}
+// void Critter::receive_collision(Critter&)
+// {
+//     // TODO
+// }

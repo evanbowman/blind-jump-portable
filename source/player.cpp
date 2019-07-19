@@ -13,9 +13,10 @@ const Vec2<s32> h_origin{16, 16};
 
 
 Player::Player()
-    : Entity(Health(4)), frame_(0), frame_base_(ResourceLoc::player_still_down),
-      anim_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
-      d_speed_(0.f), health_(5)
+    : Entity(Health(4)),
+      CollidableTemplate(HitBox{&position_, {16, 32}, {8, 16}}), frame_(0),
+      frame_base_(ResourceLoc::player_still_down), anim_timer_(0),
+      l_speed_(0.f), r_speed_(0.f), u_speed_(0.f), d_speed_(0.f), health_(5)
 {
     sprite_.set_position({104.f, 64.f});
     sprite_.set_size(Sprite::Size::w16_h32);
@@ -29,24 +30,28 @@ Player::Player()
 
 void Player::receive_collision(Critter&)
 {
+    sprite_.set_mix({ColorConstant::electric_blue, 0.5f});
     debit_health(1);
 }
 
 
 void Player::receive_collision(Dasher&)
 {
+    sprite_.set_mix({ColorConstant::electric_blue, 0.5f});
     debit_health(1);
 }
 
 
 void Player::receive_collision(Turret&)
 {
+    sprite_.set_mix({ColorConstant::electric_blue, 0.5f});
     debit_health(1);
 }
 
 
 void Player::receive_collision(Probe&)
 {
+    sprite_.set_mix({ColorConstant::electric_blue, 0.5f});
     debit_health(1);
 }
 
@@ -168,6 +173,8 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
     const auto wc = check_wall_collisions(game.get_tiles(), *this);
 
+    sprite_.set_mix({ColorConstant::electric_blue, 0.f});
+
     key_response<ResourceLoc::player_walk_up>(
         up, down, left, right, u_speed_, wc.up);
     key_response<ResourceLoc::player_walk_down>(
@@ -228,6 +235,9 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         sprite_.set_texture_index(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin(h_origin);
+        break;
+
+    default:
         break;
     }
 

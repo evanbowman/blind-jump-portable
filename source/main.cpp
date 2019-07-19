@@ -4,24 +4,25 @@
 
 int main()
 {
-    Platform pfrm;
+    Platform pf;
 
-    Screen& screen = pfrm.screen();
-    Keyboard& keyboard = pfrm.keyboard();
+    Screen& screen = pf.screen();
+    Keyboard& keyboard = pf.keyboard();
 
-    Game game(pfrm);
+    Game game(pf);
 
-    while (true) {
+    while (pf.is_running()) {
+
         keyboard.poll();
-        game.update(pfrm, DeltaClock::instance().reset());
+        game.update(pf, DeltaClock::instance().reset());
 
-        // NOTE: On some platforms, e.g. GBA and other consoles, Screen::clear()
+        // NOTE: On some pfs, e.g. GBA and other consoles, Screen::clear()
         // performs the vsync, so Game::update() should be called before the
         // clear, and Game::render() should be called after clear(), to prevent
         // tearing.
         screen.clear();
 
-        game.render(pfrm);
+        game.render(pf);
 
         screen.display();
     }
