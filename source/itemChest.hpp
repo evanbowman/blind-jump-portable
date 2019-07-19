@@ -5,10 +5,6 @@
 #include "entity.hpp"
 
 
-class Game;
-class Platform;
-
-
 class ItemChest : public Entity<ItemChest, 4> {
 public:
     ItemChest(const Vec2<Float>& pos);

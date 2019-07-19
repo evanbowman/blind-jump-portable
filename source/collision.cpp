@@ -3,12 +3,11 @@
 
 void check_collisions(CollisionSpace& input)
 {
-    for (auto c : input) {
-        for (auto o : input) {
-            if (o not_eq c) {
-                // TODO: if overlapping...
-                // c->initiate_collision(*o);
-            }
+    const auto count = input.size();
+    for (u32 i = 0; i < count; ++i) {
+        for (u32 j = i + 1; j < count; ++j) {
+            // ...
         }
     }
+
 }

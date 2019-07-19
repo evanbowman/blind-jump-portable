@@ -4,7 +4,6 @@
 #include "buffer.hpp"
 
 
-class ItemChest;
 class Critter;
 class Turret;
 class Player;

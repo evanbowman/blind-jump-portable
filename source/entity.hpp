@@ -4,6 +4,9 @@
 #include "sprite.hpp"
 
 
+class Platform;
+class Game;
+
 class EntityBase {
 public:
     using Health = s32;
@@ -17,6 +20,10 @@ public:
     }
 
     EntityBase(EntityBase&) = delete;
+
+    void update(Platform&, Game&, Microseconds)
+    {
+    }
 
     Health get_health() const
     {
@@ -42,6 +49,8 @@ public:
     {
         return position_;
     }
+
+    static constexpr bool multiface_sprite = false;
 
 protected:
     void debit_health(Health amount)
