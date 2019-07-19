@@ -6,10 +6,6 @@
 #include "entity.hpp"
 
 
-class Game;
-class Platform;
-
-
 class Turret : public Entity<Turret, 6>, public CollidableTemplate<Turret> {
 public:
     Turret(const Vec2<Float>& pos);

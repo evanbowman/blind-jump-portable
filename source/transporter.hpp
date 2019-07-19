@@ -12,7 +12,7 @@ class Transporter : public Entity<Transporter, 0> {
 public:
     Transporter()
     {
-        sprite_.set_texture_index(32);
+        sprite_.set_texture_index(TextureMap::transporter);
         sprite_.set_origin({16, 22});
     }
 
@@ -20,10 +20,5 @@ public:
     {
         Entity::set_position(new_pos);
         sprite_.set_position(new_pos);
-    }
-
-    void update(Platform&, Game&, Microseconds)
-    {
-        // ...
     }
 };

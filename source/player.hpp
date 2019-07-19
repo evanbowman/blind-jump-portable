@@ -46,10 +46,10 @@ private:
     u32 frame_;
     ResourceLoc frame_base_;
     Microseconds anim_timer_;
-    float l_speed_;
-    float r_speed_;
-    float u_speed_;
-    float d_speed_;
+    Float l_speed_;
+    Float r_speed_;
+    Float u_speed_;
+    Float d_speed_;
     Sprite shadow_;
     u16 health_;
 };

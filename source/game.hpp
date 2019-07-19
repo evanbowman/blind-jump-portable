@@ -37,7 +37,7 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup = EntityGroup<Turret>;
+    using EnemyGroup = EntityGroup<Turret, Dasher>;
     using DetailGroup = EntityGroup<ItemChest>;
     using EffectGroup = EntityGroup<>;
 

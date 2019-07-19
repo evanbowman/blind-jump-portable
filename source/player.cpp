@@ -21,7 +21,8 @@ Player::Player()
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 16});
     shadow_.set_origin({8, -9});
-    shadow_.set_texture_index(33);
+    shadow_.set_texture_index(TextureMap::drop_shadow);
+    shadow_.set_size(Sprite::Size::w16_h32);
     shadow_.set_alpha(Sprite::Alpha::translucent);
 }
 

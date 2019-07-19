@@ -69,11 +69,22 @@ void Game::update(Platform& pfrm, Microseconds delta)
 
     enemies_.transform([&](auto& entity_buf) {
         for (auto& entity : entity_buf) {
-            const auto& spr = entity->get_sprite();
-            if (within_view_frustum(pfrm.screen(), spr)) {
-                display_buffer.push_back(&spr);
-                shadows_buffer.push_back(&entity->get_shadow());
-                camera_.push_ballast(entity->get_position());
+            if constexpr (std::remove_reference<decltype(*entity)>::type::multiface_sprite) {
+                const auto sprs = entity->get_sprites();
+                if (within_view_frustum(pfrm.screen(), *sprs[0])) {
+                    for (const auto& spr : sprs) {
+                        display_buffer.push_back(spr);
+                    }
+                    shadows_buffer.push_back(&entity->get_shadow());
+                    camera_.push_ballast(entity->get_position());
+                }
+            } else {
+                const auto& spr = entity->get_sprite();
+                if (within_view_frustum(pfrm.screen(), spr)) {
+                    display_buffer.push_back(&spr);
+                    shadows_buffer.push_back(&entity->get_shadow());
+                    camera_.push_ballast(entity->get_position());
+                }
             }
         }
     });
@@ -396,7 +407,7 @@ bool Game::respawn_entities(Platform& pfrm)
     };
 
     auto pos = [&](const MapCoord* c) {
-        return Vec2<Float>{static_cast<Float>(c->x * 32),
+        return Vec2<Float>{static_cast<Float>(c->x * 32) + 16,
                            static_cast<Float>(c->y * 24)};
     };
 
@@ -416,7 +427,7 @@ bool Game::respawn_entities(Platform& pfrm)
             }
         }
         const auto target = pos(farthest);
-        transporter_.set_position({target.x + 16, target.y + 16});
+        transporter_.set_position({target.x, target.y + 16});
         free_spots.erase(farthest);
     } else {
         return false;
@@ -431,7 +442,13 @@ bool Game::respawn_entities(Platform& pfrm)
     }
 
     if (const auto c = select_coord()) {
-        enemies_.get<0>().push_back(make_entity<Turret>(pos(c)));
+        enemies_.get<1>().push_back(make_entity<Dasher>(pos(c)));
+    }
+
+    for (int i = 0; i < 2; ++i) {
+        if (const auto c = select_coord()) {
+            enemies_.get<0>().push_back(make_entity<Turret>(pos(c)));
+        }
     }
 
     return true;
