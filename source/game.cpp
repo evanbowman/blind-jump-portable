@@ -67,17 +67,16 @@ void Game::update(Platform& pfrm, Microseconds delta)
 
     Buffer<const Sprite*, 30> shadows_buffer;
 
-    auto show_sprites_and_shadows = [&](auto& entity_buf) {
+    enemies_.transform([&](auto& entity_buf) {
         for (auto& entity : entity_buf) {
             const auto& spr = entity->get_sprite();
             if (within_view_frustum(pfrm.screen(), spr)) {
                 display_buffer.push_back(&spr);
                 shadows_buffer.push_back(&entity->get_shadow());
+                camera_.push_ballast(entity->get_position());
             }
         }
-    };
-
-    enemies_.transform(show_sprites_and_shadows);
+    });
     details_.transform(show_sprites);
     effects_.transform(show_sprites);
 
