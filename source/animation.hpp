@@ -7,18 +7,28 @@
 template <TextureIndex InitialTexture, u32 Length, Microseconds Interval>
 class Animation {
 public:
-    Animation() : timer_(0), texture_index_(InitialTexture)
+    Animation() : timer_(0)
     {
     }
 
-    bool done() const
+    bool done(Sprite& sprite) const
     {
-        return texture_index_ == (InitialTexture + (Length - 1));
+        return sprite.get_texture_index() == (InitialTexture + (Length - 1));
+    }
+
+    bool at_beginning(Sprite& sprite) const
+    {
+        return sprite.get_texture_index() == InitialTexture;
     }
 
     constexpr TextureIndex initial_texture()
     {
         return InitialTexture;
+    }
+
+    void bind(Sprite& sprite) const
+    {
+        sprite.set_texture_index(InitialTexture);
     }
 
     bool advance(Sprite& sprite, Microseconds dt)
@@ -27,17 +37,16 @@ public:
         const bool ret = [&] {
             if (timer_ > Interval) {
                 timer_ -= Interval;
-                if (not Animation::done()) {
-                    texture_index_ += 1;
+                if (not Animation::done(sprite)) {
+                    sprite.set_texture_index(sprite.get_texture_index() + 1);
                 } else {
                     // Note: all animations wrap.
-                    texture_index_ = InitialTexture;
+                    sprite.set_texture_index(InitialTexture);
                 }
                 return true;
             }
             return false;
         }();
-        sprite.set_texture_index(texture_index_);
         return ret;
     }
 
@@ -47,21 +56,20 @@ public:
         const bool ret = [&] {
             if (timer_ > Interval) {
                 timer_ -= Interval;
-                if (texture_index_ >= InitialTexture) {
-                    texture_index_ -= 1;
+                const auto current = sprite.get_texture_index();
+                if (current >= InitialTexture) {
+                    sprite.set_texture_index(current - 1);
                 } else {
                     // Note: all animations wrap.
-                    texture_index_ = InitialTexture + Length - 1;
+                    sprite.set_texture_index(InitialTexture + Length - 1);
                 }
                 return true;
             }
             return false;
         }();
-        sprite.set_texture_index(texture_index_);
         return ret;
     }
 
 private:
     Microseconds timer_;
-    TextureIndex texture_index_;
 };

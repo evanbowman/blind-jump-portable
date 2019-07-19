@@ -8,8 +8,11 @@
 template <typename T, u32 Capacity> class Buffer {
 public:
     using Iterator = T*;
-    using iterator = Iterator; // (only for stl compatibility)
     using ValueType = T;
+
+    // (only for stl compatibility)
+    using iterator = Iterator;
+    using value_type = ValueType;
 
     Buffer() : begin_((Iterator)mem_.data()), end_(begin_)
     {

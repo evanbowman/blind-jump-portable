@@ -7,8 +7,8 @@ ItemChest::ItemChest(const Vec2<Float>& pos) : state_(State::closed)
 {
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_position({pos.x + 16, pos.y});
-    sprite_.set_texture_index(animation_.initial_texture());
     sprite_.set_origin({8, 16});
+    animation_.bind(sprite_);
 }
 
 
@@ -28,7 +28,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::opening:
         animation_.advance(sprite_, dt);
-        if (animation_.done()) {
+        if (animation_.done(sprite_)) {
             state_ = State::settle;
         }
         break;

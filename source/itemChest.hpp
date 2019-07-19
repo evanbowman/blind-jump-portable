@@ -18,6 +18,6 @@ public:
 private:
     enum class State { closed, opening, settle, opened };
 
-    Animation<12, 6, Microseconds(50000)> animation_;
+    Animation<TextureMap::item_chest, 6, Microseconds(50000)> animation_;
     State state_;
 };

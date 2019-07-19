@@ -16,6 +16,7 @@ public:
 
     void receive_collision(Critter&) override;
     void receive_collision(Dasher&) override;
+    void receive_collision(Turret&) override;
     void receive_collision(Probe&) override;
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
@@ -26,16 +27,7 @@ public:
     }
 
 private:
-    enum ResourceLoc {
-        still_up = 11,
-        still_down = 0,
-        still_left = 15,
-        still_right = 22,
-        walk_up = 6,
-        walk_down = 1,
-        walk_left = 9,
-        walk_right = 16,
-    };
+    using ResourceLoc = TextureMap;
 
     template <ResourceLoc L>
     void key_response(bool k1,
