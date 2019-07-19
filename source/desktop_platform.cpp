@@ -53,6 +53,10 @@ void Keyboard::poll()
     sf::Event event;
     while (::window->pollEvent(event)) {
         switch (event.type) {
+        case sf::Event::Closed:
+            ::window->close();
+            break;
+
         case sf::Event::KeyPressed:
             switch (event.key.code) {
             case sf::Keyboard::Left:
@@ -113,7 +117,13 @@ Screen::Screen()
     if (::window) {
         throw std::runtime_error("Only one screen allowed at a time");
     }
-    ::window = new sf::RenderWindow();
+    ::window = new sf::RenderWindow(sf::VideoMode(800, 600), "SFML window");
+}
+
+
+Vec2<u32> Screen::size() const
+{
+    return {::window->getSize().x, ::window->getSize().y};
 }
 
 
@@ -169,9 +179,21 @@ Platform::Platform()
 }
 
 
+bool Platform::is_running() const
+{
+    return ::window->isOpen();
+}
+
+
 void Platform::push_map(const TileMap& map)
 {
     // ...
+}
+
+
+void Platform::sleep(u32 frames)
+{
+    // TODO...
 }
 
 

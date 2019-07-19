@@ -10,11 +10,11 @@ class Game;
 class Platform;
 
 
-class Critter : public Entity<Critter, 20>, public CollidableTemplate<Critter> {
+class Critter : public Entity<Critter, 20> {
 public:
     Critter();
 
     void update(Platform&, Game&, Microseconds);
 
-    void receive_collision(Critter&) override;
+    // void receive_collision(Critter&) override;
 };

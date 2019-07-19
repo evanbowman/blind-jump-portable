@@ -27,13 +27,14 @@ INCLUDES	:=
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O3\
+CFLAGS	:=	-g -Wall -Werror -O3\
 			-mcpu=arm7tdmi -mtune=arm7tdmi\
  			-fomit-frame-pointer\
 			-ffast-math \
 			$(ARCH)
 
 CXXFLAGS :=     -Wall \
+		-Werror \
 		-pedantic \
 		-Os \
 		-D__GBA__ \

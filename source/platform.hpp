@@ -39,7 +39,13 @@ private:
 
 class Keyboard {
 public:
-    Keyboard();
+    Keyboard()
+    {
+        for (int i = 0; i < Key::count; ++i) {
+            states_[i] = false;
+            prev_[i] = false;
+        }
+    }
 
     enum Key { action_1, action_2, start, left, right, up, down, count };
 
@@ -86,7 +92,7 @@ public:
 
     void display();
 
-    const Vec2<u32>& size() const;
+    Vec2<u32> size() const;
 
     void set_view(const View& view)
     {
@@ -132,6 +138,8 @@ public:
     // 60fps, one update equals 1/60 of a second.
     void sleep(u32 frames);
 
+    bool is_running() const;
+
 private:
     Screen screen_;
     Keyboard keyboard_;
@@ -140,10 +148,10 @@ private:
 
 template <u32 N> inline int random_choice(Platform& pfrm)
 {
-    return pfrm.random() * N >> 15;
+    return pfrm.random() * N >> (8 * sizeof(int) - 1);
 }
 
 inline int random_choice(Platform& pfrm, u32 n)
 {
-    return pfrm.random() * n >> 15;
+    return pfrm.random() * n >> (8 * sizeof(int) - 1);
 }
