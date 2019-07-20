@@ -2,16 +2,7 @@
 
 
 #include "buffer.hpp"
-
-
-class Platform;
-class Critter;
-class Turret;
-class Player;
-class Dasher;
-class Probe;
-class Item;
-class Game;
+#include "entity.hpp"
 
 
 struct HitBox {
@@ -41,66 +32,35 @@ struct HitBox {
 };
 
 
-class Collidable {
-public:
-    Collidable(const HitBox& hit_box) : hit_box_(hit_box)
-    {
+template <typename Arg>
+using EntityBuffer = Buffer<EntityRef<Arg>, Arg::spawn_limit()>;
+
+
+class Game;
+class Platform;
+
+
+template <typename A, typename B>
+void check_collisions(Platform& pf, Game& game, EntityBuffer<A>& lhs, EntityBuffer<B>& rhs)
+{
+    for (auto& a : lhs) {
+        for (auto& b : rhs) {
+            if (a->hitbox().overlapping(b->hitbox())) {
+                a->on_collision(pf, game, *b);
+                b->on_collision(pf, game, *a);
+            }
+        }
     }
+}
 
-    virtual ~Collidable()
-    {
+
+template <typename A, typename B>
+void check_collisions(Platform& pf, Game& game, A& lhs, EntityBuffer<B>& rhs)
+{
+    for (auto& b : rhs) {
+        if (lhs.hitbox().overlapping(b->hitbox())) {
+            lhs.on_collision(pf, game, *b);
+            b->on_collision(pf, game, lhs);
+        }
     }
-
-    const HitBox& hit_box() const
-    {
-        return hit_box_;
-    }
-
-    virtual void send_collision(Platform&, Game&, Collidable&) = 0;
-
-    virtual void on_collision(Platform&, Game&, Critter&)
-    {
-    }
-
-    virtual void on_collision(Platform&, Game&, Player&)
-    {
-    }
-
-    virtual void on_collision(Platform&, Game&, Dasher&)
-    {
-    }
-
-    virtual void on_collision(Platform&, Game&, Probe&)
-    {
-    }
-
-    virtual void on_collision(Platform&, Game&, Turret&)
-    {
-    }
-
-    virtual void on_collision(Platform&, Game&, Item&)
-    {
-    }
-
-protected:
-    HitBox hit_box_;
-};
-
-
-template <typename Derived> class CollidableTemplate : public Collidable {
-public:
-    CollidableTemplate(const HitBox& hit_box) : Collidable(hit_box)
-    {
-    }
-
-    void send_collision(Platform& pf, Game& game, Collidable& other) override
-    {
-        other.on_collision(pf, game, *static_cast<Derived*>(this));
-    }
-};
-
-
-using CollisionSpace = Buffer<Collidable*, 25>;
-
-
-void check_collisions(Platform& pf, Game& game, CollisionSpace& input);
+}

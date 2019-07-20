@@ -8,23 +8,33 @@
 
 class Game;
 class Platform;
+class Critter;
+class Dasher;
+class Turret;
+class Probe;
+class Item;
 
 
-class Player : public Entity<Player, 0>, public CollidableTemplate<Player> {
+class Player : public Entity<Player, 0> {
 public:
     Player();
 
-    void on_collision(Platform& pf, Game& game, Critter&) override;
-    void on_collision(Platform& pf, Game& game, Dasher&) override;
-    void on_collision(Platform& pf, Game& game, Turret&) override;
-    void on_collision(Platform& pf, Game& game, Probe&) override;
-    void on_collision(Platform& pf, Game& game, Item&) override;
+    void on_collision(Platform& pf, Game& game, Critter&);
+    void on_collision(Platform& pf, Game& game, Dasher&);
+    void on_collision(Platform& pf, Game& game, Turret&);
+    void on_collision(Platform& pf, Game& game, Probe&);
+    void on_collision(Platform& pf, Game& game, Item&);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     const Sprite& get_shadow() const
     {
         return shadow_;
+    }
+
+    const HitBox& hitbox() const
+    {
+        return hitbox_;
     }
 
 private:
@@ -54,4 +64,5 @@ private:
     Float d_speed_;
     Sprite shadow_;
     u16 health_;
+    HitBox hitbox_;
 };

@@ -4,8 +4,8 @@
 
 
 Turret::Turret(const Vec2<Float>& pos)
-    : CollidableTemplate(HitBox{&position_, {16, 32}, {8, 16}}),
-      state_(State::closed)
+    : state_(State::closed),
+      hitbox_{&position_, {16, 32}, {8, 16}}
 {
     set_position(pos);
     sprite_.set_position(pos);

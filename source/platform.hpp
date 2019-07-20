@@ -104,6 +104,8 @@ public:
         return view_;
     }
 
+    void fade(float amount);
+
 private:
     View view_;
     void* userdata_;
