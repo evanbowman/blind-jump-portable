@@ -148,10 +148,10 @@ private:
 
 template <u32 N> inline int random_choice(Platform& pfrm)
 {
-    return pfrm.random() * N >> (8 * sizeof(int) - 1);
+    return pfrm.random() % N; // * N >> 15;
 }
 
 inline int random_choice(Platform& pfrm, u32 n)
 {
-    return pfrm.random() * n >> (8 * sizeof(int) - 1);
+    return pfrm.random() % n; // * n >> 15;
 }

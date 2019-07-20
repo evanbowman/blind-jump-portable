@@ -9,6 +9,7 @@ class Turret;
 class Player;
 class Dasher;
 class Probe;
+class Item;
 
 
 struct HitBox {
@@ -72,6 +73,10 @@ public:
     }
 
     virtual void receive_collision(Turret&)
+    {
+    }
+
+    virtual void receive_collision(Item&)
     {
     }
 

@@ -448,6 +448,10 @@ bool Game::respawn_entities(Platform& pfrm)
         enemies_.get<1>().push_back(make_entity<Dasher>(pos(c)));
     }
 
+    if (const auto c = select_coord()) {
+        effects_.get<0>().push_back(make_entity<Item>(pos(c)));
+    }
+
     for (int i = 0; i < 2; ++i) {
         if (const auto c = select_coord()) {
             enemies_.get<0>().push_back(make_entity<Turret>(pos(c)));

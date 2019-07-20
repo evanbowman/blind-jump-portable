@@ -123,4 +123,6 @@ enum TextureMap : TextureIndex {
     dasher_weapon2 = dasher_weapon1 + 1,
     dasher_head = dasher_weapon2 + 1,
     drop_shadow = 60,
+    heart = 61,
+    coin = 62,
 };
