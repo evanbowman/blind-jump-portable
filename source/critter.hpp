@@ -16,5 +16,5 @@ public:
 
     void update(Platform&, Game&, Microseconds);
 
-    // void receive_collision(Critter&) override;
+    // void on_collision(Platform& pf, Game& game,Critter&) override;
 };

@@ -29,33 +29,41 @@ Player::Player()
 }
 
 
-void Player::receive_collision(Critter&)
+void Player::on_collision(Platform& pf, Game& game, Critter&)
 {
     debit_health(1);
 }
 
 
-void Player::receive_collision(Dasher&)
+void Player::on_collision(Platform& pf, Game& game, Dasher&)
 {
     debit_health(1);
 }
 
 
-void Player::receive_collision(Turret&)
+void Player::on_collision(Platform& pf, Game& game, Turret&)
 {
     debit_health(1);
 }
 
 
-void Player::receive_collision(Probe&)
+void Player::on_collision(Platform& pf, Game& game, Probe&)
 {
     debit_health(1);
 }
 
 
-void Player::receive_collision(Item&)
+void Player::on_collision(Platform& pf, Game& game, Item& item)
 {
-    sprite_.set_mix({ColorConstant::ruby, 1.f});
+    switch (item.get_type()) {
+    case Item::Type::heart:
+        sprite_.set_mix({ColorConstant::ruby, 1.f});
+        break;
+
+    case Item::Type::coin:
+        sprite_.set_mix({ColorConstant::electric_blue, 1.f});
+        break;
+    }
     color_timer_ = 0;
     add_health(1);
 }
