@@ -14,11 +14,11 @@ class Player : public Entity<Player, 0>, public CollidableTemplate<Player> {
 public:
     Player();
 
-    void receive_collision(Critter&) override;
-    void receive_collision(Dasher&) override;
-    void receive_collision(Turret&) override;
-    void receive_collision(Probe&) override;
-    void receive_collision(Item&) override;
+    void on_collision(Platform& pf, Game& game, Critter&) override;
+    void on_collision(Platform& pf, Game& game, Dasher&) override;
+    void on_collision(Platform& pf, Game& game, Turret&) override;
+    void on_collision(Platform& pf, Game& game, Probe&) override;
+    void on_collision(Platform& pf, Game& game, Item&) override;
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 

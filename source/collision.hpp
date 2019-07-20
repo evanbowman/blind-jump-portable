@@ -4,12 +4,14 @@
 #include "buffer.hpp"
 
 
+class Platform;
 class Critter;
 class Turret;
 class Player;
 class Dasher;
 class Probe;
 class Item;
+class Game;
 
 
 struct HitBox {
@@ -54,29 +56,29 @@ public:
         return hit_box_;
     }
 
-    virtual void initiate_collision(Collidable&) = 0;
+    virtual void send_collision(Platform&, Game&, Collidable&) = 0;
 
-    virtual void receive_collision(Critter&)
+    virtual void on_collision(Platform&, Game&, Critter&)
     {
     }
 
-    virtual void receive_collision(Player&)
+    virtual void on_collision(Platform&, Game&, Player&)
     {
     }
 
-    virtual void receive_collision(Dasher&)
+    virtual void on_collision(Platform&, Game&, Dasher&)
     {
     }
 
-    virtual void receive_collision(Probe&)
+    virtual void on_collision(Platform&, Game&, Probe&)
     {
     }
 
-    virtual void receive_collision(Turret&)
+    virtual void on_collision(Platform&, Game&, Turret&)
     {
     }
 
-    virtual void receive_collision(Item&)
+    virtual void on_collision(Platform&, Game&, Item&)
     {
     }
 
@@ -91,9 +93,9 @@ public:
     {
     }
 
-    void initiate_collision(Collidable& other) override
+    void send_collision(Platform& pf, Game& game, Collidable& other) override
     {
-        other.receive_collision(*static_cast<Derived*>(this));
+        other.on_collision(pf, game, *static_cast<Derived*>(this));
     }
 };
 
@@ -101,4 +103,4 @@ public:
 using CollisionSpace = Buffer<Collidable*, 25>;
 
 
-void check_collisions(CollisionSpace& input);
+void check_collisions(Platform& pf, Game& game, CollisionSpace& input);

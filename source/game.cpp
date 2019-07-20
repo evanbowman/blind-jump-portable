@@ -50,7 +50,7 @@ void Game::update(Platform& pfrm, Microseconds delta)
     details_.transform(update_policy);
     effects_.transform(update_policy);
 
-    check_collisions(collision_vec);
+    check_collisions(pfrm, *this, collision_vec);
 
     display_buffer.push_back(&player_.get_sprite());
 
@@ -70,7 +70,7 @@ void Game::update(Platform& pfrm, Microseconds delta)
 
     enemies_.transform([&](auto& entity_buf) {
         for (auto& entity : entity_buf) {
-            if constexpr (std::remove_reference<decltype(
+                    if constexpr (std::remove_reference<decltype(
                               *entity)>::type::multiface_sprite) {
                 const auto sprs = entity->get_sprites();
                 if (within_view_frustum(pfrm.screen(), *sprs[0])) {
@@ -448,13 +448,48 @@ bool Game::respawn_entities(Platform& pfrm)
         enemies_.get<1>().push_back(make_entity<Dasher>(pos(c)));
     }
 
-    if (const auto c = select_coord()) {
-        effects_.get<0>().push_back(make_entity<Item>(pos(c)));
-    }
+    // Potentially hide some items in far crannies of the map. If
+    // there's no sand nearby, and no items eiher, potentially place
+    // an item.
+    tiles_.for_each([&](Tile t, s8 x, s8 y) {
+        auto is_plate = [&](Tile t) {
+            return t == Tile::plate or
+                   (t >= Tile::grass_plate and t < Tile::grass_ledge);
+        };
+        [[gnu::unused]]auto is_sand =
+            [&](Tile t) {
+                return t == Tile::sand or
+                    (t >= Tile::grass_sand and t < Tile::grass_plate);
+            };
+        if (is_plate(t)) {
+            for (int i = x - 1; i < x + 2; ++i) {
+                for (int j = y - 1; j < y + 2; ++j) {
+                    const auto curr = tiles_.get_tile(i, j);
+                    if (is_sand(curr)) {
+                        return;
+                    }
+                }
+            }
+            for (auto& item : effects_.get<0>()) {
+                if (manhattan_length(item->get_position(),
+                                     to_world_coord({x, y})) < 64) {
+                    return;
+                }
+            }
+            if (random_choice<2>(pfrm)) {
+                MapCoord c{x, y};
+                if (auto ent = make_entity<Item>(pos(&c), pfrm, Item::Type::coin)) {
+                    effects_.get<0>().push_back(std::move(ent));
+                }
+            }
+        }
+    });
 
     for (int i = 0; i < 2; ++i) {
         if (const auto c = select_coord()) {
-            enemies_.get<0>().push_back(make_entity<Turret>(pos(c)));
+            if (auto ent = make_entity<Turret>(pos(c))) {
+                enemies_.get<0>().push_back(std::move(ent));
+            }
         }
     }
 
