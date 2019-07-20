@@ -3,6 +3,7 @@
 #include "camera.hpp"
 #include "critter.hpp"
 #include "dasher.hpp"
+#include "item.hpp"
 #include "itemChest.hpp"
 #include "platform.hpp"
 #include "player.hpp"
@@ -39,7 +40,7 @@ public:
 
     using EnemyGroup = EntityGroup<Turret, Dasher>;
     using DetailGroup = EntityGroup<ItemChest>;
-    using EffectGroup = EntityGroup<>;
+    using EffectGroup = EntityGroup<Item>;
 
     inline EffectGroup& get_effects()
     {

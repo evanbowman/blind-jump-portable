@@ -114,3 +114,9 @@ template <typename T> T interpolate(const T& a, const T& b, Float t)
 
 
 using Microseconds = s32;
+
+
+s16 sine(s16 angle);
+
+
+s16 cosine(s16 angle);

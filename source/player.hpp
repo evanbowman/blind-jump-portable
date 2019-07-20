@@ -18,6 +18,7 @@ public:
     void receive_collision(Dasher&) override;
     void receive_collision(Turret&) override;
     void receive_collision(Probe&) override;
+    void receive_collision(Item&) override;
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
@@ -46,6 +47,7 @@ private:
     u32 frame_;
     ResourceLoc frame_base_;
     Microseconds anim_timer_;
+    Microseconds color_timer_;
     Float l_speed_;
     Float r_speed_;
     Float u_speed_;

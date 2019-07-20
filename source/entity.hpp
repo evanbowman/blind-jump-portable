@@ -45,6 +45,11 @@ public:
         position_ = position;
     }
 
+    void add_health(Health amount)
+    {
+        health_ += amount;
+    }
+
     const Vec2<Float>& get_position() const
     {
         return position_;
@@ -56,6 +61,11 @@ protected:
     void debit_health(Health amount)
     {
         health_ = std::max(Health(0), health_ - amount);
+    }
+
+    void kill()
+    {
+        health_ = 0;
     }
 
     Sprite sprite_;
