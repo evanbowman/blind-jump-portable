@@ -5,7 +5,10 @@
 #include "sprite.hpp"
 
 
-class Dasher : public Entity<Dasher, 20>, public CollidableTemplate<Dasher> {
+class Player;
+
+
+class Dasher : public Entity<Dasher, 20> {
 public:
     Dasher(const Vec2<Float>& position);
 
@@ -26,7 +29,15 @@ public:
         return ret;
     }
 
+    const HitBox& hitbox() const
+    {
+        return hitbox_;
+    }
+
+    void on_collision(Platform&, Game&, Player&) {}
+
 private:
     Sprite shadow_;
     Sprite head_;
+    HitBox hitbox_;
 };

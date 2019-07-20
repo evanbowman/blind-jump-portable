@@ -59,6 +59,9 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 }
 
 
+static volatile u16* const scanline = (u16*)0x4000006;
+
+
 Microseconds DeltaClock::reset()
 {
     // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) =
@@ -119,9 +122,6 @@ constexpr u32 oam_count = Screen::sprite_limit;
 
 static ObjectAttributes* const object_attribute_memory = {
     (ObjectAttributes*)0x07000000};
-
-
-static volatile u16* const scanline = (u16*)0x4000006;
 
 
 #define OBJ_SHAPE(m) ((m) << 14)
@@ -511,6 +511,25 @@ static void load_sprite_data()
     *bg0_control = BG_SBB(8) | BG_REG_64x64;
     //        0xC800; // 64x64, 0x0100 for 32x32
     *bg1_control = BG_SBB(12);
+}
+
+
+void Screen::fade(float amount)
+{
+    // To do a screen fade, blend black into the palettes.
+    static const Color black(0, 0, 0);
+    for (int i = 0; i < 16; ++i) {
+        auto from = Color::from_bgr_hex_555(bgr_spritesheetPal[i]);
+        MEM_PALETTE[i] = Color(interpolate(black.r_, from.r_, amount),
+                               interpolate(black.g_, from.g_, amount),
+                               interpolate(black.b_, from.b_, amount)).bgr_hex_555();
+    }
+    for (int i = 0; i < 16; ++i) {
+        auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
+        MEM_BG_PALETTE[i] = Color(interpolate(black.r_, from.r_, amount),
+                                  interpolate(black.g_, from.g_, amount),
+                                  interpolate(black.b_, from.b_, amount)).bgr_hex_555();
+    }
 }
 
 

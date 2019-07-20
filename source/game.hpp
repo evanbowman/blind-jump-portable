@@ -13,11 +13,11 @@
 
 
 template <typename Arg>
-using EntityBuffer = Buffer<Arg, Arg::element_type::spawn_limit()>;
+using EntityBuffer = Buffer<EntityRef<Arg>, Arg::spawn_limit()>;
 
 
 template <typename... Args>
-using EntityGroup = TransformGroup<EntityBuffer<EntityRef<Args>>...>;
+using EntityGroup = TransformGroup<EntityBuffer<Args>...>;
 
 
 class Game {
@@ -67,6 +67,13 @@ private:
     DetailGroup details_;
     EffectGroup effects_;
     Transporter transporter_;
+    Microseconds counter_;
+
+    enum class State {
+        active,
+        fade_out,
+        fade_in
+    } state_;
 
     void next_level(Platform& platform);
     void regenerate_map(Platform& platform);

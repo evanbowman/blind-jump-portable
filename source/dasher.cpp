@@ -3,7 +3,7 @@
 
 
 Dasher::Dasher(const Vec2<Float>& position)
-    : CollidableTemplate(HitBox{&position_, {16, 32}, {8, 16}})
+    : hitbox_{&position_, {16, 32}, {8, 16}}
 {
     position_ = position;
 

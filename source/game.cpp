@@ -19,17 +19,45 @@ static bool within_view_frustum(const Screen& screen, const Sprite& spr)
 
 void Game::update(Platform& pfrm, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Keyboard::Key::action_2>()) {
-        if (manhattan_length(player_.get_position(),
-                             transporter_.get_position()) < 32) {
-            Game::next_level(pfrm);
+    switch (state_) {
+    case State::active:
+        if (pfrm.keyboard().down_transition<Keyboard::Key::action_2>()) {
+            if (manhattan_length(player_.get_position(),
+                                 transporter_.get_position()) < 32) {
+                state_ = State::fade_out;
+            }
         }
+        break;
+
+    case State::fade_out:
+        counter_ += delta;
+        static const Microseconds fade_duration = 950000;
+        if (counter_ > fade_duration) {
+            counter_ = 0;
+            pfrm.screen().fade(1.f);
+            state_ = State::fade_in;
+            Game::next_level(pfrm);
+        } else {
+            pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_));
+        }
+        break;
+
+
+    case State::fade_in:
+        counter_ += delta;
+        if (counter_ > fade_duration) {
+            counter_ = 0;
+            pfrm.screen().fade(0.f);
+            state_ = State::active;
+        } else {
+            pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
+        }
+        break;
+
     }
 
-    CollisionSpace collision_vec;
 
     player_.update(pfrm, *this, delta);
-    collision_vec.push_back(&player_);
 
     auto update_policy = [&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
@@ -37,20 +65,18 @@ void Game::update(Platform& pfrm, Microseconds delta)
                 entity_buf.erase(it);
             } else {
                 (*it)->update(pfrm, *this, delta);
-                using T = typename std::remove_reference<decltype(**it)>::type;
-                if constexpr (std::is_base_of<Collidable, T>()) {
-                    collision_vec.push_back(it->get());
-                }
                 ++it;
             }
         }
     };
 
+    effects_.transform(update_policy);
     enemies_.transform(update_policy);
     details_.transform(update_policy);
-    effects_.transform(update_policy);
 
-    check_collisions(pfrm, *this, collision_vec);
+    check_collisions(pfrm, *this, player_, enemies_.get<0>());
+    check_collisions(pfrm, *this, player_, enemies_.get<1>());
+    check_collisions(pfrm, *this, player_, effects_.get<0>());
 
     display_buffer.push_back(&player_.get_sprite());
 
@@ -165,7 +191,9 @@ static void condense(TileMap& map, TileMap& maptemp)
 }
 
 
-Game::Game(Platform& pfrm) : level_(-1)
+Game::Game(Platform& pfrm) : level_(-1),
+                             counter_(0),
+                             state_(State::fade_in)
 {
     Game::next_level(pfrm);
 }
@@ -456,7 +484,7 @@ bool Game::respawn_entities(Platform& pfrm)
             return t == Tile::plate or
                    (t >= Tile::grass_plate and t < Tile::grass_ledge);
         };
-        [[gnu::unused]]auto is_sand =
+        auto is_sand =
             [&](Tile t) {
                 return t == Tile::sand or
                     (t >= Tile::grass_sand and t < Tile::grass_plate);
