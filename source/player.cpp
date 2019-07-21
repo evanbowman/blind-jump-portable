@@ -57,7 +57,8 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
 {
     switch (item.get_type()) {
     case Item::Type::heart:
-        sprite_.set_mix({ColorConstant::ruby, 1.f});
+        sprite_.set_mix({ColorConstant::spanish_crimson, 1.f});
+        add_health(1);
         break;
 
     case Item::Type::coin:
@@ -65,7 +66,6 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
         break;
     }
     color_timer_ = 0;
-    add_health(1);
 }
 
 
@@ -194,6 +194,8 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             color_timer_ -= 80000;
             sprite_.set_mix({c, cmix_amount - 0.1f});
         }
+    } else {
+        sprite_.set_mix({});
     }
 
     key_response<ResourceLoc::player_walk_up>(

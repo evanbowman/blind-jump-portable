@@ -104,7 +104,7 @@ public:
         return view_;
     }
 
-    void fade(float amount);
+    void fade(float amount, ColorConstant = ColorConstant::rich_black);
 
 private:
     View view_;
