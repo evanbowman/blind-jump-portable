@@ -2,6 +2,7 @@
 
 #include "numeric.hpp"
 #include "tileMap.hpp"
+#include "save.hpp"
 #include <array>
 
 
@@ -141,6 +142,8 @@ public:
     void sleep(u32 frames);
 
     bool is_running() const;
+
+    void write_save(const SaveData& data);
 
 private:
     Screen screen_;

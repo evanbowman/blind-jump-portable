@@ -16,7 +16,8 @@ Player::Player()
     : Entity(Health(4)),
       frame_(0),
       frame_base_(ResourceLoc::player_still_down), anim_timer_(0),
-      color_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
+      color_timer_(0), invulnerability_timer_(0),
+      l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
       d_speed_(0.f), health_(5), hitbox_{&position_, {16, 32}, {8, 16}}
 {
     sprite_.set_position({104.f, 64.f});
@@ -29,27 +30,38 @@ Player::Player()
 }
 
 
+void Player::enemy_contact()
+{
+    if (not Player::is_invulnerable()) {
+        debit_health(1);
+        sprite_.set_mix({ColorConstant::coquelicot, 1.f});
+        color_timer_ = 0;
+        invulnerability_timer_ = 700000;
+    }
+}
+
+
 void Player::on_collision(Platform& pf, Game& game, Critter&)
 {
-    debit_health(1);
+    Player::enemy_contact();
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Dasher&)
 {
-    debit_health(1);
+    Player::enemy_contact();
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Turret&)
 {
-    debit_health(1);
+    Player::enemy_contact();
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Probe&)
 {
-    debit_health(1);
+    Player::enemy_contact();
 }
 
 
@@ -185,6 +197,10 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool right = input.pressed<Keyboard::Key::right>();
 
     const auto wc = check_wall_collisions(game.get_tiles(), *this);
+
+    if (invulnerability_timer_ > 0) {
+        invulnerability_timer_ -= dt;
+    }
 
     const auto cmix_amount = sprite_.get_mix().amount_;
     if (cmix_amount > 0.f) {
