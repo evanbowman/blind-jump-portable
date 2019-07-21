@@ -4,17 +4,7 @@
 #include <type_traits>
 
 
-static bool within_view_frustum(const Screen& screen, const Sprite& spr)
-{
-    const auto position =
-        spr.get_position().template cast<s32>() - spr.get_origin();
-    const auto view_center = screen.get_view().get_center().cast<s32>();
-    const auto view_half_extent = screen.size().cast<s32>() / s32(2);
-    Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
-                         view_center.y + view_half_extent.y * 2};
-    return position.x > view_center.x - 32 and position.x < view_br.x and
-           position.y > view_center.y - 32 and position.y < view_br.y;
-}
+static bool within_view_frustum(const Screen& screen, const Sprite& spr);
 
 
 void Game::update(Platform& pfrm, Microseconds delta)
@@ -201,6 +191,11 @@ Game::Game(Platform& pfrm) : level_(-1),
 
 void Game::next_level(Platform& pfrm)
 {
+    SaveData sav;
+    sav.seed_ = pfrm.random();
+
+    pfrm.write_save(sav);
+
     level_ += 1;
 
 RETRY:
@@ -522,4 +517,17 @@ bool Game::respawn_entities(Platform& pfrm)
     }
 
     return true;
+}
+
+
+static bool within_view_frustum(const Screen& screen, const Sprite& spr)
+{
+    const auto position =
+        spr.get_position().template cast<s32>() - spr.get_origin();
+    const auto view_center = screen.get_view().get_center().cast<s32>();
+    const auto view_half_extent = screen.size().cast<s32>() / s32(2);
+    Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
+                         view_center.y + view_half_extent.y * 2};
+    return position.x > view_center.x - 32 and position.x < view_br.x and
+           position.y > view_center.y - 32 and position.y < view_br.y;
 }

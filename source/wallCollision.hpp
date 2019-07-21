@@ -38,8 +38,8 @@ WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
 
     // A four by four block around the entity should be a large enough region to
     // check for wall collisions.
-    for (TIdx x = tile_coords.x - 2; x < tile_coords.x + 3; ++x) {
-        for (TIdx y = tile_coords.y - 2; y < tile_coords.y + 3; ++y) {
+    for (TIdx x = tile_coords.x - 1; x < tile_coords.x + 2; ++x) {
+        for (TIdx y = tile_coords.y - 1; y < tile_coords.y + 2; ++y) {
             check_wall(x, y);
         }
     }

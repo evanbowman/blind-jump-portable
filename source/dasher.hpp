@@ -37,7 +37,19 @@ public:
     void on_collision(Platform&, Game&, Player&) {}
 
 private:
+    enum class State {
+        idle,
+        shooting,
+        dash_begin,
+        dashing,
+        dash_end,
+        shoot_begin,
+        pause
+    };
+
     Sprite shadow_;
     Sprite head_;
     HitBox hitbox_;
+    Microseconds timer_;
+    State state_;
 };

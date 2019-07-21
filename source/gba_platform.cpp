@@ -1,3 +1,14 @@
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+// Gameboy Advance Platform
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef __GBA__
+
 #include "platform.hpp"
 #include <string.h>
 
@@ -9,16 +20,6 @@
 #pragma GCC diagnostic ignored "-Wregister"
 #include "/opt/devkitpro/libgba/include/gba_systemcalls.h"
 #pragma GCC diagnostic pop
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-// Gameboy Advance Platform
-//
-//
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef __GBA__
 
 #define REG_DISPCNT *(u32*)0x4000000
 #define MODE_0 0x0
@@ -235,23 +236,25 @@ static PaletteBank color_mix(const Color& c, float amount)
 }
 
 
-static const Color rich_black(0, 0, 2);
-static const Color spn_crimson(29, 3, 11);
-static const Color el_blue(9, 31, 31);
-
-
 const Color& real_color(ColorConstant k)
 {
     switch (k) {
     case ColorConstant::spanish_crimson:
+        static const Color spn_crimson(29, 3, 11);
         return spn_crimson;
 
     case ColorConstant::electric_blue:
+        static const Color el_blue(9, 31, 31);
         return el_blue;
+
+    case ColorConstant::coquelicot:
+        static const Color coquelicot(30, 7, 1);
+        return coquelicot;
 
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:
+        static const Color rich_black(0, 0, 2);
         return rich_black;
     }
 }
@@ -563,6 +566,18 @@ bool Platform::is_running() const
 }
 
 
+static volatile u8* const sram  = (volatile u8*)0x0E000000;
+
+
+void Platform::write_save(const SaveData& data)
+{
+    // NOTE: SRAM has an eight bit bus, so assignment/memcpy won't work!
+    for (size_t i = 0; i < sizeof(data); ++i) {
+        sram[i] = ((const u8*)&data)[i];
+    }
+}
+
+
 Platform::Platform()
 {
     irqInit();
@@ -570,10 +585,18 @@ Platform::Platform()
 
     load_sprite_data();
 
-    // Not sure where else to get a good unpredictable seed value for
-    // the RNG. So I'm using the contents of one of the timer
-    // registers, which seems to work well enough...
-    random_seed = *((volatile u16*)0x4000104);
+    SaveData sd;
+
+    // NOTE: SRAM has an eight bit bus, so assignment/memcpy won't work!
+    for (size_t i = 0; i < sizeof(sd); ++i) {
+        ((u8*)&sd)[i] = sram[i];
+    }
+
+    if (sd.magic_ == SaveData::magic_val) {
+        random_seed = sd.seed_;
+    } else {
+        random_seed = 42;
+    }
 }
 
 

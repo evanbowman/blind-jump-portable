@@ -37,6 +37,11 @@ public:
         return hitbox_;
     }
 
+    bool is_invulnerable() const
+    {
+        return invulnerability_timer_ > 0;
+    }
+
 private:
     using ResourceLoc = TextureMap;
 
@@ -54,10 +59,13 @@ private:
     template <u8 StepSize>
     void update_animation(Microseconds dt, u8 max_index, Microseconds count);
 
+    void enemy_contact();
+
     u32 frame_;
     ResourceLoc frame_base_;
     Microseconds anim_timer_;
     Microseconds color_timer_;
+    Microseconds invulnerability_timer_;
     Float l_speed_;
     Float r_speed_;
     Float u_speed_;
