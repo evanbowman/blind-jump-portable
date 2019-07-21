@@ -235,20 +235,24 @@ static PaletteBank color_mix(const Color& c, float amount)
 }
 
 
+static const Color rich_black(0, 0, 2);
+static const Color spn_crimson(29, 3, 11);
+static const Color el_blue(9, 31, 31);
+
+
 const Color& real_color(ColorConstant k)
 {
     switch (k) {
-    case ColorConstant::ruby:
-        static const Color ruby(29, 3, 11);
-        return ruby;
+    case ColorConstant::spanish_crimson:
+        return spn_crimson;
 
     case ColorConstant::electric_blue:
-        static const Color el_blue(9, 31, 31);
         return el_blue;
 
     default:
-        static const Color err(0, 0, 0);
-        return err;
+    case ColorConstant::null:
+    case ColorConstant::rich_black:
+        return rich_black;
     }
 }
 
@@ -257,7 +261,7 @@ void Screen::draw(const Sprite& spr)
 {
     const auto pb = [&]() -> PaletteBank {
         const auto& mix = spr.get_mix();
-        if (mix.amount_ not_eq 0.f) {
+        if (mix.color_ not_eq ColorConstant::null) {
             if (const auto pal_bank =
                     color_mix(real_color(mix.color_), mix.amount_)) {
                 return ATTR2_PALBANK(pal_bank);
@@ -514,21 +518,21 @@ static void load_sprite_data()
 }
 
 
-void Screen::fade(float amount)
+void Screen::fade(float amount, ColorConstant k)
 {
+    const auto& c = real_color(k);
     // To do a screen fade, blend black into the palettes.
-    static const Color black(0, 0, 0);
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(bgr_spritesheetPal[i]);
-        MEM_PALETTE[i] = Color(interpolate(black.r_, from.r_, amount),
-                               interpolate(black.g_, from.g_, amount),
-                               interpolate(black.b_, from.b_, amount)).bgr_hex_555();
+        MEM_PALETTE[i] = Color(interpolate(c.r_, from.r_, amount),
+                               interpolate(c.g_, from.g_, amount),
+                               interpolate(c.b_, from.b_, amount)).bgr_hex_555();
     }
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
-        MEM_BG_PALETTE[i] = Color(interpolate(black.r_, from.r_, amount),
-                                  interpolate(black.g_, from.g_, amount),
-                                  interpolate(black.b_, from.b_, amount)).bgr_hex_555();
+        MEM_BG_PALETTE[i] = Color(interpolate(c.r_, from.r_, amount),
+                                  interpolate(c.g_, from.g_, amount),
+                                  interpolate(c.b_, from.b_, amount)).bgr_hex_555();
     }
 }
 
