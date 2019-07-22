@@ -1,14 +1,15 @@
 #include "game.hpp"
+#include "random.hpp"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
-#include "random.hpp"
 
 
 static bool within_view_frustum(const Screen& screen, const Sprite& spr);
 
 
-Game::Game(Platform& pfrm) : level_(-1), counter_(0), max_save_(0), state_(State::fade_in)
+Game::Game(Platform& pfrm)
+    : level_(-1), counter_(0), max_save_(0), state_(State::fade_in)
 {
     const auto sd = pfrm.read_save();
     if (sd) {
@@ -195,11 +196,24 @@ static void condense(TileMap& map, TileMap& maptemp)
 
 void Game::next_level(Platform& pfrm)
 {
-    SaveData sav;
-    sav.magic_ = SaveData::magic_val;
-    sav.seed_ = random_seed();
-    sav.id_ = ++max_save_;
-    pfrm.write_save(sav);
+    auto& keyboard = pfrm.keyboard();
+
+#ifdef __GBA__
+    if (keyboard.pressed<Keyboard::Key::alt_1>() and
+        keyboard.pressed<Keyboard::Key::alt_2>()) {
+#endif
+        // On the gba, I haven't implemented level-wearing to protect
+        // the flash, i.e. the code writes to the same memory location
+        // repeatedly, so for now, just do a save if the tester holds
+        // the l/r buttons during a transition.
+        SaveData sav;
+        sav.magic_ = SaveData::magic_val;
+        sav.seed_ = random_seed();
+        sav.id_ = ++max_save_;
+        pfrm.write_save(sav);
+#ifdef __GBA__
+    }
+#endif
 
     level_ += 1;
 
@@ -260,9 +274,8 @@ void Game::regenerate_map(Platform& pfrm)
 {
     TileMap temporary;
 
-    tiles_.for_each([&](Tile& t, int, int) {
-        t = Tile(random_choice<int(Tile::sand)>());
-    });
+    tiles_.for_each(
+        [&](Tile& t, int, int) { t = Tile(random_choice<int(Tile::sand)>()); });
 
     for (int i = 0; i < 3; ++i) {
         condense(tiles_, temporary);
