@@ -13,6 +13,9 @@ using s32 = int32_t;
 using s64 = int64_t;
 
 
+enum class byte : u8 {};
+
+
 template <typename T> struct Vec2 {
     T x = 0;
     T y = 0;

@@ -561,7 +561,7 @@ bool Platform::is_running() const
 }
 
 
-static u8* const sram = (u8*)0x0E000000;
+static byte* const sram = (byte*)0x0E000000;
 
 
 static bool
