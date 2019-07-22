@@ -529,13 +529,15 @@ void Screen::fade(float amount, ColorConstant k)
         auto from = Color::from_bgr_hex_555(bgr_spritesheetPal[i]);
         MEM_PALETTE[i] = Color(interpolate(c.r_, from.r_, amount),
                                interpolate(c.g_, from.g_, amount),
-                               interpolate(c.b_, from.b_, amount)).bgr_hex_555();
+                               interpolate(c.b_, from.b_, amount))
+                             .bgr_hex_555();
     }
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
         MEM_BG_PALETTE[i] = Color(interpolate(c.r_, from.r_, amount),
                                   interpolate(c.g_, from.g_, amount),
-                                  interpolate(c.b_, from.b_, amount)).bgr_hex_555();
+                                  interpolate(c.b_, from.b_, amount))
+                                .bgr_hex_555();
     }
 }
 
@@ -547,6 +549,12 @@ int Platform::random()
 {
     random_seed = 1664525 * random_seed + 1013904223;
     return (random_seed >> 16) & 0x7FFF;
+}
+
+
+int& Platform::seed()
+{
+    return random_seed;
 }
 
 
@@ -566,15 +574,103 @@ bool Platform::is_running() const
 }
 
 
-static volatile u8* const sram  = (volatile u8*)0x0E000000;
+static u8* const sram = (u8*)0x0E000000;
 
 
-void Platform::write_save(const SaveData& data)
+static bool
+flash_byteverify(void* in_dst, const void* in_src, unsigned int length)
 {
-    // NOTE: SRAM has an eight bit bus, so assignment/memcpy won't work!
-    for (size_t i = 0; i < sizeof(data); ++i) {
-        sram[i] = ((const u8*)&data)[i];
+    unsigned char* src = (unsigned char*)in_src;
+    unsigned char* dst = (unsigned char*)in_dst;
+
+    for (; length > 0; length--) {
+
+        if (*dst++ != *src++)
+            return true;
     }
+    return false;
+}
+
+
+static void
+flash_bytecpy(void* in_dst, const void* in_src, unsigned int length, bool write)
+{
+    unsigned char* src = (unsigned char*)in_src;
+    unsigned char* dst = (unsigned char*)in_dst;
+
+    for (; length > 0; length--) {
+        if (write) {
+            *(vu8*)0x0E005555 = 0xAA;
+            *(vu8*)0x0E002AAA = 0x55;
+            *(vu8*)0x0E005555 = 0xA0;
+        }
+        *dst++ = *src++;
+    }
+}
+
+
+static void set_flash_bank(u32 bankID)
+{
+    if (bankID < 2) {
+        *(vu8*)0x0E005555 = 0xAA;
+        *(vu8*)0x0E002AAA = 0x55;
+        *(vu8*)0x0E005555 = 0xB0;
+        *(vu8*)0x0E000000 = bankID;
+    }
+}
+
+
+template <typename T>
+static bool flash_save(const T& obj, u32 flash_offset)
+{
+    if ((u32)flash_offset >= 0x10000) {
+        set_flash_bank(1);
+    } else {
+        set_flash_bank(0);
+    }
+
+    flash_bytecpy((void*)(sram + flash_offset), &obj, sizeof(T), true);
+
+    if (flash_byteverify((void*)(sram + flash_offset), &obj, sizeof(T))) {
+        return true;
+    }
+    return false;
+}
+
+
+template <typename T>
+static T flash_load(u32 flash_offset)
+{
+    if (flash_offset >= 0x10000) {
+        set_flash_bank(1);
+    } else {
+        set_flash_bank(0);
+    }
+
+    // static_assert(std::is_standard_layout<T>());
+
+    T result;
+    flash_bytecpy(&result, (const void*)(sram + flash_offset), sizeof(T), false);
+
+    // if (flash_byteverify(in_dst, (const void*)(sram + (u32)in_src), length)) {
+    // }
+    return result;
+}
+
+
+
+bool Platform::write_save(const SaveData& data)
+{
+    if (not flash_save(data, 0)) {
+        return false;
+    }
+
+    // Sanity check, that writing the save file succeeded.
+    const auto d = flash_load<SaveData>(0);
+    if (d.magic_ not_eq SaveData::magic_val) {
+        return false;
+    }
+    return true;
 }
 
 
@@ -585,15 +681,15 @@ Platform::Platform()
 
     load_sprite_data();
 
-    SaveData sd;
+    // FIXME: Lets be nice to the flash an not write to the same
+    // memory location every single time! What about a list? Each new
+    // save will have a unique id. On startup, scan through memory
+    // until you reach the highest unique id. Then start writing new
+    // saves at that point.
+    SaveData d = flash_load<SaveData>(0);
 
-    // NOTE: SRAM has an eight bit bus, so assignment/memcpy won't work!
-    for (size_t i = 0; i < sizeof(sd); ++i) {
-        ((u8*)&sd)[i] = sram[i];
-    }
-
-    if (sd.magic_ == SaveData::magic_val) {
-        random_seed = sd.seed_;
+    if (d.magic_ == SaveData::magic_val) {
+        random_seed = d.seed_;
     } else {
         random_seed = 42;
     }

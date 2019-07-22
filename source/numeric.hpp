@@ -107,8 +107,8 @@ template <typename T> Vec2<T> operator/(const T& rhs, const Vec2<T>& lhs)
     return {lhs.x / rhs, lhs.y / rhs};
 }
 
-template <typename T>
-T clamp(T x, T floor, T ceil) {
+template <typename T> T clamp(T x, T floor, T ceil)
+{
     if (x < floor) {
         return floor;
     } else if (x > ceil) {
@@ -118,7 +118,8 @@ T clamp(T x, T floor, T ceil) {
     }
 }
 
-inline Float smoothstep(Float edge0, Float edge1, Float x) {
+inline Float smoothstep(Float edge0, Float edge1, Float x)
+{
     x = clamp((x - edge0) / (edge1 - edge0), 0.f, 1.f);
     return x * x * (3 - 2 * x);
 }

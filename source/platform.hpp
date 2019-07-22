@@ -1,8 +1,8 @@
 #pragma once
 
 #include "numeric.hpp"
-#include "tileMap.hpp"
 #include "save.hpp"
+#include "tileMap.hpp"
 #include <array>
 
 
@@ -134,6 +134,9 @@ public:
 
     void push_map(const TileMap& map);
 
+    int& seed();
+
+
     int random();
 
     // Sleep halts the game for an amount of time equal to some number
@@ -143,7 +146,9 @@ public:
 
     bool is_running() const;
 
-    void write_save(const SaveData& data);
+
+    bool write_save(const SaveData& data);
+    SaveData read_save();
 
 private:
     Screen screen_;

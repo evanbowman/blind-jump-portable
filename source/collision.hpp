@@ -41,7 +41,10 @@ class Platform;
 
 
 template <typename A, typename B>
-void check_collisions(Platform& pf, Game& game, EntityBuffer<A>& lhs, EntityBuffer<B>& rhs)
+void check_collisions(Platform& pf,
+                      Game& game,
+                      EntityBuffer<A>& lhs,
+                      EntityBuffer<B>& rhs)
 {
     for (auto& a : lhs) {
         for (auto& b : rhs) {

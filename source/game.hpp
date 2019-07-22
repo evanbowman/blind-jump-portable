@@ -69,11 +69,7 @@ private:
     Transporter transporter_;
     Microseconds counter_;
 
-    enum class State {
-        active,
-        fade_out,
-        fade_in
-    } state_;
+    enum class State { active, fade_out, fade_in } state_;
 
     void next_level(Platform& platform);
     void regenerate_map(Platform& platform);
