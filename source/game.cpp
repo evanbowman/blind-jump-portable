@@ -2,9 +2,22 @@
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
+#include "random.hpp"
 
 
 static bool within_view_frustum(const Screen& screen, const Sprite& spr);
+
+
+Game::Game(Platform& pfrm) : level_(-1), counter_(0), max_save_(0), state_(State::fade_in)
+{
+    const auto sd = pfrm.read_save();
+    if (sd) {
+        random_seed() = sd->seed_;
+        max_save_ = sd->id_;
+    }
+
+    Game::next_level(pfrm);
+}
 
 
 void Game::update(Platform& pfrm, Microseconds delta)
@@ -180,17 +193,12 @@ static void condense(TileMap& map, TileMap& maptemp)
 }
 
 
-Game::Game(Platform& pfrm) : level_(-1), counter_(0), state_(State::fade_in)
-{
-    Game::next_level(pfrm);
-}
-
-
 void Game::next_level(Platform& pfrm)
 {
     SaveData sav;
     sav.magic_ = SaveData::magic_val;
-    sav.seed_ = pfrm.seed();
+    sav.seed_ = random_seed();
+    sav.id_ = ++max_save_;
     pfrm.write_save(sav);
 
     level_ += 1;
@@ -253,7 +261,7 @@ void Game::regenerate_map(Platform& pfrm)
     TileMap temporary;
 
     tiles_.for_each([&](Tile& t, int, int) {
-        t = Tile(random_choice<int(Tile::sand)>(pfrm));
+        t = Tile(random_choice<int(Tile::sand)>());
     });
 
     for (int i = 0; i < 3; ++i) {
@@ -277,8 +285,8 @@ void Game::regenerate_map(Platform& pfrm)
     });
 
     while (true) {
-        const auto x = random_choice(pfrm, TileMap::width);
-        const auto y = random_choice(pfrm, TileMap::height);
+        const auto x = random_choice(TileMap::width);
+        const auto y = random_choice(TileMap::height);
         if (temporary.get_tile(x, y) not_eq Tile::none) {
             flood_fill(temporary, Tile(2), x, y);
             temporary.for_each([&](const Tile& tile, TIdx x, TIdx y) {
@@ -293,7 +301,7 @@ void Game::regenerate_map(Platform& pfrm)
     }
 
     TileMap grass_overlay([&](Tile& t, int, int) {
-        if (random_choice<3>(pfrm)) {
+        if (random_choice<3>()) {
             t = Tile::none;
         } else {
             t = Tile::plate;
@@ -366,7 +374,7 @@ void Game::regenerate_map(Platform& pfrm)
 
     tiles_.for_each([&](Tile& tile, int, int) {
         if (tile == Tile::plate) {
-            if (random_choice<8>(pfrm) == 0) {
+            if (random_choice<8>() == 0) {
                 tile = Tile::damaged_plate;
             }
         }
@@ -420,7 +428,7 @@ bool Game::respawn_entities(Platform& pfrm)
 
     auto select_coord = [&]() -> MapCoord* {
         if (not free_spots.empty()) {
-            auto choice = random_choice(pfrm, free_spots.size());
+            auto choice = random_choice(free_spots.size());
             auto result = &free_spots[choice];
             free_spots.erase(result);
             return result;
@@ -495,7 +503,7 @@ bool Game::respawn_entities(Platform& pfrm)
                     return;
                 }
             }
-            if (random_choice<2>(pfrm)) {
+            if (random_choice<2>()) {
                 MapCoord c{x, y};
                 if (auto ent =
                         make_entity<Item>(pos(&c), pfrm, Item::Type::coin)) {

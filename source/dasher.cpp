@@ -1,5 +1,6 @@
 #include "dasher.hpp"
 #include "game.hpp"
+#include "random.hpp"
 
 
 Dasher::Dasher(const Vec2<Float>& position)
@@ -44,7 +45,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     case State::idle:
         if (timer_ >= 200000) {
             timer_ -= 200000;
-            if (random_choice<2>(pf)) {
+            if (random_choice<2>()) {
                 state_ = State::dash_begin;
                 sprite_.set_texture_index(TextureMap::dasher_crouch);
             } else {

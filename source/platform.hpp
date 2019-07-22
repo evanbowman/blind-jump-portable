@@ -4,6 +4,7 @@
 #include "save.hpp"
 #include "tileMap.hpp"
 #include <array>
+#include <optional>
 
 
 // Anything platform specific should be defined here.
@@ -134,10 +135,6 @@ public:
 
     void push_map(const TileMap& map);
 
-    int& seed();
-
-
-    int random();
 
     // Sleep halts the game for an amount of time equal to some number
     // of game updates. Given that the game should be running at
@@ -148,20 +145,10 @@ public:
 
 
     bool write_save(const SaveData& data);
-    SaveData read_save();
+    std::optional<SaveData> read_save();
+
 
 private:
     Screen screen_;
     Keyboard keyboard_;
 };
-
-
-template <u32 N> inline int random_choice(Platform& pfrm)
-{
-    return pfrm.random() % N; // * N >> 15;
-}
-
-inline int random_choice(Platform& pfrm, u32 n)
-{
-    return pfrm.random() % n; // * n >> 15;
-}
