@@ -11,6 +11,7 @@
 
 #include "platform.hpp"
 #include <string.h>
+#include "random.hpp"
 
 // FIXME: I'm relying on devkit ARM right now for handling
 // interrupts. But it would be more educational to set this stuff up
@@ -472,10 +473,10 @@ void Platform::push_map(const TileMap& map)
     // different with each new map.
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
-            if (random_choice<8>(*this)) {
+            if (random_choice<8>()) {
                 MEM_SCREENBLOCKS[12][i + j * 32] = 67;
             } else {
-                if (random_choice<2>(*this)) {
+                if (random_choice<2>()) {
                     MEM_SCREENBLOCKS[12][i + j * 32] = 70;
                 } else {
                     MEM_SCREENBLOCKS[12][i + j * 32] = 71;
@@ -539,22 +540,6 @@ void Screen::fade(float amount, ColorConstant k)
                                   interpolate(c.b_, from.b_, amount))
                                 .bgr_hex_555();
     }
-}
-
-
-static int random_seed;
-
-
-int Platform::random()
-{
-    random_seed = 1664525 * random_seed + 1013904223;
-    return (random_seed >> 16) & 0x7FFF;
-}
-
-
-int& Platform::seed()
-{
-    return random_seed;
 }
 
 
@@ -629,6 +614,8 @@ static bool flash_save(const T& obj, u32 flash_offset)
         set_flash_bank(0);
     }
 
+    static_assert(std::is_standard_layout<T>());
+
     flash_bytecpy((void*)(sram + flash_offset), &obj, sizeof(T), true);
 
     if (flash_byteverify((void*)(sram + flash_offset), &obj, sizeof(T))) {
@@ -647,17 +634,20 @@ static T flash_load(u32 flash_offset)
         set_flash_bank(0);
     }
 
-    // static_assert(std::is_standard_layout<T>());
+    static_assert(std::is_standard_layout<T>());
 
     T result;
     flash_bytecpy(&result, (const void*)(sram + flash_offset), sizeof(T), false);
 
-    // if (flash_byteverify(in_dst, (const void*)(sram + (u32)in_src), length)) {
-    // }
     return result;
 }
 
 
+// FIXME: Lets be nice to the flash an not write to the same
+// memory location every single time! What about a list? Each new
+// save will have a unique id. On startup, scan through memory
+// until you reach the highest unique id. Then start writing new
+// saves at that point.
 
 bool Platform::write_save(const SaveData& data)
 {
@@ -674,25 +664,22 @@ bool Platform::write_save(const SaveData& data)
 }
 
 
+std::optional<SaveData> Platform::read_save()
+{
+    auto sd = flash_load<SaveData>(0);
+    if (sd.magic_ == SaveData::magic_val) {
+        return sd;
+    }
+    return {};
+}
+
+
 Platform::Platform()
 {
     irqInit();
     irqEnable(IRQ_VBLANK);
 
     load_sprite_data();
-
-    // FIXME: Lets be nice to the flash an not write to the same
-    // memory location every single time! What about a list? Each new
-    // save will have a unique id. On startup, scan through memory
-    // until you reach the highest unique id. Then start writing new
-    // saves at that point.
-    SaveData d = flash_load<SaveData>(0);
-
-    if (d.magic_ == SaveData::magic_val) {
-        random_seed = d.seed_;
-    } else {
-        random_seed = 42;
-    }
 }
 
 

@@ -163,17 +163,6 @@ void Screen::draw(const Sprite& spr)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include <random>
-
-std::mt19937 rng{std::random_device()()};
-
-
-int Platform::random()
-{
-    return rng();
-}
-
-
 Platform::Platform()
 {
 }

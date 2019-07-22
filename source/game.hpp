@@ -68,6 +68,7 @@ private:
     EffectGroup effects_;
     Transporter transporter_;
     Microseconds counter_;
+    SaveData::ID max_save_;
 
     enum class State { active, fade_out, fade_in } state_;
 
