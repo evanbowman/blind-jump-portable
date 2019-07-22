@@ -10,8 +10,8 @@
 #ifdef __GBA__
 
 #include "platform.hpp"
-#include <string.h>
 #include "random.hpp"
+#include <string.h>
 
 // FIXME: I'm relying on devkit ARM right now for handling
 // interrupts. But it would be more educational to set this stuff up
@@ -98,6 +98,8 @@ void Keyboard::poll()
     states_[left] = ~(*keys) & KEY_LEFT;
     states_[down] = ~(*keys) & KEY_DOWN;
     states_[up] = ~(*keys) & KEY_UP;
+    states_[alt_1] = ~(*keys) & KEY_L;
+    states_[alt_2] = ~(*keys) & KEY_R;
 }
 
 
@@ -605,8 +607,7 @@ static void set_flash_bank(u32 bankID)
 }
 
 
-template <typename T>
-static bool flash_save(const T& obj, u32 flash_offset)
+template <typename T> static bool flash_save(const T& obj, u32 flash_offset)
 {
     if ((u32)flash_offset >= 0x10000) {
         set_flash_bank(1);
@@ -625,8 +626,7 @@ static bool flash_save(const T& obj, u32 flash_offset)
 }
 
 
-template <typename T>
-static T flash_load(u32 flash_offset)
+template <typename T> static T flash_load(u32 flash_offset)
 {
     if (flash_offset >= 0x10000) {
         set_flash_bank(1);
@@ -637,7 +637,8 @@ static T flash_load(u32 flash_offset)
     static_assert(std::is_standard_layout<T>());
 
     T result;
-    flash_bytecpy(&result, (const void*)(sram + flash_offset), sizeof(T), false);
+    flash_bytecpy(
+        &result, (const void*)(sram + flash_offset), sizeof(T), false);
 
     return result;
 }

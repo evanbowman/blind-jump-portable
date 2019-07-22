@@ -49,7 +49,18 @@ public:
         }
     }
 
-    enum Key { action_1, action_2, start, left, right, up, down, count };
+    enum Key {
+        action_1,
+        action_2,
+        start,
+        left,
+        right,
+        up,
+        down,
+        alt_1,
+        alt_2,
+        count
+    };
 
     void poll();
 
