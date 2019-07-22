@@ -41,7 +41,16 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
     timer_ += dt;
 
+    const auto& screen_size = pf.screen().size();
+
     switch (state_) {
+    case State::inactive:
+        if (manhattan_length(game.get_player().get_position(), position_) <
+            std::min(screen_size.x, screen_size.y) / 2) {
+            state_ = State::idle;
+        }
+        break;
+
     case State::idle:
         if (timer_ >= 200000) {
             timer_ -= 200000;

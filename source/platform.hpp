@@ -152,12 +152,15 @@ public:
     // 60fps, one update equals 1/60 of a second.
     void sleep(u32 frames);
 
+
     bool is_running() const;
+
+
+    void fatal_error(const char* msg);
 
 
     bool write_save(const SaveData& data);
     std::optional<SaveData> read_save();
-
 
 private:
     Screen screen_;

@@ -60,6 +60,7 @@ public:
 private:
     Buffer<const Sprite*, Screen::sprite_limit> display_buffer;
     s32 level_;
+    u32 update_counter_;
     TileMap tiles_;
     Camera camera_;
     Player player_;
@@ -68,11 +69,13 @@ private:
     EffectGroup effects_;
     Transporter transporter_;
     Microseconds counter_;
-    SaveData::ID max_save_;
+    SaveData save_data_;
 
     enum class State { active, fade_out, fade_in } state_;
 
     void next_level(Platform& platform);
     void regenerate_map(Platform& platform);
     bool respawn_entities(Platform& platform);
+
+    void update_transitions(Platform& pf, Microseconds dt);
 };

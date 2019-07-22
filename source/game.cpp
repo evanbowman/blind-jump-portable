@@ -9,13 +9,13 @@ static bool within_view_frustum(const Screen& screen, const Sprite& spr);
 
 
 Game::Game(Platform& pfrm)
-    : level_(-1), counter_(0), max_save_(0), state_(State::fade_in)
+    : level_(-1), update_counter_(0), counter_(0), state_(State::fade_in)
 {
-    const auto sd = pfrm.read_save();
-    if (sd) {
-        random_seed() = sd->seed_;
-        max_save_ = sd->id_;
+    if (auto sd = pfrm.read_save()) {
+        save_data_ = *sd;
     }
+
+    random_seed() = save_data_.seed_;
 
     Game::next_level(pfrm);
 }
@@ -23,42 +23,14 @@ Game::Game(Platform& pfrm)
 
 void Game::update(Platform& pfrm, Microseconds delta)
 {
-    switch (state_) {
-    case State::active:
-        if (pfrm.keyboard().down_transition<Keyboard::Key::action_2>()) {
-            if (manhattan_length(player_.get_position(),
-                                 transporter_.get_position()) < 32) {
-                state_ = State::fade_out;
-            }
-        }
-        break;
-
-    case State::fade_out:
-        counter_ += delta;
-        static const Microseconds fade_duration = 950000;
-        if (counter_ > fade_duration) {
-            counter_ = 0;
-            pfrm.screen().fade(1.f);
-            state_ = State::fade_in;
-            Game::next_level(pfrm);
-        } else {
-            pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_));
-        }
-        break;
-
-
-    case State::fade_in:
-        counter_ += delta;
-        if (counter_ > fade_duration) {
-            counter_ = 0;
-            pfrm.screen().fade(0.f);
-            state_ = State::active;
-        } else {
-            pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
-        }
-        break;
-    }
-
+    // Every update, advance the random number engine, so that the
+    // amount of time spent on a level contributes some entropy to the
+    // number stream. This makes the game somewhat less predictable,
+    // because, knowing the state of the random number engine, you
+    // would have to beat the current level in some microsecond
+    // granularity to get to a new level that's possible to
+    // anticipate.
+    random_value();
 
     player_.update(pfrm, *this, delta);
 
@@ -145,6 +117,8 @@ void Game::update(Platform& pfrm, Microseconds delta)
               std::back_inserter(display_buffer));
 
     display_buffer.push_back(&player_.get_shadow());
+
+    Game::update_transitions(pfrm, delta);
 }
 
 
@@ -155,6 +129,46 @@ void Game::render(Platform& pfrm)
     }
 
     display_buffer.clear();
+}
+
+
+void Game::update_transitions(Platform& pf, Microseconds dt)
+{
+    switch (state_) {
+    case State::active:
+        if (pf.keyboard().down_transition<Keyboard::Key::action_2>()) {
+            if (manhattan_length(player_.get_position(),
+                                 transporter_.get_position()) < 32) {
+                state_ = State::fade_out;
+            }
+        }
+        break;
+
+    case State::fade_out:
+        counter_ += dt;
+        static const Microseconds fade_duration = 950000;
+        if (counter_ > fade_duration) {
+            counter_ = 0;
+            pf.screen().fade(1.f);
+            state_ = State::fade_in;
+            Game::next_level(pf);
+        } else {
+            pf.screen().fade(smoothstep(0.f, fade_duration, counter_));
+        }
+        break;
+
+
+    case State::fade_in:
+        counter_ += dt;
+        if (counter_ > fade_duration) {
+            counter_ = 0;
+            pf.screen().fade(0.f);
+            state_ = State::active;
+        } else {
+            pf.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
+        }
+        break;
+    }
 }
 
 
@@ -196,25 +210,6 @@ static void condense(TileMap& map, TileMap& maptemp)
 
 void Game::next_level(Platform& pfrm)
 {
-    auto& keyboard = pfrm.keyboard();
-
-#ifdef __GBA__
-    if (keyboard.pressed<Keyboard::Key::alt_1>() and
-        keyboard.pressed<Keyboard::Key::alt_2>()) {
-#endif
-        // On the gba, I haven't implemented level-wearing to protect
-        // the flash, i.e. the code writes to the same memory location
-        // repeatedly, so for now, just do a save if the tester holds
-        // the l/r buttons during a transition.
-        SaveData sav;
-        sav.magic_ = SaveData::magic_val;
-        sav.seed_ = random_seed();
-        sav.id_ = ++max_save_;
-        pfrm.write_save(sav);
-#ifdef __GBA__
-    }
-#endif
-
     level_ += 1;
 
 RETRY:

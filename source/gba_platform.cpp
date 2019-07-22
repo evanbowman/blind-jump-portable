@@ -637,6 +637,10 @@ template <typename T> static T flash_load(u32 flash_offset)
     static_assert(std::is_standard_layout<T>());
 
     T result;
+    for (u32 i = 0; i < sizeof(result); ++i) {
+        ((u8*)&result)[i] = 0;
+    }
+
     flash_bytecpy(
         &result, (const void*)(sram + flash_offset), sizeof(T), false);
 
@@ -644,11 +648,13 @@ template <typename T> static T flash_load(u32 flash_offset)
 }
 
 
-// FIXME: Lets be nice to the flash an not write to the same
-// memory location every single time! What about a list? Each new
-// save will have a unique id. On startup, scan through memory
-// until you reach the highest unique id. Then start writing new
-// saves at that point.
+// FIXME: Lets be nice to the flash an not write to the same memory
+// location every single time! What about a list? Each new save will
+// have a unique id. On startup, scan through memory until you reach
+// the highest unique id. Then start writing new saves at that
+// point. NOTE: My everdrive uses SRAM for Flash writes anyway, so
+// it's probably not going to wear out, but I like to pretend that I'm
+// developing a real gba game.
 
 bool Platform::write_save(const SaveData& data)
 {
@@ -681,6 +687,12 @@ Platform::Platform()
     irqEnable(IRQ_VBLANK);
 
     load_sprite_data();
+}
+
+
+void Platform::fatal_error(const char* msg)
+{
+
 }
 
 
