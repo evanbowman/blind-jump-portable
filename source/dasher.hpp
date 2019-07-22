@@ -40,6 +40,7 @@ public:
 
 private:
     enum class State {
+        inactive,
         idle,
         shooting,
         dash_begin,
