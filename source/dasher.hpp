@@ -34,7 +34,9 @@ public:
         return hitbox_;
     }
 
-    void on_collision(Platform&, Game&, Player&) {}
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
 
 private:
     enum class State {

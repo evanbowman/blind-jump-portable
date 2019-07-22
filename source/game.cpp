@@ -43,7 +43,6 @@ void Game::update(Platform& pfrm, Microseconds delta)
             pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
         }
         break;
-
     }
 
 
@@ -86,7 +85,7 @@ void Game::update(Platform& pfrm, Microseconds delta)
 
     enemies_.transform([&](auto& entity_buf) {
         for (auto& entity : entity_buf) {
-                    if constexpr (std::remove_reference<decltype(
+            if constexpr (std::remove_reference<decltype(
                               *entity)>::type::multiface_sprite) {
                 const auto sprs = entity->get_sprites();
                 if (within_view_frustum(pfrm.screen(), *sprs[0])) {
@@ -181,9 +180,7 @@ static void condense(TileMap& map, TileMap& maptemp)
 }
 
 
-Game::Game(Platform& pfrm) : level_(-1),
-                             counter_(0),
-                             state_(State::fade_in)
+Game::Game(Platform& pfrm) : level_(-1), counter_(0), state_(State::fade_in)
 {
     Game::next_level(pfrm);
 }
@@ -192,8 +189,8 @@ Game::Game(Platform& pfrm) : level_(-1),
 void Game::next_level(Platform& pfrm)
 {
     SaveData sav;
-    sav.seed_ = pfrm.random();
-
+    sav.magic_ = SaveData::magic_val;
+    sav.seed_ = pfrm.seed();
     pfrm.write_save(sav);
 
     level_ += 1;
@@ -479,11 +476,10 @@ bool Game::respawn_entities(Platform& pfrm)
             return t == Tile::plate or
                    (t >= Tile::grass_plate and t < Tile::grass_ledge);
         };
-        auto is_sand =
-            [&](Tile t) {
-                return t == Tile::sand or
-                    (t >= Tile::grass_sand and t < Tile::grass_plate);
-            };
+        auto is_sand = [&](Tile t) {
+            return t == Tile::sand or
+                   (t >= Tile::grass_sand and t < Tile::grass_plate);
+        };
         if (is_plate(t)) {
             for (int i = x - 1; i < x + 2; ++i) {
                 for (int j = y - 1; j < y + 2; ++j) {
@@ -501,7 +497,8 @@ bool Game::respawn_entities(Platform& pfrm)
             }
             if (random_choice<2>(pfrm)) {
                 MapCoord c{x, y};
-                if (auto ent = make_entity<Item>(pos(&c), pfrm, Item::Type::coin)) {
+                if (auto ent =
+                        make_entity<Item>(pos(&c), pfrm, Item::Type::coin)) {
                     effects_.get<0>().push_back(std::move(ent));
                 }
             }

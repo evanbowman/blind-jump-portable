@@ -3,9 +3,7 @@
 
 
 Dasher::Dasher(const Vec2<Float>& position)
-    : hitbox_{&position_, {16, 32}, {8, 16}},
-      timer_(0),
-      state_(State::idle)
+    : hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0), state_(State::idle)
 {
     position_ = position;
 
@@ -31,14 +29,14 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     head_.set_position({position_.x, position_.y - 9});
 
     auto face_player = [this, &player = game.get_player()] {
-                           if (player.get_position().x > position_.x) {
-                               sprite_.set_flip({1, 0});
-                               head_.set_flip({1, 0});
-                           } else {
-                               sprite_.set_flip({0, 0});
-                               head_.set_flip({0, 0});
-                           }
-                       };
+        if (player.get_position().x > position_.x) {
+            sprite_.set_flip({1, 0});
+            head_.set_flip({1, 0});
+        } else {
+            sprite_.set_flip({0, 0});
+            head_.set_flip({0, 0});
+        }
+    };
 
     timer_ += dt;
 
@@ -115,8 +113,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case TextureMap::dasher_dash:
-        head_.set_position({sprite_.get_flip().x ? position_.x + 3 : position_.x - 3,
-                            position_.y - 5});
+        head_.set_position(
+            {sprite_.get_flip().x ? position_.x + 3 : position_.x - 3,
+             position_.y - 5});
         break;
 
     case TextureMap::dasher_weapon1:
