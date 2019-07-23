@@ -34,6 +34,11 @@ public:
         return std::get<index>(members_);
     }
 
+    template <typename T> auto& get()
+    {
+        return std::get<T>(members_);
+    }
+
 private:
     std::tuple<Members...> members_;
 };

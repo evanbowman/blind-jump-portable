@@ -2,11 +2,11 @@
 
 #include "numeric.hpp"
 #include "save.hpp"
+#include "sprite.hpp"
 #include "tileMap.hpp"
+#include "view.hpp"
 #include <array>
 #include <optional>
-#include "sprite.hpp"
-#include "view.hpp"
 
 
 // Anything platform specific should be defined here.
@@ -141,7 +141,6 @@ public:
 
     class Keyboard {
     public:
-
         void poll();
 
         template <Key k> bool pressed() const
@@ -182,10 +181,11 @@ public:
 
     class Logger {
     public:
-        void log(const char* msg);
+        enum class Severity { info, warning, error };
+
+        void log(Severity severity, const char* msg);
 
     private:
-
         friend class Platform;
     };
 
@@ -197,19 +197,30 @@ private:
 };
 
 
-
-
-
 #ifdef __BLINDJUMP_ENABLE_LOGS
 #ifdef __GBA__
 // #pragma message "Warning: logging can wear down Flash memory, be careful using this on physical hardware!"
 #endif
-inline void log(Platform& pf, const char* msg)
+inline void info(Platform& pf, const char* msg)
 {
-    pf.logger().log(msg);
+    pf.logger().log(Platform::Logger::Severity::info, msg);
+}
+inline void warning(Platform& pf, const char* msg)
+{
+    pf.logger().log(Platform::Logger::Severity::warning, msg);
+}
+inline void error(Platform& pf, const char* msg)
+{
+    pf.logger().log(Platform::Logger::Severity::error, msg);
 }
 #else
-inline void log(Platform&, const char*)
+inline void info(Platform&, const char*)
+{
+}
+inline void warning(Platform&, const char*)
+{
+}
+inline void error(Platform&, const char*)
 {
 }
 #endif // __BLINDJUMP_ENABLE_LOGS

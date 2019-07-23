@@ -41,27 +41,36 @@ public:
         return end_;
     }
 
-    template <typename... Args> void emplace_back(Args&&... args)
+    template <typename... Args> bool emplace_back(Args&&... args)
     {
         if (Buffer::size() < Buffer::capacity()) {
             new (end_) T(std::forward<Args>(args)...);
             ++end_;
+            return true;
+        } else {
+            return false;
         }
     }
 
-    void push_back(const T& elem)
+    bool push_back(const T& elem)
     {
         if (Buffer::size() < Buffer::capacity()) {
             new (end_) T(elem);
             ++end_;
+            return true;
+        } else {
+            return false;
         }
     }
 
-    void push_back(T&& elem)
+    bool push_back(T&& elem)
     {
         if (Buffer::size() < Buffer::capacity()) {
             new (end_) T(std::forward<T>(elem));
             ++end_;
+            return true;
+        } else {
+            return false;
         }
     }
 

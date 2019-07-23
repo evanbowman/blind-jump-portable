@@ -17,7 +17,14 @@ using EntityBuffer = Buffer<EntityRef<Arg>, Arg::spawn_limit()>;
 
 
 template <typename... Args>
-using EntityGroup = TransformGroup<EntityBuffer<Args>...>;
+class EntityGroup : public TransformGroup<EntityBuffer<Args>...> {
+public:
+    template <typename T> auto& get()
+    {
+        return TransformGroup<EntityBuffer<Args>...>::template get<
+            EntityBuffer<T>>();
+    }
+};
 
 
 class Game {
