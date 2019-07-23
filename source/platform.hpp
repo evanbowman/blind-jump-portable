@@ -5,6 +5,8 @@
 #include "tileMap.hpp"
 #include <array>
 #include <optional>
+#include "sprite.hpp"
+#include "view.hpp"
 
 
 // Anything platform specific should be defined here.
@@ -34,94 +36,17 @@ private:
 };
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Keyboard
-////////////////////////////////////////////////////////////////////////////////
-
-
-class Keyboard {
-public:
-    Keyboard()
-    {
-        for (int i = 0; i < Key::count; ++i) {
-            states_[i] = false;
-            prev_[i] = false;
-        }
-    }
-
-    enum Key {
-        action_1,
-        action_2,
-        start,
-        left,
-        right,
-        up,
-        down,
-        alt_1,
-        alt_2,
-        count
-    };
-
-    void poll();
-
-    template <Key k> bool pressed() const
-    {
-        return states_[k];
-    }
-
-    template <Key k> bool down_transition() const
-    {
-        return states_[k] and not prev_[k];
-    }
-
-    template <Key k> bool up_transition() const
-    {
-        return not states_[k] and prev_[k];
-    }
-
-private:
-    std::array<bool, Key::count> prev_;
-    std::array<bool, Key::count> states_;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Screen
-////////////////////////////////////////////////////////////////////////////////
-
-#include "sprite.hpp"
-#include "view.hpp"
-
-
-class Screen {
-public:
-    Screen();
-
-    static constexpr u32 sprite_limit = 128;
-
-    void draw(const Sprite& spr);
-
-    void clear();
-
-    void display();
-
-    Vec2<u32> size() const;
-
-    void set_view(const View& view)
-    {
-        view_ = view;
-    }
-
-    const View& get_view() const
-    {
-        return view_;
-    }
-
-    void fade(float amount, ColorConstant = ColorConstant::rich_black);
-
-private:
-    View view_;
-    void* userdata_;
+enum class Key {
+    action_1,
+    action_2,
+    start,
+    left,
+    right,
+    up,
+    down,
+    alt_1,
+    alt_2,
+    count
 };
 
 
@@ -134,6 +59,11 @@ class Platform {
 public:
     Platform();
 
+    class Screen;
+    class Keyboard;
+    class Logger;
+
+
     inline Screen& screen()
     {
         return screen_;
@@ -142,6 +72,11 @@ public:
     inline Keyboard& keyboard()
     {
         return keyboard_;
+    }
+
+    inline Logger& logger()
+    {
+        return logger_;
     }
 
     void push_map(const TileMap& map);
@@ -156,13 +91,125 @@ public:
     bool is_running() const;
 
 
-    void fatal_error(const char* msg);
-
-
     bool write_save(const SaveData& data);
     std::optional<SaveData> read_save();
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Screen
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    class Screen {
+    public:
+        static constexpr u32 sprite_limit = 128;
+
+        void draw(const Sprite& spr);
+
+        void clear();
+
+        void display();
+
+        Vec2<u32> size() const;
+
+        void set_view(const View& view)
+        {
+            view_ = view;
+        }
+
+        const View& get_view() const
+        {
+            return view_;
+        }
+
+        void fade(float amount, ColorConstant = ColorConstant::rich_black);
+
+    private:
+        Screen();
+
+        friend class Platform;
+
+        View view_;
+        void* userdata_;
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Keyboard
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    class Keyboard {
+    public:
+
+        void poll();
+
+        template <Key k> bool pressed() const
+        {
+            return states_[int(k)];
+        }
+
+        template <Key k> bool down_transition() const
+        {
+            return states_[int(k)] and not prev_[int(k)];
+        }
+
+        template <Key k> bool up_transition() const
+        {
+            return not states_[int(k)] and prev_[int(k)];
+        }
+
+    private:
+        Keyboard()
+        {
+            for (int i = 0; i < int(Key::count); ++i) {
+                states_[i] = false;
+                prev_[i] = false;
+            }
+        }
+
+        friend class Platform;
+
+        std::array<bool, int(Key::count)> prev_;
+        std::array<bool, int(Key::count)> states_;
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Logger
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    class Logger {
+    public:
+        void log(const char* msg);
+
+    private:
+
+        friend class Platform;
+    };
+
 
 private:
     Screen screen_;
     Keyboard keyboard_;
+    Logger logger_;
 };
+
+
+
+
+
+#ifdef __BLINDJUMP_ENABLE_LOGS
+#ifdef __GBA__
+// #pragma message "Warning: logging can wear down Flash memory, be careful using this on physical hardware!"
+#endif
+inline void log(Platform& pf, const char* msg)
+{
+    pf.logger().log(msg);
+}
+#else
+inline void log(Platform&, const char*)
+{
+}
+#endif // __BLINDJUMP_ENABLE_LOGS

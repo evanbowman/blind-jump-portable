@@ -58,7 +58,7 @@ public:
     }
 
 private:
-    Buffer<const Sprite*, Screen::sprite_limit> display_buffer;
+    Buffer<const Sprite*, Platform::Screen::sprite_limit> display_buffer;
     s32 level_;
     u32 update_counter_;
     TileMap tiles_;

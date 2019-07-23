@@ -86,20 +86,20 @@ DeltaClock::~DeltaClock()
 static volatile u32* keys = (volatile u32*)0x04000130;
 
 
-void Keyboard::poll()
+void Platform::Keyboard::poll()
 {
-    for (size_t i = 0; i < Key::count; ++i) {
+    for (size_t i = 0; i < int(Key::count); ++i) {
         prev_[i] = states_[i];
     }
-    states_[action_1] = ~(*keys) & KEY_A;
-    states_[action_2] = ~(*keys) & KEY_B;
-    states_[start] = ~(*keys) & KEY_START;
-    states_[right] = ~(*keys) & KEY_RIGHT;
-    states_[left] = ~(*keys) & KEY_LEFT;
-    states_[down] = ~(*keys) & KEY_DOWN;
-    states_[up] = ~(*keys) & KEY_UP;
-    states_[alt_1] = ~(*keys) & KEY_L;
-    states_[alt_2] = ~(*keys) & KEY_R;
+    states_[int(Key::action_1)] = ~(*keys) & KEY_A;
+    states_[int(Key::action_2)] = ~(*keys) & KEY_B;
+    states_[int(Key::start)] = ~(*keys) & KEY_START;
+    states_[int(Key::right)] = ~(*keys) & KEY_RIGHT;
+    states_[int(Key::left)] = ~(*keys) & KEY_LEFT;
+    states_[int(Key::down)] = ~(*keys) & KEY_DOWN;
+    states_[int(Key::up)] = ~(*keys) & KEY_UP;
+    states_[int(Key::alt_1)] = ~(*keys) & KEY_L;
+    states_[int(Key::alt_2)] = ~(*keys) & KEY_R;
 }
 
 
@@ -121,7 +121,7 @@ constexpr u16 disabled{2 << 8};
 }
 
 
-constexpr u32 oam_count = Screen::sprite_limit;
+constexpr u32 oam_count = Platform::Screen::sprite_limit;
 
 
 static ObjectAttributes* const object_attribute_memory = {
@@ -196,7 +196,7 @@ public:
 };
 
 
-Screen::Screen() : userdata_(nullptr)
+Platform::Screen::Screen() : userdata_(nullptr)
 {
     REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE;
 
@@ -263,7 +263,7 @@ const Color& real_color(ColorConstant k)
 }
 
 
-void Screen::draw(const Sprite& spr)
+void Platform::Screen::draw(const Sprite& spr)
 {
     const auto pb = [&]() -> PaletteBank {
         const auto& mix = spr.get_mix();
@@ -332,14 +332,14 @@ void Screen::draw(const Sprite& spr)
 }
 
 
-void Screen::clear()
+void Platform::Screen::clear()
 {
     // VSync
     VBlankIntrWait();
 }
 
 
-void Screen::display()
+void Platform::Screen::display()
 {
     // The Sprites are technically already displayed, so all we really
     // need to do is turn off the sprites in the table if the sprite
@@ -360,7 +360,7 @@ void Screen::display()
 }
 
 
-Vec2<u32> Screen::size() const
+Vec2<u32> Platform::Screen::size() const
 {
     static const Vec2<u32> gba_widescreen{240, 160};
     return gba_widescreen;
@@ -524,7 +524,7 @@ static void load_sprite_data()
 }
 
 
-void Screen::fade(float amount, ColorConstant k)
+void Platform::Screen::fade(float amount, ColorConstant k)
 {
     const auto& c = real_color(k);
     // To do a screen fade, blend black into the palettes.
@@ -690,9 +690,31 @@ Platform::Platform()
 }
 
 
-void Platform::fatal_error(const char* msg)
-{
+////////////////////////////////////////////////////////////////////////////////
+// Logger
+////////////////////////////////////////////////////////////////////////////////
 
+
+// NOTE: SaveData goes first into flash memory, followed by the game's
+// logs.
+static u32 log_write_loc = sizeof(SaveData);
+
+
+void Platform::Logger::log(const char* msg)
+{
+    std::array<char, 1024> buffer;
+
+    const auto msg_size = strlen(msg);
+
+    u32 i;
+    for (i = 0; i < std::min(msg_size, buffer.size() - 1); ++i) {
+        buffer[i] = msg[i];
+    }
+    buffer[i] = '\n';
+
+    flash_save(buffer, log_write_loc);
+
+    log_write_loc += msg_size;
 }
 
 

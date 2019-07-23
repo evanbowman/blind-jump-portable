@@ -189,10 +189,10 @@ void Player::update_animation(Microseconds dt, u8 max_index, Microseconds count)
 void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto& input = pfrm.keyboard();
-    const bool up = input.pressed<Keyboard::Key::up>();
-    const bool down = input.pressed<Keyboard::Key::down>();
-    const bool left = input.pressed<Keyboard::Key::left>();
-    const bool right = input.pressed<Keyboard::Key::right>();
+    const bool up = input.pressed<Key::up>();
+    const bool down = input.pressed<Key::down>();
+    const bool left = input.pressed<Key::left>();
+    const bool right = input.pressed<Key::right>();
 
     const auto wc = check_wall_collisions(game.get_tiles(), *this);
 
@@ -221,19 +221,19 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     key_response<ResourceLoc::player_walk_right>(
         right, left, down, up, r_speed_, wc.right);
 
-    if (input.up_transition<Keyboard::Key::up>()) {
+    if (input.up_transition<Key::up>()) {
         on_key_released<ResourceLoc::player_still_up, 0>(
             down, left, right, false);
     }
-    if (input.up_transition<Keyboard::Key::down>()) {
+    if (input.up_transition<Key::down>()) {
         on_key_released<ResourceLoc::player_still_down, 0>(
             up, left, right, false);
     }
-    if (input.up_transition<Keyboard::Key::left>()) {
+    if (input.up_transition<Key::left>()) {
         on_key_released<ResourceLoc::player_still_left, 0>(
             up, down, right, false);
     }
-    if (input.up_transition<Keyboard::Key::right>()) {
+    if (input.up_transition<Key::right>()) {
         on_key_released<ResourceLoc::player_still_right, 0>(
             up, down, left, false);
     }
