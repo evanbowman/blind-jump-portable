@@ -42,7 +42,9 @@ CXXFLAGS :=     -Wall \
 		-nostdlib \
 		-std=c++17 \
 		-mcpu=arm7tdmi \
-		-mtune=arm7tdmi
+		-mtune=arm7tdmi \
+                $(ARCH) \
+		-D__BLINDJUMP_ENABLE_LOGS
 
 CFLAGS	+=	$(INCLUDE)
 
