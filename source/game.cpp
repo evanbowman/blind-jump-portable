@@ -5,14 +5,18 @@
 #include <type_traits>
 
 
-static bool within_view_frustum(const Platform::Screen& screen, const Sprite& spr);
+static bool within_view_frustum(const Platform::Screen& screen,
+                                const Sprite& spr);
 
 
 Game::Game(Platform& pfrm)
     : level_(-1), update_counter_(0), counter_(0), state_(State::fade_in)
 {
     if (auto sd = pfrm.read_save()) {
+        info(pfrm, "loaded existing save file");
         save_data_ = *sd;
+    } else {
+        info(pfrm, "no save file found");
     }
 
     random_seed() = save_data_.seed_;
@@ -49,9 +53,9 @@ void Game::update(Platform& pfrm, Microseconds delta)
     enemies_.transform(update_policy);
     details_.transform(update_policy);
 
-    check_collisions(pfrm, *this, player_, enemies_.get<0>());
-    check_collisions(pfrm, *this, player_, enemies_.get<1>());
-    check_collisions(pfrm, *this, player_, effects_.get<0>());
+    check_collisions(pfrm, *this, player_, enemies_.get<Turret>());
+    check_collisions(pfrm, *this, player_, enemies_.get<Dasher>());
+    check_collisions(pfrm, *this, player_, effects_.get<Item>());
 
     display_buffer.push_back(&player_.get_sprite());
 
@@ -216,7 +220,7 @@ RETRY:
     Game::regenerate_map(pfrm);
 
     if (not Game::respawn_entities(pfrm)) {
-        log(pfrm, "Map is too small, regenerating...");
+        warning(pfrm, "Map is too small, regenerating...");
         goto RETRY;
     }
 
@@ -478,11 +482,11 @@ bool Game::respawn_entities(Platform& pfrm)
     // increase, the density of stuff on the map increases, along with the types
     // of enemies spawned.
     if (const auto c = select_coord()) {
-        details_.get<0>().push_back(make_entity<ItemChest>(pos(c)));
+        details_.get<ItemChest>().push_back(make_entity<ItemChest>(pos(c)));
     }
 
     if (const auto c = select_coord()) {
-        enemies_.get<1>().push_back(make_entity<Dasher>(pos(c)));
+        enemies_.get<Dasher>().push_back(make_entity<Dasher>(pos(c)));
     }
 
     // Potentially hide some items in far crannies of the map. If
@@ -506,7 +510,7 @@ bool Game::respawn_entities(Platform& pfrm)
                     }
                 }
             }
-            for (auto& item : effects_.get<0>()) {
+            for (auto& item : effects_.get<Item>()) {
                 if (manhattan_length(item->get_position(),
                                      to_world_coord({x, y})) < 64) {
                     return;
@@ -516,7 +520,7 @@ bool Game::respawn_entities(Platform& pfrm)
                 MapCoord c{x, y};
                 if (auto ent =
                         make_entity<Item>(pos(&c), pfrm, Item::Type::coin)) {
-                    effects_.get<0>().push_back(std::move(ent));
+                    effects_.get<Item>().push_back(std::move(ent));
                 }
             }
         }
@@ -525,7 +529,7 @@ bool Game::respawn_entities(Platform& pfrm)
     for (int i = 0; i < 2; ++i) {
         if (const auto c = select_coord()) {
             if (auto ent = make_entity<Turret>(pos(c))) {
-                enemies_.get<0>().push_back(std::move(ent));
+                enemies_.get<Turret>().push_back(std::move(ent));
             }
         }
     }
@@ -534,7 +538,8 @@ bool Game::respawn_entities(Platform& pfrm)
 }
 
 
-static bool within_view_frustum(const Platform::Screen& screen, const Sprite& spr)
+static bool within_view_frustum(const Platform::Screen& screen,
+                                const Sprite& spr)
 {
     const auto position =
         spr.get_position().template cast<s32>() - spr.get_origin();

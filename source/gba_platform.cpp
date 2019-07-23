@@ -700,21 +700,40 @@ Platform::Platform()
 static u32 log_write_loc = sizeof(SaveData);
 
 
-void Platform::Logger::log(const char* msg)
+void Platform::Logger::log(Logger::Severity level, const char* msg)
 {
     std::array<char, 1024> buffer;
+
+    buffer[0] = '[';
+    buffer[2] = ']';
+
+    switch (level) {
+    case Severity::info:
+        buffer[1] = 'i';
+        break;
+
+    case Severity::warning:
+        buffer[1] = 'w';
+        break;
+
+    case Severity::error:
+        buffer[1] = 'E';
+        break;
+    }
 
     const auto msg_size = strlen(msg);
 
     u32 i;
-    for (i = 0; i < std::min(msg_size, buffer.size() - 1); ++i) {
-        buffer[i] = msg[i];
+    constexpr size_t prefix_size = 3;
+    for (i = 0; i < std::min(msg_size, buffer.size() - (prefix_size + 1));
+         ++i) {
+        buffer[i + 3] = msg[i];
     }
-    buffer[i] = '\n';
+    buffer[i + 3] = '\n';
 
     flash_save(buffer, log_write_loc);
 
-    log_write_loc += msg_size;
+    log_write_loc += msg_size + prefix_size + 1;
 }
 
 

@@ -6,6 +6,8 @@ int main()
 {
     Platform pf;
 
+    info(pf, "platform ready");
+
 
     Game game(pf);
 
