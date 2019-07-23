@@ -5,7 +5,7 @@
 #include <type_traits>
 
 
-static bool within_view_frustum(const Screen& screen, const Sprite& spr);
+static bool within_view_frustum(const Platform::Screen& screen, const Sprite& spr);
 
 
 Game::Game(Platform& pfrm)
@@ -136,7 +136,7 @@ void Game::update_transitions(Platform& pf, Microseconds dt)
 {
     switch (state_) {
     case State::active:
-        if (pf.keyboard().down_transition<Keyboard::Key::action_2>()) {
+        if (pf.keyboard().down_transition<Key::action_2>()) {
             if (manhattan_length(player_.get_position(),
                                  transporter_.get_position()) < 32) {
                 state_ = State::fade_out;
@@ -216,6 +216,7 @@ RETRY:
     Game::regenerate_map(pfrm);
 
     if (not Game::respawn_entities(pfrm)) {
+        log(pfrm, "Map is too small, regenerating...");
         goto RETRY;
     }
 
@@ -533,7 +534,7 @@ bool Game::respawn_entities(Platform& pfrm)
 }
 
 
-static bool within_view_frustum(const Screen& screen, const Sprite& spr)
+static bool within_view_frustum(const Platform::Screen& screen, const Sprite& spr)
 {
     const auto position =
         spr.get_position().template cast<s32>() - spr.get_origin();
