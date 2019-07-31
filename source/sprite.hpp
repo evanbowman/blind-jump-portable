@@ -13,80 +13,51 @@ public:
 
     enum class Size : u8 { w32_h32, w16_h32 };
 
-    Sprite(Size size = Size::w32_h32)
-        : texture_index_(0), alpha_(Alpha::opaque), size_(size)
-    {
-    }
 
-    void set_position(const Vec2<Float>& position)
-    {
-        position_ = position;
-    }
+    Sprite(Size size = Size::w32_h32);
 
-    const Vec2<Float>& get_position() const
-    {
-        return position_;
-    }
 
-    void set_origin(const Vec2<s32>& origin)
-    {
-        origin_ = origin;
-    }
+    void set_position(const Vec2<Float>& position);
 
-    const Vec2<s32>& get_origin() const
-    {
-        return origin_;
-    }
 
-    void set_texture_index(TextureIndex texture_index)
-    {
-        texture_index_ = texture_index;
-    }
+    void set_origin(const Vec2<s32>& origin);
 
-    TextureIndex get_texture_index() const
-    {
-        return texture_index_;
-    }
 
-    void set_flip(const Vec2<bool>& flip)
-    {
-        flip_ = flip;
-    }
+    void set_texture_index(TextureIndex texture_index);
 
-    const Vec2<bool>& get_flip() const
-    {
-        return flip_;
-    }
 
-    Alpha get_alpha() const
-    {
-        return alpha_;
-    }
+    void set_flip(const Vec2<bool>& flip);
 
-    void set_alpha(Alpha alpha)
-    {
-        alpha_ = alpha;
-    }
 
-    const ColorMix& get_mix() const
-    {
-        return mix_;
-    }
+    void set_alpha(Alpha alpha);
 
-    void set_mix(const ColorMix& mix)
-    {
-        mix_ = mix;
-    }
 
-    Size get_size() const
-    {
-        return size_;
-    }
+    void set_mix(const ColorMix& mix);
 
-    void set_size(Size size)
-    {
-        size_ = size;
-    }
+
+    void set_size(Size size);
+
+
+    const Vec2<Float>& get_position() const;
+
+
+    const Vec2<s32>& get_origin() const;
+
+
+    TextureIndex get_texture_index() const;
+
+
+    const Vec2<bool>& get_flip() const;
+
+
+    Alpha get_alpha() const;
+
+
+    const ColorMix& get_mix() const;
+
+
+    Size get_size() const;
+
 
 private:
     Vec2<Float> position_;

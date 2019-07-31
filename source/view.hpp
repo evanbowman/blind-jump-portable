@@ -5,25 +5,13 @@
 
 class View {
 public:
-    void set_center(const Vec2<Float>& center)
-    {
-        center_ = center;
-    }
+    void set_center(const Vec2<Float>& center);
 
-    const Vec2<Float>& get_center() const
-    {
-        return center_;
-    }
+    void set_size(const Vec2<Float>& size);
 
-    void set_size(const Vec2<Float>& size)
-    {
-        size_ = size;
-    }
+    const Vec2<Float>& get_center() const;
 
-    const Vec2<Float>& get_size() const
-    {
-        return size_;
-    }
+    const Vec2<Float>& get_size() const;
 
 private:
     Vec2<Float> center_;

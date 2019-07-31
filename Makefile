@@ -29,7 +29,7 @@ ARCH	:=	-mthumb -mthumb-interwork
 
 CFLAGS	:=	-g -Wall -Werror -O3\
 			-mcpu=arm7tdmi -mtune=arm7tdmi\
- 			-fomit-frame-pointer\
+			-fomit-frame-pointer\
 			-ffast-math \
 			$(ARCH)
 
@@ -39,10 +39,14 @@ CXXFLAGS :=     -Wall \
 		-Os \
 		-D__GBA__ \
 		-fno-exceptions \
+		-flto \
 		-nostdlib \
 		-std=c++17 \
 		-mcpu=arm7tdmi \
 		-mtune=arm7tdmi \
+		-ffast-math \
+		-fomit-frame-pointer \
+		-fno-math-errno \
                 $(ARCH) \
 		-D__BLINDJUMP_ENABLE_LOGS
 
