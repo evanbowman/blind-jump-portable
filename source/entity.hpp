@@ -11,58 +11,48 @@ class EntityBase {
 public:
     using Health = s32;
 
-    EntityBase() : health_(1)
-    {
-    }
 
-    EntityBase(Health health) : health_(health)
-    {
-    }
+    EntityBase();
+
+
+    EntityBase(Health health);
+
 
     EntityBase(EntityBase&) = delete;
 
-    void update(Platform&, Game&, Microseconds)
-    {
-    }
 
-    Health get_health() const
-    {
-        return health_;
-    }
+    void update(Platform&, Game&, Microseconds);
 
-    bool alive() const
-    {
-        return health_ not_eq 0;
-    }
 
-    const Sprite& get_sprite() const
-    {
-        return sprite_;
-    }
+    Health get_health() const;
 
-    void set_position(const Vec2<Float>& position)
-    {
-        position_ = position;
-    }
 
-    void add_health(Health amount)
-    {
-        health_ += amount;
-    }
+    bool alive() const;
 
-    const Vec2<Float>& get_position() const
-    {
-        return position_;
-    }
+
+    const Sprite& get_sprite() const;
+
+
+    void set_position(const Vec2<Float>& position);
+
+
+    void add_health(Health amount);
+
+
+    const Vec2<Float>& get_position() const;
+
 
     static constexpr bool multiface_sprite = false;
 
+
 protected:
+    [[gnu::cold]]
     void debit_health(Health amount)
     {
         health_ = std::max(Health(0), health_ - amount);
     }
 
+    [[gnu::cold]]
     void kill()
     {
         health_ = 0;
