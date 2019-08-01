@@ -46,13 +46,11 @@ public:
 
 
 protected:
-    [[gnu::cold]]
     void debit_health(Health amount)
     {
         health_ = std::max(Health(0), health_ - amount);
     }
 
-    [[gnu::cold]]
     void kill()
     {
         health_ = 0;

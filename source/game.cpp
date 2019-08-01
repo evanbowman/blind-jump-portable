@@ -1,5 +1,6 @@
 #include "game.hpp"
 #include "random.hpp"
+#include "macros.hpp"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
@@ -25,7 +26,7 @@ Game::Game(Platform& pfrm)
 }
 
 
-void Game::update(Platform& pfrm, Microseconds delta)
+HOT void Game::update(Platform& pfrm, Microseconds delta)
 {
     // Every update, advance the random number engine, so that the
     // amount of time spent on a level contributes some entropy to the
@@ -126,7 +127,7 @@ void Game::update(Platform& pfrm, Microseconds delta)
 }
 
 
-void Game::render(Platform& pfrm)
+HOT void Game::render(Platform& pfrm)
 {
     for (auto spr : display_buffer) {
         pfrm.screen().draw(*spr);
@@ -136,7 +137,7 @@ void Game::render(Platform& pfrm)
 }
 
 
-void Game::update_transitions(Platform& pf, Microseconds dt)
+HOT void Game::update_transitions(Platform& pf, Microseconds dt)
 {
     switch (state_) {
     case State::active:
@@ -212,7 +213,8 @@ static void condense(TileMap& map, TileMap& maptemp)
 }
 
 
-void Game::next_level(Platform& pfrm)
+
+COLD void Game::next_level(Platform& pfrm)
 {
     level_ += 1;
 
@@ -233,7 +235,8 @@ RETRY:
 }
 
 
-static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
+
+COLD static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
 {
     using Coord = Vec2<s8>;
 
@@ -270,7 +273,7 @@ static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
 }
 
 
-void Game::regenerate_map(Platform& pfrm)
+COLD void Game::regenerate_map(Platform& pfrm)
 {
     TileMap temporary;
 
@@ -399,7 +402,7 @@ using MapCoord = Vec2<TIdx>;
 using MapCoordBuf = Buffer<MapCoord, TileMap::tile_count>;
 
 
-static MapCoordBuf get_free_map_slots(const TileMap& map)
+COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 {
     MapCoordBuf output;
 
@@ -424,7 +427,10 @@ static MapCoordBuf get_free_map_slots(const TileMap& map)
 }
 
 
-bool Game::respawn_entities(Platform& pfrm)
+template <typename T> struct Type { using value = T; };
+
+
+COLD bool Game::respawn_entities(Platform& pfrm)
 {
     auto clear_entities = [&](auto& buf) { buf.clear(); };
 
@@ -477,17 +483,26 @@ bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
+    auto spawn_entity = [&](auto& group, auto type) {
+        if (const auto c = select_coord()) {
+            using T = typename decltype(type)::value;
+            if (auto ent = make_entity<T>(pos(c))) {
+                group.template get<T>().push_back(std::move(ent));
+            } else {
+                warning(pfrm, "spawn failed: entity buffer full");
+            }
+        } else {
+            warning(pfrm, "spawn failed: out of coords");
+        }
+    };
+
     // Now at this point, we'll want to place things on the map based on how
     // many open slots there are, and what the current level is. As levels
     // increase, the density of stuff on the map increases, along with the types
     // of enemies spawned.
-    if (const auto c = select_coord()) {
-        details_.get<ItemChest>().push_back(make_entity<ItemChest>(pos(c)));
-    }
+    spawn_entity(details_, Type<ItemChest>{});
+    spawn_entity(enemies_, Type<Dasher>{});
 
-    if (const auto c = select_coord()) {
-        enemies_.get<Dasher>().push_back(make_entity<Dasher>(pos(c)));
-    }
 
     // Potentially hide some items in far crannies of the map. If
     // there's no sand nearby, and no items eiher, potentially place
@@ -527,11 +542,7 @@ bool Game::respawn_entities(Platform& pfrm)
     });
 
     for (int i = 0; i < 2; ++i) {
-        if (const auto c = select_coord()) {
-            if (auto ent = make_entity<Turret>(pos(c))) {
-                enemies_.get<Turret>().push_back(std::move(ent));
-            }
-        }
+        spawn_entity(enemies_, Type<Turret>());
     }
 
     return true;

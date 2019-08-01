@@ -9,6 +9,7 @@
 
 #ifdef __GBA__
 
+#include "macros.hpp"
 #include "platform.hpp"
 #include "random.hpp"
 #include <string.h>
@@ -224,7 +225,7 @@ static PaletteBank palette_counter = available_palettes;
 // display 12 mixed colors at a time, because the first four banks are in use.
 static PaletteBank color_mix(const Color& c, float amount)
 {
-    if (palette_counter == 15) {
+    if (UNLIKELY(palette_counter == 15)) {
         return 0; // Exhausted all the palettes that we have for effects.
     }
     for (int i = 0; i < 16; ++i) {
@@ -267,7 +268,7 @@ void Platform::Screen::draw(const Sprite& spr)
 {
     const auto pb = [&]() -> PaletteBank {
         const auto& mix = spr.get_mix();
-        if (mix.color_ not_eq ColorConstant::null) {
+        if (UNLIKELY(mix.color_ not_eq ColorConstant::null)) {
             if (const auto pal_bank =
                     color_mix(real_color(mix.color_), mix.amount_)) {
                 return ATTR2_PALBANK(pal_bank);
@@ -280,7 +281,7 @@ void Platform::Screen::draw(const Sprite& spr)
     }();
 
     auto draw_sprite = [&](int tex_off, int x_off, int scale) {
-        if (oam_write_index == oam_count) {
+        if (UNLIKELY(oam_write_index == oam_count)) {
             return;
         }
         const auto position = spr.get_position().cast<s32>() - spr.get_origin();
@@ -383,7 +384,7 @@ Vec2<u32> Platform::Screen::size() const
 // charblock is used up by the tileset image.
 
 
-static void set_tile(u16 x, u16 y, u16 tile_id)
+COLD static void set_tile(u16 x, u16 y, u16 tile_id)
 {
     // NOTE: The game's tiles are 32x24px in size. GBA tiles are each
     // 8x8. To further complicate things, the GBA's VRAM is
@@ -463,7 +464,7 @@ static void set_tile(u16 x, u16 y, u16 tile_id)
 }
 
 
-void Platform::push_map(const TileMap& map)
+COLD void Platform::push_map(const TileMap& map)
 {
     for (u32 i = 0; i < TileMap::width; ++i) {
         for (u32 j = 0; j < TileMap::height; ++j) {
@@ -506,7 +507,7 @@ void Platform::push_map(const TileMap& map)
 #define BG_REG_64x64 0xC000 //!< reg bg, 64x64 (512x512 px)
 
 
-static void load_sprite_data()
+COLD static void load_sprite_data()
 {
     memcpy((void*)MEM_PALETTE, bgr_spritesheetPal, bgr_spritesheetPalLen);
 
@@ -607,7 +608,7 @@ static void set_flash_bank(u32 bankID)
 }
 
 
-template <typename T> static bool flash_save(const T& obj, u32 flash_offset)
+template <typename T> COLD static bool flash_save(const T& obj, u32 flash_offset)
 {
     if ((u32)flash_offset >= 0x10000) {
         set_flash_bank(1);
@@ -626,7 +627,7 @@ template <typename T> static bool flash_save(const T& obj, u32 flash_offset)
 }
 
 
-template <typename T> static T flash_load(u32 flash_offset)
+template <typename T> COLD static T flash_load(u32 flash_offset)
 {
     if (flash_offset >= 0x10000) {
         set_flash_bank(1);
