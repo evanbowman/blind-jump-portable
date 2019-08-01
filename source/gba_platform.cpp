@@ -220,14 +220,6 @@ constexpr PaletteBank available_palettes = 3;
 static PaletteBank palette_counter = available_palettes;
 
 
-// For software color blending, floating point is too slow, so lets
-// use this instead...
-static u8 lerp8(u8 a, u8 b, u8 x)
-{
-    return a + (u8)(((u16)(b - a) * x) >> 8);
-}
-
-
 // Perform a color mix between the spritesheet palette bank (bank zero), and
 // return the palette bank where the resulting mixture is stored. We can only
 // display 12 mixed colors at a time, because the first four banks are in use.
@@ -237,14 +229,14 @@ static PaletteBank color_mix(const Color& c, float amount)
         return 0; // Exhausted all the palettes that we have for effects.
     }
 
-    const u8 amt = (1.f - amount) * 255;
+    const u8 amt = amount * 255;
 
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(MEM_PALETTE[i]);
         const u32 index = 16 * (palette_counter + 1) + i;
-        MEM_PALETTE[index] = Color(lerp8(c.r_, from.r_, amt),
-                                   lerp8(c.g_, from.g_, amt),
-                                   lerp8(c.b_, from.b_, amt))
+        MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amt),
+                                   fast_interpolate(c.g_, from.g_, amt),
+                                   fast_interpolate(c.b_, from.b_, amt))
                                  .bgr_hex_555();
     }
     return ++palette_counter;
@@ -538,22 +530,22 @@ COLD static void load_sprite_data()
 
 void Platform::Screen::fade(float amount, ColorConstant k)
 {
-    const u8 amt = (1.f - amount) * 255;
+    const u8 amt = amount * 255;
 
     const auto& c = real_color(k);
     // To do a screen fade, blend black into the palettes.
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(bgr_spritesheetPal[i]);
-        MEM_PALETTE[i] = Color(lerp8(c.r_, from.r_, amt),
-                               lerp8(c.g_, from.g_, amt),
-                               lerp8(c.b_, from.b_, amt))
+        MEM_PALETTE[i] = Color(fast_interpolate(c.r_, from.r_, amt),
+                               fast_interpolate(c.g_, from.g_, amt),
+                               fast_interpolate(c.b_, from.b_, amt))
                              .bgr_hex_555();
     }
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
-        MEM_BG_PALETTE[i] = Color(lerp8(c.r_, from.r_, amt),
-                                  lerp8(c.g_, from.g_, amt),
-                                  lerp8(c.b_, from.b_, amt))
+        MEM_BG_PALETTE[i] = Color(fast_interpolate(c.r_, from.r_, amt),
+                                  fast_interpolate(c.g_, from.g_, amt),
+                                  fast_interpolate(c.b_, from.b_, amt))
                                 .bgr_hex_555();
     }
 }
