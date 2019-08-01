@@ -1,5 +1,6 @@
 #pragma once
 
+#include "macros.hpp"
 #include "numeric.hpp"
 #include <array>
 #include <new>
