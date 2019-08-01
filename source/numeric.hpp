@@ -134,6 +134,12 @@ template <typename T> T interpolate(const T& a, const T& b, Float t)
 }
 
 
+inline u8 fast_interpolate(u32 a, u32 b, u32 t)
+{
+    return b + (u8)(((u16)(a - b) * t) >> 8);
+}
+
+
 using Microseconds = s32;
 
 
