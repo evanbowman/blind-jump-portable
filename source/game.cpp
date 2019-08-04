@@ -1,6 +1,6 @@
 #include "game.hpp"
-#include "random.hpp"
 #include "macros.hpp"
+#include "random.hpp"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
@@ -37,7 +37,11 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     // anticipate.
     random_value();
 
-    player_.update(pfrm, *this, delta);
+    if (state_ == State::active) {
+        player_.update(pfrm, *this, delta);
+    } else {
+        player_.soft_update(pfrm, *this, delta);
+    }
 
     auto update_policy = [&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
@@ -101,8 +105,6 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
 
     camera_.update(pfrm, delta, player_.get_position());
 
-    show_sprite(transporter_.get_sprite());
-
     std::sort(display_buffer.begin(),
               display_buffer.end(),
               [](const auto& l, const auto& r) {
@@ -120,6 +122,8 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     std::copy(shadows_buffer.begin(),
               shadows_buffer.end(),
               std::back_inserter(display_buffer));
+
+    show_sprite(transporter_.get_sprite());
 
     display_buffer.push_back(&player_.get_shadow());
 
@@ -139,13 +143,12 @@ HOT void Game::render(Platform& pfrm)
 
 HOT void Game::update_transitions(Platform& pf, Microseconds dt)
 {
+    const auto& t_pos = transporter_.get_position() - Vec2<Float>{0, 22};
     switch (state_) {
     case State::active:
-        if (pf.keyboard().down_transition<Key::action_2>()) {
-            if (manhattan_length(player_.get_position(),
-                                 transporter_.get_position()) < 32) {
-                state_ = State::fade_out;
-            }
+        if (manhattan_length(player_.get_position(), t_pos) < 16) {
+            state_ = State::fade_out;
+            player_.move(t_pos);
         }
         break;
 
@@ -213,7 +216,6 @@ static void condense(TileMap& map, TileMap& maptemp)
 }
 
 
-
 COLD void Game::next_level(Platform& pfrm)
 {
     level_ += 1;
@@ -233,7 +235,6 @@ RETRY:
     camera_.set_position(
         pfrm, {player_pos.x - ssize.x / 2, player_pos.y - float(ssize.y)});
 }
-
 
 
 COLD static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
@@ -427,7 +428,9 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 }
 
 
-template <typename T> struct Type { using value = T; };
+template <typename T> struct Type {
+    using value = T;
+};
 
 
 COLD bool Game::respawn_entities(Platform& pfrm)
@@ -463,7 +466,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     auto player_coord = select_coord();
     if (player_coord) {
-        player_.set_position(pos(player_coord));
+        player_.move(pos(player_coord));
     } else {
         return false;
     }
@@ -533,8 +536,13 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
             if (random_choice<2>()) {
                 MapCoord c{x, y};
-                if (auto ent =
-                        make_entity<Item>(pos(&c), pfrm, Item::Type::coin)) {
+                if (auto ent = make_entity<Item>(pos(&c), pfrm, [] {
+                        if (random_choice<4>()) {
+                            return Item::Type::coin;
+                        } else {
+                            return Item::Type::heart;
+                        }
+                    }())) {
                     effects_.get<Item>().push_back(std::move(ent));
                 }
             }

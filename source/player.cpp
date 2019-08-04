@@ -32,7 +32,7 @@ void Player::enemy_contact()
 {
     if (not Player::is_invulnerable()) {
         debit_health(1);
-        sprite_.set_mix({ColorConstant::coquelicot, 1.f});
+        sprite_.set_mix({ColorConstant::coquelicot, 255});
         color_timer_ = 0;
         invulnerability_timer_ = 700000;
     }
@@ -67,12 +67,12 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
 {
     switch (item.get_type()) {
     case Item::Type::heart:
-        sprite_.set_mix({ColorConstant::spanish_crimson, 1.f});
+        sprite_.set_mix({ColorConstant::spanish_crimson, 255});
         add_health(1);
         break;
 
     case Item::Type::coin:
-        sprite_.set_mix({ColorConstant::electric_blue, 1.f});
+        sprite_.set_mix({ColorConstant::electric_blue, 255});
         break;
     }
     color_timer_ = 0;
@@ -186,6 +186,21 @@ void Player::update_animation(Microseconds dt, u8 max_index, Microseconds count)
 }
 
 
+void Player::soft_update(Platform& pfrm, Game& game, Microseconds dt)
+{
+    const auto& cmix = sprite_.get_mix();
+    if (cmix.amount_ > 0) {
+        color_timer_ += dt;
+        if (color_timer_ > 15685) {
+            color_timer_ -= 15685;
+            sprite_.set_mix({cmix.color_, u8(cmix.amount_ - 5)});
+        }
+    } else {
+        sprite_.set_mix({});
+    }
+}
+
+
 void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto& input = pfrm.keyboard();
@@ -200,17 +215,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         invulnerability_timer_ -= dt;
     }
 
-    const auto cmix_amount = sprite_.get_mix().amount_;
-    if (cmix_amount > 0.f) {
-        const auto c = sprite_.get_mix().color_;
-        color_timer_ += dt;
-        if (color_timer_ > 80000) {
-            color_timer_ -= 80000;
-            sprite_.set_mix({c, cmix_amount - 0.1f});
-        }
-    } else {
-        sprite_.set_mix({});
-    }
+    soft_update(pfrm, game, dt);
 
     key_response<ResourceLoc::player_walk_up>(
         up, down, left, right, u_speed_, wc.up);
@@ -286,4 +291,16 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     Entity::set_position(new_pos);
     sprite_.set_position(new_pos);
     shadow_.set_position(new_pos);
+}
+
+
+void Player::move(const Vec2<Float>& pos)
+{
+    Player::set_position(pos);
+    sprite_.set_position(pos);
+    shadow_.set_position(pos);
+    frame_base_ = ResourceLoc::player_still_down;
+    sprite_.set_texture_index(frame_base_);
+    sprite_.set_size(Sprite::Size::w16_h32);
+    sprite_.set_origin(v_origin);
 }

@@ -33,9 +33,6 @@ public:
     const Sprite& get_sprite() const;
 
 
-    void set_position(const Vec2<Float>& position);
-
-
     void add_health(Health amount);
 
 
@@ -50,6 +47,8 @@ protected:
     {
         health_ = std::max(Health(0), health_ - amount);
     }
+
+    void set_position(const Vec2<Float>& position);
 
     void kill()
     {
