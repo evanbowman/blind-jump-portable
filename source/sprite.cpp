@@ -2,7 +2,7 @@
 
 
 Sprite::Sprite(Size size)
-    : texture_index_(0), alpha_(Alpha::opaque), size_(size)
+    : rotation_(0), texture_index_(0), alpha_(Alpha::opaque), size_(size)
 {
 }
 
@@ -49,6 +49,12 @@ void Sprite::set_size(Size size)
 }
 
 
+void Sprite::set_rotation(Rotation rotation)
+{
+    rotation_ = rotation;
+}
+
+
 const Vec2<Float>& Sprite::get_position() const
 {
     return position_;
@@ -88,4 +94,10 @@ const ColorMix& Sprite::get_mix() const
 Sprite::Size Sprite::get_size() const
 {
     return size_;
+}
+
+
+Sprite::Rotation Sprite::get_rotation() const
+{
+    return rotation_;
 }

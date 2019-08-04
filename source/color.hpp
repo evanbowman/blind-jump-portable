@@ -18,5 +18,5 @@ enum class ColorConstant {
 
 struct ColorMix {
     ColorConstant color_ = ColorConstant::null;
-    Float amount_ = 0.f;
+    u8 amount_ = 0;
 };

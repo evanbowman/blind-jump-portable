@@ -27,6 +27,8 @@ public:
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
+    void soft_update(Platform& pfrm, Game& game, Microseconds dt);
+
     const Sprite& get_shadow() const
     {
         return shadow_;
@@ -41,6 +43,8 @@ public:
     {
         return invulnerability_timer_ > 0;
     }
+
+    void move(const Vec2<Float>& pos);
 
 private:
     using ResourceLoc = TextureMap;

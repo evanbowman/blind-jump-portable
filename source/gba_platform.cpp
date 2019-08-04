@@ -223,20 +223,18 @@ static PaletteBank palette_counter = available_palettes;
 // Perform a color mix between the spritesheet palette bank (bank zero), and
 // return the palette bank where the resulting mixture is stored. We can only
 // display 12 mixed colors at a time, because the first four banks are in use.
-static PaletteBank color_mix(const Color& c, float amount)
+static PaletteBank color_mix(const Color& c, u8 amount)
 {
     if (UNLIKELY(palette_counter == 15)) {
         return 0; // Exhausted all the palettes that we have for effects.
     }
 
-    const u8 amt = amount * 255;
-
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(MEM_PALETTE[i]);
         const u32 index = 16 * (palette_counter + 1) + i;
-        MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amt),
-                                   fast_interpolate(c.g_, from.g_, amt),
-                                   fast_interpolate(c.b_, from.b_, amt))
+        MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amount),
+                                   fast_interpolate(c.g_, from.g_, amount),
+                                   fast_interpolate(c.b_, from.b_, amount))
                                  .bgr_hex_555();
     }
     return ++palette_counter;
@@ -613,7 +611,8 @@ static void set_flash_bank(u32 bankID)
 }
 
 
-template <typename T> COLD static bool flash_save(const T& obj, u32 flash_offset)
+template <typename T>
+COLD static bool flash_save(const T& obj, u32 flash_offset)
 {
     if ((u32)flash_offset >= 0x10000) {
         set_flash_bank(1);

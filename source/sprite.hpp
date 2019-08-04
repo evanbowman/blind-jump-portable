@@ -13,6 +13,8 @@ public:
 
     enum class Size : u8 { w32_h32, w16_h32 };
 
+    using Rotation = u16;
+
 
     Sprite(Size size = Size::w32_h32);
 
@@ -38,6 +40,9 @@ public:
     void set_size(Size size);
 
 
+    void set_rotation(Rotation degrees);
+
+
     const Vec2<Float>& get_position() const;
 
 
@@ -59,10 +64,14 @@ public:
     Size get_size() const;
 
 
+    Rotation get_rotation() const;
+
+
 private:
     Vec2<Float> position_;
     Vec2<s32> origin_;
     Vec2<bool> flip_;
+    Rotation rotation_;
     TextureIndex texture_index_;
     Alpha alpha_;
     Size size_;
