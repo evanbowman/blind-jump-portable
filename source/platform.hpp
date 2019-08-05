@@ -57,11 +57,11 @@ enum class Key {
 
 class Platform {
 public:
-    Platform();
 
     class Screen;
     class Keyboard;
     class Logger;
+    class Speaker;
 
 
     inline Screen& screen()
@@ -77,6 +77,11 @@ public:
     inline Logger& logger()
     {
         return logger_;
+    }
+
+    inline Speaker& speaker()
+    {
+        return speaker_;
     }
 
     void push_map(const TileMap& map);
@@ -190,9 +195,29 @@ public:
     };
 
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Speaker
+    ////////////////////////////////////////////////////////////////////////////
+
+    class Speaker {
+    public:
+
+
+    private:
+        friend class Platform;
+
+        Speaker();
+
+    };
+
 private:
+    Platform();
+
+    friend int main();
+
     Screen screen_;
     Keyboard keyboard_;
+    Speaker speaker_;
     Logger logger_;
 };
 

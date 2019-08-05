@@ -45,9 +45,9 @@ DeltaClock::~DeltaClock()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void Keyboard::poll()
+void Platform::Keyboard::poll()
 {
-    for (size_t i = 0; i < Key::count; ++i) {
+    for (size_t i = 0; i < size_t(Key::count); ++i) {
         prev_[i] = states_[i];
     }
     sf::Event event;
@@ -60,19 +60,19 @@ void Keyboard::poll()
         case sf::Event::KeyPressed:
             switch (event.key.code) {
             case sf::Keyboard::Left:
-                states_[left] = true;
+                states_[size_t(Key::left)] = true;
                 break;
 
             case sf::Keyboard::Right:
-                states_[right] = true;
+                states_[size_t(Key::right)] = true;
                 break;
 
             case sf::Keyboard::Up:
-                states_[up] = true;
+                states_[size_t(Key::up)] = true;
                 break;
 
             case sf::Keyboard::Down:
-                states_[down] = true;
+                states_[size_t(Key::down)] = true;
                 break;
 
             default:
@@ -83,19 +83,19 @@ void Keyboard::poll()
         case sf::Event::KeyReleased:
             switch (event.key.code) {
             case sf::Keyboard::Left:
-                states_[left] = true;
+                states_[size_t(Key::left)] = true;
                 break;
 
             case sf::Keyboard::Right:
-                states_[right] = true;
+                states_[size_t(Key::right)] = true;
                 break;
 
             case sf::Keyboard::Up:
-                states_[up] = true;
+                states_[size_t(Key::up)] = true;
                 break;
 
             case sf::Keyboard::Down:
-                states_[down] = true;
+                states_[size_t(Key::down)] = true;
                 break;
 
             default:
@@ -112,7 +112,7 @@ void Keyboard::poll()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-Screen::Screen()
+Platform::Screen::Screen()
 {
     if (::window) {
         throw std::runtime_error("Only one screen allowed at a time");
@@ -121,25 +121,25 @@ Screen::Screen()
 }
 
 
-Vec2<u32> Screen::size() const
+Vec2<u32> Platform::Screen::size() const
 {
     return {::window->getSize().x, ::window->getSize().y};
 }
 
 
-void Screen::clear()
+void Platform::Screen::clear()
 {
     ::window->clear();
 }
 
 
-void Screen::display()
+void Platform::Screen::display()
 {
     ::window->display();
 }
 
 
-void Screen::draw(const Sprite& spr)
+void Platform::Screen::draw(const Sprite& spr)
 {
     const Vec2<Float>& pos = spr.get_position();
     const Vec2<bool>& flip = spr.get_flip();
@@ -186,4 +186,16 @@ void Platform::sleep(u32 frames)
 }
 
 
-#endif // __GBA__
+void start(Platform&);
+
+int main()
+{
+    Platform pf;
+    start(pf);
+}
+
+#ifdef _WIN32
+int WinMain(HINSTANCE, HINSTANCE, LPSTR, int) { return main(); }
+#endif
+
+#endif
