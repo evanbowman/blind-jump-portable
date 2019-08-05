@@ -6,8 +6,8 @@
 Item::Item(const Vec2<Float>& pos, Platform&, Type type)
     : timer_(random_value()), type_(type), hitbox_{&position_, {16, 16}, {8, 8}}
 {
-    position_ = pos;
-    sprite_.set_position(pos);
+    position_ = pos - Vec2<Float>{8, 0};
+    sprite_.set_position(position_);
     switch (type) {
     case Type::heart:
         sprite_.set_texture_index(TextureMap::heart);

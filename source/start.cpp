@@ -2,13 +2,8 @@
 #include "transformGroup.hpp"
 
 
-int main()
+void start(Platform& pf)
 {
-    Platform pf;
-
-    info(pf, "platform ready");
-
-
     Game game(pf);
 
 
