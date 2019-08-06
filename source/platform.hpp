@@ -3,6 +3,7 @@
 #include "numeric.hpp"
 #include "save.hpp"
 #include "sprite.hpp"
+#include "sound.hpp"
 #include "tileMap.hpp"
 #include "view.hpp"
 #include <array>
@@ -201,7 +202,9 @@ public:
 
     class Speaker {
     public:
+        using Channel = int;
 
+        void play(Note n, Octave o, Channel c);
 
     private:
         friend class Platform;

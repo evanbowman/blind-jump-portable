@@ -26,6 +26,10 @@ Game::Game(Platform& pfrm)
 }
 
 
+void riff(Platform&);
+
+
+
 HOT void Game::update(Platform& pfrm, Microseconds delta)
 {
     // Every update, advance the random number engine, so that the
@@ -36,6 +40,10 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     // granularity to get to a new level that's possible to
     // anticipate.
     random_value();
+
+    if (pfrm.keyboard().pressed<Key::alt_1>()) {
+        riff(pfrm);
+    }
 
     if (state_ == State::active) {
         player_.update(pfrm, *this, delta);
