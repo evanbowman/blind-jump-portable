@@ -765,6 +765,9 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 #define REG_SNDDSCNT *(volatile u16*)(0x04000000+0x0082)	//!< Direct Sound control
 #define REG_SNDSTAT *(volatile u16*)(0x04000000+0x0084)	//!< Sound status
 #define REG_SNDBIAS *(volatile u16*)(0x04000000+0x0088)	//!< Sound bias
+#define REG_SND2CNT *(volatile u16*)(0x04000000+0x0068)	//!< Channel 2 control
+#define REG_SND2FREQ *(volatile u16*)(0x04000000+0x006C)	//!< Channel 2 frequency
+
 
 // --- REG_SND1SWEEP ---------------------------------------------------
 
@@ -941,13 +944,6 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 #define SSTAT_ENABLE	0x0080	//!< Enable sound. NOTE: enable before using any other sound regs
 
 
-typedef enum
-{
-    NOTE_C=0, NOTE_CIS, NOTE_D,   NOTE_DIS,
-    NOTE_E,   NOTE_F,   NOTE_FIS, NOTE_G,
-    NOTE_GIS, NOTE_A,   NOTE_BES, NOTE_B
-} eSndNoteId;
-
 // Rates for traditional notes in octave +5
 const u32 __snd_rates[12]=
 {
@@ -957,33 +953,40 @@ const u32 __snd_rates[12]=
 };
 
 
-#define SND_RATE(note, oct) ( 2048-(__snd_rates[note]>>(4+(oct))) )
+#define SND_RATE(note, oct) ( 2048-(__snd_rates[note]>>((oct))) )
 
 
-static void play_note(int note, int octave)
+void Platform::Speaker::play(Note n, Octave o, Channel c)
 {
-    REG_SND1FREQ = SFREQ_RESET | SND_RATE(note, octave);
-}
+    switch (c) {
+    case 0:
+        REG_SND1FREQ = SFREQ_RESET | SND_RATE(int(n), o);
+        break;
 
+    case 1:
+        REG_SND2FREQ = SFREQ_RESET | SND_RATE(int(n), o);
+        break;
+    }
+}
 
 Platform::Speaker::Speaker()
 {
     // turn sound on
     REG_SNDSTAT = SSTAT_ENABLE;
     // snd1 on left/right ; both full volume
-    REG_SNDDMGCNT = SDMG_BUILD_LR(SDMG_SQR1, 7);
+    REG_SNDDMGCNT = SDMG_BUILD_LR(SDMG_SQR1 | SDMG_SQR2, 7);
     // DMG ratio to 100%
     REG_SNDDSCNT = SDS_DMG100;
 
     // no sweep
     REG_SND1SWEEP = SSW_OFF;
+
     // envelope: vol=12, decay, max step time (7) ; 50% duty
     REG_SND1CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY1_2;
     REG_SND1FREQ = 0;
 
-    for (int i = 0; i < 1000000; ++i) {
-        play_note(0x02 & 15, 0x02 >> 4);
-    }
+    REG_SND2CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY1_2;
+    REG_SND2FREQ = 0;
 }
 
 
