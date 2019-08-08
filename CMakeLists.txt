@@ -77,8 +77,9 @@ if(GAMEBOY_ADVANCE)
     -mtune=arm7tdmi)
 
   add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-    COMMENT "running objcopy"
-    COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary ${EXECUTABLE} BlindJump.gba)
+    COMMENT "building cartridge"
+    COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary ${EXECUTABLE} BlindJump.gba
+    COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump BlindJump.gba)
 endif()
 
 
