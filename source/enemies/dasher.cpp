@@ -1,6 +1,6 @@
 #include "dasher.hpp"
-#include "game.hpp"
-#include "random.hpp"
+#include "../game.hpp"
+#include "../random.hpp"
 
 
 Dasher::Dasher(const Vec2<Float>& position)

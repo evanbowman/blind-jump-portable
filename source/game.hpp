@@ -2,7 +2,8 @@
 
 #include "camera.hpp"
 #include "critter.hpp"
-#include "dasher.hpp"
+#include "enemies/dasher.hpp"
+#include "enemies/probe.hpp"
 #include "item.hpp"
 #include "itemChest.hpp"
 #include "platform.hpp"
@@ -45,7 +46,7 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup = EntityGroup<Turret, Dasher>;
+    using EnemyGroup = EntityGroup<Turret, Dasher, Probe>;
     using DetailGroup = EntityGroup<ItemChest>;
     using EffectGroup = EntityGroup<Item>;
 

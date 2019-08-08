@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include "animation.hpp"
-#include "collision.hpp"
-#include "entity.hpp"
+#include "../animation.hpp"
+#include "../collision.hpp"
+#include "../entity.hpp"
 
 
 class Player;
