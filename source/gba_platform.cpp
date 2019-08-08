@@ -536,9 +536,18 @@ COLD static void load_sprite_data()
 }
 
 
+static u8 last_fade_amt;
+
+
 void Platform::Screen::fade(float amount, ColorConstant k)
 {
     const u8 amt = amount * 255;
+
+    if (amt == last_fade_amt) {
+        return;
+    }
+
+    last_fade_amt = amt;
 
     const auto& c = real_color(k);
     // To do a screen fade, blend black into the palettes.
