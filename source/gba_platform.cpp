@@ -991,10 +991,10 @@ Platform::Speaker::Speaker()
     REG_SND1SWEEP = SSW_OFF;
 
     // envelope: vol=12, decay, max step time (7) ; 50% duty
-    REG_SND1CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY1_2;
+    REG_SND1CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY1_4;
     REG_SND1FREQ = 0;
 
-    REG_SND2CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY1_2;
+    REG_SND2CNT = SSQR_ENV_BUILD(10, 0, 7) | SSQR_DUTY1_4;
     REG_SND2FREQ = 0;
 }
 
