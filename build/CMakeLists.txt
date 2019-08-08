@@ -1,0 +1,92 @@
+cmake_minimum_required(VERSION 3.5)
+
+
+
+set(SOURCE_DIR ${PROJECT_BINARY_DIR}/../source)
+
+
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+enable_language(ASM)
+
+
+
+option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
+
+
+
+if(GAMEBOY_ADVANCE)
+  set(BLINDJUMP_PLATFORM_SOURCE ${SOURCE_DIR}/gba_platform.cpp)
+else()
+  set(BLINDJUMP_PLATFORM_SOURCE ${SOURCE_DIR}/desktop_platform.cpp)
+endif()
+
+
+
+# include_directories(PROJECT_SOURCE_DIR)
+# configure_file("config.hpp.in" "source/config.hpp")
+
+
+
+add_executable(BlindJump
+  ${SOURCE_DIR}/enemies/critter.cpp
+  ${SOURCE_DIR}/enemies/turret.cpp
+  ${SOURCE_DIR}/enemies/dasher.cpp
+  ${SOURCE_DIR}/enemies/probe.cpp
+  ${SOURCE_DIR}/bgr_spritesheet.s
+  ${SOURCE_DIR}/bgr_tilesheet.s
+  ${SOURCE_DIR}/collision.cpp
+  ${SOURCE_DIR}/itemChest.cpp
+  ${SOURCE_DIR}/easterEgg.cpp
+  ${SOURCE_DIR}/itemChest.cpp
+  ${SOURCE_DIR}/tileMap.cpp
+  ${SOURCE_DIR}/numeric.cpp
+  ${SOURCE_DIR}/camera.cpp
+  ${SOURCE_DIR}/random.cpp
+  ${SOURCE_DIR}/player.cpp
+  ${SOURCE_DIR}/entity.cpp
+  ${SOURCE_DIR}/sprite.cpp
+  ${SOURCE_DIR}/start.cpp
+  ${SOURCE_DIR}/item.cpp
+  ${SOURCE_DIR}/game.cpp
+  ${SOURCE_DIR}/view.cpp
+  ${BLINDJUMP_PLATFORM_SOURCE})
+
+
+
+if(GAMEBOY_ADVANCE)
+  set(CMAKE_EXE_LINKER_FLAGS
+    "-g -mthumb -mthumb-interwork -Wl,-Map,BlindJump.elf.map -specs=gba.specs"
+    CACHE INTERNAL "" FORCE)
+
+  target_link_libraries(BlindJump PRIVATE
+    ${DEVKITPRO}/libgba/lib/libgba.a)
+
+  target_compile_options(BlindJump PRIVATE
+    -mthumb
+    -mthumb-interwork
+    -mcpu=arm7tdmi
+    -mtune=arm7tdmi)
+
+  add_custom_command(TARGET BlindJump POST_BUILD
+    COMMENT "building cartridge"
+    COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary BlindJump BlindJump.gba
+    COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump BlindJump.gba)
+endif()
+
+
+
+target_compile_options(BlindJump PRIVATE
+  -Os
+  -Wall
+  -flto
+  -Werror
+  -pedantic
+  -D__GBA__
+  -nostdlib
+  -ffast-math
+  -fno-exceptions
+  -fno-math-errno
+  -fomit-frame-pointer
+  -D__BLINDJUMP_ENABLE_LOGS)
