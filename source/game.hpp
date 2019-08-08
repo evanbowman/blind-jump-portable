@@ -1,15 +1,16 @@
 #pragma once
 
 #include "camera.hpp"
-#include "critter.hpp"
-#include "dasher.hpp"
+#include "enemies/critter.hpp"
+#include "enemies/dasher.hpp"
+#include "enemies/probe.hpp"
+#include "enemies/turret.hpp"
 #include "item.hpp"
 #include "itemChest.hpp"
 #include "platform.hpp"
 #include "player.hpp"
 #include "transformGroup.hpp"
 #include "transporter.hpp"
-#include "turret.hpp"
 
 
 template <typename Arg>
@@ -45,7 +46,7 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup = EntityGroup<Turret, Dasher>;
+    using EnemyGroup = EntityGroup<Turret, Dasher, Probe>;
     using DetailGroup = EntityGroup<ItemChest>;
     using EffectGroup = EntityGroup<Item>;
 
