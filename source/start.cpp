@@ -2,9 +2,6 @@
 #include "transformGroup.hpp"
 
 
-void riff(Platform&);
-
-
 void start(Platform& pf)
 {
     Game game(pf);
