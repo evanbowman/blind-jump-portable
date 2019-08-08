@@ -96,14 +96,18 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
                         display_buffer.push_back(spr);
                     }
                     shadows_buffer.push_back(&entity->get_shadow());
-                    camera_.push_ballast(entity->get_position());
+                    if (state_ == State::active) {
+                        camera_.push_ballast(entity->get_position());
+                    }
                 }
             } else {
                 const auto& spr = entity->get_sprite();
                 if (within_view_frustum(pfrm.screen(), spr)) {
                     display_buffer.push_back(&spr);
                     shadows_buffer.push_back(&entity->get_shadow());
-                    camera_.push_ballast(entity->get_position());
+                    if (state_ == State::active) {
+                        camera_.push_ballast(entity->get_position());
+                    }
                 }
             }
         }

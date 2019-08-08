@@ -13,6 +13,16 @@ using s32 = int32_t;
 using s64 = int64_t;
 
 
+#ifdef __GBA__
+template <typename T>
+using Atomic = T;
+#else
+#include <atomic>
+template <typename T>
+using Atomic = std::atomic<T>;
+#endif
+
+
 enum class byte : u8 {};
 
 
