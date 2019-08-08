@@ -1,8 +1,8 @@
 #pragma once
 
-#include "collision.hpp"
-#include "entity.hpp"
-#include "sprite.hpp"
+#include "../collision.hpp"
+#include "../entity.hpp"
+#include "../sprite.hpp"
 
 
 class Player;
