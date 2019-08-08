@@ -1,0 +1,22 @@
+set(CMAKE_SYSTEM_NAME Generic)
+
+set(DEVKITARM $ENV{DEVKITARM})
+set(DEVKITPRO $ENV{DEVKITPRO})
+
+if(NOT DEVKITARM)
+  message(FATAL_ERROR "Please set DEVKITARM in your environment")
+endif(NOT DEVKITARM)
+
+
+set(CMAKE_AR ${DEVKITARM}/bin/arm-none-eabi-ar)
+set(CMAKE_C_COMPILER ${DEVKITARM}/bin/arm-none-eabi-gcc)
+set(CMAKE_CXX_COMPILER ${DEVKITARM}/bin/arm-none-eabi-g++)
+
+set(PKG_CONFIG_EXECUTABLE "arm-none-eabi-pkg-config")
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+SET(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Shared libs not available" )

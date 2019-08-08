@@ -12,25 +12,10 @@ option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
 
 
 if(GAMEBOY_ADVANCE)
-  set(DEVKITARM $ENV{DEVKITARM})
-  set(DEVKITPRO $ENV{DEVKITPRO})
-
-  if(NOT DEVKITARM)
-    message(FATAL_ERROR "Please set DEVKITARM in your environment")
-  endif(NOT DEVKITARM)
-
-  # set(CMAKE_C_COMPILER ${DEVKITARM}/bin/arm-none-eabi-gcc)
-  # set(CMAKE_CXX_COMPILER ${DEVKITARM}/bin/arm-none-eabi-g++)
-  # set(CMAKE_FIND_ROOT_PATH ${DEVKITARM})
-  # set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-  # set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-  # set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-  set(PKG_CONFIG_EXECUTABLE "arm-none-eabi-pkg-config")
-  set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Shared libs not available" )
-  enable_language(ASM)
 
   set(BLINDJUMP_PLATFORM_SOURCE source/gba_platform.cpp)
+
+  set(EXECUTABLE BlindJump.elf)
 else()
 
   set(BLINDJUMP_PLATFORM_SOURCE source/desktop_platform.cpp)
@@ -38,18 +23,15 @@ endif()
 
 
 
-include_directories(PROJECT_SOURCE_DIR)
-configure_file("config.hpp.in" "source/config.hpp")
+# include_directories(PROJECT_SOURCE_DIR)
+# configure_file("config.hpp.in" "source/config.hpp")
 
 
 
-
-add_executable(BlindJump
+add_executable(${EXECUTABLE}
   source/enemies/dasher.cpp
   source/enemies/probe.cpp
-  source/bgr_spritesheet.s
   source/gba_platform.cpp
-  source/bgr_tilesheet.s
   source/collision.cpp
   source/itemChest.cpp
   source/easterEgg.cpp
@@ -72,29 +54,36 @@ add_executable(BlindJump
 
 
 if(GAMEBOY_ADVANCE)
-  set(CMAKE_EXE_LINKER_FLAGS "-g -mthumb -mthumb-interwork -specs=gba.specs"
+  set(CMAKE_EXE_LINKER_FLAGS "-g -mthumb -mthumb-interwork -Wl,-Map,BlindJump.elf.map -specs=gba.specs"
     CACHE INTERNAL "" FORCE)
 
-  target_link_libraries(BlindJump PRIVATE
+  enable_language(ASM)
+
+  add_library(BlindJumpSprites
+    source/bgr_spritesheet.s
+    source/bgr_tilesheet.s)
+
+  target_compile_options(BlindJumpSprites PRIVATE
+    -x assembler-with-cpp -mthumb -mthumb-interwork)
+
+  target_link_libraries(${EXECUTABLE} PRIVATE
+    BlindJumpSprites
     ${DEVKITPRO}/libgba/lib/libgba.a)
 
-  target_compile_options(BlindJump PRIVATE
-    -MMD
-    -MP
-    -MF
+  target_compile_options(${EXECUTABLE} PRIVATE
     -mthumb
     -mthumb-interwork
     -mcpu=arm7tdmi
     -mtune=arm7tdmi)
 
-  add_custom_command(TARGET BlindJump POST_BUILD
+  add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
     COMMENT "running objcopy"
-    COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary BlindJump BlindJump.gba)
+    COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary ${EXECUTABLE} BlindJump.gba)
 endif()
 
 
 
-target_compile_options(BlindJump PRIVATE
+target_compile_options(${EXECUTABLE} PRIVATE
   -Os
   -Wall
   -flto
