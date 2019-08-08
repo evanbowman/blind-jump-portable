@@ -7,6 +7,7 @@ using NoteInfo = std::tuple<Note, int, Octave>;
 static const NoteInfo B0 {Note::B, 2, -1};
 static const NoteInfo AS1 {Note::AS, 2, 0};
 static const NoteInfo B1 {Note::B, 2, 0};
+static const NoteInfo B1Fast {Note::B, 1, 0};
 static const NoteInfo C1 {Note::C, 2, 0};
 static const NoteInfo C2 {Note::C, 2, 1};
 static const NoteInfo C2Fast {Note::C, 1, 1};
@@ -61,7 +62,8 @@ static const NoteInfo* guitar_riff[] = {
 
 
 static const NoteInfo* base_line[] =
-    {
+{
+     // clang-format off
      0, 0, 0, 0, 0, 0, 0, 0,
 
      0, 0, 0, 0, 0, 0, 0, 0,
@@ -70,9 +72,9 @@ static const NoteInfo* base_line[] =
 
      0, 0, 0, 0, 0, 0, 0, 0,
 
-     &C1, 0, &C2Fast, &C2Fast, &C1, &C1, &C1, &C2, &C1,
+     &B0, 0, &B1Fast, &B1Fast, &B0, &B0, &B0, &B1, &B0,
 
-     &C1, 0, &C2Fast, &C2Fast, &C1, &C1, &C1, &C2, &C1,
+     &B0, 0, &B1Fast, &B1Fast, &B0, &B0, &B0, &B1, &B0,
 
      &D1, 0, &D2Fast, &D2Fast, &D1, &D1, &D1, &D2, &D1,
 
@@ -82,13 +84,14 @@ static const NoteInfo* base_line[] =
 
      &E1, 0, &E2Fast, &E2Fast, &E1, &E1, &E1, &E2, &E1,
 
-     &C1, 0, &C2Fast, &C2Fast, &C1, &C1, &C1, &C2, &C1,
+     &B0, 0, &B1Fast, &B1Fast, &B0, &B0, &B0, &B1, &B0,
 
-     &C1, 0, &C2Fast, &C2Fast, &C1, &C1, &C1, &C2, &C1,
-
-     &D1, 0, &D2Fast, &D2Fast, &D1, &D1, &D1, &D2, &D1,
+     &B0, 0, &B1Fast, &B1Fast, &B0, &B0, &B0, &B1, &B0,
 
      &D1, 0, &D2Fast, &D2Fast, &D1, &D1, &D1, &D2, &D1,
+
+     &D1, 0, &D2Fast, &D2Fast, &D1, &D1, &D1, &D2, &D1,
+     // clang-format on
 };
 
 
@@ -125,7 +128,7 @@ void riff(Platform& pf)
             if (not note) {
                 baseline_timer = time_step * 5 * 2;
             } else {
-                pf.speaker().play(std::get<0>(*note), 1 + std::get<2>(*note), 1);
+                pf.speaker().play(std::get<0>(*note), 3 + std::get<2>(*note), 1);
                 baseline_timer = time_step * 5 * std::get<1>(*note);
             }
         }
