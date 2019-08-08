@@ -19,12 +19,12 @@ if(GAMEBOY_ADVANCE)
     message(FATAL_ERROR "Please set DEVKITARM in your environment")
   endif(NOT DEVKITARM)
 
-  set(CMAKE_C_COMPILER ${DEVKITARM}/bin/arm-none-eabi-gcc)
-  set(CMAKE_CXX_COMPILER ${DEVKITARM}/bin/arm-none-eabi-g++)
-  set(CMAKE_FIND_ROOT_PATH ${DEVKITARM})
-  set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+  # set(CMAKE_C_COMPILER ${DEVKITARM}/bin/arm-none-eabi-gcc)
+  # set(CMAKE_CXX_COMPILER ${DEVKITARM}/bin/arm-none-eabi-g++)
+  # set(CMAKE_FIND_ROOT_PATH ${DEVKITARM})
+  # set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+  # set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+  # set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
   set(PKG_CONFIG_EXECUTABLE "arm-none-eabi-pkg-config")
   set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Shared libs not available" )
@@ -55,12 +55,12 @@ add_executable(BlindJump
   source/easterEgg.cpp
   source/itemChest.cpp
   source/tileMap.cpp
-  source/critter.cpp
+  source/enemies/critter.cpp
   source/numeric.cpp
   source/camera.cpp
   source/random.cpp
   source/player.cpp
-  source/turret.cpp
+  source/enemies/turret.cpp
   source/entity.cpp
   source/sprite.cpp
   source/start.cpp
@@ -79,6 +79,9 @@ if(GAMEBOY_ADVANCE)
     ${DEVKITPRO}/libgba/lib/libgba.a)
 
   target_compile_options(BlindJump PRIVATE
+    -MMD
+    -MP
+    -MF
     -mthumb
     -mthumb-interwork
     -mcpu=arm7tdmi
