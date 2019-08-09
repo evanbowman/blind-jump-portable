@@ -1,7 +1,6 @@
 #pragma once
 
 #include "entity/entity.hpp"
-#include "sprite.hpp"
 
 
 class Game;

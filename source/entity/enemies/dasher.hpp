@@ -2,7 +2,7 @@
 
 #include "collision.hpp"
 #include "entity/entity.hpp"
-#include "sprite.hpp"
+#include "graphics/sprite.hpp"
 
 
 class Player;

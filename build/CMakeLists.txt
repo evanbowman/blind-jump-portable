@@ -37,6 +37,8 @@ add_executable(BlindJump
   ${SOURCE_DIR}/entity/enemies/dasher.cpp
   ${SOURCE_DIR}/entity/enemies/probe.cpp
   ${SOURCE_DIR}/entity/details/item.cpp
+  ${SOURCE_DIR}/graphics/sprite.cpp
+  ${SOURCE_DIR}/graphics/view.cpp
   ${SOURCE_DIR}/entity/entity.cpp
   ${SOURCE_DIR}/entity/player.cpp
   ${SOURCE_DIR}/bgr_spritesheet.s
@@ -47,10 +49,8 @@ add_executable(BlindJump
   ${SOURCE_DIR}/numeric.cpp
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/random.cpp
-  ${SOURCE_DIR}/sprite.cpp
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/game.cpp
-  ${SOURCE_DIR}/view.cpp
   ${BLINDJUMP_PLATFORM_SOURCE})
 
 
