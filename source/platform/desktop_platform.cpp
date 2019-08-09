@@ -9,13 +9,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef __GBA__
-
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
-
+#include <fstream>
 
 static sf::RenderWindow* window = nullptr;
+
+
+class Platform::Data {
+public:
+    sf::Texture spritesheet_;
+    sf::Shader color_shader_;
+};
+
+
+static Platform* platform = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,24 +91,27 @@ void Platform::Keyboard::poll()
         case sf::Event::KeyReleased:
             switch (event.key.code) {
             case sf::Keyboard::Left:
-                states_[size_t(Key::left)] = true;
+                states_[size_t(Key::left)] = false;
                 break;
 
             case sf::Keyboard::Right:
-                states_[size_t(Key::right)] = true;
+                states_[size_t(Key::right)] = false;
                 break;
 
             case sf::Keyboard::Up:
-                states_[size_t(Key::up)] = true;
+                states_[size_t(Key::up)] = false;
                 break;
 
             case sf::Keyboard::Down:
-                states_[size_t(Key::down)] = true;
+                states_[size_t(Key::down)] = false;
                 break;
 
             default:
                 break;
             }
+            break;
+
+        default:
             break;
         }
     }
@@ -114,10 +125,14 @@ void Platform::Keyboard::poll()
 
 Platform::Screen::Screen()
 {
-    if (::window) {
-        throw std::runtime_error("Only one screen allowed at a time");
+    if (not ::window) {
+        ::window = new sf::RenderWindow(sf::VideoMode(480, 320), "SFML window");
+        if (not ::window) {
+            exit(EXIT_FAILURE);
+        }
+        ::window->setVerticalSyncEnabled(true);
     }
-    ::window = new sf::RenderWindow(sf::VideoMode(800, 600), "SFML window");
+    view_.set_size(this->size().cast<Float>());
 }
 
 
@@ -133,28 +148,143 @@ void Platform::Screen::clear()
 }
 
 
+template <typename T>
+struct reversion_wrapper { T& iterable; };
+
+template <typename T>
+auto begin (reversion_wrapper<T> w) { return std::rbegin(w.iterable); }
+
+template <typename T>
+auto end (reversion_wrapper<T> w) { return std::rend(w.iterable); }
+
+template <typename T>
+reversion_wrapper<T> reverse (T&& iterable) { return { iterable }; }
+
+
+std::vector<Sprite> draw_queue;
+
+
+static sf::Glsl::Vec3 real_color(ColorConstant k)
+{
+    switch (k) {
+    case ColorConstant::spanish_crimson:
+        static const sf::Glsl::Vec3 spn_crimson(29.f / 31.f, 3.f / 31.f, 11.f / 31.f);
+        return spn_crimson;
+
+    case ColorConstant::electric_blue:
+        static const sf::Glsl::Vec3 el_blue(9.f / 31.f, 31.f / 31.f, 31.f / 31.f);
+        return el_blue;
+
+    case ColorConstant::coquelicot:
+        static const sf::Glsl::Vec3 coquelicot(30.f / 31.f, 7.f / 31.f, 1.f / 31.f);
+        return coquelicot;
+
+    default:
+    case ColorConstant::null:
+    case ColorConstant::rich_black:
+        static const sf::Glsl::Vec3 rich_black(0.f, 0.f, 2.f / 31.f);
+        return rich_black;
+    }
+}
+
+
 void Platform::Screen::display()
 {
+    for (auto& spr : reverse(::draw_queue)) {
+        const Vec2<Float>& pos = spr.get_position();
+        const Vec2<bool>& flip = spr.get_flip();
+
+        sf::Sprite sf_spr;
+
+        sf_spr.setPosition({pos.x, pos.y});
+        sf_spr.setOrigin({float(spr.get_origin().x),
+                          float(spr.get_origin().y)});
+        if (spr.get_alpha() == Sprite::Alpha::translucent) {
+            sf_spr.setColor({255, 255, 255, 128});
+        }
+
+        sf_spr.setScale({flip.x ? -1.f : 1.f, flip.y ? -1.f : 1.f});
+
+        sf_spr.setTexture(::platform->data()->spritesheet_);
+
+        switch(const auto ind = spr.get_texture_index(); spr.get_size()) {
+        case Sprite::Size::w16_h32:
+            sf_spr.setTextureRect({static_cast<s32>(ind) * 16, 0, 16, 32});
+            break;
+
+        case Sprite::Size::w32_h32:
+            sf_spr.setTextureRect({static_cast<s32>(ind) * 32, 0, 32, 32});
+            break;
+        }
+
+        if (const auto& mix = spr.get_mix();
+            mix.color_ not_eq ColorConstant::null) {
+            sf::Shader& shader = ::platform->data()->color_shader_;
+            shader.setUniform("amount", mix.amount_ / 255.f);
+            shader.setUniform("targetColor", real_color(mix.color_));
+            ::window->draw(sf_spr, &shader);
+        } else {
+            ::window->draw(sf_spr);
+        }
+    }
+
+    sf::View view;
+    view.setCenter(view_.get_center().x + view_.get_size().x / 2,
+                   view_.get_center().y + view_.get_size().y / 2);
+    view.setSize(view_.get_size().x, view_.get_size().y);
+    ::window->setView(view);
     ::window->display();
+
+    draw_queue.clear();
+}
+
+
+void Platform::Screen::fade(Float amount, ColorConstant k)
+{
+    // TODO...
 }
 
 
 void Platform::Screen::draw(const Sprite& spr)
 {
-    const Vec2<Float>& pos = spr.get_position();
-    const Vec2<bool>& flip = spr.get_flip();
+    draw_queue.push_back(spr);
+}
 
-    sf::Sprite sf_spr;
 
-    sf_spr.setPosition({pos.x, pos.y});
+////////////////////////////////////////////////////////////////////////////////
+// Speaker
+////////////////////////////////////////////////////////////////////////////////
 
-    if (spr.get_alpha() == Sprite::Alpha::translucent) {
-        sf_spr.setColor({255, 255, 255, 128});
-    }
 
-    sf_spr.setScale({flip.x ? -1.f : 1.f, flip.y ? -1.f : 1.f});
+Platform::Speaker::Speaker()
+{
+    // TODO...
+}
 
-    // TODO: Remap TextureIndex -> sfml sprite subrect
+
+void Platform::Speaker::play(Note note, Octave o, Channel c)
+{
+    // TODO...
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Logger
+////////////////////////////////////////////////////////////////////////////////
+
+
+static std::ofstream logfile("logfile.txt");
+
+
+void Platform::Logger::log(Logger::Severity level, const char* msg)
+{
+    logfile << msg << std::endl;
+}
+
+
+Platform::Logger::Logger()
+{
+
 }
 
 
@@ -165,6 +295,50 @@ void Platform::Screen::draw(const Sprite& spr)
 
 Platform::Platform()
 {
+    data_ = new Data;
+    if (not data_) {
+        error(*this, "Failed to allocate context");
+        exit(EXIT_FAILURE);
+    }
+    sf::Image image;
+    if (not image.loadFromFile("../spritesheet.png")) {
+        error(*this, "Failed to load spritesheet");
+    }
+    image.createMaskFromColor({255, 0, 255, 255});
+    if (not data_->spritesheet_.loadFromImage(image)) {
+        error(*this, "Failed to create spritesheet texture");
+        exit(EXIT_FAILURE);
+    }
+    if (not data_->color_shader_.loadFromFile("../shaders/colorShader.frag",
+                                              sf::Shader::Fragment)) {
+        error(*this, "Failed to load shader");
+    }
+    data_->color_shader_.setUniform("texture", sf::Shader::CurrentTexture);
+
+    ::platform = this;
+}
+
+
+std::optional<SaveData> Platform::read_save()
+{
+    // TODO...
+    return {};
+}
+
+
+#include <thread>
+#include <chrono>
+
+
+void Platform::push_task(Task* task)
+{
+    std::thread([task] {
+                    while (true) {
+                        if (not task->complete()) {
+                            task->run();
+                        }
+                    }
+                }).detach();
 }
 
 
@@ -176,7 +350,7 @@ bool Platform::is_running() const
 
 void Platform::push_map(const TileMap& map)
 {
-    // ...
+    // TODO...
 }
 
 
@@ -198,4 +372,29 @@ int main()
 int WinMain(HINSTANCE, HINSTANCE, LPSTR, int) { return main(); }
 #endif
 
-#endif
+
+void SynchronizedBase::init(Platform& pf)
+{
+    impl_ = new std::mutex;
+    if (not impl_) {
+        error(pf, "failed to allocate mutex");
+    }
+}
+
+
+void SynchronizedBase::lock()
+{
+    reinterpret_cast<std::mutex*>(impl_)->lock();
+}
+
+
+void SynchronizedBase::unlock()
+{
+    reinterpret_cast<std::mutex*>(impl_)->unlock();
+}
+
+
+SynchronizedBase::~SynchronizedBase()
+{
+    delete reinterpret_cast<std::mutex*>(impl_);
+}

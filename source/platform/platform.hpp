@@ -193,6 +193,8 @@ public:
         void log(Severity severity, const char* msg);
 
     private:
+        Logger();
+
         friend class Platform;
     };
 
@@ -240,9 +242,16 @@ public:
     };
 
     // If only we had a heap, and shared pointers, we could enforce better
-    // ownership... ah well.
+    // ownership than raw pointers for Tasks... ah well.
     void push_task(Task* task);
 
+
+    class Data;
+
+    Data* data()
+    {
+        return data_;
+    }
 
 private:
     Platform();
@@ -253,6 +262,7 @@ private:
     Keyboard keyboard_;
     Speaker speaker_;
     Logger logger_;
+    Data* data_ = nullptr;
 };
 
 
@@ -261,6 +271,8 @@ protected:
     void init(Platform& pf);
     void lock();
     void unlock();
+
+    ~SynchronizedBase();
 
 private:
     friend class Platform;
