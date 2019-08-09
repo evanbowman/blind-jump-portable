@@ -24,8 +24,9 @@ endif()
 
 
 
-# include_directories(PROJECT_SOURCE_DIR)
-# configure_file("config.hpp.in" "source/config.hpp")
+include_directories(${SOURCE_DIR})
+# For emacs flycheck users
+configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 
 

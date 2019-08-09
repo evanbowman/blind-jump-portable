@@ -1,5 +1,5 @@
 #include "turret.hpp"
-#include "../game.hpp"
+#include "game.hpp"
 #include <algorithm>
 
 
