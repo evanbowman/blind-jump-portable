@@ -2,23 +2,50 @@
 #include "transformGroup.hpp"
 
 
+class UpdateTask : public Platform::Task {
+public:
+    UpdateTask(Synchronized<Game>* game, Platform* pf);
+
+    void run() override;
+private:
+    Synchronized<Game>* game_;
+    Platform* pf_;
+};
+
+
+UpdateTask::UpdateTask(Synchronized<Game>* game, Platform* pf) :
+    game_(game), pf_(pf)
+{
+}
+
+
+void UpdateTask::run()
+{
+    if (pf_->is_running()) {
+        game_->enter([this](Game& game) {
+            game.update(*pf_, DeltaClock::instance().reset());
+        });
+    } else {
+        Task::completed();
+    }
+}
+
+
 void start(Platform& pf)
 {
-    Game game(pf);
+    Synchronized<Game> game(pf, pf);
+
+    UpdateTask update(&game, &pf);
+    pf.push_task(&update);
 
     while (pf.is_running()) {
 
         pf.keyboard().poll();
-        game.update(pf, DeltaClock::instance().reset());
 
-        // NOTE: On some pfs, e.g. GBA and other consoles, Screen::clear()
-        // performs the vsync, so Game::update() should be called before the
-        // clear, and Game::render() should be called after clear(), to prevent
-        // tearing.
         pf.screen().clear();
-
-        game.render(pf);
-
+        game.enter([&](Game& gm) {
+            gm.render(pf);
+        });
         pf.screen().display();
     }
 }

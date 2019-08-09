@@ -4,6 +4,7 @@
 #include "save.hpp"
 #include "graphics/sprite.hpp"
 #include "graphics/view.hpp"
+#include "memory/buffer.hpp"
 #include "sound.hpp"
 #include "tileMap.hpp"
 #include <array>
@@ -210,8 +211,38 @@ public:
         friend class Platform;
 
         Speaker();
-
     };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Task
+    ////////////////////////////////////////////////////////////////////////////
+
+    class Task {
+    public:
+        virtual void run() = 0;
+
+        virtual ~Task() {}
+
+        bool complete() const
+        {
+            return complete_;
+        }
+
+    protected:
+        void completed()
+        {
+            complete_ = true;
+        }
+
+    private:
+        bool complete_ = false;
+    };
+
+    // If only we had a heap, and shared pointers, we could enforce better
+    // ownership... ah well.
+    void push_task(Task* task);
+
 
 private:
     Platform();
@@ -223,6 +254,43 @@ private:
     Speaker speaker_;
     Logger logger_;
 };
+
+
+class SynchronizedBase {
+protected:
+    void init(Platform& pf);
+    void lock();
+    void unlock();
+
+private:
+    friend class Platform;
+
+    void* impl_;
+};
+
+
+template <typename T>
+class Synchronized : SynchronizedBase {
+public:
+    template <typename ...Args>
+    Synchronized(Platform& pf, Args&& ...args) :
+        data_(std::forward<Args>(args)...)
+    {
+        init(pf);
+    }
+
+    template <typename F>
+    void enter(F&& handler)
+    {
+        lock();
+        handler(data_);
+        unlock();
+    }
+private:
+
+    T data_;
+};
+
 
 
 #ifdef __BLINDJUMP_ENABLE_LOGS

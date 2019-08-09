@@ -344,8 +344,28 @@ void Platform::Screen::draw(const Sprite& spr)
 }
 
 
+Buffer<Platform::Task*, 8> task_queue_;
+
+
+void Platform::push_task(Task* task)
+{
+    task_queue_.push_back(task);
+}
+
+
 void Platform::Screen::clear()
 {
+    // On the GBA, we don't have real threads, so run tasks prior to the vsync,
+    // so any updates are least likely to cause tearing.
+    for (auto it = task_queue_.begin(); it not_eq task_queue_.end();) {
+        (*it)->run();
+        if ((*it)->complete()) {
+            task_queue_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
     // VSync
     VBlankIntrWait();
 }
@@ -711,6 +731,21 @@ Platform::Platform()
     irqEnable(IRQ_VBLANK);
 
     load_sprite_data();
+}
+
+
+void SynchronizedBase::init(Platform& pf)
+{
+}
+
+
+void SynchronizedBase::lock()
+{
+}
+
+
+void SynchronizedBase::unlock()
+{
 }
 
 
