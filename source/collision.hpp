@@ -2,7 +2,7 @@
 
 
 #include "memory/buffer.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 
 
 struct HitBox {

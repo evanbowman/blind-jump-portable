@@ -2,7 +2,7 @@
 
 #include "animation.hpp"
 #include "collision.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 
 
 class ItemChest : public Entity<ItemChest, 4> {

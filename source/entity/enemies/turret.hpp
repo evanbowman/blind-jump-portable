@@ -3,7 +3,7 @@
 
 #include "animation.hpp"
 #include "collision.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 
 
 class Player;
