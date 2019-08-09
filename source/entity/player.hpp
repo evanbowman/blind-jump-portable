@@ -75,6 +75,5 @@ private:
     Float u_speed_;
     Float d_speed_;
     Sprite shadow_;
-    u16 health_;
     HitBox hitbox_;
 };

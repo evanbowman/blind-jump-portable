@@ -12,15 +12,7 @@ enable_language(ASM)
 
 
 
-option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
-
-
-
-if(GAMEBOY_ADVANCE)
-  set(BLINDJUMP_PLATFORM_SOURCE ${SOURCE_DIR}/platform/gba_platform.cpp)
-else()
-  set(BLINDJUMP_PLATFORM_SOURCE ${SOURCE_DIR}/platform/desktop_platform.cpp)
-endif()
+option(GAMEBOY_ADVANCE "GameboyAdvance" OFF)
 
 
 
@@ -30,14 +22,12 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 
 
-add_executable(BlindJump
+set(SOURCES
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/enemies/critter.cpp
-  ${SOURCE_DIR}/graphics/bgr_spritesheet.s
   ${SOURCE_DIR}/entity/enemies/turret.cpp
   ${SOURCE_DIR}/entity/enemies/dasher.cpp
   ${SOURCE_DIR}/entity/enemies/probe.cpp
-  ${SOURCE_DIR}/graphics/bgr_tilesheet.s
   ${SOURCE_DIR}/entity/details/item.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
   ${SOURCE_DIR}/number/numeric.cpp
@@ -50,8 +40,26 @@ add_executable(BlindJump
   ${SOURCE_DIR}/tileMap.cpp
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/start.cpp
-  ${SOURCE_DIR}/game.cpp
-  ${BLINDJUMP_PLATFORM_SOURCE})
+  ${SOURCE_DIR}/game.cpp)
+
+
+
+if(GAMEBOY_ADVANCE)
+  set(SOURCES
+    ${SOURCES}
+    ${SOURCE_DIR}/graphics/bgr_tilesheet.s
+    ${SOURCE_DIR}/graphics/bgr_spritesheet.s
+    ${SOURCE_DIR}/platform/gba_platform.cpp)
+else()
+  set(SOURCES
+    ${SOURCES}
+    ${SOURCE_DIR}/platform/desktop_platform.cpp)
+endif()
+
+
+
+add_executable(BlindJump
+  ${SOURCES})
 
 
 
@@ -78,7 +86,10 @@ elseif(APPLE)
     "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio")
   set_target_properties(BlindJump
     PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
+
+  include_directories("/usr/local/include/")
 endif()
+
 
 
 target_compile_options(BlindJump PRIVATE

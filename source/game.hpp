@@ -67,7 +67,6 @@ public:
 
 private:
     s32 level_;
-    u32 update_counter_;
     TileMap tiles_;
     Camera camera_;
     Player player_;

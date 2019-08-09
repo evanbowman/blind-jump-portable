@@ -9,7 +9,7 @@
 
 #ifdef __GBA__
 
-#include "macros.hpp"
+#include "util.hpp"
 #include "platform.hpp"
 #include "number/random.hpp"
 #include <string.h>
@@ -749,6 +749,11 @@ void SynchronizedBase::unlock()
 }
 
 
+SynchronizedBase::~SynchronizedBase()
+{
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Logger
 ////////////////////////////////////////////////////////////////////////////////
@@ -757,6 +762,11 @@ void SynchronizedBase::unlock()
 // NOTE: SaveData goes first into flash memory, followed by the game's
 // logs.
 static u32 log_write_loc = sizeof(SaveData);
+
+
+Platform::Logger::Logger()
+{
+}
 
 
 void Platform::Logger::log(Logger::Severity level, const char* msg)

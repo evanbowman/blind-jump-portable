@@ -1,5 +1,5 @@
 #include "game.hpp"
-#include "macros.hpp"
+#include "util.hpp"
 #include "number/random.hpp"
 #include <algorithm>
 #include <iterator>
@@ -11,7 +11,7 @@ static bool within_view_frustum(const Platform::Screen& screen,
 
 
 Game::Game(Platform& pfrm)
-    : level_(-1), update_counter_(0), counter_(0), state_(State::fade_in)
+    : level_(-1), counter_(0), state_(State::fade_in)
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
