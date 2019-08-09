@@ -11,7 +11,7 @@
 
 #include "macros.hpp"
 #include "platform.hpp"
-#include "random.hpp"
+#include "number/random.hpp"
 #include <string.h>
 
 

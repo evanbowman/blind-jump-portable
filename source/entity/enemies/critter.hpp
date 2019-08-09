@@ -2,7 +2,7 @@
 
 #include "collision.hpp"
 #include "entity/entity.hpp"
-#include "numeric.hpp"
+#include "number/numeric.hpp"
 
 
 class Game;

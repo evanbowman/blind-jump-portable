@@ -2,7 +2,7 @@
 
 #include <optional>
 #include "pool.hpp"
-#include "numeric.hpp"
+#include "number/numeric.hpp"
 
 
 // This program targets embedded systems, and intentionally doesn't

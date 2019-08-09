@@ -1,6 +1,6 @@
 #pragma once
 
-#include "numeric.hpp"
+#include "number/numeric.hpp"
 
 
 // Color representation is often platform specific, e.g., OpenGL uses
