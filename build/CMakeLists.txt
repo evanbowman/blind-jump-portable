@@ -12,7 +12,14 @@ enable_language(ASM)
 
 
 
-option(GAMEBOY_ADVANCE "GameboyAdvance" OFF)
+option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
+
+
+
+if(GAMEBOY_ADVANCE AND NOT DEVKITARM)
+  message(WARNING "Note: GAMEBOY_ADVANCE option is ON by default.")
+  message(FATAL_ERROR "GAMEBOY_ADVANCE option is set, but missing ARM toolchain.")
+endif()
 
 
 
