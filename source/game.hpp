@@ -1,15 +1,15 @@
 #pragma once
 
 #include "camera.hpp"
-#include "enemies/critter.hpp"
-#include "enemies/dasher.hpp"
-#include "enemies/probe.hpp"
-#include "enemies/turret.hpp"
-#include "details/item.hpp"
-#include "details/itemChest.hpp"
-#include "details/transporter.hpp"
+#include "entity/enemies/critter.hpp"
+#include "entity/enemies/dasher.hpp"
+#include "entity/enemies/probe.hpp"
+#include "entity/enemies/turret.hpp"
+#include "entity/details/item.hpp"
+#include "entity/details/itemChest.hpp"
+#include "entity/details/transporter.hpp"
+#include "entity/player.hpp"
 #include "platform/platform.hpp"
-#include "player.hpp"
 #include "transformGroup.hpp"
 
 

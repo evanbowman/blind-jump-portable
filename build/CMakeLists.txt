@@ -31,13 +31,15 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 
 add_executable(BlindJump
-  ${SOURCE_DIR}/details/itemChest.cpp
-  ${SOURCE_DIR}/enemies/critter.cpp
-  ${SOURCE_DIR}/enemies/turret.cpp
-  ${SOURCE_DIR}/enemies/dasher.cpp
-  ${SOURCE_DIR}/enemies/probe.cpp
+  ${SOURCE_DIR}/entity/details/itemChest.cpp
+  ${SOURCE_DIR}/entity/enemies/critter.cpp
+  ${SOURCE_DIR}/entity/enemies/turret.cpp
+  ${SOURCE_DIR}/entity/enemies/dasher.cpp
+  ${SOURCE_DIR}/entity/enemies/probe.cpp
+  ${SOURCE_DIR}/entity/details/item.cpp
+  ${SOURCE_DIR}/entity/entity.cpp
+  ${SOURCE_DIR}/entity/player.cpp
   ${SOURCE_DIR}/bgr_spritesheet.s
-  ${SOURCE_DIR}/details/item.cpp
   ${SOURCE_DIR}/bgr_tilesheet.s
   ${SOURCE_DIR}/collision.cpp
   ${SOURCE_DIR}/easterEgg.cpp
@@ -45,8 +47,6 @@ add_executable(BlindJump
   ${SOURCE_DIR}/numeric.cpp
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/random.cpp
-  ${SOURCE_DIR}/player.cpp
-  ${SOURCE_DIR}/entity.cpp
   ${SOURCE_DIR}/sprite.cpp
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/game.cpp

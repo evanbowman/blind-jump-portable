@@ -1,7 +1,7 @@
 #pragma once
 
 #include "collision.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "numeric.hpp"
 #include "sprite.hpp"
 

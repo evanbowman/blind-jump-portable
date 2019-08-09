@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "numeric.hpp"
 
 class Platform;
