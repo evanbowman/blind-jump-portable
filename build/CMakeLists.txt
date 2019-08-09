@@ -73,8 +73,12 @@ if(GAMEBOY_ADVANCE)
     COMMENT "building cartridge"
     COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary BlindJump BlindJump.gba
     COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump BlindJump.gba)
+elseif(APPLE)
+  target_link_libraries(BlindJump
+    "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio")
+  set_target_properties(BlindJump
+    PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
 endif()
-
 
 
 target_compile_options(BlindJump PRIVATE
