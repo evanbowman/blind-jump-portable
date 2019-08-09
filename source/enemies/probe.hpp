@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../entity.hpp"
-#include "../collision.hpp"
-#include "../platform.hpp"
+#include "entity.hpp"
+#include "collision.hpp"
+#include "platform.hpp"
 
 
 class Probe : public Entity<Probe, 20> {
