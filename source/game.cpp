@@ -7,7 +7,7 @@
 
 
 static bool within_view_frustum(const Platform::Screen& screen,
-                                const Sprite& spr);
+                                const Vec2<Float>& pos);
 
 
 Game::Game(Platform& pfrm)
@@ -63,17 +63,41 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     };
 
     effects_.transform(update_policy);
-    enemies_.transform(update_policy);
     details_.transform(update_policy);
+    enemies_.transform([&](auto& entity_buf) {
+        for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
+            if (not(*it)->alive()) {
+                entity_buf.erase(it);
+            } else {
+                (*it)->update(pfrm, *this, delta);
+                if (within_view_frustum(pfrm.screen(), (*it)->get_position())) {
+                    if (state_ == State::active) {
+                        camera_.push_ballast((*it)->get_position());
+                    }
+                }
+                ++it;
+            }
+        }
+    });
+
+    camera_.update(pfrm, delta, player_.get_position());
 
     check_collisions(pfrm, *this, player_, enemies_.get<Turret>());
     check_collisions(pfrm, *this, player_, enemies_.get<Dasher>());
     check_collisions(pfrm, *this, player_, effects_.get<Item>());
 
+    Game::update_transitions(pfrm, delta);
+}
+
+
+HOT void Game::render(Platform& pfrm)
+{
+    Buffer<const Sprite*, Platform::Screen::sprite_limit> display_buffer;
+
     display_buffer.push_back(&player_.get_sprite());
 
     auto show_sprite = [&](const Sprite& spr) {
-        if (within_view_frustum(pfrm.screen(), spr)) {
+        if (within_view_frustum(pfrm.screen(), spr.get_position())) {
             display_buffer.push_back(&spr);
         }
     };
@@ -91,23 +115,17 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
             if constexpr (std::remove_reference<decltype(
                               *entity)>::type::multiface_sprite) {
                 const auto sprs = entity->get_sprites();
-                if (within_view_frustum(pfrm.screen(), *sprs[0])) {
+                if (within_view_frustum(pfrm.screen(), sprs[0]->get_position())) {
                     for (const auto& spr : sprs) {
                         display_buffer.push_back(spr);
                     }
                     shadows_buffer.push_back(&entity->get_shadow());
-                    if (state_ == State::active) {
-                        camera_.push_ballast(entity->get_position());
-                    }
                 }
             } else {
                 const auto& spr = entity->get_sprite();
-                if (within_view_frustum(pfrm.screen(), spr)) {
+                if (within_view_frustum(pfrm.screen(), spr.get_position())) {
                     display_buffer.push_back(&spr);
                     shadows_buffer.push_back(&entity->get_shadow());
-                    if (state_ == State::active) {
-                        camera_.push_ballast(entity->get_position());
-                    }
                 }
             }
         }
@@ -115,37 +133,21 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     details_.transform(show_sprites);
     effects_.transform(show_sprites);
 
-    camera_.update(pfrm, delta, player_.get_position());
-
     std::sort(display_buffer.begin(),
               display_buffer.end(),
               [](const auto& l, const auto& r) {
                   return l->get_position().y > r->get_position().y;
               });
 
-    // My hope is that using a separate buffer and copying back is
-    // cheaper than checking the view frustum all over again. The view
-    // frustum check is actually essential for some platforms. If we
-    // don't check the frustum, the best case scenario, is that the
-    // shadow will draw offscreen (which isn't too bad). But it can be
-    // much worse, e.g. on the Gameboy Advance, sprites auto wrap, so
-    // an offscreen draw can result in a floating sprite when the
-    // sprite's real position translates outside the view.
-    std::copy(shadows_buffer.begin(),
-              shadows_buffer.end(),
-              std::back_inserter(display_buffer));
-
     show_sprite(transporter_.get_sprite());
 
     display_buffer.push_back(&player_.get_shadow());
 
-    Game::update_transitions(pfrm, delta);
-}
-
-
-HOT void Game::render(Platform& pfrm)
-{
     for (auto spr : display_buffer) {
+        pfrm.screen().draw(*spr);
+    }
+
+    for (auto spr : shadows_buffer) {
         pfrm.screen().draw(*spr);
     }
 
@@ -570,14 +572,12 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
 
 static bool within_view_frustum(const Platform::Screen& screen,
-                                const Sprite& spr)
+                                const Vec2<Float>& pos)
 {
-    const auto position =
-        spr.get_position().template cast<s32>() - spr.get_origin();
     const auto view_center = screen.get_view().get_center().cast<s32>();
     const auto view_half_extent = screen.size().cast<s32>() / s32(2);
     Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
                          view_center.y + view_half_extent.y * 2};
-    return position.x > view_center.x - 32 and position.x < view_br.x and
-           position.y > view_center.y - 32 and position.y < view_br.y;
+    return pos.x > view_center.x - 32 and pos.x < view_br.x and
+           pos.y > view_center.y - 32 and pos.y < view_br.y;
 }
