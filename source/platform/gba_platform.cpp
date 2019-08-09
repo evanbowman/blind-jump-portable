@@ -384,8 +384,8 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "bgr_spritesheet.h"
-#include "bgr_tilesheet.h"
+#include "graphics/bgr_spritesheet.h"
+#include "graphics/bgr_tilesheet.h"
 
 
 // NOTE: ScreenBlock layout:
