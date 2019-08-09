@@ -2,7 +2,7 @@
 
 #include "entity.hpp"
 #include "collision.hpp"
-#include "platform.hpp"
+#include "platform/platform.hpp"
 
 
 class Probe : public Entity<Probe, 20> {

@@ -8,7 +8,7 @@
 #include "details/item.hpp"
 #include "details/itemChest.hpp"
 #include "details/transporter.hpp"
-#include "platform.hpp"
+#include "platform/platform.hpp"
 #include "player.hpp"
 #include "transformGroup.hpp"
 

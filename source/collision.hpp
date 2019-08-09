@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "buffer.hpp"
+#include "memory/buffer.hpp"
 #include "entity.hpp"
 
 

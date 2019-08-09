@@ -1,6 +1,6 @@
 #include "itemChest.hpp"
 #include "game.hpp"
-#include "platform.hpp"
+#include "platform/platform.hpp"
 
 
 ItemChest::ItemChest(const Vec2<Float>& pos) : state_(State::closed)

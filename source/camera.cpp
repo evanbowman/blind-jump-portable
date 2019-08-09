@@ -1,5 +1,5 @@
 #include "camera.hpp"
-#include "platform.hpp"
+#include "platform/platform.hpp"
 
 
 void Camera::update(Platform& pfrm,
