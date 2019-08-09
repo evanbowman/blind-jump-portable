@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "numeric.hpp"
+#include "number/numeric.hpp"
 
 
 struct SaveData {

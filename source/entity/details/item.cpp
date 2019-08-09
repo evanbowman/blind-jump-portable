@@ -1,6 +1,6 @@
 #include "item.hpp"
 #include "platform/platform.hpp"
-#include "random.hpp"
+#include "number/random.hpp"
 
 
 Item::Item(const Vec2<Float>& pos, Platform&, Type type)

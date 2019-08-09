@@ -38,6 +38,8 @@ add_executable(BlindJump
   ${SOURCE_DIR}/entity/enemies/probe.cpp
   ${SOURCE_DIR}/entity/details/item.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
+  ${SOURCE_DIR}/number/numeric.cpp
+  ${SOURCE_DIR}/number/random.cpp
   ${SOURCE_DIR}/graphics/view.cpp
   ${SOURCE_DIR}/entity/entity.cpp
   ${SOURCE_DIR}/entity/player.cpp
@@ -46,9 +48,7 @@ add_executable(BlindJump
   ${SOURCE_DIR}/collision.cpp
   ${SOURCE_DIR}/easterEgg.cpp
   ${SOURCE_DIR}/tileMap.cpp
-  ${SOURCE_DIR}/numeric.cpp
   ${SOURCE_DIR}/camera.cpp
-  ${SOURCE_DIR}/random.cpp
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/game.cpp
   ${BLINDJUMP_PLATFORM_SOURCE})

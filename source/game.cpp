@@ -1,6 +1,6 @@
 #include "game.hpp"
 #include "macros.hpp"
-#include "random.hpp"
+#include "number/random.hpp"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>

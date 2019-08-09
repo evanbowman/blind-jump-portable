@@ -1,7 +1,7 @@
 #pragma once
 
 #include "color.hpp"
-#include "numeric.hpp"
+#include "number/numeric.hpp"
 
 
 using TextureIndex = u32;

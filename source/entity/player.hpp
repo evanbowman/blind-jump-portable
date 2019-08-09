@@ -3,7 +3,7 @@
 #include "graphics/animation.hpp"
 #include "collision.hpp"
 #include "entity.hpp"
-#include "numeric.hpp"
+#include "number/numeric.hpp"
 
 
 class Game;
