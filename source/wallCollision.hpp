@@ -1,6 +1,6 @@
 #pragma once
 
-#include "buffer.hpp"
+#include "memory/buffer.hpp"
 #include "tileMap.hpp"
 
 

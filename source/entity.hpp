@@ -1,6 +1,6 @@
 #pragma once
 
-#include "memory.hpp"
+#include "memory/pool.hpp"
 #include "sprite.hpp"
 
 

@@ -17,9 +17,9 @@ option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
 
 
 if(GAMEBOY_ADVANCE)
-  set(BLINDJUMP_PLATFORM_SOURCE ${SOURCE_DIR}/gba_platform.cpp)
+  set(BLINDJUMP_PLATFORM_SOURCE ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()
-  set(BLINDJUMP_PLATFORM_SOURCE ${SOURCE_DIR}/desktop_platform.cpp)
+  set(BLINDJUMP_PLATFORM_SOURCE ${SOURCE_DIR}/platform/desktop_platform.cpp)
 endif()
 
 

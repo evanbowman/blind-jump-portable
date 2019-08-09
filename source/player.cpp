@@ -1,6 +1,6 @@
 #include "player.hpp"
 #include "game.hpp"
-#include "platform.hpp"
+#include "platform/platform.hpp"
 #include "wallCollision.hpp"
 
 
