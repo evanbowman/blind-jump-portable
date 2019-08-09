@@ -5,12 +5,12 @@
 #include "enemies/dasher.hpp"
 #include "enemies/probe.hpp"
 #include "enemies/turret.hpp"
-#include "item.hpp"
-#include "itemChest.hpp"
+#include "details/item.hpp"
+#include "details/itemChest.hpp"
+#include "details/transporter.hpp"
 #include "platform.hpp"
 #include "player.hpp"
 #include "transformGroup.hpp"
-#include "transporter.hpp"
 
 
 template <typename Arg>
