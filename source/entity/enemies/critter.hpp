@@ -3,7 +3,6 @@
 #include "collision.hpp"
 #include "entity/entity.hpp"
 #include "numeric.hpp"
-#include "sprite.hpp"
 
 
 class Game;

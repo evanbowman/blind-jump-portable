@@ -1,6 +1,6 @@
 #pragma once
 
-#include "animation.hpp"
+#include "graphics/animation.hpp"
 #include "collision.hpp"
 #include "entity/entity.hpp"
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "memory/pool.hpp"
-#include "sprite.hpp"
+#include "graphics/sprite.hpp"
 
 
 class Platform;

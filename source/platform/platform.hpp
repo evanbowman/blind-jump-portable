@@ -2,10 +2,10 @@
 
 #include "numeric.hpp"
 #include "save.hpp"
-#include "sprite.hpp"
+#include "graphics/sprite.hpp"
+#include "graphics/view.hpp"
 #include "sound.hpp"
 #include "tileMap.hpp"
-#include "view.hpp"
 #include <array>
 #include <optional>
 
