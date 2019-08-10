@@ -196,6 +196,10 @@ HOT void Game::update_transitions(Platform& pf, Microseconds dt)
 
 static void condense(TileMap& map, TileMap& maptemp)
 {
+    // At the start, whether each tile is filled or unfilled is
+    // completely random. The condense function causes each tile to
+    // appear/disappear based on how many neighbors that tile has,
+    // which ultimately causes tiles to coalesce into blobs.
     map.for_each([&](const Tile& tile, int x, int y) {
         uint8_t count = 0;
         auto collect = [&](int x, int y) {
@@ -299,6 +303,10 @@ COLD void Game::regenerate_map(Platform& pfrm)
         condense(tiles_, temporary);
     }
 
+    // Remove tiles from edges of the map. Some platforms,
+    // particularly consoles, have automatic tile-wrapping, and we
+    // don't want to deal with having to support wrapping in all the
+    // game logic.
     tiles_.for_each([&](Tile& tile, int x, int y) {
         if (x == 0 or x == TileMap::width - 1 or y == 0 or
             y == TileMap::height - 1) {
@@ -306,6 +314,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
+    // Create a mask of the tileset by filling the temporary tileset
+    // with all walkable tiles from the tilemap.
     tiles_.for_each([&](const Tile& tile, TIdx x, TIdx y) {
         if (tile not_eq Tile::none and tile not_eq Tile::ledge and
             tile not_eq Tile::grass_ledge) {
@@ -315,6 +325,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
+    // Pick a random filled tile, and flood-fill around that tile in
+    // the map, to produce a single connected component.
     while (true) {
         const auto x = random_choice(TileMap::width);
         const auto y = random_choice(TileMap::height);
@@ -343,6 +355,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         condense(grass_overlay, temporary);
     }
 
+    // All tiles with four neighbors become sand tiles.
     tiles_.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::plate and
             tiles_.get_tile(x - 1, y) not_eq Tile::none and
@@ -353,6 +366,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
+    // Add ledge tiles to empty locations, where the y-1 tile is non-empty.
     tiles_.for_each([&](Tile& tile, int x, int y) {
         auto above = tiles_.get_tile(x, y - 1);
         if (tile == Tile::none and
@@ -361,6 +375,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
+    // Crop the grass overlay tileset to fit the target tilemap.
     tiles_.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::none) {
             grass_overlay.set_tile(x, y, Tile::none);
@@ -368,6 +383,9 @@ COLD void Game::regenerate_map(Platform& pfrm)
     });
 
     u8 bitmask[TileMap::width][TileMap::height];
+    // After running the algorithm below, the bitmask will contain
+    // correct tile indices, such that all the grass tiles are
+    // smoothly connected.
     for (int x = 0; x < TileMap::width; ++x) {
         for (int y = 0; y < TileMap::height; ++y) {
             bitmask[x][y] = 0;
