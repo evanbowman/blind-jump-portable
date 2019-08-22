@@ -22,7 +22,7 @@ UpdateTask::UpdateTask(Synchronized<Game>* game, Platform* pf) :
 void UpdateTask::run()
 {
     if (pf_->is_running()) {
-        game_->enter([this](Game& game) {
+        game_->acquire([this](Game& game) {
             game.update(*pf_, DeltaClock::instance().reset());
         });
     } else {
@@ -43,7 +43,7 @@ void start(Platform& pf)
         pf.keyboard().poll();
 
         pf.screen().clear();
-        game.enter([&](Game& gm) {
+        game.acquire([&](Game& gm) {
             gm.render(pf);
         });
         pf.screen().display();

@@ -292,7 +292,7 @@ public:
     }
 
     template <typename F>
-    void enter(F&& handler)
+    void acquire(F&& handler)
     {
         lock();
         handler(data_);
