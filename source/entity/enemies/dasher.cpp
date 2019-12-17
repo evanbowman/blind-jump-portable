@@ -1,7 +1,8 @@
 #include "dasher.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
-
+#include <iostream>
+#include <cmath>
 
 Dasher::Dasher(const Vec2<Float>& position)
     : hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0), state_(State::idle)
@@ -29,13 +30,20 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     shadow_.set_position(position_);
     head_.set_position({position_.x, position_.y - 9});
 
-    auto face_player = [this, &player = game.get_player()] {
+    auto face_left = [this] { sprite_.set_flip({0, 0});
+                              head_.set_flip({0, 0}); };
+
+    auto face_right = [this] { sprite_.set_flip({1, 0});
+                               head_.set_flip({1, 0}); };
+
+    auto face_player = [this,
+                        &player = game.player(),
+                        &face_left,
+                        &face_right] {
         if (player.get_position().x > position_.x) {
-            sprite_.set_flip({1, 0});
-            head_.set_flip({1, 0});
+            face_right();
         } else {
-            sprite_.set_flip({0, 0});
-            head_.set_flip({0, 0});
+            face_left();
         }
     };
 
@@ -45,7 +53,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
     switch (state_) {
     case State::inactive:
-        if (manhattan_length(game.get_player().get_position(), position_) <
+        if (manhattan_length(game.player().get_position(), position_) <
             std::min(screen_size.x, screen_size.y) / 2) {
             state_ = State::idle;
         }
@@ -88,25 +96,44 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::dash_begin:
-        face_player();
         if (timer_ > 352000) {
             timer_ -= 352000;
+
+            u8 tries{0};
+            s16 dir = ((static_cast<float>(random_choice<359>())) / 360) * INT16_MAX;
+            do {
+                if (tries++ > 254) {
+                    goto IDLE_TRANSITION;
+                }
+            } while (false);
+
+            speed_.x = 5 * (float(cosine(dir)) / INT16_MAX);
+            speed_.y = 5 * (float(sine(dir)) / INT16_MAX);
             state_ = State::dashing;
             sprite_.set_texture_index(TextureMap::dasher_dash);
         }
         break;
 
-    case State::dashing:
+    case State::dashing: {
         if (timer_ > 250000) {
             timer_ -= 250000;
             state_ = State::dash_end;
             sprite_.set_texture_index(TextureMap::dasher_crouch);
         }
-        break;
+        if (speed_.x < 0) {
+            face_left();
+        } else {
+            face_right();
+        }
+        // static const float movement_rate = 0.00005f;
+        // position_.x += speed_.x * dt * movement_rate;
+        // position_.y += speed_.y * dt * movement_rate;
+    } break;
 
     case State::dash_end:
         if (timer_ > 150000) {
             timer_ -= 150000;
+        IDLE_TRANSITION:
             state_ = State::idle;
             sprite_.set_texture_index(TextureMap::dasher_idle);
         }

@@ -14,7 +14,7 @@ ItemChest::ItemChest(const Vec2<Float>& pos) : state_(State::closed)
 
 void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
 {
-    const auto& player_pos = game.get_player().get_position();
+    const auto& player_pos = game.player().get_position();
     const auto& pos = sprite_.get_position();
     switch (state_) {
     case State::closed:

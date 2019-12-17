@@ -156,4 +156,6 @@ using Microseconds = s32;
 s16 sine(s16 angle);
 
 
+// This cosine function is implemented in terms of sine, and therefore
+// slightly more expensive to call than sine.
 s16 cosine(s16 angle);

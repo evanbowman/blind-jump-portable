@@ -344,11 +344,13 @@ void Platform::Screen::draw(const Sprite& spr)
 }
 
 
-Buffer<Platform::Task*, 8> task_queue_;
+Buffer<Platform::Task*, 16> task_queue_;
 
 
 void Platform::push_task(Task* task)
 {
+    task->complete_ = false;
+    task->running_ = true;
     task_queue_.push_back(task);
 }
 
@@ -360,6 +362,7 @@ void Platform::Screen::clear()
     for (auto it = task_queue_.begin(); it not_eq task_queue_.end();) {
         (*it)->run();
         if ((*it)->complete()) {
+            (*it)->running_ = false;
             task_queue_.erase(it);
         } else {
             ++it;

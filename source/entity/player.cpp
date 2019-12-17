@@ -209,7 +209,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool left = input.pressed<Key::left>();
     const bool right = input.pressed<Key::right>();
 
-    const auto wc = check_wall_collisions(game.get_tiles(), *this);
+    const auto wc = check_wall_collisions(game.tiles(), *this);
 
     if (invulnerability_timer_ > 0) {
         invulnerability_timer_ -= dt;

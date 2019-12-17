@@ -231,14 +231,22 @@ public:
             return complete_;
         }
 
+        bool running() const
+        {
+            return running_;
+        }
+
     protected:
         void completed()
         {
             complete_ = true;
         }
 
+        friend class Platform;
+
     private:
-        bool complete_ = false;
+        Atomic<bool> running_ = false;
+        Atomic<bool> complete_ = false;
     };
 
     // If only we had a heap, and shared pointers, we could enforce better

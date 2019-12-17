@@ -33,7 +33,7 @@ static void animate_shadow(Sprite& shadow, Sprite& turret_spr)
 
 void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 {
-    const auto& player_pos = game.get_player().get_position();
+    const auto& player_pos = game.player().get_position();
     const auto& screen_size = pfrm.screen().size();
     switch (state_) {
     case State::closed:

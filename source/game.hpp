@@ -36,12 +36,12 @@ public:
 
     void render(Platform& platform);
 
-    inline Player& get_player()
+    inline Player& player()
     {
         return player_;
     }
 
-    inline TileMap& get_tiles()
+    inline TileMap& tiles()
     {
         return tiles_;
     }
@@ -50,20 +50,40 @@ public:
     using DetailGroup = EntityGroup<ItemChest>;
     using EffectGroup = EntityGroup<Item>;
 
-    inline EffectGroup& get_effects()
+    inline EffectGroup& effects()
     {
         return effects_;
     }
 
-    inline DetailGroup& get_details()
+    inline DetailGroup& details()
     {
         return details_;
     }
 
-    inline EnemyGroup& get_enemies()
+    inline EnemyGroup& enemies()
     {
         return enemies_;
     }
+
+    inline Camera& camera()
+    {
+        return camera_;
+    }
+
+    inline Transporter& transporter()
+    {
+        return transporter_;
+    }
+
+    class State {
+    public:
+        virtual State* update(Platform& platform,
+                              Microseconds delta,
+                              Game& game) = 0;
+        virtual ~State() {}
+    };
+
+    void next_level(Platform& platform);
 
 private:
     s32 level_;
@@ -76,10 +96,8 @@ private:
     Transporter transporter_;
     Microseconds counter_;
     SaveData save_data_;
+    State* state_;
 
-    enum class State { active, fade_out, fade_in } state_;
-
-    void next_level(Platform& platform);
     void regenerate_map(Platform& platform);
     bool respawn_entities(Platform& platform);
 

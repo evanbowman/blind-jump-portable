@@ -11,9 +11,7 @@ class Platform;
 
 class Critter : public Entity<Critter, 20> {
 public:
-    Critter();
+    Critter(Platform& pf);
 
     void update(Platform&, Game&, Microseconds);
-
-    // void on_collision(Platform& pf, Game& game,Critter&) override;
 };

@@ -55,4 +55,5 @@ private:
     HitBox hitbox_;
     Microseconds timer_;
     State state_;
+    Vec2<Float> speed_;
 };

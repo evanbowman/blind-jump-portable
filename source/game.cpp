@@ -10,8 +10,187 @@ static bool within_view_frustum(const Platform::Screen& screen,
                                 const Vec2<Float>& pos);
 
 
+
+class OverworldState : public Game::State {
+public:
+    OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking) {}
+    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+private:
+    const bool camera_tracking_;
+};
+
+
+
+static class ActiveState : public OverworldState {
+public:
+    ActiveState(bool camera_tracking) : OverworldState(camera_tracking) {}
+    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+} active_state(true);
+
+
+
+static class FadeInState : public OverworldState {
+public:
+    FadeInState() : OverworldState(false) {}
+    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+private:
+    Microseconds counter_ = 0;
+} fade_in_state;
+
+
+
+static class FadeOutState : public OverworldState {
+public:
+    FadeOutState() : OverworldState(false) {}
+    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+private:
+    Microseconds counter_ = 0;
+} fade_out_state;
+
+
+
+static class DeathFadeState : public OverworldState {
+public:
+    DeathFadeState() : OverworldState(false) {}
+    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+private:
+    Microseconds counter_ = 0;
+} death_fade_state;
+
+
+
+Game::State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
+{
+    Player& player = game.player();
+
+    auto update_policy = [&](auto& entity_buf) {
+        for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
+            if (not(*it)->alive()) {
+                entity_buf.erase(it);
+            } else {
+                (*it)->update(pfrm, game, delta);
+                ++it;
+            }
+        }
+    };
+
+    game.effects().transform(update_policy);
+    game.details().transform(update_policy);
+    game.enemies().transform([&](auto& entity_buf) {
+        for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
+            if (not(*it)->alive()) {
+                entity_buf.erase(it);
+            } else {
+                (*it)->update(pfrm, game, delta);
+                if (camera_tracking_) {
+                    if (within_view_frustum(pfrm.screen(), (*it)->get_position())) {
+                        game.camera().push_ballast((*it)->get_position());
+                    }
+                }
+                ++it;
+            }
+        }
+    });
+
+    game.camera().update(pfrm, delta, player.get_position());
+
+    check_collisions(pfrm, game, player, game.enemies().get<Turret>());
+    check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
+    check_collisions(pfrm, game, player, game.effects().get<Item>());
+
+    return this;
+}
+
+
+
+Game::State* ActiveState::update(Platform& pfrm, Microseconds delta, Game& game)
+{
+    game.player().update(pfrm, game, delta);
+
+    OverworldState::update(pfrm, delta, game);
+
+    if (game.player().get_health() == 0) {
+        return &death_fade_state;
+    }
+
+    const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
+    if (manhattan_length(game.player().get_position(), t_pos) < 16) {
+        game.player().move(t_pos);
+        return &fade_out_state;
+    } else {
+        return this;
+    }
+}
+
+
+
+Game::State* FadeInState::update(Platform& pfrm, Microseconds delta, Game& game)
+{
+    game.player().soft_update(pfrm, game, delta);
+
+    OverworldState::update(pfrm, delta, game);
+
+    counter_ += delta;
+
+    static const Microseconds fade_duration = 950000;
+    if (counter_ > fade_duration) {
+        counter_ = 0;
+        pfrm.screen().fade(0.f);
+        return &active_state;
+    } else {
+        pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
+        return this;
+    }
+}
+
+
+
+Game::State* FadeOutState::update(Platform& pfrm, Microseconds delta, Game& game)
+{
+    game.player().soft_update(pfrm, game, delta);
+
+    OverworldState::update(pfrm, delta, game);
+
+    counter_ += delta;
+
+    static const Microseconds fade_duration = 950000;
+    if (counter_ > fade_duration) {
+        counter_ = 0;
+        pfrm.screen().fade(1.f);
+        game.next_level(pfrm);
+        return &fade_in_state;
+    } else {
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_));
+        return this;
+    }
+}
+
+
+
+Game::State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
+{
+    game.player().soft_update(pfrm, game, delta);
+
+    OverworldState::update(pfrm, delta, game);
+
+    counter_ += delta;
+
+    static const Microseconds fade_duration = 950000;
+    if (counter_ > fade_duration) {
+        counter_ -= delta;
+        pfrm.screen().fade(1.f, ColorConstant::coquelicot);
+        return this;
+    } else {
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
+                           ColorConstant::coquelicot);
+        return this;
+    }
+}
+
+
+
 Game::Game(Platform& pfrm)
-    : level_(-1), counter_(0), state_(State::fade_in)
+    : level_(-1), counter_(0), state_(&fade_in_state)
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
@@ -26,10 +205,6 @@ Game::Game(Platform& pfrm)
 }
 
 
-void riff(Platform&);
-
-
-
 HOT void Game::update(Platform& pfrm, Microseconds delta)
 {
     // Every update, advance the random number engine, so that the
@@ -41,52 +216,7 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     // anticipate.
     random_value();
 
-    if (pfrm.keyboard().pressed<Key::alt_1>()) {
-        riff(pfrm);
-    }
-
-    if (state_ == State::active) {
-        player_.update(pfrm, *this, delta);
-    } else {
-        player_.soft_update(pfrm, *this, delta);
-    }
-
-    auto update_policy = [&](auto& entity_buf) {
-        for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
-            if (not(*it)->alive()) {
-                entity_buf.erase(it);
-            } else {
-                (*it)->update(pfrm, *this, delta);
-                ++it;
-            }
-        }
-    };
-
-    effects_.transform(update_policy);
-    details_.transform(update_policy);
-    enemies_.transform([&](auto& entity_buf) {
-        for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
-            if (not(*it)->alive()) {
-                entity_buf.erase(it);
-            } else {
-                (*it)->update(pfrm, *this, delta);
-                if (within_view_frustum(pfrm.screen(), (*it)->get_position())) {
-                    if (state_ == State::active) {
-                        camera_.push_ballast((*it)->get_position());
-                    }
-                }
-                ++it;
-            }
-        }
-    });
-
-    camera_.update(pfrm, delta, player_.get_position());
-
-    check_collisions(pfrm, *this, player_, enemies_.get<Turret>());
-    check_collisions(pfrm, *this, player_, enemies_.get<Dasher>());
-    check_collisions(pfrm, *this, player_, effects_.get<Item>());
-
-    Game::update_transitions(pfrm, delta);
+    state_ = state_->update(pfrm, delta, *this);
 }
 
 
@@ -155,43 +285,62 @@ HOT void Game::render(Platform& pfrm)
 }
 
 
-HOT void Game::update_transitions(Platform& pf, Microseconds dt)
-{
-    const auto& t_pos = transporter_.get_position() - Vec2<Float>{0, 22};
-    switch (state_) {
-    case State::active:
-        if (manhattan_length(player_.get_position(), t_pos) < 16) {
-            state_ = State::fade_out;
-            player_.move(t_pos);
-        }
-        break;
-
-    case State::fade_out:
-        counter_ += dt;
-        static const Microseconds fade_duration = 950000;
-        if (counter_ > fade_duration) {
-            counter_ = 0;
-            pf.screen().fade(1.f);
-            state_ = State::fade_in;
-            Game::next_level(pf);
-        } else {
-            pf.screen().fade(smoothstep(0.f, fade_duration, counter_));
-        }
-        break;
+// HOT void Game::update_transitions(Platform& pf, Microseconds dt)
+// {
+//     const auto& t_pos = transporter_.get_position() - Vec2<Float>{0, 22};
+//     switch (state_) {
+//     case State::active:
+//         if (manhattan_length(player_.get_position(), t_pos) < 16) {
+//             state_ = State::fade_out;
+//             player_.move(t_pos);
+//         }
+//         break;
 
 
-    case State::fade_in:
-        counter_ += dt;
-        if (counter_ > fade_duration) {
-            counter_ = 0;
-            pf.screen().fade(0.f);
-            state_ = State::active;
-        } else {
-            pf.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
-        }
-        break;
-    }
-}
+
+//     case State::fade_death:
+//         counter_ += dt;
+//         static const Microseconds fade_duration = 950000;
+//         if (counter_ > fade_duration) {
+//             counter_ = 0;
+//             pf.screen().fade(1.f, ColorConstant::coquelicot);
+//             state_ = State::death_pause;
+//         } else {
+//             pf.screen().fade(smoothstep(0.f, fade_duration, counter_),
+//                              ColorConstant::coquelicot);
+//         }
+//         break;
+
+//     case State::death_pause:
+//         pf.screen().fade(1.f, ColorConstant::coquelicot);
+//         break;
+
+
+//     case State::fade_out:
+//         counter_ += dt;
+//         if (counter_ > fade_duration) {
+//             counter_ = 0;
+//             pf.screen().fade(1.f);
+//             state_ = State::fade_in;
+//             Game::next_level(pf);
+//         } else {
+//             pf.screen().fade(smoothstep(0.f, fade_duration, counter_));
+//         }
+//         break;
+
+
+//     case State::fade_in:
+//         counter_ += dt;
+//         if (counter_ > fade_duration) {
+//             counter_ = 0;
+//             pf.screen().fade(0.f);
+//             state_ = State::active;
+//         } else {
+//             pf.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
+//         }
+//         break;
+//     }
+// }
 
 
 static void condense(TileMap& map, TileMap& maptemp)
