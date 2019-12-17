@@ -1,4 +1,5 @@
 #include "platform.hpp"
+#include "number/random.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -364,6 +365,8 @@ void start(Platform&);
 
 int main()
 {
+    random_seed() = time(nullptr);
+
     Platform pf;
     start(pf);
 }
