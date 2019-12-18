@@ -38,6 +38,8 @@ public:
     {
     }
 
+
+
 private:
     enum class State {
         inactive,

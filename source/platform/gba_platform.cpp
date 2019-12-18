@@ -573,20 +573,27 @@ void Platform::Screen::fade(float amount, ColorConstant k)
     last_fade_amt = amt;
 
     const auto& c = real_color(k);
-    // To do a screen fade, blend black into the palettes.
+    // To do a screen fade, blend color into the palettes.
+    auto blend = [&](const Color& from) {
+        return [&] {
+            switch (amt) {
+            case 0: return from;
+            case 255: return c;
+            default:
+                return Color(fast_interpolate(c.r_, from.r_, amt),
+                             fast_interpolate(c.g_, from.g_, amt),
+                             fast_interpolate(c.b_, from.b_, amt));
+            }
+        }().bgr_hex_555();
+    };
+
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(bgr_spritesheetPal[i]);
-        MEM_PALETTE[i] = Color(fast_interpolate(c.r_, from.r_, amt),
-                               fast_interpolate(c.g_, from.g_, amt),
-                               fast_interpolate(c.b_, from.b_, amt))
-                             .bgr_hex_555();
+        MEM_PALETTE[i] = blend(from);
     }
     for (int i = 0; i < 16; ++i) {
         auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
-        MEM_BG_PALETTE[i] = Color(fast_interpolate(c.r_, from.r_, amt),
-                                  fast_interpolate(c.g_, from.g_, amt),
-                                  fast_interpolate(c.b_, from.b_, amt))
-                                .bgr_hex_555();
+        MEM_BG_PALETTE[i] = blend(from);
     }
 }
 

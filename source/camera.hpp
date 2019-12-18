@@ -19,6 +19,11 @@ public:
         ballast_.center_ = ballast_.center_ + pos;
     }
 
+    void set_speed(Float speed)
+    {
+        speed_ = speed;
+    }
+
 private:
     struct Ballast {
         u32 divisor_ = 0;
@@ -26,4 +31,5 @@ private:
     } ballast_;
 
     Vec2<Float> buffer_;
+    Float speed_ = 1.f;
 };

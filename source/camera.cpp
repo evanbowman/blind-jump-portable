@@ -23,7 +23,9 @@ void Camera::update(Platform& pfrm,
     Vec2<Float> target{(seek.x - screen_size.x / 2),
                        (seek.y - screen_size.y / 2)};
 
-    view.set_center(interpolate(target, view_center, dt * 0.00000125f));
+    view.set_center(interpolate(target,
+                                view_center,
+                                dt * speed_ * 0.00000125f));
 
     pfrm.screen().set_view(view);
 
