@@ -285,64 +285,6 @@ HOT void Game::render(Platform& pfrm)
 }
 
 
-// HOT void Game::update_transitions(Platform& pf, Microseconds dt)
-// {
-//     const auto& t_pos = transporter_.get_position() - Vec2<Float>{0, 22};
-//     switch (state_) {
-//     case State::active:
-//         if (manhattan_length(player_.get_position(), t_pos) < 16) {
-//             state_ = State::fade_out;
-//             player_.move(t_pos);
-//         }
-//         break;
-
-
-
-//     case State::fade_death:
-//         counter_ += dt;
-//         static const Microseconds fade_duration = 950000;
-//         if (counter_ > fade_duration) {
-//             counter_ = 0;
-//             pf.screen().fade(1.f, ColorConstant::coquelicot);
-//             state_ = State::death_pause;
-//         } else {
-//             pf.screen().fade(smoothstep(0.f, fade_duration, counter_),
-//                              ColorConstant::coquelicot);
-//         }
-//         break;
-
-//     case State::death_pause:
-//         pf.screen().fade(1.f, ColorConstant::coquelicot);
-//         break;
-
-
-//     case State::fade_out:
-//         counter_ += dt;
-//         if (counter_ > fade_duration) {
-//             counter_ = 0;
-//             pf.screen().fade(1.f);
-//             state_ = State::fade_in;
-//             Game::next_level(pf);
-//         } else {
-//             pf.screen().fade(smoothstep(0.f, fade_duration, counter_));
-//         }
-//         break;
-
-
-//     case State::fade_in:
-//         counter_ += dt;
-//         if (counter_ > fade_duration) {
-//             counter_ = 0;
-//             pf.screen().fade(0.f);
-//             state_ = State::active;
-//         } else {
-//             pf.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
-//         }
-//         break;
-//     }
-// }
-
-
 static void condense(TileMap& map, TileMap& maptemp)
 {
     // At the start, whether each tile is filled or unfilled is
