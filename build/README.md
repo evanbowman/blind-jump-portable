@@ -2,5 +2,5 @@
 For GAMEBOY builds:
 
 ```
-cmake -DCMAKE_TOOLCHAIN_FILE=/<ABSOLUTE_PATH>/build/devkitarm.cmake .
+cmake -DCMAKE_TOOLCHAIN_FILE=$(pwd)/devkitarm.cmake .
 ```

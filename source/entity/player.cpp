@@ -10,10 +10,10 @@
 
 const Vec2<s32> v_origin{8, 16};
 const Vec2<s32> h_origin{16, 16};
-
+static const Player::Health initial_health{4};
 
 Player::Player()
-    : Entity(Health(4)), frame_(0), frame_base_(ResourceLoc::player_still_down),
+    : Entity(initial_health), frame_(0), frame_base_(ResourceLoc::player_still_down),
       anim_timer_(0), color_timer_(0), invulnerability_timer_(0), l_speed_(0.f),
       r_speed_(0.f), u_speed_(0.f), d_speed_(0.f),
       hitbox_{&position_, {16, 32}, {8, 16}}
@@ -25,6 +25,14 @@ Player::Player()
     shadow_.set_texture_index(TextureMap::drop_shadow);
     shadow_.set_size(Sprite::Size::w16_h32);
     shadow_.set_alpha(Sprite::Alpha::translucent);
+}
+
+
+void Player::revive()
+{
+    if (not alive()) {
+        add_health(initial_health);
+    }
 }
 
 

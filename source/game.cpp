@@ -39,6 +39,14 @@ private:
 
 
 
+static class PreFadePauseState : public OverworldState {
+public:
+    PreFadePauseState() : OverworldState(false) {}
+    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+} pre_fade_pause_state;
+
+
+
 static class FadeOutState : public OverworldState {
 public:
     FadeOutState() : OverworldState(false) {}
@@ -116,7 +124,7 @@ Game::State* ActiveState::update(Platform& pfrm, Microseconds delta, Game& game)
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
     if (manhattan_length(game.player().get_position(), t_pos) < 16) {
         game.player().move(t_pos);
-        return &fade_out_state;
+        return &pre_fade_pause_state;
     } else {
         return this;
     }
@@ -139,6 +147,28 @@ Game::State* FadeInState::update(Platform& pfrm, Microseconds delta, Game& game)
         return &active_state;
     } else {
         pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
+        return this;
+    }
+}
+
+
+
+Game::State* PreFadePauseState::update(Platform& pfrm,
+                                       Microseconds delta,
+                                       Game& game)
+{
+    game.camera().set_speed(1.5f);
+
+    game.player().soft_update(pfrm, game, delta);
+
+    OverworldState::update(pfrm, delta, game);
+
+    if (manhattan_length(pfrm.screen().get_view().get_center() +
+                         pfrm.screen().get_view().get_size() / 2.f,
+                         game.player().get_position()) < 18) {
+        game.camera().set_speed(1.f);
+        return &fade_out_state;
+    } else {
         return this;
     }
 }
@@ -169,17 +199,24 @@ Game::State* FadeOutState::update(Platform& pfrm, Microseconds delta, Game& game
 
 Game::State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
 {
-    game.player().soft_update(pfrm, game, delta);
+    // game.player().soft_update(pfrm, game, delta);
 
     OverworldState::update(pfrm, delta, game);
 
     counter_ += delta;
 
-    static const Microseconds fade_duration = 950000;
+    static const Microseconds fade_duration = 1500000;
     if (counter_ > fade_duration) {
         counter_ -= delta;
         pfrm.screen().fade(1.f, ColorConstant::coquelicot);
-        return this;
+        if (pfrm.keyboard().pressed<Key::action_1>()) {
+            counter_ = 0;
+            game.player().revive();
+            game.next_level(pfrm);
+            return &fade_in_state;
+        } else {
+            return this;
+        }
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::coquelicot);

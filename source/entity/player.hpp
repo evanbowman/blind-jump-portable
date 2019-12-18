@@ -46,6 +46,8 @@ public:
 
     void move(const Vec2<Float>& pos);
 
+    void revive();
+
 private:
     using ResourceLoc = TextureMap;
 

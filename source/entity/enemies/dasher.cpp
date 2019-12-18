@@ -1,8 +1,8 @@
 #include "dasher.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
-#include <iostream>
-#include <cmath>
+#include "wallCollision.hpp"
+
 
 Dasher::Dasher(const Vec2<Float>& position)
     : hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0), state_(State::idle)
@@ -115,19 +115,38 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::dashing: {
-        if (timer_ > 250000) {
-            timer_ -= 250000;
+        auto next_state = [this] {
             state_ = State::dash_end;
             sprite_.set_texture_index(TextureMap::dasher_crouch);
+        };
+        if (timer_ > 250000) {
+            timer_ -= 250000;
+            next_state();
         }
+        const auto wc = check_wall_collisions(game.tiles(), *this);
+        if (wc.any()) {
+            if ((wc.left and speed_.x < 0.f) or
+                (wc.right and speed_.x > 0.f)) {
+                speed_.x = 0.f;
+            }
+            if ((wc.up and speed_.y < 0.f) or
+                (wc.down and speed_.y > 0.f)) {
+                speed_.y = 0.f;
+            }
+            if (speed_.x == 0.f and speed_.y == 0.f) {
+                timer_ = 0;
+                next_state();
+            }
+        }
+
         if (speed_.x < 0) {
             face_left();
         } else {
             face_right();
         }
-        // static const float movement_rate = 0.00005f;
-        // position_.x += speed_.x * dt * movement_rate;
-        // position_.y += speed_.y * dt * movement_rate;
+        static const float movement_rate = 0.00005f;
+        position_.x += speed_.x * dt * movement_rate;
+        position_.y += speed_.y * dt * movement_rate;
     } break;
 
     case State::dash_end:
