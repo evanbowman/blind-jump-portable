@@ -11,6 +11,7 @@
 #include "entity/player.hpp"
 #include "platform/platform.hpp"
 #include "transformGroup.hpp"
+#include "state.hpp"
 
 
 template <typename Arg>
@@ -74,14 +75,6 @@ public:
     {
         return transporter_;
     }
-
-    class State {
-    public:
-        virtual State* update(Platform& platform,
-                              Microseconds delta,
-                              Game& game) = 0;
-        virtual ~State() {}
-    };
 
     void next_level(Platform& platform);
 

@@ -47,6 +47,7 @@ set(SOURCES
   ${SOURCE_DIR}/tileMap.cpp
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/start.cpp
+  ${SOURCE_DIR}/state.cpp
   ${SOURCE_DIR}/game.cpp)
 
 
