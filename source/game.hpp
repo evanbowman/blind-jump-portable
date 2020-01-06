@@ -51,6 +51,11 @@ public:
     using DetailGroup = EntityGroup<ItemChest>;
     using EffectGroup = EntityGroup<Item>;
 
+    inline Transporter& transporter()
+    {
+        return transporter_;
+    }
+
     inline EffectGroup& effects()
     {
         return effects_;
@@ -69,11 +74,6 @@ public:
     inline Camera& camera()
     {
         return camera_;
-    }
-
-    inline Transporter& transporter()
-    {
-        return transporter_;
     }
 
     void next_level(Platform& platform);
