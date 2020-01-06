@@ -53,5 +53,5 @@ s16 cosine(s16 angle)
         angle += INT16_MAX;
         angle += 1;
     }
-    return sine(angle - (270.f / 360.f) * INT16_MAX);
+    return sine(angle - s16((270.f / 360.f) * INT16_MAX));
 }
