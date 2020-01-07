@@ -66,6 +66,10 @@ template <typename T> T manhattan_length(const Vec2<T>& a, const Vec2<T>& b)
 }
 
 
+using Degree = u16;
+using Angle = Degree;
+
+
 // Note: In case I need to swap in a fixed-point class in the future.
 using Float = float;
 
