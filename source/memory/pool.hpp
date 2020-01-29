@@ -45,6 +45,11 @@ public:
         return size;
     }
 
+    static constexpr u32 alignment()
+    {
+        return align;
+    }
+
 private:
     std::array<Cell, count> cells_;
     Cell* freelist_;
