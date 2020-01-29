@@ -16,20 +16,27 @@
 #include "platform/platform.hpp"
 #include "transformGroup.hpp"
 #include "state.hpp"
+#include "list.hpp"
+
+
+using EntityNode = BiNode<EntityRef<Entity>>;
+
+
+template <u32 Capacity>
+using EntityNodePool = Pool<sizeof(EntityNode), Capacity, alignof(EntityNode)>;
 
 
 template <typename Arg, u32 Capacity>
-using EntityBuffer = Buffer<EntityRef<Arg>, Capacity>;
+using EntityBuffer = List<EntityRef<Arg>, EntityNodePool<Capacity>>;
 
 
-// TODO: By using a buffer for each type of entity, we waste a lot of memory,
-// especially considering that we know the Capacity in advance. Instead, we
-// could use a list with nodes allocated from a shared pool of nodes. All entity
-// refs _should_ be the same size, because they're all unique ptrs with
-// deleters.
 template <size_t Capacity, typename... Members>
 class EntityGroup : public TransformGroup<EntityBuffer<Members, Capacity>...> {
 public:
+
+    EntityGroup() : TransformGroup<EntityBuffer<Members, Capacity>...>(node_pool_)
+    {
+    }
 
     template <typename T, typename... CtorArgs>
     EntityRef<T> spawn(CtorArgs&&... ctorArgs)
@@ -58,12 +65,19 @@ private:
                        Capacity,
                        std::max({alignof(Members)...})>;
 
+    using NodePool_ = EntityNodePool<Capacity>;
+    static NodePool_ node_pool_;
+
     static Pool_ pool_;
 };
 
 
 template <size_t Cap, typename... Members>
 typename EntityGroup<Cap, Members...>::Pool_ EntityGroup<Cap, Members...>::pool_;
+
+template <size_t Cap, typename... Members>
+typename EntityGroup<Cap, Members...>::NodePool_ EntityGroup<Cap, Members...>::node_pool_;
+
 
 
 class Game {

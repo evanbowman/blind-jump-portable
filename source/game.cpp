@@ -435,7 +435,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         if (const auto c = select_coord()) {
             using T = typename decltype(type)::value;
             if (auto ent = group.template spawn<T>(pos(c))) {
-                group.template get<T>().push_back(std::move(ent));
+                group.template get<T>().push(std::move(ent));
             } else {
                 warning(pfrm, "spawn failed: entity buffer full");
             }
@@ -488,7 +488,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                             return Item::Type::heart;
                         }
                     }())) {
-                    details_.get<Item>().push_back(std::move(ent));
+                    details_.get<Item>().push(std::move(ent));
                 }
             }
         }

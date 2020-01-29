@@ -81,7 +81,7 @@ public:
     }
 
     // FIXME: I wrote this fn in like 30 seconds and it's not great
-    void erase(Iterator slot)
+    Iterator erase(Iterator slot)
     {
         slot->~T();
         for (; slot not_eq end_; ++slot) {
@@ -91,6 +91,7 @@ public:
             }
         }
         end_ -= 1;
+        return slot;
     }
 
 

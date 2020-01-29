@@ -24,6 +24,15 @@ template <std::size_t I = 0, typename FuncT, typename... Tp>
 
 template <typename... Members> class TransformGroup {
 public:
+    TransformGroup()
+    {
+    }
+
+    template <typename T>
+    TransformGroup(T& init) : members_(Members{init}...)
+    {
+    }
+
     template <typename F> void transform(F&& method)
     {
         detail::for_each(members_, method);

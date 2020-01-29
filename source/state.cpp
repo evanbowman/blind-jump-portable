@@ -71,7 +71,7 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
     auto update_policy = [&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
             if (not(*it)->alive()) {
-                entity_buf.erase(it);
+                it = entity_buf.erase(it);
             } else {
                 (*it)->update(pfrm, game, delta);
                 ++it;
@@ -84,7 +84,7 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
     game.enemies().transform([&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
             if (not(*it)->alive()) {
-                entity_buf.erase(it);
+                it = entity_buf.erase(it);
             } else {
                 (*it)->update(pfrm, game, delta);
                 if (camera_tracking_) {
