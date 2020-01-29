@@ -1,52 +1,52 @@
 #include "entity.hpp"
 
 
-EntityBase::EntityBase() : health_(1)
+Entity::Entity() : health_(1)
 {
 }
 
 
-EntityBase::EntityBase(Health health) : health_(health)
+Entity::Entity(Health health) : health_(health)
 {
 }
 
 
-void EntityBase::update(Platform&, Game&, Microseconds)
+void Entity::update(Platform&, Game&, Microseconds)
 {
 }
 
 
-EntityBase::Health EntityBase::get_health() const
+Entity::Health Entity::get_health() const
 {
     return health_;
 }
 
 
-bool EntityBase::alive() const
+bool Entity::alive() const
 {
     return health_ not_eq 0;
 }
 
 
-const Sprite& EntityBase::get_sprite() const
+const Sprite& Entity::get_sprite() const
 {
     return sprite_;
 }
 
 
-void EntityBase::set_position(const Vec2<Float>& position)
+void Entity::set_position(const Vec2<Float>& position)
 {
     position_ = position;
 }
 
 
-void EntityBase::add_health(Health amount)
+void Entity::add_health(Health amount)
 {
     health_ += amount;
 }
 
 
-const Vec2<Float>& EntityBase::get_position() const
+const Vec2<Float>& Entity::get_position() const
 {
     return position_;
 }

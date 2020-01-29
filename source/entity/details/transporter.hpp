@@ -7,7 +7,7 @@ class Game;
 class Platform;
 
 
-class Transporter : public Entity<Transporter, 0> {
+class Transporter : public Entity {
 public:
     Transporter()
     {

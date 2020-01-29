@@ -4,7 +4,7 @@
 #include "entity/entity.hpp"
 
 
-class Projectile : public Entity<Projectile, 10> {
+class Projectile : public Entity {
 public:
 
     Projectile(const Vec2<Float>& position, Angle angle, Float speed) :
@@ -13,11 +13,15 @@ public:
         this->set_position(position);
 
         set_angle(angle);
+
+        sprite_.set_texture_index(TextureMap::coin);
+        sprite_.set_size(Sprite::Size::w16_h32);
     }
 
     void update(Platform&, Game&, Microseconds dt)
     {
         this->position_ = this->position_ + (speed_ * dt * direction_);
+        sprite_.set_position(position_);
     }
 
     void set_angle(Angle angle)

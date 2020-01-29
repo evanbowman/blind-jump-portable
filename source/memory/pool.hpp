@@ -40,6 +40,11 @@ public:
         freelist_ = cell;
     }
 
+    static constexpr u32 element_size()
+    {
+        return size;
+    }
+
 private:
     std::array<Cell, count> cells_;
     Cell* freelist_;

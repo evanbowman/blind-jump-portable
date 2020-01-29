@@ -8,18 +8,18 @@
 class Platform;
 class Game;
 
-class EntityBase {
+class Entity {
 public:
     using Health = s32;
 
 
-    EntityBase();
+    Entity();
 
 
-    EntityBase(Health health);
+    Entity(Health health);
 
 
-    EntityBase(EntityBase&) = delete;
+    Entity(Entity&) = delete;
 
 
     void update(Platform&, Game&, Microseconds);
@@ -61,21 +61,6 @@ protected:
 
 private:
     Health health_;
-};
-
-
-template <typename Impl, u32 SpawnLimit> class Entity : public EntityBase {
-public:
-    static constexpr auto spawn_limit()
-    {
-        return SpawnLimit;
-    }
-
-    Entity() = default;
-
-    Entity(Health health) : EntityBase(health)
-    {
-    }
 };
 
 

@@ -9,7 +9,7 @@
 class Player;
 
 
-class Turret : public Entity<Turret, 6> {
+class Turret : public Entity {
 public:
     Turret(const Vec2<Float>& pos);
 

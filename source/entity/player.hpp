@@ -15,7 +15,7 @@ class Probe;
 class Item;
 
 
-class Player : public Entity<Player, 0> {
+class Player : public Entity {
 public:
     Player();
 

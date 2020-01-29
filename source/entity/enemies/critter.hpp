@@ -9,7 +9,7 @@ class Game;
 class Platform;
 
 
-class Critter : public Entity<Critter, 20> {
+class Critter : public Entity {
 public:
     Critter(Platform& pf);
 

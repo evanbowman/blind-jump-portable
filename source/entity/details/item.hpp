@@ -7,7 +7,7 @@
 class Player;
 
 
-class Item : public Entity<Item, 12> {
+class Item : public Entity {
 public:
     enum class Type { heart, coin };
 

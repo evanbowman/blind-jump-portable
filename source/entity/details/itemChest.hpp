@@ -5,7 +5,7 @@
 #include "entity/entity.hpp"
 
 
-class ItemChest : public Entity<ItemChest, 4> {
+class ItemChest : public Entity {
 public:
     ItemChest(const Vec2<Float>& pos);
 

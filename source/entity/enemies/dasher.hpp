@@ -8,7 +8,7 @@
 class Player;
 
 
-class Dasher : public Entity<Dasher, 20> {
+class Dasher : public Entity {
 public:
     Dasher(const Vec2<Float>& position);
 

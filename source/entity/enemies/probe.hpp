@@ -5,7 +5,7 @@
 #include "platform/platform.hpp"
 
 
-class Probe : public Entity<Probe, 20> {
+class Probe : public Entity {
 public:
     Probe(const Vec2<Float>& position);
 
