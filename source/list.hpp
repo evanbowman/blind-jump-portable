@@ -22,7 +22,8 @@ public:
     List(Pool& pool) : begin_(nullptr),
                        pool_(&pool)
     {
-        static_assert(sizeof(Node) == Pool::element_size(),
+        static_assert(sizeof(Node) == Pool::element_size() and
+                      alignof(Node) == Pool::alignment(),
                       "Pool incompatible");
     }
 
