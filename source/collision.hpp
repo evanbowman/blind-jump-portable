@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "memory/buffer.hpp"
+#include "list.hpp"
 
 
 struct HitBox {
@@ -35,11 +35,11 @@ class Game;
 class Platform;
 
 
-template <typename A, typename B, u32 s1, u32 s2>
+template <typename A, typename B, typename Pl1, typename Pl2>
 void check_collisions(Platform& pf,
                       Game& game,
-                      Buffer<A, s1>& lhs,
-                      Buffer<B, s2>& rhs)
+                      List<A, Pl1>& lhs,
+                      List<B, Pl2>& rhs)
 {
     for (auto& a : lhs) {
         for (auto& b : rhs) {
@@ -52,8 +52,8 @@ void check_collisions(Platform& pf,
 }
 
 
-template <typename A, typename B, u32 s1>
-void check_collisions(Platform& pf, Game& game, A& lhs, Buffer<B, s1>& rhs)
+template <typename A, typename B, typename Pl1>
+void check_collisions(Platform& pf, Game& game, A& lhs, List<B, Pl1>& rhs)
 {
     for (auto& b : rhs) {
         if (lhs.hitbox().overlapping(b->hitbox())) {
