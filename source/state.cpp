@@ -101,7 +101,7 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
 
     check_collisions(pfrm, game, player, game.enemies().get<Turret>());
     check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
-    check_collisions(pfrm, game, player, game.effects().get<Item>());
+    check_collisions(pfrm, game, player, game.details().get<Item>());
 
     return this;
 }

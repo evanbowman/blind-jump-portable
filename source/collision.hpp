@@ -2,7 +2,6 @@
 
 
 #include "memory/buffer.hpp"
-#include "entity/entity.hpp"
 
 
 struct HitBox {
@@ -32,19 +31,15 @@ struct HitBox {
 };
 
 
-template <typename Arg>
-using EntityBuffer = Buffer<EntityRef<Arg>, Arg::spawn_limit()>;
-
-
 class Game;
 class Platform;
 
 
-template <typename A, typename B>
+template <typename A, typename B, u32 s1, u32 s2>
 void check_collisions(Platform& pf,
                       Game& game,
-                      EntityBuffer<A>& lhs,
-                      EntityBuffer<B>& rhs)
+                      Buffer<A, s1>& lhs,
+                      Buffer<B, s2>& rhs)
 {
     for (auto& a : lhs) {
         for (auto& b : rhs) {
@@ -57,8 +52,8 @@ void check_collisions(Platform& pf,
 }
 
 
-template <typename A, typename B>
-void check_collisions(Platform& pf, Game& game, A& lhs, EntityBuffer<B>& rhs)
+template <typename A, typename B, u32 s1>
+void check_collisions(Platform& pf, Game& game, A& lhs, Buffer<B, s1>& rhs)
 {
     for (auto& b : rhs) {
         if (lhs.hitbox().overlapping(b->hitbox())) {

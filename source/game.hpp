@@ -18,12 +18,17 @@
 #include "state.hpp"
 
 
-template <typename Arg>
-using EntityBuffer = Buffer<EntityRef<Arg>, Arg::spawn_limit()>;
+template <typename Arg, u32 Capacity>
+using EntityBuffer = Buffer<EntityRef<Arg>, Capacity>;
 
 
+// TODO: By using a buffer for each type of entity, we waste a lot of memory,
+// especially considering that we know the Capacity in advance. Instead, we
+// could use a list with nodes allocated from a shared pool of nodes. All entity
+// refs _should_ be the same size, because they're all unique ptrs with
+// deleters.
 template <size_t Capacity, typename... Members>
-class EntityGroup : public TransformGroup<EntityBuffer<Members>...> {
+class EntityGroup : public TransformGroup<EntityBuffer<Members, Capacity>...> {
 public:
 
     template <typename T, typename... CtorArgs>
@@ -44,8 +49,8 @@ public:
 
     template <typename T> auto& get()
     {
-        return TransformGroup<EntityBuffer<Members>...>::template get<
-            EntityBuffer<T>>();
+        return TransformGroup<EntityBuffer<Members, Capacity>...>::template get<
+            EntityBuffer<T, Capacity>>();
     }
 
 private:
