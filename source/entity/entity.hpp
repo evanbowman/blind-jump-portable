@@ -1,6 +1,7 @@
 #pragma once
 
-#include "memory/pool.hpp"
+#include <algorithm>
+
 #include "graphics/sprite.hpp"
 
 
@@ -75,19 +76,6 @@ public:
     Entity(Health health) : EntityBase(health)
     {
     }
-
-    // Note: Impl is still an incomplete type at this point, so we need to delay
-    // instantiation of the Pool until access. Otherwise it could just be a
-    // static member.
-    //
-    // The game is designed to run on a wide variety of platforms, including
-    // consoles without an OS, so Entities are allocated from fixed pools.
-    //
-    template <typename F = void> static auto& pool()
-    {
-        static ObjectPool<Impl, SpawnLimit> obj_pool;
-        return obj_pool;
-    }
 };
 
 
@@ -95,10 +83,3 @@ public:
 
 
 template <typename T> using EntityRef = std::unique_ptr<T, void (*)(T*)>;
-
-
-template <typename T, typename... Args> EntityRef<T> make_entity(Args&&... args)
-{
-    return {T::pool().get(std::forward<Args>(args)...),
-            [](T* mem) { T::pool().post(mem); }};
-}

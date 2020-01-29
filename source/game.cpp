@@ -434,7 +434,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     auto spawn_entity = [&](auto& group, auto type) {
         if (const auto c = select_coord()) {
             using T = typename decltype(type)::value;
-            if (auto ent = make_entity<T>(pos(c))) {
+            if (auto ent = group.template spawn<T>(pos(c))) {
                 group.template get<T>().push_back(std::move(ent));
             } else {
                 warning(pfrm, "spawn failed: entity buffer full");
@@ -473,7 +473,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                     }
                 }
             }
-            for (auto& item : effects_.get<Item>()) {
+            for (auto& item : details_.get<Item>()) {
                 if (manhattan_length(item->get_position(),
                                      to_world_coord({x, y})) < 64) {
                     return;
@@ -481,14 +481,14 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
             if (random_choice<2>()) {
                 MapCoord c{x, y};
-                if (auto ent = make_entity<Item>(pos(&c), pfrm, [] {
+                if (auto ent = details_.spawn<Item>(pos(&c), pfrm, [] {
                         if (random_choice<4>()) {
                             return Item::Type::coin;
                         } else {
                             return Item::Type::heart;
                         }
                     }())) {
-                    effects_.get<Item>().push_back(std::move(ent));
+                    details_.get<Item>().push_back(std::move(ent));
                 }
             }
         }
