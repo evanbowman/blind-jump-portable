@@ -4,8 +4,7 @@
 #include "entity/entity.hpp"
 
 
-template <u32 SpawnLimit>
-class Projectile : public Entity<Projectile<SpawnLimit>, SpawnLimit> {
+class Projectile : public Entity<Projectile, 10> {
 public:
 
     Projectile(const Vec2<Float>& position, Angle angle, Float speed) :
@@ -18,7 +17,7 @@ public:
 
     void update(Platform&, Game&, Microseconds dt)
     {
-        this->position_ += speed_ * dt * direction_;
+        this->position_ = this->position_ + (speed_ * dt * direction_);
     }
 
     void set_angle(Angle angle)
