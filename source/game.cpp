@@ -23,6 +23,9 @@ Game::Game(Platform& pfrm)
 
     random_seed() = save_data_.seed_;
 
+    pfrm.load_sprite_texture("bgr_spritesheet");
+    pfrm.load_tile_texture("bgr_tilesheet");
+
     Game::next_level(pfrm);
 }
 
