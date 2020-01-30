@@ -173,6 +173,18 @@ inline u8 fast_interpolate(u8 a, u8 b, u8 t)
 using Microseconds = s32;
 
 
+constexpr Microseconds seconds(u32 count)
+{
+    return count * 1000000;
+}
+
+
+constexpr Microseconds milliseconds(u32 count)
+{
+    return count * 1000;
+}
+
+
 s16 sine(s16 angle);
 
 

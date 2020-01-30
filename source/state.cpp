@@ -138,7 +138,7 @@ State* FadeInState::update(Platform& pfrm, Microseconds delta, Game& game)
 
     counter_ += delta;
 
-    static const Microseconds fade_duration = 950000;
+    static const auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
         counter_ = 0;
         pfrm.screen().fade(0.f);
@@ -181,7 +181,7 @@ State* FadeOutState::update(Platform& pfrm, Microseconds delta, Game& game)
 
     counter_ += delta;
 
-    static const Microseconds fade_duration = 950000;
+    static const auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
         counter_ = 0;
         pfrm.screen().fade(1.f);
@@ -203,7 +203,7 @@ State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
 
     counter_ += delta;
 
-    static const Microseconds fade_duration = 1500000;
+    static const auto fade_duration = milliseconds(1500);
     if (counter_ > fade_duration) {
         counter_ -= delta;
         pfrm.screen().fade(1.f, ColorConstant::coquelicot);

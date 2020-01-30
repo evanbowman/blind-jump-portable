@@ -62,8 +62,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     }
 
     case State::idle:
-        if (timer_ >= 200000) {
-            timer_ -= 200000;
+        if (timer_ >= milliseconds(200)) {
+            timer_ -= milliseconds(200);
 
             if (manhattan_length(game.player().get_position(), position_) <
                 std::min(screen_size.x, screen_size.y)
@@ -78,8 +78,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::pause:
-        if (timer_ >= 200000) {
-            timer_ -= 200000;
+        if (timer_ >= milliseconds(200)) {
+            timer_ -= milliseconds(200);
             state_ = State::dash_begin;
             sprite_.set_texture_index(TextureMap::dasher_crouch);
         }
@@ -87,16 +87,16 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
     case State::shoot_begin:
         face_player();
-        if (timer_ > 80000) {
-            timer_ -= 80000;
+        if (timer_ > milliseconds(80)) {
+            timer_ -= milliseconds(80);
             state_ = State::shot1;
             sprite_.set_texture_index(TextureMap::dasher_weapon2);
         }
         break;
 
     case State::shot1:
-        if (timer_ > 50000) {
-            timer_ -= 50000;
+        if (timer_ > milliseconds(50)) {
+            timer_ -= milliseconds(50);
             state_ = State::shot2;
 
             game.effects().spawn<OrbShot>(position_,
@@ -105,8 +105,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::shot2:
-        if (timer_ > 150000) {
-            timer_ -= 150000;
+        if (timer_ > milliseconds(150)) {
+            timer_ -= milliseconds(150);
             state_ = State::shot3;
 
             game.effects().spawn<OrbShot>(position_,
@@ -115,8 +115,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::shot3:
-        if (timer_ > 150000) {
-            timer_ -= 150000;
+        if (timer_ > milliseconds(150)) {
+            timer_ -= milliseconds(150);
             state_ = State::pause;
 
             game.effects().spawn<OrbShot>(position_,
@@ -126,8 +126,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::dash_begin:
-        if (timer_ > 352000) {
-            timer_ -= 352000;
+        if (timer_ > milliseconds(352)) {
+            timer_ -= milliseconds(352);
 
             u8 tries{0};
             s16 dir = ((static_cast<float>(random_choice<359>())) / 360) * INT16_MAX;
@@ -149,8 +149,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::dash_end;
             sprite_.set_texture_index(TextureMap::dasher_crouch);
         };
-        if (timer_ > 200000) {
-            timer_ -= 200000;
+        if (timer_ > milliseconds(200)) {
+            timer_ -= milliseconds(200);
             next_state();
         }
         const auto wc = check_wall_collisions(game.tiles(), *this);
@@ -180,8 +180,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     } break;
 
     case State::dash_end:
-        if (timer_ > 150000) {
-            timer_ -= 150000;
+        if (timer_ > milliseconds(150)) {
+            timer_ -= milliseconds(150);
         IDLE_TRANSITION:
             state_ = State::idle;
             sprite_.set_texture_index(TextureMap::dasher_idle);
