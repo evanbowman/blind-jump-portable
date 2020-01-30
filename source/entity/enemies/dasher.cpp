@@ -5,7 +5,7 @@
 
 
 Dasher::Dasher(const Vec2<Float>& position)
-    : hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0), state_(State::idle)
+    : hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0), state_(State::inactive)
 {
     position_ = position;
 
@@ -52,22 +52,27 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     const auto& screen_size = pf.screen().size();
 
     switch (state_) {
-    case State::inactive:
+    case State::inactive: {
         if (manhattan_length(game.player().get_position(), position_) <
-            std::min(screen_size.x, screen_size.y) / 2) {
+            std::min(screen_size.x, screen_size.y)) {
             state_ = State::idle;
         }
+        timer_ = 0;
         break;
+    }
 
     case State::idle:
         if (timer_ >= 200000) {
             timer_ -= 200000;
-            if (random_choice<2>()) {
-                state_ = State::dash_begin;
-                sprite_.set_texture_index(TextureMap::dasher_crouch);
-            } else {
+
+            if (manhattan_length(game.player().get_position(), position_) <
+                std::min(screen_size.x, screen_size.y)
+                and random_choice<2>()) {
                 state_ = State::shoot_begin;
                 sprite_.set_texture_index(TextureMap::dasher_weapon1);
+            } else {
+                state_ = State::dash_begin;
+                sprite_.set_texture_index(TextureMap::dasher_crouch);
             }
         }
         break;
