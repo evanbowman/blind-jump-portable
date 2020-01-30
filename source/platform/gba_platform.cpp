@@ -9,9 +9,9 @@
 
 #ifdef __GBA__
 
-#include "util.hpp"
-#include "platform.hpp"
 #include "number/random.hpp"
+#include "platform.hpp"
+#include "util.hpp"
 #include <string.h>
 
 
@@ -155,6 +155,22 @@ static ObjectAttributes* const object_attribute_memory = {
 #define BG1_ENABLE 0x200
 #define BG2_ENABLE 0x400
 #define BG3_ENABLE 0x800
+#define BG_CBB_MASK 0x000C
+#define BG_CBB_SHIFT 2
+#define BG_CBB(n) ((n) << BG_CBB_SHIFT)
+
+#define BG_SBB_MASK 0x1F00
+#define BG_SBB_SHIFT 8
+#define BG_SBB(n) ((n) << BG_SBB_SHIFT)
+
+#define BG_SIZE_MASK 0xC000
+#define BG_SIZE_SHIFT 14
+#define BG_SIZE(n) ((n) << BG_SIZE_SHIFT)
+
+#define BG_REG_32x32 0      //!< reg bg, 32x32 (256x256 px)
+#define BG_REG_64x32 0x4000 //!< reg bg, 64x32 (512x256 px)
+#define BG_REG_32x64 0x8000 //!< reg bg, 32x64 (256x512 px)
+#define BG_REG_64x64 0xC000 //!< reg bg, 64x64 (512x512 px)
 
 
 static volatile u16* bg0_control = (volatile u16*)0x4000008;
@@ -215,6 +231,9 @@ Platform::Screen::Screen() : userdata_(nullptr)
 
     *reg_blendalpha = BLDA_BUILD(0x40 / 8, 0x40 / 8);
 
+    *bg0_control = BG_SBB(8) | BG_REG_64x64;
+    //        0xC800; // 64x64, 0x0100 for 32x32
+    *bg1_control = BG_SBB(12);
 
     view_.set_size(this->size().cast<Float>());
 }
@@ -407,8 +426,92 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
+int strcmp(const char* p1, const char* p2)
+{
+    const unsigned char* s1 = (const unsigned char*)p1;
+    const unsigned char* s2 = (const unsigned char*)p2;
+
+    unsigned char c1, c2;
+
+    do {
+        c1 = (unsigned char)*s1++;
+        c2 = (unsigned char)*s2++;
+
+        if (c1 == '\0') {
+            return c1 - c2;
+        }
+
+    } while (c1 == c2);
+
+    return c1 - c2;
+}
+
+
 #include "graphics/bgr_spritesheet.h"
 #include "graphics/bgr_tilesheet.h"
+
+
+struct TextureData {
+    const char* name_;
+    const char* tile_data_;
+    const char* palette_data_;
+    u32 tile_data_length_;
+    u32 palette_data_length_;
+};
+
+
+#define STR(X) #X
+#define TEXTURE_INFO(NAME)                                                     \
+    {                                                                          \
+        STR(NAME), (const char*)NAME##Tiles, (const char*)NAME##Pal,           \
+            NAME##TilesLen, NAME##PalLen                                       \
+    }
+
+
+static const TextureData sprite_textures[] = {
+    TEXTURE_INFO(bgr_spritesheet)};
+
+
+static const TextureData tile_textures[] = {
+    TEXTURE_INFO(bgr_tilesheet)};
+
+
+void Platform::load_sprite_texture(const char* name)
+{
+    for (auto& info : sprite_textures) {
+
+        if (strcmp(name, info.name_) == 0) {
+
+            memcpy((void*)MEM_PALETTE,
+                   info.palette_data_,
+                   info.palette_data_length_);
+
+            // NOTE: There are four tile blocks, so index four points to the
+            // end of the tile memory.
+            memcpy((void*)&MEM_TILE[4][1],
+                   info.tile_data_,
+                   info.tile_data_length_);
+        }
+    }
+}
+
+
+void Platform::load_tile_texture(const char* name) 
+{
+    for (auto& info : tile_textures) {
+
+        if (strcmp(name, info.name_) == 0) {
+            
+            memcpy((void*)MEM_BG_PALETTE,
+                   info.palette_data_,
+                   info.palette_data_length_);
+            
+            memcpy((void*)&MEM_TILE[0][0],
+                   info.tile_data_,
+                   info.tile_data_length_);
+        }
+    }
+}
 
 
 // NOTE: ScreenBlock layout:
@@ -523,41 +626,6 @@ COLD void Platform::push_map(const TileMap& map)
     }
 }
 
-#define BG_CBB_MASK 0x000C
-#define BG_CBB_SHIFT 2
-#define BG_CBB(n) ((n) << BG_CBB_SHIFT)
-
-#define BG_SBB_MASK 0x1F00
-#define BG_SBB_SHIFT 8
-#define BG_SBB(n) ((n) << BG_SBB_SHIFT)
-
-#define BG_SIZE_MASK 0xC000
-#define BG_SIZE_SHIFT 14
-#define BG_SIZE(n) ((n) << BG_SIZE_SHIFT)
-
-#define BG_REG_32x32 0      //!< reg bg, 32x32 (256x256 px)
-#define BG_REG_64x32 0x4000 //!< reg bg, 64x32 (512x256 px)
-#define BG_REG_32x64 0x8000 //!< reg bg, 32x64 (256x512 px)
-#define BG_REG_64x64 0xC000 //!< reg bg, 64x64 (512x512 px)
-
-
-COLD static void load_sprite_data()
-{
-    memcpy((void*)MEM_PALETTE, bgr_spritesheetPal, bgr_spritesheetPalLen);
-
-    // NOTE: There are four tile blocks, so index four points to the
-    // end of the tile memory.
-    memcpy(
-        (void*)&MEM_TILE[4][1], bgr_spritesheetTiles, bgr_spritesheetTilesLen);
-
-    memcpy((void*)MEM_BG_PALETTE, bgr_tilesheetPal, bgr_tilesheetPalLen);
-    memcpy((void*)&MEM_TILE[0][0], bgr_tilesheetTiles, bgr_tilesheetTilesLen);
-
-    *bg0_control = BG_SBB(8) | BG_REG_64x64;
-    //        0xC800; // 64x64, 0x0100 for 32x32
-    *bg1_control = BG_SBB(12);
-}
-
 
 static u8 last_fade_amt;
 
@@ -577,14 +645,17 @@ void Platform::Screen::fade(float amount, ColorConstant k)
     auto blend = [&](const Color& from) {
         return [&] {
             switch (amt) {
-            case 0: return from;
-            case 255: return c;
+            case 0:
+                return from;
+            case 255:
+                return c;
             default:
                 return Color(fast_interpolate(c.r_, from.r_, amt),
                              fast_interpolate(c.g_, from.g_, amt),
                              fast_interpolate(c.b_, from.b_, amt));
             }
-        }().bgr_hex_555();
+        }()
+                   .bgr_hex_555();
     };
 
     for (int i = 0; i < 16; ++i) {
@@ -739,8 +810,6 @@ Platform::Platform()
 {
     irqInit();
     irqEnable(IRQ_VBLANK);
-
-    load_sprite_data();
 }
 
 

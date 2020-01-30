@@ -89,6 +89,10 @@ public:
     void push_map(const TileMap& map);
 
 
+    void load_sprite_texture(const char* name);
+    void load_tile_texture(const char* name);
+
+
     // Sleep halts the game for an amount of time equal to some number
     // of game updates. Given that the game should be running at
     // 60fps, one update equals 1/60 of a second.
