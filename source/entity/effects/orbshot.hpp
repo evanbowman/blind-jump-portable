@@ -23,5 +23,5 @@ public:
 private:
     Microseconds timer_;
     HitBox hitbox_;
-    Animation<TextureMap::orb1, 2, 20000> animation_;
+    Animation<TextureMap::orb1, 2, milliseconds(20)> animation_;
 };

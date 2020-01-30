@@ -19,7 +19,7 @@ void OrbShot::update(Platform& pf, Game& game, Microseconds dt)
 
     timer_ += dt;
 
-    if (timer_ > 2000000) {
+    if (timer_ > seconds(2)) {
         Entity::kill();
     }
 

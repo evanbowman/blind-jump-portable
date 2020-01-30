@@ -31,7 +31,7 @@ public:
 
 private:
     Sprite shadow_;
-    Animation<TextureMap::turret, 5, Microseconds(50000)> animation_;
+    Animation<TextureMap::turret, 5, milliseconds(50)> animation_;
     enum class State { closed, opening, open, closing } state_;
     HitBox hitbox_;
 };

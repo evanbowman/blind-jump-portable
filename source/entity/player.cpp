@@ -43,7 +43,7 @@ void Player::injured(Platform& pf, Health damage)
         debit_health(damage);
         sprite_.set_mix({ColorConstant::coquelicot, 255});
         color_timer_ = 0;
-        invulnerability_timer_ = 700000;
+        invulnerability_timer_ = milliseconds(700);
     }
 }
 
