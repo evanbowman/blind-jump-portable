@@ -11,7 +11,7 @@
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/transporter.hpp"
-#include "entity/effects/projectile.hpp"
+#include "entity/effects/orbshot.hpp"
 #include "entity/player.hpp"
 #include "platform/platform.hpp"
 #include "transformGroup.hpp"
@@ -39,7 +39,7 @@ public:
     }
 
     template <typename T, typename... CtorArgs>
-    EntityRef<T> spawn(CtorArgs&&... ctorArgs)
+    bool spawn(CtorArgs&&... ctorArgs)
     {
         auto deleter = [](T* obj) {
                 obj->~T();
@@ -48,9 +48,12 @@ public:
 
         if (auto mem = pool_.get()) {
             new (mem) T(std::forward<CtorArgs>(ctorArgs)...);
-            return {reinterpret_cast<T*>(mem), deleter};
+
+            this->get<T>().push({reinterpret_cast<T*>(mem), deleter});
+
+            return true;
         } else {
-            return {nullptr, deleter};
+            return false;
         }
     }
 
@@ -100,7 +103,7 @@ public:
 
     using EnemyGroup = EntityGroup<5, Turret, Dasher, Probe>;
     using DetailGroup = EntityGroup<20, ItemChest, Item>;
-    using EffectGroup = EntityGroup<10, Projectile>;
+    using EffectGroup = EntityGroup<10, OrbShot>;
 
     inline Transporter& transporter()
     {

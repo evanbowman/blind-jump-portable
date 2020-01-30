@@ -44,7 +44,9 @@ private:
     enum class State {
         inactive,
         idle,
-        shooting,
+        shot1,
+        shot2,
+        shot3,
         dash_begin,
         dashing,
         dash_end,

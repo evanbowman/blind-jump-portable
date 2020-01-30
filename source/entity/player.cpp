@@ -36,10 +36,11 @@ void Player::revive()
 }
 
 
-void Player::enemy_contact()
+void Player::injured(Platform& pf, Health damage)
 {
     if (not Player::is_invulnerable()) {
-        debit_health(1);
+        pf.sleep(5);
+        debit_health(damage);
         sprite_.set_mix({ColorConstant::coquelicot, 255});
         color_timer_ = 0;
         invulnerability_timer_ = 700000;
@@ -47,27 +48,33 @@ void Player::enemy_contact()
 }
 
 
+void Player::on_collision(Platform& pf, Game& game, OrbShot&)
+{
+    Player::injured(pf, Health(1));
+}
+
+
 void Player::on_collision(Platform& pf, Game& game, Critter&)
 {
-    Player::enemy_contact();
+    Player::injured(pf, Health(1));
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Dasher&)
 {
-    Player::enemy_contact();
+    Player::injured(pf, Health(1));
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Turret&)
 {
-    Player::enemy_contact();
+    Player::injured(pf, Health(1));
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Probe&)
 {
-    Player::enemy_contact();
+    Player::injured(pf, Health(1));
 }
 
 

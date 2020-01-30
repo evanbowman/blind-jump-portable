@@ -84,14 +84,39 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         face_player();
         if (timer_ > 80000) {
             timer_ -= 80000;
-            state_ = State::shooting;
+            state_ = State::shot1;
             sprite_.set_texture_index(TextureMap::dasher_weapon2);
         }
         break;
 
-    case State::shooting:
-        if (timer_ > 300000) {
+    case State::shot1:
+        if (timer_ > 50000) {
+            timer_ -= 50000;
+            state_ = State::shot2;
+
+            game.effects().spawn<OrbShot>(position_,
+                                          game.player().get_position());
+        }
+        break;
+
+    case State::shot2:
+        if (timer_ > 150000) {
+            timer_ -= 150000;
+            state_ = State::shot3;
+
+            game.effects().spawn<OrbShot>(position_,
+                                          game.player().get_position());
+        }
+        break;
+
+    case State::shot3:
+        if (timer_ > 150000) {
+            timer_ -= 150000;
             state_ = State::pause;
+
+            game.effects().spawn<OrbShot>(position_,
+                                          game.player().get_position());
+
         }
         break;
 
@@ -119,8 +144,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::dash_end;
             sprite_.set_texture_index(TextureMap::dasher_crouch);
         };
-        if (timer_ > 250000) {
-            timer_ -= 250000;
+        if (timer_ > 200000) {
+            timer_ -= 200000;
             next_state();
         }
         const auto wc = check_wall_collisions(game.tiles(), *this);
