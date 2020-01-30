@@ -105,4 +105,6 @@ enum TextureMap : TextureIndex {
     drop_shadow = 60,
     heart = 61,
     coin = 62,
+    orb1 = 63,
+    orb2 = 64,
 };

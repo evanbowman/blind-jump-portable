@@ -74,6 +74,22 @@ using Angle = Degree;
 using Float = float;
 
 
+inline Float sqrt_approx(const Float x)
+{
+    constexpr Float magic = 0x5f3759df;
+    const Float xhalf = 0.5f * x;
+
+    union {
+        float x;
+        int i;
+    } u;
+
+    u.x = x;
+    u.i = magic - (u.i >> 1);
+    return x * u.x * (1.5f - xhalf * u.x * u.x);
+}
+
+
 template <typename T> Vec2<T> operator+(const Vec2<T>& lhs, const Vec2<T>& rhs)
 {
     return {lhs.x + rhs.x, lhs.y + rhs.y};
@@ -163,3 +179,16 @@ s16 sine(s16 angle);
 // This cosine function is implemented in terms of sine, and therefore
 // slightly more expensive to call than sine.
 s16 cosine(s16 angle);
+
+
+using UnitVec = Vec2<Float>;
+
+
+inline UnitVec direction(const Vec2<Float>& origin, const Vec2<Float>& target)
+{
+    const auto vec = target - origin;
+
+    const auto magnitude = sqrt_approx(vec.x * vec.x + vec.y * vec.y);
+
+    return vec / magnitude;
+}

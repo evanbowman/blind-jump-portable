@@ -7,41 +7,22 @@
 class Projectile : public Entity {
 public:
 
-    Projectile(const Vec2<Float>& position, Angle angle, Float speed) :
-        speed_(speed)
+    Projectile(const Vec2<Float>& position,
+               const Vec2<Float>& target,
+               Float speed)
     {
         this->set_position(position);
+        sprite_.set_position(position);
 
-        set_angle(angle);
-
-        sprite_.set_texture_index(TextureMap::coin);
-        sprite_.set_size(Sprite::Size::w16_h32);
+        step_vector_ = direction(position, target) * speed;
     }
 
     void update(Platform&, Game&, Microseconds dt)
     {
-        this->position_ = this->position_ + (speed_ * dt * direction_);
+        this->position_ = this->position_ + Float(dt) * step_vector_;
         sprite_.set_position(position_);
     }
 
-    void set_angle(Angle angle)
-    {
-        angle_ = angle;
-
-        direction_ = {
-            Float(cosine(angle)) / INT16_MAX,
-            Float(sine(angle)) / INT16_MAX
-        };
-    }
-
-    Angle get_angle() const
-    {
-        return angle_;
-    }
-
 private:
-    Angle angle_;
-    Float speed_;
-
-    Vec2<Float> direction_;
+    Vec2<Float> step_vector_;
 };

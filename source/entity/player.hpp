@@ -13,12 +13,14 @@ class Dasher;
 class Turret;
 class Probe;
 class Item;
+class OrbShot;
 
 
 class Player : public Entity {
 public:
     Player();
 
+    void on_collision(Platform& pf, Game& game, OrbShot&);
     void on_collision(Platform& pf, Game& game, Critter&);
     void on_collision(Platform& pf, Game& game, Dasher&);
     void on_collision(Platform& pf, Game& game, Turret&);
@@ -65,7 +67,7 @@ private:
     template <u8 StepSize>
     void update_animation(Microseconds dt, u8 max_index, Microseconds count);
 
-    void enemy_contact();
+    void injured(Platform& pf, Health damage);
 
     u32 frame_;
     ResourceLoc frame_base_;
