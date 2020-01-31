@@ -12,6 +12,8 @@ public:
 
     void set_position(Platform& pfrm, const Vec2<Float>& pos);
 
+    void shake();
+
     // The camera supports a counter-weight to the seek position.
     void push_ballast(const Vec2<Float>& pos)
     {
@@ -32,4 +34,8 @@ private:
 
     Vec2<Float> buffer_;
     Float speed_ = 1.f;
+
+    bool shaking_ = false;
+    u8 shake_index_ = 0;
+    Microseconds shake_timer_ = 0;
 };

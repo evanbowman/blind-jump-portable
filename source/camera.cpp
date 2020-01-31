@@ -23,13 +23,48 @@ void Camera::update(Platform& pfrm,
     Vec2<Float> target{(seek.x - screen_size.x / 2),
                        (seek.y - screen_size.y / 2)};
 
-    view.set_center(interpolate(target,
-                                view_center,
-                                dt * speed_ * 0.00000125f));
+
+    static const std::array<Float, 5> shake_constants =
+        {{1.5f, -2.5f, 1.5f, -1.f, 0.5f}};
+
+    const auto center = interpolate(target,
+                                    view_center,
+                                    dt * speed_ * 0.00000125f);
+
+    if (not shaking_) {
+
+        view.set_center(center);
+
+    } else {
+
+        shake_timer_ += dt;
+
+        if (shake_timer_ > milliseconds(50)) {
+            shake_timer_ = 0;
+            shake_index_ += 1;
+
+            if (shake_index_ == shake_constants.size()) {
+                shake_index_ = 4;
+                shaking_ = false;
+            }
+        }
+
+        view.set_center({center.x, center.y + shake_constants[shake_index_]});
+    }
 
     pfrm.screen().set_view(view);
 
     ballast_ = {};
+}
+
+
+void Camera::shake()
+{
+    if (not shaking_) {
+        shaking_ = true;
+        shake_timer_ = 0;
+        shake_index_ = 0;
+    }
 }
 
 

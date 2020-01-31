@@ -100,7 +100,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::shot2;
 
             game.effects().spawn<OrbShot>(position_,
-                                          game.player().get_position());
+                                          sample<8>(game.player().get_position()));
         }
         break;
 
@@ -110,7 +110,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::shot3;
 
             game.effects().spawn<OrbShot>(position_,
-                                          game.player().get_position());
+                                          sample<16>(game.player().get_position()));
         }
         break;
 
@@ -120,7 +120,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::pause;
 
             game.effects().spawn<OrbShot>(position_,
-                                          game.player().get_position());
+                                          sample<32>(game.player().get_position()));
 
         }
         break;

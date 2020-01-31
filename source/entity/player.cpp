@@ -32,6 +32,9 @@ void Player::revive()
 {
     if (not alive()) {
         add_health(initial_health);
+
+        invulnerability_timer_ = seconds(1);
+        sprite_.set_mix({});
     }
 }
 
@@ -50,6 +53,10 @@ void Player::injured(Platform& pf, Health damage)
 
 void Player::on_collision(Platform& pf, Game& game, OrbShot&)
 {
+    if (not Player::is_invulnerable()) {
+        game.camera().shake();
+    }
+
     Player::injured(pf, Health(1));
 }
 
@@ -227,7 +234,11 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const auto wc = check_wall_collisions(game.tiles(), *this);
 
     if (invulnerability_timer_ > 0) {
-        invulnerability_timer_ -= dt;
+        if (invulnerability_timer_ > dt) {
+            invulnerability_timer_ -= dt;
+        } else {
+            invulnerability_timer_ = 0;
+        }
     }
 
     soft_update(pfrm, game, dt);
