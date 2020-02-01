@@ -21,6 +21,7 @@ class Platform::Data {
 public:
     sf::Texture spritesheet_;
     sf::Shader color_shader_;
+    sf::RectangleShape fade_overlay_;
 };
 
 
@@ -84,6 +85,14 @@ void Platform::Keyboard::poll()
                 states_[size_t(Key::down)] = true;
                 break;
 
+            case sf::Keyboard::A:
+                states_[size_t(Key::action_1)] = true;
+                break;
+
+            case sf::Keyboard::B:
+                states_[size_t(Key::action_2)] = true;
+                break;
+
             default:
                 break;
             }
@@ -105,6 +114,14 @@ void Platform::Keyboard::poll()
 
             case sf::Keyboard::Down:
                 states_[size_t(Key::down)] = false;
+                break;
+
+            case sf::Keyboard::A:
+                states_[size_t(Key::action_1)] = false;
+                break;
+
+            case sf::Keyboard::B:
+                states_[size_t(Key::action_2)] = false;
                 break;
 
             default:
@@ -233,6 +250,12 @@ void Platform::Screen::display()
     view.setCenter(view_.get_center().x + view_.get_size().x / 2,
                    view_.get_center().y + view_.get_size().y / 2);
     view.setSize(view_.get_size().x, view_.get_size().y);
+
+    ::platform->data()->fade_overlay_.setPosition({view_.get_center().x,
+                                                   view_.get_center().y});
+
+    ::window->draw(::platform->data()->fade_overlay_);
+
     ::window->setView(view);
     ::window->display();
 
@@ -242,7 +265,14 @@ void Platform::Screen::display()
 
 void Platform::Screen::fade(Float amount, ColorConstant k)
 {
-    // TODO...
+    const auto& c = real_color(k);
+
+    ::platform->data()->fade_overlay_.setFillColor({
+        static_cast<uint8_t>(c.x * 255),
+        static_cast<uint8_t>(c.y * 255),
+        static_cast<uint8_t>(c.z * 255),
+        static_cast<uint8_t>(amount * 255)
+    });
 }
 
 
@@ -316,6 +346,9 @@ Platform::Platform()
     }
     data_->color_shader_.setUniform("texture", sf::Shader::CurrentTexture);
 
+    data_->fade_overlay_.setSize({Float(screen_.size().x),
+                                  Float(screen_.size().y)});
+
     ::platform = this;
 }
 
@@ -331,15 +364,16 @@ std::optional<SaveData> Platform::read_save()
 #include <chrono>
 
 
+static std::vector<std::thread> worker_threads;
+
+
 void Platform::push_task(Task* task)
 {
-    std::thread([task] {
-                    while (true) {
-                        if (not task->complete()) {
-                            task->run();
-                        }
-                    }
-                }).detach();
+    worker_threads.emplace_back([task] {
+            while (not task->complete()) {
+                task->run();
+            }
+        });
 }
 
 
@@ -361,6 +395,18 @@ void Platform::sleep(u32 frames)
 }
 
 
+void Platform::load_sprite_texture(const char* name)
+{
+
+}
+
+
+void Platform::load_tile_texture(const char* name)
+{
+
+}
+
+
 void start(Platform&);
 
 int main()
@@ -369,6 +415,10 @@ int main()
 
     Platform pf;
     start(pf);
+
+    for (auto& worker : worker_threads) {
+        worker.join();
+    }
 }
 
 #ifdef _WIN32
