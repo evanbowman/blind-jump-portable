@@ -12,7 +12,7 @@ enable_language(ASM)
 
 
 
-option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
+option(GAMEBOY_ADVANCE "GameboyAdvance" OFF)
 
 
 
