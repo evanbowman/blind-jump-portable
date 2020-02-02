@@ -451,7 +451,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     // of enemies spawned.
     spawn_entity(details_, Type<ItemChest>{});
     spawn_entity(enemies_, Type<Dasher>{});
-    spawn_entity(enemies_, Type<Snake>{}, *this);
+    spawn_entity(enemies_, Type<SnakeHead>{}, *this);
 
 
     // Potentially hide some items in far crannies of the map. If
