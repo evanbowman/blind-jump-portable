@@ -296,6 +296,10 @@ const Color& real_color(ColorConstant k)
 
 void Platform::Screen::draw(const Sprite& spr)
 {
+    if (UNLIKELY(spr.get_alpha() == Sprite::Alpha::transparent)) {
+        return;
+    }
+
     const auto pb = [&]() -> PaletteBank {
         const auto& mix = spr.get_mix();
         if (UNLIKELY(mix.color_ not_eq ColorConstant::null)) {
@@ -496,16 +500,16 @@ void Platform::load_sprite_texture(const char* name)
 }
 
 
-void Platform::load_tile_texture(const char* name) 
+void Platform::load_tile_texture(const char* name)
 {
     for (auto& info : tile_textures) {
 
         if (strcmp(name, info.name_) == 0) {
-            
+
             memcpy((void*)MEM_BG_PALETTE,
                    info.palette_data_,
                    info.palette_data_length_);
-            
+
             memcpy((void*)&MEM_TILE[0][0],
                    info.tile_data_,
                    info.tile_data_length_);

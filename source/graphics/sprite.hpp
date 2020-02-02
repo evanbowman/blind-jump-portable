@@ -9,7 +9,11 @@ using TextureIndex = u32;
 
 class Sprite {
 public:
-    enum class Alpha : u8 { opaque, translucent };
+    enum class Alpha : u8 {
+        opaque,
+        translucent,
+        transparent // invisible
+    };
 
     enum class Size : u8 { w32_h32, w16_h32 };
 
@@ -107,4 +111,5 @@ enum TextureMap : TextureIndex {
     coin = 62,
     orb1 = 63,
     orb2 = 64,
+    snake_body = 65,
 };
