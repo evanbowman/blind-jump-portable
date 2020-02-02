@@ -42,7 +42,7 @@ void Player::revive()
 void Player::injured(Platform& pf, Health damage)
 {
     if (not Player::is_invulnerable()) {
-        pf.sleep(5);
+        pf.sleep(4);
         debit_health(damage);
         sprite_.set_mix({ColorConstant::coquelicot, 255});
         color_timer_ = 0;
@@ -54,7 +54,7 @@ void Player::injured(Platform& pf, Health damage)
 void Player::on_collision(Platform& pf, Game& game, OrbShot&)
 {
     if (not Player::is_invulnerable()) {
-        // game.camera().shake();
+        game.camera().shake();
     }
 
     Player::injured(pf, Health(1));

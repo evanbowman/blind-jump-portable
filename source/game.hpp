@@ -102,7 +102,14 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup = EntityGroup<10, Turret, Dasher, Probe, Snake>;
+    using EnemyGroup = EntityGroup<10,
+                                   Turret,
+                                   Dasher,
+                                   Probe,
+                                   SnakeHead,
+                                   SnakeBody,
+                                   SnakeTail>;
+
     using DetailGroup = EntityGroup<20, ItemChest, Item>;
     using EffectGroup = EntityGroup<10, OrbShot>;
 
