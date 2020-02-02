@@ -8,6 +8,7 @@
 #include "entity/enemies/dasher.hpp"
 #include "entity/enemies/probe.hpp"
 #include "entity/enemies/turret.hpp"
+#include "entity/enemies/snake.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/transporter.hpp"
@@ -101,7 +102,7 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup = EntityGroup<5, Turret, Dasher, Probe>;
+    using EnemyGroup = EntityGroup<10, Turret, Dasher, Probe, Snake>;
     using DetailGroup = EntityGroup<20, ItemChest, Item>;
     using EffectGroup = EntityGroup<10, OrbShot>;
 

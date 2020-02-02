@@ -140,6 +140,17 @@ template <typename T> Vec2<T> operator/(const T& rhs, const Vec2<T>& lhs)
     return {lhs.x / rhs, lhs.y / rhs};
 }
 
+template <typename T> bool operator==(const Vec2<T>& rhs, const Vec2<T>& lhs)
+{
+    return lhs.x == rhs.x and lhs.y == rhs.y;
+}
+
+template <typename T> bool operator not_eq(const Vec2<T>& rhs,
+                                           const Vec2<T>& lhs)
+{
+    return lhs.x not_eq rhs.x or lhs.y not_eq rhs.y;
+}
+
 template <typename T> T clamp(T x, T floor, T ceil)
 {
     if (x < floor) {

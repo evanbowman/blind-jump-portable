@@ -20,6 +20,7 @@ static sf::RenderWindow* window = nullptr;
 class Platform::Data {
 public:
     sf::Texture spritesheet_;
+    sf::Texture tileset_;
     sf::Shader color_shader_;
     sf::RectangleShape fade_overlay_;
 };
@@ -385,7 +386,11 @@ bool Platform::is_running() const
 
 void Platform::push_map(const TileMap& map)
 {
-    // TODO...
+    for (int i = 0; i < TileMap::width; ++i) {
+        for (int j = 0; j < TileMap::height; ++j) {
+
+        }
+    }
 }
 
 

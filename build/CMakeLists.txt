@@ -12,7 +12,7 @@ enable_language(ASM)
 
 
 
-option(GAMEBOY_ADVANCE "GameboyAdvance" OFF)
+option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
 
 
 
@@ -36,6 +36,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/enemies/turret.cpp
   ${SOURCE_DIR}/entity/enemies/dasher.cpp
   ${SOURCE_DIR}/entity/enemies/probe.cpp
+  ${SOURCE_DIR}/entity/enemies/snake.cpp
   ${SOURCE_DIR}/entity/details/item.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
   ${SOURCE_DIR}/number/numeric.cpp

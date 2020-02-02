@@ -434,10 +434,10 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
-    auto spawn_entity = [&](auto& group, auto type) {
+    auto spawn_entity = [&](auto& group, auto type, auto&& ...params) {
         if (const auto c = select_coord()) {
             using T = typename decltype(type)::value;
-            if (not group.template spawn<T>(pos(c))) {
+            if (not group.template spawn<T>(pos(c), params...)) {
                 warning(pfrm, "spawn failed: entity buffer full");
             }
         } else {
@@ -451,6 +451,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     // of enemies spawned.
     spawn_entity(details_, Type<ItemChest>{});
     spawn_entity(enemies_, Type<Dasher>{});
+    spawn_entity(enemies_, Type<Snake>{}, *this);
 
 
     // Potentially hide some items in far crannies of the map. If
