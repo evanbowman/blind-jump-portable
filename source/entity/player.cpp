@@ -61,6 +61,18 @@ void Player::on_collision(Platform& pf, Game& game, OrbShot&)
 }
 
 
+void Player::on_collision(Platform& pf, Game& game, SnakeHead&)
+{
+    Player::injured(pf, Health(1));
+}
+
+
+void Player::on_collision(Platform& pf, Game& game, SnakeBody&)
+{
+    Player::injured(pf, Health(1));
+}
+
+
 void Player::on_collision(Platform& pf, Game& game, Critter&)
 {
     Player::injured(pf, Health(1));

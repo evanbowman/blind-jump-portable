@@ -88,9 +88,15 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
             } else {
                 (*it)->update(pfrm, game, delta);
                 if (camera_tracking_) {
-                    if (within_view_frustum(pfrm.screen(), (*it)->get_position())) {
-                        game.camera().push_ballast((*it)->get_position());
+                    // NOTE: snake body segments do not make much sense to
+                    // center the camera on, so exclude them.
+                    if constexpr (not std::is_same<decltype(**it), SnakeBody>()) {
+                        if (within_view_frustum(pfrm.screen(),
+                                                (*it)->get_position())) {
+                            game.camera().push_ballast((*it)->get_position());
+                        }
                     }
+
                 }
                 ++it;
             }
@@ -103,6 +109,8 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
     check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
     check_collisions(pfrm, game, player, game.details().get<Item>());
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
+    check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
+    check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
 
     return this;
 }

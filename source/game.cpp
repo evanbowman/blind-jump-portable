@@ -49,44 +49,61 @@ HOT void Game::render(Platform& pfrm)
 {
     Buffer<const Sprite*, Platform::Screen::sprite_limit> display_buffer;
 
-    display_buffer.push_back(&player_.get_sprite());
-
-    auto show_sprite = [&](const Sprite& spr) {
-        if (within_view_frustum(pfrm.screen(), spr.get_position())) {
-            display_buffer.push_back(&spr);
+    auto show_sprite = [&](Entity& e) {
+        if (within_view_frustum(pfrm.screen(), e.get_sprite().get_position())) {
+            display_buffer.push_back(&e.get_sprite());
+            e.mark_visible(true);
+        } else {
+            e.mark_visible(false);
         }
     };
 
     auto show_sprites = [&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end(); ++it) {
-            show_sprite((*it)->get_sprite());
+            show_sprite(**it);
         }
     };
+
+    // Draw the effects first. Effects are not subject to z-ordering like
+    // overworld objects, therefore, faster to draw.
+    effects_.transform(show_sprites);
+    for (auto spr : display_buffer) {
+        pfrm.screen().draw(*spr);
+    }
+    display_buffer.clear();
+
+    display_buffer.push_back(&player_.get_sprite());
 
     Buffer<const Sprite*, 30> shadows_buffer;
 
     enemies_.transform([&](auto& entity_buf) {
         for (auto& entity : entity_buf) {
-            if constexpr (std::remove_reference<decltype(
-                              *entity)>::type::multiface_sprite) {
-                const auto sprs = entity->get_sprites();
-                if (within_view_frustum(pfrm.screen(), sprs[0]->get_position())) {
+            if (within_view_frustum(pfrm.screen(), entity->get_position())) {
+
+                entity->mark_visible(true);
+
+                if constexpr (std::remove_reference<decltype(
+                                  *entity)>::type::multiface_sprite) {
+
+                    const auto sprs = entity->get_sprites();
+
                     for (const auto& spr : sprs) {
                         display_buffer.push_back(spr);
                     }
+
                     shadows_buffer.push_back(&entity->get_shadow());
-                }
-            } else {
-                const auto& spr = entity->get_sprite();
-                if (within_view_frustum(pfrm.screen(), spr.get_position())) {
+
+                } else {
+                    const auto& spr = entity->get_sprite();
                     display_buffer.push_back(&spr);
                     shadows_buffer.push_back(&entity->get_shadow());
                 }
+            } else {
+                entity->mark_visible(false);
             }
         }
     });
     details_.transform(show_sprites);
-    effects_.transform(show_sprites);
 
     std::sort(display_buffer.begin(),
               display_buffer.end(),
@@ -94,7 +111,7 @@ HOT void Game::render(Platform& pfrm)
                   return l->get_position().y > r->get_position().y;
               });
 
-    show_sprite(transporter_.get_sprite());
+    show_sprite(transporter_);
 
     display_buffer.push_back(&player_.get_shadow());
 

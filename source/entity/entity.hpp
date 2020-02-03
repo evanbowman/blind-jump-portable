@@ -43,6 +43,18 @@ public:
     static constexpr bool multiface_sprite = false;
 
 
+    bool visible() const { return visible_; }
+
+    // This is VERY BAD CODE. Basically, the rendering loop already determines
+    // which objects are visible within the window when drawing sprites. To save
+    // CPU cycles, we are marking an object visible during a rendering pass, so
+    // that the game logic skip updates for certain Entities outside the window.
+    void mark_visible(bool visible)
+    {
+        visible_ = visible;
+    }
+
+
 protected:
     void debit_health(Health amount)
     {
@@ -61,6 +73,7 @@ protected:
 
 private:
     Health health_;
+    bool visible_ = false;
 };
 
 

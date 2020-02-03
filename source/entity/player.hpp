@@ -14,12 +14,15 @@ class Turret;
 class Probe;
 class Item;
 class OrbShot;
-
+class SnakeHead;
+class SnakeBody;
 
 class Player : public Entity {
 public:
     Player();
 
+    void on_collision(Platform& pf, Game& game, SnakeHead&);
+    void on_collision(Platform& pf, Game& game, SnakeBody&);
     void on_collision(Platform& pf, Game& game, OrbShot&);
     void on_collision(Platform& pf, Game& game, Critter&);
     void on_collision(Platform& pf, Game& game, Dasher&);

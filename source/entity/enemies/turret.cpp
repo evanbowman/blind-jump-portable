@@ -37,9 +37,11 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
     const auto& screen_size = pfrm.screen().size();
     switch (state_) {
     case State::closed:
-        if (manhattan_length(player_pos, position_) <
-            std::min(screen_size.x, screen_size.y) / 2) {
-            state_ = State::opening;
+        if (visible()) {
+            if (manhattan_length(player_pos, position_) <
+                std::min(screen_size.x, screen_size.y) / 2) {
+                state_ = State::opening;
+            }
         }
         break;
 

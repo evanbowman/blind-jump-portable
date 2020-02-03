@@ -1,9 +1,16 @@
 #pragma once
 
+// NOTE: The snake enemy takes up a lot of resources, we can only realistically
+// spawn one per level.
+
 
 
 #include "entity/entity.hpp"
 #include "tileMap.hpp"
+#include "collision.hpp"
+
+
+class Player;
 
 
 
@@ -17,9 +24,15 @@ public:
 
     const Vec2<TIdx>& tile_coord() const;
 
+    const HitBox& hitbox() const
+    {
+        return hitbox_;
+    }
+
 private:
     SnakeNode* parent_;
     Vec2<TIdx> tile_coord_;
+    HitBox hitbox_;
 };
 
 
@@ -29,6 +42,8 @@ public:
     SnakeHead(const Vec2<Float>& pos, Game& game);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
+
+    void on_collision(Platform& pf, Game& game, Player&) {}
 
     const Sprite& get_shadow() const
     {
@@ -50,6 +65,8 @@ public:
     SnakeBody(const Vec2<Float>& pos, SnakeNode* parent, Game&, u8 remaining);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
+
+    void on_collision(Platform& pf, Game& game, Player&) {}
 
     const Sprite& get_shadow() const
     {

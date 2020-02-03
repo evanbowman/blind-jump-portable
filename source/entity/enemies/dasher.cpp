@@ -53,11 +53,13 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
     switch (state_) {
     case State::inactive: {
-        if (manhattan_length(game.player().get_position(), position_) <
-            std::min(screen_size.x, screen_size.y)) {
-            state_ = State::idle;
+        if (visible()) {
+            timer_ = 0;
+            if (manhattan_length(game.player().get_position(), position_) <
+                std::min(screen_size.x, screen_size.y)) {
+                state_ = State::idle;
+            }
         }
-        timer_ = 0;
         break;
     }
 
@@ -65,9 +67,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ >= milliseconds(200)) {
             timer_ -= milliseconds(200);
 
-            if (manhattan_length(game.player().get_position(), position_) <
-                std::min(screen_size.x, screen_size.y)
-                and random_choice<2>()) {
+            if (random_choice<2>()) {
                 state_ = State::shoot_begin;
                 sprite_.set_texture_index(TextureMap::dasher_weapon1);
             } else {

@@ -102,7 +102,7 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup = EntityGroup<10,
+    using EnemyGroup = EntityGroup<20,
                                    Turret,
                                    Dasher,
                                    Probe,
