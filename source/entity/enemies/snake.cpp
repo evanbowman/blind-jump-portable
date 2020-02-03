@@ -4,7 +4,7 @@
 
 
 
-static constexpr const Float x_move_rate = 0.000028f;
+static constexpr const Float x_move_rate = 0.000046f;
 
 // Tiles are wider than they are tall. If we move with the same vertical rate as
 // our horizontal rate, the snake segments will end up spaced out when the snake
@@ -21,7 +21,8 @@ static constexpr const Float y_move_rate = x_move_rate * (12.f / 16.f);
 
 
 SnakeNode::SnakeNode(SnakeNode* parent) :
-    parent_(parent)
+    parent_(parent),
+    hitbox_{&position_, {16, 16}, {8, 8}}
 {
 }
 
@@ -63,14 +64,14 @@ SnakeHead::SnakeHead(const Vec2<Float>& pos, Game& game)
     sprite_.set_position(pos);
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 16});
-    sprite_.set_texture_index(TextureMap::snake_body);
+    sprite_.set_texture_index(TextureMap::snake_head_profile);
 
     shadow_.set_texture_index(TextureMap::drop_shadow);
     shadow_.set_size(Sprite::Size::w16_h32);
     shadow_.set_origin({8, -11});
     shadow_.set_alpha(Sprite::Alpha::translucent);
 
-    game.enemies().spawn<SnakeBody>(pos, this, game, 3);
+    game.enemies().spawn<SnakeBody>(pos, this, game, 5);
 }
 
 
@@ -85,6 +86,8 @@ void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
 
         const auto& player_pos = game.player().get_position();
 
+        const auto player_tile = to_quarter_tile_coord(player_pos.cast<s32>());
+
         if (abs(position_.x - player_pos.x) > 80) {
             if (position_.x < player_pos.x) {
                 dir_ = Dir::right;
@@ -96,6 +99,18 @@ void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
                 dir_ = Dir::down;
             } else if (position_.y > player_pos.y) {
                 dir_ = Dir::up;
+            }
+        } else if (player_tile.x == tile_coord().x) {
+            if (tile_coord().y < player_tile.y) {
+                dir_ = Dir::down;
+            } else {
+                dir_ = Dir::up;
+            }
+        } else if (player_tile.y == tile_coord().y) {
+            if (tile_coord().x < player_tile.x) {
+                dir_ = Dir::right;
+            } else {
+                dir_ = Dir::left;
             }
         } else {
             if (random_choice<5>() == 0) {
@@ -119,18 +134,26 @@ void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
 
     switch (dir_) {
     case Dir::up:
+        sprite_.set_texture_index(TextureMap::snake_head_up);
+        sprite_.set_flip({0, 0});
         position_.y -= y_move_rate * dt;
         break;
 
     case Dir::down:
+        sprite_.set_texture_index(TextureMap::snake_head_down);
+        sprite_.set_flip({0, 0});
         position_.y += y_move_rate * dt;
         break;
 
     case Dir::left:
+        sprite_.set_texture_index(TextureMap::snake_head_profile);
+        sprite_.set_flip({1, 0});
         position_.x -= x_move_rate * dt;
         break;
 
     case Dir::right:
+        sprite_.set_texture_index(TextureMap::snake_head_profile);
+        sprite_.set_flip({0, 0});
         position_.x += x_move_rate * dt;
         break;
     }
@@ -226,4 +249,5 @@ void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game) :
     SnakeBody(pos, parent, game, 0)
 {
+    // sprite_.set_texture_index(TextureMap::snake_tail);
 }

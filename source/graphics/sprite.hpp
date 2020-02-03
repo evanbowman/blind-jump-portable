@@ -112,4 +112,7 @@ enum TextureMap : TextureIndex {
     orb1 = 63,
     orb2 = 64,
     snake_body = 65,
+    snake_head_profile = 66,
+    snake_head_down = 67,
+    snake_head_up = 68,
 };

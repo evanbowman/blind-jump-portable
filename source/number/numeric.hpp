@@ -54,7 +54,7 @@ template <typename T, typename U = T> struct Rect {
 
 template <typename T> T abs(const T& val)
 {
-    return (val > 0) ? val : -val;
+    return (val > 0) ? val : val * -1;
 }
 
 
