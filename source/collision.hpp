@@ -42,10 +42,12 @@ void check_collisions(Platform& pf,
                       List<B, Pl2>& rhs)
 {
     for (auto& a : lhs) {
-        for (auto& b : rhs) {
-            if (a->hitbox().overlapping(b->hitbox())) {
-                a->on_collision(pf, game, *b);
-                b->on_collision(pf, game, *a);
+        if (a->visible()) {
+            for (auto& b : rhs) {
+                if (a->hitbox().overlapping(b->hitbox())) {
+                    a->on_collision(pf, game, *b);
+                    b->on_collision(pf, game, *a);
+                }
             }
         }
     }
@@ -56,9 +58,11 @@ template <typename A, typename B, typename Pl1>
 void check_collisions(Platform& pf, Game& game, A& lhs, List<B, Pl1>& rhs)
 {
     for (auto& b : rhs) {
-        if (lhs.hitbox().overlapping(b->hitbox())) {
-            lhs.on_collision(pf, game, *b);
-            b->on_collision(pf, game, lhs);
+        if (b->visible()) {
+            if (lhs.hitbox().overlapping(b->hitbox())) {
+                lhs.on_collision(pf, game, *b);
+                b->on_collision(pf, game, lhs);
+            }
         }
     }
 }

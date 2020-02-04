@@ -115,4 +115,34 @@ enum TextureMap : TextureIndex {
     snake_head_profile = 66,
     snake_head_down = 67,
     snake_head_up = 68,
+    h_laser = 69,
+    v_laser = 70,
+};
+
+
+// Warning: The class requires the initial mix amount passed in to be a multiple
+// of five. There is a reason for this, and it has to do with smooth animations
+// when the game logic is run synchronously (dt is > 1000 microseconds per
+// step).
+template <Microseconds Interval>
+class FadeColorAnimation {
+public:
+    inline void advance(Sprite& sprite, Microseconds dt)
+    {
+        const auto& cmix = sprite.get_mix();
+        if (cmix.amount_ > 0) {
+            timer_ += dt;
+            if (timer_ > Interval) {
+                timer_ -= Interval;
+                sprite.set_mix({cmix.color_,
+                                u8(cmix.amount_ - 5)});
+            }
+        } else {
+            timer_ = 0;
+            sprite.set_mix({});
+        }
+    }
+
+private:
+    Microseconds timer_ = 0;
 };

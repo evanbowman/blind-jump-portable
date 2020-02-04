@@ -6,6 +6,7 @@
 
 
 class Player;
+class Laser;
 
 
 class Dasher : public Entity {
@@ -38,7 +39,7 @@ public:
     {
     }
 
-
+    void on_collision(Platform&, Game&, Laser&);
 
 private:
     enum class State {
@@ -60,4 +61,5 @@ private:
     Microseconds timer_;
     State state_;
     Vec2<Float> speed_;
+    FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

@@ -4,7 +4,7 @@
 
 
 Turret::Turret(const Vec2<Float>& pos)
-    : state_(State::closed), hitbox_{&position_, {16, 32}, {8, 16}}
+    : Entity(5), state_(State::closed), hitbox_{&position_, {16, 32}, {8, 16}}
 {
     set_position(pos);
     sprite_.set_position(pos);
@@ -69,5 +69,16 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
             state_ = State::closed;
         }
         break;
+    }
+
+    fade_color_anim_.advance(sprite_, dt);
+}
+
+
+void Turret::on_collision(Platform&, Game&, Laser&)
+{
+    if (state_ not_eq State::closed) {
+        sprite_.set_mix({ColorConstant::coquelicot, 255});
+        debit_health(1);
     }
 }

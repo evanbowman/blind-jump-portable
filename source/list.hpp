@@ -77,6 +77,11 @@ public:
         while (begin_) pop();
     }
 
+    bool empty()
+    {
+        return begin_ == nullptr;
+    }
+
     class Iterator {
     public:
         Iterator(Node* ptr) : node_(ptr)
@@ -137,12 +142,12 @@ public:
         return Iterator(next);
     }
 
-    Iterator begin()
+    Iterator begin() const
     {
         return Iterator(begin_);
     }
 
-    Iterator end()
+    Iterator end() const
     {
         // NOTE: This technically works, but prevents us from implementing the
         // decrement operator on the Iterator. FIXME!
@@ -154,3 +159,16 @@ private:
     Node* begin_;
     Pool* pool_;
 };
+
+
+template <typename T, typename Pool>
+u32 length(const List<T, Pool>& lat)
+{
+    u32 len = 0;
+
+    for (auto it = lat.begin(); it not_eq lat.end(); ++it) {
+        ++len;
+    }
+
+    return len;
+}
