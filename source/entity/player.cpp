@@ -14,7 +14,7 @@ static const Player::Health initial_health{4};
 
 Player::Player()
     : Entity(initial_health), frame_(0), frame_base_(ResourceLoc::player_still_down),
-      anim_timer_(0), color_timer_(0), invulnerability_timer_(0), l_speed_(0.f),
+      anim_timer_(0), invulnerability_timer_(0), l_speed_(0.f),
       r_speed_(0.f), u_speed_(0.f), d_speed_(0.f),
       hitbox_{&position_, {16, 32}, {8, 16}}
 {
@@ -45,7 +45,6 @@ void Player::injured(Platform& pf, Health damage)
         pf.sleep(4);
         debit_health(damage);
         sprite_.set_mix({ColorConstant::coquelicot, 255});
-        color_timer_ = 0;
         invulnerability_timer_ = milliseconds(700);
     }
 }
@@ -109,7 +108,6 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
         sprite_.set_mix({ColorConstant::electric_blue, 255});
         break;
     }
-    color_timer_ = 0;
 }
 
 
@@ -222,16 +220,7 @@ void Player::update_animation(Microseconds dt, u8 max_index, Microseconds count)
 
 void Player::soft_update(Platform& pfrm, Game& game, Microseconds dt)
 {
-    const auto& cmix = sprite_.get_mix();
-    if (cmix.amount_ > 0) {
-        color_timer_ += dt;
-        if (color_timer_ > 15685) {
-            color_timer_ -= 15685;
-            sprite_.set_mix({cmix.color_, u8(cmix.amount_ - 5)});
-        }
-    } else {
-        sprite_.set_mix({});
-    }
+    fade_color_anim_.advance(sprite_, dt);
 }
 
 
@@ -250,6 +239,12 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             invulnerability_timer_ -= dt;
         } else {
             invulnerability_timer_ = 0;
+        }
+    }
+
+    if (pfrm.keyboard().pressed<Key::action_1>()) {
+        if (game.effects().get<Laser>().empty()) {
+            game.effects().spawn<Laser>(position_, Laser::Direction::left);
         }
     }
 

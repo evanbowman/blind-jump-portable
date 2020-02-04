@@ -285,6 +285,10 @@ const Color& real_color(ColorConstant k)
         static const Color coquelicot(30, 7, 1);
         return coquelicot;
 
+    case ColorConstant::french_plum:
+        static const Color french_plum(6, 10, 16);
+        return french_plum;
+
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:

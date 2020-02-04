@@ -64,6 +64,15 @@ private:
 
 
 
+static class PauseFadeState : public State {
+public:
+    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+private:
+    Microseconds counter_ = 0;
+} pause_fade_state;
+
+
+
 State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
 {
     Player& player = game.player();
@@ -111,6 +120,18 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
     check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
     check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
+    check_collisions(pfrm, game,
+                     game.effects().get<Laser>(),
+                     game.enemies().get<Dasher>());
+    check_collisions(pfrm, game,
+                     game.effects().get<Laser>(),
+                     game.enemies().get<Turret>());
+    check_collisions(pfrm, game,
+                     game.effects().get<Laser>(),
+                     game.enemies().get<SnakeBody>());
+    check_collisions(pfrm, game,
+                     game.effects().get<Laser>(),
+                     game.enemies().get<SnakeHead>());
 
     return this;
 }
@@ -125,6 +146,10 @@ State* ActiveState::update(Platform& pfrm, Microseconds delta, Game& game)
 
     if (game.player().get_health() == 0) {
         return &death_fade_state;
+    }
+
+    if (pfrm.keyboard().pressed<Key::start>()) {
+        return &pause_fade_state;
     }
 
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
@@ -230,6 +255,23 @@ State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
     }
 }
 
+
+
+State* PauseFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
+{
+    counter_ += delta;
+
+    static const auto fade_duration = milliseconds(800);
+    if (counter_ > fade_duration) {
+        counter_ -= delta;
+        pfrm.screen().fade(1.f, ColorConstant::french_plum);
+        return this;
+    } else {
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
+                           ColorConstant::french_plum);
+        return this;
+    }
+}
 
 
 State* State::initial()

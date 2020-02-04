@@ -13,6 +13,7 @@
 #include "entity/details/itemChest.hpp"
 #include "entity/details/transporter.hpp"
 #include "entity/effects/orbshot.hpp"
+#include "entity/effects/laser.hpp"
 #include "entity/player.hpp"
 #include "platform/platform.hpp"
 #include "transformGroup.hpp"
@@ -111,7 +112,7 @@ public:
                                    SnakeTail>;
 
     using DetailGroup = EntityGroup<20, ItemChest, Item>;
-    using EffectGroup = EntityGroup<10, OrbShot>;
+    using EffectGroup = EntityGroup<20, OrbShot, Laser>;
 
     inline Transporter& transporter()
     {

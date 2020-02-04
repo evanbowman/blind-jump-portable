@@ -75,8 +75,8 @@ private:
     u32 frame_;
     ResourceLoc frame_base_;
     Microseconds anim_timer_;
-    Microseconds color_timer_;
     Microseconds invulnerability_timer_;
+    FadeColorAnimation<Microseconds(15685)> fade_color_anim_;
     Float l_speed_;
     Float r_speed_;
     Float u_speed_;

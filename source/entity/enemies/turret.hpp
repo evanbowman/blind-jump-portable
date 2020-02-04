@@ -7,6 +7,7 @@
 
 
 class Player;
+class Laser;
 
 
 class Turret : public Entity {
@@ -29,9 +30,12 @@ public:
     {
     }
 
+    void on_collision(Platform&, Game&, Laser&);
+
 private:
     Sprite shadow_;
     Animation<TextureMap::turret, 5, milliseconds(50)> animation_;
     enum class State { closed, opening, open, closing } state_;
     HitBox hitbox_;
+    FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

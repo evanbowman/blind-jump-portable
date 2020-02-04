@@ -11,6 +11,7 @@
 
 
 class Player;
+class Laser;
 
 
 
@@ -44,6 +45,8 @@ public:
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     void on_collision(Platform& pf, Game& game, Player&) {}
+    void on_collision(Platform& pf, Game& game, Laser&) {}
+
 
     const Sprite& get_shadow() const
     {
@@ -67,6 +70,7 @@ public:
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     void on_collision(Platform& pf, Game& game, Player&) {}
+    void on_collision(Platform& pf, Game& game, Laser&) {}
 
     const Sprite& get_shadow() const
     {

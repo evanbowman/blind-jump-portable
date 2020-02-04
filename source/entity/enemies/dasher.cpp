@@ -5,7 +5,10 @@
 
 
 Dasher::Dasher(const Vec2<Float>& position)
-    : hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0), state_(State::inactive)
+    : Entity(5),
+      hitbox_{&position_, {16, 32}, {8, 16}},
+      timer_(0),
+      state_(State::inactive)
 {
     position_ = position;
 
@@ -49,6 +52,11 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
     timer_ += dt;
 
+
+    fade_color_anim_.advance(sprite_, dt);
+    head_.set_mix(sprite_.get_mix());
+
+
     const auto& screen_size = pf.screen().size();
 
     switch (state_) {
@@ -67,7 +75,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ >= milliseconds(200)) {
             timer_ -= milliseconds(200);
 
-            if (random_choice<2>()) {
+            if (manhattan_length(game.player().get_position(), position_) <
+                std::min(screen_size.x, screen_size.y) and random_choice<2>()) {
                 state_ = State::shoot_begin;
                 sprite_.set_texture_index(TextureMap::dasher_weapon1);
             } else {
@@ -211,5 +220,19 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     case TextureMap::dasher_weapon2:
         head_.set_position({position_.x, position_.y - 9});
         break;
+    }
+}
+
+
+void Dasher::on_collision(Platform& pf, Game& game, Laser&)
+{
+    debit_health(1);
+
+    sprite_.set_mix({ColorConstant::coquelicot, 255});
+    head_.set_mix({ColorConstant::coquelicot, 255});
+
+    if (not alive()) {
+        pf.sleep(5);
+        game.camera().shake();
     }
 }
