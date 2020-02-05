@@ -87,4 +87,5 @@ private:
     Float d_speed_;
     Sprite shadow_;
     HitBox hitbox_;
+    Microseconds reload_;
 };
