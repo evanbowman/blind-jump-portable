@@ -104,11 +104,14 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
                 it = entity_buf.erase(it);
             } else {
                 (*it)->update(pfrm, game, delta);
-                if (camera_tracking_ && pfrm.keyboard().pressed<Key::action_1>()) {
+                if (camera_tracking_ &&
+                    pfrm.keyboard().pressed<Key::action_1>()) {
                     // NOTE: snake body segments do not make much sense to
                     // center the camera on, so exclude them.
                     if constexpr (not std::is_same<decltype(**it),
-                                                   SnakeBody>()) {
+                                                   SnakeBody>() and
+                                  not std::is_same<decltype(**it),
+                                                   SnakeHead>()) {
                         if (within_view_frustum(pfrm.screen(),
                                                 (*it)->get_position())) {
                             game.camera().push_ballast((*it)->get_position());

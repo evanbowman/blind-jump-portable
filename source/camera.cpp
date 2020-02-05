@@ -27,8 +27,10 @@ void Camera::update(Platform& pfrm,
     static const std::array<Float, 5> shake_constants = {
         {1.5f, -2.5f, 1.5f, -1.f, 0.5f}};
 
-    const auto center =
-        interpolate(target, view_center, dt * speed_ * 0.00000125f);
+    const auto center = interpolate(
+        target,
+        view_center,
+        dt * speed_ * (ballast_.divisor_ ? 0.00000125f : 0.000003f));
 
     if (not shaking_) {
 
