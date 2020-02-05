@@ -1,8 +1,8 @@
 #pragma once
 
-#include <optional>
-#include "pool.hpp"
 #include "number/numeric.hpp"
+#include "pool.hpp"
+#include <optional>
 
 
 // This program targets embedded systems, and intentionally doesn't
@@ -13,8 +13,7 @@
 // 1) No upcasting.
 // 2) Can not contain null.
 
-template <typename T, u32 Count>
-class RcBase {
+template <typename T, u32 Count> class RcBase {
 public:
     size_t strong_count() const
     {
@@ -23,10 +22,10 @@ public:
 
 protected:
     struct ControlBlock {
-        template <typename ...Args>
-        ControlBlock(Args&& ...args) : data_(std::forward<Args>(args)...),
-                                       strong_count_(0),
-                                       weak_count_(0)
+        template <typename... Args>
+        ControlBlock(Args&&... args)
+            : data_(std::forward<Args>(args)...), strong_count_(0),
+              weak_count_(0)
         {
         }
 
@@ -71,8 +70,7 @@ protected:
 };
 
 
-template <typename T, u32 Count>
-class Rc : public RcBase<T, Count> {
+template <typename T, u32 Count> class Rc : public RcBase<T, Count> {
 public:
     using Super = RcBase<T, Count>;
 
@@ -105,8 +103,7 @@ public:
         Super::remove_strong();
     }
 
-    template <typename ...Args>
-    static std::optional<Rc> create(Args&& ...args)
+    template <typename... Args> static std::optional<Rc> create(Args&&... args)
     {
         auto ctrl = Super::pool().get(std::forward<Args>(args)...);
         if (ctrl) {
@@ -122,13 +119,11 @@ private:
         Super::add_strong(control);
     }
 
-    template <typename, u32>
-    friend class Weak;
+    template <typename, u32> friend class Weak;
 };
 
 
-template <typename T, u32 Count>
-class Weak : public RcBase<T, Count> {
+template <typename T, u32 Count> class Weak : public RcBase<T, Count> {
 public:
     using Super = RcBase<T, Count>;
 

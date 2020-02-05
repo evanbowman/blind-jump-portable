@@ -116,3 +116,13 @@ target_compile_options(BlindJump PRIVATE
   -fno-math-errno
   -fomit-frame-pointer
   -D__BLINDJUMP_ENABLE_LOGS)
+
+
+
+file(GLOB_RECURSE SOURCES "${SOURCE_DIR}/*.cpp")
+file(GLOB_RECURSE HEADERS "${SOURCE_DIR}/*.hpp")
+
+add_custom_target(clang-format
+  COMMAND clang-format --style=file -i ${SOURCES} ${HEADERS}
+  COMMENT "Running clang-format"
+  VERBATIM)

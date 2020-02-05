@@ -43,7 +43,10 @@ public:
     static constexpr bool multiface_sprite = false;
 
 
-    bool visible() const { return visible_; }
+    bool visible() const
+    {
+        return visible_;
+    }
 
     // This is VERY BAD CODE. Basically, the rendering loop already determines
     // which objects are visible within the window when drawing sprites. To save

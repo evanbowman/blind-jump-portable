@@ -1,6 +1,6 @@
 #include "item.hpp"
-#include "platform/platform.hpp"
 #include "number/random.hpp"
+#include "platform/platform.hpp"
 
 
 Item::Item(const Vec2<Float>& pos, Platform&, Type type)
@@ -35,8 +35,7 @@ void Item::update(Platform&, Game&, Microseconds dt)
     if (visible()) {
         // Yikes! This is probably expensive...
         const Float offset = 3 * float(sine(4 * 3.14 * 0.001f * timer_ + 180)) /
-            std::numeric_limits<s16>::max();
+                             std::numeric_limits<s16>::max();
         sprite_.set_position({position_.x, position_.y + offset});
-
     }
 }

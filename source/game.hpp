@@ -2,23 +2,23 @@
 
 #include <algorithm>
 
-#include "memory/pool.hpp"
 #include "camera.hpp"
-#include "entity/enemies/critter.hpp"
-#include "entity/enemies/dasher.hpp"
-#include "entity/enemies/probe.hpp"
-#include "entity/enemies/turret.hpp"
-#include "entity/enemies/snake.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/transporter.hpp"
-#include "entity/effects/orbshot.hpp"
 #include "entity/effects/laser.hpp"
+#include "entity/effects/orbshot.hpp"
+#include "entity/enemies/critter.hpp"
+#include "entity/enemies/dasher.hpp"
+#include "entity/enemies/probe.hpp"
+#include "entity/enemies/snake.hpp"
+#include "entity/enemies/turret.hpp"
 #include "entity/player.hpp"
-#include "platform/platform.hpp"
-#include "transformGroup.hpp"
-#include "state.hpp"
 #include "list.hpp"
+#include "memory/pool.hpp"
+#include "platform/platform.hpp"
+#include "state.hpp"
+#include "transformGroup.hpp"
 
 
 using EntityNode = BiNode<EntityRef<Entity>>;
@@ -35,8 +35,8 @@ using EntityBuffer = List<EntityRef<Arg>, EntityNodePool<Capacity>>;
 template <size_t Capacity, typename... Members>
 class EntityGroup : public TransformGroup<EntityBuffer<Members, Capacity>...> {
 public:
-
-    EntityGroup() : TransformGroup<EntityBuffer<Members, Capacity>...>(node_pool_)
+    EntityGroup()
+        : TransformGroup<EntityBuffer<Members, Capacity>...>(node_pool_)
     {
     }
 
@@ -44,9 +44,9 @@ public:
     bool spawn(CtorArgs&&... ctorArgs)
     {
         auto deleter = [](T* obj) {
-                obj->~T();
-                pool_.post(reinterpret_cast<byte*>(obj));
-            };
+            obj->~T();
+            pool_.post(reinterpret_cast<byte*>(obj));
+        };
 
         if (auto mem = pool_.get()) {
             new (mem) T(std::forward<CtorArgs>(ctorArgs)...);
@@ -78,11 +78,12 @@ private:
 
 
 template <size_t Cap, typename... Members>
-typename EntityGroup<Cap, Members...>::Pool_ EntityGroup<Cap, Members...>::pool_;
+typename EntityGroup<Cap, Members...>::Pool_
+    EntityGroup<Cap, Members...>::pool_;
 
 template <size_t Cap, typename... Members>
-typename EntityGroup<Cap, Members...>::NodePool_ EntityGroup<Cap, Members...>::node_pool_;
-
+typename EntityGroup<Cap, Members...>::NodePool_
+    EntityGroup<Cap, Members...>::node_pool_;
 
 
 class Game {
@@ -103,13 +104,8 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup = EntityGroup<20,
-                                   Turret,
-                                   Dasher,
-                                   Probe,
-                                   SnakeHead,
-                                   SnakeBody,
-                                   SnakeTail>;
+    using EnemyGroup =
+        EntityGroup<20, Turret, Dasher, Probe, SnakeHead, SnakeBody, SnakeTail>;
 
     using DetailGroup = EntityGroup<20, ItemChest, Item>;
     using EffectGroup = EntityGroup<20, OrbShot, Laser>;

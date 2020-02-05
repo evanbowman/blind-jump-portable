@@ -1,5 +1,5 @@
-#include "platform.hpp"
 #include "number/random.hpp"
+#include "platform.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -144,9 +144,9 @@ void Platform::Keyboard::poll()
 
 Platform::Screen::Screen()
 {
-    if (not ::window) {
+    if (not::window) {
         ::window = new sf::RenderWindow(sf::VideoMode(480, 320), "SFML window");
-        if (not ::window) {
+        if (not::window) {
             exit(EXIT_FAILURE);
         }
         ::window->setVerticalSyncEnabled(true);
@@ -167,17 +167,24 @@ void Platform::Screen::clear()
 }
 
 
-template <typename T>
-struct reversion_wrapper { T& iterable; };
+template <typename T> struct reversion_wrapper {
+    T& iterable;
+};
 
-template <typename T>
-auto begin (reversion_wrapper<T> w) { return std::rbegin(w.iterable); }
+template <typename T> auto begin(reversion_wrapper<T> w)
+{
+    return std::rbegin(w.iterable);
+}
 
-template <typename T>
-auto end (reversion_wrapper<T> w) { return std::rend(w.iterable); }
+template <typename T> auto end(reversion_wrapper<T> w)
+{
+    return std::rend(w.iterable);
+}
 
-template <typename T>
-reversion_wrapper<T> reverse (T&& iterable) { return { iterable }; }
+template <typename T> reversion_wrapper<T> reverse(T&& iterable)
+{
+    return {iterable};
+}
 
 
 std::vector<Sprite> draw_queue;
@@ -187,15 +194,18 @@ static sf::Glsl::Vec3 real_color(ColorConstant k)
 {
     switch (k) {
     case ColorConstant::spanish_crimson:
-        static const sf::Glsl::Vec3 spn_crimson(29.f / 31.f, 3.f / 31.f, 11.f / 31.f);
+        static const sf::Glsl::Vec3 spn_crimson(
+            29.f / 31.f, 3.f / 31.f, 11.f / 31.f);
         return spn_crimson;
 
     case ColorConstant::electric_blue:
-        static const sf::Glsl::Vec3 el_blue(9.f / 31.f, 31.f / 31.f, 31.f / 31.f);
+        static const sf::Glsl::Vec3 el_blue(
+            9.f / 31.f, 31.f / 31.f, 31.f / 31.f);
         return el_blue;
 
     case ColorConstant::coquelicot:
-        static const sf::Glsl::Vec3 coquelicot(30.f / 31.f, 7.f / 31.f, 1.f / 31.f);
+        static const sf::Glsl::Vec3 coquelicot(
+            30.f / 31.f, 7.f / 31.f, 1.f / 31.f);
         return coquelicot;
 
     default:
@@ -216,8 +226,8 @@ void Platform::Screen::display()
         sf::Sprite sf_spr;
 
         sf_spr.setPosition({pos.x, pos.y});
-        sf_spr.setOrigin({float(spr.get_origin().x),
-                          float(spr.get_origin().y)});
+        sf_spr.setOrigin(
+            {float(spr.get_origin().x), float(spr.get_origin().y)});
         if (spr.get_alpha() == Sprite::Alpha::translucent) {
             sf_spr.setColor({255, 255, 255, 128});
         }
@@ -226,7 +236,7 @@ void Platform::Screen::display()
 
         sf_spr.setTexture(::platform->data()->spritesheet_);
 
-        switch(const auto ind = spr.get_texture_index(); spr.get_size()) {
+        switch (const auto ind = spr.get_texture_index(); spr.get_size()) {
         case Sprite::Size::w16_h32:
             sf_spr.setTextureRect({static_cast<s32>(ind) * 16, 0, 16, 32});
             break;
@@ -252,8 +262,8 @@ void Platform::Screen::display()
                    view_.get_center().y + view_.get_size().y / 2);
     view.setSize(view_.get_size().x, view_.get_size().y);
 
-    ::platform->data()->fade_overlay_.setPosition({view_.get_center().x,
-                                                   view_.get_center().y});
+    ::platform->data()->fade_overlay_.setPosition(
+        {view_.get_center().x, view_.get_center().y});
 
     ::window->draw(::platform->data()->fade_overlay_);
 
@@ -268,12 +278,11 @@ void Platform::Screen::fade(Float amount, ColorConstant k)
 {
     const auto& c = real_color(k);
 
-    ::platform->data()->fade_overlay_.setFillColor({
-        static_cast<uint8_t>(c.x * 255),
-        static_cast<uint8_t>(c.y * 255),
-        static_cast<uint8_t>(c.z * 255),
-        static_cast<uint8_t>(amount * 255)
-    });
+    ::platform->data()->fade_overlay_.setFillColor(
+        {static_cast<uint8_t>(c.x * 255),
+         static_cast<uint8_t>(c.y * 255),
+         static_cast<uint8_t>(c.z * 255),
+         static_cast<uint8_t>(amount * 255)});
 }
 
 
@@ -316,7 +325,6 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 
 Platform::Logger::Logger()
 {
-
 }
 
 
@@ -347,8 +355,8 @@ Platform::Platform()
     }
     data_->color_shader_.setUniform("texture", sf::Shader::CurrentTexture);
 
-    data_->fade_overlay_.setSize({Float(screen_.size().x),
-                                  Float(screen_.size().y)});
+    data_->fade_overlay_.setSize(
+        {Float(screen_.size().x), Float(screen_.size().y)});
 
     ::platform = this;
 }
@@ -361,8 +369,8 @@ std::optional<SaveData> Platform::read_save()
 }
 
 
-#include <thread>
 #include <chrono>
+#include <thread>
 
 
 static std::vector<std::thread> worker_threads;
@@ -371,10 +379,10 @@ static std::vector<std::thread> worker_threads;
 void Platform::push_task(Task* task)
 {
     worker_threads.emplace_back([task] {
-            while (not task->complete()) {
-                task->run();
-            }
-        });
+        while (not task->complete()) {
+            task->run();
+        }
+    });
 }
 
 
@@ -388,7 +396,6 @@ void Platform::push_map(const TileMap& map)
 {
     for (int i = 0; i < TileMap::width; ++i) {
         for (int j = 0; j < TileMap::height; ++j) {
-
         }
     }
 }
@@ -402,13 +409,11 @@ void Platform::sleep(u32 frames)
 
 void Platform::load_sprite_texture(const char* name)
 {
-
 }
 
 
 void Platform::load_tile_texture(const char* name)
 {
-
 }
 
 
@@ -427,7 +432,10 @@ int main()
 }
 
 #ifdef _WIN32
-int WinMain(HINSTANCE, HINSTANCE, LPSTR, int) { return main(); }
+int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+{
+    return main();
+}
 #endif
 
 

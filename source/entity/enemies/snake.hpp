@@ -4,15 +4,13 @@
 // spawn one per level.
 
 
-
+#include "collision.hpp"
 #include "entity/entity.hpp"
 #include "tileMap.hpp"
-#include "collision.hpp"
 
 
 class Player;
 class Laser;
-
 
 
 class SnakeNode : public Entity {
@@ -37,15 +35,18 @@ private:
 };
 
 
-
 class SnakeHead : public SnakeNode {
 public:
     SnakeHead(const Vec2<Float>& pos, Game& game);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
-    void on_collision(Platform& pf, Game& game, Player&) {}
-    void on_collision(Platform& pf, Game& game, Laser&) {}
+    void on_collision(Platform& pf, Game& game, Player&)
+    {
+    }
+    void on_collision(Platform& pf, Game& game, Laser&)
+    {
+    }
 
 
     const Sprite& get_shadow() const
@@ -54,23 +55,24 @@ public:
     }
 
 private:
-
     Sprite shadow_;
 
     enum class Dir { up, down, left, right } dir_;
 };
 
 
-
 class SnakeBody : public SnakeNode {
 public:
-
     SnakeBody(const Vec2<Float>& pos, SnakeNode* parent, Game&, u8 remaining);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
-    void on_collision(Platform& pf, Game& game, Player&) {}
-    void on_collision(Platform& pf, Game& game, Laser&) {}
+    void on_collision(Platform& pf, Game& game, Player&)
+    {
+    }
+    void on_collision(Platform& pf, Game& game, Laser&)
+    {
+    }
 
     const Sprite& get_shadow() const
     {
@@ -78,16 +80,13 @@ public:
     }
 
 private:
-
     Sprite shadow_;
 
     Vec2<TIdx> next_coord_;
 };
 
 
-
 class SnakeTail : public SnakeBody {
 public:
-
     SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game);
 };

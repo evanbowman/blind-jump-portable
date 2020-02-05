@@ -2,75 +2,83 @@
 #include "game.hpp"
 
 
-
 bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
-
 class OverworldState : public State {
 public:
-    OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking) {}
+    OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking)
+    {
+    }
     State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+
 private:
     const bool camera_tracking_;
 };
 
 
-
 static class ActiveState : public OverworldState {
 public:
-    ActiveState(bool camera_tracking) : OverworldState(camera_tracking) {}
+    ActiveState(bool camera_tracking) : OverworldState(camera_tracking)
+    {
+    }
     State* update(Platform& pfrm, Microseconds delta, Game& game) override;
 } active_state(true);
 
 
-
 static class FadeInState : public OverworldState {
 public:
-    FadeInState() : OverworldState(false) {}
+    FadeInState() : OverworldState(false)
+    {
+    }
     State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+
 private:
     Microseconds counter_ = 0;
 } fade_in_state;
 
 
-
 static class PreFadePauseState : public OverworldState {
 public:
-    PreFadePauseState() : OverworldState(false) {}
+    PreFadePauseState() : OverworldState(false)
+    {
+    }
     State* update(Platform& pfrm, Microseconds delta, Game& game) override;
 } pre_fade_pause_state;
 
 
-
 static class FadeOutState : public OverworldState {
 public:
-    FadeOutState() : OverworldState(false) {}
+    FadeOutState() : OverworldState(false)
+    {
+    }
     State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+
 private:
     Microseconds counter_ = 0;
 } fade_out_state;
 
 
-
 static class DeathFadeState : public OverworldState {
 public:
-    DeathFadeState() : OverworldState(false) {}
+    DeathFadeState() : OverworldState(false)
+    {
+    }
     State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+
 private:
     Microseconds counter_ = 0;
 } death_fade_state;
 
 
-
 static class PauseFadeState : public State {
 public:
     State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+
 private:
     Microseconds counter_ = 0;
 } pause_fade_state;
-
 
 
 State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
@@ -96,16 +104,16 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
                 it = entity_buf.erase(it);
             } else {
                 (*it)->update(pfrm, game, delta);
-                if (camera_tracking_) {
+                if (camera_tracking_ && pfrm.keyboard().pressed<Key::action_1>()) {
                     // NOTE: snake body segments do not make much sense to
                     // center the camera on, so exclude them.
-                    if constexpr (not std::is_same<decltype(**it), SnakeBody>()) {
+                    if constexpr (not std::is_same<decltype(**it),
+                                                   SnakeBody>()) {
                         if (within_view_frustum(pfrm.screen(),
                                                 (*it)->get_position())) {
                             game.camera().push_ballast((*it)->get_position());
                         }
                     }
-
                 }
                 ++it;
             }
@@ -120,22 +128,21 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
     check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
     check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
-    check_collisions(pfrm, game,
-                     game.effects().get<Laser>(),
-                     game.enemies().get<Dasher>());
-    check_collisions(pfrm, game,
-                     game.effects().get<Laser>(),
-                     game.enemies().get<Turret>());
-    check_collisions(pfrm, game,
+    check_collisions(
+        pfrm, game, game.effects().get<Laser>(), game.enemies().get<Dasher>());
+    check_collisions(
+        pfrm, game, game.effects().get<Laser>(), game.enemies().get<Turret>());
+    check_collisions(pfrm,
+                     game,
                      game.effects().get<Laser>(),
                      game.enemies().get<SnakeBody>());
-    check_collisions(pfrm, game,
+    check_collisions(pfrm,
+                     game,
                      game.effects().get<Laser>(),
                      game.enemies().get<SnakeHead>());
 
     return this;
 }
-
 
 
 State* ActiveState::update(Platform& pfrm, Microseconds delta, Game& game)
@@ -162,7 +169,6 @@ State* ActiveState::update(Platform& pfrm, Microseconds delta, Game& game)
 }
 
 
-
 State* FadeInState::update(Platform& pfrm, Microseconds delta, Game& game)
 {
     game.player().soft_update(pfrm, game, delta);
@@ -183,10 +189,7 @@ State* FadeInState::update(Platform& pfrm, Microseconds delta, Game& game)
 }
 
 
-
-State* PreFadePauseState::update(Platform& pfrm,
-                                       Microseconds delta,
-                                       Game& game)
+State* PreFadePauseState::update(Platform& pfrm, Microseconds delta, Game& game)
 {
     game.camera().set_speed(1.5f);
 
@@ -195,7 +198,7 @@ State* PreFadePauseState::update(Platform& pfrm,
     OverworldState::update(pfrm, delta, game);
 
     if (manhattan_length(pfrm.screen().get_view().get_center() +
-                         pfrm.screen().get_view().get_size() / 2.f,
+                             pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {
         game.camera().set_speed(1.f);
         return &fade_out_state;
@@ -203,7 +206,6 @@ State* PreFadePauseState::update(Platform& pfrm,
         return this;
     }
 }
-
 
 
 State* FadeOutState::update(Platform& pfrm, Microseconds delta, Game& game)
@@ -225,7 +227,6 @@ State* FadeOutState::update(Platform& pfrm, Microseconds delta, Game& game)
         return this;
     }
 }
-
 
 
 State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
@@ -254,7 +255,6 @@ State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
         return this;
     }
 }
-
 
 
 State* PauseFadeState::update(Platform& pfrm, Microseconds delta, Game& game)

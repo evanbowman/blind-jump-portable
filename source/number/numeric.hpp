@@ -14,12 +14,10 @@ using s64 = int64_t;
 
 
 #ifdef __GBA__
-template <typename T>
-using Atomic = T;
+template <typename T> using Atomic = T;
 #else
 #include <atomic>
-template <typename T>
-using Atomic = std::atomic<T>;
+template <typename T> using Atomic = std::atomic<T>;
 #endif
 
 
@@ -145,8 +143,8 @@ template <typename T> bool operator==(const Vec2<T>& rhs, const Vec2<T>& lhs)
     return lhs.x == rhs.x and lhs.y == rhs.y;
 }
 
-template <typename T> bool operator not_eq(const Vec2<T>& rhs,
-                                           const Vec2<T>& lhs)
+template <typename T>
+bool operator not_eq(const Vec2<T>& rhs, const Vec2<T>& lhs)
 {
     return lhs.x not_eq rhs.x or lhs.y not_eq rhs.y;
 }

@@ -124,8 +124,7 @@ enum TextureMap : TextureIndex {
 // of five. There is a reason for this, and it has to do with smooth animations
 // when the game logic is run synchronously (dt is > 1000 microseconds per
 // step).
-template <Microseconds Interval>
-class FadeColorAnimation {
+template <Microseconds Interval> class FadeColorAnimation {
 public:
     inline void advance(Sprite& sprite, Microseconds dt)
     {
@@ -134,8 +133,7 @@ public:
             timer_ += dt;
             if (timer_ > Interval) {
                 timer_ -= Interval;
-                sprite.set_mix({cmix.color_,
-                                u8(cmix.amount_ - 5)});
+                sprite.set_mix({cmix.color_, u8(cmix.amount_ - 5)});
             }
         } else {
             timer_ = 0;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <array>
 #include "number/numeric.hpp"
+#include <array>
 #include <new>
 
 

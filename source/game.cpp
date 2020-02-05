@@ -1,6 +1,6 @@
 #include "game.hpp"
-#include "util.hpp"
 #include "number/random.hpp"
+#include "util.hpp"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
@@ -10,9 +10,7 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
-
-Game::Game(Platform& pfrm)
-    : level_(-1), counter_(0), state_(State::initial())
+Game::Game(Platform& pfrm) : level_(-1), counter_(0), state_(State::initial())
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
@@ -451,7 +449,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
-    auto spawn_entity = [&](auto& group, auto type, auto&& ...params) {
+    auto spawn_entity = [&](auto& group, auto type, auto&&... params) {
         if (const auto c = select_coord()) {
             using T = typename decltype(type)::value;
             if (not group.template spawn<T>(pos(c), params...)) {

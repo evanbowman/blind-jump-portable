@@ -5,36 +5,28 @@
 #include "memory/pool.hpp"
 
 
-template <typename T>
-struct BiNode {
+template <typename T> struct BiNode {
     BiNode* right_;
     BiNode* left_;
     T data_;
 };
 
 
-template <typename T, typename Pool>
-class List {
+template <typename T, typename Pool> class List {
 public:
-
     using Node = BiNode<T>;
 
-    List(Pool& pool) : begin_(nullptr),
-                       pool_(&pool)
+    List(Pool& pool) : begin_(nullptr), pool_(&pool)
     {
         static_assert(sizeof(Node) == Pool::element_size() and
-                      alignof(Node) == Pool::alignment(),
+                          alignof(Node) == Pool::alignment(),
                       "Pool incompatible");
     }
 
     void push(const T& elem)
     {
         if (auto mem = pool_->get()) {
-            new (mem) Node {
-                begin_,
-                nullptr,
-                elem
-            };
+            new (mem) Node{begin_, nullptr, elem};
             if (begin_) {
                 begin_->left_ = reinterpret_cast<Node*>(mem);
             }
@@ -45,11 +37,7 @@ public:
     void push(T&& elem)
     {
         if (auto mem = pool_->get()) {
-            new (mem) Node {
-                begin_,
-                nullptr,
-                std::forward<T>(elem)
-            };
+            new (mem) Node{begin_, nullptr, std::forward<T>(elem)};
             if (begin_) {
                 begin_->left_ = reinterpret_cast<Node*>(mem);
             }
@@ -74,7 +62,8 @@ public:
 
     void clear()
     {
-        while (begin_) pop();
+        while (begin_)
+            pop();
     }
 
     bool empty()
@@ -155,14 +144,12 @@ public:
     }
 
 private:
-
     Node* begin_;
     Pool* pool_;
 };
 
 
-template <typename T, typename Pool>
-u32 length(const List<T, Pool>& lat)
+template <typename T, typename Pool> u32 length(const List<T, Pool>& lat)
 {
     u32 len = 0;
 

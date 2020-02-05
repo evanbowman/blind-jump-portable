@@ -1,5 +1,5 @@
-#include "entity/entity.hpp"
 #include "collision.hpp"
+#include "entity/entity.hpp"
 
 
 class Turret;
@@ -10,7 +10,6 @@ class SnakeBody;
 
 class Laser : public Entity {
 public:
-
     enum class Direction { up, down, left, right };
 
     Laser(const Vec2<Float>& position, Direction dir);

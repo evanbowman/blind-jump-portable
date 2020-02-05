@@ -16,5 +16,4 @@ Probe::Probe(const Vec2<Float>& position)
 
 void Probe::update(Platform&, Game&, Microseconds dt)
 {
-
 }
