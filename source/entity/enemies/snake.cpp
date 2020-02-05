@@ -3,7 +3,6 @@
 #include "number/random.hpp"
 
 
-
 static constexpr const Float x_move_rate = 0.000046f;
 
 // Tiles are wider than they are tall. If we move with the same vertical rate as
@@ -13,19 +12,15 @@ static constexpr const Float x_move_rate = 0.000046f;
 static constexpr const Float y_move_rate = x_move_rate * (12.f / 16.f);
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // SnakeNode
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
-SnakeNode::SnakeNode(SnakeNode* parent) :
-    parent_(parent),
-    hitbox_{&position_, {16, 16}, {8, 8}}
+SnakeNode::SnakeNode(SnakeNode* parent)
+    : parent_(parent), hitbox_{&position_, {16, 16}, {8, 8}}
 {
 }
-
 
 
 SnakeNode* SnakeNode::parent() const
@@ -34,12 +29,10 @@ SnakeNode* SnakeNode::parent() const
 }
 
 
-
 const Vec2<TIdx>& SnakeNode::tile_coord() const
 {
     return tile_coord_;
 }
-
 
 
 void SnakeNode::update()
@@ -48,16 +41,13 @@ void SnakeNode::update()
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // SnakeHead
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 SnakeHead::SnakeHead(const Vec2<Float>& pos, Game& game)
-    : SnakeNode(nullptr),
-      dir_(Dir::left)
+    : SnakeNode(nullptr), dir_(Dir::left)
 {
     set_position(pos);
 
@@ -73,7 +63,6 @@ SnakeHead::SnakeHead(const Vec2<Float>& pos, Game& game)
 
     game.enemies().spawn<SnakeBody>(pos, this, game, 5);
 }
-
 
 
 void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
@@ -163,18 +152,16 @@ void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // SnakeBody
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 SnakeBody::SnakeBody(const Vec2<Float>& pos,
                      SnakeNode* parent,
                      Game& game,
-                     u8 remaining) :
-    SnakeNode(parent)
+                     u8 remaining)
+    : SnakeNode(parent)
 {
     set_position(pos);
 
@@ -199,7 +186,6 @@ SnakeBody::SnakeBody(const Vec2<Float>& pos,
         }
     }
 }
-
 
 
 void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
@@ -240,14 +226,13 @@ void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // SnakeBody
 ////////////////////////////////////////////////////////////////////////////////
 
 
-SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game) :
-    SnakeBody(pos, parent, game, 0)
+SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game)
+    : SnakeBody(pos, parent, game, 0)
 {
     // sprite_.set_texture_index(TextureMap::snake_tail);
 }

@@ -15,7 +15,7 @@ void Camera::update(Platform& pfrm,
     if (ballast_.divisor_) {
         const auto counter_weight = ballast_.center_ / float(ballast_.divisor_);
         buffer_ = interpolate(buffer_, counter_weight, 0.000000025f * dt);
-        seek = interpolate(seek_pos, buffer_, 0.78f);
+        seek = interpolate(seek_pos, buffer_, 0.5f);
     } else {
         seek = seek_pos;
     }
@@ -24,12 +24,11 @@ void Camera::update(Platform& pfrm,
                        (seek.y - screen_size.y / 2)};
 
 
-    static const std::array<Float, 5> shake_constants =
-        {{1.5f, -2.5f, 1.5f, -1.f, 0.5f}};
+    static const std::array<Float, 5> shake_constants = {
+        {1.5f, -2.5f, 1.5f, -1.f, 0.5f}};
 
-    const auto center = interpolate(target,
-                                    view_center,
-                                    dt * speed_ * 0.00000125f);
+    const auto center =
+        interpolate(target, view_center, dt * speed_ * 0.00000125f);
 
     if (not shaking_) {
 

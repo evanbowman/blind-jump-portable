@@ -476,12 +476,10 @@ struct TextureData {
     }
 
 
-static const TextureData sprite_textures[] = {
-    TEXTURE_INFO(bgr_spritesheet)};
+static const TextureData sprite_textures[] = {TEXTURE_INFO(bgr_spritesheet)};
 
 
-static const TextureData tile_textures[] = {
-    TEXTURE_INFO(bgr_tilesheet)};
+static const TextureData tile_textures[] = {TEXTURE_INFO(bgr_tilesheet)};
 
 
 void Platform::load_sprite_texture(const char* name)
@@ -897,17 +895,21 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 // Speaker
 ////////////////////////////////////////////////////////////////////////////////
 
-#define REG_SND1SWEEP		*(volatile u16*)(0x04000000+0x0060)	//!< Channel 1 Sweep
-#define REG_SND1CNT			*(volatile u16*)(0x04000000+0x0062)	//!< Channel 1 Control
-#define REG_SND1FREQ		*(volatile u16*)(0x04000000+0x0064)	//!< Channel 1 frequency
-#define REG_SND1FREQ *(volatile u16*)(0x04000000+0x0064)
-#define REG_SNDCNT *(volatile u32*)(0x04000000+0x0080)	//!< Main sound control
-#define REG_SNDDMGCNT *(volatile u16*)(0x04000000+0x0080)	//!< DMG channel control
-#define REG_SNDDSCNT *(volatile u16*)(0x04000000+0x0082)	//!< Direct Sound control
-#define REG_SNDSTAT *(volatile u16*)(0x04000000+0x0084)	//!< Sound status
-#define REG_SNDBIAS *(volatile u16*)(0x04000000+0x0088)	//!< Sound bias
-#define REG_SND2CNT *(volatile u16*)(0x04000000+0x0068)	//!< Channel 2 control
-#define REG_SND2FREQ *(volatile u16*)(0x04000000+0x006C)	//!< Channel 2 frequency
+#define REG_SND1SWEEP *(volatile u16*)(0x04000000 + 0x0060) //!< Channel 1 Sweep
+#define REG_SND1CNT *(volatile u16*)(0x04000000 + 0x0062) //!< Channel 1 Control
+#define REG_SND1FREQ                                                           \
+    *(volatile u16*)(0x04000000 + 0x0064) //!< Channel 1 frequency
+#define REG_SND1FREQ *(volatile u16*)(0x04000000 + 0x0064)
+#define REG_SNDCNT *(volatile u32*)(0x04000000 + 0x0080) //!< Main sound control
+#define REG_SNDDMGCNT                                                          \
+    *(volatile u16*)(0x04000000 + 0x0080) //!< DMG channel control
+#define REG_SNDDSCNT                                                           \
+    *(volatile u16*)(0x04000000 + 0x0082) //!< Direct Sound control
+#define REG_SNDSTAT *(volatile u16*)(0x04000000 + 0x0084) //!< Sound status
+#define REG_SNDBIAS *(volatile u16*)(0x04000000 + 0x0088) //!< Sound bias
+#define REG_SND2CNT *(volatile u16*)(0x04000000 + 0x0068) //!< Channel 2 control
+#define REG_SND2FREQ                                                           \
+    *(volatile u16*)(0x04000000 + 0x006C) //!< Channel 2 frequency
 
 
 // --- REG_SND1SWEEP ---------------------------------------------------
@@ -918,21 +920,21 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 */
 /*!	\{	*/
 
-#define SSW_INC			 0		//!< Increasing sweep rate
-#define SSW_DEC			0x0008	//!< Decreasing sweep rate
-#define SSW_OFF         0x0008	//!< Disable sweep altogether
+#define SSW_INC 0      //!< Increasing sweep rate
+#define SSW_DEC 0x0008 //!< Decreasing sweep rate
+#define SSW_OFF 0x0008 //!< Disable sweep altogether
 
-#define SSW_SHIFT_MASK	0x0007
-#define SSW_SHIFT_SHIFT		 0
-#define SSW_SHIFT(n)	((n)<<SSW_SHIFT_SHIFT)
+#define SSW_SHIFT_MASK 0x0007
+#define SSW_SHIFT_SHIFT 0
+#define SSW_SHIFT(n) ((n) << SSW_SHIFT_SHIFT)
 
-#define SSW_TIME_MASK	0x0070
-#define SSW_TIME_SHIFT		 4
-#define SSW_TIME(n)		((n)<<SSW_TIME_SHIFT)
+#define SSW_TIME_MASK 0x0070
+#define SSW_TIME_SHIFT 4
+#define SSW_TIME(n) ((n) << SSW_TIME_SHIFT)
 
 
-#define SSW_BUILD(shift, dir, time) \
-	( (((time)&7)<<4) | ((dir)<<3) | ((shift)&7) )
+#define SSW_BUILD(shift, dir, time)                                            \
+    ((((time)&7) << 4) | ((dir) << 3) | ((shift)&7))
 
 /*!	\}	/defgroup	*/
 
@@ -945,35 +947,35 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 */
 /*!	\{	*/
 
-#define SSQR_DUTY1_8		 0	//!< 12.5% duty cycle (#-------)
-#define SSQR_DUTY1_4	0x0040	//!< 25% duty cycle (##------)
-#define SSQR_DUTY1_2	0x0080	//!< 50% duty cycle (####----)
-#define SSQR_DUTY3_4	0x00C0	//!< 75% duty cycle (######--) Equivalent to 25%
-#define SSQR_INC			 0	//!< Increasing volume
-#define SSQR_DEC		0x0800	//!< Decreasing volume
+#define SSQR_DUTY1_8 0      //!< 12.5% duty cycle (#-------)
+#define SSQR_DUTY1_4 0x0040 //!< 25% duty cycle (##------)
+#define SSQR_DUTY1_2 0x0080 //!< 50% duty cycle (####----)
+#define SSQR_DUTY3_4 0x00C0 //!< 75% duty cycle (######--) Equivalent to 25%
+#define SSQR_INC 0          //!< Increasing volume
+#define SSQR_DEC 0x0800     //!< Decreasing volume
 
-#define SSQR_LEN_MASK	0x003F
-#define SSQR_LEN_SHIFT		 0
-#define SSQR_LEN(n)		((n)<<SSQR_LEN_SHIFT)
+#define SSQR_LEN_MASK 0x003F
+#define SSQR_LEN_SHIFT 0
+#define SSQR_LEN(n) ((n) << SSQR_LEN_SHIFT)
 
-#define SSQR_DUTY_MASK	0x00C0
-#define SSQR_DUTY_SHIFT		 6
-#define SSQR_DUTY(n)	((n)<<SSQR_DUTY_SHIFT)
+#define SSQR_DUTY_MASK 0x00C0
+#define SSQR_DUTY_SHIFT 6
+#define SSQR_DUTY(n) ((n) << SSQR_DUTY_SHIFT)
 
-#define SSQR_TIME_MASK	0x0700
-#define SSQR_TIME_SHIFT		 8
-#define SSQR_TIME(n)	((n)<<SSQR_TIME_SHIFT)
+#define SSQR_TIME_MASK 0x0700
+#define SSQR_TIME_SHIFT 8
+#define SSQR_TIME(n) ((n) << SSQR_TIME_SHIFT)
 
-#define SSQR_IVOL_MASK	0xF000
-#define SSQR_IVOL_SHIFT		12
-#define SSQR_IVOL(n)	((n)<<SSQR_IVOL_SHIFT)
+#define SSQR_IVOL_MASK 0xF000
+#define SSQR_IVOL_SHIFT 12
+#define SSQR_IVOL(n) ((n) << SSQR_IVOL_SHIFT)
 
 
-#define SSQR_ENV_BUILD(ivol, dir, time)				\
-	(  ((ivol)<<12) | ((dir)<<11) | (((time)&7)<<8) )
+#define SSQR_ENV_BUILD(ivol, dir, time)                                        \
+    (((ivol) << 12) | ((dir) << 11) | (((time)&7) << 8))
 
-#define SSQR_BUILD(_ivol, dir, step, duty, len)		\
-	( SSQR_ENV_BUILD(ivol,dir,step) | (((duty)&3)<<6) | ((len)&63) )
+#define SSQR_BUILD(_ivol, dir, step, duty, len)                                \
+    (SSQR_ENV_BUILD(ivol, dir, step) | (((duty)&3) << 6) | ((len)&63))
 
 
 /*!	\}	/defgroup	*/
@@ -987,16 +989,16 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 */
 /*!	\{	*/
 
-#define SFREQ_HOLD				 0	//!< Continuous play
-#define SFREQ_TIMED			0x4000	//!< Timed play
-#define SFREQ_RESET			0x8000	//!< Reset sound
+#define SFREQ_HOLD 0       //!< Continuous play
+#define SFREQ_TIMED 0x4000 //!< Timed play
+#define SFREQ_RESET 0x8000 //!< Reset sound
 
-#define SFREQ_RATE_MASK		0x07FF
-#define SFREQ_RATE_SHIFT		 0
-#define SFREQ_RATE(n)		((n)<<SFREQ_RATE_SHIFT)
+#define SFREQ_RATE_MASK 0x07FF
+#define SFREQ_RATE_SHIFT 0
+#define SFREQ_RATE(n) ((n) << SFREQ_RATE_SHIFT)
 
-#define SFREQ_BUILD(rate, timed, reset)				\
-	( ((rate)&0x7FF) | ((timed)<<14) | ((reset)<<15) )
+#define SFREQ_BUILD(rate, timed, reset)                                        \
+    (((rate)&0x7FF) | ((timed) << 14) | ((reset) << 15))
 
 /*!	\}	/defgroup	*/
 
@@ -1009,33 +1011,33 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 /*!	\{	*/
 
 
-#define SDMG_LSQR1		0x0100	//!< Enable channel 1 on left
-#define SDMG_LSQR2		0x0200	//!< Enable channel 2 on left
-#define SDMG_LWAVE		0x0400	//!< Enable channel 3 on left
-#define SDMG_LNOISE		0x0800	//!< Enable channel 4 on left
-#define SDMG_RSQR1		0x1000	//!< Enable channel 1 on right
-#define SDMG_RSQR2		0x2000	//!< Enable channel 2 on right
-#define SDMG_RWAVE		0x4000	//!< Enable channel 3 on right
-#define SDMG_RNOISE		0x8000	//!< Enable channel 4 on right
+#define SDMG_LSQR1 0x0100  //!< Enable channel 1 on left
+#define SDMG_LSQR2 0x0200  //!< Enable channel 2 on left
+#define SDMG_LWAVE 0x0400  //!< Enable channel 3 on left
+#define SDMG_LNOISE 0x0800 //!< Enable channel 4 on left
+#define SDMG_RSQR1 0x1000  //!< Enable channel 1 on right
+#define SDMG_RSQR2 0x2000  //!< Enable channel 2 on right
+#define SDMG_RWAVE 0x4000  //!< Enable channel 3 on right
+#define SDMG_RNOISE 0x8000 //!< Enable channel 4 on right
 
-#define SDMG_LVOL_MASK	0x0007
-#define SDMG_LVOL_SHIFT		 0
-#define SDMG_LVOL(n)	((n)<<SDMG_LVOL_SHIFT)
+#define SDMG_LVOL_MASK 0x0007
+#define SDMG_LVOL_SHIFT 0
+#define SDMG_LVOL(n) ((n) << SDMG_LVOL_SHIFT)
 
-#define SDMG_RVOL_MASK	0x0070
-#define SDMG_RVOL_SHIFT		 4
-#define SDMG_RVOL(n)	((n)<<SDMG_RVOL_SHIFT)
+#define SDMG_RVOL_MASK 0x0070
+#define SDMG_RVOL_SHIFT 4
+#define SDMG_RVOL(n) ((n) << SDMG_RVOL_SHIFT)
 
 
 // Unshifted values
-#define SDMG_SQR1		0x01
-#define SDMG_SQR2		0x02
-#define SDMG_WAVE		0x04
-#define SDMG_NOISE		0x08
+#define SDMG_SQR1 0x01
+#define SDMG_SQR2 0x02
+#define SDMG_WAVE 0x04
+#define SDMG_NOISE 0x08
 
 
-#define SDMG_BUILD(_lmode, _rmode, _lvol, _rvol)	\
-	( ((_rmode)<<12) | ((_lmode)<<8) | (((_rvol)&7)<<4) | ((_lvol)&7) )
+#define SDMG_BUILD(_lmode, _rmode, _lvol, _rvol)                               \
+    (((_rmode) << 12) | ((_lmode) << 8) | (((_rvol)&7) << 4) | ((_lvol)&7))
 
 #define SDMG_BUILD_LR(_mode, _vol) SDMG_BUILD(_mode, _mode, _vol, _vol)
 
@@ -1049,23 +1051,23 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 */
 /*!	\{	*/
 
-#define SDS_DMG25			 0	//!< Tone generators at 25% volume
-#define SDS_DMG50		0x0001	//!< Tone generators at 50% volume
-#define SDS_DMG100		0x0002	//!< Tone generators at 100% volume
-#define SDS_A50			 0	//!< Direct Sound A at 50% volume
-#define SDS_A100		0x0004	//!< Direct Sound A at 100% volume
-#define SDS_B50			 0	//!< Direct Sound B at 50% volume
-#define SDS_B100		0x0008	//!< Direct Sound B at 100% volume
-#define SDS_AR			0x0100	//!< Enable Direct Sound A on right
-#define SDS_AL			0x0200	//!< Enable Direct Sound A on left
-#define SDS_ATMR0			 0	//!< Direct Sound A to use timer 0
-#define SDS_ATMR1		0x0400	//!< Direct Sound A to use timer 1
-#define SDS_ARESET		0x0800	//!< Reset FIFO of Direct Sound A
-#define SDS_BR			0x1000	//!< Enable Direct Sound B on right
-#define SDS_BL			0x2000	//!< Enable Direct Sound B on left
-#define SDS_BTMR0			 0	//!< Direct Sound B to use timer 0
-#define SDS_BTMR1		0x4000	//!< Direct Sound B to use timer 1
-#define SDS_BRESET		0x8000	//!< Reset FIFO of Direct Sound B
+#define SDS_DMG25 0       //!< Tone generators at 25% volume
+#define SDS_DMG50 0x0001  //!< Tone generators at 50% volume
+#define SDS_DMG100 0x0002 //!< Tone generators at 100% volume
+#define SDS_A50 0         //!< Direct Sound A at 50% volume
+#define SDS_A100 0x0004   //!< Direct Sound A at 100% volume
+#define SDS_B50 0         //!< Direct Sound B at 50% volume
+#define SDS_B100 0x0008   //!< Direct Sound B at 100% volume
+#define SDS_AR 0x0100     //!< Enable Direct Sound A on right
+#define SDS_AL 0x0200     //!< Enable Direct Sound A on left
+#define SDS_ATMR0 0       //!< Direct Sound A to use timer 0
+#define SDS_ATMR1 0x0400  //!< Direct Sound A to use timer 1
+#define SDS_ARESET 0x0800 //!< Reset FIFO of Direct Sound A
+#define SDS_BR 0x1000     //!< Enable Direct Sound B on right
+#define SDS_BL 0x2000     //!< Enable Direct Sound B on left
+#define SDS_BTMR0 0       //!< Direct Sound B to use timer 0
+#define SDS_BTMR1 0x4000  //!< Direct Sound B to use timer 1
+#define SDS_BRESET 0x8000 //!< Reset FIFO of Direct Sound B
 
 /*!	\}	/defgroup	*/
 
@@ -1077,24 +1079,33 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 */
 /*!	\{	*/
 
-#define SSTAT_SQR1		0x0001	//!< (R) Channel 1 status
-#define SSTAT_SQR2		0x0002	//!< (R) Channel 2 status
-#define SSTAT_WAVE		0x0004	//!< (R) Channel 3 status
-#define SSTAT_NOISE		0x0008	//!< (R) Channel 4 status
-#define SSTAT_DISABLE		 0	//!< Disable sound
-#define SSTAT_ENABLE	0x0080	//!< Enable sound. NOTE: enable before using any other sound regs
+#define SSTAT_SQR1 0x0001  //!< (R) Channel 1 status
+#define SSTAT_SQR2 0x0002  //!< (R) Channel 2 status
+#define SSTAT_WAVE 0x0004  //!< (R) Channel 3 status
+#define SSTAT_NOISE 0x0008 //!< (R) Channel 4 status
+#define SSTAT_DISABLE 0    //!< Disable sound
+#define SSTAT_ENABLE                                                           \
+    0x0080 //!< Enable sound. NOTE: enable before using any other sound regs
 
 
 // Rates for traditional notes in octave +5
-const u32 __snd_rates[12]=
-{
-    8013, 7566, 7144, 6742, // C , C#, D , D#
-    6362, 6005, 5666, 5346, // E , F , F#, G
-    5048, 4766, 4499, 4246  // G#, A , A#, B
+const u32 __snd_rates[12] = {
+    8013,
+    7566,
+    7144,
+    6742, // C , C#, D , D#
+    6362,
+    6005,
+    5666,
+    5346, // E , F , F#, G
+    5048,
+    4766,
+    4499,
+    4246 // G#, A , A#, B
 };
 
 
-#define SND_RATE(note, oct) ( 2048-(__snd_rates[note]>>((oct))) )
+#define SND_RATE(note, oct) (2048 - (__snd_rates[note] >> ((oct))))
 
 
 void Platform::Speaker::play(Note n, Octave o, Channel c)

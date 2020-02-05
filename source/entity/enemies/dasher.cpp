@@ -5,9 +5,7 @@
 
 
 Dasher::Dasher(const Vec2<Float>& position)
-    : Entity(5),
-      hitbox_{&position_, {16, 32}, {8, 16}},
-      timer_(0),
+    : Entity(5), hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0),
       state_(State::inactive)
 {
     position_ = position;
@@ -33,22 +31,24 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     shadow_.set_position(position_);
     head_.set_position({position_.x, position_.y - 9});
 
-    auto face_left = [this] { sprite_.set_flip({0, 0});
-                              head_.set_flip({0, 0}); };
-
-    auto face_right = [this] { sprite_.set_flip({1, 0});
-                               head_.set_flip({1, 0}); };
-
-    auto face_player = [this,
-                        &player = game.player(),
-                        &face_left,
-                        &face_right] {
-        if (player.get_position().x > position_.x) {
-            face_right();
-        } else {
-            face_left();
-        }
+    auto face_left = [this] {
+        sprite_.set_flip({0, 0});
+        head_.set_flip({0, 0});
     };
+
+    auto face_right = [this] {
+        sprite_.set_flip({1, 0});
+        head_.set_flip({1, 0});
+    };
+
+    auto face_player =
+        [this, &player = game.player(), &face_left, &face_right] {
+            if (player.get_position().x > position_.x) {
+                face_right();
+            } else {
+                face_left();
+            }
+        };
 
     timer_ += dt;
 
@@ -76,7 +76,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(200);
 
             if (manhattan_length(game.player().get_position(), position_) <
-                std::min(screen_size.x, screen_size.y) and random_choice<2>()) {
+                    std::min(screen_size.x, screen_size.y) and
+                random_choice<2>()) {
                 state_ = State::shoot_begin;
                 sprite_.set_texture_index(TextureMap::dasher_weapon1);
             } else {
@@ -108,8 +109,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(50);
             state_ = State::shot2;
 
-            game.effects().spawn<OrbShot>(position_,
-                                          sample<8>(game.player().get_position()));
+            game.effects().spawn<OrbShot>(
+                position_, sample<8>(game.player().get_position()));
         }
         break;
 
@@ -118,8 +119,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(150);
             state_ = State::shot3;
 
-            game.effects().spawn<OrbShot>(position_,
-                                          sample<16>(game.player().get_position()));
+            game.effects().spawn<OrbShot>(
+                position_, sample<16>(game.player().get_position()));
         }
         break;
 
@@ -128,9 +129,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(150);
             state_ = State::pause;
 
-            game.effects().spawn<OrbShot>(position_,
-                                          sample<32>(game.player().get_position()));
-
+            game.effects().spawn<OrbShot>(
+                position_, sample<32>(game.player().get_position()));
         }
         break;
 
@@ -139,7 +139,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(352);
 
             u8 tries{0};
-            s16 dir = ((static_cast<float>(random_choice<359>())) / 360) * INT16_MAX;
+            s16 dir =
+                ((static_cast<float>(random_choice<359>())) / 360) * INT16_MAX;
             do {
                 if (tries++ > 254) {
                     goto IDLE_TRANSITION;
@@ -164,12 +165,10 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         }
         const auto wc = check_wall_collisions(game.tiles(), *this);
         if (wc.any()) {
-            if ((wc.left and speed_.x < 0.f) or
-                (wc.right and speed_.x > 0.f)) {
+            if ((wc.left and speed_.x < 0.f) or (wc.right and speed_.x > 0.f)) {
                 speed_.x = 0.f;
             }
-            if ((wc.up and speed_.y < 0.f) or
-                (wc.down and speed_.y > 0.f)) {
+            if ((wc.up and speed_.y < 0.f) or (wc.down and speed_.y > 0.f)) {
                 speed_.y = 0.f;
             }
             if (speed_.x == 0.f and speed_.y == 0.f) {

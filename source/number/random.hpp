@@ -21,8 +21,7 @@ inline int random_choice(u32 n)
 }
 
 
-template <u32 offset>
-static Vec2<Float> sample(const Vec2<Float>& position)
+template <u32 offset> static Vec2<Float> sample(const Vec2<Float>& position)
 {
     auto result = position;
 

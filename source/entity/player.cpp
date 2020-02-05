@@ -13,10 +13,10 @@ const Vec2<s32> h_origin{16, 16};
 static const Player::Health initial_health{4};
 
 Player::Player()
-    : Entity(initial_health), frame_(0), frame_base_(ResourceLoc::player_still_down),
-      anim_timer_(0), invulnerability_timer_(0), l_speed_(0.f),
-      r_speed_(0.f), u_speed_(0.f), d_speed_(0.f),
-      hitbox_{&position_, {16, 32}, {8, 16}}
+    : Entity(initial_health), frame_(0),
+      frame_base_(ResourceLoc::player_still_down), anim_timer_(0),
+      invulnerability_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
+      d_speed_(0.f), hitbox_{&position_, {16, 32}, {8, 16}}
 {
     sprite_.set_position({104.f, 64.f});
     sprite_.set_size(Sprite::Size::w16_h32);
@@ -112,6 +112,30 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
 
 
 template <Player::ResourceLoc L>
+void Player::altKeyResponse(bool k1,
+                            bool k2,
+                            bool k3,
+                            float& speed,
+                            bool collision)
+{
+    if (k1) {
+        frame_base_ = L;
+        if (not collision) {
+            if (k2 or k3) {
+                speed = 0.83f;
+            } else {
+                speed = 1.24f;
+            }
+        } else {
+            speed = 0.f;
+        }
+    } else {
+        speed = 0.f;
+    }
+}
+
+
+template <Player::ResourceLoc L>
 void Player::key_response(bool k1,
                           bool k2,
                           bool k3,
@@ -124,7 +148,7 @@ void Player::key_response(bool k1,
             frame_base_ = L;
         }
         if (not collision) {
-            if (k3 || k4) {
+            if (k3 or k4) {
                 speed = 1.00f;
             } else {
                 speed = 1.50f;
@@ -231,6 +255,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool down = input.pressed<Key::down>();
     const bool left = input.pressed<Key::left>();
     const bool right = input.pressed<Key::right>();
+    const bool shoot = input.pressed<Key::action_1>();
 
     const auto wc = check_wall_collisions(game.tiles(), *this);
 
@@ -242,39 +267,115 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         }
     }
 
-    if (pfrm.keyboard().pressed<Key::action_1>()) {
-        if (game.effects().get<Laser>().empty()) {
-            game.effects().spawn<Laser>(position_, Laser::Direction::left);
+    soft_update(pfrm, game, dt);
+
+    if (not shoot) {
+        key_response<ResourceLoc::player_walk_up>(
+            up, down, left, right, u_speed_, wc.up);
+        key_response<ResourceLoc::player_walk_down>(
+            down, up, left, right, d_speed_, wc.down);
+        key_response<ResourceLoc::player_walk_left>(
+            left, right, down, up, l_speed_, wc.left);
+        key_response<ResourceLoc::player_walk_right>(
+            right, left, down, up, r_speed_, wc.right);
+    } else {
+        if (frame_base_ == ResourceLoc::player_walk_up or
+            frame_base_ == ResourceLoc::player_still_up) {
+
+            altKeyResponse<ResourceLoc::player_walk_up>(
+                up, left, right, u_speed_, wc.up);
+            altKeyResponse<ResourceLoc::player_walk_up>(
+                down, left, right, d_speed_, wc.down);
+            altKeyResponse<ResourceLoc::player_walk_up>(
+                left, up, down, l_speed_, wc.left);
+            altKeyResponse<ResourceLoc::player_walk_up>(
+                right, up, down, r_speed_, wc.right);
+
+        } else if (frame_base_ == ResourceLoc::player_walk_down or
+                   frame_base_ == ResourceLoc::player_still_down) {
+
+            altKeyResponse<ResourceLoc::player_walk_down>(
+                up, left, right, u_speed_, wc.up);
+            altKeyResponse<ResourceLoc::player_walk_down>(
+                down, left, right, d_speed_, wc.down);
+            altKeyResponse<ResourceLoc::player_walk_down>(
+                left, up, down, l_speed_, wc.left);
+            altKeyResponse<ResourceLoc::player_walk_down>(
+                right, up, down, r_speed_, wc.right);
+
+        } else if (frame_base_ == ResourceLoc::player_walk_right or
+                   frame_base_ == ResourceLoc::player_still_right) {
+
+            altKeyResponse<ResourceLoc::player_walk_right>(
+                up, left, right, u_speed_, wc.up);
+            altKeyResponse<ResourceLoc::player_walk_right>(
+                down, left, right, d_speed_, wc.down);
+            altKeyResponse<ResourceLoc::player_walk_right>(
+                left, up, down, l_speed_, wc.left);
+            altKeyResponse<ResourceLoc::player_walk_right>(
+                right, up, down, r_speed_, wc.right);
+
+        } else if (frame_base_ == ResourceLoc::player_walk_left or
+                   frame_base_ == ResourceLoc::player_still_left) {
+
+            altKeyResponse<ResourceLoc::player_walk_left>(
+                up, left, right, u_speed_, wc.up);
+            altKeyResponse<ResourceLoc::player_walk_left>(
+                down, left, right, d_speed_, wc.down);
+            altKeyResponse<ResourceLoc::player_walk_left>(
+                left, up, down, l_speed_, wc.left);
+            altKeyResponse<ResourceLoc::player_walk_left>(
+                right, up, down, r_speed_, wc.right);
         }
     }
 
-    soft_update(pfrm, game, dt);
-
-    key_response<ResourceLoc::player_walk_up>(
-        up, down, left, right, u_speed_, wc.up);
-    key_response<ResourceLoc::player_walk_down>(
-        down, up, left, right, d_speed_, wc.down);
-    key_response<ResourceLoc::player_walk_left>(
-        left, right, down, up, l_speed_, wc.left);
-    key_response<ResourceLoc::player_walk_right>(
-        right, left, down, up, r_speed_, wc.right);
+    if (shoot) {
+        if (game.effects().get<Laser>().empty()) {
+            game.effects().spawn<Laser>(position_, [this]{
+                                                       switch (frame_base_) {
+                                                       case ResourceLoc::player_walk_left:
+                                                       case ResourceLoc::player_still_left:
+                                                           return Laser::Direction::left;
+                                                       case ResourceLoc::player_walk_right:
+                                                       case ResourceLoc::player_still_right:
+                                                           return Laser::Direction::right;
+                                                       case ResourceLoc::player_walk_up:
+                                                       case ResourceLoc::player_still_up:
+                                                           return Laser::Direction::up;
+                                                       case ResourceLoc::player_walk_down:
+                                                       case ResourceLoc::player_still_down:
+                                                           return Laser::Direction::down;
+                                                       default:
+                                                           return Laser::Direction::down;
+                                                       }
+                                                   }());
+        }
+    }
 
     if (input.up_transition<Key::up>()) {
         on_key_released<ResourceLoc::player_still_up, 0>(
-            down, left, right, false);
+            down, left, right, shoot);
     }
     if (input.up_transition<Key::down>()) {
         on_key_released<ResourceLoc::player_still_down, 0>(
-            up, left, right, false);
+            up, left, right, shoot);
     }
     if (input.up_transition<Key::left>()) {
         on_key_released<ResourceLoc::player_still_left, 0>(
-            up, down, right, false);
+            up, down, right, shoot);
     }
     if (input.up_transition<Key::right>()) {
         on_key_released<ResourceLoc::player_still_right, 0>(
-            up, down, left, false);
+            up, down, left, shoot);
     }
+
+    const auto frame_persist = [&] {
+        if (shoot) {
+            return 130000;
+        } else {
+            return 100000;
+        }
+    }();
 
     switch (frame_base_) {
     case ResourceLoc::player_still_up:
@@ -285,28 +386,28 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case ResourceLoc::player_walk_up:
-        update_animation<1>(dt, 9, 100000);
+        update_animation<1>(dt, 9, frame_persist);
         sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
         sprite_.set_size(Sprite::Size::w16_h32);
         sprite_.set_origin(v_origin);
         break;
 
     case ResourceLoc::player_walk_down:
-        update_animation<1>(dt, 9, 100000);
+        update_animation<1>(dt, 9, frame_persist);
         sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
         sprite_.set_size(Sprite::Size::w16_h32);
         sprite_.set_origin(v_origin);
         break;
 
     case ResourceLoc::player_walk_left:
-        update_animation<2>(dt, 5, 100000);
+        update_animation<2>(dt, 5, frame_persist);
         sprite_.set_texture_index(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::player_walk_right:
-        update_animation<2>(dt, 5, 100000);
+        update_animation<2>(dt, 5, frame_persist);
         sprite_.set_texture_index(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin(h_origin);

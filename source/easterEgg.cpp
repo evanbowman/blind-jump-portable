@@ -4,32 +4,32 @@
 
 using NoteInfo = std::tuple<Note, int, Octave>;
 
-static const NoteInfo B0 {Note::B, 2, -1};
-static const NoteInfo AS1 {Note::AS, 2, 0};
-static const NoteInfo B1 {Note::B, 2, 0};
-static const NoteInfo B1Fast {Note::B, 1, 0};
+static const NoteInfo B0{Note::B, 2, -1};
+static const NoteInfo AS1{Note::AS, 2, 0};
+static const NoteInfo B1{Note::B, 2, 0};
+static const NoteInfo B1Fast{Note::B, 1, 0};
 // static const NoteInfo C1 {Note::C, 2, 0};
-static const NoteInfo C2 {Note::C, 2, 1};
+static const NoteInfo C2{Note::C, 2, 1};
 // static const NoteInfo C2Fast {Note::C, 1, 1};
-static const NoteInfo A1 {Note::A, 2, 0};
-static const NoteInfo D1 {Note::D, 2, 0};
-static const NoteInfo D2 {Note::D, 2, 1};
-static const NoteInfo D2Fast {Note::D, 1, 1};
-static const NoteInfo E1 {Note::E, 2, 0};
-static const NoteInfo E2 {Note::E, 2, 1};
-static const NoteInfo E2Fast {Note::E, 1, 1};
-static const NoteInfo F2 {Note::F, 2, 1};
-static const NoteInfo F2Fast {Note::F, 1, 1};
+static const NoteInfo A1{Note::A, 2, 0};
+static const NoteInfo D1{Note::D, 2, 0};
+static const NoteInfo D2{Note::D, 2, 1};
+static const NoteInfo D2Fast{Note::D, 1, 1};
+static const NoteInfo E1{Note::E, 2, 0};
+static const NoteInfo E2{Note::E, 2, 1};
+static const NoteInfo E2Fast{Note::E, 1, 1};
+static const NoteInfo F2{Note::F, 2, 1};
+static const NoteInfo F2Fast{Note::F, 1, 1};
 // static const NoteInfo G2 {Note::G, 2, 1};
-static const NoteInfo F1 {Note::F, 2, 0};
-static const NoteInfo GS2 {Note::GS, 2, 1};
-static const NoteInfo G2Fast {Note::G, 1, 1};
-static const NoteInfo A2 {Note::A, 2, 1};
+static const NoteInfo F1{Note::F, 2, 0};
+static const NoteInfo GS2{Note::GS, 2, 1};
+static const NoteInfo G2Fast{Note::G, 1, 1};
+static const NoteInfo A2{Note::A, 2, 1};
 
 
 // My plug in baby Crucifies my enemies...
 static const NoteInfo* guitar_riff[] = {
-     // clang-format off
+    // clang-format off
      &AS1, &B1, &C2, &A1, &B1, &C2, &D2, &B1,
 
      &C2, &D2, &E2, &F2Fast, &G2Fast, &F2, &E2, &D2, &C2,
@@ -57,13 +57,12 @@ static const NoteInfo* guitar_riff[] = {
      &AS1, &B1, &C2, &A1, &B1, &C2, &D2, &B1,
 
      &C2, &D2, &E2, &F2Fast, &G2Fast, &F2, &E2, &D2, &C2,
-     // clang-format on
+    // clang-format on
 };
 
 
-static const NoteInfo* base_line[] =
-{
-     // clang-format off
+static const NoteInfo* base_line[] = {
+    // clang-format off
      0, 0, 0, 0, 0, 0, 0, 0,
 
      0, 0, 0, 0, 0, 0, 0, 0,
@@ -91,7 +90,7 @@ static const NoteInfo* base_line[] =
      &D1, 0, &D2Fast, &D2Fast, &D1, &D1, &D1, &D2, &D1,
 
      &D1, 0, &D2Fast, &D2Fast, &D1, &D1, &D1, &D2, &D1,
-     // clang-format on
+    // clang-format on
 };
 
 
@@ -116,7 +115,8 @@ void riff(Platform& pf)
             if (not note) {
                 riff_timer = time_step * 5 * 2;
             } else {
-                pf.speaker().play(std::get<0>(*note), 4 + std::get<2>(*note), 0);
+                pf.speaker().play(
+                    std::get<0>(*note), 4 + std::get<2>(*note), 0);
                 riff_timer = time_step * 5 * std::get<1>(*note);
             }
         }
@@ -128,7 +128,8 @@ void riff(Platform& pf)
             if (not note) {
                 baseline_timer = time_step * 5 * 2;
             } else {
-                pf.speaker().play(std::get<0>(*note), 3 + std::get<2>(*note), 1);
+                pf.speaker().play(
+                    std::get<0>(*note), 3 + std::get<2>(*note), 1);
                 baseline_timer = time_step * 5 * std::get<1>(*note);
             }
         }

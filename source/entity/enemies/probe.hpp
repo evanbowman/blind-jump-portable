@@ -1,7 +1,7 @@
 #pragma once
 
-#include "entity/entity.hpp"
 #include "collision.hpp"
+#include "entity/entity.hpp"
 #include "platform/platform.hpp"
 
 

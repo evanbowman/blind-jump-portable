@@ -1,8 +1,8 @@
 #pragma once
 
-#include "graphics/animation.hpp"
 #include "collision.hpp"
 #include "entity.hpp"
+#include "graphics/animation.hpp"
 #include "number/numeric.hpp"
 
 
@@ -63,6 +63,10 @@ private:
                       bool k4,
                       float& speed,
                       bool collision);
+
+    template <ResourceLoc L>
+    void
+    altKeyResponse(bool k1, bool k2, bool k3, float& speed, bool collision);
 
     template <Player::ResourceLoc S, uint8_t maxIndx>
     void on_key_released(bool k2, bool k3, bool k4, bool x);

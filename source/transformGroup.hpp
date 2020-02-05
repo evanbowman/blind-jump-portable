@@ -28,8 +28,7 @@ public:
     {
     }
 
-    template <typename T>
-    TransformGroup(T& init) : members_(Members{init}...)
+    template <typename T> TransformGroup(T& init) : members_(Members{init}...)
     {
     }
 

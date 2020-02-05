@@ -7,14 +7,15 @@ public:
     UpdateTask(Synchronized<Game>* game, Platform* pf);
 
     void run() override;
+
 private:
     Synchronized<Game>* game_;
     Platform* pf_;
 };
 
 
-UpdateTask::UpdateTask(Synchronized<Game>* game, Platform* pf) :
-    game_(game), pf_(pf)
+UpdateTask::UpdateTask(Synchronized<Game>* game, Platform* pf)
+    : game_(game), pf_(pf)
 {
 }
 
@@ -43,9 +44,7 @@ void start(Platform& pf)
         pf.keyboard().poll();
 
         pf.screen().clear();
-        game.acquire([&](Game& gm) {
-            gm.render(pf);
-        });
+        game.acquire([&](Game& gm) { gm.render(pf); });
         pf.screen().display();
     }
 }

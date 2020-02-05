@@ -1,10 +1,10 @@
 #pragma once
 
-#include "number/numeric.hpp"
-#include "save.hpp"
 #include "graphics/sprite.hpp"
 #include "graphics/view.hpp"
 #include "memory/buffer.hpp"
+#include "number/numeric.hpp"
+#include "save.hpp"
 #include "sound.hpp"
 #include "tileMap.hpp"
 #include <array>
@@ -59,7 +59,6 @@ enum class Key {
 
 class Platform {
 public:
-
     class Screen;
     class Keyboard;
     class Logger;
@@ -228,7 +227,9 @@ public:
     public:
         virtual void run() = 0;
 
-        virtual ~Task() {}
+        virtual ~Task()
+        {
+        }
 
         bool complete() const
         {
@@ -293,28 +294,25 @@ private:
 };
 
 
-template <typename T>
-class Synchronized : SynchronizedBase {
+template <typename T> class Synchronized : SynchronizedBase {
 public:
-    template <typename ...Args>
-    Synchronized(Platform& pf, Args&& ...args) :
-        data_(std::forward<Args>(args)...)
+    template <typename... Args>
+    Synchronized(Platform& pf, Args&&... args)
+        : data_(std::forward<Args>(args)...)
     {
         init(pf);
     }
 
-    template <typename F>
-    void acquire(F&& handler)
+    template <typename F> void acquire(F&& handler)
     {
         lock();
         handler(data_);
         unlock();
     }
-private:
 
+private:
     T data_;
 };
-
 
 
 #ifdef __BLINDJUMP_ENABLE_LOGS
