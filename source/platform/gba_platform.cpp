@@ -243,32 +243,6 @@ static u32 last_oam_write_index = 0;
 static u32 oam_write_index = 0;
 
 
-using PaletteBank = int;
-constexpr PaletteBank available_palettes = 3;
-
-static PaletteBank palette_counter = available_palettes;
-
-
-// Perform a color mix between the spritesheet palette bank (bank zero), and
-// return the palette bank where the resulting mixture is stored. We can only
-// display 12 mixed colors at a time, because the first four banks are in use.
-static PaletteBank color_mix(const Color& c, u8 amount)
-{
-    if (UNLIKELY(palette_counter == 15)) {
-        return 0; // Exhausted all the palettes that we have for effects.
-    }
-
-    for (int i = 0; i < 16; ++i) {
-        auto from = Color::from_bgr_hex_555(MEM_PALETTE[i]);
-        const u32 index = 16 * (palette_counter + 1) + i;
-        MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amount),
-                                   fast_interpolate(c.g_, from.g_, amount),
-                                   fast_interpolate(c.b_, from.b_, amount))
-                                 .bgr_hex_555();
-    }
-    return ++palette_counter;
-}
-
 
 const Color& real_color(ColorConstant k)
 {
@@ -298,6 +272,69 @@ const Color& real_color(ColorConstant k)
 }
 
 
+
+using PaletteBank = int;
+constexpr PaletteBank available_palettes = 3;
+constexpr PaletteBank palette_count = 16;
+
+static PaletteBank palette_counter = available_palettes;
+
+
+// For the purpose of saving cpu cycles. The color_mix function scans a list of
+// previous results, and if one matches the current blend parameters, the caller
+// will set the locked_ field to true, and return the index of the existing
+// palette bank. Each call to display() unlocks all of the palette infos.
+static struct PaletteInfo {
+    ColorConstant color_ = ColorConstant::null;
+    u8 blend_amount_ = 0;
+    bool locked_ = false;
+} palette_info[palette_count] = {};
+
+
+
+// Perform a color mix between the spritesheet palette bank (bank zero), and
+// return the palette bank where the resulting mixture is stored. We can only
+// display 12 mixed colors at a time, because the first four banks are in use.
+static PaletteBank color_mix(ColorConstant k, u8 amount)
+{
+    for (PaletteBank palette = available_palettes; palette < 16; ++palette) {
+        auto& info = palette_info[palette];
+        if (info.color_ == k and info.blend_amount_ == amount) {
+            info.locked_ = true;
+            return palette;
+        }
+    }
+
+    // Skip over any palettes that are in use
+    while (palette_info[palette_counter].locked_) {
+        if (UNLIKELY(palette_counter == palette_count)) {
+            return 0;
+        }
+        ++palette_counter;
+    }
+
+    if (UNLIKELY(palette_counter == palette_count)) {
+        return 0; // Exhausted all the palettes that we have for effects.
+    }
+
+    const auto& c = real_color(k);
+
+    for (int i = 0; i < 16; ++i) {
+        auto from = Color::from_bgr_hex_555(MEM_PALETTE[i]);
+        const u32 index = 16 * palette_counter + i;
+        MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amount),
+                                   fast_interpolate(c.g_, from.g_, amount),
+                                   fast_interpolate(c.b_, from.b_, amount))
+                                 .bgr_hex_555();
+    }
+
+    palette_info[palette_counter] = {k, amount, true};
+
+    return palette_counter++;
+}
+
+
+
 void Platform::Screen::draw(const Sprite& spr)
 {
     if (UNLIKELY(spr.get_alpha() == Sprite::Alpha::transparent)) {
@@ -308,7 +345,7 @@ void Platform::Screen::draw(const Sprite& spr)
         const auto& mix = spr.get_mix();
         if (UNLIKELY(mix.color_ not_eq ColorConstant::null)) {
             if (const auto pal_bank =
-                    color_mix(real_color(mix.color_), mix.amount_)) {
+                    color_mix(mix.color_, mix.amount_)) {
                 return ATTR2_PALBANK(pal_bank);
             } else {
                 return 0;
@@ -413,6 +450,10 @@ void Platform::Screen::display()
     last_oam_write_index = oam_write_index;
     oam_write_index = 0;
     palette_counter = available_palettes;
+
+    for (auto& info : palette_info) {
+        info.locked_ = false;
+    }
 
     auto view_offset = view_.get_center().cast<s32>();
     *bg0_x_scroll = view_offset.x;

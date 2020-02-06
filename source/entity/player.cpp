@@ -16,7 +16,7 @@ Player::Player()
     : Entity(initial_health), frame_(0),
       frame_base_(ResourceLoc::player_still_down), anim_timer_(0),
       invulnerability_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
-      d_speed_(0.f), hitbox_{&position_, {16, 32}, {8, 16}}, reload_(0)
+      d_speed_(0.f), hitbox_{&position_, {12, 26}, {8, 16}}, reload_(0)
 {
     sprite_.set_position({104.f, 64.f});
     sprite_.set_size(Sprite::Size::w16_h32);

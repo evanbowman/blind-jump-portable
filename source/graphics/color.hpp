@@ -14,6 +14,7 @@ enum class ColorConstant {
     coquelicot,      // #F03808
     rich_black,      // #000010
     french_plum,     // #345680
+    count
 };
 
 
