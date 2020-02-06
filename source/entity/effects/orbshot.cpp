@@ -4,7 +4,7 @@
 
 OrbShot::OrbShot(const Vec2<Float>& position, const Vec2<Float>& target)
     : Projectile(position, target, 0.00015),
-      timer_(0), hitbox_{&position_, {16, 16}, {8, 8}}
+      timer_(0), hitbox_{&position_, {12, 12}, {8, 8}}
 {
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 8});
