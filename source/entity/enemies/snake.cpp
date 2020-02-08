@@ -283,6 +283,7 @@ void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
 
     if (not alive()) {
 
+        pf.sleep(5);
         game.camera().shake();
 
         SnakeNode* current = parent();
