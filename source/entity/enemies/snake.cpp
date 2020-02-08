@@ -18,7 +18,7 @@ static constexpr const Float y_move_rate = x_move_rate * (12.f / 16.f);
 
 
 SnakeNode::SnakeNode(SnakeNode* parent)
-    : parent_(parent), hitbox_{&position_, {16, 16}, {8, 8}}
+    : parent_(parent), hitbox_{&position_, {16, 16}, {8, 8}}, destruct_timer_(0)
 {
 }
 
@@ -35,9 +35,27 @@ const Vec2<TIdx>& SnakeNode::tile_coord() const
 }
 
 
-void SnakeNode::update()
+void SnakeNode::update(Game& game, Microseconds dt)
 {
     tile_coord_ = to_quarter_tile_coord(position_.cast<s32>());
+
+    if (destruct_timer_) {
+        destruct_timer_ -= dt;
+
+        if (destruct_timer_ <= 0) {
+            if (parent()) {
+                parent()->destroy();
+            }
+            game.camera().shake();
+            kill();
+        }
+    }
+}
+
+
+void SnakeNode::destroy()
+{
+    destruct_timer_ = milliseconds(400);
 }
 
 
@@ -69,7 +87,7 @@ void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto last_coord = tile_coord();
 
-    SnakeNode::update();
+    SnakeNode::update(game, dt);
 
     if (last_coord not_eq tile_coord()) {
 
@@ -175,7 +193,7 @@ SnakeBody::SnakeBody(const Vec2<Float>& pos,
     shadow_.set_origin({8, -11});
     shadow_.set_alpha(Sprite::Alpha::translucent);
 
-    SnakeNode::update();
+    SnakeNode::update(game, 0);
     next_coord_ = tile_coord();
 
     if (remaining) {
@@ -190,7 +208,7 @@ SnakeBody::SnakeBody(const Vec2<Float>& pos,
 
 void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 {
-    SnakeNode::update();
+    SnakeNode::update(game, dt);
 
     if (tile_coord() == next_coord_) {
         next_coord_ = parent()->tile_coord();
@@ -234,5 +252,45 @@ void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game)
     : SnakeBody(pos, parent, game, 0)
 {
-    // sprite_.set_texture_index(TextureMap::snake_tail);
+    add_health(10);
+}
+
+
+void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
+{
+    SnakeBody::update(pfrm, game, dt);
+
+    const auto& mix = sprite_.get_mix();
+
+    if (mix.color_ not_eq ColorConstant::null) {
+
+        fade_color_anim_.advance(sprite_, dt);
+
+        SnakeNode* current = parent();
+        while (current) {
+            current->sprite_.set_mix(mix);
+            current = current->parent();
+        }
+    }
+}
+
+
+void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
+{
+    sprite_.set_mix({ColorConstant::coquelicot, 255});
+
+    debit_health();
+
+    if (not alive()) {
+
+        game.camera().shake();
+
+        SnakeNode* current = parent();
+        while (current) {
+            current->sprite_.set_mix({});
+            current = current->parent();
+        }
+
+        parent()->destroy();
+    }
 }

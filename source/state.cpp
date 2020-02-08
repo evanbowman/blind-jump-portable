@@ -143,6 +143,11 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
                      game,
                      game.effects().get<Laser>(),
                      game.enemies().get<SnakeHead>());
+    check_collisions(pfrm,
+                     game,
+                     game.effects().get<Laser>(),
+                     game.enemies().get<SnakeTail>());
+
 
     return this;
 }
