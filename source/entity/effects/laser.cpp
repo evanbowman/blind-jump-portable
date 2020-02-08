@@ -81,3 +81,9 @@ void Laser::on_collision(Platform&, Game&, SnakeBody&)
 {
     this->kill();
 }
+
+
+void Laser::on_collision(Platform&, Game&, Laser&)
+{
+    this->kill();
+}

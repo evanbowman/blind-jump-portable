@@ -19,7 +19,7 @@ public:
 
     SnakeNode* parent() const;
 
-    void update();
+    void update(Game& game, Microseconds dt);
 
     const Vec2<TIdx>& tile_coord() const;
 
@@ -28,10 +28,17 @@ public:
         return hitbox_;
     }
 
+    friend class SnakeTail;
+
+protected:
+
+    void destroy();
+
 private:
     SnakeNode* parent_;
     Vec2<TIdx> tile_coord_;
     HitBox hitbox_;
+    Microseconds destruct_timer_;
 };
 
 
@@ -89,4 +96,11 @@ private:
 class SnakeTail : public SnakeBody {
 public:
     SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game);
+
+    void update(Platform& pfrm, Game& game, Microseconds dt);
+
+    void on_collision(Platform& pf, Game& game, Laser&);
+
+private:
+    FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

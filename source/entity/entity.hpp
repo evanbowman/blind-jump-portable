@@ -59,7 +59,7 @@ public:
 
 
 protected:
-    void debit_health(Health amount)
+    void debit_health(Health amount = 1)
     {
         health_ = std::max(Health(0), health_ - amount);
     }
