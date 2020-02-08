@@ -75,10 +75,15 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-void Turret::on_collision(Platform&, Game&, Laser&)
+void Turret::on_collision(Platform& pf, Game& game, Laser&)
 {
     if (state_ not_eq State::closed) {
         sprite_.set_mix({ColorConstant::coquelicot, 255});
         debit_health(1);
+
+        if (not alive()) {
+            pf.sleep(5);
+            game.camera().shake();
+        }
     }
 }
