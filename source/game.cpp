@@ -461,18 +461,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
-    auto select_coord = [&]() -> MapCoord* {
-        if (not free_spots.empty()) {
-            auto choice = random_choice(free_spots.size());
-            auto result = &free_spots[choice];
-            free_spots.erase(result);
-            return result;
-        } else {
-            return nullptr;
-        }
-    };
-
-    auto player_coord = select_coord();
+    auto player_coord = select_coord(free_spots);
     if (player_coord) {
         player_.move(world_coord(*player_coord));
     } else {
