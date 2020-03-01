@@ -437,8 +437,6 @@ COLD static void spawn_enemies(Platform& pfrm,
                                Game& game,
                                MapCoordBuf& free_spots)
 {
-    const auto available_slots = free_spots.size();
-
     spawn_entity<Dasher>(pfrm, free_spots, game.enemies());
     spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
 
