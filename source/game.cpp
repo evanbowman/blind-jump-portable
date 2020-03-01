@@ -391,9 +391,61 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 }
 
 
+COLD static std::optional<MapCoord> select_coord(MapCoordBuf& free_spots)
+{
+    if (not free_spots.empty()) {
+        auto choice = random_choice(free_spots.size());
+        auto it = &free_spots[choice];
+        const auto result = *it;
+        free_spots.erase(it);
+        return result;
+    } else {
+        return {};
+    }
+}
+
+
 template <typename T> struct Type {
     using value = T;
 };
+
+
+static Vec2<Float> world_coord(const MapCoord& c)
+{
+    return Vec2<Float>{static_cast<Float>(c.x * 32) + 16,
+                       static_cast<Float>(c.y * 24)};
+}
+
+
+template <typename Type, typename Group, typename ...Params>
+void spawn_entity(Platform& pf,
+                  MapCoordBuf& free_spots,
+                  Group& group,
+                  Params&&... params)
+{
+    if (const auto c = select_coord(free_spots)) {
+        if (not group.template spawn<Type>(world_coord(*c), params...)) {
+            warning(pf, "spawn failed: entity buffer full");
+        }
+    } else {
+        warning(pf, "spawn failed: out of coords");
+    }
+}
+
+
+COLD static void spawn_enemies(Platform& pfrm,
+                               Game& game,
+                               MapCoordBuf& free_spots)
+{
+    const auto available_slots = free_spots.size();
+
+    spawn_entity<Dasher>(pfrm, free_spots, game.enemies());
+    spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
+
+    for (int i = 0; i < 2; ++i) {
+        spawn_entity<Turret>(pfrm, free_spots, game.enemies());
+    }
+}
 
 
 COLD bool Game::respawn_entities(Platform& pfrm)
@@ -422,14 +474,9 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         }
     };
 
-    auto pos = [&](const MapCoord* c) {
-        return Vec2<Float>{static_cast<Float>(c->x * 32) + 16,
-                           static_cast<Float>(c->y * 24)};
-    };
-
     auto player_coord = select_coord();
     if (player_coord) {
-        player_.move(pos(player_coord));
+        player_.move(world_coord(*player_coord));
     } else {
         return false;
     }
@@ -442,32 +489,16 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 farthest = &elem;
             }
         }
-        const auto target = pos(farthest);
+        const auto target = world_coord(*farthest);
         transporter_.set_position({target.x, target.y + 16});
         free_spots.erase(farthest);
     } else {
         return false;
     }
 
-    auto spawn_entity = [&](auto& group, auto type, auto&&... params) {
-        if (const auto c = select_coord()) {
-            using T = typename decltype(type)::value;
-            if (not group.template spawn<T>(pos(c), params...)) {
-                warning(pfrm, "spawn failed: entity buffer full");
-            }
-        } else {
-            warning(pfrm, "spawn failed: out of coords");
-        }
-    };
+    spawn_entity<ItemChest>(pfrm, free_spots, details_);
 
-    // Now at this point, we'll want to place things on the map based on how
-    // many open slots there are, and what the current level is. As levels
-    // increase, the density of stuff on the map increases, along with the types
-    // of enemies spawned.
-    spawn_entity(details_, Type<ItemChest>{});
-    spawn_entity(enemies_, Type<Dasher>{});
-    spawn_entity(enemies_, Type<SnakeHead>{}, *this);
-
+    spawn_enemies(pfrm, *this, free_spots);
 
     // Potentially hide some items in far crannies of the map. If
     // there's no sand nearby, and no items eiher, potentially place
@@ -498,7 +529,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
             if (random_choice<2>()) {
                 MapCoord c{x, y};
-                if (not details_.spawn<Item>(pos(&c), pfrm, [] {
+                if (not details_.spawn<Item>(world_coord(c), pfrm, [] {
                         if (random_choice<4>()) {
                             return Item::Type::coin;
                         } else {
@@ -510,10 +541,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
         }
     });
-
-    for (int i = 0; i < 2; ++i) {
-        spawn_entity(enemies_, Type<Turret>());
-    }
 
     return true;
 }
