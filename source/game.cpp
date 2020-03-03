@@ -417,7 +417,7 @@ static Vec2<Float> world_coord(const MapCoord& c)
 }
 
 
-template <typename Type, typename Group, typename ...Params>
+template <typename Type, typename Group, typename... Params>
 void spawn_entity(Platform& pf,
                   MapCoordBuf& free_spots,
                   Group& group,
@@ -433,9 +433,8 @@ void spawn_entity(Platform& pf,
 }
 
 
-COLD static void spawn_enemies(Platform& pfrm,
-                               Game& game,
-                               MapCoordBuf& free_spots)
+COLD static void
+spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 {
     spawn_entity<Dasher>(pfrm, free_spots, game.enemies());
     spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);

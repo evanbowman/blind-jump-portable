@@ -10,9 +10,7 @@ class SnakeBody;
 
 class Laser : public Entity {
 public:
-    enum class Direction { up, down, left, right };
-
-    Laser(const Vec2<Float>& position, Direction dir);
+    Laser(const Vec2<Float>& position, Cardinal dir);
 
     void update(Platform& pf, Game& game, Microseconds dt);
 
@@ -28,7 +26,7 @@ public:
     }
 
 private:
-    Direction dir_;
+    Cardinal dir_;
     Microseconds timer_;
     HitBox hitbox_;
 };

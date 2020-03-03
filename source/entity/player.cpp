@@ -16,7 +16,7 @@ Player::Player()
     : Entity(initial_health), frame_(0),
       frame_base_(ResourceLoc::player_still_down), anim_timer_(0),
       invulnerability_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
-      d_speed_(0.f), hitbox_{&position_, {12, 26}, {8, 16}}, reload_(0)
+      d_speed_(0.f), hitbox_{&position_, {12, 26}, {8, 16}}
 {
     sprite_.set_position({104.f, 64.f});
     sprite_.set_size(Sprite::Size::w16_h32);
@@ -329,34 +329,28 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         }
     }
 
+    blaster_.set_position(position_);
+    blaster_.update(dt);
+
     if (shoot) {
-        if (reload_ > 0) {
-            reload_ -= dt;
-        } else if (length(game.effects().get<Laser>()) < 2) {
-            reload_ = milliseconds(250);
-            game.effects().spawn<Laser>(position_, [this] {
-                switch (frame_base_) {
-                case ResourceLoc::player_walk_left:
-                case ResourceLoc::player_still_left:
-                    return Laser::Direction::left;
-                case ResourceLoc::player_walk_right:
-                case ResourceLoc::player_still_right:
-                    return Laser::Direction::right;
-                case ResourceLoc::player_walk_up:
-                case ResourceLoc::player_still_up:
-                    return Laser::Direction::up;
-                case ResourceLoc::player_walk_down:
-                case ResourceLoc::player_still_down:
-                    return Laser::Direction::down;
-                default:
-                    return Laser::Direction::down;
-                }
-            }());
-        }
-    } else {
-        if (reload_ > 0) {
-            reload_ -= dt;
-        }
+        blaster_.shoot(pfrm, game, [this] {
+            switch (frame_base_) {
+            case ResourceLoc::player_walk_left:
+            case ResourceLoc::player_still_left:
+                return Cardinal::west;
+            case ResourceLoc::player_walk_right:
+            case ResourceLoc::player_still_right:
+                return Cardinal::east;
+            case ResourceLoc::player_walk_up:
+            case ResourceLoc::player_still_up:
+                return Cardinal::north;
+            case ResourceLoc::player_walk_down:
+            case ResourceLoc::player_still_down:
+                return Cardinal::south;
+            default:
+                return Cardinal::south;
+            }
+        }());
     }
 
     if (input.up_transition<Key::up>()) {
@@ -444,4 +438,30 @@ void Player::move(const Vec2<Float>& pos)
     sprite_.set_texture_index(frame_base_);
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin(v_origin);
+}
+
+
+void Blaster::update(Microseconds dt)
+{
+    if (reload_) {
+        reload_ -= dt;
+    }
+}
+
+
+void Blaster::shoot(Platform& pf, Game& game, Cardinal dir)
+{
+    if (reload_ <= 0) {
+        if (length(game.effects().get<Laser>()) < 2) {
+            reload_ = milliseconds(250);
+
+            game.effects().spawn<Laser>(position_, dir);
+        }
+    }
+}
+
+
+void Blaster::set_position(const Vec2<Float>& pos)
+{
+    position_ = pos;
 }

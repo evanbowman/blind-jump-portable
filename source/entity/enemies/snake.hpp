@@ -31,7 +31,6 @@ public:
     friend class SnakeTail;
 
 protected:
-
     void destroy();
 
 private:
