@@ -213,3 +213,6 @@ inline UnitVec direction(const Vec2<Float>& origin, const Vec2<Float>& target)
 
     return vec / magnitude;
 }
+
+
+enum class Cardinal { north, south, east, west };

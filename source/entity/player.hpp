@@ -17,6 +17,22 @@ class OrbShot;
 class SnakeHead;
 class SnakeBody;
 
+
+class Blaster {
+public:
+    void update(Microseconds dt);
+
+    void shoot(Platform& pf, Game& game, Cardinal dir);
+
+    void set_position(const Vec2<Float>& pos);
+
+private:
+    Microseconds reload_ = 0;
+    Sprite sprite_;
+    Vec2<Float> position_;
+};
+
+
 class Player : public Entity {
 public:
     Player();
@@ -87,5 +103,5 @@ private:
     Float d_speed_;
     Sprite shadow_;
     HitBox hitbox_;
-    Microseconds reload_;
+    Blaster blaster_;
 };

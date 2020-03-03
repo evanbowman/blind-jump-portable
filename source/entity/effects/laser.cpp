@@ -4,7 +4,7 @@
 static constexpr const Float move_rate = 0.0002f;
 
 
-Laser::Laser(const Vec2<Float>& position, Direction dir)
+Laser::Laser(const Vec2<Float>& position, Cardinal dir)
     : dir_(dir), timer_(0), hitbox_{&position_, {16, 16}, {8, 8}}
 {
     set_position(position);
@@ -15,8 +15,8 @@ Laser::Laser(const Vec2<Float>& position, Direction dir)
 
     sprite_.set_texture_index([this] {
         switch (dir_) {
-        case Direction::up:
-        case Direction::down:
+        case Cardinal::north:
+        case Cardinal::south:
             return TextureMap::v_laser;
         default:
             return TextureMap::h_laser;
@@ -38,20 +38,20 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
     }
 
     switch (dir_) {
-    case Direction::up:
+    case Cardinal::north:
         position_.y -= dt * move_rate;
         break;
 
-    case Direction::down:
+    case Cardinal::south:
         position_.y += dt * move_rate;
         break;
 
-    case Direction::left:
-        position_.x -= dt * move_rate;
+    case Cardinal::east:
+        position_.x += dt * move_rate;
         break;
 
-    case Direction::right:
-        position_.x += dt * move_rate;
+    case Cardinal::west:
+        position_.x -= dt * move_rate;
         break;
     }
 

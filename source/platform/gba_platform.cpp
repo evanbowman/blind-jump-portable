@@ -243,7 +243,6 @@ static u32 last_oam_write_index = 0;
 static u32 oam_write_index = 0;
 
 
-
 const Color& real_color(ColorConstant k)
 {
     switch (k) {
@@ -272,7 +271,6 @@ const Color& real_color(ColorConstant k)
 }
 
 
-
 using PaletteBank = int;
 constexpr PaletteBank available_palettes = 3;
 constexpr PaletteBank palette_count = 16;
@@ -289,7 +287,6 @@ static struct PaletteInfo {
     u8 blend_amount_ = 0;
     bool locked_ = false;
 } palette_info[palette_count] = {};
-
 
 
 // Perform a color mix between the spritesheet palette bank (bank zero), and
@@ -334,7 +331,6 @@ static PaletteBank color_mix(ColorConstant k, u8 amount)
 }
 
 
-
 void Platform::Screen::draw(const Sprite& spr)
 {
     if (UNLIKELY(spr.get_alpha() == Sprite::Alpha::transparent)) {
@@ -344,8 +340,7 @@ void Platform::Screen::draw(const Sprite& spr)
     const auto pb = [&]() -> PaletteBank {
         const auto& mix = spr.get_mix();
         if (UNLIKELY(mix.color_ not_eq ColorConstant::null)) {
-            if (const auto pal_bank =
-                    color_mix(mix.color_, mix.amount_)) {
+            if (const auto pal_bank = color_mix(mix.color_, mix.amount_)) {
                 return ATTR2_PALBANK(pal_bank);
             } else {
                 return 0;
