@@ -11,4 +11,8 @@ This repository contains a substantial re-write of the original BlindJump code. 
 
 ## Building
 
-The project should be pretty easy to compile, but if you have trouble, please try using the dockerfile before emailing me with OS environment questions.
+The project should be pretty easy to compile, but if you have trouble, please try using the attached docker container before emailing me about operating system questions.
+```
+sudo docker build -t blind_jump_build .
+sudo docker run -it blind_jump_build
+```
