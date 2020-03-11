@@ -13,6 +13,7 @@ This repository contains a substantial re-write of the original BlindJump code. 
 
 The project should be pretty easy to compile, but if you have trouble, please try using the attached docker container before emailing me with operating system questions.
 ```
+docker pull ubuntu:18.04
 sudo docker build -t blind_jump_build .
 sudo docker run -it blind_jump_build
 make
