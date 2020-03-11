@@ -15,4 +15,5 @@ The project should be pretty easy to compile, but if you have trouble, please tr
 ```
 sudo docker build -t blind_jump_build .
 sudo docker run -it blind_jump_build
+make
 ```
