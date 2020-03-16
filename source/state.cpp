@@ -48,6 +48,17 @@ public:
 } pre_fade_pause_state;
 
 
+static class GlowFadeState : public OverworldState {
+public:
+    GlowFadeState() : OverworldState(false)
+    {
+    }
+    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+private:
+    Microseconds counter_ = 0;
+} glow_fade_state;
+
+
 static class FadeOutState : public OverworldState {
 public:
     FadeOutState() : OverworldState(false)
@@ -209,8 +220,28 @@ State* PreFadePauseState::update(Platform& pfrm, Microseconds delta, Game& game)
                              pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {
         game.camera().set_speed(1.f);
+        return &glow_fade_state;
+    } else {
+        return this;
+    }
+}
+
+
+State* GlowFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
+{
+    game.player().soft_update(pfrm, game, delta);
+
+    OverworldState::update(pfrm, delta, game);
+
+    counter_ += delta;
+
+    static const auto fade_duration = milliseconds(950);
+    if (counter_ > fade_duration) {
+        counter_ = 0;
+        pfrm.screen().fade(1.f, ColorConstant::electric_blue);
         return &fade_out_state;
     } else {
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_), ColorConstant::electric_blue);
         return this;
     }
 }
@@ -224,14 +255,16 @@ State* FadeOutState::update(Platform& pfrm, Microseconds delta, Game& game)
 
     counter_ += delta;
 
-    static const auto fade_duration = milliseconds(950);
+    static const auto fade_duration = milliseconds(670);
     if (counter_ > fade_duration) {
         counter_ = 0;
         pfrm.screen().fade(1.f);
         game.next_level(pfrm);
         return &fade_in_state;
     } else {
-        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_));
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
+                           ColorConstant::rich_black,
+                           ColorConstant::electric_blue);
         return this;
     }
 }

@@ -91,7 +91,6 @@ public:
     void load_sprite_texture(const char* name);
     void load_tile_texture(const char* name);
 
-
     // Sleep halts the game for an amount of time equal to some number
     // of game updates. Given that the game should be running at
     // 60fps, one update equals 1/60 of a second.
@@ -132,7 +131,12 @@ public:
             return view_;
         }
 
-        void fade(float amount, ColorConstant = ColorConstant::rich_black);
+        // Blend color into sprite existing screen colors, unless a base color
+        // is specified, in which case, computes the resulting color from the
+        // base color blended with the color parameter.
+        void fade(float amount,
+                  ColorConstant color = ColorConstant::rich_black,
+                  std::optional<ColorConstant> base = {});
 
     private:
         Screen();
