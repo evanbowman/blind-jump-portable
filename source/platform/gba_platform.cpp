@@ -670,17 +670,19 @@ COLD void Platform::push_map(const TileMap& map)
 
 
 static u8 last_fade_amt;
+static ColorConstant last_color;
 
 
-void Platform::Screen::fade(float amount, ColorConstant k)
+void Platform::Screen::fade(float amount, ColorConstant k, std::optional<ColorConstant> base)
 {
     const u8 amt = amount * 255;
 
-    if (amt == last_fade_amt) {
+    if (amt == last_fade_amt and k == last_color) {
         return;
     }
 
     last_fade_amt = amt;
+    last_color = k;
 
     const auto& c = real_color(k);
     // To do a screen fade, blend color into the palettes.
@@ -700,13 +702,20 @@ void Platform::Screen::fade(float amount, ColorConstant k)
                    .bgr_hex_555();
     };
 
-    for (int i = 0; i < 16; ++i) {
-        auto from = Color::from_bgr_hex_555(bgr_spritesheetPal[i]);
-        MEM_PALETTE[i] = blend(from);
-    }
-    for (int i = 0; i < 16; ++i) {
-        auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
-        MEM_BG_PALETTE[i] = blend(from);
+    if (not base) {
+        for (int i = 0; i < 16; ++i) {
+            auto from = Color::from_bgr_hex_555(bgr_spritesheetPal[i]);
+            MEM_PALETTE[i] = blend(from);
+        }
+        for (int i = 0; i < 16; ++i) {
+            auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
+            MEM_BG_PALETTE[i] = blend(from);
+        }
+    } else {
+        for (int i = 0; i < 16; ++i) {
+            MEM_PALETTE[i] = blend(real_color(*base));
+            MEM_BG_PALETTE[i] = blend(real_color(*base));
+        }
     }
 }
 
