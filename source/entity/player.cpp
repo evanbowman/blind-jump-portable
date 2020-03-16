@@ -475,14 +475,14 @@ void Blaster::update(Platform& pf, Game& game, Microseconds dt, Cardinal dir)
 
     case Cardinal::north:
         sprite_.set_alpha(Sprite::Alpha::transparent);
-        position_ = player_pos;
+        position_ = {player_pos.x + 4, player_pos.y - 10};
         break;
 
     case Cardinal::south:
         sprite_.set_alpha(Sprite::Alpha::opaque);
         sprite_.set_texture_index(v_blaster);
         sprite_.set_flip({false, false});
-        position_ = {player_pos.x - 2, player_pos.y + 1};
+        position_ = {player_pos.x - 3, player_pos.y + 1};
         break;
     }
 
