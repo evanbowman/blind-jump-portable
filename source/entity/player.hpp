@@ -2,6 +2,7 @@
 
 #include "collision.hpp"
 #include "entity.hpp"
+#include "entity/entityGroup.hpp"
 #include "graphics/animation.hpp"
 #include "number/numeric.hpp"
 
@@ -18,18 +19,20 @@ class SnakeHead;
 class SnakeBody;
 
 
-class Blaster {
+class Blaster : public Entity {
 public:
-    void update(Microseconds dt);
+    Blaster();
 
-    void shoot(Platform& pf, Game& game, Cardinal dir);
+    void update(Platform& pfrm, Game& game, Microseconds dt, Cardinal dir);
 
-    void set_position(const Vec2<Float>& pos);
+    void shoot(Platform& pf, Game& game);
+
+    void set_visible(bool visible);
 
 private:
     Microseconds reload_ = 0;
-    Sprite sprite_;
-    Vec2<Float> position_;
+    Cardinal dir_;
+    bool visible_;
 };
 
 
@@ -47,23 +50,13 @@ public:
     void on_collision(Platform& pf, Game& game, Item&);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
-
     void soft_update(Platform& pfrm, Game& game, Microseconds dt);
 
-    const Sprite& get_shadow() const
-    {
-        return shadow_;
-    }
+    inline const Sprite& get_shadow() const;
+    inline const HitBox& hitbox() const;
+    inline Blaster& weapon();
 
-    const HitBox& hitbox() const
-    {
-        return hitbox_;
-    }
-
-    bool is_invulnerable() const
-    {
-        return invulnerability_timer_ > 0;
-    }
+    inline bool is_invulnerable() const;
 
     void move(const Vec2<Float>& pos);
 
@@ -103,5 +96,30 @@ private:
     Float d_speed_;
     Sprite shadow_;
     HitBox hitbox_;
+
     Blaster blaster_;
 };
+
+
+const Sprite& Player::get_shadow() const
+{
+    return shadow_;
+}
+
+
+const HitBox& Player::hitbox() const
+{
+    return hitbox_;
+}
+
+
+bool Player::is_invulnerable() const
+{
+    return invulnerability_timer_ > 0;
+}
+
+
+Blaster& Player::weapon()
+{
+    return blaster_;
+}

@@ -34,6 +34,12 @@ const Sprite& Entity::get_sprite() const
 }
 
 
+Sprite& Entity::get_sprite()
+{
+    return sprite_;
+}
+
+
 void Entity::set_position(const Vec2<Float>& position)
 {
     position_ = position;
