@@ -673,7 +673,9 @@ static u8 last_fade_amt;
 static ColorConstant last_color;
 
 
-void Platform::Screen::fade(float amount, ColorConstant k, std::optional<ColorConstant> base)
+void Platform::Screen::fade(float amount,
+                            ColorConstant k,
+                            std::optional<ColorConstant> base)
 {
     const u8 amt = amount * 255;
 

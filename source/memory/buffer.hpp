@@ -25,7 +25,7 @@ public:
     }
 
 
-    constexpr u32 capacity()
+    constexpr u32 capacity() const
     {
         return Capacity;
     }
@@ -128,6 +128,12 @@ public:
     bool empty() const
     {
         return Buffer::size() == 0;
+    }
+
+
+    bool full() const
+    {
+        return Buffer::size() == Buffer::capacity();
     }
 
 

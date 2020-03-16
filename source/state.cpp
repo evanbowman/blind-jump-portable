@@ -54,6 +54,7 @@ public:
     {
     }
     State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+
 private:
     Microseconds counter_ = 0;
 } glow_fade_state;
@@ -241,7 +242,8 @@ State* GlowFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
         pfrm.screen().fade(1.f, ColorConstant::electric_blue);
         return &fade_out_state;
     } else {
-        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_), ColorConstant::electric_blue);
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
+                           ColorConstant::electric_blue);
         return this;
     }
 }

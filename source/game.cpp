@@ -1,4 +1,5 @@
 #include "game.hpp"
+#include "function.hpp"
 #include "number/random.hpp"
 #include "util.hpp"
 #include <algorithm>
@@ -437,11 +438,58 @@ void spawn_entity(Platform& pf,
 COLD static void
 spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 {
-    spawn_entity<Dasher>(pfrm, free_spots, game.enemies());
-    spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
+    // We want to spawn enemies based on both the difficulty of level, and the
+    // number of free spots that are actually available on the map. Some
+    // enemies, like snakes, take up a lot of resources on constrained systems,
+    // so we can only display one or _maybe_ two.
+    //
+    // Some other enemies require a lot of map space to fight effectively, so
+    // they are banned from tiny maps.
 
-    for (int i = 0; i < 2; ++i) {
-        spawn_entity<Turret>(pfrm, free_spots, game.enemies());
+    constexpr auto density = 0.05;
+    constexpr auto max_enemies = 6;
+
+    const int spawn_count =
+        std::max(std::min(max_enemies, int(free_spots.size() * density)), 1);
+
+
+    struct EnemyInfo {
+        int min_level_;
+        Function<64, void()> spawn_;
+        int max_allowed_ = 1000;
+    } info[] = {
+        {3, [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); }},
+        {4,
+         [&]() {
+             spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
+         },
+         1},
+        {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }}};
+
+
+    Buffer<EnemyInfo*, 100> distribution;
+
+    while (not distribution.full()) {
+        auto selected = &info[random_choice<sizeof info / sizeof(EnemyInfo)>()];
+
+        if (selected->min_level_ > std::max(Game::Level(0), game.level())) {
+            continue;
+        }
+
+        distribution.push_back(selected);
+    }
+
+    int i = 0;
+    while (i < spawn_count) {
+
+        auto choice = distribution[random_choice<distribution.capacity()>()];
+
+        if (choice->max_allowed_-- == 0) {
+            continue;
+        }
+
+        ++i;
+        choice->spawn_();
     }
 }
 
