@@ -404,24 +404,24 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     sprite_.set_position(new_pos);
     shadow_.set_position(new_pos);
 
-    blaster_.update(pfrm, game, dt,  [this] {
-            switch (frame_base_) {
-            case ResourceLoc::player_walk_left:
-            case ResourceLoc::player_still_left:
-                return Cardinal::west;
-            case ResourceLoc::player_walk_right:
-            case ResourceLoc::player_still_right:
-                return Cardinal::east;
-            case ResourceLoc::player_walk_up:
-            case ResourceLoc::player_still_up:
-                return Cardinal::north;
-            case ResourceLoc::player_walk_down:
-            case ResourceLoc::player_still_down:
-                return Cardinal::south;
-            default:
-                return Cardinal::south;
-            }
-        }());
+    blaster_.update(pfrm, game, dt, [this] {
+        switch (frame_base_) {
+        case ResourceLoc::player_walk_left:
+        case ResourceLoc::player_still_left:
+            return Cardinal::west;
+        case ResourceLoc::player_walk_right:
+        case ResourceLoc::player_still_right:
+            return Cardinal::east;
+        case ResourceLoc::player_walk_up:
+        case ResourceLoc::player_still_up:
+            return Cardinal::north;
+        case ResourceLoc::player_walk_down:
+        case ResourceLoc::player_still_down:
+            return Cardinal::south;
+        default:
+            return Cardinal::south;
+        }
+    }());
 
     if (shoot) {
         blaster_.set_visible(true);

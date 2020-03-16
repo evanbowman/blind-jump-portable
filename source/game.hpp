@@ -70,8 +70,15 @@ public:
 
     void next_level(Platform& platform);
 
+    using Level = s32;
+
+    Level level() const
+    {
+        return level_;
+    }
+
 private:
-    s32 level_;
+    Level level_;
     TileMap tiles_;
     Camera camera_;
     Player player_;
