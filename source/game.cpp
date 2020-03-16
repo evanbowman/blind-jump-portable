@@ -71,6 +71,7 @@ HOT void Game::render(Platform& pfrm)
     display_buffer.clear();
 
     display_buffer.push_back(&player_.get_sprite());
+    display_buffer.push_back(&player_.weapon().get_sprite());
 
     Buffer<const Sprite*, 30> shadows_buffer;
 

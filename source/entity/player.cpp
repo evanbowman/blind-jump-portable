@@ -245,6 +245,7 @@ void Player::update_animation(Microseconds dt, u8 max_index, Microseconds count)
 void Player::soft_update(Platform& pfrm, Game& game, Microseconds dt)
 {
     fade_color_anim_.advance(sprite_, dt);
+    blaster_.get_sprite().set_mix(sprite_.get_mix());
 }
 
 
@@ -329,30 +330,6 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         }
     }
 
-    blaster_.set_position(position_);
-    blaster_.update(dt);
-
-    if (shoot) {
-        blaster_.shoot(pfrm, game, [this] {
-            switch (frame_base_) {
-            case ResourceLoc::player_walk_left:
-            case ResourceLoc::player_still_left:
-                return Cardinal::west;
-            case ResourceLoc::player_walk_right:
-            case ResourceLoc::player_still_right:
-                return Cardinal::east;
-            case ResourceLoc::player_walk_up:
-            case ResourceLoc::player_still_up:
-                return Cardinal::north;
-            case ResourceLoc::player_walk_down:
-            case ResourceLoc::player_still_down:
-                return Cardinal::south;
-            default:
-                return Cardinal::south;
-            }
-        }());
-    }
-
     if (input.up_transition<Key::up>()) {
         on_key_released<ResourceLoc::player_still_up, 0>(
             down, left, right, shoot);
@@ -426,6 +403,32 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     Entity::set_position(new_pos);
     sprite_.set_position(new_pos);
     shadow_.set_position(new_pos);
+
+    blaster_.update(pfrm, game, dt,  [this] {
+            switch (frame_base_) {
+            case ResourceLoc::player_walk_left:
+            case ResourceLoc::player_still_left:
+                return Cardinal::west;
+            case ResourceLoc::player_walk_right:
+            case ResourceLoc::player_still_right:
+                return Cardinal::east;
+            case ResourceLoc::player_walk_up:
+            case ResourceLoc::player_still_up:
+                return Cardinal::north;
+            case ResourceLoc::player_walk_down:
+            case ResourceLoc::player_still_down:
+                return Cardinal::south;
+            default:
+                return Cardinal::south;
+            }
+        }());
+
+    if (shoot) {
+        blaster_.set_visible(true);
+        blaster_.shoot(pfrm, game);
+    } else {
+        blaster_.set_visible(false);
+    }
 }
 
 
@@ -441,27 +444,73 @@ void Player::move(const Vec2<Float>& pos)
 }
 
 
-void Blaster::update(Microseconds dt)
+Blaster::Blaster()
 {
+    sprite_.set_size(Sprite::Size::w16_h32);
+    sprite_.set_origin({8, 8});
+    sprite_.set_texture_index(h_blaster);
+}
+
+
+void Blaster::update(Platform& pf, Game& game, Microseconds dt, Cardinal dir)
+{
+    const auto player_pos = game.player().get_position();
+
+    dir_ = dir;
+
+    switch (dir) {
+    case Cardinal::west:
+        sprite_.set_alpha(Sprite::Alpha::opaque);
+        sprite_.set_texture_index(h_blaster);
+        sprite_.set_flip({true, false});
+        position_ = {player_pos.x - 12, player_pos.y + 1};
+        break;
+
+    case Cardinal::east:
+        sprite_.set_alpha(Sprite::Alpha::opaque);
+        sprite_.set_texture_index(h_blaster);
+        sprite_.set_flip({false, false});
+        position_ = {player_pos.x + 12, player_pos.y + 1};
+        break;
+
+    case Cardinal::north:
+        sprite_.set_alpha(Sprite::Alpha::transparent);
+        position_ = player_pos;
+        break;
+
+    case Cardinal::south:
+        sprite_.set_alpha(Sprite::Alpha::opaque);
+        sprite_.set_texture_index(v_blaster);
+        sprite_.set_flip({false, false});
+        position_ = {player_pos.x - 2, player_pos.y + 1};
+        break;
+    }
+
+    if (not visible_) {
+        sprite_.set_alpha(Sprite::Alpha::transparent);
+    }
+
+    sprite_.set_position(position_);
+
     if (reload_) {
         reload_ -= dt;
     }
 }
 
 
-void Blaster::shoot(Platform& pf, Game& game, Cardinal dir)
+void Blaster::shoot(Platform& pf, Game& game)
 {
     if (reload_ <= 0) {
         if (length(game.effects().get<Laser>()) < 2) {
             reload_ = milliseconds(250);
 
-            game.effects().spawn<Laser>(position_, dir);
+            game.effects().spawn<Laser>(position_, dir_);
         }
     }
 }
 
 
-void Blaster::set_position(const Vec2<Float>& pos)
+void Blaster::set_visible(bool visible)
 {
-    position_ = pos;
+    visible_ = visible;
 }

@@ -32,6 +32,7 @@ public:
 
 
     const Sprite& get_sprite() const;
+    Sprite& get_sprite();
 
 
     void add_health(Health amount);
