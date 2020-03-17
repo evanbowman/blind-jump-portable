@@ -49,6 +49,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::settle:
         if (animation_.reverse(sprite_, dt)) {
             state_ = State::opened;
+            game.score() += 100;
         }
         break;
 
