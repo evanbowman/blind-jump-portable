@@ -73,10 +73,10 @@ public:
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
-    void on_collision(Platform& pf, Game& game, Player&)
+    void on_collision(Platform&, Game&, Player&)
     {
     }
-    void on_collision(Platform& pf, Game& game, Laser&)
+    void on_collision(Platform&, Game&, Laser&)
     {
     }
 

@@ -17,9 +17,9 @@ def rgb_to_bgr(file_name):
     im.save('bgr_' + file_name)
 
 
-rgb_to_bgr('spritesheet.png')
+for name in ['spritesheet.png', 'tilesheet.png', 'overlay.png']:
+    rgb_to_bgr(name)
 
-rgb_to_bgr('tilesheet.png')
 
 
 # Now the spritesheet just needs to be converted to a tileset. Use:

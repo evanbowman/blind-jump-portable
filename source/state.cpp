@@ -1,5 +1,6 @@
 #include "state.hpp"
 #include "game.hpp"
+#include "graphics/overlay.hpp"
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -11,7 +12,7 @@ public:
     OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking)
     {
     }
-    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     const bool camera_tracking_;
@@ -23,7 +24,10 @@ public:
     ActiveState(bool camera_tracking) : OverworldState(camera_tracking)
     {
     }
-    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+    void enter(Platform& pfrm, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    std::optional<Text> text_;
+    std::optional<Text> score_;
 } active_state(true);
 
 
@@ -32,11 +36,25 @@ public:
     FadeInState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+    void enter(Platform& pfrm, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
 } fade_in_state;
+
+
+static class WarpInState : public OverworldState {
+public:
+    WarpInState() : OverworldState(true)
+    {
+    }
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    Microseconds counter_ = 0;
+    bool shook_ = false;
+} warp_in_state;
 
 
 static class PreFadePauseState : public OverworldState {
@@ -44,7 +62,7 @@ public:
     PreFadePauseState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 } pre_fade_pause_state;
 
 
@@ -53,7 +71,7 @@ public:
     GlowFadeState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
@@ -65,7 +83,7 @@ public:
     FadeOutState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
@@ -77,7 +95,7 @@ public:
     DeathFadeState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
@@ -86,14 +104,15 @@ private:
 
 static class PauseFadeState : public State {
 public:
-    State* update(Platform& pfrm, Microseconds delta, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
 } pause_fade_state;
 
 
-State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
+#include "number/random.hpp"
+State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     Player& player = game.player();
 
@@ -160,16 +179,35 @@ State* OverworldState::update(Platform& pfrm, Microseconds delta, Game& game)
                      game.effects().get<Laser>(),
                      game.enemies().get<SnakeTail>());
 
-
     return this;
 }
 
 
-State* ActiveState::update(Platform& pfrm, Microseconds delta, Game& game)
+void ActiveState::enter(Platform& pfrm, Game& game)
+{
+    text_.emplace(pfrm, OverlayCoord{1, 17});
+    score_.emplace(pfrm, OverlayCoord{1, 18});
+    text_->assign(game.player().get_health());
+    score_->assign(game.score());
+}
+
+
+State* ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().update(pfrm, game, delta);
 
-    OverworldState::update(pfrm, delta, game);
+    const auto last_health = game.player().get_health();
+    const auto last_score = game.score();
+
+    OverworldState::update(pfrm, game, delta);
+
+    if (last_health not_eq game.player().get_health()) {
+        text_->assign(game.player().get_health());
+    }
+
+    if (last_score not_eq game.score()) {
+        score_->assign(game.score());
+    }
 
     if (game.player().get_health() == 0) {
         return &death_fade_state;
@@ -182,6 +220,8 @@ State* ActiveState::update(Platform& pfrm, Microseconds delta, Game& game)
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
     if (manhattan_length(game.player().get_position(), t_pos) < 16) {
         game.player().move(t_pos);
+        text_.reset();
+        score_.reset();
         return &pre_fade_pause_state;
     } else {
         return this;
@@ -189,19 +229,27 @@ State* ActiveState::update(Platform& pfrm, Microseconds delta, Game& game)
 }
 
 
-State* FadeInState::update(Platform& pfrm, Microseconds delta, Game& game)
+void FadeInState::enter(Platform& pfrm, Game& game)
+{
+    game.player().set_visible(false);
+}
+
+
+State* FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().soft_update(pfrm, game, delta);
 
-    OverworldState::update(pfrm, delta, game);
+    OverworldState::update(pfrm, game, delta);
 
     counter_ += delta;
 
-    static const auto fade_duration = milliseconds(950);
+    static const auto fade_duration = milliseconds(800);
     if (counter_ > fade_duration) {
         counter_ = 0;
-        pfrm.screen().fade(0.f);
-        return &active_state;
+        pfrm.screen().fade(1.f, ColorConstant::electric_blue);
+        pfrm.sleep(2);
+        game.player().set_visible(true);
+        return &warp_in_state;
     } else {
         pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
         return this;
@@ -209,13 +257,40 @@ State* FadeInState::update(Platform& pfrm, Microseconds delta, Game& game)
 }
 
 
-State* PreFadePauseState::update(Platform& pfrm, Microseconds delta, Game& game)
+State* WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    game.player().soft_update(pfrm, game, delta);
+
+    OverworldState::update(pfrm, game, delta);
+
+    counter_ += delta;
+
+    if (counter_ > milliseconds(200) and not shook_) {
+        game.camera().shake();
+        shook_ = true;
+    }
+
+    static const auto fade_duration = milliseconds(950);
+    if (counter_ > fade_duration) {
+        counter_ = 0;
+        shook_ = false;
+        pfrm.screen().fade(0.f, ColorConstant::electric_blue);
+        return &active_state;
+    } else {
+        pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_),
+                           ColorConstant::electric_blue);
+        return this;
+    }
+}
+
+
+State* PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.camera().set_speed(1.5f);
 
     game.player().soft_update(pfrm, game, delta);
 
-    OverworldState::update(pfrm, delta, game);
+    OverworldState::update(pfrm, game, delta);
 
     if (manhattan_length(pfrm.screen().get_view().get_center() +
                              pfrm.screen().get_view().get_size() / 2.f,
@@ -228,11 +303,11 @@ State* PreFadePauseState::update(Platform& pfrm, Microseconds delta, Game& game)
 }
 
 
-State* GlowFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
+State* GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().soft_update(pfrm, game, delta);
 
-    OverworldState::update(pfrm, delta, game);
+    OverworldState::update(pfrm, game, delta);
 
     counter_ += delta;
 
@@ -249,11 +324,11 @@ State* GlowFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
 }
 
 
-State* FadeOutState::update(Platform& pfrm, Microseconds delta, Game& game)
+State* FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().soft_update(pfrm, game, delta);
 
-    OverworldState::update(pfrm, delta, game);
+    OverworldState::update(pfrm, game, delta);
 
     counter_ += delta;
 
@@ -272,11 +347,11 @@ State* FadeOutState::update(Platform& pfrm, Microseconds delta, Game& game)
 }
 
 
-State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
+State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     // game.player().soft_update(pfrm, game, delta);
 
-    OverworldState::update(pfrm, delta, game);
+    OverworldState::update(pfrm, game, delta);
 
     counter_ += delta;
 
@@ -286,8 +361,9 @@ State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
         pfrm.screen().fade(1.f, ColorConstant::coquelicot);
         if (pfrm.keyboard().pressed<Key::action_1>()) {
             counter_ = 0;
+            game.score() = 0;
             game.player().revive();
-            game.next_level(pfrm);
+            game.next_level(pfrm, 0);
             return &fade_in_state;
         } else {
             return this;
@@ -300,7 +376,7 @@ State* DeathFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
 }
 
 
-State* PauseFadeState::update(Platform& pfrm, Microseconds delta, Game& game)
+State* PauseFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     counter_ += delta;
 

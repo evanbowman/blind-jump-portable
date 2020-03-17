@@ -11,7 +11,7 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
-Game::Game(Platform& pfrm) : level_(-1), counter_(0), state_(State::initial())
+Game::Game(Platform& pfrm) : state_(State::initial())
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
@@ -23,7 +23,10 @@ Game::Game(Platform& pfrm) : level_(-1), counter_(0), state_(State::initial())
     random_seed() = save_data_.seed_;
 
     pfrm.load_sprite_texture("bgr_spritesheet");
+    pfrm.load_overlay_texture("bgr_overlay");
     pfrm.load_tile_texture("bgr_tilesheet");
+
+    state_->enter(pfrm, *this);
 
     Game::next_level(pfrm);
 }
@@ -40,7 +43,13 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     // anticipate.
     random_value();
 
-    state_ = state_->update(pfrm, delta, *this);
+    const auto last_state = state_;
+
+    state_ = state_->update(pfrm, *this, delta);
+
+    if (state_ not_eq last_state) {
+        state_->enter(pfrm, *this);
+    }
 }
 
 
@@ -167,9 +176,16 @@ static void condense(TileMap& map, TileMap& maptemp)
 }
 
 
-COLD void Game::next_level(Platform& pfrm)
+COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
-    level_ += 1;
+    save_data_.seed_ = random_seed();
+    save_data_.player_health_ = player_.get_health();
+
+    if (set_level) {
+        save_data_.level_ = *set_level;
+    } else {
+        save_data_.level_ += 1;
+    }
 
 RETRY:
     Game::regenerate_map(pfrm);
@@ -472,7 +488,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     while (not distribution.full()) {
         auto selected = &info[random_choice<sizeof info / sizeof(EnemyInfo)>()];
 
-        if (selected->min_level_ > std::max(Game::Level(0), game.level())) {
+        if (selected->min_level_ > std::max(Level(0), game.level())) {
             continue;
         }
 
@@ -484,11 +500,12 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 
         auto choice = distribution[random_choice<distribution.capacity()>()];
 
-        if (choice->max_allowed_-- == 0) {
+        if (choice->max_allowed_ == 0) {
             continue;
         }
 
         ++i;
+        choice->max_allowed_--;
         choice->spawn_();
     }
 }

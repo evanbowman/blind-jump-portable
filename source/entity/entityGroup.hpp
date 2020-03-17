@@ -1,10 +1,9 @@
 #pragma once
 
+#include "entity/entity.hpp"
 #include "list.hpp"
 #include "memory/pool.hpp"
-#include "entity/entity.hpp"
 #include "transformGroup.hpp"
-
 
 
 using EntityNode = BiNode<EntityRef<Entity>>;

@@ -87,9 +87,12 @@ public:
 
     void push_map(const TileMap& map);
 
+    void set_overlay_tile(u16 x, u16 y, u16 val);
+
 
     void load_sprite_texture(const char* name);
     void load_tile_texture(const char* name);
+    void load_overlay_texture(const char* name);
 
     // Sleep halts the game for an amount of time equal to some number
     // of game updates. Given that the game should be running at
