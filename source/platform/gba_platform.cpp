@@ -58,9 +58,17 @@ using ScreenBlock = u16[1024];
 #define MEM_BG_PALETTE ((u16*)(0x05000000))
 #define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
+#define SE_PALBANK_MASK 0xF000
+#define SE_PALBANK_SHIFT 12
+#define SE_PALBANK(n) ((n) << SE_PALBANK_SHIFT)
+
 #define ATTR2_PALBANK_MASK 0xF000
 #define ATTR2_PALBANK_SHIFT 12
 #define ATTR2_PALBANK(n) ((n) << ATTR2_PALBANK_SHIFT)
+
+#define ATTR2_PRIO_SHIFT 10
+#define ATTR2_PRIO(n) ((n) << ATTR2_PRIO_SHIFT)
+#define ATTR2_PRIORITY(n) ATTR2_PRIO(n)
 
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
@@ -167,6 +175,8 @@ static ObjectAttributes* const object_attribute_memory = {
 #define BG_SIZE_SHIFT 14
 #define BG_SIZE(n) ((n) << BG_SIZE_SHIFT)
 
+#define BG_PRIORITY(m) ((m))
+
 #define BG_REG_32x32 0      //!< reg bg, 32x32 (256x256 px)
 #define BG_REG_64x32 0x4000 //!< reg bg, 64x32 (512x256 px)
 #define BG_REG_32x64 0x8000 //!< reg bg, 32x64 (256x512 px)
@@ -175,7 +185,7 @@ static ObjectAttributes* const object_attribute_memory = {
 
 static volatile u16* bg0_control = (volatile u16*)0x4000008;
 static volatile u16* bg1_control = (volatile u16*)0x400000a;
-// static volatile u16* bg2_control = (volatile u16*)0x400000c;
+static volatile u16* bg2_control = (volatile u16*)0x400000c;
 // static volatile u16* bg3_control = (volatile u16*)0x400000e;
 
 
@@ -225,15 +235,17 @@ public:
 
 Platform::Screen::Screen() : userdata_(nullptr)
 {
-    REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE;
+    REG_DISPCNT =
+        MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE | BG2_ENABLE;
 
     *reg_blendcnt = BLD_BUILD(BLD_OBJ, BLD_BG0 | BLD_BG1, 0);
 
     *reg_blendalpha = BLDA_BUILD(0x40 / 8, 0x40 / 8);
 
-    *bg0_control = BG_SBB(8) | BG_REG_64x64;
+    *bg0_control = BG_SBB(8) | BG_REG_64x64 | BG_PRIORITY(3);
     //        0xC800; // 64x64, 0x0100 for 32x32
-    *bg1_control = BG_SBB(12);
+    *bg1_control = BG_SBB(12) | BG_PRIORITY(3);
+    *bg2_control = BG_SBB(13) | BG_PRIORITY(0) | BG_CBB(3);
 
     view_.set_size(this->size().cast<Float>());
 }
@@ -377,6 +389,7 @@ void Platform::Screen::draw(const Sprite& spr)
         oa->attribute_1 |= (abs_position.x + x_off) & 0x01ff;
         oa->attribute_2 = 2 + spr.get_texture_index() * scale + tex_off;
         oa->attribute_2 |= pb;
+        oa->attribute_2 |= ATTR2_PRIORITY(2);
         oam_write_index += 1;
     };
 
@@ -491,6 +504,7 @@ int strcmp(const char* p1, const char* p2)
 }
 
 
+#include "graphics/bgr_overlay.h"
 #include "graphics/bgr_spritesheet.h"
 #include "graphics/bgr_tilesheet.h"
 
@@ -516,6 +530,9 @@ static const TextureData sprite_textures[] = {TEXTURE_INFO(bgr_spritesheet)};
 
 
 static const TextureData tile_textures[] = {TEXTURE_INFO(bgr_tilesheet)};
+
+
+static const TextureData overlay_textures[] = {TEXTURE_INFO(bgr_overlay)};
 
 
 void Platform::load_sprite_texture(const char* name)
@@ -548,7 +565,27 @@ void Platform::load_tile_texture(const char* name)
                    info.palette_data_,
                    info.palette_data_length_);
 
-            memcpy((void*)&MEM_TILE[0][0],
+            memcpy((void*)&MEM_SCREENBLOCKS[0][0],
+                   info.tile_data_,
+                   info.tile_data_length_);
+        }
+    }
+}
+
+
+void Platform::load_overlay_texture(const char* name)
+{
+    for (auto& info : overlay_textures) {
+
+        if (strcmp(name, info.name_) == 0) {
+
+            // NOTE: Background palette bank 2, 16 colors per palette
+            memcpy((void*)&MEM_BG_PALETTE[16],
+                   info.palette_data_,
+                   info.palette_data_length_);
+
+            // NOTE: this is the last charblock
+            memcpy((void*)&MEM_SCREENBLOCKS[24][0],
                    info.tile_data_,
                    info.tile_data_length_);
         }
@@ -666,6 +703,23 @@ COLD void Platform::push_map(const TileMap& map)
             }
         }
     }
+
+    // DEBUG: init the overlay
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            set_overlay_tile(i, j, 10);
+        }
+    }
+}
+
+
+void Platform::set_overlay_tile(u16 x, u16 y, u16 val)
+{
+    if (x > 31 or y > 31) {
+        return;
+    }
+
+    MEM_SCREENBLOCKS[13][x + y * 32] = val | SE_PALBANK(1);
 }
 
 
@@ -713,10 +767,15 @@ void Platform::Screen::fade(float amount,
             auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
             MEM_BG_PALETTE[i] = blend(from);
         }
+        for (int i = 0; i < 16; ++i) {
+            auto from = Color::from_bgr_hex_555(bgr_overlayPal[i]);
+            MEM_BG_PALETTE[16 + i] = blend(from);
+        }
     } else {
         for (int i = 0; i < 16; ++i) {
             MEM_PALETTE[i] = blend(real_color(*base));
             MEM_BG_PALETTE[i] = blend(real_color(*base));
+            MEM_BG_PALETTE[16 + i] = blend(real_color(*base));
         }
     }
 }

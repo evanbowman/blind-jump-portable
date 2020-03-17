@@ -233,6 +233,7 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
     if (not alive()) {
         pf.sleep(5);
         game.camera().shake();
+        game.score() += 15;
 
         if (random_choice<3>() == 0) {
             game.details().spawn<Item>(position_, pf, Item::Type::coin);

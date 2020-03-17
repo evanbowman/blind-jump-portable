@@ -62,6 +62,8 @@ public:
 
     void revive();
 
+    void set_visible(bool visible);
+
 private:
     using ResourceLoc = TextureMap;
 

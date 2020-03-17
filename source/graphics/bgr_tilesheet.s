@@ -9,16 +9,15 @@
 @	+ 468 tiles Metatiled by 4x3 not compressed
 @	Total size: 512 + 14976 = 15488
 @
-@	Time-stamp: 2019-07-05, 23:34:22
-@	Exported by Cearn's GBA Image Transmogrifier, v0.8.15
+@	Time-stamp: 2020-03-17, 19:34:57
+@	Exported by Cearn's GBA Image Transmogrifier, v
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
 	.align	2
-	.global bgr_tilesheetTiles		@ 14976 unsigned chars
-	.hidden bgr_tilesheetTiles
+	.global bgr_tilesheetTiles		@ 14976 bytes
 bgr_tilesheetTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -546,11 +545,11 @@ bgr_tilesheetTiles:
 	.word 0x00000001,0x00000001,0x00000001,0x00000001,0x00000001,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
+	.size	bgr_tilesheetTiles, .-bgr_tilesheetTiles
 
 	.section .rodata
 	.align	2
-	.global bgr_tilesheetPal		@ 512 unsigned chars
-	.hidden bgr_tilesheetPal
+	.global bgr_tilesheetPal		@ 512 bytes
 bgr_tilesheetPal:
 	.hword 0x7C1F,0x3CEA,0x5ABD,0x56EE,0x6AD7,0x779E,0x5354,0x5EFF
 	.hword 0x6BBA,0x49EB,0x6253,0x731B,0x55CE,0x4D4A,0x6A95,0x7FFF
@@ -587,5 +586,6 @@ bgr_tilesheetPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
+	.size	bgr_tilesheetPal, .-bgr_tilesheetPal
 
 @}}BLOCK(bgr_tilesheet)

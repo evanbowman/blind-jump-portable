@@ -39,6 +39,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/enemies/snake.cpp
   ${SOURCE_DIR}/entity/effects/laser.cpp
   ${SOURCE_DIR}/entity/details/item.cpp
+  ${SOURCE_DIR}/graphics/overlay.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
   ${SOURCE_DIR}/number/numeric.cpp
   ${SOURCE_DIR}/number/random.cpp
@@ -58,6 +59,7 @@ set(SOURCES
 if(GAMEBOY_ADVANCE)
   set(SOURCES
     ${SOURCES}
+    ${SOURCE_DIR}/graphics/bgr_overlay.s
     ${SOURCE_DIR}/graphics/bgr_tilesheet.s
     ${SOURCE_DIR}/graphics/bgr_spritesheet.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)

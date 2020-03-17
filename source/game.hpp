@@ -68,17 +68,20 @@ public:
         return camera_;
     }
 
-    void next_level(Platform& platform);
-
-    using Level = s32;
+    void next_level(Platform& platform, std::optional<Level> set_level = {});
 
     Level level() const
     {
-        return level_;
+        return save_data_.level_;
     }
 
+    Score& score()
+    {
+        return save_data_.score_;
+    }
+
+
 private:
-    Level level_;
     TileMap tiles_;
     Camera camera_;
     Player player_;
@@ -86,7 +89,6 @@ private:
     DetailGroup details_;
     EffectGroup effects_;
     Transporter transporter_;
-    Microseconds counter_;
     SaveData save_data_;
     State* state_;
 

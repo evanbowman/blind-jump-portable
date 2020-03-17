@@ -10,8 +10,11 @@ class Game;
 
 class State {
 public:
+    virtual void enter(Platform&, Game&){};
+
     virtual State*
-    update(Platform& platform, Microseconds delta, Game& game) = 0;
+    update(Platform& platform, Game& game, Microseconds delta) = 0;
+
     virtual ~State()
     {
     }

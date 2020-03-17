@@ -47,6 +47,7 @@ void SnakeNode::update(Game& game, Microseconds dt)
                 parent()->destroy();
             }
             game.camera().shake();
+            game.score() += 8;
             kill();
         }
     }

@@ -10,7 +10,7 @@
 
 const Vec2<s32> v_origin{8, 16};
 const Vec2<s32> h_origin{16, 16};
-static const Player::Health initial_health{4};
+static const Player::Health initial_health{3};
 
 Player::Player()
     : Entity(initial_health), frame_(0),
@@ -106,6 +106,7 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
 
     case Item::Type::coin:
         sprite_.set_mix({ColorConstant::electric_blue, 255});
+        game.score() += 4;
         break;
     }
 }
@@ -428,6 +429,20 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         blaster_.shoot(pfrm, game);
     } else {
         blaster_.set_visible(false);
+    }
+}
+
+
+void Player::set_visible(bool visible)
+{
+    blaster_.set_visible(visible);
+
+    if (visible) {
+        sprite_.set_alpha(Sprite::Alpha::opaque);
+        shadow_.set_alpha(Sprite::Alpha::translucent);
+    } else {
+        sprite_.set_alpha(Sprite::Alpha::transparent);
+        shadow_.set_alpha(Sprite::Alpha::transparent);
     }
 }
 
