@@ -561,9 +561,12 @@ void Platform::load_tile_texture(const char* name)
 
         if (strcmp(name, info.name_) == 0) {
 
-            memcpy((void*)MEM_BG_PALETTE,
-                   info.palette_data_,
-                   info.palette_data_length_);
+            // We don't want to load the whole palette into memory, we might
+            // overwrite palettes used by someone else, e.g. the overlay...
+            for (int i = 0; i < 16; ++i) {
+                auto from = Color::from_bgr_hex_555(info.palette_data_[i]);
+                MEM_BG_PALETTE[i] = from.bgr_hex_555();
+            }
 
             memcpy((void*)&MEM_SCREENBLOCKS[0][0],
                    info.tile_data_,
@@ -580,9 +583,14 @@ void Platform::load_overlay_texture(const char* name)
         if (strcmp(name, info.name_) == 0) {
 
             // NOTE: Background palette bank 2, 16 colors per palette
-            memcpy((void*)&MEM_BG_PALETTE[16],
-                   info.palette_data_,
-                   info.palette_data_length_);
+            // memcpy((void*)&MEM_BG_PALETTE[16],
+            //        info.palette_data_,
+            //        info.palette_data_length_);
+
+            for (int i = 0; i < 16; ++i) {
+                auto from = Color::from_bgr_hex_555(info.palette_data_[i]);
+                MEM_BG_PALETTE[16 + i] = from.bgr_hex_555();
+            }
 
             // NOTE: this is the last charblock
             memcpy((void*)&MEM_SCREENBLOCKS[24][0],
@@ -767,15 +775,19 @@ void Platform::Screen::fade(float amount,
             auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
             MEM_BG_PALETTE[i] = blend(from);
         }
-        for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(bgr_overlayPal[i]);
-            MEM_BG_PALETTE[16 + i] = blend(from);
-        }
+        // Should the overlay really be part of the fade...? Tricky, sometimes
+        // one wants do display some text over a faded out screen, so let's
+        // leave it disabled for now.
+        //
+        // for (int i = 0; i < 16; ++i) {
+        //     auto from = Color::from_bgr_hex_555(bgr_overlayPal[i]);
+        //     MEM_BG_PALETTE[16 + i] = blend(from);
+        // }
     } else {
         for (int i = 0; i < 16; ++i) {
             MEM_PALETTE[i] = blend(real_color(*base));
             MEM_BG_PALETTE[i] = blend(real_color(*base));
-            MEM_BG_PALETTE[16 + i] = blend(real_color(*base));
+            // MEM_BG_PALETTE[16 + i] = blend(real_color(*base));
         }
     }
 }

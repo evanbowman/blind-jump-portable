@@ -95,9 +95,11 @@ public:
     DeathFadeState() : OverworldState(false)
     {
     }
+    void enter(Platform& pfrm, Game& game) override;
     State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
+    std::optional<Text> text_;
     Microseconds counter_ = 0;
 } death_fade_state;
 
@@ -210,6 +212,8 @@ State* ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (game.player().get_health() == 0) {
+        text_.reset();
+        score_.reset();
         return &death_fade_state;
     }
 
@@ -347,6 +351,13 @@ State* FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
+void DeathFadeState::enter(Platform& pfrm, Game& game)
+{
+    text_.emplace(pfrm, OverlayCoord{11, 3});
+    text_->assign("you died");
+}
+
+
 State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     // game.player().soft_update(pfrm, game, delta);
@@ -355,7 +366,7 @@ State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     counter_ += delta;
 
-    static const auto fade_duration = milliseconds(1500);
+    static const auto fade_duration = seconds(5);
     if (counter_ > fade_duration) {
         counter_ -= delta;
         pfrm.screen().fade(1.f, ColorConstant::coquelicot);
@@ -364,6 +375,7 @@ State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
             game.score() = 0;
             game.player().revive();
             game.next_level(pfrm, 0);
+            text_.reset();
             return &fade_in_state;
         } else {
             return this;
