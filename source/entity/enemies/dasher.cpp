@@ -227,8 +227,8 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
 {
     debit_health(1);
 
-    sprite_.set_mix({ColorConstant::coquelicot, 255});
-    head_.set_mix({ColorConstant::coquelicot, 255});
+    sprite_.set_mix({ColorConstant::aerospace_orange, 255});
+    head_.set_mix({ColorConstant::aerospace_orange, 255});
 
     if (not alive()) {
         pf.sleep(5);
