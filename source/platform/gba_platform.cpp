@@ -266,9 +266,9 @@ const Color& real_color(ColorConstant k)
         static const Color el_blue(9, 31, 31);
         return el_blue;
 
-    case ColorConstant::coquelicot:
-        static const Color coquelicot(30, 7, 1);
-        return coquelicot;
+    case ColorConstant::aerospace_orange:
+        static const Color aerospace_orange(31, 10, 0);
+        return aerospace_orange;
 
     default:
     case ColorConstant::null:

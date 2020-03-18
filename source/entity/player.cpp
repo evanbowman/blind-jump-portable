@@ -44,7 +44,7 @@ void Player::injured(Platform& pf, Health damage)
     if (not Player::is_invulnerable()) {
         pf.sleep(4);
         debit_health(damage);
-        sprite_.set_mix({ColorConstant::coquelicot, 255});
+        sprite_.set_mix({ColorConstant::aerospace_orange, 255});
         invulnerability_timer_ = milliseconds(700);
     }
 }

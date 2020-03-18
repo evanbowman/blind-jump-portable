@@ -188,8 +188,11 @@ State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void ActiveState::enter(Platform& pfrm, Game& game)
 {
-    text_.emplace(pfrm, OverlayCoord{1, 17});
-    score_.emplace(pfrm, OverlayCoord{1, 18});
+    constexpr u32 overlay_tile_size = 8;
+    auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
+
+    text_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 3)});
+    score_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 2)});
     text_->assign(game.player().get_health());
     score_->assign(game.score());
 }
@@ -354,13 +357,13 @@ State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     counter_ += delta;
 
-    constexpr auto fade_duration = seconds(3);
+    constexpr auto fade_duration = seconds(2);
     if (counter_ > fade_duration) {
         counter_ = 0;
         return &death_continue_state;
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
-                           ColorConstant::coquelicot);
+                           ColorConstant::aerospace_orange);
         return this;
     }
 }
@@ -380,11 +383,11 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     counter_ += delta;
 
-    constexpr auto fade_duration = seconds(2);
+    constexpr auto fade_duration = seconds(1);
     if (counter_ > fade_duration) {
         counter_ -= delta;
         pfrm.screen().fade(
-            1.f, ColorConstant::rich_black, ColorConstant::coquelicot);
+            1.f, ColorConstant::rich_black, ColorConstant::aerospace_orange);
         if (pfrm.keyboard().pressed<Key::action_1>()) {
             counter_ = 0;
             game.score() = 0;
@@ -398,7 +401,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::rich_black,
-                           ColorConstant::coquelicot);
+                           ColorConstant::aerospace_orange);
         return this;
     }
 }

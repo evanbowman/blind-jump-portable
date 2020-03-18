@@ -278,7 +278,7 @@ void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
 
 void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
 {
-    sprite_.set_mix({ColorConstant::coquelicot, 255});
+    sprite_.set_mix({ColorConstant::aerospace_orange, 255});
 
     debit_health();
 
