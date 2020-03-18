@@ -95,25 +95,26 @@ public:
     DeathFadeState() : OverworldState(false)
     {
     }
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    Microseconds counter_ = 0;
+} death_fade_state;
+
+
+static class DeathContinueState : public State {
+public:
+    DeathContinueState()
+    {
+    }
     void enter(Platform& pfrm, Game& game) override;
     State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     std::optional<Text> text_;
     Microseconds counter_ = 0;
-} death_fade_state;
+} death_continue_state;
 
 
-static class PauseFadeState : public State {
-public:
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds counter_ = 0;
-} pause_fade_state;
-
-
-#include "number/random.hpp"
 State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     Player& player = game.player();
@@ -217,10 +218,6 @@ State* ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return &death_fade_state;
     }
 
-    if (pfrm.keyboard().pressed<Key::start>()) {
-        return &pause_fade_state;
-    }
-
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
     if (manhattan_length(game.player().get_position(), t_pos) < 16) {
         game.player().move(t_pos);
@@ -247,7 +244,7 @@ State* FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     counter_ += delta;
 
-    static const auto fade_duration = milliseconds(800);
+    constexpr auto fade_duration = milliseconds(800);
     if (counter_ > fade_duration) {
         counter_ = 0;
         pfrm.screen().fade(1.f, ColorConstant::electric_blue);
@@ -274,7 +271,7 @@ State* WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         shook_ = true;
     }
 
-    static const auto fade_duration = milliseconds(950);
+    constexpr auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
         counter_ = 0;
         shook_ = false;
@@ -315,7 +312,7 @@ State* GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     counter_ += delta;
 
-    static const auto fade_duration = milliseconds(950);
+    constexpr auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
         counter_ = 0;
         pfrm.screen().fade(1.f, ColorConstant::electric_blue);
@@ -336,7 +333,7 @@ State* FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     counter_ += delta;
 
-    static const auto fade_duration = milliseconds(670);
+    constexpr auto fade_duration = milliseconds(670);
     if (counter_ > fade_duration) {
         counter_ = 0;
         pfrm.screen().fade(1.f);
@@ -351,25 +348,43 @@ State* FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
-void DeathFadeState::enter(Platform& pfrm, Game& game)
-{
-    text_.emplace(pfrm, OverlayCoord{11, 3});
-    text_->assign("you died");
-}
-
-
 State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    // game.player().soft_update(pfrm, game, delta);
-
     OverworldState::update(pfrm, game, delta);
 
     counter_ += delta;
 
-    static const auto fade_duration = seconds(5);
+    constexpr auto fade_duration = seconds(3);
+    if (counter_ > fade_duration) {
+        counter_ = 0;
+        return &death_continue_state;
+    } else {
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
+                           ColorConstant::coquelicot);
+        return this;
+    }
+}
+
+
+void DeathContinueState::enter(Platform& pfrm, Game& game)
+{
+    text_.emplace(pfrm, OverlayCoord{11, 4});
+    text_->assign("you died");
+
+    game.player().set_visible(false);
+}
+
+
+State*
+DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    counter_ += delta;
+
+    constexpr auto fade_duration = seconds(2);
     if (counter_ > fade_duration) {
         counter_ -= delta;
-        pfrm.screen().fade(1.f, ColorConstant::coquelicot);
+        pfrm.screen().fade(
+            1.f, ColorConstant::rich_black, ColorConstant::coquelicot);
         if (pfrm.keyboard().pressed<Key::action_1>()) {
             counter_ = 0;
             game.score() = 0;
@@ -382,24 +397,8 @@ State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
+                           ColorConstant::rich_black,
                            ColorConstant::coquelicot);
-        return this;
-    }
-}
-
-
-State* PauseFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
-{
-    counter_ += delta;
-
-    static const auto fade_duration = milliseconds(800);
-    if (counter_ > fade_duration) {
-        counter_ -= delta;
-        pfrm.screen().fade(1.f, ColorConstant::french_plum);
-        return this;
-    } else {
-        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
-                           ColorConstant::french_plum);
         return this;
     }
 }
