@@ -11,6 +11,7 @@ class Game;
 class State {
 public:
     virtual void enter(Platform&, Game&){};
+    virtual void exit(Platform&, Game&){};
 
     virtual State*
     update(Platform& platform, Game& game, Microseconds delta) = 0;

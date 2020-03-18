@@ -270,10 +270,6 @@ const Color& real_color(ColorConstant k)
         static const Color coquelicot(30, 7, 1);
         return coquelicot;
 
-    case ColorConstant::french_plum:
-        static const Color french_plum(6, 10, 16);
-        return french_plum;
-
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:
@@ -511,8 +507,8 @@ int strcmp(const char* p1, const char* p2)
 
 struct TextureData {
     const char* name_;
-    const char* tile_data_;
-    const char* palette_data_;
+    const unsigned int* tile_data_;
+    const unsigned short* palette_data_;
     u32 tile_data_length_;
     u32 palette_data_length_;
 };
@@ -521,8 +517,7 @@ struct TextureData {
 #define STR(X) #X
 #define TEXTURE_INFO(NAME)                                                     \
     {                                                                          \
-        STR(NAME), (const char*)NAME##Tiles, (const char*)NAME##Pal,           \
-            NAME##TilesLen, NAME##PalLen                                       \
+        STR(NAME), NAME##Tiles, NAME##Pal, NAME##TilesLen, NAME##PalLen        \
     }
 
 
@@ -581,11 +576,6 @@ void Platform::load_overlay_texture(const char* name)
     for (auto& info : overlay_textures) {
 
         if (strcmp(name, info.name_) == 0) {
-
-            // NOTE: Background palette bank 2, 16 colors per palette
-            // memcpy((void*)&MEM_BG_PALETTE[16],
-            //        info.palette_data_,
-            //        info.palette_data_length_);
 
             for (int i = 0; i < 16; ++i) {
                 auto from = Color::from_bgr_hex_555(info.palette_data_[i]);

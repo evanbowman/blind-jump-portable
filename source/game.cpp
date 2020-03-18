@@ -23,8 +23,8 @@ Game::Game(Platform& pfrm) : state_(State::initial())
     random_seed() = save_data_.seed_;
 
     pfrm.load_sprite_texture("bgr_spritesheet");
-    pfrm.load_overlay_texture("bgr_overlay");
     pfrm.load_tile_texture("bgr_tilesheet");
+    pfrm.load_overlay_texture("bgr_overlay");
 
     state_->enter(pfrm, *this);
 
@@ -49,6 +49,7 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
 
     if (state_ not_eq last_state) {
         state_->enter(pfrm, *this);
+        last_state->exit(pfrm, *this);
     }
 }
 

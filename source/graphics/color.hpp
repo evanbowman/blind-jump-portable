@@ -13,7 +13,6 @@ enum class ColorConstant {
     spanish_crimson, // #E81858
     coquelicot,      // #F03808
     rich_black,      // #000010
-    french_plum,     // #345680
     stil_de_grain,   // #F5CB5C
     count
 };
