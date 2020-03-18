@@ -121,8 +121,7 @@ void Text::assign(const char* str)
             pfrm_.set_overlay_tile(write_pos++, coord_.y, (c - 97) + 11);
         } else {
             // FIXME: add uppercase letters
-            pfrm_.set_overlay_tile(write_pos++, coord_.y, 1);
-
+            pfrm_.set_overlay_tile(write_pos++, coord_.y, 10);
         }
 
         ++pos;
