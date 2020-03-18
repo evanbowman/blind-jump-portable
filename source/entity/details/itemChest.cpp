@@ -24,10 +24,10 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
             // enemies on the map.
             bool enemies_remaining = false;
             game.enemies().transform([&](auto& buf) {
-                                         if (not buf.empty()) {
-                                             enemies_remaining = true;
-                                         }
-                                     });
+                if (not buf.empty()) {
+                    enemies_remaining = true;
+                }
+            });
             if (enemies_remaining) {
                 break;
             }
