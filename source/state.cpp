@@ -25,7 +25,10 @@ public:
     {
     }
     void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
     State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
     std::optional<Text> text_;
     std::optional<Text> score_;
 } active_state(true);
@@ -146,8 +149,7 @@ State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                                                    SnakeBody>() and
                                   not std::is_same<decltype(**it),
                                                    SnakeHead>()) {
-                        if (within_view_frustum(pfrm.screen(),
-                                                (*it)->get_position())) {
+                        if ((*it)->visible()) {
                             game.camera().push_ballast((*it)->get_position());
                         }
                     }
@@ -198,6 +200,13 @@ void ActiveState::enter(Platform& pfrm, Game& game)
 }
 
 
+void ActiveState::exit(Platform&, Game&)
+{
+    text_.reset();
+    score_.reset();
+}
+
+
 State* ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().update(pfrm, game, delta);
@@ -216,16 +225,12 @@ State* ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (game.player().get_health() == 0) {
-        text_.reset();
-        score_.reset();
         return &death_fade_state;
     }
 
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
     if (manhattan_length(game.player().get_position(), t_pos) < 16) {
         game.player().move(t_pos);
-        text_.reset();
-        score_.reset();
         return &pre_fade_pause_state;
     } else {
         return this;

@@ -705,7 +705,7 @@ COLD void Platform::push_map(const TileMap& map)
     // DEBUG: init the overlay
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
-            set_overlay_tile(i, j, 10);
+            set_overlay_tile(i, j, 0);
         }
     }
 }
