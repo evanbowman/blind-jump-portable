@@ -22,14 +22,18 @@ using OverlayCoord = Vec2<u8>;
 
 class Text {
 public:
+    // Setting a custom font color is sort of platform specific, and resource
+    // intensive on some platforms. So we provide a few presents.
+    enum class Style { default_red, old_paper };
+
     Text(Platform& pfrm, const char* str, const OverlayCoord& coord);
     Text(Platform& pfrm, const OverlayCoord& coord);
     Text(const Text&) = delete;
 
     ~Text();
 
-    void assign(const char* str);
-    void assign(int num);
+    void assign(const char* str, Style = Style::default_red);
+    void assign(int num, Style = Style::default_red);
 
     void erase();
 
@@ -37,4 +41,21 @@ private:
     Platform& pfrm_;
     const OverlayCoord coord_;
     u16 len_;
+};
+
+
+// Unlike Text, TextView understands words, reflows words onto new lines, and is
+// capable of scrolling vertically through a block of text.
+class TextView {
+public:
+    TextView(Platform& pfrm);
+
+    // Use the skiplines parameter to scroll the textview vertically.
+    void assign(const char* str,
+                const OverlayCoord& coord,
+                const OverlayCoord& size,
+                int skiplines = 0);
+
+private:
+    Platform& pfrm_;
 };

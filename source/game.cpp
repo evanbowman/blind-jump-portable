@@ -601,10 +601,12 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
 bool within_view_frustum(const Platform::Screen& screen, const Vec2<Float>& pos)
 {
+    // FIXME: I thought I had the math correct, but apparantly the view center
+    // points to the top left corner of the screen. Ah well...
     const auto view_center = screen.get_view().get_center().cast<s32>();
     const auto view_half_extent = screen.size().cast<s32>() / s32(2);
     Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
                          view_center.y + view_half_extent.y * 2};
-    return pos.x > view_center.x - 32 and pos.x < view_br.x and
-           pos.y > view_center.y - 32 and pos.y < view_br.y;
+    return pos.x > view_center.x - 32 and pos.x < view_br.x + 32 and
+           pos.y > view_center.y - 32 and pos.y < view_br.y + 32;
 }
