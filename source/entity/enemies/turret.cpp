@@ -1,8 +1,8 @@
 #include "turret.hpp"
+#include "common.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 #include <algorithm>
-#include "common.hpp"
 
 
 Turret::Turret(const Vec2<Float>& pos)

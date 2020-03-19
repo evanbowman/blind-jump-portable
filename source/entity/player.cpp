@@ -529,4 +529,8 @@ void Blaster::shoot(Platform& pf, Game& game)
 void Blaster::set_visible(bool visible)
 {
     visible_ = visible;
+
+    if (not visible_) {
+        sprite_.set_alpha(Sprite::Alpha::transparent);
+    }
 }

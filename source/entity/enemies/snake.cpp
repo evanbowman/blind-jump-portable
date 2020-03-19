@@ -1,7 +1,7 @@
 #include "snake.hpp"
+#include "common.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
-#include "common.hpp"
 
 
 static constexpr const Float x_move_rate = 0.000046f;
@@ -286,7 +286,7 @@ void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
     if (not alive()) {
 
         pf.sleep(5);
-        game.camera().shake();
+        on_enemy_destroyed(game, position_);
 
         SnakeNode* current = parent();
         while (current) {

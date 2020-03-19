@@ -270,6 +270,10 @@ const Color& real_color(ColorConstant k)
         static const Color aerospace_orange(31, 10, 0);
         return aerospace_orange;
 
+    case ColorConstant::chrome_yellow:
+        static const Color chrome_yellow(31, 20, 0);
+        return chrome_yellow;
+
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:

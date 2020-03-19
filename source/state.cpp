@@ -13,9 +13,11 @@ public:
     {
     }
     State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    void exit(Platform& pfrm, Game& game) override;
 
 private:
     const bool camera_tracking_;
+    std::optional<Text> room_clear_text_;
 };
 
 
@@ -118,6 +120,12 @@ private:
 } death_continue_state;
 
 
+void OverworldState::exit(Platform&, Game&)
+{
+    room_clear_text_.reset();
+}
+
+
 State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     Player& player = game.player();
@@ -135,11 +143,16 @@ State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     game.effects().transform(update_policy);
     game.details().transform(update_policy);
+
+    bool enemies_remaining = false;
+    bool enemies_destroyed = false;
     game.enemies().transform([&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
             if (not(*it)->alive()) {
                 it = entity_buf.erase(it);
+                enemies_destroyed = true;
             } else {
+                enemies_remaining = true;
                 (*it)->update(pfrm, game, delta);
                 if (camera_tracking_ &&
                     pfrm.keyboard().pressed<Key::action_1>()) {
@@ -158,6 +171,22 @@ State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
         }
     });
+
+    if (not room_clear_text_) {
+        if (not enemies_remaining and enemies_destroyed) {
+            room_clear_text_.emplace(pfrm, "level clear", OverlayCoord{1, 1});
+
+            for (auto& chest : game.details().get<ItemChest>()) {
+                chest->unlock();
+            }
+
+            game.on_timeout(seconds(4), [this](Platform&, Game&) {
+                if (room_clear_text_) {
+                    room_clear_text_->erase();
+                }
+            });
+        }
+    }
 
     game.camera().update(pfrm, delta, player.get_position());
 
@@ -200,8 +229,10 @@ void ActiveState::enter(Platform& pfrm, Game& game)
 }
 
 
-void ActiveState::exit(Platform&, Game&)
+void ActiveState::exit(Platform& pfrm, Game& game)
 {
+    OverworldState::exit(pfrm, game);
+
     text_.reset();
     score_.reset();
 }
