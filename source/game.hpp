@@ -82,7 +82,8 @@ public:
         return save_data_.score_;
     }
 
-    using DeferredCallback = Function<32, void(Platform&, Game&)>;
+    // NOTE: May need to increase internal storage for Function eventually... not sure...
+    using DeferredCallback = Function<16, void(Platform&, Game&)>;
 
     void on_timeout(Microseconds expire_time, const DeferredCallback& callback)
     {
