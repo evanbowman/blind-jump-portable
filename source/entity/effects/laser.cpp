@@ -1,4 +1,5 @@
 #include "laser.hpp"
+#include "number/random.hpp"
 
 
 static constexpr const Float move_rate = 0.0002f;
@@ -10,7 +11,7 @@ Laser::Laser(const Vec2<Float>& position, Cardinal dir)
     set_position(position);
 
     sprite_.set_size(Sprite::Size::w16_h32);
-    sprite_.set_origin({8, 8});
+    sprite_.set_origin({8, 16});
     sprite_.set_position(position);
 
     sprite_.set_texture_index([this] {
@@ -22,18 +23,46 @@ Laser::Laser(const Vec2<Float>& position, Cardinal dir)
             return TextureMap::h_laser;
         }
     }());
+
+    if (dir_ == Cardinal::south) {
+        sprite_.set_flip({false, true});
+    } else if (dir_ == Cardinal::east) {
+        sprite_.set_flip({true, false});
+    }
 }
 
 
 void Laser::update(Platform& pf, Game& game, Microseconds dt)
 {
     // wait till we've had one update cycle to check visibility
-    if (timer_ == 0) {
-        timer_ += dt;
-    } else {
+    if (timer_ != 0) {
         if (not this->visible()) {
             this->kill();
             return;
+        }
+    }
+
+    timer_ += dt;
+
+    if (timer_ > milliseconds(20)) {
+        timer_ = 0;
+        const auto flip = sprite_.get_flip();
+        const auto spr = sprite_.get_texture_index();
+        if (dir_ == Cardinal::north or dir_ == Cardinal::south) {
+                sprite_.set_flip({static_cast<bool>(random_choice<2>()), flip.y});
+        } else {
+            sprite_.set_flip({flip.x, static_cast<bool>(random_choice<2>())});
+        }
+        if (random_choice<3>() == 0) {
+            if (spr == TextureMap::v_laser) {
+                sprite_.set_texture_index(TextureMap::v_laser2);
+            } else if (spr == TextureMap::v_laser2) {
+                sprite_.set_texture_index(TextureMap::v_laser);
+            } else if (spr == TextureMap::h_laser) {
+                sprite_.set_texture_index(TextureMap::h_laser2);
+            } else if (spr == TextureMap::h_laser2) {
+                sprite_.set_texture_index(TextureMap::h_laser);
+            }
         }
     }
 

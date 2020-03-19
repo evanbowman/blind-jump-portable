@@ -508,7 +508,7 @@ void Blaster::update(Platform& pf, Game& game, Microseconds dt, Cardinal dir)
 
     sprite_.set_position(position_);
 
-    if (reload_) {
+    if (reload_ > 0) {
         reload_ -= dt;
     }
 }

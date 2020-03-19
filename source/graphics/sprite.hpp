@@ -116,10 +116,12 @@ enum TextureMap : TextureIndex {
     snake_head_down = 67,
     snake_head_up = 68,
     h_laser = 69,
-    v_laser = 70,
-    h_blaster = 71,
-    v_blaster = 72,
-    explosion = 73,
+    h_laser2 = 70,
+    v_laser = 71,
+    v_laser2 = 72,
+    h_blaster = 73,
+    v_blaster = 74,
+    explosion = 75,
 };
 
 

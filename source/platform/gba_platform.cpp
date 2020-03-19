@@ -263,7 +263,7 @@ const Color& real_color(ColorConstant k)
         return spn_crimson;
 
     case ColorConstant::electric_blue:
-        static const Color el_blue(9, 31, 31);
+        static const Color el_blue(0, 31, 31);
         return el_blue;
 
     case ColorConstant::aerospace_orange:
