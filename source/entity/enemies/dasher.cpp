@@ -6,7 +6,7 @@
 
 Dasher::Dasher(const Vec2<Float>& position)
     : Entity(6), hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0),
-      state_(State::inactive)
+      state_(State::sleep)
 {
     position_ = position;
 
@@ -60,6 +60,13 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     const auto& screen_size = pf.screen().size();
 
     switch (state_) {
+    case State::sleep:
+        if (timer_ > seconds(2)) {
+            timer_ = 0;
+            state_ = State::inactive;
+        }
+        break;
+
     case State::inactive: {
         if (visible()) {
             timer_ = 0;
@@ -110,7 +117,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::shot2;
 
             game.effects().spawn<OrbShot>(
-                position_, sample<8>(game.player().get_position()));
+                position_, sample<8>(game.player().get_position()), 0.00015f);
         }
         break;
 
@@ -120,7 +127,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::shot3;
 
             game.effects().spawn<OrbShot>(
-                position_, sample<16>(game.player().get_position()));
+                position_, sample<16>(game.player().get_position()), 0.00015f);
         }
         break;
 
@@ -130,7 +137,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::pause;
 
             game.effects().spawn<OrbShot>(
-                position_, sample<32>(game.player().get_position()));
+                position_, sample<32>(game.player().get_position()), 0.00015f);
         }
         break;
 
@@ -238,5 +245,9 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
         if (random_choice<3>() == 0) {
             game.details().spawn<Item>(position_, pf, Item::Type::coin);
         }
+    }
+
+    if (state_ == State::sleep) {
+        state_ = State::shoot_begin;
     }
 }

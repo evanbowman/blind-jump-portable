@@ -45,6 +45,7 @@ void Player::injured(Platform& pf, Health damage)
         pf.sleep(4);
         debit_health(damage);
         sprite_.set_mix({ColorConstant::aerospace_orange, 255});
+        blaster_.get_sprite().set_mix(sprite_.get_mix());
         invulnerability_timer_ = milliseconds(700);
     }
 }
