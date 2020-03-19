@@ -43,6 +43,7 @@ public:
 
 private:
     enum class State {
+        sleep,
         inactive,
         idle,
         shot1,

@@ -70,9 +70,6 @@ public:
         if (invoke_policy_) {
             data_ = internal_storage_.data();
             move_policy_(data_, rhs.data_);
-            if (not rhs.isSmall()) {
-                free(rhs.data_);
-            }
             rhs.data_ = nullptr;
         }
     }

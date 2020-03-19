@@ -1,6 +1,7 @@
 #include "snake.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
+#include "common.hpp"
 
 
 static constexpr const Float x_move_rate = 0.000046f;
@@ -46,7 +47,7 @@ void SnakeNode::update(Game& game, Microseconds dt)
             if (parent()) {
                 parent()->destroy();
             }
-            game.camera().shake();
+            on_enemy_destroyed(game, position_);
             game.score() += 8;
             kill();
         }

@@ -1,10 +1,13 @@
 #include "turret.hpp"
 #include "game.hpp"
+#include "number/random.hpp"
 #include <algorithm>
+#include "common.hpp"
 
 
 Turret::Turret(const Vec2<Float>& pos)
-    : Entity(5), state_(State::closed), hitbox_{&position_, {16, 32}, {8, 16}}
+    : Entity(5), state_(State::sleep), hitbox_{&position_, {16, 32}, {8, 16}},
+      timer_(seconds(2))
 {
     set_position(pos);
     sprite_.set_position(pos);
@@ -36,10 +39,18 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
     const auto& player_pos = game.player().get_position();
     const auto& screen_size = pfrm.screen().size();
     switch (state_) {
+    case State::sleep:
+        if (timer_ > 0) {
+            timer_ -= dt;
+        } else {
+            state_ = State::closed;
+        }
+        break;
+
     case State::closed:
         if (visible()) {
             if (manhattan_length(player_pos, position_) <
-                std::min(screen_size.x, screen_size.y) / 2) {
+                std::min(screen_size.x, screen_size.y) / 2 + 15) {
                 state_ = State::opening;
             }
         }
@@ -51,14 +62,23 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         if (animation_.done(sprite_)) {
             state_ = State::open;
+            timer_ = milliseconds(110);
         }
         break;
 
     case State::open:
         if (manhattan_length(player_pos, position_) >
-            std::min(screen_size.x, screen_size.y) / 2 + 48) {
+            std::min(screen_size.x, screen_size.y) / 2 + 48 + 40) {
             state_ = State::closing;
         }
+        if (timer_ > 0) {
+            timer_ -= dt;
+        } else {
+            game.effects().spawn<OrbShot>(
+                position_, sample<8>(game.player().get_position()), 0.00011f);
+            timer_ = milliseconds(830);
+        }
+
         break;
 
     case State::closing:
@@ -83,8 +103,9 @@ void Turret::on_collision(Platform& pf, Game& game, Laser&)
 
         if (not alive()) {
             game.score() += 10;
+
             pf.sleep(5);
-            game.camera().shake();
+            on_enemy_destroyed(game, position_);
         }
     }
 }

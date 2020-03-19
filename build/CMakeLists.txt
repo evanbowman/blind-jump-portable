@@ -31,8 +31,10 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 set(SOURCES
   ${SOURCE_DIR}/entity/details/itemChest.cpp
+  ${SOURCE_DIR}/entity/effects/explosion.cpp
   ${SOURCE_DIR}/entity/enemies/critter.cpp
   ${SOURCE_DIR}/entity/effects/orbshot.cpp
+  ${SOURCE_DIR}/entity/enemies/common.cpp
   ${SOURCE_DIR}/entity/enemies/turret.cpp
   ${SOURCE_DIR}/entity/enemies/dasher.cpp
   ${SOURCE_DIR}/entity/enemies/probe.cpp

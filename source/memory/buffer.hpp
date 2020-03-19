@@ -83,6 +83,8 @@ public:
     // FIXME: I wrote this fn in like 30 seconds and it's not great
     Iterator erase(Iterator slot)
     {
+        const auto before = slot;
+
         slot->~T();
         for (; slot not_eq end_; ++slot) {
             // FIXME: improve this!
@@ -91,7 +93,7 @@ public:
             }
         }
         end_ -= 1;
-        return slot;
+        return before;
     }
 
 

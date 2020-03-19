@@ -6,6 +6,7 @@
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/transporter.hpp"
+#include "entity/effects/explosion.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
 #include "entity/enemies/critter.hpp"
@@ -15,6 +16,7 @@
 #include "entity/enemies/turret.hpp"
 #include "entity/entityGroup.hpp"
 #include "entity/player.hpp"
+#include "function.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"
 
@@ -41,7 +43,7 @@ public:
         EntityGroup<20, Turret, Dasher, Probe, SnakeHead, SnakeBody, SnakeTail>;
 
     using DetailGroup = EntityGroup<20, ItemChest, Item>;
-    using EffectGroup = EntityGroup<20, OrbShot, Laser>;
+    using EffectGroup = EntityGroup<20, OrbShot, Laser, Explosion>;
 
     inline Transporter& transporter()
     {
@@ -80,6 +82,12 @@ public:
         return save_data_.score_;
     }
 
+    using DeferredCallback = Function<32, void(Platform&, Game&)>;
+
+    void on_timeout(Microseconds expire_time, const DeferredCallback& callback)
+    {
+        deferred_callbacks_.push_back({callback, expire_time});
+    }
 
 private:
     TileMap tiles_;
@@ -91,6 +99,9 @@ private:
     Transporter transporter_;
     SaveData save_data_;
     State* state_;
+
+
+    Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 
     void regenerate_map(Platform& platform);
     bool respawn_entities(Platform& platform);

@@ -2,8 +2,10 @@
 #include "platform/platform.hpp"
 
 
-OrbShot::OrbShot(const Vec2<Float>& position, const Vec2<Float>& target)
-    : Projectile(position, target, 0.00015),
+OrbShot::OrbShot(const Vec2<Float>& position,
+                 const Vec2<Float>& target,
+                 Float speed)
+    : Projectile(position, target, speed),
       timer_(0), hitbox_{&position_, {12, 12}, {8, 8}}
 {
     sprite_.set_size(Sprite::Size::w16_h32);

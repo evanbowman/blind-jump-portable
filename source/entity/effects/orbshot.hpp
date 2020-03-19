@@ -9,7 +9,9 @@ class Player;
 
 class OrbShot : public Projectile {
 public:
-    OrbShot(const Vec2<Float>& position, const Vec2<Float>& target);
+    OrbShot(const Vec2<Float>& position,
+            const Vec2<Float>& target,
+            Float speed);
 
     void update(Platform& pf, Game& game, Microseconds dt);
 
