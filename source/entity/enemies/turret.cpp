@@ -6,7 +6,7 @@
 
 
 Turret::Turret(const Vec2<Float>& pos)
-    : Entity(5), state_(State::sleep), hitbox_{&position_, {16, 32}, {8, 16}},
+    : Entity(3), state_(State::sleep), hitbox_{&position_, {16, 32}, {8, 16}},
       timer_(seconds(2))
 {
     set_position(pos);

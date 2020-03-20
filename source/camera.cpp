@@ -30,7 +30,7 @@ void Camera::update(Platform& pfrm,
     const auto center = interpolate(
         target,
         view_center,
-        dt * speed_ * (ballast_.divisor_ ? 0.00000125f : 0.000003f));
+        dt * speed_ * (ballast_.divisor_ ? 0.00000125f : 0.000004f));
 
     if (not shaking_) {
 
