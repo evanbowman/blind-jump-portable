@@ -32,7 +32,18 @@ public:
     void update(Platform&, Game&, Microseconds);
 
 private:
-    enum class State { sleep, inactive, move, idle } state_;
+    enum class State {
+        sleep,
+        inactive,
+        idle1,
+        dodge1,
+        idle2,
+        dodge2,
+        idle3,
+        dodge3,
+        idle4,
+        rush,
+    } state_;
 
     Microseconds timer_;
 
