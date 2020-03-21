@@ -258,6 +258,7 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
     }
 
     if (state_ == State::sleep) {
+        timer_ = 0;
         state_ = State::shoot_begin;
     }
 }

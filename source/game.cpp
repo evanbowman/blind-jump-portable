@@ -493,7 +493,9 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         {1,
          [&]() {
              spawn_entity<Drone>(pfrm, free_spots, game.enemies());
-             spawn_entity<Drone>(pfrm, free_spots, game.enemies());
+             if (game.level() > 6) {
+                 spawn_entity<Drone>(pfrm, free_spots, game.enemies());
+             }
          }},
         {3, [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); }},
         {4,
