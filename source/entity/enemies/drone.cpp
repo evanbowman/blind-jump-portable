@@ -6,17 +6,17 @@
 
 Drone::Drone(const Vec2<Float>& pos)
     : Entity(Entity::Health(2)), state_{State::sleep},
-      timer_(0), hitbox_{&position_, {12, 12}, {8, 14}}
+      timer_(0), hitbox_{&position_, {16, 16}, {8, 13}}
 {
     set_position(pos);
 
     sprite_.set_position(pos);
     sprite_.set_size(Sprite::Size::w16_h32);
-    sprite_.set_origin({8, 16});
+    sprite_.set_origin({8, 13});
     sprite_.set_texture_index(TextureMap::drone);
 
     shadow_.set_position(pos);
-    shadow_.set_origin({7, -9});
+    shadow_.set_origin({7, -12});
     shadow_.set_size(Sprite::Size::w16_h32);
     shadow_.set_alpha(Sprite::Alpha::translucent);
     shadow_.set_texture_index(TextureMap::drop_shadow);
