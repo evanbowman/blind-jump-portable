@@ -5,7 +5,7 @@
 
 
 Drone::Drone(const Vec2<Float>& pos)
-    : Entity(Entity::Health(2)), state_{State::sleep},
+    : Entity(Entity::Health(4)), state_{State::sleep},
       timer_(0), hitbox_{&position_, {16, 16}, {8, 13}}
 {
     set_position(pos);
