@@ -283,7 +283,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
     // with all walkable tiles from the tilemap.
     tiles_.for_each([&](const Tile& tile, TIdx x, TIdx y) {
         if (tile not_eq Tile::none and tile not_eq Tile::ledge and
-            tile not_eq Tile::grass_ledge) {
+            tile not_eq Tile::grass_ledge and
+            tile not_eq Tile::grass_ledge_vines) {
             temporary.set_tile(x, y, Tile(1));
         } else {
             temporary.set_tile(x, y, Tile(0));
@@ -377,7 +378,10 @@ COLD void Game::regenerate_map(Platform& pfrm)
                 break;
 
             case Tile::ledge:
-                tiles_.set_tile(x, y, Tile::grass_ledge);
+                tiles_.set_tile(x,
+                                y,
+                                (random_choice<2>()) ? Tile::grass_ledge
+                                                     : Tile::grass_ledge_vines);
                 break;
 
             default:
@@ -388,8 +392,12 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     tiles_.for_each([&](Tile& tile, int, int) {
         if (tile == Tile::plate) {
-            if (random_choice<8>() == 0) {
+            if (random_choice<7>() == 0) {
                 tile = Tile::damaged_plate;
+            }
+        } else if (tile == Tile::sand) {
+            if (random_choice<4>() == 0) {
+                tile = Tile::sand_sprouted;
             }
         }
     });
@@ -406,15 +414,17 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 
     map.for_each([&](const Tile& tile, TIdx x, TIdx y) {
         if (tile not_eq Tile::none and tile not_eq Tile::ledge and
-            tile not_eq Tile::grass_ledge) {
+            tile not_eq Tile::grass_ledge and
+            tile not_eq Tile::grass_ledge_vines) {
             output.push_back({x, y});
         }
     });
 
     for (auto it = output.begin(); it not_eq output.end();) {
         const Tile tile = map.get_tile(it->x, it->y);
-        if (not(tile == Tile::sand or (u8(tile) >= u8(Tile::grass_sand) and
-                                       u8(tile) < u8(Tile::grass_plate)))) {
+        if (not(tile == Tile::sand or tile == Tile::sand_sprouted or
+                (u8(tile) >= u8(Tile::grass_sand) and
+                 u8(tile) < u8(Tile::grass_plate)))) {
             output.erase(it);
         } else {
             ++it;
@@ -490,7 +500,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         Function<64, void()> spawn_;
         int max_allowed_ = 1000;
     } info[] = {
-        {1,
+        {0,
          [&]() {
              spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              if (game.level() > 6) {
@@ -599,7 +609,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                    (t >= Tile::grass_plate and t < Tile::grass_ledge);
         };
         auto is_sand = [&](Tile t) {
-            return t == Tile::sand or
+            return t == Tile::sand or t == Tile::sand_sprouted or
                    (t >= Tile::grass_sand and t < Tile::grass_plate);
         };
         if (is_plate(t)) {

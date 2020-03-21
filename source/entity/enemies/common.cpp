@@ -28,7 +28,7 @@ void on_enemy_destroyed(Platform& pfrm,
 
     // We do not want to spawn rubble over an empty map tile
     if (tile not_eq Tile::ledge and tile not_eq Tile::grass_ledge and
-        tile not_eq Tile::none) {
+        tile not_eq Tile::none and tile not_eq Tile::grass_ledge_vines) {
         game.on_timeout(milliseconds(200),
                         [pos = position](Platform&, Game& game) {
                             game.details().spawn<Rubble>(pos);

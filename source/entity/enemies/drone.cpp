@@ -59,7 +59,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::dodge1;
             const auto player_pos = game.player().get_position();
-            step_vector_ = direction(position_, sample<64>(player_pos)) * 0.000055f;
+            step_vector_ =
+                direction(position_, sample<64>(player_pos)) * 0.000055f;
         }
         break;
 
@@ -78,7 +79,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::dodge2;
             const auto player_pos = game.player().get_position();
-            step_vector_ = direction(position_, sample<64>(player_pos)) * 0.000055f;
+            step_vector_ =
+                direction(position_, sample<64>(player_pos)) * 0.000055f;
         }
         break;
 
@@ -97,7 +99,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::dodge3;
             const auto player_pos = game.player().get_position();
-            step_vector_ = direction(position_, sample<64>(player_pos)) * 0.000055f;
+            step_vector_ =
+                direction(position_, sample<64>(player_pos)) * 0.000055f;
         }
         break;
 

@@ -3,13 +3,13 @@
 
 //======================================================================
 //
-//	bgr_tilesheet, 1248x24@4, 
+//	bgr_tilesheet, 1344x24@4, 
 //	Transparent color : FF,00,FF
 //	+ palette 256 entries, not compressed
-//	+ 468 tiles Metatiled by 4x3 not compressed
-//	Total size: 512 + 14976 = 15488
+//	+ 504 tiles Metatiled by 4x3 not compressed
+//	Total size: 512 + 16128 = 16640
 //
-//	Time-stamp: 2020-03-21, 08:36:27
+//	Time-stamp: 2020-03-21, 17:51:57
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -18,8 +18,8 @@
 #ifndef GRIT_BGR_TILESHEET_H
 #define GRIT_BGR_TILESHEET_H
 
-#define bgr_tilesheetTilesLen 14976
-extern const unsigned int bgr_tilesheetTiles[3744];
+#define bgr_tilesheetTilesLen 16128
+extern const unsigned int bgr_tilesheetTiles[4032];
 
 #define bgr_tilesheetPalLen 512
 extern const unsigned short bgr_tilesheetPal[256];

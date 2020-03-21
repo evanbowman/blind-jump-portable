@@ -10,10 +10,13 @@ enum class Tile : u8 {
     sand,
     ledge,
     damaged_plate,
-    __reserved_0,
+    __reserved_0, // Used for rendering the parallax scrolling starfield
+    sand_sprouted,
+    __reserved_2,
     grass_sand,
     grass_plate = grass_sand + 16,
     grass_ledge = grass_plate + 16,
+    grass_ledge_vines,
     count,
 };
 
