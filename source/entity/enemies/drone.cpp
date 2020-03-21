@@ -1,9 +1,12 @@
 #include "drone.hpp"
-#include "game.hpp"
 #include "common.hpp"
+#include "game.hpp"
+#include "number/random.hpp"
 
 
-Drone::Drone(const Vec2<Float>& pos) : Entity(Entity::Health(2)), hitbox_{&position_, {11, 11}, {8, 11}}
+Drone::Drone(const Vec2<Float>& pos)
+    : Entity(Entity::Health(2)), state_{State::sleep},
+      timer_(0), hitbox_{&position_, {12, 12}, {8, 14}}
 {
     set_position(pos);
 
@@ -20,7 +23,7 @@ Drone::Drone(const Vec2<Float>& pos) : Entity(Entity::Health(2)), hitbox_{&posit
 }
 
 
-void Drone::update(Platform&, Game& game, Microseconds dt)
+void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     fade_color_anim_.advance(sprite_, dt);
 
@@ -30,6 +33,53 @@ void Drone::update(Platform&, Game& game, Microseconds dt)
         sprite_.set_flip({false, false});
     }
 
+    timer_ += dt;
+
+    switch (state_) {
+    case State::sleep:
+        if (timer_ > seconds(2)) {
+            timer_ = 0;
+            state_ = State::inactive;
+        }
+        break;
+
+    case State::inactive:
+        if (visible()) {
+            timer_ = 0;
+            const auto screen_size = pfrm.screen().size();
+            if (manhattan_length(game.player().get_position(), position_) <
+                std::min(screen_size.x, screen_size.y)) {
+                state_ = State::idle;
+            }
+        }
+        break;
+
+    case State::move:
+        position_ = position_ + Float(dt) * step_vector_;
+        sprite_.set_position(position_);
+        shadow_.set_position(position_);
+        if (timer_ > seconds(1)) {
+            timer_ = 0;
+            state_ = State::idle;
+        }
+        break;
+
+    case State::idle:
+        if (timer_ > milliseconds(700)) {
+            timer_ = 0;
+            state_ = State::move;
+            const auto player_pos = game.player().get_position();
+            const auto target = [&] {
+                if (random_choice<2>()) {
+                    return player_pos;
+                } else {
+                    return sample<64>(player_pos);
+                }
+            }();
+            step_vector_ = direction(position_, target) * 0.000055f;
+        }
+        break;
+    }
 }
 
 
