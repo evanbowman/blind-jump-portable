@@ -49,34 +49,84 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             const auto screen_size = pfrm.screen().size();
             if (manhattan_length(game.player().get_position(), position_) <
                 std::min(screen_size.x, screen_size.y)) {
-                state_ = State::idle;
+                state_ = State::idle1;
             }
         }
         break;
 
-    case State::move:
+    case State::idle1:
+        if (timer_ > milliseconds(700)) {
+            timer_ = 0;
+            state_ = State::dodge1;
+            const auto player_pos = game.player().get_position();
+            step_vector_ = direction(position_, sample<64>(player_pos)) * 0.000055f;
+        }
+        break;
+
+    case State::dodge1:
         position_ = position_ + Float(dt) * step_vector_;
         sprite_.set_position(position_);
         shadow_.set_position(position_);
         if (timer_ > seconds(1)) {
             timer_ = 0;
-            state_ = State::idle;
+            state_ = State::idle2;
         }
         break;
 
-    case State::idle:
+    case State::idle2:
         if (timer_ > milliseconds(700)) {
             timer_ = 0;
-            state_ = State::move;
+            state_ = State::dodge2;
             const auto player_pos = game.player().get_position();
-            const auto target = [&] {
-                if (random_choice<2>()) {
-                    return player_pos;
-                } else {
-                    return sample<64>(player_pos);
-                }
-            }();
-            step_vector_ = direction(position_, target) * 0.000055f;
+            step_vector_ = direction(position_, sample<64>(player_pos)) * 0.000055f;
+        }
+        break;
+
+    case State::dodge2:
+        position_ = position_ + Float(dt) * step_vector_;
+        sprite_.set_position(position_);
+        shadow_.set_position(position_);
+        if (timer_ > seconds(1)) {
+            timer_ = 0;
+            state_ = State::idle3;
+        }
+        break;
+
+    case State::idle3:
+        if (timer_ > milliseconds(700)) {
+            timer_ = 0;
+            state_ = State::dodge3;
+            const auto player_pos = game.player().get_position();
+            step_vector_ = direction(position_, sample<64>(player_pos)) * 0.000055f;
+        }
+        break;
+
+    case State::dodge3:
+        position_ = position_ + Float(dt) * step_vector_;
+        sprite_.set_position(position_);
+        shadow_.set_position(position_);
+        if (timer_ > seconds(1)) {
+            timer_ = 0;
+            state_ = State::idle4;
+        }
+        break;
+
+    case State::idle4:
+        if (timer_ > milliseconds(700)) {
+            timer_ = 0;
+            state_ = State::rush;
+            const auto player_pos = game.player().get_position();
+            step_vector_ = direction(position_, player_pos) * 0.00015f;
+        }
+        break;
+
+    case State::rush:
+        position_ = position_ + Float(dt) * step_vector_;
+        sprite_.set_position(position_);
+        shadow_.set_position(position_);
+        if (timer_ > seconds(1)) {
+            timer_ = 0;
+            state_ = State::idle1;
         }
         break;
     }

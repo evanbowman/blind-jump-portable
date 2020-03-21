@@ -479,21 +479,21 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 void InventoryState::enter(Platform& pfrm, Game& game)
 {
     pfrm.screen().fade(0.4f);
-    text_.emplace(pfrm);
-    text_->assign(
-        "in these deep solitudes and awful cells, where heav'nly-pensive "
-        "contemplation dwells, and ever-musing melancholy reigns; what means "
-        "this tumult in a vestal's veins? why rove my thoughts beyond this "
-        "last retreat? why feels my heart its long-forgotten heat? yet, yet i "
-        "love!—from abelard it came, and eloisa yet must kiss the name. dear "
-        "fatal name! rest ever unreveal'd, nor pass these lips in holy silence "
-        "seal'd. hide it, my heart, within that close disguise, where mix'd "
-        "with god's, his lov'd idea lies: o write it not, my hand—the name "
-        "appears already written—wash it out, my tears! in vain lost eloisa "
-        "weeps and prays, her heart still dictates, and her hand obeys.",
-        {0, 0},
-        (pfrm.screen().size() / u32(8)).cast<u8>(),
-        0);
+    // text_.emplace(pfrm);
+    // text_->assign(
+    //     "in these deep solitudes and awful cells, where heav'nly-pensive "
+    //     "contemplation dwells, and ever-musing melancholy reigns; what means "
+    //     "this tumult in a vestal's veins? why rove my thoughts beyond this "
+    //     "last retreat? why feels my heart its long-forgotten heat? yet, yet i "
+    //     "love!—from abelard it came, and eloisa yet must kiss the name. dear "
+    //     "fatal name! rest ever unreveal'd, nor pass these lips in holy silence "
+    //     "seal'd. hide it, my heart, within that close disguise, where mix'd "
+    //     "with god's, his lov'd idea lies: o write it not, my hand—the name "
+    //     "appears already written—wash it out, my tears! in vain lost eloisa "
+    //     "weeps and prays, her heart still dictates, and her hand obeys.",
+    //     {0, 0},
+    //     (pfrm.screen().size() / u32(8)).cast<u8>(),
+    //     0);
 }
 
 
