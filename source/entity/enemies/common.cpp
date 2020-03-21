@@ -23,16 +23,16 @@ void on_enemy_destroyed(Platform& pfrm,
         });
     });
 
-    const auto tile_coord = to_quarter_tile_coord(position.cast<s32>());
+    const auto tile_coord = to_tile_coord(position.cast<s32>());
     const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);
 
     // We do not want to spawn rubble over an empty map tile
-    if (tile not_eq Tile::ledge
-        and tile not_eq Tile::grass_ledge
-        and tile not_eq Tile::none) {
-        game.on_timeout(milliseconds(200), [pos = position](Platform&, Game& game) {
-                                               game.details().spawn<Rubble>(pos);
-                                           });
+    if (tile not_eq Tile::ledge and tile not_eq Tile::grass_ledge and
+        tile not_eq Tile::none) {
+        game.on_timeout(milliseconds(200),
+                        [pos = position](Platform&, Game& game) {
+                            game.details().spawn<Rubble>(pos);
+                        });
     }
 
     if (item_drop_chance) {

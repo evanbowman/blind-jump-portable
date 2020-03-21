@@ -32,6 +32,12 @@ public:
     void update(Platform&, Game&, Microseconds);
 
 private:
+    enum class State { sleep, inactive, move, idle } state_;
+
+    Microseconds timer_;
+
+    Vec2<Float> step_vector_;
+
     Sprite shadow_;
     HitBox hitbox_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
