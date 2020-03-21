@@ -12,7 +12,7 @@ class Platform;
 class Critter;
 class Dasher;
 class Turret;
-class Probe;
+class Drone;
 class Item;
 class OrbShot;
 class SnakeHead;
@@ -46,7 +46,7 @@ public:
     void on_collision(Platform& pf, Game& game, Critter&);
     void on_collision(Platform& pf, Game& game, Dasher&);
     void on_collision(Platform& pf, Game& game, Turret&);
-    void on_collision(Platform& pf, Game& game, Probe&);
+    void on_collision(Platform& pf, Game& game, Drone&);
     void on_collision(Platform& pf, Game& game, Item&);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);

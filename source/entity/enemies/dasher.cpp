@@ -242,7 +242,14 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
         game.score() += 15;
 
         pf.sleep(5);
-        on_enemy_destroyed(game, position_);
+
+        static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                                   Item::Type::coin,
+                                                   Item::Type::coin,
+                                                   Item::Type::heart,
+                                                   Item::Type::null};
+
+        on_enemy_destroyed(pf, game, position_, 3, item_drop_vec);
 
 
         if (random_choice<3>() == 0) {

@@ -149,16 +149,40 @@ void Text::assign(const char* str, Style style)
 }
 
 
+SmallIcon::SmallIcon(Platform& pfrm, int tile, const OverlayCoord& coord)
+    : pfrm_(pfrm), coord_(coord)
+{
+    pfrm_.set_overlay_tile(coord_.x, coord_.y, tile);
+}
+
+
+SmallIcon::~SmallIcon()
+{
+    pfrm_.set_overlay_tile(coord_.x, coord_.y, 0);
+}
+
+
 TextView::TextView(Platform& pfrm) : pfrm_(pfrm)
 {
 }
 
+TextView::~TextView()
+{
+    for (int i = position_.x; i < position_.x + size_.x; ++i) {
+        for (int j = position_.y; j < position_.y + size_.y; ++j) {
+            pfrm_.set_overlay_tile(i, j, 0);
+        }
+    }
+}
 
 void TextView::assign(const char* str,
                       const OverlayCoord& coord,
                       const OverlayCoord& size,
                       int skiplines)
 {
+    position_ = coord;
+    size_ = size;
+
     const auto len = strlen(str);
 
     auto cursor = coord;

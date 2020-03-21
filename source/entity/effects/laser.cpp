@@ -49,7 +49,7 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
         const auto flip = sprite_.get_flip();
         const auto spr = sprite_.get_texture_index();
         if (dir_ == Cardinal::north or dir_ == Cardinal::south) {
-                sprite_.set_flip({static_cast<bool>(random_choice<2>()), flip.y});
+            sprite_.set_flip({static_cast<bool>(random_choice<2>()), flip.y});
         } else {
             sprite_.set_flip({flip.x, static_cast<bool>(random_choice<2>())});
         }
@@ -112,7 +112,7 @@ void Laser::on_collision(Platform&, Game&, SnakeBody&)
 }
 
 
-void Laser::on_collision(Platform&, Game&, Laser&)
+void Laser::on_collision(Platform&, Game&, Drone&)
 {
     this->kill();
 }

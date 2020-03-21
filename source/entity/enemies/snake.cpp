@@ -36,7 +36,7 @@ const Vec2<TIdx>& SnakeNode::tile_coord() const
 }
 
 
-void SnakeNode::update(Game& game, Microseconds dt)
+void SnakeNode::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     tile_coord_ = to_quarter_tile_coord(position_.cast<s32>());
 
@@ -45,9 +45,14 @@ void SnakeNode::update(Game& game, Microseconds dt)
 
         if (destruct_timer_ <= 0) {
             if (parent()) {
+                static const Item::Type item_drop_vec[] = {Item::Type::null};
+                on_enemy_destroyed(pfrm, game, position_, 0, item_drop_vec);
                 parent()->destroy();
+            } else /* No parent, i.e.: we're the head */ {
+                static const Item::Type item_drop_vec[] = {
+                    Item::Type::heart, Item::Type::coin, Item::Type::null};
+                on_enemy_destroyed(pfrm, game, position_, 1, item_drop_vec);
             }
-            on_enemy_destroyed(game, position_);
             game.score() += 8;
             kill();
         }
@@ -89,7 +94,7 @@ void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto last_coord = tile_coord();
 
-    SnakeNode::update(game, dt);
+    SnakeNode::update(pfrm, game, dt);
 
     if (last_coord not_eq tile_coord()) {
 
@@ -195,8 +200,9 @@ SnakeBody::SnakeBody(const Vec2<Float>& pos,
     shadow_.set_origin({8, -11});
     shadow_.set_alpha(Sprite::Alpha::translucent);
 
-    SnakeNode::update(game, 0);
-    next_coord_ = tile_coord();
+    // SnakeNode::update(game, 0);
+    next_coord_ = to_quarter_tile_coord(position_.cast<s32>());
+
 
     if (remaining) {
         if (remaining == 1) {
@@ -210,7 +216,7 @@ SnakeBody::SnakeBody(const Vec2<Float>& pos,
 
 void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 {
-    SnakeNode::update(game, dt);
+    SnakeNode::update(pfrm, game, dt);
 
     if (tile_coord() == next_coord_) {
         next_coord_ = parent()->tile_coord();
@@ -286,7 +292,9 @@ void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
     if (not alive()) {
 
         pf.sleep(5);
-        on_enemy_destroyed(game, position_);
+
+        static const Item::Type item_drop_vec[] = {Item::Type::null};
+        on_enemy_destroyed(pf, game, position_, 0, item_drop_vec);
 
         SnakeNode* current = parent();
         while (current) {
