@@ -27,7 +27,8 @@ WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
     const Vec2<TIdx> tile_coords = to_tile_coord(pos);
 
     auto tile_is_wall = [&](Tile t) {
-        return t == Tile::none or t == Tile::ledge or t == Tile::grass_ledge;
+        return t == Tile::none or t == Tile::ledge or t == Tile::grass_ledge or
+               t == Tile::grass_ledge_vines;
     };
 
     auto check_wall = [&](TIdx x, TIdx y) {

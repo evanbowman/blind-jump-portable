@@ -567,6 +567,12 @@ void Platform::load_tile_texture(const char* name)
                 MEM_BG_PALETTE[i] = from.bgr_hex_555();
             }
 
+            constexpr auto charblock_size = sizeof(ScreenBlock) * 8;
+            if (info.tile_data_length_ > charblock_size) {
+                error(*this, "tileset exceeds charblock size");
+                return;
+            }
+
             memcpy((void*)&MEM_SCREENBLOCKS[0][0],
                    info.tile_data_,
                    info.tile_data_length_);
