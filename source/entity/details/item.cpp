@@ -13,6 +13,7 @@ Item::Item(const Vec2<Float>& pos, Platform&, Type type)
         sprite_.set_texture_index(TextureMap::heart);
         break;
 
+    case Type::null:
     case Type::coin:
         sprite_.set_texture_index(TextureMap::coin);
         break;

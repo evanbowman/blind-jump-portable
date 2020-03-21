@@ -91,7 +91,7 @@ void Player::on_collision(Platform& pf, Game& game, Turret&)
 }
 
 
-void Player::on_collision(Platform& pf, Game& game, Probe&)
+void Player::on_collision(Platform& pf, Game& game, Drone&)
 {
     Player::injured(pf, Health(1));
 }
@@ -108,6 +108,9 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
     case Item::Type::coin:
         sprite_.set_mix({ColorConstant::electric_blue, 255});
         game.score() += 4;
+        break;
+
+    case Item::Type::null:
         break;
     }
 }

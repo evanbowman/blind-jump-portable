@@ -44,11 +44,25 @@ private:
 };
 
 
+class SmallIcon {
+public:
+    SmallIcon(Platform& pfrm, int tile, const OverlayCoord& coord);
+    SmallIcon(const SmallIcon&) = delete;
+    ~SmallIcon();
+
+private:
+    Platform& pfrm_;
+    const OverlayCoord coord_;
+};
+
+
 // Unlike Text, TextView understands words, reflows words onto new lines, and is
 // capable of scrolling vertically through a block of text.
 class TextView {
 public:
     TextView(Platform& pfrm);
+    TextView(const TextView&) = delete;
+    ~TextView();
 
     // Use the skiplines parameter to scroll the textview vertically.
     void assign(const char* str,
@@ -58,4 +72,6 @@ public:
 
 private:
     Platform& pfrm_;
+    OverlayCoord size_;
+    OverlayCoord position_;
 };

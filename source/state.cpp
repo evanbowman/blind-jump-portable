@@ -33,6 +33,8 @@ public:
 private:
     std::optional<Text> text_;
     std::optional<Text> score_;
+    std::optional<SmallIcon> heart_icon_;
+    std::optional<SmallIcon> coin_icon_;
 } active_state(true);
 
 
@@ -120,6 +122,15 @@ private:
 } death_continue_state;
 
 
+static class InventoryState : public State {
+public:
+    void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
+    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    std::optional<TextView> text_;
+} inventory_state;
+
+
 void OverworldState::exit(Platform&, Game&)
 {
     room_clear_text_.reset();
@@ -190,12 +201,15 @@ State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     game.camera().update(pfrm, delta, player.get_position());
 
+    check_collisions(pfrm, game, player, game.enemies().get<Drone>());
     check_collisions(pfrm, game, player, game.enemies().get<Turret>());
     check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
     check_collisions(pfrm, game, player, game.details().get<Item>());
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
     check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
     check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
+    check_collisions(
+        pfrm, game, game.effects().get<Laser>(), game.enemies().get<Drone>());
     check_collisions(
         pfrm, game, game.effects().get<Laser>(), game.enemies().get<Dasher>());
     check_collisions(
@@ -222,10 +236,13 @@ void ActiveState::enter(Platform& pfrm, Game& game)
     constexpr u32 overlay_tile_size = 8;
     auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
 
-    text_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 3)});
-    score_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 2)});
+    text_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 3)});
+    score_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 2)});
     text_->assign(game.player().get_health());
     score_->assign(game.score());
+
+    heart_icon_.emplace(pfrm, 78, OverlayCoord{1, u8(screen_tiles.y - 3)});
+    coin_icon_.emplace(pfrm, 79, OverlayCoord{1, u8(screen_tiles.y - 2)});
 }
 
 
@@ -235,6 +252,8 @@ void ActiveState::exit(Platform& pfrm, Game& game)
 
     text_.reset();
     score_.reset();
+    heart_icon_.reset();
+    coin_icon_.reset();
 }
 
 
@@ -257,6 +276,10 @@ State* ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (game.player().get_health() == 0) {
         return &death_fade_state;
+    }
+
+    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
+        return &inventory_state;
     }
 
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
@@ -440,6 +463,31 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                            ColorConstant::aerospace_orange);
         return this;
     }
+}
+
+
+State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
+        return &active_state;
+    }
+
+    return this;
+}
+
+
+void InventoryState::enter(Platform& pfrm, Game& game)
+{
+    pfrm.screen().fade(0.4f);
+    text_.emplace(pfrm);
+    text_->assign("in these deep solitudes and awful cells, where heav'nly-pensive contemplation dwells, and ever-musing melancholy reigns; what means this tumult in a vestal's veins? why rove my thoughts beyond this last retreat? why feels my heart its long-forgotten heat? yet, yet i love!—from abelard it came, and eloisa yet must kiss the name. dear fatal name! rest ever unreveal'd, nor pass these lips in holy silence seal'd. hide it, my heart, within that close disguise, where mix'd with god's, his lov'd idea lies: o write it not, my hand—the name appears already written—wash it out, my tears! in vain lost eloisa weeps and prays, her heart still dictates, and her hand obeys.", {0, 0}, (pfrm.screen().size() / u32(8)).cast<u8>(), 0);
+}
+
+
+void InventoryState::exit(Platform& pfrm, Game& game)
+{
+    pfrm.screen().fade(0.f);
+    text_.reset();
 }
 
 

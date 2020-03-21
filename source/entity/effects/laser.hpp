@@ -6,6 +6,7 @@ class Turret;
 class Dasher;
 class SnakeHead;
 class SnakeBody;
+class Drone;
 
 
 class Laser : public Entity {
@@ -14,7 +15,7 @@ public:
 
     void update(Platform& pf, Game& game, Microseconds dt);
 
-    void on_collision(Platform&, Game&, Laser&);
+    void on_collision(Platform&, Game&, Drone&);
     void on_collision(Platform&, Game&, Turret&);
     void on_collision(Platform&, Game&, Dasher&);
     void on_collision(Platform&, Game&, SnakeHead&);

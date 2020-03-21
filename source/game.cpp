@@ -63,8 +63,8 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     state_ = state_->update(pfrm, *this, delta);
 
     if (state_ not_eq last_state) {
-        state_->enter(pfrm, *this);
         last_state->exit(pfrm, *this);
+        state_->enter(pfrm, *this);
     }
 }
 
@@ -490,6 +490,10 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         Function<64, void()> spawn_;
         int max_allowed_ = 1000;
     } info[] = {
+        {1, [&]() {
+                spawn_entity<Drone>(pfrm, free_spots, game.enemies());
+                spawn_entity<Drone>(pfrm, free_spots, game.enemies());
+            }},
         {3, [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); }},
         {4,
          [&]() {
@@ -544,7 +548,22 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     auto player_coord = select_coord(free_spots);
     if (player_coord) {
+
         player_.move(world_coord(*player_coord));
+
+        // We want to remove adjacent free spaces, so that the player doesn't
+        // spawn on top of enemies, and get injured upon entry into a level. The
+        // game is meant to be difficult, but not cruel!
+        for (auto it = free_spots.begin(); it not_eq free_spots.end();) {
+            if (abs(it->x - player_coord->x) < 2 and
+                abs(it->y - player_coord->y) < 2) {
+
+                it = free_spots.erase(it);
+            } else {
+                ++it;
+            }
+        }
+
     } else {
         return false;
     }

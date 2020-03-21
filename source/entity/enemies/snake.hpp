@@ -19,7 +19,7 @@ public:
 
     SnakeNode* parent() const;
 
-    void update(Game& game, Microseconds dt);
+    void update(Platform& pfrm, Game& game, Microseconds dt);
 
     const Vec2<TIdx>& tile_coord() const;
 

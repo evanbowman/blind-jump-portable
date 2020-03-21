@@ -5,6 +5,7 @@
 #include "camera.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
+#include "entity/details/rubble.hpp"
 #include "entity/details/transporter.hpp"
 #include "entity/effects/explosion.hpp"
 #include "entity/effects/laser.hpp"
@@ -14,6 +15,7 @@
 #include "entity/enemies/probe.hpp"
 #include "entity/enemies/snake.hpp"
 #include "entity/enemies/turret.hpp"
+#include "entity/enemies/drone.hpp"
 #include "entity/entityGroup.hpp"
 #include "entity/player.hpp"
 #include "function.hpp"
@@ -40,9 +42,9 @@ public:
     }
 
     using EnemyGroup =
-        EntityGroup<20, Turret, Dasher, Probe, SnakeHead, SnakeBody, SnakeTail>;
+        EntityGroup<20, Drone, Turret, Dasher, SnakeHead, SnakeBody, SnakeTail>;
 
-    using DetailGroup = EntityGroup<20, ItemChest, Item>;
+    using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
     using EffectGroup = EntityGroup<20, OrbShot, Laser, Explosion>;
 
     inline Transporter& transporter()

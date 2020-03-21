@@ -122,6 +122,8 @@ enum TextureMap : TextureIndex {
     h_blaster = 73,
     v_blaster = 74,
     explosion = 75,
+    rubble = 81,
+    drone = 82,
 };
 
 
