@@ -76,12 +76,12 @@ public:
 
     Level level() const
     {
-        return save_data_.level_;
+        return persistent_data_.level_;
     }
 
     Score& score()
     {
-        return save_data_.score_;
+        return persistent_data_.score_;
     }
 
     // NOTE: May need to increase internal storage for Function eventually... not sure...
@@ -100,7 +100,7 @@ private:
     DetailGroup details_;
     EffectGroup effects_;
     Transporter transporter_;
-    SaveData save_data_;
+    PersistentData persistent_data_;
     State* state_;
 
 

@@ -15,12 +15,12 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
-        save_data_ = *sd;
+        persistent_data_ = *sd;
     } else {
         info(pfrm, "no save file found");
     }
 
-    random_seed() = save_data_.seed_;
+    random_seed() = persistent_data_.seed_;
 
     pfrm.load_sprite_texture("bgr_spritesheet");
     pfrm.load_tile_texture("bgr_tilesheet");
@@ -194,13 +194,13 @@ static void condense(TileMap& map, TileMap& maptemp)
 
 COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
-    save_data_.seed_ = random_seed();
-    save_data_.player_health_ = player_.get_health();
+    persistent_data_.seed_ = random_seed();
+    persistent_data_.player_health_ = player_.get_health();
 
     if (set_level) {
-        save_data_.level_ = *set_level;
+        persistent_data_.level_ = *set_level;
     } else {
-        save_data_.level_ += 1;
+        persistent_data_.level_ += 1;
     }
 
 RETRY:

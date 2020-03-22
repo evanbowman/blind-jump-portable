@@ -362,7 +362,7 @@ Platform::Platform()
 }
 
 
-std::optional<SaveData> Platform::read_save()
+std::optional<PersistentData> Platform::read_save()
 {
     // TODO...
     return {};

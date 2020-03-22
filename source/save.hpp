@@ -8,7 +8,7 @@
 using Level = s32;
 using Score = u64;
 
-struct SaveData {
+struct PersistentData {
     static constexpr u32 magic_val = 0xCA55E77E;
 
     using Identity = u64;
@@ -20,4 +20,6 @@ struct SaveData {
     Entity::Health player_health_ = 0;
     Level level_ = -1;
     Score score_ = 0;
+
+    u16 inventory[32] = {};
 };

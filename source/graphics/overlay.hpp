@@ -37,10 +37,14 @@ public:
 
     void erase();
 
+    using Length = u16;
+
+    Length len() { return len_; }
+
 private:
     Platform& pfrm_;
     const OverlayCoord coord_;
-    u16 len_;
+    Length len_;
 };
 
 
@@ -74,4 +78,18 @@ private:
     Platform& pfrm_;
     OverlayCoord size_;
     OverlayCoord position_;
+};
+
+
+class Border {
+public:
+    Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& position, bool fill = false);
+    Border(const Border&) = delete;
+    ~Border();
+
+private:
+    Platform& pfrm_;
+    OverlayCoord size_;
+    OverlayCoord position_;
+    bool filled_;
 };

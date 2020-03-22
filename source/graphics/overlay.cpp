@@ -241,3 +241,83 @@ void TextView::assign(const char* str,
         newline();
     }
 }
+
+
+
+Border::Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& position, bool fill) :
+    pfrm_(pfrm), size_(size), position_(position), filled_(fill)
+{
+    const auto stopx = position_.x + size_.x;
+    const auto stopy = position_.y + size_.y;
+
+    for (int x = position_.x; x < stopx; ++x) {
+        for (int y = position_.x; y < stopy; ++y) {
+
+            if (x == position_.x and y == position_.y) {
+                pfrm.set_overlay_tile(x, y, 86);
+
+            } else if (x == position_.x and y == stopy - 1) {
+                pfrm.set_overlay_tile(x, y, 88);
+
+            } else if (x == stopx - 1 and y == position_.y) {
+                pfrm.set_overlay_tile(x, y, 85);
+
+            } else if (x == stopx - 1 and y == stopy - 1) {
+                pfrm.set_overlay_tile(x, y, 87);
+
+            } else if (x == position_.x) {
+                pfrm.set_overlay_tile(x, y, 84);
+
+            } else if (y == position_.y) {
+                pfrm.set_overlay_tile(x, y, 81);
+
+            } else if (x == stopx - 1) {
+                pfrm.set_overlay_tile(x, y, 82);
+
+            } else if (y == stopy - 1) {
+                pfrm.set_overlay_tile(x, y, 83);
+
+            } else if (fill) {
+                pfrm.set_overlay_tile(x, y, 80);
+
+            }
+        }
+    }
+}
+
+
+
+Border::~Border()
+{
+    const auto stopx = position_.x + size_.x;
+    const auto stopy = position_.y + size_.y;
+
+    for (int x = position_.x; x < stopx; ++x) {
+        for (int y = position_.x; y < stopy; ++y) {
+
+            // TODO: simplify this if/else
+            if ((x == position_.x and y == position_.y) or
+                (x == position_.x and y == stopy - 1) or
+                (x == stopx - 1 and y == position_.y) or
+                (x == stopx - 1 and y == stopy - 1)) {
+                pfrm_.set_overlay_tile(x, y, 0);
+
+            } else if (x == position_.x) {
+                pfrm_.set_overlay_tile(x, y, 0);
+
+            } else if (y == position_.y) {
+                pfrm_.set_overlay_tile(x, y, 0);
+
+            } else if (x == stopx - 1) {
+                pfrm_.set_overlay_tile(x, y, 0);
+
+            } else if (y == stopy - 1) {
+                pfrm_.set_overlay_tile(x, y, 0);
+
+            } else if (filled_) {
+                pfrm_.set_overlay_tile(x, y, 0);
+
+            }
+        }
+    }
+}

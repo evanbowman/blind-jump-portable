@@ -103,8 +103,8 @@ public:
     bool is_running() const;
 
 
-    bool write_save(const SaveData& data);
-    std::optional<SaveData> read_save();
+    bool write_save(const PersistentData& data);
+    std::optional<PersistentData> read_save();
 
 
     ////////////////////////////////////////////////////////////////////////////
