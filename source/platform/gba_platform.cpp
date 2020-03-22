@@ -898,25 +898,25 @@ template <typename T> COLD static T flash_load(u32 flash_offset)
 // it's probably not going to wear out, but I like to pretend that I'm
 // developing a real gba game.
 
-bool Platform::write_save(const SaveData& data)
+bool Platform::write_save(const PersistentData& data)
 {
     if (not flash_save(data, 0)) {
         return false;
     }
 
     // Sanity check, that writing the save file succeeded.
-    const auto d = flash_load<SaveData>(0);
-    if (d.magic_ not_eq SaveData::magic_val) {
+    const auto d = flash_load<PersistentData>(0);
+    if (d.magic_ not_eq PersistentData::magic_val) {
         return false;
     }
     return true;
 }
 
 
-std::optional<SaveData> Platform::read_save()
+std::optional<PersistentData> Platform::read_save()
 {
-    auto sd = flash_load<SaveData>(0);
-    if (sd.magic_ == SaveData::magic_val) {
+    auto sd = flash_load<PersistentData>(0);
+    if (sd.magic_ == PersistentData::magic_val) {
         return sd;
     }
     return {};
@@ -961,9 +961,9 @@ SynchronizedBase::~SynchronizedBase()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// NOTE: SaveData goes first into flash memory, followed by the game's
+// NOTE: PersistentData goes first into flash memory, followed by the game's
 // logs.
-static u32 log_write_loc = sizeof(SaveData);
+static u32 log_write_loc = sizeof(PersistentData);
 
 
 Platform::Logger::Logger()

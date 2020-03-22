@@ -127,7 +127,9 @@ public:
     void enter(Platform& pfrm, Game& game) override;
     void exit(Platform& pfrm, Game& game) override;
     State* update(Platform& pfrm, Game& game, Microseconds delta) override;
-    std::optional<TextView> text_;
+
+private:
+    std::optional<Border> border_;
 } inventory_state;
 
 
@@ -478,29 +480,28 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void InventoryState::enter(Platform& pfrm, Game& game)
 {
-    pfrm.screen().fade(0.4f);
-    // text_.emplace(pfrm);
-    // text_->assign(
-    //     "in these deep solitudes and awful cells, where heav'nly-pensive "
-    //     "contemplation dwells, and ever-musing melancholy reigns; what means "
-    //     "this tumult in a vestal's veins? why rove my thoughts beyond this "
-    //     "last retreat? why feels my heart its long-forgotten heat? yet, yet i "
-    //     "love!—from abelard it came, and eloisa yet must kiss the name. dear "
-    //     "fatal name! rest ever unreveal'd, nor pass these lips in holy silence "
-    //     "seal'd. hide it, my heart, within that close disguise, where mix'd "
-    //     "with god's, his lov'd idea lies: o write it not, my hand—the name "
-    //     "appears already written—wash it out, my tears! in vain lost eloisa "
-    //     "weeps and prays, her heart still dictates, and her hand obeys.",
-    //     {0, 0},
-    //     (pfrm.screen().size() / u32(8)).cast<u8>(),
-    //     0);
+    pfrm.screen().fade(0.2f);
+
+    constexpr u32 overlay_tile_size = 8;
+    auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
+
+    border_.emplace(pfrm, OverlayCoord{static_cast<u8>(screen_tiles.x - 2), static_cast<u8>(screen_tiles.y - 2)},
+                    OverlayCoord{1, 1}, true);
 }
 
 
 void InventoryState::exit(Platform& pfrm, Game& game)
 {
     pfrm.screen().fade(0.f);
-    text_.reset();
+    border_.reset();
+
+    // constexpr u32 overlay_tile_size = 8;
+    // auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
+    // for (int x = 1; x < screen_tiles.x - 1; ++x) {
+    //     for (int y = 1; y < screen_tiles.y - 1; ++y) {
+    //         pfrm.set_overlay_tile(x, y, 0);
+    //     }
+    // }
 }
 
 
