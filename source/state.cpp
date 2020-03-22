@@ -130,6 +130,16 @@ public:
 
 private:
     std::optional<Border> border_;
+    std::optional<Border> selector_;
+    std::optional<SmallIcon> left_icon_;
+    std::optional<SmallIcon> right_icon_;
+
+    Microseconds selector_timer_ = 0;
+    Microseconds fade_timer_ = 0;
+    bool selector_shaded_ = false;
+
+    Vec2<u8> selector_coord_ = {0, 0};
+
 } inventory_state;
 
 
@@ -474,34 +484,70 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         return &active_state;
     }
 
+    if (pfrm.keyboard().down_transition<Key::left>()) {
+        if (selector_coord_.x > 0) {
+            selector_coord_.x -= 1;
+        }
+    } else if (pfrm.keyboard().down_transition<Key::right>()) {
+        if (selector_coord_.x < 4) {
+            selector_coord_.x += 1;
+        }
+    } else if (pfrm.keyboard().down_transition<Key::down>()) {
+        if (selector_coord_.y < 1) {
+            selector_coord_.y += 1;
+        }
+    } else if (pfrm.keyboard().down_transition<Key::up>()) {
+        if (selector_coord_.y > 0) {
+            selector_coord_.y -= 1;
+        }
+    }
+
+    selector_timer_ += delta;
+
+    if (fade_timer_ < milliseconds(400)) {
+        fade_timer_ += delta;
+
+        pfrm.screen().fade(smoothstep(0.f, milliseconds(400), fade_timer_));
+    }
+
+    if (selector_timer_ > milliseconds(75)) {
+        selector_timer_ = 0;
+        const OverlayCoord pos{static_cast<u8>(3 + selector_coord_.x * 5),
+                               static_cast<u8>(3 + selector_coord_.y * 5)};
+        if (selector_shaded_) {
+            selector_.emplace(pfrm, OverlayCoord{4, 4}, pos, false, 8);
+            selector_shaded_ = false;
+        } else {
+            selector_.emplace(pfrm, OverlayCoord{4, 4}, pos, false, 16);
+            selector_shaded_ = true;
+        }
+    }
+
     return this;
 }
 
 
 void InventoryState::enter(Platform& pfrm, Game& game)
 {
-    pfrm.screen().fade(0.2f);
+    right_icon_.emplace(pfrm, 105, OverlayCoord{28, 7});
+    left_icon_.emplace(pfrm, 106, OverlayCoord{1, 7});
 
-    constexpr u32 overlay_tile_size = 8;
-    auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
+    // constexpr u32 overlay_tile_size = 8;
+    // auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
 
-    border_.emplace(pfrm, OverlayCoord{static_cast<u8>(screen_tiles.x - 2), static_cast<u8>(screen_tiles.y - 2)},
-                    OverlayCoord{1, 1}, true);
+    // border_.emplace(pfrm, OverlayCoord{static_cast<u8>(screen_tiles.x - 2), static_cast<u8>(screen_tiles.y - 2)},
+    //                 OverlayCoord{1, 1}, true);
 }
 
 
 void InventoryState::exit(Platform& pfrm, Game& game)
 {
     pfrm.screen().fade(0.f);
+    selector_.reset();
     border_.reset();
-
-    // constexpr u32 overlay_tile_size = 8;
-    // auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
-    // for (int x = 1; x < screen_tiles.x - 1; ++x) {
-    //     for (int y = 1; y < screen_tiles.y - 1; ++y) {
-    //         pfrm.set_overlay_tile(x, y, 0);
-    //     }
-    // }
+    left_icon_.reset();
+    right_icon_.reset();
+    fade_timer_ = 0;
 }
 
 

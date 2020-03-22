@@ -244,38 +244,38 @@ void TextView::assign(const char* str,
 
 
 
-Border::Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& position, bool fill) :
+Border::Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& position, bool fill, int tile_offset) :
     pfrm_(pfrm), size_(size), position_(position), filled_(fill)
 {
     const auto stopx = position_.x + size_.x;
     const auto stopy = position_.y + size_.y;
 
     for (int x = position_.x; x < stopx; ++x) {
-        for (int y = position_.x; y < stopy; ++y) {
+        for (int y = position_.y; y < stopy; ++y) {
 
             if (x == position_.x and y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 86);
+                pfrm.set_overlay_tile(x, y, 86 + tile_offset);
 
             } else if (x == position_.x and y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 88);
+                pfrm.set_overlay_tile(x, y, 88 + tile_offset);
 
             } else if (x == stopx - 1 and y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 85);
+                pfrm.set_overlay_tile(x, y, 85 + tile_offset);
 
             } else if (x == stopx - 1 and y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 87);
+                pfrm.set_overlay_tile(x, y, 87 + tile_offset);
 
             } else if (x == position_.x) {
-                pfrm.set_overlay_tile(x, y, 84);
+                pfrm.set_overlay_tile(x, y, 84 + tile_offset);
 
             } else if (y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 81);
+                pfrm.set_overlay_tile(x, y, 81 + tile_offset);
 
             } else if (x == stopx - 1) {
-                pfrm.set_overlay_tile(x, y, 82);
+                pfrm.set_overlay_tile(x, y, 82 + tile_offset);
 
             } else if (y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 83);
+                pfrm.set_overlay_tile(x, y, 83 + tile_offset);
 
             } else if (fill) {
                 pfrm.set_overlay_tile(x, y, 80);
@@ -293,7 +293,7 @@ Border::~Border()
     const auto stopy = position_.y + size_.y;
 
     for (int x = position_.x; x < stopx; ++x) {
-        for (int y = position_.x; y < stopy; ++y) {
+        for (int y = position_.y; y < stopy; ++y) {
 
             // TODO: simplify this if/else
             if ((x == position_.x and y == position_.y) or

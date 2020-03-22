@@ -83,7 +83,7 @@ private:
 
 class Border {
 public:
-    Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& position, bool fill = false);
+    Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& position, bool fill = false, int tile_offset = 0);
     Border(const Border&) = delete;
     ~Border();
 
