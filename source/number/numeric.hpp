@@ -166,7 +166,6 @@ inline Float smoothstep(Float edge0, Float edge1, Float x)
     return x * x * (3 - 2 * x);
 }
 
-
 template <typename T> T interpolate(const T& a, const T& b, Float t)
 {
     return a * t + (1 - t) * b;

@@ -21,5 +21,5 @@ struct PersistentData {
     Level level_ = -1;
     Score score_ = 0;
 
-    u16 inventory[32] = {};
+    u16 inventory_[40] = {};
 };

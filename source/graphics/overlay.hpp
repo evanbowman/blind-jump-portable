@@ -24,7 +24,7 @@ class Text {
 public:
     // Setting a custom font color is sort of platform specific, and resource
     // intensive on some platforms. So we provide a few presents.
-    enum class Style { default_red, old_paper };
+    enum class Style { inventory };
 
     Text(Platform& pfrm, const char* str, const OverlayCoord& coord);
     Text(Platform& pfrm, const OverlayCoord& coord);
@@ -32,8 +32,11 @@ public:
 
     ~Text();
 
-    void assign(const char* str, Style = Style::default_red);
-    void assign(int num, Style = Style::default_red);
+    void assign(const char* str, Style = Style::inventory);
+    void assign(int num, Style = Style::inventory);
+
+    void append(const char* str, Style = Style::inventory);
+    void append(int num, Style = Style::inventory);
 
     void erase();
 
@@ -92,4 +95,16 @@ private:
     OverlayCoord size_;
     OverlayCoord position_;
     bool filled_;
+};
+
+
+class DottedHorizontalLine {
+public:
+    DottedHorizontalLine(Platform& pfrm, u8 y);
+    DottedHorizontalLine(const DottedHorizontalLine& other) = delete;
+    ~DottedHorizontalLine();
+
+private:
+    Platform& pfrm_;
+    u8 y_;
 };

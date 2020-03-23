@@ -105,8 +105,6 @@ print_char(Platform& pfrm, char c, const OverlayCoord& coord, Text::Style style)
 {
     const auto offset = [&] {
         switch (style) {
-        case Text::Style::old_paper:
-            return 39;
         default:
             return 0;
         };
@@ -120,8 +118,10 @@ print_char(Platform& pfrm, char c, const OverlayCoord& coord, Text::Style style)
         pfrm.set_overlay_tile(coord.x, coord.y, offset + 38);
     } else if (c == '.') {
         pfrm.set_overlay_tile(coord.x, coord.y, offset + 37);
-    } else {
+    } else if (c > 64 and c < 65 + 27) {
         // FIXME: add uppercase letters
+        pfrm.set_overlay_tile(coord.x, coord.y, offset + (c - 65) + 39);
+    } else {
         pfrm.set_overlay_tile(coord.x, coord.y, offset + 0);
     }
 }
@@ -129,13 +129,19 @@ print_char(Platform& pfrm, char c, const OverlayCoord& coord, Text::Style style)
 
 void Text::assign(const char* str, Style style)
 {
+    this->erase();
+
+    this->append(str, style);
+}
+
+
+void Text::append(const char* str, Style style)
+{
     if (str == nullptr) {
         return;
     }
 
-    this->erase();
-
-    auto write_pos = coord_.x;
+    auto write_pos = static_cast<u8>(coord_.x + len_);
 
     auto pos = str;
     while (*pos not_eq '\0') {
@@ -146,6 +152,14 @@ void Text::assign(const char* str, Style style)
         ++pos;
         ++len_;
     }
+}
+
+
+void Text::append(int num, Style style)
+{
+    std::array<char, 40> buffer = {0};
+
+    this->append(myitoa(num, buffer.data(), 10), style);
 }
 
 
@@ -189,7 +203,7 @@ void TextView::assign(const char* str,
 
     auto newline = [&] {
         while (cursor.x < size.x) {
-            print_char(pfrm_, ' ', cursor, Text::Style::old_paper);
+            print_char(pfrm_, ' ', cursor, Text::Style::inventory);
             ++cursor.x;
         }
         cursor.x = coord.x;
@@ -230,7 +244,7 @@ void TextView::assign(const char* str,
             // ...
         } else {
             if (not skiplines) {
-                print_char(pfrm_, str[i], cursor, Text::Style::old_paper);
+                print_char(pfrm_, str[i], cursor, Text::Style::inventory);
             }
 
             ++cursor.x;
@@ -319,5 +333,22 @@ Border::~Border()
 
             }
         }
+    }
+}
+
+
+
+DottedHorizontalLine::DottedHorizontalLine(Platform& pfrm, u8 y) : pfrm_(pfrm), y_(y)
+{
+    for (int i = 0; i < 30; ++i) {
+        pfrm.set_overlay_tile(i, y, 109);
+    }
+}
+
+
+DottedHorizontalLine::~DottedHorizontalLine()
+{
+    for (int i = 0; i < 30; ++i) {
+        pfrm_.set_overlay_tile(i, y_, 0);
     }
 }

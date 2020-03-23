@@ -129,10 +129,54 @@ public:
     State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    std::optional<Border> border_;
+
+    static constexpr const auto max_page = 3;
+
+    void update_arrow_icons(Platform& pfrm)
+    {
+        switch (page_) {
+        case 0:
+            right_icon_.emplace(pfrm, 105, OverlayCoord{28, 7});
+            left_icon_.emplace(pfrm, 108, OverlayCoord{1, 7});
+            break;
+
+        case max_page:
+            right_icon_.emplace(pfrm, 107, OverlayCoord{28, 7});
+            left_icon_.emplace(pfrm, 106, OverlayCoord{1, 7});
+            break;
+
+        default:
+            right_icon_.emplace(pfrm, 105, OverlayCoord{28, 7});
+            left_icon_.emplace(pfrm, 106, OverlayCoord{1, 7});
+            break;
+        }
+    }
+
+    void update_item_description(Platform& pfrm, Game& game)
+    {
+        const auto item = game.inventory()[page_ * 10 + selector_coord_.y * 5 + selector_coord_.x];
+
+        switch (static_cast<Item::Type>(item)) {
+        // These items should never appear in the inventory.
+        case Item::Type::heart:
+        case Item::Type::coin:
+            break;
+
+        case Item::Type::null: {
+            static const char* text = "Empty.";
+            item_description_.emplace(pfrm, text, OverlayCoord{3, 15});
+            break;
+        }
+        }
+    }
+
     std::optional<Border> selector_;
     std::optional<SmallIcon> left_icon_;
     std::optional<SmallIcon> right_icon_;
+    std::optional<Text> page_text_;
+    std::optional<Text> item_description_;
+
+    int page_ = 0;
 
     Microseconds selector_timer_ = 0;
     Microseconds fade_timer_ = 0;
@@ -487,27 +531,60 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (pfrm.keyboard().down_transition<Key::left>()) {
         if (selector_coord_.x > 0) {
             selector_coord_.x -= 1;
+        } else {
+            if (page_ > 0) {
+                page_ -= 1;
+                selector_coord_.x = 4;
+                if (page_text_) {
+                    page_text_->assign(page_ + 1);
+                }
+                update_arrow_icons(pfrm);
+            }
         }
+        update_item_description(pfrm, game);
+
     } else if (pfrm.keyboard().down_transition<Key::right>()) {
         if (selector_coord_.x < 4) {
             selector_coord_.x += 1;
+        } else {
+            if (page_ < max_page) {
+                page_ += 1;
+                selector_coord_.x = 0;
+                if (page_text_) {
+                    page_text_->assign(page_ + 1);
+                }
+                update_arrow_icons(pfrm);
+            }
         }
+        update_item_description(pfrm, game);
+
     } else if (pfrm.keyboard().down_transition<Key::down>()) {
         if (selector_coord_.y < 1) {
             selector_coord_.y += 1;
         }
+        update_item_description(pfrm, game);
+
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
         if (selector_coord_.y > 0) {
             selector_coord_.y -= 1;
         }
+        update_item_description(pfrm, game);
+
     }
 
     selector_timer_ += delta;
 
-    if (fade_timer_ < milliseconds(400)) {
+    constexpr auto fade_duration = milliseconds(400);
+    if (fade_timer_ < fade_duration) {
         fade_timer_ += delta;
 
-        pfrm.screen().fade(smoothstep(0.f, milliseconds(400), fade_timer_));
+        if (fade_timer_ >= fade_duration) {
+            page_text_.emplace(pfrm, OverlayCoord{1, 1});
+            page_text_->assign(page_ + 1);
+            update_item_description(pfrm, game);
+        }
+
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, fade_timer_));
     }
 
     if (selector_timer_ > milliseconds(75)) {
@@ -529,14 +606,12 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void InventoryState::enter(Platform& pfrm, Game& game)
 {
-    right_icon_.emplace(pfrm, 105, OverlayCoord{28, 7});
-    left_icon_.emplace(pfrm, 106, OverlayCoord{1, 7});
-
-    // constexpr u32 overlay_tile_size = 8;
-    // auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
-
-    // border_.emplace(pfrm, OverlayCoord{static_cast<u8>(screen_tiles.x - 2), static_cast<u8>(screen_tiles.y - 2)},
-    //                 OverlayCoord{1, 1}, true);
+    update_arrow_icons(pfrm);
+    for (int i = 0; i < 6; ++i) {
+        pfrm.set_overlay_tile(2 + i * 5, 2, 109);
+        pfrm.set_overlay_tile(2 + i * 5, 7, 109);
+        pfrm.set_overlay_tile(2 + i * 5, 12, 109);
+    }
 }
 
 
@@ -544,10 +619,17 @@ void InventoryState::exit(Platform& pfrm, Game& game)
 {
     pfrm.screen().fade(0.f);
     selector_.reset();
-    border_.reset();
     left_icon_.reset();
     right_icon_.reset();
+    page_text_.reset();
+    item_description_.reset();
     fade_timer_ = 0;
+
+    for (int i = 0; i < 6; ++i) {
+        pfrm.set_overlay_tile(2 + i * 5, 2, 0);
+        pfrm.set_overlay_tile(2 + i * 5, 7, 0);
+        pfrm.set_overlay_tile(2 + i * 5, 12, 0);
+    }
 }
 
 
