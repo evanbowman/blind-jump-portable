@@ -84,6 +84,11 @@ public:
         return persistent_data_.score_;
     }
 
+    auto& inventory()
+    {
+        return persistent_data_.inventory_;
+    }
+
     // NOTE: May need to increase internal storage for Function eventually... not sure...
     using DeferredCallback = Function<16, void(Platform&, Game&)>;
 

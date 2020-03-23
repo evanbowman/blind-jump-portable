@@ -16,7 +16,7 @@ Drone::Drone(const Vec2<Float>& pos)
     sprite_.set_texture_index(TextureMap::drone);
 
     shadow_.set_position(pos);
-    shadow_.set_origin({7, -12});
+    shadow_.set_origin({7, -9});
     shadow_.set_size(Sprite::Size::w16_h32);
     shadow_.set_alpha(Sprite::Alpha::translucent);
     shadow_.set_texture_index(TextureMap::drop_shadow);
