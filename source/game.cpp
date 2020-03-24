@@ -28,6 +28,9 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 
     state_->enter(pfrm, *this);
 
+    inventory().push_item(Item::Type::blaster);
+    inventory().push_item(Item::Type::journal);
+
     Game::next_level(pfrm);
 }
 
@@ -264,7 +267,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     tiles_.for_each(
         [&](Tile& t, int, int) { t = Tile(random_choice<int(Tile::sand)>()); });
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 2; ++i) {
         condense(tiles_, temporary);
     }
 
@@ -488,7 +491,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     // Some other enemies require a lot of map space to fight effectively, so
     // they are banned from tiny maps.
 
-    constexpr auto density = 0.05;
+    constexpr auto density = 0.07;
     constexpr auto max_enemies = 6;
 
     const int spawn_count =

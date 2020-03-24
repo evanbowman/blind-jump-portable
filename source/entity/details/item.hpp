@@ -9,7 +9,7 @@ class Player;
 
 class Item : public Entity {
 public:
-    enum class Type { null, heart, coin };
+    enum class Type : u8 { null, heart, coin, journal, blaster };
 
     Item(const Vec2<Float>& pos, Platform&, Type type);
 

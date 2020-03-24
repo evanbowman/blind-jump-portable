@@ -118,11 +118,13 @@ print_char(Platform& pfrm, char c, const OverlayCoord& coord, Text::Style style)
         pfrm.set_overlay_tile(coord.x, coord.y, offset + 38);
     } else if (c == '.') {
         pfrm.set_overlay_tile(coord.x, coord.y, offset + 37);
+    } else if (c == '\'') {
+        pfrm.set_overlay_tile(coord.x, coord.y, offset + 39 + 26 + 1);
     } else if (c > 64 and c < 65 + 27) {
         // FIXME: add uppercase letters
         pfrm.set_overlay_tile(coord.x, coord.y, offset + (c - 65) + 39);
     } else {
-        pfrm.set_overlay_tile(coord.x, coord.y, offset + 0);
+        pfrm.set_overlay_tile(coord.x, coord.y, offset + 39 + 26 + 6);
     }
 }
 
@@ -173,6 +175,25 @@ SmallIcon::SmallIcon(Platform& pfrm, int tile, const OverlayCoord& coord)
 SmallIcon::~SmallIcon()
 {
     pfrm_.set_overlay_tile(coord_.x, coord_.y, 0);
+}
+
+
+MediumIcon::MediumIcon(Platform& pfrm, int tile, const OverlayCoord& coord)
+    : pfrm_(pfrm), coord_(coord)
+{
+    pfrm_.set_overlay_tile(coord_.x, coord_.y, tile);
+    pfrm_.set_overlay_tile(coord_.x + 1, coord_.y, tile + 1);
+    pfrm_.set_overlay_tile(coord_.x, coord_.y + 1, tile + 2);
+    pfrm_.set_overlay_tile(coord_.x + 1, coord_.y + 1, tile + 3);
+}
+
+
+MediumIcon::~MediumIcon()
+{
+    pfrm_.set_overlay_tile(coord_.x, coord_.y, 0);
+    pfrm_.set_overlay_tile(coord_.x + 1, coord_.y, 0);
+    pfrm_.set_overlay_tile(coord_.x, coord_.y + 1, 0);
+    pfrm_.set_overlay_tile(coord_.x + 1, coord_.y + 1, 0);
 }
 
 
@@ -257,9 +278,12 @@ void TextView::assign(const char* str,
 }
 
 
-
-Border::Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& position, bool fill, int tile_offset) :
-    pfrm_(pfrm), size_(size), position_(position), filled_(fill)
+Border::Border(Platform& pfrm,
+               const OverlayCoord& size,
+               const OverlayCoord& position,
+               bool fill,
+               int tile_offset)
+    : pfrm_(pfrm), size_(size), position_(position), filled_(fill)
 {
     const auto stopx = position_.x + size_.x;
     const auto stopy = position_.y + size_.y;
@@ -268,37 +292,35 @@ Border::Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& pos
         for (int y = position_.y; y < stopy; ++y) {
 
             if (x == position_.x and y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 86 + tile_offset);
+                pfrm.set_overlay_tile(x, y, 67 + 86 + tile_offset);
 
             } else if (x == position_.x and y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 88 + tile_offset);
+                pfrm.set_overlay_tile(x, y, 67 + 88 + tile_offset);
 
             } else if (x == stopx - 1 and y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 85 + tile_offset);
+                pfrm.set_overlay_tile(x, y, 67 + 85 + tile_offset);
 
             } else if (x == stopx - 1 and y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 87 + tile_offset);
+                pfrm.set_overlay_tile(x, y, 67 + 87 + tile_offset);
 
             } else if (x == position_.x) {
-                pfrm.set_overlay_tile(x, y, 84 + tile_offset);
+                pfrm.set_overlay_tile(x, y, 67 + 84 + tile_offset);
 
             } else if (y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 81 + tile_offset);
+                pfrm.set_overlay_tile(x, y, 67 + 81 + tile_offset);
 
             } else if (x == stopx - 1) {
-                pfrm.set_overlay_tile(x, y, 82 + tile_offset);
+                pfrm.set_overlay_tile(x, y, 67 + 82 + tile_offset);
 
             } else if (y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 83 + tile_offset);
+                pfrm.set_overlay_tile(x, y, 67 + 83 + tile_offset);
 
             } else if (fill) {
-                pfrm.set_overlay_tile(x, y, 80);
-
+                pfrm.set_overlay_tile(x, y, 67 + 80);
             }
         }
     }
 }
-
 
 
 Border::~Border()
@@ -330,15 +352,14 @@ Border::~Border()
 
             } else if (filled_) {
                 pfrm_.set_overlay_tile(x, y, 0);
-
             }
         }
     }
 }
 
 
-
-DottedHorizontalLine::DottedHorizontalLine(Platform& pfrm, u8 y) : pfrm_(pfrm), y_(y)
+DottedHorizontalLine::DottedHorizontalLine(Platform& pfrm, u8 y)
+    : pfrm_(pfrm), y_(y)
 {
     for (int i = 0; i < 30; ++i) {
         pfrm.set_overlay_tile(i, y, 109);

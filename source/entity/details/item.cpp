@@ -13,9 +13,15 @@ Item::Item(const Vec2<Float>& pos, Platform&, Type type)
         sprite_.set_texture_index(TextureMap::heart);
         break;
 
-    case Type::null:
     case Type::coin:
         sprite_.set_texture_index(TextureMap::coin);
+        break;
+
+    case Type::null:
+        break;
+
+    default:
+        // TODO: overworld sprite for all other items
         break;
     }
     sprite_.set_size(Sprite::Size::w16_h32);
