@@ -129,52 +129,19 @@ public:
     State* update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-
     static constexpr const auto max_page = 3;
 
-    void update_arrow_icons(Platform& pfrm)
-    {
-        switch (page_) {
-        case 0:
-            right_icon_.emplace(pfrm, 105, OverlayCoord{28, 7});
-            left_icon_.emplace(pfrm, 108, OverlayCoord{1, 7});
-            break;
-
-        case max_page:
-            right_icon_.emplace(pfrm, 107, OverlayCoord{28, 7});
-            left_icon_.emplace(pfrm, 106, OverlayCoord{1, 7});
-            break;
-
-        default:
-            right_icon_.emplace(pfrm, 105, OverlayCoord{28, 7});
-            left_icon_.emplace(pfrm, 106, OverlayCoord{1, 7});
-            break;
-        }
-    }
-
-    void update_item_description(Platform& pfrm, Game& game)
-    {
-        const auto item = game.inventory()[page_ * 10 + selector_coord_.y * 5 + selector_coord_.x];
-
-        switch (static_cast<Item::Type>(item)) {
-        // These items should never appear in the inventory.
-        case Item::Type::heart:
-        case Item::Type::coin:
-            break;
-
-        case Item::Type::null: {
-            static const char* text = "Empty.";
-            item_description_.emplace(pfrm, text, OverlayCoord{3, 15});
-            break;
-        }
-        }
-    }
+    void update_arrow_icons(Platform& pfrm);
+    void update_item_description(Platform& pfrm, Game& game);
+    void clear_items();
+    void display_items(Platform& pfrm, Game& game);
 
     std::optional<Border> selector_;
     std::optional<SmallIcon> left_icon_;
     std::optional<SmallIcon> right_icon_;
     std::optional<Text> page_text_;
     std::optional<Text> item_description_;
+    std::optional<MediumIcon> item_icons_[5][2];
 
     int page_ = 0;
 
@@ -241,7 +208,7 @@ State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (not room_clear_text_) {
         if (not enemies_remaining and enemies_destroyed) {
-            room_clear_text_.emplace(pfrm, "level clear", OverlayCoord{1, 1});
+            room_clear_text_.emplace(pfrm, "level clear", OverlayCoord{0, 0});
 
             for (auto& chest : game.details().get<ItemChest>()) {
                 chest->unlock();
@@ -297,8 +264,8 @@ void ActiveState::enter(Platform& pfrm, Game& game)
     text_->assign(game.player().get_health());
     score_->assign(game.score());
 
-    heart_icon_.emplace(pfrm, 78, OverlayCoord{1, u8(screen_tiles.y - 3)});
-    coin_icon_.emplace(pfrm, 79, OverlayCoord{1, u8(screen_tiles.y - 2)});
+    heart_icon_.emplace(pfrm, 145, OverlayCoord{1, u8(screen_tiles.y - 3)});
+    coin_icon_.emplace(pfrm, 146, OverlayCoord{1, u8(screen_tiles.y - 2)});
 }
 
 
@@ -539,6 +506,7 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
                     page_text_->assign(page_ + 1);
                 }
                 update_arrow_icons(pfrm);
+                display_items(pfrm, game);
             }
         }
         update_item_description(pfrm, game);
@@ -554,6 +522,7 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
                     page_text_->assign(page_ + 1);
                 }
                 update_arrow_icons(pfrm);
+                display_items(pfrm, game);
             }
         }
         update_item_description(pfrm, game);
@@ -569,7 +538,6 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
             selector_coord_.y -= 1;
         }
         update_item_description(pfrm, game);
-
     }
 
     selector_timer_ += delta;
@@ -582,6 +550,7 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
             page_text_.emplace(pfrm, OverlayCoord{1, 1});
             page_text_->assign(page_ + 1);
             update_item_description(pfrm, game);
+            display_items(pfrm, game);
         }
 
         pfrm.screen().fade(smoothstep(0.f, fade_duration, fade_timer_));
@@ -608,9 +577,9 @@ void InventoryState::enter(Platform& pfrm, Game& game)
 {
     update_arrow_icons(pfrm);
     for (int i = 0; i < 6; ++i) {
-        pfrm.set_overlay_tile(2 + i * 5, 2, 109);
-        pfrm.set_overlay_tile(2 + i * 5, 7, 109);
-        pfrm.set_overlay_tile(2 + i * 5, 12, 109);
+        pfrm.set_overlay_tile(2 + i * 5, 2, 176);
+        pfrm.set_overlay_tile(2 + i * 5, 7, 176);
+        pfrm.set_overlay_tile(2 + i * 5, 12, 176);
     }
 }
 
@@ -629,6 +598,104 @@ void InventoryState::exit(Platform& pfrm, Game& game)
         pfrm.set_overlay_tile(2 + i * 5, 2, 0);
         pfrm.set_overlay_tile(2 + i * 5, 7, 0);
         pfrm.set_overlay_tile(2 + i * 5, 12, 0);
+    }
+
+    clear_items();
+}
+
+
+void InventoryState::update_arrow_icons(Platform& pfrm)
+{
+    switch (page_) {
+    case 0:
+        right_icon_.emplace(pfrm, 172, OverlayCoord{28, 7});
+        left_icon_.emplace(pfrm, 175, OverlayCoord{1, 7});
+        break;
+
+    case max_page:
+        right_icon_.emplace(pfrm, 174, OverlayCoord{28, 7});
+        left_icon_.emplace(pfrm, 173, OverlayCoord{1, 7});
+        break;
+
+    default:
+        right_icon_.emplace(pfrm, 172, OverlayCoord{28, 7});
+        left_icon_.emplace(pfrm, 173, OverlayCoord{1, 7});
+        break;
+    }
+}
+
+
+void InventoryState::update_item_description(Platform& pfrm, Game& game)
+
+{
+    const auto item =
+        game.inventory().get_item(page_, selector_coord_.x, selector_coord_.y);
+
+    static const OverlayCoord text_loc{3, 15};
+
+    switch (static_cast<Item::Type>(item)) {
+        // These items should never appear in the inventory.
+    case Item::Type::heart:
+    case Item::Type::coin:
+        break;
+
+    case Item::Type::null: {
+        static const char* text = "Empty.";
+        item_description_.emplace(pfrm, text, text_loc);
+        break;
+    }
+
+    case Item::Type::journal: {
+        static const char* text = "Jan's notebook.";
+        item_description_.emplace(pfrm, text, text_loc);
+        break;
+    }
+
+    case Item::Type::blaster: {
+        static const char* text = "A powerful laser weapon.";
+        item_description_.emplace(pfrm, text, text_loc);
+        break;
+    }
+    }
+}
+
+
+void InventoryState::clear_items()
+{
+    for (auto& items : item_icons_) {
+        for (auto& item : items) {
+            item.reset();
+        }
+    }
+}
+
+
+void InventoryState::display_items(Platform& pfrm, Game& game)
+{
+    clear_items();
+
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 2; ++j) {
+
+            const auto item = game.inventory().get_item(page_, i, j);
+            if (item not_eq Item::Type::null) {
+                auto icon = [&] {
+                    switch (item) {
+                    case Item::Type::journal:
+                        return 177;
+                    case Item::Type::blaster:
+                        return 181;
+                    default:
+                        return 0;
+                    };
+                }();
+                item_icons_[i][j].emplace(
+                    pfrm,
+                    icon,
+                    OverlayCoord{static_cast<u8>(4 + i * 5),
+                                 static_cast<u8>(4 + j * 5)});
+            }
+        }
     }
 }
 

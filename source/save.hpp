@@ -2,11 +2,13 @@
 
 
 #include "entity/entity.hpp"
+#include "inventory.hpp"
 #include "number/numeric.hpp"
 
 
 using Level = s32;
 using Score = u64;
+
 
 struct PersistentData {
     static constexpr u32 magic_val = 0xCA55E77E;
@@ -21,5 +23,5 @@ struct PersistentData {
     Level level_ = -1;
     Score score_ = 0;
 
-    u16 inventory_[40] = {};
+    Inventory inventory_;
 };

@@ -63,7 +63,7 @@ void Player::on_collision(Platform& pf, Game& game, OrbShot&)
 
 void Player::on_collision(Platform& pf, Game& game, SnakeHead&)
 {
-    Player::injured(pf, Health(1));
+    Player::injured(pf, Health(10));
 }
 
 
@@ -91,9 +91,10 @@ void Player::on_collision(Platform& pf, Game& game, Turret&)
 }
 
 
-void Player::on_collision(Platform& pf, Game& game, Drone&)
+void Player::on_collision(Platform& pf, Game& game, Drone& drone)
 {
-    Player::injured(pf, Health(1));
+    Player::injured(
+        pf, drone.state() == Drone::State::rush ? Health(2) : Health(1));
 }
 
 
@@ -111,6 +112,10 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
         break;
 
     case Item::Type::null:
+        break;
+
+    default:
+        // TODO
         break;
     }
 }

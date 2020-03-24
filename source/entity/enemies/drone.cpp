@@ -49,7 +49,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             const auto screen_size = pfrm.screen().size();
             if (manhattan_length(game.player().get_position(), position_) <
                 std::min(screen_size.x, screen_size.y)) {
-                state_ = State::idle1;
+                state_ = State::idle2;
             }
         }
         break;
@@ -139,12 +139,28 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
 void Drone::on_collision(Platform& pf, Game& game, Laser&)
 {
     sprite_.set_mix({ColorConstant::aerospace_orange, 255});
+
     debit_health(1);
 
     if (not alive()) {
         game.score() += 3;
 
         pf.sleep(5);
+
+        static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                                   Item::Type::null};
+
+        on_enemy_destroyed(pf, game, position_, 7, item_drop_vec);
+    }
+}
+
+
+void Drone::on_collision(Platform& pf, Game& game, Player& player)
+{
+    if (state_ == State::rush) {
+        this->kill();
+
+        pf.sleep(2);
 
         static const Item::Type item_drop_vec[] = {Item::Type::coin,
                                                    Item::Type::null};

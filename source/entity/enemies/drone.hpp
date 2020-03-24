@@ -23,15 +23,11 @@ public:
         return hitbox_;
     }
 
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
-
+    void on_collision(Platform&, Game&, Player&);
     void on_collision(Platform&, Game&, Laser&);
 
     void update(Platform&, Game&, Microseconds);
 
-private:
     enum class State {
         sleep,
         inactive,
@@ -43,7 +39,15 @@ private:
         dodge3,
         idle4,
         rush,
-    } state_;
+    };
+
+    inline State state()
+    {
+        return state_;
+    }
+
+private:
+    State state_;
 
     Microseconds timer_;
 

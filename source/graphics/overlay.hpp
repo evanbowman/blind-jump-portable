@@ -42,7 +42,10 @@ public:
 
     using Length = u16;
 
-    Length len() { return len_; }
+    Length len()
+    {
+        return len_;
+    }
 
 private:
     Platform& pfrm_;
@@ -51,11 +54,25 @@ private:
 };
 
 
+// 8x8 pixels
 class SmallIcon {
 public:
     SmallIcon(Platform& pfrm, int tile, const OverlayCoord& coord);
     SmallIcon(const SmallIcon&) = delete;
     ~SmallIcon();
+
+private:
+    Platform& pfrm_;
+    const OverlayCoord coord_;
+};
+
+
+// 16x16 pixels, comprised of four 8x8 tiles
+class MediumIcon {
+public:
+    MediumIcon(Platform& pfrm, int tile, const OverlayCoord& coord);
+    MediumIcon(const MediumIcon&) = delete;
+    ~MediumIcon();
 
 private:
     Platform& pfrm_;
@@ -86,7 +103,11 @@ private:
 
 class Border {
 public:
-    Border(Platform& pfrm, const OverlayCoord& size, const OverlayCoord& position, bool fill = false, int tile_offset = 0);
+    Border(Platform& pfrm,
+           const OverlayCoord& size,
+           const OverlayCoord& position,
+           bool fill = false,
+           int tile_offset = 0);
     Border(const Border&) = delete;
     ~Border();
 

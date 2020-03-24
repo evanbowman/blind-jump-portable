@@ -301,11 +301,22 @@ static struct PaletteInfo {
 } palette_info[palette_count] = {};
 
 
+// We want to be able to disable color mixes during a screen fade. We perform a
+// screen fade by blending a color into the base palette. If we allow sprites to
+// use other palette banks during a screen fade, they won't be faded, because
+// they are not using the first palette bank.
+static bool color_mix_disabled = false;
+
+
 // Perform a color mix between the spritesheet palette bank (bank zero), and
 // return the palette bank where the resulting mixture is stored. We can only
 // display 12 mixed colors at a time, because the first four banks are in use.
 static PaletteBank color_mix(ColorConstant k, u8 amount)
 {
+    if (UNLIKELY(color_mix_disabled)) {
+        return 0;
+    }
+
     for (PaletteBank palette = available_palettes; palette < 16; ++palette) {
         auto& info = palette_info[palette];
         if (info.color_ == k and info.blend_amount_ == amount) {
@@ -554,6 +565,17 @@ void Platform::load_sprite_texture(const char* name)
 }
 
 
+static bool validate_texture_size(Platform& pfrm, size_t size)
+{
+    constexpr auto charblock_size = sizeof(ScreenBlock) * 8;
+    if (size > charblock_size) {
+        error(pfrm, "tileset exceeds charblock size");
+        return false;
+    }
+    return true;
+}
+
+
 void Platform::load_tile_texture(const char* name)
 {
     for (auto& info : tile_textures) {
@@ -567,15 +589,11 @@ void Platform::load_tile_texture(const char* name)
                 MEM_BG_PALETTE[i] = from.bgr_hex_555();
             }
 
-            constexpr auto charblock_size = sizeof(ScreenBlock) * 8;
-            if (info.tile_data_length_ > charblock_size) {
-                error(*this, "tileset exceeds charblock size");
-                return;
+            if (validate_texture_size(*this, info.tile_data_length_)) {
+                memcpy((void*)&MEM_SCREENBLOCKS[0][0],
+                       info.tile_data_,
+                       info.tile_data_length_);
             }
-
-            memcpy((void*)&MEM_SCREENBLOCKS[0][0],
-                   info.tile_data_,
-                   info.tile_data_length_);
         }
     }
 }
@@ -592,10 +610,12 @@ void Platform::load_overlay_texture(const char* name)
                 MEM_BG_PALETTE[16 + i] = from.bgr_hex_555();
             }
 
-            // NOTE: this is the last charblock
-            memcpy((void*)&MEM_SCREENBLOCKS[24][0],
-                   info.tile_data_,
-                   info.tile_data_length_);
+            if (validate_texture_size(*this, info.tile_data_length_)) {
+                // NOTE: this is the last charblock
+                memcpy((void*)&MEM_SCREENBLOCKS[24][0],
+                       info.tile_data_,
+                       info.tile_data_length_);
+            }
         }
     }
 }
@@ -733,6 +753,12 @@ void Platform::Screen::fade(float amount,
                             std::optional<ColorConstant> base)
 {
     const u8 amt = amount * 255;
+
+    if (amt == 0) {
+        color_mix_disabled = false;
+    } else {
+        color_mix_disabled = true;
+    }
 
     if (amt == last_fade_amt and k == last_color) {
         return;
