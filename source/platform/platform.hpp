@@ -97,7 +97,8 @@ public:
     // Sleep halts the game for an amount of time equal to some number
     // of game updates. Given that the game should be running at
     // 60fps, one update equals 1/60 of a second.
-    void sleep(u32 frames);
+    using Frame = u32;
+    void sleep(Frame frames);
 
 
     bool is_running() const;
@@ -218,6 +219,9 @@ public:
         using Channel = int;
 
         void play(Note n, Octave o, Channel c);
+
+        void load_music(const char* name);
+        void stop_music();
 
     private:
         friend class Platform;

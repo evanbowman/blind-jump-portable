@@ -62,6 +62,7 @@ set(SOURCES
 if(GAMEBOY_ADVANCE)
   set(SOURCES
     ${SOURCES}
+    ${SOURCE_DIR}/platform/frostellar.s
     ${SOURCE_DIR}/graphics/bgr_overlay.s
     ${SOURCE_DIR}/graphics/bgr_tilesheet.s
     ${SOURCE_DIR}/graphics/bgr_spritesheet.s

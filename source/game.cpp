@@ -11,6 +11,19 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
+// FIXME: Looping music should, perhaps, be the responsibility of the
+// Platform::Speaker class. While I contemplate the best way to implement
+// looping audio within Platform::Speaker (which currently does not have a
+// concept of time), the Game class instead handles looping audio by itself via
+// the existing Game::on_timeout() method.
+static void play_music(Platform& pfrm, Game& game)
+{
+    pfrm.speaker().load_music("ambience");
+
+    game.on_timeout(seconds(118), play_music);
+}
+
+
 Game::Game(Platform& pfrm) : state_(State::initial())
 {
     if (auto sd = pfrm.read_save()) {
@@ -31,6 +44,8 @@ Game::Game(Platform& pfrm) : state_(State::initial())
     inventory().push_item(Item::Type::blaster);
     inventory().push_item(Item::Type::journal);
 
+    play_music(pfrm, *this);
+
     Game::next_level(pfrm);
 }
 
@@ -45,7 +60,6 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     // granularity to get to a new level that's possible to
     // anticipate.
     random_value();
-
 
     for (auto it = deferred_callbacks_.begin();
          it not_eq deferred_callbacks_.end();) {
@@ -491,7 +505,16 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     // Some other enemies require a lot of map space to fight effectively, so
     // they are banned from tiny maps.
 
-    constexpr auto density = 0.07;
+    const auto density = [&game] {
+        if (game.level() > 8) {
+            return 0.12f;
+        } else if (game.level() > 5) {
+            return 0.09f;
+        } else {
+            return 0.07f;
+        }
+    }();
+
     constexpr auto max_enemies = 6;
 
     const int spawn_count =
@@ -557,6 +580,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     auto free_spots = get_free_map_slots(tiles_);
 
+    const size_t initial_free_spaces = free_spots.size();
+
     if (free_spots.size() < 6) {
         // The randomly generated map is unacceptably tiny! Try again...
         return false;
@@ -599,7 +624,10 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
-    spawn_entity<ItemChest>(pfrm, free_spots, details_);
+    // Sometimes for small maps, and always for large maps, place an item chest
+    if (random_choice<2>() or initial_free_spaces > 25) {
+        spawn_entity<ItemChest>(pfrm, free_spots, details_);
+    }
 
     spawn_enemies(pfrm, *this, free_spots);
 
