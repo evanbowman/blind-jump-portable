@@ -685,9 +685,12 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
                         return 177;
                     case Item::Type::blaster:
                         return 181;
-                    default:
+                    case Item::Type::heart:
+                    case Item::Type::coin:
+                    case Item::Type::null:
                         return 0;
                     };
+                    return 0;
                 }();
                 item_icons_[i][j].emplace(
                     pfrm,

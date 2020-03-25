@@ -1,12 +1,11 @@
 #pragma once
 
-#include "number/numeric.hpp"
 #include "entity/details/item.hpp"
+#include "number/numeric.hpp"
 
 
 class Inventory {
 public:
-
     struct ItemInfo {
         Item::Type type_;
         u8 parameter_; // Misc parameter for setting various item properties

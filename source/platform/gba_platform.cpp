@@ -952,7 +952,7 @@ std::optional<PersistentData> Platform::read_save()
 Platform::Platform()
 {
     irqInit();
-    irqEnable(IRQ_VBLANK);
+    irqEnable(IRQ_VBLANK | IRQ_TIMER0);
 
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
@@ -1264,24 +1264,111 @@ void Platform::Speaker::play(Note n, Octave o, Channel c)
     }
 }
 
+#define REG_SOUNDCNT_L                                                         \
+    *(volatile u16*)0x4000080 //DMG sound control// #include "gba.h"
+#define REG_SOUNDCNT_H *(volatile u16*)0x4000082 //Direct sound control
+#define REG_SOUNDCNT_X *(volatile u16*)0x4000084 //Extended sound control
+#define REG_DMA1SAD *(u32*)0x40000BC             //DMA1 Source Address
+#define REG_DMA1DAD *(u32*)0x40000C0             //DMA1 Desination Address
+#define REG_DMA1CNT_H *(u16*)0x40000C6           //DMA1 Control High Value
+#define REG_TM1CNT_L *(u16*)0x4000104            //Timer 2 count value
+#define REG_TM1CNT_H *(u16*)0x4000106            //Timer 2 control
+#define REG_TM0CNT_L *(u16*)0x4000100            //Timer 0 count value
+#define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
+
+
+extern uint8_t frostellar[];
+
+
+static const struct {
+    const char* name_;
+    uint8_t* data_;
+} tracks[] = {{"ambience", frostellar}};
+
+
+static uint8_t* find_track(const char* name)
+{
+    for (auto& track : tracks) {
+
+        if (strcmp(name, track.name_) == 0) {
+            return track.data_;
+        }
+    }
+
+    return nullptr;
+}
+
+
+void Platform::Speaker::stop_music()
+{
+    // FIXME!!! Part of this block needs to be placed in an interrupt handler!!! When
+    // the music sample finishes playing, we can loop back to the beginning,
+    // potentially more easily, if we perform the action in the interrupt
+    // handler. Also, clearing out the interrupt flags outside the interrupt
+    // handler is _really_ hacky, but probably only causes bugs in rare
+    // cases...
+    REG_TM0CNT_H = 0;  //disable timer 0
+    REG_DMA1CNT_H = 0; //stop DMA
+    REG_IF |= REG_IF;
+}
+
+
+void Platform::Speaker::load_music(const char* name)
+{
+    // NOTE: The sound sample needs to be mono, and 8-bit signed. To export this
+    // format from Audacity, convert the tracks to mono via the Tracks dropdown,
+    // and then export as raw, in the format 8-bit signed.
+    //
+    // Also, important to convert the sound file frequency to 16kHz.
+
+    stop_music();
+
+    const auto track = find_track(name);
+    if (track == nullptr) {
+        return;
+    }
+
+    // Play a mono sound at 16khz in DMA mode Direct Sound
+    // uses timer 0 as sampling rate source
+    // uses timer 1 to count the samples played in order to stop the sound
+    REG_SOUNDCNT_L = 0;
+    REG_SOUNDCNT_H =
+        0x0b0F; // DS A&B + fifo reset + timer0 + max volume to L and R
+    REG_SOUNDCNT_X = 0x0080; // turn sound chip on
+
+    REG_DMA1SAD = (unsigned long)track; // dma1 source
+    REG_DMA1DAD = 0x040000a0;           // write to FIFO A address
+    REG_DMA1CNT_H =
+        0xb600; // dma control: DMA enabled+ start on FIFO+32bit+repeat
+
+    REG_TM1CNT_L = 0xff98; // 0xffff-the number of samples to play
+    REG_TM1CNT_H = 0xC4;   // enable timer1 + irq and cascade from timer 0
+
+
+    // Formula for playback frequency is: 0xFFFF-round(cpuFreq/playbackFreq)
+    REG_TM0CNT_L = 0xFBE8; // 16khz playback freq
+    REG_TM0CNT_H = 0x0080; // enable timer at CPU freq
+}
+
+
 Platform::Speaker::Speaker()
 {
-    // turn sound on
-    REG_SNDSTAT = SSTAT_ENABLE;
-    // snd1 on left/right ; both full volume
-    REG_SNDDMGCNT = SDMG_BUILD_LR(SDMG_SQR1 | SDMG_SQR2, 7);
-    // DMG ratio to 100%
-    REG_SNDDSCNT = SDS_DMG100;
+    // // turn sound on
+    // REG_SNDSTAT = SSTAT_ENABLE;
+    // // snd1 on left/right ; both full volume
+    // REG_SNDDMGCNT = SDMG_BUILD_LR(SDMG_SQR1 | SDMG_SQR2, 7);
+    // // DMG ratio to 100%
+    // REG_SNDDSCNT = SDS_DMG100;
 
-    // no sweep
-    REG_SND1SWEEP = SSW_OFF;
+    // // no sweep
+    // REG_SND1SWEEP = SSW_OFF;
 
-    // envelope: vol=12, decay, max step time (7) ; 50% duty
-    REG_SND1CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY1_4;
-    REG_SND1FREQ = 0;
+    // // envelope: vol=12, decay, max step time (7) ; 50% duty
+    // REG_SND1CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY1_4;
+    // REG_SND1FREQ = 0;
 
-    REG_SND2CNT = SSQR_ENV_BUILD(10, 0, 7) | SSQR_DUTY1_4;
-    REG_SND2FREQ = 0;
+    // REG_SND2CNT = SSQR_ENV_BUILD(10, 0, 7) | SSQR_DUTY1_4;
+    // REG_SND2FREQ = 0;
 }
 
 
