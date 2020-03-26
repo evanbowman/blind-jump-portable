@@ -1,4 +1,4 @@
-# Blind Jump Embedded
+# Blind Jump Portable
 
 <p align="center">
   <img src="header.png"/>
