@@ -32,6 +32,8 @@ void Camera::update(Platform& pfrm,
         view_center,
         dt * speed_ * (ballast_.divisor_ ? 0.00000125f : 0.000004f));
 
+    ballast_.divisor_ = 0;
+
     if (not shaking_) {
 
         view.set_center(center);

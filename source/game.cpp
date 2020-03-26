@@ -505,15 +505,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     // Some other enemies require a lot of map space to fight effectively, so
     // they are banned from tiny maps.
 
-    const auto density = [&game] {
-        if (game.level() > 8) {
-            return 0.12f;
-        } else if (game.level() > 5) {
-            return 0.09f;
-        } else {
-            return 0.07f;
-        }
-    }();
+    const auto density = std::min(0.16f, 0.07f + game.level() * 0.004f);
 
     constexpr auto max_enemies = 6;
 
@@ -665,7 +657,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 // levels, so that the game naturally becomes more
                 // challenging. But for the first few levels, do not make hearts
                 // more scarce.
-                const int heart_chance = 4 + std::max(level() - 4, Level(0)) * 0.2f;
+                const int heart_chance = 3 + std::max(level() - 4, Level(0)) * 0.2f;
 
                 if (not details_.spawn<Item>(world_coord(c), pfrm, [&] {
                         if (random_choice(heart_chance)) {

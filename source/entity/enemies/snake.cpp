@@ -72,7 +72,8 @@ void SnakeNode::destroy()
 
 
 SnakeHead::SnakeHead(const Vec2<Float>& pos, Game& game)
-    : SnakeNode(nullptr), dir_(Dir::left)
+    : SnakeNode(nullptr),
+      dir_(Dir::left)
 {
     set_position(pos);
 
@@ -92,6 +93,10 @@ SnakeHead::SnakeHead(const Vec2<Float>& pos, Game& game)
 
 void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    if (UNLIKELY(state_ == State::sleep)) {
+        return;
+    }
+
     const auto last_coord = tile_coord();
 
     SnakeNode::update(pfrm, game, dt);
@@ -216,6 +221,10 @@ SnakeBody::SnakeBody(const Vec2<Float>& pos,
 
 void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    if (UNLIKELY(state_ == State::sleep)) {
+        return;
+    }
+
     SnakeNode::update(pfrm, game, dt);
 
     if (tile_coord() == next_coord_) {
@@ -258,7 +267,8 @@ void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 
 
 SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game)
-    : SnakeBody(pos, parent, game, 0)
+    : SnakeBody(pos, parent, game, 0),
+      sleep_timer_(seconds(2))
 {
     add_health(10);
 }
@@ -266,6 +276,22 @@ SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game)
 
 void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    if (UNLIKELY(state_ == State::sleep)) {
+
+        sleep_timer_ -= dt;
+
+        if (sleep_timer_ <= 0) {
+            state_ = State::active;
+
+            SnakeNode* current = parent();
+            while (current) {
+                current->state_ = State::active;
+                current = current->parent();
+            }
+        }
+        return;
+    }
+
     SnakeBody::update(pfrm, game, dt);
 
     const auto& mix = sprite_.get_mix();

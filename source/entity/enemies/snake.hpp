@@ -33,6 +33,10 @@ public:
 protected:
     void destroy();
 
+    enum class State {
+        sleep, active
+    } state_ = State::sleep;
+
 private:
     SnakeNode* parent_;
     Vec2<TIdx> tile_coord_;
@@ -54,13 +58,13 @@ public:
     {
     }
 
-
     const Sprite& get_shadow() const
     {
         return shadow_;
     }
 
 private:
+
     Sprite shadow_;
 
     enum class Dir { up, down, left, right } dir_;
@@ -101,5 +105,6 @@ public:
     void on_collision(Platform& pf, Game& game, Laser&);
 
 private:
+    Microseconds sleep_timer_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };
