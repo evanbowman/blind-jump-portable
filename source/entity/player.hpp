@@ -29,10 +29,18 @@ public:
 
     void set_visible(bool visible);
 
+    // NOTE: (3,milliseconds(150)) works well
+    void accelerate(u8 max_lasers, Microseconds reload_interval);
+    void reset();
+
 private:
+    Microseconds reload_interval_;
     Microseconds reload_ = 0;
     Cardinal dir_;
     bool visible_;
+
+    // Max lasers allowed onscreen
+    u8 max_lasers_ = 2;
 };
 
 

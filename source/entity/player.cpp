@@ -473,6 +473,8 @@ Blaster::Blaster()
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 8});
     sprite_.set_texture_index(h_blaster);
+
+    this->reset();
 }
 
 
@@ -525,8 +527,8 @@ void Blaster::update(Platform& pf, Game& game, Microseconds dt, Cardinal dir)
 void Blaster::shoot(Platform& pf, Game& game)
 {
     if (reload_ <= 0) {
-        if (length(game.effects().get<Laser>()) < 2) {
-            reload_ = milliseconds(250);
+        if (length(game.effects().get<Laser>()) < max_lasers_) {
+            reload_ = reload_interval_;
 
             game.effects().spawn<Laser>(position_, dir_);
         }
@@ -541,4 +543,18 @@ void Blaster::set_visible(bool visible)
     if (not visible_) {
         sprite_.set_alpha(Sprite::Alpha::transparent);
     }
+}
+
+
+void Blaster::accelerate(u8 max_lasers, Microseconds reload_interval)
+{
+    max_lasers_ = max_lasers;
+    reload_interval_ = reload_interval;
+}
+
+
+void Blaster::reset()
+{
+    max_lasers_ = 2;
+    reload_interval_ = milliseconds(250);
 }

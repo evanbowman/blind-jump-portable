@@ -92,9 +92,9 @@ public:
     // NOTE: May need to increase internal storage for Function eventually... not sure...
     using DeferredCallback = Function<16, void(Platform&, Game&)>;
 
-    void on_timeout(Microseconds expire_time, const DeferredCallback& callback)
+    bool on_timeout(Microseconds expire_time, const DeferredCallback& callback)
     {
-        deferred_callbacks_.push_back({callback, expire_time});
+        return deferred_callbacks_.push_back({callback, expire_time});
     }
 
 private:
