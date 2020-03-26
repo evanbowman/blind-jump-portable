@@ -21,6 +21,7 @@
 #include "function.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"
+#include "graphics/overlay.hpp"
 
 
 class Game {
@@ -106,8 +107,7 @@ private:
     EffectGroup effects_;
     Transporter transporter_;
     PersistentData persistent_data_;
-    State* state_;
-
+    StatePtr state_;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 

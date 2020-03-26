@@ -29,8 +29,10 @@ public:
     bool spawn(CtorArgs&&... ctorArgs)
     {
         auto deleter = [](T* obj) {
-            obj->~T();
-            pool_.post(reinterpret_cast<byte*>(obj));
+            if (obj) {
+                obj->~T();
+                pool_.post(reinterpret_cast<byte*>(obj));
+            }
         };
 
         if (auto mem = pool_.get()) {

@@ -7,126 +7,128 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
+static std::optional<Text> notification_text;
+
+
 class OverworldState : public State {
 public:
     OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking)
     {
     }
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
     void exit(Platform& pfrm, Game& game) override;
 
 private:
     const bool camera_tracking_;
-    std::optional<Text> room_clear_text_;
 };
 
 
-static class ActiveState : public OverworldState {
+class ActiveState : public OverworldState {
 public:
     ActiveState(bool camera_tracking) : OverworldState(camera_tracking)
     {
     }
     void enter(Platform& pfrm, Game& game) override;
     void exit(Platform& pfrm, Game& game) override;
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     std::optional<Text> text_;
     std::optional<Text> score_;
     std::optional<SmallIcon> heart_icon_;
     std::optional<SmallIcon> coin_icon_;
-} active_state(true);
+};
 
 
-static class FadeInState : public OverworldState {
+class FadeInState : public OverworldState {
 public:
     FadeInState() : OverworldState(false)
     {
     }
     void enter(Platform& pfrm, Game& game) override;
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
-} fade_in_state;
+};
 
 
-static class WarpInState : public OverworldState {
+class WarpInState : public OverworldState {
 public:
     WarpInState() : OverworldState(true)
     {
     }
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
     bool shook_ = false;
-} warp_in_state;
+};
 
 
-static class PreFadePauseState : public OverworldState {
+class PreFadePauseState : public OverworldState {
 public:
     PreFadePauseState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
-} pre_fade_pause_state;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+};
 
 
-static class GlowFadeState : public OverworldState {
+class GlowFadeState : public OverworldState {
 public:
     GlowFadeState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
-} glow_fade_state;
+};
 
 
-static class FadeOutState : public OverworldState {
+class FadeOutState : public OverworldState {
 public:
     FadeOutState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
-} fade_out_state;
+};
 
 
-static class DeathFadeState : public OverworldState {
+class DeathFadeState : public OverworldState {
 public:
     DeathFadeState() : OverworldState(false)
     {
     }
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
     Microseconds counter_ = 0;
-} death_fade_state;
+};
 
 
-static class DeathContinueState : public State {
+class DeathContinueState : public State {
 public:
     DeathContinueState()
     {
     }
     void enter(Platform& pfrm, Game& game) override;
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     std::optional<Text> text_;
     Microseconds counter_ = 0;
-} death_continue_state;
+};
 
 
-static class InventoryState : public State {
+class InventoryState : public State {
 public:
     void enter(Platform& pfrm, Game& game) override;
     void exit(Platform& pfrm, Game& game) override;
-    State* update(Platform& pfrm, Game& game, Microseconds delta) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     static constexpr const auto max_page = 3;
@@ -143,24 +145,86 @@ private:
     std::optional<Text> item_description_;
     std::optional<MediumIcon> item_icons_[5][2];
 
-    int page_ = 0;
+    static int page_;
 
     Microseconds selector_timer_ = 0;
     Microseconds fade_timer_ = 0;
     bool selector_shaded_ = false;
 
-    Vec2<u8> selector_coord_ = {0, 0};
+    static Vec2<u8> selector_coord_;
 
-} inventory_state;
+};
+
+
+class NotebookState : public State {
+public:
+    void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
+
+    // NOTE: The NotebookState class does not store a local copy of the text
+    // string! Do not pass in pointers to a local buffer, only static strings!
+    void set_text(const char* text);
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    std::optional<Text> text_;
+};
+
+
+static void state_deleter(State* s);
+
+static const StatePtr null_state() {return {nullptr, state_deleter};}
+
+template <typename ...States>
+class StatePool {
+public:
+
+    template <typename TState, typename ...Args>
+    StatePtr create(Args&& ...args)
+    {
+        if (auto mem = pool_.get()) {
+            new (mem) TState(std::forward<Args>(args)...);
+
+            return {reinterpret_cast<TState*>(mem), state_deleter};
+        } else {
+            return null_state();
+        }
+    }
+
+    Pool<std::max({sizeof(States)...}),
+         // We should only need memory for two states at any given time: the
+         // current state, and the next state.
+         3,
+         std::max({alignof(States)...})> pool_;
+};
+static StatePool<ActiveState,
+                 FadeInState,
+                 WarpInState,
+                 PreFadePauseState,
+                 GlowFadeState,
+                 FadeOutState,
+                 DeathFadeState,
+                 InventoryState,
+                 NotebookState> state_pool_;
+
+
+static void state_deleter(State* s)
+{
+    if (s) {
+        s->~State();
+        state_pool_.pool_.post(reinterpret_cast<byte*>(s));
+    }
+}
 
 
 void OverworldState::exit(Platform&, Game&)
 {
-    room_clear_text_.reset();
+    notification_text.reset();
 }
 
 
-State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     Player& player = game.player();
 
@@ -206,17 +270,17 @@ State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     });
 
-    if (not room_clear_text_) {
+    if (not notification_text) {
         if (not enemies_remaining and enemies_destroyed) {
-            room_clear_text_.emplace(pfrm, "level clear", OverlayCoord{0, 0});
+            notification_text.emplace(pfrm, "level clear", OverlayCoord{0, 0});
 
             for (auto& chest : game.details().get<ItemChest>()) {
                 chest->unlock();
             }
 
             game.on_timeout(seconds(4), [this](Platform&, Game&) {
-                if (room_clear_text_) {
-                    room_clear_text_->erase();
+                if (notification_text) {
+                    notification_text->erase();
                 }
             });
         }
@@ -250,7 +314,7 @@ State* OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                      game.effects().get<Laser>(),
                      game.enemies().get<SnakeTail>());
 
-    return this;
+    return null_state();
 }
 
 
@@ -280,7 +344,7 @@ void ActiveState::exit(Platform& pfrm, Game& game)
 }
 
 
-State* ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().update(pfrm, game, delta);
 
@@ -298,19 +362,19 @@ State* ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (game.player().get_health() == 0) {
-        return &death_fade_state;
+        return state_pool_.create<DeathFadeState>();
     }
 
     if (pfrm.keyboard().down_transition<Key::alt_1>()) {
-        return &inventory_state;
+        return state_pool_.create<InventoryState>();
     }
 
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
     if (manhattan_length(game.player().get_position(), t_pos) < 16) {
         game.player().move(t_pos);
-        return &pre_fade_pause_state;
+        return state_pool_.create<PreFadePauseState>();
     } else {
-        return this;
+        return null_state();
     }
 }
 
@@ -321,7 +385,7 @@ void FadeInState::enter(Platform& pfrm, Game& game)
 }
 
 
-State* FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().soft_update(pfrm, game, delta);
 
@@ -331,19 +395,18 @@ State* FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = milliseconds(800);
     if (counter_ > fade_duration) {
-        counter_ = 0;
         pfrm.screen().fade(1.f, ColorConstant::electric_blue);
         pfrm.sleep(2);
         game.player().set_visible(true);
-        return &warp_in_state;
+        return state_pool_.create<WarpInState>();
     } else {
         pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
-        return this;
+        return null_state();
     }
 }
 
 
-State* WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().soft_update(pfrm, game, delta);
 
@@ -358,19 +421,18 @@ State* WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
-        counter_ = 0;
         shook_ = false;
         pfrm.screen().fade(0.f, ColorConstant::electric_blue);
-        return &active_state;
+        return state_pool_.create<ActiveState>(true);
     } else {
         pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::electric_blue);
-        return this;
+        return null_state();
     }
 }
 
 
-State* PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.camera().set_speed(1.5f);
 
@@ -382,14 +444,14 @@ State* PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
                              pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {
         game.camera().set_speed(1.f);
-        return &glow_fade_state;
+        return state_pool_.create<GlowFadeState>();
     } else {
-        return this;
+        return null_state();
     }
 }
 
 
-State* GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().soft_update(pfrm, game, delta);
 
@@ -399,18 +461,17 @@ State* GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
-        counter_ = 0;
         pfrm.screen().fade(1.f, ColorConstant::electric_blue);
-        return &fade_out_state;
+        return state_pool_.create<FadeOutState>();
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::electric_blue);
-        return this;
+        return null_state();
     }
 }
 
 
-State* FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().soft_update(pfrm, game, delta);
 
@@ -420,20 +481,19 @@ State* FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = milliseconds(670);
     if (counter_ > fade_duration) {
-        counter_ = 0;
         pfrm.screen().fade(1.f);
         game.next_level(pfrm);
-        return &fade_in_state;
+        return state_pool_.create<FadeInState>();
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::rich_black,
                            ColorConstant::electric_blue);
-        return this;
+        return null_state();
     }
 }
 
 
-State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     OverworldState::update(pfrm, game, delta);
 
@@ -441,12 +501,11 @@ State* DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = seconds(2);
     if (counter_ > fade_duration) {
-        counter_ = 0;
-        return &death_continue_state;
+        return state_pool_.create<DeathContinueState>();
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::aerospace_orange);
-        return this;
+        return null_state();
     }
 }
 
@@ -460,7 +519,7 @@ void DeathContinueState::enter(Platform& pfrm, Game& game)
 }
 
 
-State*
+StatePtr
 DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     counter_ += delta;
@@ -471,28 +530,32 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.screen().fade(
             1.f, ColorConstant::rich_black, ColorConstant::aerospace_orange);
         if (pfrm.keyboard().pressed<Key::action_1>()) {
-            counter_ = 0;
             game.score() = 0;
             game.player().revive();
             game.next_level(pfrm, 0);
             text_.reset();
-            return &fade_in_state;
+            return state_pool_.create<FadeInState>();
         } else {
-            return this;
+            return null_state();
         }
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::rich_black,
                            ColorConstant::aerospace_orange);
-        return this;
+        return null_state();
     }
 }
 
 
-State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
+// These are static, because it's simply more convenient for the player when the inventory page and selector are persistent across opening/closing the inventory page.
+int InventoryState::page_{0};
+Vec2<u8> InventoryState::selector_coord_{0, 0};
+
+
+StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     if (pfrm.keyboard().down_transition<Key::alt_1>()) {
-        return &active_state;
+        return state_pool_.create<ActiveState>(true);
     }
 
     if (pfrm.keyboard().down_transition<Key::left>()) {
@@ -569,7 +632,7 @@ State* InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
-    return this;
+    return null_state();
 }
 
 
@@ -592,7 +655,6 @@ void InventoryState::exit(Platform& pfrm, Game& game)
     right_icon_.reset();
     page_text_.reset();
     item_description_.reset();
-    fade_timer_ = 0;
 
     for (int i = 0; i < 6; ++i) {
         pfrm.set_overlay_tile(2 + i * 5, 2, 0);
@@ -703,7 +765,7 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 }
 
 
-State* State::initial()
+StatePtr State::initial()
 {
-    return &fade_in_state;
+    return state_pool_.create<FadeInState>();
 }

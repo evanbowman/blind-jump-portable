@@ -74,14 +74,13 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
         }
     }
 
+    auto new_state = state_->update(pfrm, *this, delta);
 
-    const auto last_state = state_;
+    if (new_state) {
+        state_->exit(pfrm, *this);
+        new_state->enter(pfrm, *this);
 
-    state_ = state_->update(pfrm, *this, delta);
-
-    if (state_ not_eq last_state) {
-        last_state->exit(pfrm, *this);
-        state_->enter(pfrm, *this);
+        state_ = std::move(new_state);
     }
 }
 
