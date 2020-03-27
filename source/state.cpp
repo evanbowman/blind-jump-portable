@@ -15,6 +15,13 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
+static OverlayCoord calc_screen_tiles(Platform& pfrm)
+{
+    constexpr u32 overlay_tile_size = 8;
+    return (pfrm.screen().size() / overlay_tile_size).cast<u8>();
+}
+
+
 static std::optional<Text> notification_text;
 
 
@@ -141,7 +148,6 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-
     static constexpr const Microseconds fade_duration_ = milliseconds(400);
 
     static constexpr const auto max_page = 3;
@@ -180,7 +186,11 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
+    void repaint_page(Platform& pfrm);
+    void repaint_margin(Platform& pfrm);
+
     std::optional<TextView> text_;
+    std::optional<Text> page_number_;
     const char* str_;
     int page_;
 };
@@ -348,8 +358,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void ActiveState::enter(Platform& pfrm, Game& game)
 {
-    constexpr u32 overlay_tile_size = 8;
-    auto screen_tiles = (pfrm.screen().size() / overlay_tile_size).cast<u8>();
+    auto screen_tiles = calc_screen_tiles(pfrm);
 
     text_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 3)});
     score_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 2)});
@@ -603,7 +612,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool_.create<NotebookState>(kafka_str);
      },
      [] {
-         static const auto str = "Jan's notebook.";
+         static const auto str = "Octavo notebook.";
          return str;
      }},
     {Item::Type::blaster,
@@ -836,14 +845,57 @@ void NotebookState::enter(Platform& pfrm, Game&)
 {
     pfrm.screen().fade(1.f);
     pfrm.load_overlay_texture("bgr_overlay_journal");
-    auto screen_tiles = (pfrm.screen().size() / u32(8)).cast<u8>();
+    auto screen_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm);
-    text_->assign(str_, {0, 0}, screen_tiles);
+    text_->assign(str_,
+                  {1, 2},
+                  OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
+    page_number_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
+
+    repaint_page(pfrm);
+}
+
+
+void NotebookState::repaint_margin(Platform& pfrm)
+{
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    for (int x = 0; x < screen_tiles.x; ++x) {
+        for (int y = 0; y < screen_tiles.y; ++y) {
+            if (x == 0 or y == 0 or y == 1 or x == screen_tiles.x - 1 or
+                y == screen_tiles.y - 2 or y == screen_tiles.y - 1) {
+                pfrm.set_overlay_tile(x, y, 39 + 26 + 6);
+            }
+        }
+    }
+}
+
+
+void NotebookState::repaint_page(Platform& pfrm)
+{
+    const auto size = text_->size();
+
+    page_number_->erase();
+    repaint_margin(pfrm);
+    page_number_->assign(page_ + 1);
+    text_->assign(str_, {1, 2}, size, page_ * (size.y / 2));
 }
 
 
 void NotebookState::exit(Platform& pfrm, Game&)
 {
+    const auto screen_tiles = calc_screen_tiles(pfrm);
+
+    // clear margin
+    for (int x = 0; x < screen_tiles.x; ++x) {
+        for (int y = 0; y < screen_tiles.y; ++y) {
+            if (x == 0 or y == 0 or y == 1 or x == screen_tiles.x - 1 or
+                y == screen_tiles.y - 2 or y == screen_tiles.y - 1) {
+                pfrm.set_overlay_tile(x, y, 0);
+            }
+        }
+    }
+
     text_.reset();
     pfrm.load_overlay_texture("bgr_overlay");
 }
@@ -858,20 +910,17 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<InventoryState>(false);
     }
 
-    const auto& size = text_->size();
-
     if (pfrm.keyboard().down_transition<Key::down>()) {
         if (text_->parsed() not_eq strlen(str_)) {
             page_ += 1;
-            text_->assign(str_, {0, 0}, size, page_ * (size.y / 2));
+            repaint_page(pfrm);
         }
 
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
         if (page_ > 0) {
             page_ -= 1;
-            text_->assign(str_, {0, 0}, size, page_ * (size.y / 2));
+            repaint_page(pfrm);
         }
-
     }
 
     return null_state();
@@ -895,7 +944,8 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game)
 }
 
 
-StatePtr IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     timer_ += delta;
 

@@ -215,7 +215,7 @@ void TextView::assign(const char* str,
     auto cursor = coord;
 
     auto newline = [&] {
-        while (cursor.x < size.x) {
+        while (cursor.x < coord.x + size.x) {
             print_char(pfrm_, ' ', cursor);
             ++cursor.x;
         }
@@ -226,7 +226,7 @@ void TextView::assign(const char* str,
     size_t i;
     for (i = 0; i < len; ++i) {
 
-        if (cursor.x == size.x) {
+        if (cursor.x == coord.x + size.x) {
             if (str[i] not_eq ' ') {
                 // If the next character is not a space, then the current word
                 // does not fit on the current line, and needs to be written
@@ -236,14 +236,14 @@ void TextView::assign(const char* str,
                     --cursor.x;
                 }
                 newline();
-                if (cursor.y == size.y - 1) {
+                if (cursor.y == (coord.y + size.y) - 1) {
                     break;
                 }
                 newline();
             } else {
                 cursor.y += 1;
                 cursor.x = coord.x;
-                if (cursor.y == size.y - 1) {
+                if (cursor.y == (coord.y + size.y) - 1) {
                     break;
                 }
                 newline();
@@ -267,7 +267,7 @@ void TextView::assign(const char* str,
 
     parsed_ = i;
 
-    while (cursor.y < size.y) {
+    while (cursor.y < (coord.y + size.y)) {
         newline();
     }
 }

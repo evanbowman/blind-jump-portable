@@ -14,7 +14,7 @@ enum class ColorConstant {
     spanish_crimson,  // #E81858
     aerospace_orange, // #FD5200
     rich_black,       // #000010
-    chrome_yellow,    // #F0A202
+    stil_de_grain,    // #F9DC5C
     count
 };
 

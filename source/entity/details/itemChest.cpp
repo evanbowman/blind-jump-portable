@@ -26,7 +26,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
         fade_color_anim_.advance(sprite_, dt);
 
         if (sprite_.get_mix().amount_ == 0) {
-            sprite_.set_mix({ColorConstant::chrome_yellow, 255});
+            sprite_.set_mix({ColorConstant::stil_de_grain, 255});
         }
 
         if (pfrm.keyboard().down_transition<Key::action_2>()) {
