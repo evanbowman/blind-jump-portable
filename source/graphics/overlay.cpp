@@ -223,7 +223,8 @@ void TextView::assign(const char* str,
         ++cursor.y;
     };
 
-    for (size_t i = 0; i < len; ++i) {
+    size_t i;
+    for (i = 0; i < len; ++i) {
 
         if (cursor.x == size.x) {
             if (str[i] not_eq ' ') {
@@ -263,6 +264,8 @@ void TextView::assign(const char* str,
             ++cursor.x;
         }
     }
+
+    parsed_ = i;
 
     while (cursor.y < size.y) {
         newline();

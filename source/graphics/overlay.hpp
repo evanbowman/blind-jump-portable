@@ -90,10 +90,21 @@ public:
                 const OverlayCoord& size,
                 int skiplines = 0);
 
+    inline const OverlayCoord& size() { return size_; }
+
+    // Returns the amount of the input string was processed by the textview
+    // rendering code. Useful for determining whether adding extra skiplines to
+    // the assign() function would scroll the text further.
+    size_t parsed() const
+    {
+        return parsed_;
+    }
+
 private:
     Platform& pfrm_;
     OverlayCoord size_;
     OverlayCoord position_;
+    size_t parsed_;
 };
 
 

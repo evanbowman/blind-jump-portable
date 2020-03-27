@@ -182,6 +182,7 @@ public:
 private:
     std::optional<TextView> text_;
     const char* str_;
+    int page_;
 };
 
 
@@ -826,7 +827,7 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 }
 
 
-NotebookState::NotebookState(const char* text) : str_(text)
+NotebookState::NotebookState(const char* text) : str_(text), page_(0)
 {
 }
 
@@ -848,17 +849,33 @@ void NotebookState::exit(Platform& pfrm, Game&)
 }
 
 
+size_t strlen(const char*);
+
+
 StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<InventoryState>(false);
-    } else {
-        return null_state();
     }
+
+    const auto& size = text_->size();
+
+    if (pfrm.keyboard().down_transition<Key::down>()) {
+        if (text_->parsed() not_eq strlen(str_)) {
+            page_ += 1;
+            text_->assign(str_, {0, 0}, size, page_ * (size.y / 2));
+        }
+
+    } else if (pfrm.keyboard().down_transition<Key::up>()) {
+        if (page_ > 0) {
+            page_ -= 1;
+            text_->assign(str_, {0, 0}, size, page_ * (size.y / 2));
+        }
+
+    }
+
+    return null_state();
 }
-
-
-size_t strlen(const char*);
 
 
 void IntroCreditsState::enter(Platform& pfrm, Game& game)
