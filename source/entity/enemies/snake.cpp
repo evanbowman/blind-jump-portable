@@ -72,8 +72,7 @@ void SnakeNode::destroy()
 
 
 SnakeHead::SnakeHead(const Vec2<Float>& pos, Game& game)
-    : SnakeNode(nullptr),
-      dir_(Dir::left)
+    : SnakeNode(nullptr), dir_(Dir::left)
 {
     set_position(pos);
 
@@ -267,8 +266,7 @@ void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 
 
 SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game)
-    : SnakeBody(pos, parent, game, 0),
-      sleep_timer_(seconds(2))
+    : SnakeBody(pos, parent, game, 0), sleep_timer_(seconds(2))
 {
     add_health(10);
 }

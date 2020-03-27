@@ -22,21 +22,17 @@ using OverlayCoord = Vec2<u8>;
 
 class Text {
 public:
-    // Setting a custom font color is sort of platform specific, and resource
-    // intensive on some platforms. So we provide a few presents.
-    enum class Style { inventory };
-
     Text(Platform& pfrm, const char* str, const OverlayCoord& coord);
     Text(Platform& pfrm, const OverlayCoord& coord);
     Text(const Text&) = delete;
 
     ~Text();
 
-    void assign(const char* str, Style = Style::inventory);
-    void assign(int num, Style = Style::inventory);
+    void assign(const char* str);
+    void assign(int num);
 
-    void append(const char* str, Style = Style::inventory);
-    void append(int num, Style = Style::inventory);
+    void append(const char* str);
+    void append(int num);
 
     void erase();
 

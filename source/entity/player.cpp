@@ -368,9 +368,16 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     switch (frame_base_) {
     case ResourceLoc::player_still_up:
     case ResourceLoc::player_still_down:
+        sprite_.set_size(Sprite::Size::w16_h32);
+        sprite_.set_texture_index(frame_base_);
+        sprite_.set_origin(v_origin);
+        break;
+
     case ResourceLoc::player_still_left:
     case ResourceLoc::player_still_right:
+        sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_texture_index(frame_base_);
+        sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::player_walk_up:

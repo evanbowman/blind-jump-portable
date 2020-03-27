@@ -3,6 +3,14 @@
 #include "graphics/overlay.hpp"
 
 
+constexpr static const char* kafka_str =
+    "Everyone carries a room about inside him. This fact can even be proved by "
+    "means of the sense of hearing. If someone walks fast and one pricks up "
+    "one's ears and listens, say in the night, when everything round about is "
+    "quiet, one hears, for instance, the rattling of a mirror not quite firmly "
+    "fastened to the wall.";
+
+
 bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
@@ -126,11 +134,16 @@ private:
 
 class InventoryState : public State {
 public:
+    InventoryState(bool fade_in);
+
     void enter(Platform& pfrm, Game& game) override;
     void exit(Platform& pfrm, Game& game) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
+
+    static constexpr const Microseconds fade_duration_ = milliseconds(400);
+
     static constexpr const auto max_page = 3;
 
     void update_arrow_icons(Platform& pfrm);
@@ -152,36 +165,36 @@ private:
     bool selector_shaded_ = false;
 
     static Vec2<u8> selector_coord_;
-
 };
 
 
 class NotebookState : public State {
 public:
-    void enter(Platform& pfrm, Game& game) override;
-    void exit(Platform& pfrm, Game& game) override;
-
     // NOTE: The NotebookState class does not store a local copy of the text
     // string! Do not pass in pointers to a local buffer, only static strings!
-    void set_text(const char* text);
+    NotebookState(const char* text);
+
+    void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    std::optional<Text> text_;
+    std::optional<TextView> text_;
+    const char* str_;
 };
 
 
 static void state_deleter(State* s);
 
-static const StatePtr null_state() {return {nullptr, state_deleter};}
+static const StatePtr null_state()
+{
+    return {nullptr, state_deleter};
+}
 
-template <typename ...States>
-class StatePool {
+template <typename... States> class StatePool {
 public:
-
-    template <typename TState, typename ...Args>
-    StatePtr create(Args&& ...args)
+    template <typename TState, typename... Args> StatePtr create(Args&&... args)
     {
         if (auto mem = pool_.get()) {
             new (mem) TState(std::forward<Args>(args)...);
@@ -196,7 +209,8 @@ public:
          // We should only need memory for two states at any given time: the
          // current state, and the next state.
          3,
-         std::max({alignof(States)...})> pool_;
+         std::max({alignof(States)...})>
+        pool_;
 };
 static StatePool<ActiveState,
                  FadeInState,
@@ -206,7 +220,8 @@ static StatePool<ActiveState,
                  FadeOutState,
                  DeathFadeState,
                  InventoryState,
-                 NotebookState> state_pool_;
+                 NotebookState>
+    state_pool_;
 
 
 static void state_deleter(State* s)
@@ -278,7 +293,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                 chest->unlock();
             }
 
-            game.on_timeout(seconds(4), [this](Platform&, Game&) {
+            game.on_timeout(seconds(4), [](Platform&, Game&) {
                 if (notification_text) {
                     notification_text->erase();
                 }
@@ -365,8 +380,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<DeathFadeState>();
     }
 
-    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
-        return state_pool_.create<InventoryState>();
+    if (pfrm.keyboard().down_transition<Key::start>()) {
+        return state_pool_.create<InventoryState>(true);
     }
 
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
@@ -432,7 +447,8 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
-StatePtr PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.camera().set_speed(1.5f);
 
@@ -529,7 +545,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
         counter_ -= delta;
         pfrm.screen().fade(
             1.f, ColorConstant::rich_black, ColorConstant::aerospace_orange);
-        if (pfrm.keyboard().pressed<Key::action_1>()) {
+        if (pfrm.keyboard().pressed<Key::action_2>()) {
             game.score() = 0;
             game.player().revive();
             game.next_level(pfrm, 0);
@@ -552,9 +568,54 @@ int InventoryState::page_{0};
 Vec2<u8> InventoryState::selector_coord_{0, 0};
 
 
+struct InventoryItemHandler {
+    Item::Type type_;
+    int icon_;
+    StatePtr (*callback_)(Platform& pfrm, Game& game);
+    const char* (*description_)();
+};
+
+
+constexpr static const InventoryItemHandler inventory_handlers[] = {
+    {Item::Type::null,
+     0,
+     [](Platform&, Game&) { return null_state(); },
+     [] {
+         static const auto str = "Empty.";
+         return str;
+     }},
+    {Item::Type::journal,
+     177,
+     [](Platform&, Game&) {
+         return state_pool_.create<NotebookState>(kafka_str);
+     },
+     [] {
+         static const auto str = "Jan's notebook.";
+         return str;
+     }},
+    {Item::Type::blaster,
+     181,
+     [](Platform&, Game&) { return null_state(); },
+     [] {
+         static const auto str = "Blaster.";
+         return str;
+     }}};
+
+
+const InventoryItemHandler* inventory_item_handler(Item::Type type)
+{
+    for (auto& handler : inventory_handlers) {
+        if (handler.type_ == type) {
+            return &handler;
+        }
+    }
+    return nullptr;
+}
+
+
 StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
+    if (pfrm.keyboard().down_transition<Key::start>()) {
         return state_pool_.create<ActiveState>(true);
     }
 
@@ -601,6 +662,17 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
             selector_coord_.y -= 1;
         }
         update_item_description(pfrm, game);
+
+    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+
+        const auto item = game.inventory().get_item(
+            page_, selector_coord_.x, selector_coord_.y);
+
+        if (auto handler = inventory_item_handler(item)) {
+            if (auto new_state = handler->callback_(pfrm, game)) {
+                return new_state;
+            }
+        }
     }
 
     selector_timer_ += delta;
@@ -633,6 +705,14 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     return null_state();
+}
+
+
+InventoryState::InventoryState(bool fade_in)
+{
+    if (not fade_in) {
+        fade_timer_ = fade_duration_ - Microseconds{1};
+    }
 }
 
 
@@ -693,31 +773,10 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
     const auto item =
         game.inventory().get_item(page_, selector_coord_.x, selector_coord_.y);
 
-    static const OverlayCoord text_loc{3, 15};
+    constexpr static const OverlayCoord text_loc{3, 15};
 
-    switch (static_cast<Item::Type>(item)) {
-        // These items should never appear in the inventory.
-    case Item::Type::heart:
-    case Item::Type::coin:
-        break;
-
-    case Item::Type::null: {
-        static const char* text = "Empty.";
-        item_description_.emplace(pfrm, text, text_loc);
-        break;
-    }
-
-    case Item::Type::journal: {
-        static const char* text = "Jan's notebook.";
-        item_description_.emplace(pfrm, text, text_loc);
-        break;
-    }
-
-    case Item::Type::blaster: {
-        static const char* text = "A powerful laser weapon.";
-        item_description_.emplace(pfrm, text, text_loc);
-        break;
-    }
+    if (auto handler = inventory_item_handler(item)) {
+        item_description_.emplace(pfrm, handler->description_(), text_loc);
     }
 }
 
@@ -740,27 +799,49 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
         for (int j = 0; j < 2; ++j) {
 
             const auto item = game.inventory().get_item(page_, i, j);
+
             if (item not_eq Item::Type::null) {
-                auto icon = [&] {
-                    switch (item) {
-                    case Item::Type::journal:
-                        return 177;
-                    case Item::Type::blaster:
-                        return 181;
-                    case Item::Type::heart:
-                    case Item::Type::coin:
-                    case Item::Type::null:
-                        return 0;
-                    };
-                    return 0;
-                }();
-                item_icons_[i][j].emplace(
-                    pfrm,
-                    icon,
-                    OverlayCoord{static_cast<u8>(4 + i * 5),
-                                 static_cast<u8>(4 + j * 5)});
+                if (auto handler = inventory_item_handler(item)) {
+                    item_icons_[i][j].emplace(
+                        pfrm,
+                        handler->icon_,
+                        OverlayCoord{static_cast<u8>(4 + i * 5),
+                                     static_cast<u8>(4 + j * 5)});
+                }
             }
         }
+    }
+}
+
+
+NotebookState::NotebookState(const char* text) : str_(text)
+{
+}
+
+
+void NotebookState::enter(Platform& pfrm, Game&)
+{
+    pfrm.screen().fade(1.f);
+    pfrm.load_overlay_texture("bgr_overlay_journal");
+    auto screen_tiles = (pfrm.screen().size() / u32(8)).cast<u8>();
+    text_.emplace(pfrm);
+    text_->assign(str_, {0, 0}, screen_tiles);
+}
+
+
+void NotebookState::exit(Platform& pfrm, Game&)
+{
+    text_.reset();
+    pfrm.load_overlay_texture("bgr_overlay");
+}
+
+
+StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        return state_pool_.create<InventoryState>(false);
+    } else {
+        return null_state();
     }
 }
 

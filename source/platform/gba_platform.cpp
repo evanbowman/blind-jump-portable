@@ -516,6 +516,7 @@ int strcmp(const char* p1, const char* p2)
 
 
 #include "graphics/bgr_overlay.h"
+#include "graphics/bgr_overlay_journal.h"
 #include "graphics/bgr_spritesheet.h"
 #include "graphics/bgr_tilesheet.h"
 
@@ -542,7 +543,9 @@ static const TextureData sprite_textures[] = {TEXTURE_INFO(bgr_spritesheet)};
 static const TextureData tile_textures[] = {TEXTURE_INFO(bgr_tilesheet)};
 
 
-static const TextureData overlay_textures[] = {TEXTURE_INFO(bgr_overlay)};
+static const TextureData overlay_textures[] = {
+    TEXTURE_INFO(bgr_overlay),
+    TEXTURE_INFO(bgr_overlay_journal)};
 
 
 void Platform::load_sprite_texture(const char* name)

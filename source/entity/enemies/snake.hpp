@@ -33,9 +33,7 @@ public:
 protected:
     void destroy();
 
-    enum class State {
-        sleep, active
-    } state_ = State::sleep;
+    enum class State { sleep, active } state_ = State::sleep;
 
 private:
     SnakeNode* parent_;
@@ -64,7 +62,6 @@ public:
     }
 
 private:
-
     Sprite shadow_;
 
     enum class Dir { up, down, left, right } dir_;

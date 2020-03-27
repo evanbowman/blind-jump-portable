@@ -656,7 +656,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 // levels, so that the game naturally becomes more
                 // challenging. But for the first few levels, do not make hearts
                 // more scarce.
-                const int heart_chance = 3 + std::max(level() - 4, Level(0)) * 0.2f;
+                const int heart_chance =
+                    3 + std::max(level() - 4, Level(0)) * 0.2f;
 
                 if (not details_.spawn<Item>(world_coord(c), pfrm, [&] {
                         if (random_choice(heart_chance)) {

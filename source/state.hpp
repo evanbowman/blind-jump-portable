@@ -10,7 +10,7 @@ class Game;
 class State;
 
 
-using StatePtr = std::unique_ptr<State, void(*)(State*)>;
+using StatePtr = std::unique_ptr<State, void (*)(State*)>;
 
 
 class State {
@@ -23,7 +23,8 @@ public:
     // pointer.
 
 
-    virtual StatePtr update(Platform& platform, Game& game, Microseconds delta) = 0;
+    virtual StatePtr
+    update(Platform& platform, Game& game, Microseconds delta) = 0;
 
     virtual ~State()
     {

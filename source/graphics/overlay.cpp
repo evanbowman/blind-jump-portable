@@ -92,52 +92,44 @@ Text::~Text()
 }
 
 
-void Text::assign(int val, Style style)
+void Text::assign(int val)
 {
     std::array<char, 40> buffer = {0};
 
-    this->assign(myitoa(val, buffer.data(), 10), style);
+    this->assign(myitoa(val, buffer.data(), 10));
 }
 
 
-static void
-print_char(Platform& pfrm, char c, const OverlayCoord& coord, Text::Style style)
+static void print_char(Platform& pfrm, char c, const OverlayCoord& coord)
 {
-    const auto offset = [&] {
-        switch (style) {
-        default:
-            return 0;
-        };
-    }();
-
     if (c > 47 and c < 58) { // Number
-        pfrm.set_overlay_tile(coord.x, coord.y, offset + (c - 48) + 1);
+        pfrm.set_overlay_tile(coord.x, coord.y, (c - 48) + 1);
     } else if (c > 96 and c < 97 + 27) {
-        pfrm.set_overlay_tile(coord.x, coord.y, offset + (c - 97) + 11);
+        pfrm.set_overlay_tile(coord.x, coord.y, (c - 97) + 11);
     } else if (c == ',') {
-        pfrm.set_overlay_tile(coord.x, coord.y, offset + 38);
+        pfrm.set_overlay_tile(coord.x, coord.y, 38);
     } else if (c == '.') {
-        pfrm.set_overlay_tile(coord.x, coord.y, offset + 37);
+        pfrm.set_overlay_tile(coord.x, coord.y, 37);
     } else if (c == '\'') {
-        pfrm.set_overlay_tile(coord.x, coord.y, offset + 39 + 26 + 1);
+        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 1);
     } else if (c > 64 and c < 65 + 27) {
         // FIXME: add uppercase letters
-        pfrm.set_overlay_tile(coord.x, coord.y, offset + (c - 65) + 39);
+        pfrm.set_overlay_tile(coord.x, coord.y, (c - 65) + 39);
     } else {
-        pfrm.set_overlay_tile(coord.x, coord.y, offset + 39 + 26 + 6);
+        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 6);
     }
 }
 
 
-void Text::assign(const char* str, Style style)
+void Text::assign(const char* str)
 {
     this->erase();
 
-    this->append(str, style);
+    this->append(str);
 }
 
 
-void Text::append(const char* str, Style style)
+void Text::append(const char* str)
 {
     if (str == nullptr) {
         return;
@@ -148,7 +140,7 @@ void Text::append(const char* str, Style style)
     auto pos = str;
     while (*pos not_eq '\0') {
 
-        print_char(pfrm_, *pos, {write_pos, coord_.y}, style);
+        print_char(pfrm_, *pos, {write_pos, coord_.y});
 
         ++write_pos;
         ++pos;
@@ -157,11 +149,11 @@ void Text::append(const char* str, Style style)
 }
 
 
-void Text::append(int num, Style style)
+void Text::append(int num)
 {
     std::array<char, 40> buffer = {0};
 
-    this->append(myitoa(num, buffer.data(), 10), style);
+    this->append(myitoa(num, buffer.data(), 10));
 }
 
 
@@ -224,7 +216,7 @@ void TextView::assign(const char* str,
 
     auto newline = [&] {
         while (cursor.x < size.x) {
-            print_char(pfrm_, ' ', cursor, Text::Style::inventory);
+            print_char(pfrm_, ' ', cursor);
             ++cursor.x;
         }
         cursor.x = coord.x;
@@ -265,7 +257,7 @@ void TextView::assign(const char* str,
             // ...
         } else {
             if (not skiplines) {
-                print_char(pfrm_, str[i], cursor, Text::Style::inventory);
+                print_char(pfrm_, str[i], cursor);
             }
 
             ++cursor.x;

@@ -12,3 +12,7 @@ mv bgr_tilesheet.h source/graphics
 grit bgr_overlay.png -gB4 -gTFF00FF
 mv bgr_overlay.s source/graphics
 mv bgr_overlay.h source/graphics
+
+grit bgr_overlay_journal.png -gB4 -gTFF00FF
+mv bgr_overlay_journal.s source/graphics
+mv bgr_overlay_journal.h source/graphics

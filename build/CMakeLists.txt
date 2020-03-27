@@ -66,6 +66,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/bgr_overlay.s
     ${SOURCE_DIR}/graphics/bgr_tilesheet.s
     ${SOURCE_DIR}/graphics/bgr_spritesheet.s
+    ${SOURCE_DIR}/graphics/bgr_overlay_journal.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()
   set(SOURCES

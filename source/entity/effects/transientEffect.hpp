@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "graphics/animation.hpp"
 #include "entity/entity.hpp"
+#include "graphics/animation.hpp"
 
 
 class Game;
@@ -12,7 +12,10 @@ class Platform;
 template <TextureIndex InitialTexture, u32 AnimLen, u32 AnimInterval>
 class TransientEffect : public Entity {
 public:
-    TransientEffect() { animation_.bind(sprite_); }
+    TransientEffect()
+    {
+        animation_.bind(sprite_);
+    }
 
     void update(Platform&, Game&, Microseconds dt)
     {
