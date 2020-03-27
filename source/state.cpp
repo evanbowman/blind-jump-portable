@@ -185,6 +185,18 @@ private:
 };
 
 
+class IntroCreditsState : public State {
+public:
+    void enter(Platform& pfrm, Game& game) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    std::optional<Text> text_;
+    Microseconds timer_ = 0;
+};
+
+
 static void state_deleter(State* s);
 
 static const StatePtr null_state()
@@ -846,7 +858,48 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
+size_t strlen(const char*);
+
+
+void IntroCreditsState::enter(Platform& pfrm, Game& game)
+{
+    static const char* credits = "Evan Bowman presents";
+
+    auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
+
+    // Center horizontally, and place text vertically in top third of screen
+    pos.x -= strlen(credits);
+    pos.x /= 2;
+    pos.y *= 0.35f;
+
+    text_.emplace(pfrm, credits, pos);
+
+    pfrm.screen().fade(1.f);
+}
+
+
+StatePtr IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    timer_ += delta;
+
+    const auto skip = pfrm.keyboard().down_transition<Key::action_1>();
+
+    if (timer_ > seconds(2) or skip) {
+        text_.reset();
+
+        if (not skip) {
+            pfrm.sleep(70);
+        }
+
+        return state_pool_.create<FadeInState>();
+
+    } else {
+        return null_state();
+    }
+}
+
+
 StatePtr State::initial()
 {
-    return state_pool_.create<FadeInState>();
+    return state_pool_.create<IntroCreditsState>();
 }
