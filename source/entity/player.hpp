@@ -39,6 +39,8 @@ private:
     Cardinal dir_;
     bool visible_;
 
+    u16 powerup_remaining_ = 0;
+
     // Max lasers allowed onscreen
     u8 max_lasers_ = 2;
 };

@@ -3,12 +3,11 @@
 #include "graphics/overlay.hpp"
 
 
-constexpr static const char* kafka_str =
-    "Everyone carries a room about inside him. This fact can even be proved by "
-    "means of the sense of hearing. If someone walks fast and one pricks up "
-    "one's ears and listens, say in the night, when everything round about is "
-    "quiet, one hears, for instance, the rattling of a mirror not quite firmly "
-    "fastened to the wall.";
+constexpr static const char* surveyor_logbook_str =
+    "[2.11.2081]  We've been experiencing strange power surges lately on the "
+    "station. The director reassured me that everthing will run smoothly from "
+    "now on. The robots have been acting up ever since the last "
+    "communications blackout though, I'm afraid next time they'll go mad...";
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -147,10 +146,11 @@ public:
     void exit(Platform& pfrm, Game& game) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
+    static int page_;
+    static Vec2<u8> selector_coord_;
+
 private:
     static constexpr const Microseconds fade_duration_ = milliseconds(400);
-
-    static constexpr const auto max_page = 3;
 
     void update_arrow_icons(Platform& pfrm);
     void update_item_description(Platform& pfrm, Game& game);
@@ -162,15 +162,11 @@ private:
     std::optional<SmallIcon> right_icon_;
     std::optional<Text> page_text_;
     std::optional<Text> item_description_;
-    std::optional<MediumIcon> item_icons_[5][2];
-
-    static int page_;
+    std::optional<MediumIcon> item_icons_[Inventory::cols][Inventory::rows];
 
     Microseconds selector_timer_ = 0;
     Microseconds fade_timer_ = 0;
     bool selector_shaded_ = false;
-
-    static Vec2<u8> selector_coord_;
 };
 
 
@@ -554,6 +550,8 @@ void DeathContinueState::enter(Platform& pfrm, Game& game)
     text_->assign("you died");
 
     game.player().set_visible(false);
+
+    game.inventory().remove_non_persistent();
 }
 
 
@@ -567,12 +565,16 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
         counter_ -= delta;
         pfrm.screen().fade(
             1.f, ColorConstant::rich_black, ColorConstant::aerospace_orange);
-        if (pfrm.keyboard().pressed<Key::action_2>()) {
+
+        if (pfrm.keyboard().pressed<Key::action_2>() or
+            pfrm.keyboard().pressed<Key::action_1>()) {
+
             game.score() = 0;
             game.player().revive();
             game.next_level(pfrm, 0);
             text_.reset();
             return state_pool_.create<FadeInState>();
+
         } else {
             return null_state();
         }
@@ -606,13 +608,13 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          static const auto str = "Empty.";
          return str;
      }},
-    {Item::Type::journal,
+    {Item::Type::surveyor_logbook,
      177,
      [](Platform&, Game&) {
-         return state_pool_.create<NotebookState>(kafka_str);
+         return state_pool_.create<NotebookState>(surveyor_logbook_str);
      },
      [] {
-         static const auto str = "Octavo notebook.";
+         static const auto str = "Surveyor's logbook.";
          return str;
      }},
     {Item::Type::blaster,
@@ -620,6 +622,21 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [](Platform&, Game&) { return null_state(); },
      [] {
          static const auto str = "Blaster.";
+         return str;
+     }},
+    {Item::Type::accelerator,
+     181,
+     [](Platform&, Game& game) {
+         game.inventory().remove_item(InventoryState::page_,
+                                      InventoryState::selector_coord_.x,
+                                      InventoryState::selector_coord_.y);
+
+         game.player().weapon().accelerate(3, milliseconds(150));
+
+         return null_state();
+     },
+     [] {
+         static const auto str = "Accelerator (60 shots).";
          return str;
      }}};
 
@@ -661,7 +678,7 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (selector_coord_.x < 4) {
             selector_coord_.x += 1;
         } else {
-            if (page_ < max_page) {
+            if (page_ < Inventory::pages - 1) {
                 page_ += 1;
                 selector_coord_.x = 0;
                 if (page_text_) {
@@ -685,7 +702,7 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
         update_item_description(pfrm, game);
 
-    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+    } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
 
         const auto item = game.inventory().get_item(
             page_, selector_coord_.x, selector_coord_.y);
@@ -693,6 +710,9 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (auto handler = inventory_item_handler(item)) {
             if (auto new_state = handler->callback_(pfrm, game)) {
                 return new_state;
+            } else {
+                update_item_description(pfrm, game);
+                display_items(pfrm, game);
             }
         }
     }
@@ -776,7 +796,7 @@ void InventoryState::update_arrow_icons(Platform& pfrm)
         left_icon_.emplace(pfrm, 175, OverlayCoord{1, 7});
         break;
 
-    case max_page:
+    case Inventory::pages - 1:
         right_icon_.emplace(pfrm, 174, OverlayCoord{28, 7});
         left_icon_.emplace(pfrm, 173, OverlayCoord{1, 7});
         break;
@@ -906,7 +926,7 @@ size_t strlen(const char*);
 
 StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::action_2>()) {
+    if (pfrm.keyboard().down_transition<Key::action_1>()) {
         return state_pool_.create<InventoryState>(false);
     }
 
@@ -934,7 +954,7 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game)
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
     // Center horizontally, and place text vertically in top third of screen
-    pos.x -= strlen(credits);
+    pos.x -= strlen(credits) + 1;
     pos.x /= 2;
     pos.y *= 0.35f;
 

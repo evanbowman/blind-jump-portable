@@ -9,7 +9,15 @@ class Player;
 
 class Item : public Entity {
 public:
-    enum class Type : u8 { null, heart, coin, journal, blaster, count };
+    enum class Type : u8 {
+        null,
+        heart,
+        coin,
+        surveyor_logbook,
+        blaster,
+        accelerator,
+        count
+    };
 
     Item(const Vec2<Float>& pos, Platform&, Type type);
 
@@ -32,3 +40,11 @@ private:
     Type type_;
     HitBox hitbox_;
 };
+
+
+// Some items, mainly story-related, persist across game sessions. Persistent
+// items should also be unique.
+inline bool item_is_persistent(Item::Type type)
+{
+    return type == Item::Type::blaster or type == Item::Type::surveyor_logbook;
+}

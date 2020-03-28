@@ -3,7 +3,8 @@
 #include "platform/platform.hpp"
 
 
-ItemChest::ItemChest(const Vec2<Float>& pos) : state_(State::locked)
+ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item)
+    : state_(State::locked), item_(item)
 {
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_position({pos.x, pos.y});
@@ -36,6 +37,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                 pfrm.sleep(10);
                 state_ = State::opening;
                 sprite_.set_mix({ColorConstant::null, 0});
+                game.inventory().push_item(item_);
             }
         }
         break;

@@ -63,7 +63,7 @@ void Player::on_collision(Platform& pf, Game& game, OrbShot&)
 
 void Player::on_collision(Platform& pf, Game& game, SnakeHead&)
 {
-    Player::injured(pf, Health(10));
+    Player::injured(pf, Health(3));
 }
 
 
@@ -538,6 +538,14 @@ void Blaster::shoot(Platform& pf, Game& game)
             reload_ = reload_interval_;
 
             game.effects().spawn<Laser>(position_, dir_);
+
+            if (powerup_remaining_) {
+                --powerup_remaining_;
+
+                if (powerup_remaining_ == 0) {
+                    this->reset();
+                }
+            }
         }
     }
 }
@@ -557,6 +565,7 @@ void Blaster::accelerate(u8 max_lasers, Microseconds reload_interval)
 {
     max_lasers_ = max_lasers;
     reload_interval_ = reload_interval;
+    powerup_remaining_ = 60;
 }
 
 

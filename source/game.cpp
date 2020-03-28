@@ -42,7 +42,6 @@ Game::Game(Platform& pfrm) : state_(State::initial())
     state_->enter(pfrm, *this);
 
     inventory().push_item(Item::Type::blaster);
-    inventory().push_item(Item::Type::journal);
 
     play_music(pfrm, *this);
 
@@ -561,6 +560,28 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 }
 
 
+static void
+spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
+{
+    // Certain items only appear once, and some items are more likely to appear
+    // than others. Some items, like hearts and coins, only appear in the
+    // outside of item chests, so should not be included.
+
+    auto item = Item::Type::null;
+
+    // FIXME: this is just debugging code:
+    while ((game.inventory().has_item(item) and item_is_persistent(item)) or
+           item == Item::Type::null or item == Item::Type::heart or
+           item == Item::Type::coin) {
+
+        item = static_cast<Item::Type>(
+            random_choice(static_cast<int>(Item::Type::count)));
+    }
+
+    spawn_entity<ItemChest>(pfrm, free_spots, game.details(), item);
+}
+
+
 COLD bool Game::respawn_entities(Platform& pfrm)
 {
     auto clear_entities = [&](auto& buf) { buf.clear(); };
@@ -617,7 +638,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     // Sometimes for small maps, and always for large maps, place an item chest
     if (random_choice<2>() or initial_free_spaces > 25) {
-        spawn_entity<ItemChest>(pfrm, free_spots, details_);
+        spawn_item_chest(pfrm, *this, free_spots);
     }
 
     spawn_enemies(pfrm, *this, free_spots);
