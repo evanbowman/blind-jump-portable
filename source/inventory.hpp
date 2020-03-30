@@ -5,6 +5,10 @@
 #include "util.hpp"
 
 
+class Platform;
+class Game;
+
+
 class Inventory {
 public:
     static constexpr const u16 pages = 4;
@@ -16,16 +20,7 @@ public:
         u8 parameter_; // Misc parameter for setting various item properties
     };
 
-    inline void push_item(Item::Type insert)
-    {
-        for (auto& item : data_) {
-            if (item.type_ == Item::Type::null) {
-                item.type_ = insert;
-                item.parameter_ = 0;
-                break;
-            }
-        }
-    }
+    void push_item(Platform& pfrm, Game& game, Item::Type insert);
 
     inline Item::Type get_item(u16 page, u16 column, u16 row)
     {

@@ -48,3 +48,10 @@ inline bool item_is_persistent(Item::Type type)
 {
     return type == Item::Type::blaster or type == Item::Type::surveyor_logbook;
 }
+
+
+// Note: For memory efficiency, this function happens to be implemented in
+// state.cpp, so that the implementation can pull the data from an existing
+// readonly table containing a variety of Item metadata used by the inventory
+// state.
+const char* item_description(Item::Type type);

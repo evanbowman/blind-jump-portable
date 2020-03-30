@@ -37,7 +37,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                 pfrm.sleep(10);
                 state_ = State::opening;
                 sprite_.set_mix({ColorConstant::null, 0});
-                game.inventory().push_item(item_);
+                game.inventory().push_item(pfrm, game, item_);
             }
         }
         break;

@@ -90,6 +90,11 @@ public:
         return persistent_data_.inventory_;
     }
 
+    State* state()
+    {
+        return state_.get();
+    }
+
     // NOTE: May need to increase internal storage for Function eventually... not sure...
     using DeferredCallback = Function<16, void(Platform&, Game&)>;
 

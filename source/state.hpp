@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "function.hpp"
 #include "number/numeric.hpp"
 #include <memory>
 
@@ -32,3 +33,9 @@ public:
 
     static StatePtr initial();
 };
+
+
+class Text;
+void push_notification(Platform& pfrm,
+                       Game& game,
+                       Function<16, void(Text&)> notification_builder);

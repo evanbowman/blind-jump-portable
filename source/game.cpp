@@ -41,7 +41,9 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 
     state_->enter(pfrm, *this);
 
-    inventory().push_item(Item::Type::blaster);
+    if (not inventory().has_item(Item::Type::blaster)) {
+        inventory().push_item(pfrm, *this, Item::Type::blaster);
+    }
 
     play_music(pfrm, *this);
 
@@ -567,12 +569,11 @@ spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     // than others. Some items, like hearts and coins, only appear in the
     // outside of item chests, so should not be included.
 
-    auto item = Item::Type::null;
+    auto item = Item::Type::heart;
 
     // FIXME: this is just debugging code:
     while ((game.inventory().has_item(item) and item_is_persistent(item)) or
-           item == Item::Type::null or item == Item::Type::heart or
-           item == Item::Type::coin) {
+           item == Item::Type::heart or item == Item::Type::coin) {
 
         item = static_cast<Item::Type>(
             random_choice(static_cast<int>(Item::Type::count)));

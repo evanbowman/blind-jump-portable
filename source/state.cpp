@@ -21,9 +21,6 @@ static OverlayCoord calc_screen_tiles(Platform& pfrm)
 }
 
 
-static std::optional<Text> notification_text;
-
-
 class OverworldState : public State {
 public:
     OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking)
@@ -52,6 +49,24 @@ private:
     std::optional<SmallIcon> heart_icon_;
     std::optional<SmallIcon> coin_icon_;
 };
+
+
+static std::optional<Text> notification_text;
+static Microseconds notification_text_timer;
+
+
+void push_notification(Platform& pfrm,
+                       Game& game,
+                       Function<16, void(Text&)> notification_builder)
+{
+    if (dynamic_cast<OverworldState*>(game.state())) {
+
+        notification_text_timer = seconds(3);
+        notification_text.emplace(pfrm, OverlayCoord{0, 0});
+
+        notification_builder(*notification_text);
+    }
+}
 
 
 class FadeInState : public OverworldState {
@@ -304,20 +319,21 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     });
 
-    if (not notification_text) {
-        if (not enemies_remaining and enemies_destroyed) {
-            notification_text.emplace(pfrm, "level clear", OverlayCoord{0, 0});
+    if (not enemies_remaining and enemies_destroyed) {
 
-            for (auto& chest : game.details().get<ItemChest>()) {
-                chest->unlock();
-            }
+        push_notification(
+            pfrm, game, [](Text& text) { text.assign("level clear"); });
 
-            game.on_timeout(seconds(4), [](Platform&, Game&) {
-                if (notification_text) {
-                    notification_text->erase();
-                }
-            });
+        for (auto& chest : game.details().get<ItemChest>()) {
+            chest->unlock();
         }
+    }
+
+    if (notification_text_timer > 0) {
+        notification_text_timer -= delta;
+
+    } else {
+        notification_text.reset();
     }
 
     game.camera().update(pfrm, delta, player.get_position());
@@ -605,7 +621,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      0,
      [](Platform&, Game&) { return null_state(); },
      [] {
-         static const auto str = "Empty.";
+         static const auto str = "Empty";
          return str;
      }},
     {Item::Type::surveyor_logbook,
@@ -614,14 +630,14 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool_.create<NotebookState>(surveyor_logbook_str);
      },
      [] {
-         static const auto str = "Surveyor's logbook.";
+         static const auto str = "Surveyor's logbook";
          return str;
      }},
     {Item::Type::blaster,
      181,
      [](Platform&, Game&) { return null_state(); },
      [] {
-         static const auto str = "Blaster.";
+         static const auto str = "Blaster";
          return str;
      }},
     {Item::Type::accelerator,
@@ -636,12 +652,12 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return null_state();
      },
      [] {
-         static const auto str = "Accelerator (60 shots).";
+         static const auto str = "Accelerator (60 shots)";
          return str;
      }}};
 
 
-const InventoryItemHandler* inventory_item_handler(Item::Type type)
+static const InventoryItemHandler* inventory_item_handler(Item::Type type)
 {
     for (auto& handler : inventory_handlers) {
         if (handler.type_ == type) {
@@ -649,6 +665,17 @@ const InventoryItemHandler* inventory_item_handler(Item::Type type)
         }
     }
     return nullptr;
+}
+
+
+const char* item_description(Item::Type type)
+{
+    if (auto handler = inventory_item_handler(type)) {
+        return handler->description_();
+
+    } else {
+        return nullptr;
+    }
 }
 
 
@@ -819,6 +846,7 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
 
     if (auto handler = inventory_item_handler(item)) {
         item_description_.emplace(pfrm, handler->description_(), text_loc);
+        item_description_->append(".");
     }
 }
 

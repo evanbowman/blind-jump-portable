@@ -35,6 +35,8 @@ void Player::revive()
 
         invulnerability_timer_ = seconds(1);
         sprite_.set_mix({});
+
+        weapon().reset();
     }
 }
 
