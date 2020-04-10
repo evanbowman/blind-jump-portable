@@ -703,7 +703,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return str;
      }},
     {Item::Type::accelerator,
-     181,
+     185,
      [](Platform&, Game& game) {
          game.inventory().remove_item(InventoryState::page_,
                                       InventoryState::selector_coord_.x,
