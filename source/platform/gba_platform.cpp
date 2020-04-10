@@ -748,6 +748,16 @@ void Platform::set_overlay_tile(u16 x, u16 y, u16 val)
 }
 
 
+u16 Platform::get_overlay_tile(u16 x, u16 y)
+{
+    if (x > 31 or y > 31) {
+        return 0;
+    }
+
+    return MEM_SCREENBLOCKS[13][x + y * 32] & ~(SE_PALBANK(1));
+}
+
+
 static u8 last_fade_amt;
 static ColorConstant last_color;
 

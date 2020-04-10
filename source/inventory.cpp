@@ -11,29 +11,39 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
             item.type_ = insert;
             item.parameter_ = 0;
 
+            auto description = [&] {
+                if (insert == Item::Type::null) {
+                    // Technically, the description for null is Empty, but that
+                    // doesn't make sense contextually, so lets use this text
+                    // instead.
+                    static const auto nothing = "Nothing";
+                    return nothing;
 
-            if (auto description = item_description(insert)) {
+                } else {
+                    return item_description(insert);
+                }
+            }();
 
-                push_notification(
-                    pfrm, game, [&description, &pfrm](Text& text) {
-                        static const auto prefix = "got \"";
-                        static const auto suffix = "\"";
+            if (description) {
 
-                        const auto width = str_len(prefix) +
-                                           str_len(description) +
-                                           str_len(suffix);
+                push_notification(pfrm, game, [description, &pfrm](Text& text) {
+                    static const auto prefix = "got \"";
+                    static const auto suffix = "\"";
 
-                        const auto margin = centered_text_margins(pfrm, width);
+                    const auto width = str_len(prefix) + str_len(description) +
+                                       str_len(suffix);
+
+                    const auto margin = centered_text_margins(pfrm, width);
 
 
-                        left_text_margin(text, margin);
+                    left_text_margin(text, margin);
 
-                        text.append(prefix);
-                        text.append(description);
-                        text.append(suffix);
+                    text.append(prefix);
+                    text.append(description);
+                    text.append(suffix);
 
-                        right_text_margin(text, margin);
-                    });
+                    right_text_margin(text, margin);
+                });
             }
 
             return;

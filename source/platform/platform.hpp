@@ -88,6 +88,7 @@ public:
     void push_map(const TileMap& map);
 
     void set_overlay_tile(u16 x, u16 y, u16 val);
+    u16 get_overlay_tile(u16 x, u16 y);
 
 
     void load_sprite_texture(const char* name);

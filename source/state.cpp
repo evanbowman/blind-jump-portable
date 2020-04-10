@@ -47,6 +47,11 @@ private:
 
 static std::optional<Text> notification_text;
 static Microseconds notification_text_timer;
+static enum class NotificationStatus {
+    display,
+    exit,
+    hidden
+} notification_status;
 
 
 void push_notification(Platform& pfrm,
@@ -57,6 +62,8 @@ void push_notification(Platform& pfrm,
 
         notification_text_timer = seconds(3);
         notification_text.emplace(pfrm, OverlayCoord{0, 0});
+
+        notification_status = NotificationStatus::display;
 
         notification_builder(*notification_text);
     }
@@ -272,6 +279,7 @@ static Microseconds enemy_lethargy_timer;
 void OverworldState::exit(Platform&, Game&)
 {
     notification_text.reset();
+    notification_status = NotificationStatus::hidden;
 }
 
 
@@ -346,12 +354,44 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
-    if (notification_text_timer > 0) {
-        notification_text_timer -= delta;
 
-    } else {
-        notification_text.reset();
+    switch (notification_status) {
+    case NotificationStatus::hidden:
+        break;
+
+    case NotificationStatus::display:
+        if (notification_text_timer > 0) {
+            notification_text_timer -= delta;
+
+        } else {
+            notification_text.reset();
+            notification_text_timer = 0;
+            notification_status = NotificationStatus::exit;
+
+            for (int x = 0; x < 32; ++x) {
+                pfrm.set_overlay_tile(x, 0, 73);
+            }
+        }
+        break;
+
+    case NotificationStatus::exit: {
+        notification_text_timer += delta;
+        if (notification_text_timer > milliseconds(50)) {
+            notification_text_timer -= delta;
+
+            const auto tile = pfrm.get_overlay_tile(0, 0);
+            if (tile < 73 + 7) {
+                for (int x = 0; x < 32; ++x) {
+                    pfrm.set_overlay_tile(x, 0, tile + 1);
+                }
+            } else {
+                notification_status = NotificationStatus::hidden;
+            }
+        }
+        break;
     }
+    }
+
 
     game.camera().update(pfrm, delta, player.get_position());
 
@@ -739,10 +779,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
 
          return null_state();
      },
-    [] {
-        static const auto str = "Lethargy (18 sec)";
-        return str;
-    }}};
+     [] {
+         static const auto str = "Lethargy (18 sec)";
+         return str;
+     }}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)
