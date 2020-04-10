@@ -8,3 +8,33 @@
 #else
 #define UNLIKELY(COND) (COND)
 #endif
+
+#include <iterator>
+
+
+namespace _detail {
+
+template <typename T> struct reversion_wrapper {
+    T& iterable;
+};
+
+
+template <typename T> auto begin(reversion_wrapper<T> w)
+{
+    return std::rbegin(w.iterable);
+}
+
+
+template <typename T> auto end(reversion_wrapper<T> w)
+{
+    return std::rend(w.iterable);
+}
+
+
+} // namespace _detail
+
+
+template <typename T> _detail::reversion_wrapper<T> reverse(T&& iterable)
+{
+    return {iterable};
+}

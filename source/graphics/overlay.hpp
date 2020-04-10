@@ -139,3 +139,37 @@ private:
     Platform& pfrm_;
     u8 y_;
 };
+
+
+inline OverlayCoord calc_screen_tiles(Platform& pfrm)
+{
+    constexpr u32 overlay_tile_size = 8;
+    return (pfrm.screen().size() / overlay_tile_size).cast<u8>();
+}
+
+
+using Margin = u16;
+
+
+inline Margin centered_text_margins(Platform& pfrm, u16 text_length)
+{
+    const auto width = calc_screen_tiles(pfrm).x;
+
+    return (width - text_length) / 2;
+}
+
+
+inline void left_text_margin(Text& text, Margin margin)
+{
+    for (int i = 0; i < margin; ++i) {
+        text.append(" ");
+    }
+}
+
+
+inline void right_text_margin(Text& text, Margin margin)
+{
+    for (int i = 0; i < margin + 1 /* due to rounding in margin calc */; ++i) {
+        text.append(" ");
+    }
+}

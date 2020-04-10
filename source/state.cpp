@@ -1,6 +1,7 @@
 #include "state.hpp"
 #include "game.hpp"
 #include "graphics/overlay.hpp"
+#include "string.hpp"
 
 
 constexpr static const char* surveyor_logbook_str =
@@ -12,13 +13,6 @@ constexpr static const char* surveyor_logbook_str =
 
 bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
-
-
-static OverlayCoord calc_screen_tiles(Platform& pfrm)
-{
-    constexpr u32 overlay_tile_size = 8;
-    return (pfrm.screen().size() / overlay_tile_size).cast<u8>();
-}
 
 
 class OverworldState : public State {
@@ -321,8 +315,15 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (not enemies_remaining and enemies_destroyed) {
 
-        push_notification(
-            pfrm, game, [](Text& text) { text.assign("level clear"); });
+        push_notification(pfrm, game, [&pfrm](Text& text) {
+            static const auto str = "level clear";
+
+            const auto margin = centered_text_margins(pfrm, str_len(str));
+
+            left_text_margin(text, margin);
+            text.append(str);
+            right_text_margin(text, margin);
+        });
 
         for (auto& chest : game.details().get<ItemChest>()) {
             chest->unlock();
@@ -949,9 +950,6 @@ void NotebookState::exit(Platform& pfrm, Game&)
 }
 
 
-size_t strlen(const char*);
-
-
 StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     if (pfrm.keyboard().down_transition<Key::action_1>()) {
@@ -959,7 +957,7 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (pfrm.keyboard().down_transition<Key::down>()) {
-        if (text_->parsed() not_eq strlen(str_)) {
+        if (text_->parsed() not_eq str_len(str_)) {
             page_ += 1;
             repaint_page(pfrm);
         }
@@ -982,7 +980,7 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game)
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
     // Center horizontally, and place text vertically in top third of screen
-    pos.x -= strlen(credits) + 1;
+    pos.x -= str_len(credits) + 1;
     pos.x /= 2;
     pos.y *= 0.35f;
 

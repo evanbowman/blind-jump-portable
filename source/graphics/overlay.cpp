@@ -1,26 +1,5 @@
 #include "overlay.hpp"
-
-
-size_t strlen(const char* str)
-{
-    const char* s;
-
-    for (s = str; *s; ++s)
-        ;
-    return (s - str);
-}
-
-
-static void reverse(char str[], int length)
-{
-    int start = 0;
-    int end = length - 1;
-    while (start < end) {
-        std::swap(*(str + start), *(str + end));
-        start++;
-        end--;
-    }
-}
+#include "string.hpp"
 
 
 // Implementation of itoa()
@@ -57,7 +36,7 @@ static char* myitoa(int num, char* str, int base)
     str[i] = '\0'; // Append string terminator
 
     // Reverse the string
-    reverse(str, i);
+    str_reverse(str, i);
 
     return str;
 }
@@ -220,7 +199,7 @@ void TextView::assign(const char* str,
     position_ = coord;
     size_ = size;
 
-    const auto len = strlen(str);
+    const auto len = str_len(str);
 
     auto cursor = coord;
 

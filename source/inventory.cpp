@@ -1,6 +1,7 @@
 #include "inventory.hpp"
 #include "graphics/overlay.hpp"
 #include "state.hpp"
+#include "string.hpp"
 
 
 void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
@@ -12,11 +13,27 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
 
 
             if (auto description = item_description(insert)) {
-                push_notification(pfrm, game, [&description](Text& text) {
-                    text.assign("got \"");
-                    text.append(description);
-                    text.append("\"");
-                });
+
+                push_notification(
+                    pfrm, game, [&description, &pfrm](Text& text) {
+                        static const auto prefix = "got \"";
+                        static const auto suffix = "\"";
+
+                        const auto width = str_len(prefix) +
+                                           str_len(description) +
+                                           str_len(suffix);
+
+                        const auto margin = centered_text_margins(pfrm, width);
+
+
+                        left_text_margin(text, margin);
+
+                        text.append(prefix);
+                        text.append(description);
+                        text.append(suffix);
+
+                        right_text_margin(text, margin);
+                    });
             }
 
             return;
@@ -24,6 +41,13 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
     }
 
     // Inventory full!
-    push_notification(
-        pfrm, game, [](Text& text) { text.append("Inventory full"); });
+    push_notification(pfrm, game, [&pfrm](Text& text) {
+        static const auto str = "Inventory full";
+
+        const auto margin = centered_text_margins(pfrm, str_len(str));
+
+        left_text_margin(text, margin);
+        text.append(str);
+        right_text_margin(text, margin);
+    });
 }

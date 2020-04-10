@@ -11,8 +11,9 @@
 
 #include "number/random.hpp"
 #include "platform.hpp"
+#include "string.hpp"
 #include "util.hpp"
-#include <string.h>
+#include <algorithm>
 
 
 void start(Platform&);
@@ -554,15 +555,15 @@ void Platform::load_sprite_texture(const char* name)
 
         if (strcmp(name, info.name_) == 0) {
 
-            memcpy((void*)MEM_PALETTE,
-                   info.palette_data_,
-                   info.palette_data_length_);
+            __builtin_memcpy((void*)MEM_PALETTE,
+                             info.palette_data_,
+                             info.palette_data_length_);
 
             // NOTE: There are four tile blocks, so index four points to the
             // end of the tile memory.
-            memcpy((void*)&MEM_TILE[4][1],
-                   info.tile_data_,
-                   info.tile_data_length_);
+            __builtin_memcpy((void*)&MEM_TILE[4][1],
+                             info.tile_data_,
+                             info.tile_data_length_);
         }
     }
 }
@@ -593,9 +594,9 @@ void Platform::load_tile_texture(const char* name)
             }
 
             if (validate_texture_size(*this, info.tile_data_length_)) {
-                memcpy((void*)&MEM_SCREENBLOCKS[0][0],
-                       info.tile_data_,
-                       info.tile_data_length_);
+                __builtin_memcpy((void*)&MEM_SCREENBLOCKS[0][0],
+                                 info.tile_data_,
+                                 info.tile_data_length_);
             }
         }
     }
@@ -615,9 +616,9 @@ void Platform::load_overlay_texture(const char* name)
 
             if (validate_texture_size(*this, info.tile_data_length_)) {
                 // NOTE: this is the last charblock
-                memcpy((void*)&MEM_SCREENBLOCKS[24][0],
-                       info.tile_data_,
-                       info.tile_data_length_);
+                __builtin_memcpy((void*)&MEM_SCREENBLOCKS[24][0],
+                                 info.tile_data_,
+                                 info.tile_data_length_);
             }
         }
     }
@@ -1021,11 +1022,12 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
         break;
     }
 
-    const auto msg_size = strlen(msg);
+    const auto msg_size = str_len(msg);
 
     u32 i;
     constexpr size_t prefix_size = 3;
-    for (i = 0; i < std::min(msg_size, buffer.size() - (prefix_size + 1));
+    for (i = 0;
+         i < std::min(size_t(msg_size), buffer.size() - (prefix_size + 1));
          ++i) {
         buffer[i + 3] = msg[i];
     }
