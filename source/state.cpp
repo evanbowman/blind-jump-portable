@@ -261,6 +261,11 @@ static void state_deleter(State* s)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// OverworldState
+////////////////////////////////////////////////////////////////////////////////
+
+
 void OverworldState::exit(Platform&, Game&)
 {
     notification_text.reset();
@@ -369,6 +374,11 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// ActiveState
+////////////////////////////////////////////////////////////////////////////////
+
+
 void ActiveState::enter(Platform& pfrm, Game& game)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
@@ -429,6 +439,11 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// FadeInState
+////////////////////////////////////////////////////////////////////////////////
+
+
 void FadeInState::enter(Platform& pfrm, Game& game)
 {
     game.player().set_visible(false);
@@ -454,6 +469,11 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
         return null_state();
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// WarpInState
+////////////////////////////////////////////////////////////////////////////////
 
 
 StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
@@ -482,6 +502,11 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// PreFadePauseState
+////////////////////////////////////////////////////////////////////////////////
+
+
 StatePtr
 PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
@@ -500,6 +525,11 @@ PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
         return null_state();
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// GlowFadeState
+////////////////////////////////////////////////////////////////////////////////
 
 
 StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
@@ -522,6 +552,11 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// FadeOutState
+////////////////////////////////////////////////////////////////////////////////
+
+
 StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().soft_update(pfrm, game, delta);
@@ -533,6 +568,17 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
     constexpr auto fade_duration = milliseconds(670);
     if (counter_ > fade_duration) {
         pfrm.screen().fade(1.f);
+
+        const auto s_tiles = calc_screen_tiles(pfrm);
+
+        Text text(pfrm, {1, u8(s_tiles.y - 2)});
+
+        pfrm.sleep(10);
+
+        text.append("waypoint ");
+        text.append(game.level() + 1);
+        pfrm.sleep(40);
+
         game.next_level(pfrm);
         return state_pool_.create<FadeInState>();
     } else {
@@ -542,6 +588,11 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
         return null_state();
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// DeathFadeState
+////////////////////////////////////////////////////////////////////////////////
 
 
 StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
@@ -559,6 +610,11 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
         return null_state();
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// DeathContinueState
+////////////////////////////////////////////////////////////////////////////////
 
 
 void DeathContinueState::enter(Platform& pfrm, Game& game)
@@ -602,6 +658,11 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
         return null_state();
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// InventoryState
+////////////////////////////////////////////////////////////////////////////////
 
 
 // These are static, because it's simply more convenient for the player when the inventory page and selector are persistent across opening/closing the inventory page.
@@ -885,6 +946,11 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// NotebookState
+////////////////////////////////////////////////////////////////////////////////
+
+
 NotebookState::NotebookState(const char* text) : str_(text), page_(0)
 {
 }
@@ -971,6 +1037,11 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     return null_state();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// IntroCreditsState
+////////////////////////////////////////////////////////////////////////////////
 
 
 void IntroCreditsState::enter(Platform& pfrm, Game& game)
