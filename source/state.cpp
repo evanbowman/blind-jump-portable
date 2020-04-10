@@ -266,6 +266,9 @@ static void state_deleter(State* s)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+static Microseconds enemy_lethargy_timer;
+
+
 void OverworldState::exit(Platform&, Game&)
 {
     notification_text.reset();
@@ -290,6 +293,12 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     game.effects().transform(update_policy);
     game.details().transform(update_policy);
 
+    auto enemy_timestep = delta;
+    if (enemy_lethargy_timer > 0) {
+        enemy_lethargy_timer -= delta;
+        enemy_timestep /= 4;
+    }
+
     bool enemies_remaining = false;
     bool enemies_destroyed = false;
     game.enemies().transform([&](auto& entity_buf) {
@@ -299,7 +308,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                 enemies_destroyed = true;
             } else {
                 enemies_remaining = true;
-                (*it)->update(pfrm, game, delta);
+
+                (*it)->update(pfrm, game, enemy_timestep);
+
                 if (camera_tracking_ &&
                     pfrm.keyboard().pressed<Key::action_1>()) {
                     // NOTE: snake body segments do not make much sense to
@@ -577,7 +588,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         text.append("waypoint ");
         text.append(game.level() + 1);
-        pfrm.sleep(40);
+        pfrm.sleep(55);
 
         game.next_level(pfrm);
         return state_pool_.create<FadeInState>();
@@ -716,7 +727,22 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [] {
          static const auto str = "Accelerator (60 shots)";
          return str;
-     }}};
+     }},
+    {Item::Type::lethargy,
+     189,
+     [](Platform&, Game& game) {
+         game.inventory().remove_item(InventoryState::page_,
+                                      InventoryState::selector_coord_.x,
+                                      InventoryState::selector_coord_.y);
+
+         enemy_lethargy_timer = seconds(18);
+
+         return null_state();
+     },
+    [] {
+        static const auto str = "Lethargy (18 sec)";
+        return str;
+    }}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)

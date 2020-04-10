@@ -16,6 +16,7 @@ public:
         surveyor_logbook,
         blaster,
         accelerator,
+        lethargy,
         count
     };
 
