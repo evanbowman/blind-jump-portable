@@ -387,13 +387,11 @@ void Platform::Screen::draw(const Sprite& spr)
             oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_TALL | ATTR0_BLEND;
         }
         oa->attribute_1 = ATTR1_SIZE_32;
+
         const auto& flip = spr.get_flip();
-        if (flip.y) {
-            oa->attribute_1 |= (1 << 13);
-        }
-        if (flip.x) {
-            oa->attribute_1 |= (1 << 12);
-        }
+        oa->attribute_1 |= ((int)flip.y << 13);
+        oa->attribute_1 |= ((int)flip.x << 12);
+
         const auto abs_position = position - view_center;
         oa->attribute_0 &= 0xff00;
         oa->attribute_0 |= abs_position.y & 0x00ff;

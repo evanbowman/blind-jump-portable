@@ -15,11 +15,10 @@ public:
 
     void update(Platform& pf, Game& game, Microseconds dt);
 
-    void on_collision(Platform&, Game&, Drone&);
-    void on_collision(Platform&, Game&, Turret&);
-    void on_collision(Platform&, Game&, Dasher&);
-    void on_collision(Platform&, Game&, SnakeHead&);
-    void on_collision(Platform&, Game&, SnakeBody&);
+    template <typename T> void on_collision(Platform&, Game&, T&)
+    {
+        this->kill();
+    }
 
     const HitBox& hitbox() const
     {

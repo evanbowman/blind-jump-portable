@@ -124,6 +124,9 @@ enum TextureMap : TextureIndex {
     explosion = 75,
     rubble = 81,
     drone = 82,
+    scarecrow_top = 83,
+    scarecrow_bottom = 84,
+    scarecrow_top_2 = 85,
 };
 
 

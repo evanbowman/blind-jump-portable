@@ -14,6 +14,7 @@
 #include "entity/enemies/dasher.hpp"
 #include "entity/enemies/drone.hpp"
 #include "entity/enemies/probe.hpp"
+#include "entity/enemies/scarecrow.hpp"
 #include "entity/enemies/snake.hpp"
 #include "entity/enemies/turret.hpp"
 #include "entity/entityGroup.hpp"
@@ -42,8 +43,14 @@ public:
         return tiles_;
     }
 
-    using EnemyGroup =
-        EntityGroup<20, Drone, Turret, Dasher, SnakeHead, SnakeBody, SnakeTail>;
+    using EnemyGroup = EntityGroup<20,
+                                   Drone,
+                                   Turret,
+                                   Dasher,
+                                   SnakeHead,
+                                   SnakeBody,
+                                   SnakeTail,
+                                   Scarecrow>;
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
     using EffectGroup = EntityGroup<20, OrbShot, Laser, Explosion>;

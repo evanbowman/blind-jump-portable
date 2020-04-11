@@ -420,6 +420,11 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                      game,
                      game.effects().get<Laser>(),
                      game.enemies().get<SnakeTail>());
+    check_collisions(pfrm,
+                     game,
+                     game.effects().get<Laser>(),
+                     game.enemies().get<Scarecrow>());
+
 
     return null_state();
 }

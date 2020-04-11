@@ -51,6 +51,33 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 }
 
 
+[[gnu::unused]] static void
+big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
+{
+    for (int i = 0; i < 5; ++i) {
+        game.effects().spawn<Explosion>(sample<48>(position));
+    }
+
+    game.on_timeout(milliseconds(60), [pos = position](Platform&, Game& game) {
+        for (int i = 0; i < 4; ++i) {
+            game.effects().spawn<Explosion>(sample<48>(pos));
+        }
+        game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
+            for (int i = 0; i < 3; ++i) {
+                game.effects().spawn<Explosion>(sample<48>(pos));
+            }
+            game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
+                for (int i = 0; i < 2; ++i) {
+                    game.effects().spawn<Explosion>(sample<48>(pos));
+                }
+            });
+        });
+    });
+
+    game.camera().shake(Camera::ShakeMagnitude::two);
+}
+
+
 HOT void Game::update(Platform& pfrm, Microseconds delta)
 {
     // Every update, advance the random number engine, so that the
@@ -531,7 +558,10 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
              spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
          },
          1},
-        {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }}};
+        {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
+        // {0,
+        //  [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); }}
+    };
 
 
     Buffer<EnemyInfo*, 100> distribution;

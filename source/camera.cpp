@@ -24,8 +24,10 @@ void Camera::update(Platform& pfrm,
                        (seek.y - screen_size.y / 2)};
 
 
-    static const std::array<Float, 5> shake_constants = {
-        {3.f, -5.f, 3.f, -2.f, 1.f}};
+    static const std::array<std::array<Float, 5>,
+                            static_cast<int>(ShakeMagnitude::zero)>
+        shake_constants = {
+            {{3.f, -5.f, 3.f, -2.f, 1.f}, {6.f, -10.f, 6.f, -4.f, 2.f}}};
 
     const auto center = interpolate(
         target,
@@ -34,7 +36,7 @@ void Camera::update(Platform& pfrm,
 
     ballast_.divisor_ = 0;
 
-    if (not shaking_) {
+    if (shake_magnitude_ == ShakeMagnitude::zero) {
 
         view.set_center(center);
 
@@ -46,13 +48,15 @@ void Camera::update(Platform& pfrm,
             shake_timer_ = 0;
             shake_index_ += 1;
 
-            if (shake_index_ == shake_constants.size()) {
+            if (shake_index_ == shake_constants[0].size()) {
                 shake_index_ = 4;
-                shaking_ = false;
+                shake_magnitude_ = ShakeMagnitude::zero;
             }
         }
 
-        view.set_center({center.x, center.y + shake_constants[shake_index_]});
+        view.set_center({center.x,
+                         center.y + shake_constants[static_cast<int>(
+                                        shake_magnitude_)][shake_index_]});
     }
 
     pfrm.screen().set_view(view);
@@ -61,10 +65,10 @@ void Camera::update(Platform& pfrm,
 }
 
 
-void Camera::shake()
+void Camera::shake(ShakeMagnitude magnitude)
 {
-    if (not shaking_) {
-        shaking_ = true;
+    if (shake_magnitude_ == ShakeMagnitude::zero) {
+        shake_magnitude_ = magnitude;
         shake_timer_ = 0;
         shake_index_ = 0;
     }

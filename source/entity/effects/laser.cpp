@@ -86,33 +86,3 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
 
     sprite_.set_position(position_);
 }
-
-
-void Laser::on_collision(Platform&, Game&, Turret&)
-{
-    this->kill();
-}
-
-
-void Laser::on_collision(Platform&, Game&, Dasher&)
-{
-    this->kill();
-}
-
-
-void Laser::on_collision(Platform&, Game&, SnakeHead&)
-{
-    this->kill();
-}
-
-
-void Laser::on_collision(Platform&, Game&, SnakeBody&)
-{
-    this->kill();
-}
-
-
-void Laser::on_collision(Platform&, Game&, Drone&)
-{
-    this->kill();
-}
