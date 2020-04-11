@@ -20,7 +20,7 @@ static void play_music(Platform& pfrm, Game& game)
 {
     pfrm.speaker().load_music("ambience");
 
-    game.on_timeout(seconds(118), play_music);
+    game.on_timeout(seconds(116), play_music);
 }
 
 
