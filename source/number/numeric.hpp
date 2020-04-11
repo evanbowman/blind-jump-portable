@@ -87,7 +87,6 @@ inline Float sqrt_approx(const Float x)
     return x * u.x * (1.5f - xhalf * u.x * u.x);
 }
 
-
 template <typename T> Vec2<T> operator+(const Vec2<T>& lhs, const Vec2<T>& rhs)
 {
     return {lhs.x + rhs.x, lhs.y + rhs.y};
@@ -211,6 +210,13 @@ inline UnitVec direction(const Vec2<Float>& origin, const Vec2<Float>& target)
     const auto magnitude = sqrt_approx(vec.x * vec.x + vec.y * vec.y);
 
     return vec / magnitude;
+}
+
+
+inline Float distance(const Vec2<Float>& from, const Vec2<Float>& to)
+{
+    const auto vec = to - from;
+    return sqrt_approx(vec.x * vec.x + vec.y * vec.y);
 }
 
 

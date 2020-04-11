@@ -1,8 +1,8 @@
 #include "state.hpp"
 #include "game.hpp"
 #include "graphics/overlay.hpp"
-#include "string.hpp"
 #include "number/random.hpp"
+#include "string.hpp"
 
 
 constexpr static const char* surveyor_logbook_str =
@@ -151,7 +151,10 @@ public:
 
 private:
     std::optional<Text> text_;
+    std::optional<Text> score_;
+    std::optional<Text> level_;
     Microseconds counter_ = 0;
+    Microseconds counter2_ = 0;
 };
 
 
@@ -465,12 +468,12 @@ static void
 big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
 {
     for (int i = 0; i < 5; ++i) {
-        game.effects().spawn<Explosion>(sample<48>(position));
+        game.effects().spawn<Explosion>(sample<24>(position));
     }
 
     game.on_timeout(milliseconds(60), [pos = position](Platform&, Game& game) {
         for (int i = 0; i < 4; ++i) {
-            game.effects().spawn<Explosion>(sample<48>(pos));
+            game.effects().spawn<Explosion>(sample<32>(pos));
         }
         game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
             for (int i = 0; i < 3; ++i) {
@@ -662,7 +665,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         text.append("waypoint ");
         text.append(game.level() + 1);
-        pfrm.sleep(55);
+        pfrm.sleep(65);
 
         game.next_level(pfrm);
         return state_pool_.create<FadeInState>();
@@ -723,6 +726,40 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
         counter_ -= delta;
         pfrm.screen().fade(
             1.f, ColorConstant::rich_black, ColorConstant::aerospace_orange);
+
+        constexpr auto stats_time = milliseconds(500);
+        if (counter2_ < stats_time) {
+            const bool show_stats = counter2_ + delta > stats_time;
+
+            counter2_ += delta;
+
+            if (show_stats) {
+                score_.emplace(pfrm, Vec2<u8>{1, 8});
+                level_.emplace(pfrm, Vec2<u8>{1, 10});
+
+                const auto screen_tiles = calc_screen_tiles(pfrm);
+
+                static const auto score_text = "score ";
+                score_->append(score_text);
+                for (u32 i = 0;
+                     i < screen_tiles.x - (str_len(score_text) + 2 +
+                                           integer_text_length(game.score()));
+                     ++i) {
+                    score_->append(".");
+                }
+                score_->append(game.score());
+
+                static const auto level_text = "waypoints ";
+                level_->append(level_text);
+                for (u32 i = 0;
+                     i < screen_tiles.x - (str_len(level_text) + 2 +
+                                           integer_text_length(game.level()));
+                     ++i) {
+                    level_->append(".");
+                }
+                level_->append(game.level());
+            }
+        }
 
         if (pfrm.keyboard().pressed<Key::action_2>() or
             pfrm.keyboard().pressed<Key::action_1>()) {

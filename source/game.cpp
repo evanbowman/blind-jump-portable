@@ -528,7 +528,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          },
          1},
         {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
-        {3,
+        {2,
          [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); }}};
 
 

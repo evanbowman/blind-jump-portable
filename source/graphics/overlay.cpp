@@ -42,6 +42,16 @@ static char* myitoa(int num, char* str, int base)
 }
 
 
+u32 integer_text_length(int n)
+{
+    std::array<char, 40> buffer = {0};
+
+    myitoa(n, buffer.data(), 10);
+
+    return str_len(buffer.data());
+}
+
+
 Text::Text(Platform& pfrm, const char* str, const OverlayCoord& coord)
     : pfrm_(pfrm), coord_(coord), len_(0)
 {

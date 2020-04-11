@@ -173,3 +173,6 @@ inline void right_text_margin(Text& text, Margin margin)
         text.append(" ");
     }
 }
+
+
+u32 integer_text_length(int n);

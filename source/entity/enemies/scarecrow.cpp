@@ -9,8 +9,8 @@ static const Float long_jump_speed(0.00015f);
 
 
 Scarecrow::Scarecrow(const Vec2<Float>& position)
-    : Entity(4), hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0),
-      bounce_timer_(0)
+    : Entity(3), hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0),
+      bounce_timer_(0), hit_(false)
 {
     position_ = {position.x, position.y - 32};
 
@@ -129,11 +129,12 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             if (pos.y < position_.y - abs(offset) or abs(offset) > 7) {
                 sprite_.set_texture_index(TextureMap::scarecrow_top);
 
-                if (int(offset) == 0) {
-                    if (random_choice<4>()) {
+                if (int(abs(offset)) == 0) {
+                    if (random_choice<4>() and not hit_) {
                         state_ = State::idle_crouch;
                     } else {
                         state_ = State::long_crouch;
+                        hit_ = false;
                     }
                     bounce_timer_ = 0;
                 }
@@ -179,18 +180,29 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             } else {
                 sprite_.set_position(position_);
 
-                const auto& player_pos = game.player().get_position();
+                auto player_pos = game.player().get_position();
+
+                // const auto dist = distance(position_, player_pos);
+                // if (dist > 64) {
+                //     player_pos = interpolate(player_pos, position_, 64 / dist);
+                // }
+
                 const auto player_coord = to_tile_coord(player_pos.cast<s32>());
 
                 for (int i = 0; i < 200; ++i) {
                     auto selected =
                         to_tile_coord(sample<64>(player_pos).cast<s32>());
 
+                    // This is just because the enemy is tall, and we do not
+                    // want it to jump to a coordinate, such that its head is
+                    // cropped off of the screen;
+                    selected.y += 1;
+
                     const Tile t =
                         game.tiles().get_tile(selected.x, selected.y);
                     if (is_walkable(t) and
-                        abs(selected.x - player_coord.x) > 1 and
-                        abs(selected.y - player_coord.y) > 1) {
+                        manhattan_length(selected, player_coord) > 3 and
+                        selected not_eq anchor_) {
                         anchor_ = selected;
                         break;
                     }
@@ -217,6 +229,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::long_airborne: {
         if (timer_ > 0) {
+
             timer_ -= dt;
 
             position_ = position_ + Float(dt) * move_vec_;
@@ -236,11 +249,32 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
         } else {
             timer_ = 0;
             bounce_timer_ = 0;
-            state_ = State::idle_crouch;
+            state_ = State::landing;
 
             sprite_.set_position(position_);
             leg_.set_position(position_);
             shadow_.set_position(position_);
+        }
+        break;
+    }
+
+    case State::landing: {
+        const auto sprite_pos = sprite_.get_position();
+        timer_ += dt;
+        if (timer_ > milliseconds(35)) {
+            timer_ = 0;
+            if (sprite_pos.y < position_.y + 3) {
+                sprite_.set_position({sprite_pos.x, sprite_pos.y + 1});
+            } else {
+                if (visible()) {
+                    game.effects().spawn<OrbShot>(
+                        position_,
+                        sample<8>(game.player().get_position()),
+                        0.00010f);
+                }
+
+                state_ = State::idle_wait;
+            }
         }
         break;
     }
@@ -251,6 +285,8 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 void Scarecrow::on_collision(Platform& pf, Game& game, Laser&)
 {
     debit_health(1);
+
+    hit_ = true;
 
     sprite_.set_mix({ColorConstant::aerospace_orange, 255});
     leg_.set_mix({ColorConstant::aerospace_orange, 255});
@@ -266,7 +302,11 @@ void Scarecrow::on_collision(Platform& pf, Game& game, Laser&)
                                                    Item::Type::heart,
                                                    Item::Type::null};
 
-        on_enemy_destroyed(pf, game, position_, 3, item_drop_vec);
+        on_enemy_destroyed(pf,
+                           game,
+                           Vec2<Float>{position_.x, position_.y + 32},
+                           3,
+                           item_drop_vec);
 
 
         if (random_choice<3>() == 0) {

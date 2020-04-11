@@ -49,6 +49,7 @@ private:
         long_wait,
         long_jump,
         long_airborne,
+        landing,
     } state_ = State::idle_wait;
 
     Sprite shadow_;
@@ -59,4 +60,5 @@ private:
     Microseconds bounce_timer_;
     Vec2<TIdx> anchor_;
     Vec2<Float> move_vec_;
+    bool hit_;
 };
