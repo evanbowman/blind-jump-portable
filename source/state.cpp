@@ -2,6 +2,7 @@
 #include "game.hpp"
 #include "graphics/overlay.hpp"
 #include "string.hpp"
+#include "number/random.hpp"
 
 
 constexpr static const char* surveyor_logbook_str =
@@ -460,6 +461,33 @@ void ActiveState::exit(Platform& pfrm, Game& game)
 }
 
 
+static void
+big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
+{
+    for (int i = 0; i < 5; ++i) {
+        game.effects().spawn<Explosion>(sample<48>(position));
+    }
+
+    game.on_timeout(milliseconds(60), [pos = position](Platform&, Game& game) {
+        for (int i = 0; i < 4; ++i) {
+            game.effects().spawn<Explosion>(sample<48>(pos));
+        }
+        game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
+            for (int i = 0; i < 3; ++i) {
+                game.effects().spawn<Explosion>(sample<48>(pos));
+            }
+            game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
+                for (int i = 0; i < 2; ++i) {
+                    game.effects().spawn<Explosion>(sample<48>(pos));
+                }
+            });
+        });
+    });
+
+    game.camera().shake(Camera::ShakeMagnitude::two);
+}
+
+
 StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().update(pfrm, game, delta);
@@ -478,6 +506,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (game.player().get_health() == 0) {
+        big_explosion(pfrm, game, game.player().get_position());
         return state_pool_.create<DeathFadeState>();
     }
 

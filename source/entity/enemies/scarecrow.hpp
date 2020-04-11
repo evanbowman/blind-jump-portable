@@ -56,6 +56,7 @@ private:
     HitBox hitbox_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
     Microseconds timer_;
+    Microseconds bounce_timer_;
     Vec2<TIdx> anchor_;
     Vec2<Float> move_vec_;
 };

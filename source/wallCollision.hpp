@@ -26,13 +26,8 @@ WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
     const Vec2<s32> pos = entity.get_position().template cast<s32>();
     const Vec2<TIdx> tile_coords = to_tile_coord(pos);
 
-    auto tile_is_wall = [&](Tile t) {
-        return t == Tile::none or t == Tile::ledge or t == Tile::grass_ledge or
-               t == Tile::grass_ledge_vines;
-    };
-
     auto check_wall = [&](TIdx x, TIdx y) {
-        if (tile_is_wall(tiles.get_tile(x, y))) {
+        if (not is_walkable(tiles.get_tile(x, y))) {
             adjacency_vector.push_back(to_world_coord<s32>({x, y}));
         }
     };

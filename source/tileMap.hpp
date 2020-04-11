@@ -97,3 +97,9 @@ inline Vec2<TIdx> to_quarter_tile_coord(const Vec2<s32>& wc)
     }
         .cast<TIdx>();
 }
+
+inline bool is_walkable(Tile t)
+{
+    return t not_eq Tile::none and t not_eq Tile::ledge and
+           t not_eq Tile::grass_ledge and t not_eq Tile::grass_ledge_vines;
+}

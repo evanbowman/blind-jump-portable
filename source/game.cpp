@@ -51,33 +51,6 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 }
 
 
-[[gnu::unused]] static void
-big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
-{
-    for (int i = 0; i < 5; ++i) {
-        game.effects().spawn<Explosion>(sample<48>(position));
-    }
-
-    game.on_timeout(milliseconds(60), [pos = position](Platform&, Game& game) {
-        for (int i = 0; i < 4; ++i) {
-            game.effects().spawn<Explosion>(sample<48>(pos));
-        }
-        game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
-            for (int i = 0; i < 3; ++i) {
-                game.effects().spawn<Explosion>(sample<48>(pos));
-            }
-            game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
-                for (int i = 0; i < 2; ++i) {
-                    game.effects().spawn<Explosion>(sample<48>(pos));
-                }
-            });
-        });
-    });
-
-    game.camera().shake(Camera::ShakeMagnitude::two);
-}
-
-
 HOT void Game::update(Platform& pfrm, Microseconds delta)
 {
     // Every update, advance the random number engine, so that the
@@ -326,9 +299,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     // Create a mask of the tileset by filling the temporary tileset
     // with all walkable tiles from the tilemap.
     tiles_.for_each([&](const Tile& tile, TIdx x, TIdx y) {
-        if (tile not_eq Tile::none and tile not_eq Tile::ledge and
-            tile not_eq Tile::grass_ledge and
-            tile not_eq Tile::grass_ledge_vines) {
+        if (is_walkable(tile)) {
             temporary.set_tile(x, y, Tile(1));
         } else {
             temporary.set_tile(x, y, Tile(0));
@@ -457,9 +428,7 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
     MapCoordBuf output;
 
     map.for_each([&](const Tile& tile, TIdx x, TIdx y) {
-        if (tile not_eq Tile::none and tile not_eq Tile::ledge and
-            tile not_eq Tile::grass_ledge and
-            tile not_eq Tile::grass_ledge_vines) {
+        if (is_walkable(tile)) {
             output.push_back({x, y});
         }
     });
@@ -552,16 +521,15 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
                  spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              }
          }},
-        {3, [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); }},
-        {4,
+        {5, [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); }},
+        {6,
          [&]() {
              spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
          },
          1},
         {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
-        // {0,
-        //  [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); }}
-    };
+        {3,
+         [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); }}};
 
 
     Buffer<EnemyInfo*, 100> distribution;

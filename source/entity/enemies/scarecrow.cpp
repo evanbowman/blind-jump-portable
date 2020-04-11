@@ -1,11 +1,16 @@
 #include "scarecrow.hpp"
 #include "common.hpp"
 #include "game.hpp"
+#include "graphics/overlay.hpp"
 #include "number/random.hpp"
 
 
+static const Float long_jump_speed(0.00015f);
+
+
 Scarecrow::Scarecrow(const Vec2<Float>& position)
-    : Entity(3), hitbox_{&position_, {16, 32}, {8, 16}}
+    : Entity(4), hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0),
+      bounce_timer_(0)
 {
     position_ = {position.x, position.y - 32};
 
@@ -95,24 +100,28 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 sprite_.set_position({sprite_pos.x, sprite_pos.y - 1});
             } else {
                 sprite_.set_position(position_);
+
+                move_vec_ =
+                    direction(position_, sample<32>(to_world_coord(anchor_))) *
+                    0.000005f;
+
+                bounce_timer_ = 0;
                 state_ = State::idle_airborne;
             }
         }
-
-        move_vec_ = direction(position_, sample<32>(to_world_coord(anchor_))) *
-                    0.000005f;
 
         break;
     }
 
     case State::idle_airborne:
-        timer_ += dt;
-        if (visible()) {
+        bounce_timer_ += dt;
+        // if (visible())
+        {
 
             position_ = position_ + Float(dt) * move_vec_;
 
             const Float offset =
-                8 * float(sine(4 * 3.14 * 0.0027f * timer_ + 180)) /
+                8 * float(sine(4 * 3.14 * 0.0027f * bounce_timer_ + 180)) /
                 std::numeric_limits<s16>::max();
 
 
@@ -121,8 +130,12 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 sprite_.set_texture_index(TextureMap::scarecrow_top);
 
                 if (int(offset) == 0) {
-                    state_ = State::idle_crouch;
-                    timer_ = 0;
+                    if (random_choice<4>()) {
+                        state_ = State::idle_crouch;
+                    } else {
+                        state_ = State::long_crouch;
+                    }
+                    bounce_timer_ = 0;
                 }
             }
 
@@ -133,17 +146,104 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         break;
 
-    case State::long_crouch:
+    case State::long_crouch: {
+        const auto sprite_pos = sprite_.get_position();
+        timer_ += dt;
+        if (timer_ > milliseconds(20)) {
+            timer_ = 0;
+            if (sprite_pos.y < position_.y + 5) {
+                sprite_.set_position({sprite_pos.x, sprite_pos.y + 1});
+            } else {
+                state_ = State::long_wait;
+            }
+        }
         break;
+    }
 
     case State::long_wait:
+        timer_ += dt;
+        if (timer_ > milliseconds(200)) {
+            timer_ = 0;
+            sprite_.set_texture_index(TextureMap::scarecrow_top_2);
+            state_ = State::long_jump;
+        }
         break;
 
-    case State::long_jump:
-        break;
+    case State::long_jump: {
+        const auto sprite_pos = sprite_.get_position();
+        timer_ += dt;
+        if (timer_ > milliseconds(7)) {
+            timer_ = 0;
+            if (sprite_pos.y > position_.y + 1) {
+                sprite_.set_position({sprite_pos.x, sprite_pos.y - 1});
+            } else {
+                sprite_.set_position(position_);
 
-    case State::long_airborne:
+                const auto& player_pos = game.player().get_position();
+                const auto player_coord = to_tile_coord(player_pos.cast<s32>());
+
+                for (int i = 0; i < 200; ++i) {
+                    auto selected =
+                        to_tile_coord(sample<64>(player_pos).cast<s32>());
+
+                    const Tile t =
+                        game.tiles().get_tile(selected.x, selected.y);
+                    if (is_walkable(t) and
+                        abs(selected.x - player_coord.x) > 1 and
+                        abs(selected.y - player_coord.y) > 1) {
+                        anchor_ = selected;
+                        break;
+                    }
+                }
+
+                auto target = to_world_coord(anchor_);
+                target.y -= 32;
+                target.x += 16;
+                move_vec_ = direction(position_, target) * long_jump_speed;
+
+                const auto vec = target - position_;
+                const auto magnitude =
+                    sqrt_approx(vec.x * vec.x + vec.y * vec.y);
+
+                timer_ = abs(magnitude) / long_jump_speed;
+
+                bounce_timer_ = timer_;
+                state_ = State::long_airborne;
+            }
+        }
+
         break;
+    }
+
+    case State::long_airborne: {
+        if (timer_ > 0) {
+            timer_ -= dt;
+
+            position_ = position_ + Float(dt) * move_vec_;
+
+            const Float offset =
+                8 *
+                float(sine(4 * 3.14 *
+                               (360 * (1 - (bounce_timer_ - timer_) /
+                                               Float(bounce_timer_))) +
+                           180)) /
+                std::numeric_limits<s16>::max();
+
+            sprite_.set_position({position_.x, position_.y - abs(offset)});
+            leg_.set_position({position_.x, position_.y - abs(offset)});
+            shadow_.set_position(position_);
+
+        } else {
+            timer_ = 0;
+            bounce_timer_ = 0;
+            state_ = State::idle_crouch;
+
+            sprite_.set_position(position_);
+            leg_.set_position(position_);
+            shadow_.set_position(position_);
+        }
+        break;
+    }
     }
 }
 
