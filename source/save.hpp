@@ -23,7 +23,8 @@ struct PersistentData {
     Level level_ = -1;
     Score score_ = 0;
 
-    Score highscores[8] = {0};
+    using HighScores = std::array<Score, 8>;
+    HighScores highscores_ = {0};
 
     Inventory inventory_;
 };

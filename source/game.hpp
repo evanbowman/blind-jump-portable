@@ -87,6 +87,11 @@ public:
         return persistent_data_.level_;
     }
 
+    auto& highscores()
+    {
+        return persistent_data_.highscores_;
+    }
+
     Score& score()
     {
         return persistent_data_.score_;

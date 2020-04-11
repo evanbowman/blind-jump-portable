@@ -199,7 +199,7 @@ static sf::Glsl::Vec3 real_color(ColorConstant k)
 
 void Platform::Screen::display()
 {
-    for (auto& spr : reverse(::draw_queue)) {
+    for (auto& spr : reversed(::draw_queue)) {
         const Vec2<Float>& pos = spr.get_position();
         const Vec2<bool>& flip = spr.get_flip();
 

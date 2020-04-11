@@ -152,6 +152,7 @@ public:
 private:
     std::optional<Text> text_;
     std::optional<Text> score_;
+    std::optional<Text> highscore_;
     std::optional<Text> level_;
     Microseconds counter_ = 0;
     Microseconds counter2_ = 0;
@@ -735,9 +736,11 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             if (show_stats) {
                 score_.emplace(pfrm, Vec2<u8>{1, 8});
-                level_.emplace(pfrm, Vec2<u8>{1, 10});
+                highscore_.emplace(pfrm, Vec2<u8>{1, 10});
+                level_.emplace(pfrm, Vec2<u8>{1, 12});
 
                 const auto screen_tiles = calc_screen_tiles(pfrm);
+
 
                 static const auto score_text = "score ";
                 score_->append(score_text);
@@ -748,6 +751,26 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                     score_->append(".");
                 }
                 score_->append(game.score());
+
+
+                for (auto& score : reversed(game.highscores())) {
+                    if (score < game.score()) {
+                        score = game.score();
+                        break;
+                    }
+                }
+                std::sort(game.highscores().rbegin(), game.highscores().rend());
+                static const auto highscore_text = "high score ";
+                highscore_->append(highscore_text);
+                for (u32 i = 0;
+                     i < screen_tiles.x -
+                             (str_len(highscore_text) + 2 +
+                              integer_text_length(game.highscores()[0]));
+                     ++i) {
+                    highscore_->append(".");
+                }
+                highscore_->append(game.highscores()[0]);
+
 
                 static const auto level_text = "waypoints ";
                 level_->append(level_text);

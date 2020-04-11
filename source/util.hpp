@@ -34,7 +34,7 @@ template <typename T> auto end(reversion_wrapper<T> w)
 } // namespace _detail
 
 
-template <typename T> _detail::reversion_wrapper<T> reverse(T&& iterable)
+template <typename T> _detail::reversion_wrapper<T> reversed(T&& iterable)
 {
     return {iterable};
 }
