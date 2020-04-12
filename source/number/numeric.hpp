@@ -177,7 +177,8 @@ inline u8 fast_interpolate(u8 a, u8 b, u8 t)
 }
 
 
-using Microseconds = s32;
+using Microseconds = s32; // Therefore, a maximum of ~2147.5 seconds will fit in
+                          // this data type.
 
 
 constexpr Microseconds seconds(u32 count)

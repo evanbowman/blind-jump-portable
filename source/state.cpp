@@ -154,6 +154,7 @@ private:
     std::optional<Text> score_;
     std::optional<Text> highscore_;
     std::optional<Text> level_;
+    std::optional<Text> uptime_;
     Microseconds counter_ = 0;
     Microseconds counter2_ = 0;
 };
@@ -738,19 +739,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 score_.emplace(pfrm, Vec2<u8>{1, 8});
                 highscore_.emplace(pfrm, Vec2<u8>{1, 10});
                 level_.emplace(pfrm, Vec2<u8>{1, 12});
-
-                const auto screen_tiles = calc_screen_tiles(pfrm);
-
-
-                static const auto score_text = "score ";
-                score_->append(score_text);
-                for (u32 i = 0;
-                     i < screen_tiles.x - (str_len(score_text) + 2 +
-                                           integer_text_length(game.score()));
-                     ++i) {
-                    score_->append(".");
-                }
-                score_->append(game.score());
+                uptime_.emplace(pfrm, Vec2<u8>{1, 14});
 
 
                 for (auto& score : reversed(game.highscores())) {
@@ -760,27 +749,25 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                     }
                 }
                 std::sort(game.highscores().rbegin(), game.highscores().rend());
-                static const auto highscore_text = "high score ";
-                highscore_->append(highscore_text);
-                for (u32 i = 0;
-                     i < screen_tiles.x -
-                             (str_len(highscore_text) + 2 +
-                              integer_text_length(game.highscores()[0]));
-                     ++i) {
-                    highscore_->append(".");
-                }
-                highscore_->append(game.highscores()[0]);
 
 
-                static const auto level_text = "waypoints ";
-                level_->append(level_text);
-                for (u32 i = 0;
-                     i < screen_tiles.x - (str_len(level_text) + 2 +
-                                           integer_text_length(game.level()));
-                     ++i) {
-                    level_->append(".");
-                }
-                level_->append(game.level());
+                const auto screen_tiles = calc_screen_tiles(pfrm);
+
+                auto print_metric =
+                    [&](Text& target, const char* str, int num) {
+                        target.append(str);
+
+                        const auto iters = screen_tiles.x - (str_len(str) + 2 + integer_text_length(num));
+                        for (u32 i = 0; i < iters; ++i) {
+                            target.append(".");
+                        }
+
+                        target.append(num);
+                    };
+
+                print_metric(*score_, "score ", game.score());
+                print_metric(*highscore_, "high score ", game.highscores()[0]);
+                print_metric(*level_, "waypoints ", game.level());
             }
         }
 
