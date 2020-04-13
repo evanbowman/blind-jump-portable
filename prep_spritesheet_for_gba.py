@@ -17,7 +17,11 @@ def rgb_to_bgr(file_name):
     im.save('bgr_' + file_name)
 
 
-for name in ['spritesheet.png', 'tilesheet.png', 'overlay.png', 'overlay_journal.png']:
+for name in ['spritesheet.png',
+             'spritesheet_boss0.png',
+             'tilesheet.png',
+             'overlay.png',
+             'overlay_journal.png']:
     rgb_to_bgr(name)
 
 

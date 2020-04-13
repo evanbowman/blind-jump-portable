@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "camera.hpp"
+#include "entity/bosses/firstExplorer.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/rubble.hpp"
@@ -50,10 +51,12 @@ public:
                                    SnakeHead,
                                    SnakeBody,
                                    SnakeTail,
-                                   Scarecrow>;
+                                   Scarecrow,
+                                   FirstExplorer>;
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
     using EffectGroup = EntityGroup<20, OrbShot, Laser, Explosion>;
+    // using BossGroup = EntityGroup<1, FirstExplorer>;
 
     inline Transporter& transporter()
     {
@@ -122,14 +125,19 @@ private:
     EnemyGroup enemies_;
     DetailGroup details_;
     EffectGroup effects_;
+    // BossGroup bosses_;
     Transporter transporter_;
     PersistentData persistent_data_;
     StatePtr state_;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 
+    void seed_map(Platform& platform, TileMap& workspace);
     void regenerate_map(Platform& platform);
     bool respawn_entities(Platform& platform);
 
     void update_transitions(Platform& pf, Microseconds dt);
 };
+
+
+bool is_boss_level(Level level);

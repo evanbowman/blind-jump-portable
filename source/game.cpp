@@ -18,7 +18,7 @@ bool within_view_frustum(const Platform::Screen& screen,
 // the existing Game::on_timeout() method.
 static void play_music(Platform& pfrm, Game& game)
 {
-    pfrm.speaker().load_music("ambience");
+    pfrm.speaker().load_music("sb_omega");
 
     game.on_timeout(seconds(114), play_music);
 }
@@ -209,6 +209,54 @@ static void condense(TileMap& map, TileMap& maptemp)
 }
 
 
+READ_ONLY_DATA
+static constexpr const bool boss_level_0[TileMap::width][TileMap::height] = {
+    {},
+    {},
+    {},
+    {},
+    {},
+    {0, 0, 1, 1, 1, 1, 1, 1, 0},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 1, 1, 1, 1, 1, 1, 0},
+    {},
+    {},
+};
+
+
+struct BossLevel {
+    const bool (*map_)[TileMap::height];
+    Level level_;
+    const char* spritesheet_;
+};
+
+
+static const BossLevel* get_boss_level(Level current_level)
+{
+    switch (current_level) {
+    case 1: {
+        static constexpr const BossLevel ret{boss_level_0, 1, "bgr_spritesheet_boss0"};
+        return &ret;
+    }
+
+    default:
+        return nullptr;
+    }
+}
+
+
+bool is_boss_level(Level level)
+{
+    return get_boss_level(level) not_eq nullptr;
+}
+
+
 COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
     persistent_data_.seed_ = random_seed();
@@ -218,6 +266,14 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         persistent_data_.level_ = *set_level;
     } else {
         persistent_data_.level_ += 1;
+    }
+
+    auto boss_level = get_boss_level(level());
+    if (boss_level) {
+        pfrm.load_sprite_texture(boss_level->spritesheet_);
+
+    } else {
+        pfrm.load_sprite_texture("bgr_spritesheet");
     }
 
 RETRY:
@@ -274,16 +330,31 @@ COLD static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
 }
 
 
+COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
+{
+    if (auto l = get_boss_level(level())) {
+        for (int x = 0; x < TileMap::width; ++x) {
+            for (int y = 0; y < TileMap::height; ++y) {
+                tiles_.set_tile(x, y, static_cast<Tile>(l->map_[x][y]));
+            }
+        }
+    } else {
+        tiles_.for_each([&](Tile& t, int, int) {
+            t = Tile(random_choice<int(Tile::sand)>());
+        });
+
+        for (int i = 0; i < 2; ++i) {
+            condense(tiles_, workspace);
+        }
+    }
+}
+
+
 COLD void Game::regenerate_map(Platform& pfrm)
 {
     TileMap temporary;
 
-    tiles_.for_each(
-        [&](Tile& t, int, int) { t = Tile(random_choice<int(Tile::sand)>()); });
-
-    for (int i = 0; i < 2; ++i) {
-        condense(tiles_, temporary);
-    }
+    seed_map(pfrm, temporary);
 
     // Remove tiles from edges of the map. Some platforms,
     // particularly consoles, have automatic tile-wrapping, and we
@@ -618,6 +689,15 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     } else {
         return false;
+    }
+
+    // When the current level is one of the pre-generated boss levels, we do not
+    // want to spawn all of the other stuff in the level, just the player.
+    if (get_boss_level(level())) {
+
+        spawn_entity<FirstExplorer>(pfrm, free_spots, enemies_);
+
+        return true;
     }
 
     if (not free_spots.empty()) {

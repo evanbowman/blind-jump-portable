@@ -12,6 +12,13 @@
 #include <iterator>
 
 
+#ifdef __GBA__
+#define READ_ONLY_DATA __attribute__((section(".rodata")))
+#else
+#define READ_ONLY_DATA
+#endif
+
+
 namespace _detail {
 
 template <typename T> struct reversion_wrapper {

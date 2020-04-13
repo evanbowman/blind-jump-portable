@@ -200,6 +200,10 @@ static volatile short* bg1_y_scroll = (volatile short*)0x4000016;
 // static volatile short* bg3_y_scroll = (volatile short*)0x400001e;
 
 
+static u8 last_fade_amt;
+static ColorConstant last_color;
+
+
 static volatile u16* reg_blendcnt = (volatile u16*)0x04000050;
 static volatile u16* reg_blendalpha = (volatile u16*)0x04000052;
 
@@ -415,8 +419,20 @@ void Platform::Screen::draw(const Sprite& spr)
         // work with from a art/drawing perspective. Maybe I'll write
         // a script to reorganize the spritesheet into a Nx16 strip,
         // and metatile as 2x2 gba tiles... someday.
-        draw_sprite(0, 0, 16);
-        draw_sprite(8, 16, 16);
+
+        // When a sprite is flipped, each of the individual 32x16 strips are
+        // flipped, and then we need to swap the drawing X-offsets, so that the
+        // second strip will be drawn first.
+        if (not spr.get_flip().x) {
+            draw_sprite(0, 0, 16);
+            draw_sprite(8, 16, 16);
+
+        } else {
+            draw_sprite(0, 16, 16);
+            draw_sprite(8, 0, 16);
+
+        }
+
         break;
 
     case Sprite::Size::w16_h32:
@@ -517,6 +533,7 @@ int strcmp(const char* p1, const char* p2)
 #include "graphics/bgr_overlay.h"
 #include "graphics/bgr_overlay_journal.h"
 #include "graphics/bgr_spritesheet.h"
+#include "graphics/bgr_spritesheet_boss0.h"
 #include "graphics/bgr_tilesheet.h"
 
 
@@ -536,7 +553,9 @@ struct TextureData {
     }
 
 
-static const TextureData sprite_textures[] = {TEXTURE_INFO(bgr_spritesheet)};
+static const TextureData sprite_textures[] = {
+    TEXTURE_INFO(bgr_spritesheet),
+    TEXTURE_INFO(bgr_spritesheet_boss0)};
 
 
 static const TextureData tile_textures[] = {TEXTURE_INFO(bgr_tilesheet)};
@@ -547,24 +566,8 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(bgr_overlay_journal)};
 
 
-void Platform::load_sprite_texture(const char* name)
-{
-    for (auto& info : sprite_textures) {
-
-        if (strcmp(name, info.name_) == 0) {
-
-            __builtin_memcpy((void*)MEM_PALETTE,
-                             info.palette_data_,
-                             info.palette_data_length_);
-
-            // NOTE: There are four tile blocks, so index four points to the
-            // end of the tile memory.
-            __builtin_memcpy((void*)&MEM_TILE[4][1],
-                             info.tile_data_,
-                             info.tile_data_length_);
-        }
-    }
-}
+static const TextureData* current_spritesheet = &sprite_textures[0];
+static const TextureData* current_tilesheet = &tile_textures[0];
 
 
 static bool validate_texture_size(Platform& pfrm, size_t size)
@@ -575,29 +578,6 @@ static bool validate_texture_size(Platform& pfrm, size_t size)
         return false;
     }
     return true;
-}
-
-
-void Platform::load_tile_texture(const char* name)
-{
-    for (auto& info : tile_textures) {
-
-        if (strcmp(name, info.name_) == 0) {
-
-            // We don't want to load the whole palette into memory, we might
-            // overwrite palettes used by someone else, e.g. the overlay...
-            for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(info.palette_data_[i]);
-                MEM_BG_PALETTE[i] = from.bgr_hex_555();
-            }
-
-            if (validate_texture_size(*this, info.tile_data_length_)) {
-                __builtin_memcpy((void*)&MEM_SCREENBLOCKS[0][0],
-                                 info.tile_data_,
-                                 info.tile_data_length_);
-            }
-        }
-    }
 }
 
 
@@ -756,8 +736,16 @@ u16 Platform::get_overlay_tile(u16 x, u16 y)
 }
 
 
-static u8 last_fade_amt;
-static ColorConstant last_color;
+static auto blend(const Color& c1, const Color& c2, u8 amt)
+{
+    switch (amt) {
+    case 0: return c1.bgr_hex_555();
+    case 255: return c2.bgr_hex_555();
+    default: return Color(fast_interpolate(c2.r_, c1.r_, amt),
+                          fast_interpolate(c2.g_, c1.g_, amt),
+                          fast_interpolate(c2.b_, c1.b_, amt)).bgr_hex_555();
+    }
+}
 
 
 void Platform::Screen::fade(float amount,
@@ -780,31 +768,15 @@ void Platform::Screen::fade(float amount,
     last_color = k;
 
     const auto& c = real_color(k);
-    // To do a screen fade, blend color into the palettes.
-    auto blend = [&](const Color& from) {
-        return [&] {
-            switch (amt) {
-            case 0:
-                return from;
-            case 255:
-                return c;
-            default:
-                return Color(fast_interpolate(c.r_, from.r_, amt),
-                             fast_interpolate(c.g_, from.g_, amt),
-                             fast_interpolate(c.b_, from.b_, amt));
-            }
-        }()
-                   .bgr_hex_555();
-    };
 
     if (not base) {
         for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(bgr_spritesheetPal[i]);
-            MEM_PALETTE[i] = blend(from);
+            auto from = Color::from_bgr_hex_555(current_spritesheet->palette_data_[i]);
+            MEM_PALETTE[i] = blend(from, c, amt);
         }
         for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(bgr_tilesheetPal[i]);
-            MEM_BG_PALETTE[i] = blend(from);
+            auto from = Color::from_bgr_hex_555(current_tilesheet->palette_data_[i]);
+            MEM_BG_PALETTE[i] = blend(from, c, amt);
         }
         // Should the overlay really be part of the fade...? Tricky, sometimes
         // one wants do display some text over a faded out screen, so let's
@@ -816,9 +788,68 @@ void Platform::Screen::fade(float amount,
         // }
     } else {
         for (int i = 0; i < 16; ++i) {
-            MEM_PALETTE[i] = blend(real_color(*base));
-            MEM_BG_PALETTE[i] = blend(real_color(*base));
+            MEM_PALETTE[i] = blend(real_color(*base), c, amt);
+            MEM_BG_PALETTE[i] = blend(real_color(*base), c, amt);
             // MEM_BG_PALETTE[16 + i] = blend(real_color(*base));
+        }
+    }
+}
+
+
+void Platform::load_sprite_texture(const char* name)
+{
+    for (auto& info : sprite_textures) {
+
+        if (strcmp(name, info.name_) == 0) {
+
+            // __builtin_memcpy((void*)MEM_PALETTE,
+            //                  info.palette_data_,
+            //                  info.palette_data_length_);
+
+            current_spritesheet = &info;
+
+            // NOTE: There are four tile blocks, so index four points to the
+            // end of the tile memory.
+            __builtin_memcpy((void*)&MEM_TILE[4][1],
+                             info.tile_data_,
+                             info.tile_data_length_);
+
+            // We need to do this, otherwise whatever screen fade is currently
+            // active will be overwritten by the copy.
+            const auto& c = real_color(last_color);
+            for (int i = 0; i < 16; ++i) {
+                auto from = Color::from_bgr_hex_555(current_spritesheet->palette_data_[i]);
+                MEM_PALETTE[i] = blend(from, c, last_fade_amt);
+            }
+        }
+    }
+}
+
+
+void Platform::load_tile_texture(const char* name)
+{
+    for (auto& info : tile_textures) {
+
+        if (strcmp(name, info.name_) == 0) {
+
+            current_tilesheet = &info;
+
+            // We don't want to load the whole palette into memory, we might
+            // overwrite palettes used by someone else, e.g. the overlay...
+            //
+            // Also, like the sprite texture, we need to apply the currently
+            // active screen fade while modifying the color palette.
+            const auto& c = real_color(last_color);
+            for (int i = 0; i < 16; ++i) {
+                auto from = Color::from_bgr_hex_555(current_tilesheet->palette_data_[i]);
+                MEM_BG_PALETTE[i] = blend(from, c, last_fade_amt);
+            }
+
+            if (validate_texture_size(*this, info.tile_data_length_)) {
+                __builtin_memcpy((void*)&MEM_SCREENBLOCKS[0][0],
+                                 info.tile_data_,
+                                 info.tile_data_length_);
+            }
         }
     }
 }
@@ -1291,12 +1322,13 @@ void Platform::Speaker::play(Note n, Octave o, Channel c)
 
 
 extern uint8_t frostellar[];
-
+extern uint8_t sb_omega[];
 
 static const struct {
     const char* name_;
     uint8_t* data_;
-} tracks[] = {{"ambience", frostellar}};
+} tracks[] = {{"ambience", frostellar},
+              {"sb_omega", sb_omega}};
 
 
 static uint8_t* find_track(const char* name)

@@ -398,39 +398,42 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
     }
 
-
     game.camera().update(pfrm, delta, player.get_position());
 
-    check_collisions(pfrm, game, player, game.enemies().get<Drone>());
-    check_collisions(pfrm, game, player, game.enemies().get<Turret>());
-    check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
-    check_collisions(pfrm, game, player, game.details().get<Item>());
-    check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
-    check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
-    check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
-    check_collisions(
-        pfrm, game, game.effects().get<Laser>(), game.enemies().get<Drone>());
-    check_collisions(
-        pfrm, game, game.effects().get<Laser>(), game.enemies().get<Dasher>());
-    check_collisions(
-        pfrm, game, game.effects().get<Laser>(), game.enemies().get<Turret>());
-    check_collisions(pfrm,
-                     game,
-                     game.effects().get<Laser>(),
-                     game.enemies().get<SnakeBody>());
-    check_collisions(pfrm,
-                     game,
-                     game.effects().get<Laser>(),
-                     game.enemies().get<SnakeHead>());
-    check_collisions(pfrm,
-                     game,
-                     game.effects().get<Laser>(),
-                     game.enemies().get<SnakeTail>());
-    check_collisions(pfrm,
-                     game,
-                     game.effects().get<Laser>(),
-                     game.enemies().get<Scarecrow>());
-
+    if (not is_boss_level(game.level())) {
+        check_collisions(pfrm, game, player, game.enemies().get<Drone>());
+        check_collisions(pfrm, game, player, game.enemies().get<Turret>());
+        check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
+        check_collisions(pfrm, game, player, game.details().get<Item>());
+        check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
+        check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
+        check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
+        check_collisions(
+            pfrm, game, game.effects().get<Laser>(), game.enemies().get<Drone>());
+        check_collisions(
+            pfrm, game, game.effects().get<Laser>(), game.enemies().get<Dasher>());
+        check_collisions(
+            pfrm, game, game.effects().get<Laser>(), game.enemies().get<Turret>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<SnakeBody>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<SnakeHead>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<SnakeTail>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<Scarecrow>());
+    } else {
+        check_collisions(pfrm, game, player, game.enemies().get<FirstExplorer>());
+        check_collisions(pfrm, game, game.effects().get<Laser>(), game.enemies().get<FirstExplorer>());
+    }
 
     return null_state();
 }
@@ -470,7 +473,7 @@ static void
 big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
 {
     for (int i = 0; i < 5; ++i) {
-        game.effects().spawn<Explosion>(sample<24>(position));
+        game.effects().spawn<Explosion>(sample<18>(position));
     }
 
     game.on_timeout(milliseconds(60), [pos = position](Platform&, Game& game) {
@@ -511,7 +514,9 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (game.player().get_health() == 0) {
+        pfrm.sleep(5);
         big_explosion(pfrm, game, game.player().get_position());
+
         return state_pool_.create<DeathFadeState>();
     }
 
@@ -667,7 +672,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         text.append("waypoint ");
         text.append(game.level() + 1);
-        pfrm.sleep(65);
+        pfrm.sleep(45);
 
         game.next_level(pfrm);
         return state_pool_.create<FadeInState>();
@@ -757,7 +762,9 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                     [&](Text& target, const char* str, int num) {
                         target.append(str);
 
-                        const auto iters = screen_tiles.x - (str_len(str) + 2 + integer_text_length(num));
+                        const auto iters =
+                            screen_tiles.x -
+                            (str_len(str) + 2 + integer_text_length(num));
                         for (u32 i = 0; i < iters; ++i) {
                             target.append(".");
                         }

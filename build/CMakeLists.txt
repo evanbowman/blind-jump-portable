@@ -30,6 +30,7 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 
 set(SOURCES
+  ${SOURCE_DIR}/entity/bosses/firstExplorer.cpp
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/effects/explosion.cpp
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
@@ -64,11 +65,13 @@ set(SOURCES
 if(GAMEBOY_ADVANCE)
   set(SOURCES
     ${SOURCES}
+    ${SOURCE_DIR}/platform/sb_omega.s
     ${SOURCE_DIR}/platform/frostellar.s
     ${SOURCE_DIR}/graphics/bgr_overlay.s
     ${SOURCE_DIR}/graphics/bgr_tilesheet.s
     ${SOURCE_DIR}/graphics/bgr_spritesheet.s
     ${SOURCE_DIR}/graphics/bgr_overlay_journal.s
+    ${SOURCE_DIR}/graphics/bgr_spritesheet_boss0.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()
   set(SOURCES

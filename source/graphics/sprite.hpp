@@ -127,6 +127,7 @@ enum TextureMap : TextureIndex {
     scarecrow_top = 83,
     scarecrow_bottom = 84,
     scarecrow_top_2 = 85,
+    laser_pop = 86,
 };
 
 
