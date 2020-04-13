@@ -16,16 +16,35 @@ bool within_view_frustum(const Platform::Screen& screen,
 // looping audio within Platform::Speaker (which currently does not have a
 // concept of time), the Game class instead handles looping audio by itself via
 // the existing Game::on_timeout() method.
-static void play_music(Platform& pfrm, Game& game)
-{
-    pfrm.speaker().load_music("sb_omega");
 
-    game.on_timeout(seconds(114), play_music);
+static const char* ambience_music = "ambience";
+
+void Game::play_music(Platform& pfrm,
+                      const char* music,
+                      Microseconds music_len)
+{
+    pfrm.speaker().load_music(music);
+
+    music_track_name_ = music;
+    music_track_length_ = music_len;
+    music_remaining_ = music_len;
+}
+
+
+void Game::stop_music(Platform& pfrm)
+{
+    music_track_name_ = nullptr;
+    music_track_length_ = 0;
+    music_remaining_ = std::numeric_limits<Microseconds>::max();
+
+    pfrm.speaker().stop_music();
 }
 
 
 Game::Game(Platform& pfrm) : state_(State::initial())
 {
+    stop_music(pfrm);
+
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
         persistent_data_ = *sd;
@@ -45,8 +64,6 @@ Game::Game(Platform& pfrm) : state_(State::initial())
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
 
-    play_music(pfrm, *this);
-
     Game::next_level(pfrm);
 }
 
@@ -61,6 +78,15 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     // granularity to get to a new level that's possible to
     // anticipate.
     random_value();
+
+    music_remaining_ -= delta;
+    if (UNLIKELY(music_remaining_ <= 0)) {
+        if (music_track_name_) {
+            play_music(pfrm, music_track_name_, music_track_length_);
+        } else {
+            stop_music(pfrm);
+        }
+    }
 
     for (auto it = deferred_callbacks_.begin();
          it not_eq deferred_callbacks_.end();) {
@@ -241,7 +267,8 @@ static const BossLevel* get_boss_level(Level current_level)
 {
     switch (current_level) {
     case 1: {
-        static constexpr const BossLevel ret{boss_level_0, 1, "bgr_spritesheet_boss0"};
+        static constexpr const BossLevel ret{
+            boss_level_0, 1, "bgr_spritesheet_boss0"};
         return &ret;
     }
 
@@ -268,11 +295,21 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         persistent_data_.level_ += 1;
     }
 
+    if (level() == 0) {
+        play_music(pfrm, ambience_music, seconds(114));
+    }
+
     auto boss_level = get_boss_level(level());
     if (boss_level) {
+        stop_music(pfrm);
         pfrm.load_sprite_texture(boss_level->spritesheet_);
 
     } else {
+        // Boss defeated! We can change the music back, but we may also want to
+        // stop the current music when the enemy is destroyed.
+        if (is_boss_level(level() - 1)) {
+            play_music(pfrm, ambience_music, seconds(114));
+        }
         pfrm.load_sprite_texture("bgr_spritesheet");
     }
 
@@ -691,11 +728,42 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
+    auto is_plate = [&](Tile t) {
+        return t == Tile::plate or
+               (t >= Tile::grass_plate and t < Tile::grass_ledge);
+    };
+    auto is_sand = [&](Tile t) {
+        return t == Tile::sand or t == Tile::sand_sprouted or
+               (t >= Tile::grass_sand and t < Tile::grass_plate);
+    };
+
+
     // When the current level is one of the pre-generated boss levels, we do not
     // want to spawn all of the other stuff in the level, just the player.
     if (get_boss_level(level())) {
 
         spawn_entity<FirstExplorer>(pfrm, free_spots, enemies_);
+
+        // Place two hearts in the level. The game is supposed to be difficult,
+        // but not cruel!
+        int heart_count = 2;
+
+        while (true) {
+            const s8 x = random_choice<TileMap::width>();
+            const s8 y = random_choice<TileMap::height>();
+
+            if (is_plate(tiles_.get_tile(x, y))) {
+
+                auto wc = to_world_coord({x, y});
+                wc.x += 16;
+
+                details_.spawn<Item>(wc, pfrm, Item::Type::heart);
+
+                if (--heart_count == 0) {
+                    break;
+                }
+            }
+        }
 
         return true;
     }
@@ -726,14 +794,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     // there's no sand nearby, and no items eiher, potentially place
     // an item.
     tiles_.for_each([&](Tile t, s8 x, s8 y) {
-        auto is_plate = [&](Tile t) {
-            return t == Tile::plate or
-                   (t >= Tile::grass_plate and t < Tile::grass_ledge);
-        };
-        auto is_sand = [&](Tile t) {
-            return t == Tile::sand or t == Tile::sand_sprouted or
-                   (t >= Tile::grass_sand and t < Tile::grass_plate);
-        };
         if (is_plate(t)) {
             for (int i = x - 1; i < x + 2; ++i) {
                 for (int j = y - 1; j < y + 2; ++j) {

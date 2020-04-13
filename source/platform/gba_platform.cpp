@@ -430,7 +430,6 @@ void Platform::Screen::draw(const Sprite& spr)
         } else {
             draw_sprite(0, 16, 16);
             draw_sprite(8, 0, 16);
-
         }
 
         break;
@@ -739,11 +738,15 @@ u16 Platform::get_overlay_tile(u16 x, u16 y)
 static auto blend(const Color& c1, const Color& c2, u8 amt)
 {
     switch (amt) {
-    case 0: return c1.bgr_hex_555();
-    case 255: return c2.bgr_hex_555();
-    default: return Color(fast_interpolate(c2.r_, c1.r_, amt),
-                          fast_interpolate(c2.g_, c1.g_, amt),
-                          fast_interpolate(c2.b_, c1.b_, amt)).bgr_hex_555();
+    case 0:
+        return c1.bgr_hex_555();
+    case 255:
+        return c2.bgr_hex_555();
+    default:
+        return Color(fast_interpolate(c2.r_, c1.r_, amt),
+                     fast_interpolate(c2.g_, c1.g_, amt),
+                     fast_interpolate(c2.b_, c1.b_, amt))
+            .bgr_hex_555();
     }
 }
 
@@ -771,11 +774,13 @@ void Platform::Screen::fade(float amount,
 
     if (not base) {
         for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(current_spritesheet->palette_data_[i]);
+            auto from =
+                Color::from_bgr_hex_555(current_spritesheet->palette_data_[i]);
             MEM_PALETTE[i] = blend(from, c, amt);
         }
         for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(current_tilesheet->palette_data_[i]);
+            auto from =
+                Color::from_bgr_hex_555(current_tilesheet->palette_data_[i]);
             MEM_BG_PALETTE[i] = blend(from, c, amt);
         }
         // Should the overlay really be part of the fade...? Tricky, sometimes
@@ -818,7 +823,8 @@ void Platform::load_sprite_texture(const char* name)
             // active will be overwritten by the copy.
             const auto& c = real_color(last_color);
             for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(current_spritesheet->palette_data_[i]);
+                auto from = Color::from_bgr_hex_555(
+                    current_spritesheet->palette_data_[i]);
                 MEM_PALETTE[i] = blend(from, c, last_fade_amt);
             }
         }
@@ -841,7 +847,8 @@ void Platform::load_tile_texture(const char* name)
             // active screen fade while modifying the color palette.
             const auto& c = real_color(last_color);
             for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(current_tilesheet->palette_data_[i]);
+                auto from = Color::from_bgr_hex_555(
+                    current_tilesheet->palette_data_[i]);
                 MEM_BG_PALETTE[i] = blend(from, c, last_fade_amt);
             }
 
@@ -1327,8 +1334,7 @@ extern uint8_t sb_omega[];
 static const struct {
     const char* name_;
     uint8_t* data_;
-} tracks[] = {{"ambience", frostellar},
-              {"sb_omega", sb_omega}};
+} tracks[] = {{"ambience", frostellar}, {"sb_omega", sb_omega}};
 
 
 static uint8_t* find_track(const char* name)

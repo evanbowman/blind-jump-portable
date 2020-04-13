@@ -400,20 +400,28 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     game.camera().update(pfrm, delta, player.get_position());
 
+
+    check_collisions(pfrm, game, player, game.details().get<Item>());
+
     if (not is_boss_level(game.level())) {
         check_collisions(pfrm, game, player, game.enemies().get<Drone>());
         check_collisions(pfrm, game, player, game.enemies().get<Turret>());
         check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
-        check_collisions(pfrm, game, player, game.details().get<Item>());
         check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
         check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
         check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
-        check_collisions(
-            pfrm, game, game.effects().get<Laser>(), game.enemies().get<Drone>());
-        check_collisions(
-            pfrm, game, game.effects().get<Laser>(), game.enemies().get<Dasher>());
-        check_collisions(
-            pfrm, game, game.effects().get<Laser>(), game.enemies().get<Turret>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<Drone>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<Dasher>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<Turret>());
         check_collisions(pfrm,
                          game,
                          game.effects().get<Laser>(),
@@ -431,8 +439,12 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                          game.effects().get<Laser>(),
                          game.enemies().get<Scarecrow>());
     } else {
-        check_collisions(pfrm, game, player, game.enemies().get<FirstExplorer>());
-        check_collisions(pfrm, game, game.effects().get<Laser>(), game.enemies().get<FirstExplorer>());
+        check_collisions(
+            pfrm, game, player, game.enemies().get<FirstExplorer>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<FirstExplorer>());
     }
 
     return null_state();

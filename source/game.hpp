@@ -118,6 +118,9 @@ public:
         return deferred_callbacks_.push_back({callback, expire_time});
     }
 
+    void stop_music(Platform& pfrm);
+    void play_music(Platform& pfrm, const char* track_name, Microseconds track_length);
+
 private:
     TileMap tiles_;
     Camera camera_;
@@ -129,6 +132,10 @@ private:
     Transporter transporter_;
     PersistentData persistent_data_;
     StatePtr state_;
+
+    const char* music_track_name_;
+    Microseconds music_track_length_;
+    Microseconds music_remaining_;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 

@@ -10,7 +10,6 @@ class Laser;
 
 class FirstExplorer : public Entity {
 public:
-
     FirstExplorer(const Vec2<Float>& position);
 
     const Sprite& get_shadow() const
@@ -47,11 +46,14 @@ private:
         still,
         draw_weapon,
         shooting,
+        prep_dash,
+        dash,
     } state_ = State::sleep;
 
     Sprite head_;
     Sprite shadow_;
     HitBox hitbox_;
     Microseconds timer_;
+    Microseconds timer2_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };
