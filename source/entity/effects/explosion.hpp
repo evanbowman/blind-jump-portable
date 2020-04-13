@@ -8,3 +8,6 @@ class Explosion
 public:
     Explosion(const Vec2<Float>& position);
 };
+
+
+void big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position);

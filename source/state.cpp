@@ -440,11 +440,11 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                          game.enemies().get<Scarecrow>());
     } else {
         check_collisions(
-            pfrm, game, player, game.enemies().get<FirstExplorer>());
+            pfrm, game, player, game.enemies().get<TheFirstExplorer>());
         check_collisions(pfrm,
                          game,
                          game.effects().get<Laser>(),
-                         game.enemies().get<FirstExplorer>());
+                         game.enemies().get<TheFirstExplorer>());
     }
 
     return null_state();
@@ -478,33 +478,6 @@ void ActiveState::exit(Platform& pfrm, Game& game)
     score_.reset();
     heart_icon_.reset();
     coin_icon_.reset();
-}
-
-
-static void
-big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
-{
-    for (int i = 0; i < 5; ++i) {
-        game.effects().spawn<Explosion>(sample<18>(position));
-    }
-
-    game.on_timeout(milliseconds(60), [pos = position](Platform&, Game& game) {
-        for (int i = 0; i < 4; ++i) {
-            game.effects().spawn<Explosion>(sample<32>(pos));
-        }
-        game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
-            for (int i = 0; i < 3; ++i) {
-                game.effects().spawn<Explosion>(sample<48>(pos));
-            }
-            game.on_timeout(milliseconds(60), [pos](Platform&, Game& game) {
-                for (int i = 0; i < 2; ++i) {
-                    game.effects().spawn<Explosion>(sample<48>(pos));
-                }
-            });
-        });
-    });
-
-    game.camera().shake(Camera::ShakeMagnitude::two);
 }
 
 

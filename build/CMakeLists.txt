@@ -30,7 +30,7 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 
 set(SOURCES
-  ${SOURCE_DIR}/entity/bosses/firstExplorer.cpp
+  ${SOURCE_DIR}/entity/bosses/theFirstExplorer.cpp
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/effects/explosion.cpp
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp

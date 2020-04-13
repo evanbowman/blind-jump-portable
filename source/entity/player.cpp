@@ -62,7 +62,7 @@ void Player::on_collision(Platform& pf, Game& game, OrbShot&)
     Player::injured(pf, Health(1));
 }
 
-void Player::on_collision(Platform& pf, Game& game, FirstExplorer&)
+void Player::on_collision(Platform& pf, Game& game, TheFirstExplorer&)
 {
     Player::injured(pf, Health(1));
 }

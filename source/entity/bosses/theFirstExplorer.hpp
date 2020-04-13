@@ -2,15 +2,16 @@
 
 #include "collision.hpp"
 #include "entity/entity.hpp"
+#include <optional>
 
 
 class Player;
 class Laser;
 
 
-class FirstExplorer : public Entity {
+class TheFirstExplorer : public Entity {
 public:
-    FirstExplorer(const Vec2<Float>& position);
+    TheFirstExplorer(const Vec2<Float>& position);
 
     const Sprite& get_shadow() const
     {
@@ -55,5 +56,7 @@ private:
     HitBox hitbox_;
     Microseconds timer_;
     Microseconds timer2_;
+    Vec2<Float> speed_;
+    std::optional<u16> next_dir_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

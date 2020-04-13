@@ -17,7 +17,7 @@ class Item;
 class OrbShot;
 class SnakeHead;
 class SnakeBody;
-class FirstExplorer;
+class TheFirstExplorer;
 
 
 class Blaster : public Entity {
@@ -51,7 +51,7 @@ class Player : public Entity {
 public:
     Player();
 
-    void on_collision(Platform& pf, Game& game, FirstExplorer&);
+    void on_collision(Platform& pf, Game& game, TheFirstExplorer&);
     void on_collision(Platform& pf, Game& game, SnakeHead&);
     void on_collision(Platform& pf, Game& game, SnakeBody&);
     void on_collision(Platform& pf, Game& game, OrbShot&);

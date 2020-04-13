@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include "camera.hpp"
-#include "entity/bosses/firstExplorer.hpp"
+#include "entity/bosses/theFirstExplorer.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/rubble.hpp"
@@ -52,11 +52,11 @@ public:
                                    SnakeBody,
                                    SnakeTail,
                                    Scarecrow,
-                                   FirstExplorer>;
+                                   TheFirstExplorer>;
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
     using EffectGroup = EntityGroup<20, OrbShot, Laser, Explosion>;
-    // using BossGroup = EntityGroup<1, FirstExplorer>;
+    // using BossGroup = EntityGroup<1, TheFirstExplorer>;
 
     inline Transporter& transporter()
     {
@@ -119,7 +119,9 @@ public:
     }
 
     void stop_music(Platform& pfrm);
-    void play_music(Platform& pfrm, const char* track_name, Microseconds track_length);
+    void play_music(Platform& pfrm,
+                    const char* track_name,
+                    Microseconds track_length);
 
 private:
     TileMap tiles_;

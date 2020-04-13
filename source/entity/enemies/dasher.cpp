@@ -146,14 +146,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(352)) {
             timer_ -= milliseconds(352);
 
-            u8 tries{0};
             s16 dir =
                 ((static_cast<float>(random_choice<359>())) / 360) * INT16_MAX;
-            do {
-                if (tries++ > 254) {
-                    goto IDLE_TRANSITION;
-                }
-            } while (false);
 
             speed_.x = 5 * (float(cosine(dir)) / INT16_MAX);
             speed_.y = 5 * (float(sine(dir)) / INT16_MAX);
@@ -198,7 +192,6 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     case State::dash_end:
         if (timer_ > milliseconds(150)) {
             timer_ -= milliseconds(150);
-        IDLE_TRANSITION:
             state_ = State::idle;
             sprite_.set_texture_index(TextureMap::dasher_idle);
         }

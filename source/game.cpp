@@ -19,9 +19,7 @@ bool within_view_frustum(const Platform::Screen& screen,
 
 static const char* ambience_music = "ambience";
 
-void Game::play_music(Platform& pfrm,
-                      const char* music,
-                      Microseconds music_len)
+void Game::play_music(Platform& pfrm, const char* music, Microseconds music_len)
 {
     pfrm.speaker().load_music(music);
 
@@ -268,7 +266,7 @@ static const BossLevel* get_boss_level(Level current_level)
     switch (current_level) {
     case 1: {
         static constexpr const BossLevel ret{
-            boss_level_0, 1, "bgr_spritesheet_boss0"};
+            boss_level_0, 11, "bgr_spritesheet_boss0"};
         return &ret;
     }
 
@@ -742,7 +740,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     // want to spawn all of the other stuff in the level, just the player.
     if (get_boss_level(level())) {
 
-        spawn_entity<FirstExplorer>(pfrm, free_spots, enemies_);
+        spawn_entity<TheFirstExplorer>(pfrm, free_spots, enemies_);
 
         // Place two hearts in the level. The game is supposed to be difficult,
         // but not cruel!
@@ -764,6 +762,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 }
             }
         }
+
+        transporter_.set_position({0, 0});
 
         return true;
     }

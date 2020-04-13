@@ -103,3 +103,9 @@ inline bool is_walkable(Tile t)
     return t not_eq Tile::none and t not_eq Tile::ledge and
            t not_eq Tile::grass_ledge and t not_eq Tile::grass_ledge_vines;
 }
+
+inline bool is_border(Tile t)
+{
+    return t == Tile::plate or
+           (t >= Tile::grass_plate and t < Tile::grass_ledge);
+}
