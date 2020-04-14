@@ -231,9 +231,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
         if (timer_ > milliseconds(80)) {
             game.effects().spawn<FirstExplorerSmallLaser>(
-                position_ + shoot_offset(),
-                scattershot_target_,
-                0.00013f);
+                position_ + shoot_offset(), scattershot_target_, 0.00013f);
 
             Angle angle;
             const bool avoid_region = random_choice<3>();
@@ -245,7 +243,8 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                 angle = 360 - angle / 2;
             }
 
-            (*game.effects().get<FirstExplorerSmallLaser>().begin())->rotate(angle);
+            (*game.effects().get<FirstExplorerSmallLaser>().begin())
+                ->rotate(angle);
 
             timer_ = 0;
         }

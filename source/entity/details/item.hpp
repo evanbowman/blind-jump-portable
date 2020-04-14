@@ -34,6 +34,11 @@ public:
         return type_;
     }
 
+    void set_type(Type type)
+    {
+        type_ = type;
+    }
+
     void update(Platform&, Game&, Microseconds dt);
 
 private:

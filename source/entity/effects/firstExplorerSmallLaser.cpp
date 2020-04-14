@@ -4,7 +4,8 @@
 
 FirstExplorerSmallLaser::FirstExplorerSmallLaser(const Vec2<Float>& position,
                                                  const Vec2<Float>& target,
-                                                 Float speed) : OrbShot(position, target, speed)
+                                                 Float speed)
+    : OrbShot(position, target, speed)
 {
 }
 

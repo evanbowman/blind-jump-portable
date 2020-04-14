@@ -225,10 +225,8 @@ inline Vec2<Float> rotate(const Vec2<Float>& input, Angle angle)
     const Float cos_theta = Float(cosine(converted_angle)) / INT16_MAX;
     const Float sin_theta = Float(sine(converted_angle)) / INT16_MAX;
 
-    return {
-        input.x * cos_theta - input.y * sin_theta,
-        input.x * sin_theta + input.y * cos_theta
-    };
+    return {input.x * cos_theta - input.y * sin_theta,
+            input.x * sin_theta + input.y * cos_theta};
 }
 
 

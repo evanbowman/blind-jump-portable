@@ -9,8 +9,8 @@
 #include "entity/details/rubble.hpp"
 #include "entity/details/transporter.hpp"
 #include "entity/effects/explosion.hpp"
-#include "entity/effects/firstExplorerSmallLaser.hpp"
 #include "entity/effects/firstExplorerBigLaser.hpp"
+#include "entity/effects/firstExplorerSmallLaser.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
 #include "entity/enemies/critter.hpp"
@@ -57,8 +57,12 @@ public:
                                    TheFirstExplorer>;
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
-    using EffectGroup =
-        EntityGroup<20, OrbShot, Laser, Explosion, FirstExplorerBigLaser, FirstExplorerSmallLaser>;
+    using EffectGroup = EntityGroup<20,
+                                    OrbShot,
+                                    Laser,
+                                    Explosion,
+                                    FirstExplorerBigLaser,
+                                    FirstExplorerSmallLaser>;
 
     inline Transporter& transporter()
     {

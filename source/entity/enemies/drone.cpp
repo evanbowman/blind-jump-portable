@@ -163,8 +163,10 @@ void Drone::on_collision(Platform& pf, Game& game, Player& player)
         pf.sleep(2);
 
         static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                                   Item::Type::coin,
+                                                   Item::Type::heart,
                                                    Item::Type::null};
 
-        on_enemy_destroyed(pf, game, position_, 7, item_drop_vec);
+        on_enemy_destroyed(pf, game, position_, 4, item_drop_vec);
     }
 }

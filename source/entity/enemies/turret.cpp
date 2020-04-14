@@ -107,9 +107,11 @@ void Turret::on_collision(Platform& pf, Game& game, Laser&)
             pf.sleep(5);
 
             static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                                       Item::Type::coin,
+                                                       Item::Type::heart,
                                                        Item::Type::null};
 
-            on_enemy_destroyed(pf, game, position_, 5, item_drop_vec);
+            on_enemy_destroyed(pf, game, position_, 4, item_drop_vec);
         }
     }
 }

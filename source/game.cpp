@@ -234,8 +234,8 @@ static const BossLevel* get_boss_level(Level current_level)
 {
     switch (current_level) {
     case 10: {
-        static constexpr const BossLevel ret{
-            boss_level_0, "bgr_spritesheet_boss0"};
+        static constexpr const BossLevel ret{boss_level_0,
+                                             "bgr_spritesheet_boss0"};
         return &ret;
     }
 
@@ -789,7 +789,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                     return;
                 }
             }
-            if (random_choice<2>()) {
+            if (random_choice<3>()) {
                 MapCoord c{x, y};
 
                 // NOTE: We want hearts to become less available at higher
@@ -811,6 +811,88 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
         }
     });
+
+    // For map locations with nothing nearby, potentially place an item or
+    // something
+    tiles_.for_each([&](Tile t, s8 x, s8 y) {
+        if (is_sand(t)) {
+            const auto pos = to_world_coord({x, y});
+
+            bool entity_nearby = false;
+            auto check_nearby = [&](auto& entity) {
+                if (entity_nearby) {
+                    return;
+                }
+                if (distance(entity.get_position(), pos) < 132) {
+                    entity_nearby = true;
+                }
+            };
+
+            auto check_entities = [&](auto& buf) {
+                for (auto& entity : buf) {
+                    check_nearby(*entity);
+                }
+            };
+
+            enemies_.transform(check_entities);
+            check_entities(details_.get<Item>());
+            check_entities(details_.get<ItemChest>());
+            check_nearby(transporter_);
+
+            if (not entity_nearby) {
+                int adj_sand_tiles = 0;
+                for (int i = x - 1; i < x + 1; ++i) {
+                    for (int j = y - 1; j < y + 1; ++j) {
+                        if (is_sand(tiles_.get_tile(i, j))) {
+                            adj_sand_tiles++;
+                        }
+                    }
+                }
+
+                auto wc = to_world_coord({x, y});
+                wc.x += 16; // center the item over the tile
+
+                if (adj_sand_tiles < 1) {
+                    // If there are no other adjacent non-edge
+                    // tiles, definitely place an item
+                    details_.spawn<Item>(wc, pfrm, Item::Type::heart);
+
+                } else if (adj_sand_tiles < 3) {
+                    // If there is a low number of adjacent
+                    // non-edge tiles, possibly place an item
+                    if (random_choice<3>() == 0) {
+                        details_.spawn<Item>(wc, pfrm, Item::Type::heart);
+                    }
+                } else {
+                    if (random_choice<5>() == 0) {
+                        details_.spawn<Item>(wc, pfrm, Item::Type::heart);
+                    }
+                }
+            }
+        }
+    });
+
+    int heart_count = 0;
+    for (auto& item : details_.get<Item>()) {
+        if (item->get_type() == Item::Type::heart) {
+            ++heart_count;
+        }
+    }
+    // We don't want to make the levels too easy either
+    if (heart_count > 3) {
+        const auto item_count = length(details_.get<Item>());
+
+        while (heart_count > 3) {
+            auto choice = random_choice(item_count);
+
+            if (auto item = list_ref(details_.get<Item>(), choice)) {
+                if ((*item)->get_type() == Item::Type::heart) {
+                    (*item)->set_type(Item::Type::coin);
+                    --heart_count;
+                }
+            }
+        }
+    }
 
     return true;
 }

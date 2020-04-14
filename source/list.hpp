@@ -159,3 +159,15 @@ template <typename T, typename Pool> u32 length(const List<T, Pool>& lat)
 
     return len;
 }
+
+
+template <typename T, typename Pool> T* list_ref(List<T, Pool>& lat, int i)
+{
+    for (auto& elem : lat) {
+        if (i == 0) {
+            return &elem;
+        }
+        --i;
+    }
+    return nullptr;
+}

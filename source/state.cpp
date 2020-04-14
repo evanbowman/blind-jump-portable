@@ -443,7 +443,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm, game, player, game.enemies().get<TheFirstExplorer>());
         check_collisions(
             pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
-        check_collisions(pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
+        check_collisions(
+            pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
         check_collisions(pfrm,
                          game,
                          game.effects().get<Laser>(),
@@ -662,7 +663,13 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
         text.append(game.level() + 1);
         pfrm.sleep(45);
 
-        game.next_level(pfrm);
+        // backdoor into boss level, for debugging purposes.
+        if (pfrm.keyboard().pressed<Key::alt_1>() and
+            pfrm.keyboard().pressed<Key::alt_2>()) {
+            game.next_level(pfrm, 10);
+        } else {
+            game.next_level(pfrm);
+        }
         return state_pool_.create<FadeInState>();
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
