@@ -354,10 +354,6 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             text.append(str);
             right_text_margin(text, margin);
         });
-
-        for (auto& chest : game.details().get<ItemChest>()) {
-            chest->unlock();
-        }
     }
 
 

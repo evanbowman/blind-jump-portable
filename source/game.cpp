@@ -216,8 +216,8 @@ static constexpr const bool boss_level_0[TileMap::width][TileMap::height] = {
     {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
     {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
     {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
-    {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
-    {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -724,7 +724,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
         // Place two hearts in the level. The game is supposed to be difficult,
         // but not cruel!
-        int heart_count = 3;
+        int heart_count = 2;
 
         while (true) {
             const s8 x = random_choice<TileMap::width>();
@@ -879,7 +879,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         }
     }
     // We don't want to make the levels too easy either
-    if (heart_count > 3) {
+    if (heart_count > 2) {
         const auto item_count = length(details_.get<Item>());
 
         while (heart_count > 3) {
