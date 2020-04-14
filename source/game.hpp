@@ -9,6 +9,8 @@
 #include "entity/details/rubble.hpp"
 #include "entity/details/transporter.hpp"
 #include "entity/effects/explosion.hpp"
+#include "entity/effects/firstExplorerSmallLaser.hpp"
+#include "entity/effects/firstExplorerBigLaser.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
 #include "entity/enemies/critter.hpp"
@@ -55,8 +57,8 @@ public:
                                    TheFirstExplorer>;
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
-    using EffectGroup = EntityGroup<20, OrbShot, Laser, Explosion>;
-    // using BossGroup = EntityGroup<1, TheFirstExplorer>;
+    using EffectGroup =
+        EntityGroup<20, OrbShot, Laser, Explosion, FirstExplorerBigLaser, FirstExplorerSmallLaser>;
 
     inline Transporter& transporter()
     {
@@ -118,11 +120,6 @@ public:
         return deferred_callbacks_.push_back({callback, expire_time});
     }
 
-    void stop_music(Platform& pfrm);
-    void play_music(Platform& pfrm,
-                    const char* track_name,
-                    Microseconds track_length);
-
 private:
     TileMap tiles_;
     Camera camera_;
@@ -134,10 +131,6 @@ private:
     Transporter transporter_;
     PersistentData persistent_data_;
     StatePtr state_;
-
-    const char* music_track_name_;
-    Microseconds music_track_length_;
-    Microseconds music_remaining_;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 

@@ -18,9 +18,15 @@
 
 void start(Platform&);
 
+
+static Platform* platform;
+
+
 int main()
 {
     Platform pf;
+    ::platform = &pf;
+
     start(pf);
 }
 
@@ -84,11 +90,13 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 static volatile u16* const scanline = (u16*)0x4000006;
 
 
+constexpr Microseconds fixed_step = 16667;
+
+
 Microseconds DeltaClock::reset()
 {
     // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) =
     // 16,666.6...
-    constexpr Microseconds fixed_step = 16667;
     return fixed_step;
 }
 
@@ -270,6 +278,10 @@ const Color& real_color(ColorConstant k)
     case ColorConstant::electric_blue:
         static const Color el_blue(0, 31, 31);
         return el_blue;
+
+    case ColorConstant::picton_blue:
+        static const Color picton_blue(9, 20, 31);
+        return picton_blue;
 
     case ColorConstant::aerospace_orange:
         static const Color aerospace_orange(31, 10, 0);
@@ -471,6 +483,11 @@ void Platform::Screen::clear()
 }
 
 
+static const char* music_track_name;
+static Microseconds music_track_remaining;
+static bool music_track_loop;
+
+
 void Platform::Screen::display()
 {
     // The Sprites are technically already displayed, so all we really
@@ -493,6 +510,18 @@ void Platform::Screen::display()
     *bg0_y_scroll = view_offset.y;
     *bg1_x_scroll = view_offset.x * 0.3f;
     *bg1_y_scroll = view_offset.y * 0.3f;
+
+    // Well, we have to put this code _somewhere_...
+    const auto dt = fixed_step;
+    music_track_remaining -= dt;
+
+    if (UNLIKELY(music_track_remaining <= 0)) {
+        if (music_track_name and music_track_loop) {
+            ::platform->speaker().load_music(music_track_name, true);
+        } else {
+            ::platform->speaker().stop_music();
+        }
+    }
 }
 
 
@@ -1331,18 +1360,20 @@ void Platform::Speaker::play(Note n, Octave o, Channel c)
 extern uint8_t frostellar[];
 extern uint8_t sb_omega[];
 
-static const struct {
+static const struct MusicTrack {
     const char* name_;
     uint8_t* data_;
-} tracks[] = {{"ambience", frostellar}, {"sb_omega", sb_omega}};
+    Microseconds length_;
+} tracks[] = {{"ambience", frostellar, seconds(114)},
+              {"sb_omega", sb_omega, seconds(235)}};
 
 
-static uint8_t* find_track(const char* name)
+static const MusicTrack* find_track(const char* name)
 {
     for (auto& track : tracks) {
 
         if (strcmp(name, track.name_) == 0) {
-            return track.data_;
+            return &track;
         }
     }
 
@@ -1361,10 +1392,13 @@ void Platform::Speaker::stop_music()
     REG_TM0CNT_H = 0;  //disable timer 0
     REG_DMA1CNT_H = 0; //stop DMA
     REG_IF |= REG_IF;
+
+    music_track_remaining = std::numeric_limits<Microseconds>::max();
+    music_track_name = nullptr;
 }
 
 
-void Platform::Speaker::load_music(const char* name)
+void Platform::Speaker::load_music(const char* name, bool loop)
 {
     // NOTE: The sound sample needs to be mono, and 8-bit signed. To export this
     // format from Audacity, convert the tracks to mono via the Tracks dropdown,
@@ -1379,6 +1413,10 @@ void Platform::Speaker::load_music(const char* name)
         return;
     }
 
+    music_track_name = name;
+    music_track_remaining = track->length_;
+    music_track_loop = loop;
+
     // Play a mono sound at 16khz in DMA mode Direct Sound
     // uses timer 0 as sampling rate source
     // uses timer 1 to count the samples played in order to stop the sound
@@ -1387,8 +1425,8 @@ void Platform::Speaker::load_music(const char* name)
         0x0b0F; // DS A&B + fifo reset + timer0 + max volume to L and R
     REG_SOUNDCNT_X = 0x0080; // turn sound chip on
 
-    REG_DMA1SAD = (unsigned long)track; // dma1 source
-    REG_DMA1DAD = 0x040000a0;           // write to FIFO A address
+    REG_DMA1SAD = (unsigned long)track->data_; // dma1 source
+    REG_DMA1DAD = 0x040000a0;                  // write to FIFO A address
     REG_DMA1CNT_H =
         0xb600; // dma control: DMA enabled+ start on FIFO+32bit+repeat
 

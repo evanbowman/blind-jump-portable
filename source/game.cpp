@@ -19,30 +19,9 @@ bool within_view_frustum(const Platform::Screen& screen,
 
 static const char* ambience_music = "ambience";
 
-void Game::play_music(Platform& pfrm, const char* music, Microseconds music_len)
-{
-    pfrm.speaker().load_music(music);
-
-    music_track_name_ = music;
-    music_track_length_ = music_len;
-    music_remaining_ = music_len;
-}
-
-
-void Game::stop_music(Platform& pfrm)
-{
-    music_track_name_ = nullptr;
-    music_track_length_ = 0;
-    music_remaining_ = std::numeric_limits<Microseconds>::max();
-
-    pfrm.speaker().stop_music();
-}
-
 
 Game::Game(Platform& pfrm) : state_(State::initial())
 {
-    stop_music(pfrm);
-
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
         persistent_data_ = *sd;
@@ -76,15 +55,6 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     // granularity to get to a new level that's possible to
     // anticipate.
     random_value();
-
-    music_remaining_ -= delta;
-    if (UNLIKELY(music_remaining_ <= 0)) {
-        if (music_track_name_) {
-            play_music(pfrm, music_track_name_, music_track_length_);
-        } else {
-            stop_music(pfrm);
-        }
-    }
 
     for (auto it = deferred_callbacks_.begin();
          it not_eq deferred_callbacks_.end();) {
@@ -236,27 +206,26 @@ static void condense(TileMap& map, TileMap& maptemp)
 READ_ONLY_DATA
 static constexpr const bool boss_level_0[TileMap::width][TileMap::height] = {
     {},
-    {},
-    {},
-    {},
-    {},
-    {0, 0, 1, 1, 1, 1, 1, 1, 0},
-    {0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 0, 1, 1, 1, 1, 1, 1, 0},
-    {},
-    {},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 };
 
 
 struct BossLevel {
     const bool (*map_)[TileMap::height];
-    Level level_;
     const char* spritesheet_;
 };
 
@@ -264,9 +233,9 @@ struct BossLevel {
 static const BossLevel* get_boss_level(Level current_level)
 {
     switch (current_level) {
-    case 1: {
+    case 10: {
         static constexpr const BossLevel ret{
-            boss_level_0, 11, "bgr_spritesheet_boss0"};
+            boss_level_0, "bgr_spritesheet_boss0"};
         return &ret;
     }
 
@@ -294,19 +263,19 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     }
 
     if (level() == 0) {
-        play_music(pfrm, ambience_music, seconds(114));
+        pfrm.speaker().load_music(ambience_music, true);
     }
 
     auto boss_level = get_boss_level(level());
     if (boss_level) {
-        stop_music(pfrm);
+        pfrm.speaker().stop_music();
         pfrm.load_sprite_texture(boss_level->spritesheet_);
 
     } else {
         // Boss defeated! We can change the music back, but we may also want to
         // stop the current music when the enemy is destroyed.
         if (is_boss_level(level() - 1)) {
-            play_music(pfrm, ambience_music, seconds(114));
+            pfrm.speaker().load_music(ambience_music, true);
         }
         pfrm.load_sprite_texture("bgr_spritesheet");
     }
@@ -412,21 +381,23 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
-    // Pick a random filled tile, and flood-fill around that tile in
-    // the map, to produce a single connected component.
-    while (true) {
-        const auto x = random_choice(TileMap::width);
-        const auto y = random_choice(TileMap::height);
-        if (temporary.get_tile(x, y) not_eq Tile::none) {
-            flood_fill(temporary, Tile(2), x, y);
-            temporary.for_each([&](const Tile& tile, TIdx x, TIdx y) {
-                if (tile not_eq Tile(2)) {
-                    tiles_.set_tile(x, y, Tile::none);
-                }
-            });
-            break;
-        } else {
-            continue;
+    if (not is_boss_level(level())) {
+        // Pick a random filled tile, and flood-fill around that tile in
+        // the map, to produce a single connected component.
+        while (true) {
+            const auto x = random_choice(TileMap::width);
+            const auto y = random_choice(TileMap::height);
+            if (temporary.get_tile(x, y) not_eq Tile::none) {
+                flood_fill(temporary, Tile(2), x, y);
+                temporary.for_each([&](const Tile& tile, TIdx x, TIdx y) {
+                    if (tile not_eq Tile(2)) {
+                        tiles_.set_tile(x, y, Tile::none);
+                    }
+                });
+                break;
+            } else {
+                continue;
+            }
         }
     }
 
@@ -740,11 +711,20 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     // want to spawn all of the other stuff in the level, just the player.
     if (get_boss_level(level())) {
 
-        spawn_entity<TheFirstExplorer>(pfrm, free_spots, enemies_);
+        MapCoord* farthest = free_spots.begin();
+        for (auto& elem : free_spots) {
+            if (manhattan_length(elem, *player_coord) >
+                manhattan_length(*farthest, *player_coord)) {
+                farthest = &elem;
+            }
+        }
+        const auto target = world_coord(*farthest);
+
+        enemies_.spawn<TheFirstExplorer>(target);
 
         // Place two hearts in the level. The game is supposed to be difficult,
         // but not cruel!
-        int heart_count = 2;
+        int heart_count = 3;
 
         while (true) {
             const s8 x = random_choice<TileMap::width>();

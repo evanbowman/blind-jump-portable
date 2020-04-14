@@ -193,6 +193,11 @@ constexpr Microseconds milliseconds(u32 count)
 }
 
 
+// These functions are imprecise versions of sin/cos for embedded
+// systems. Fortunately, we aren't doing heavy scientific calculations, so a
+// slightly imprecise angle is just fine. If you want an angle in terms of 360,
+// cast the result to a float, divide by numeric_limits<s16>::max(), and
+// multiply by 360.
 s16 sine(s16 angle);
 
 
@@ -214,9 +219,22 @@ inline UnitVec direction(const Vec2<Float>& origin, const Vec2<Float>& target)
 }
 
 
+inline Vec2<Float> rotate(const Vec2<Float>& input, Angle angle)
+{
+    const s16 converted_angle = INT16_MAX * (angle / 360.f);
+    const Float cos_theta = Float(cosine(converted_angle)) / INT16_MAX;
+    const Float sin_theta = Float(sine(converted_angle)) / INT16_MAX;
+
+    return {
+        input.x * cos_theta - input.y * sin_theta,
+        input.x * sin_theta + input.y * cos_theta
+    };
+}
+
+
 inline Float distance(const Vec2<Float>& from, const Vec2<Float>& to)
 {
-    const auto vec = to - from;
+    const Vec2<float> vec = {abs(from.x - to.x), abs(from.y - to.y)};
     return sqrt_approx(vec.x * vec.x + vec.y * vec.y);
 }
 

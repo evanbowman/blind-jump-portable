@@ -8,12 +8,12 @@
 static const char* boss_music = "sb_omega";
 
 
-static const Entity::Health initial_health = 75;
+static const Entity::Health initial_health = 100;
 
 
 TheFirstExplorer::TheFirstExplorer(const Vec2<Float>& position)
     : Entity(initial_health), hitbox_{&position_, {16, 38}, {8, 24}}, timer_(0),
-      timer2_(0)
+      timer2_(0), chase_player_(0), dashes_remaining_(0)
 {
     set_position(position);
 
@@ -41,7 +41,7 @@ static bool wall_in_path(const Vec2<Float>& direction,
                          Game& game,
                          const Vec2<Float>& destination)
 {
-    int dist = abs(distance(position, destination));
+    int dist = distance(position, destination);
 
     for (int i = 24; i < dist; i += 16) {
         Vec2<Float> pos = {position.x + direction.x * i,
@@ -59,12 +59,20 @@ static bool wall_in_path(const Vec2<Float>& direction,
 }
 
 
+bool TheFirstExplorer::second_form() const
+{
+    return get_health() < 58;
+}
+
+
+bool TheFirstExplorer::third_form() const
+{
+    return get_health() < 20;
+}
+
+
 void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 {
-    // auto second_form = [&] {
-    //                        return get_health() < (initial_health + 10 ) / 2;
-    //                    };
-
     auto face_left = [this] {
         sprite_.set_flip({1, 0});
         head_.set_flip({1, 0});
@@ -84,6 +92,14 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             }
         };
 
+    auto shoot_offset = [&]() -> Vec2<Float> {
+        if (sprite_.get_flip().x) {
+            return {-4, -6};
+        } else {
+            return {4, -6};
+        }
+    };
+
     auto to_wide_sprite = [&] {
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin({16, 16});
@@ -98,21 +114,45 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         head_.set_origin({8, 32});
     };
 
-    static const auto dash_duration = milliseconds(650);
-    const float movement_rate = 0.00003f;
+    const auto dash_duration =
+        second_form() ? milliseconds(500) : milliseconds(650);
+    const float movement_rate = second_form() ? 0.000029f : 0.000022f;
+
+    constexpr Angle scattershot_inflection = 90;
+
+    // if (third_form()) {
+    //     state_ = State::final_form;
+    // }
 
     switch (state_) {
     case State::sleep:
         if (visible()) {
+            // Start facing away from the player
+            if (game.player().get_position().x > position_.x) {
+                face_left();
+            } else {
+                face_right();
+            }
+
             timer_ += dt;
             if (timer_ > seconds(1)) {
-                state_ = State::draw_weapon;
+                state_ = State::still;
                 timer_ = 0;
 
-                game.play_music(pf, boss_music, seconds(235));
+                pf.speaker().load_music(boss_music, true);
             }
         }
         break;
+
+    case State::after_dash:
+        timer_ += dt;
+
+        if (timer_ > milliseconds(150)) {
+            timer_ = 0;
+            state_ = State::still;
+        }
+        break;
+
 
     case State::still: {
         face_player();
@@ -124,7 +164,9 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             auto t_coord = to_tile_coord(position_.cast<s32>());
             const auto tile = game.tiles().get_tile(t_coord.x, t_coord.y);
 
-            if (random_choice<2>() and not is_border(tile)) {
+            if ((random_choice<2>() and not is_border(tile) and
+                 not chase_player_) or
+                (not is_border(tile) and dashes_remaining_ == 0)) {
                 state_ = State::draw_weapon;
 
                 to_wide_sprite();
@@ -134,6 +176,11 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
             } else {
                 state_ = State::prep_dash;
+                if (second_form()) {
+                    if (random_choice<3>() == 0) {
+                        chase_player_ = 3;
+                    }
+                }
             }
         }
         break;
@@ -153,20 +200,126 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                     std::min(u32(45), head_.get_texture_index() + 1));
 
             } else {
-                state_ = State::shooting;
                 timer_ = 0;
+
+                if (distance(position_, game.player().get_position()) > 80 and
+                    random_choice<2>()) {
+                    state_ = State::big_laser_shooting;
+                    sprite_.set_mix({ColorConstant::electric_blue, 0});
+                    head_.set_mix({ColorConstant::electric_blue, 0});
+
+                } else {
+                    // TODO...
+                    state_ = State::small_laser_prep;
+                }
             }
         }
 
         break;
     }
 
-    case State::shooting:
+    case State::small_laser_prep: {
+        bullet_spread_gap_ = random_choice<scattershot_inflection - 10>() + 5;
+        scattershot_target_ = game.player().get_position();
+        state_ = State::small_laser;
+        break;
+    }
+
+    case State::small_laser:
+        timer_ += dt;
+        timer2_ += dt;
+
+        if (timer_ > milliseconds(80)) {
+            game.effects().spawn<FirstExplorerSmallLaser>(
+                position_ + shoot_offset(),
+                scattershot_target_,
+                0.00013f);
+
+            Angle angle;
+            const bool avoid_region = random_choice<3>();
+            do {
+                angle = random_choice<scattershot_inflection>();
+            } while (abs(angle - bullet_spread_gap_) < 2 and not avoid_region);
+
+            if (angle > scattershot_inflection / 2) {
+                angle = 360 - angle / 2;
+            }
+
+            (*game.effects().get<FirstExplorerSmallLaser>().begin())->rotate(angle);
+
+            timer_ = 0;
+        }
+
+        if (timer2_ > milliseconds(1200)) {
+            timer2_ = 0;
+            timer_ = 0;
+            state_ = State::done_shooting;
+        }
+        break;
+
+    case State::big_laser_shooting:
         face_player();
 
         timer_ += dt;
-        if (timer_ > milliseconds(2000)) {
+        if (timer_ > milliseconds(620)) {
             timer_ = 0;
+            state_ = State::big_laser1;
+        }
+        break;
+
+    case State::big_laser1:
+        face_player();
+
+        timer_ += dt;
+        if (timer_ > milliseconds(10)) {
+            game.camera().shake();
+            medium_explosion(pf, game, position_ + shoot_offset());
+
+            game.effects().spawn<FirstExplorerBigLaser>(
+                position_ + shoot_offset(),
+                sample<8>(game.player().get_position()),
+                0.00028f);
+            timer_ = 0;
+            state_ = State::big_laser2;
+        }
+        break;
+
+    case State::big_laser2:
+        face_player();
+
+        timer_ += dt;
+        if (timer_ > milliseconds(180)) {
+            game.effects().spawn<FirstExplorerBigLaser>(
+                position_ + shoot_offset(),
+                sample<12>(game.player().get_position()),
+                0.00021f);
+            timer_ = 0;
+            state_ = State::big_laser3;
+        }
+        break;
+
+    case State::final_form:
+        break;
+
+    case State::big_laser3:
+        face_player();
+
+        timer_ += dt;
+        if (timer_ > milliseconds(180)) {
+            game.effects().spawn<FirstExplorerBigLaser>(
+                position_ + shoot_offset(),
+                sample<22>(game.player().get_position()),
+                0.00015f);
+            timer_ = 0;
+            state_ = State::done_shooting;
+        }
+        break;
+
+    case State::done_shooting:
+        timer_ += dt;
+        if (timer_ > milliseconds(100)) {
+            timer_ = 0;
+            dashes_remaining_ = 3;
             state_ = State::prep_dash;
 
             to_narrow_sprite();
@@ -174,7 +327,6 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             sprite_.set_texture_index(12);
             head_.set_texture_index(13);
         }
-
         break;
 
     case State::prep_dash:
@@ -182,6 +334,10 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(200)) {
             timer_ = 0;
             timer2_ = 0;
+
+            if (dashes_remaining_) {
+                dashes_remaining_--;
+            }
 
             to_wide_sprite();
 
@@ -193,7 +349,16 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             s16 dir;
             Vec2<Float> dest;
             Vec2<Float> unit;
+
+            bool chase = random_choice<2>();
+            int tries = 0;
+
             do {
+                if (tries) {
+                    chase = false;
+                    chase_player_ = 0;
+                }
+
                 dir = ((static_cast<float>(random_choice<359>())) / 360) *
                       INT16_MAX;
 
@@ -201,10 +366,16 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                         (float(sine(dir)) / INT16_MAX)};
                 speed_ = 5.f * unit;
 
-                if (random_choice<3>() == 0) {
+                if ((not second_form() and random_choice<3>() == 0) or
+                    (chase_player_ and chase)) {
+                    if (chase_player_) {
+                        chase_player_--;
+                    }
                     unit = direction(position_, game.player().get_position());
                     speed_ = 5.f * unit;
                 }
+
+                tries++;
 
                 const auto tolerance = milliseconds(70);
                 dest = position_ +
@@ -234,7 +405,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         }
 
         auto transition = [&] {
-            state_ = State::still;
+            state_ = State::after_dash;
 
             timer_ = 0;
             timer2_ = 0;
@@ -266,29 +437,57 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
     }
     }
 
-    fade_color_anim_.advance(sprite_, dt);
-    head_.set_mix(sprite_.get_mix());
+    if (sprite_.get_mix().color_ == ColorConstant::electric_blue) {
+        fade_color_anim_.reverse(sprite_, dt);
+        head_.set_mix(sprite_.get_mix());
+    } else {
+        fade_color_anim_.advance(sprite_, dt);
+        head_.set_mix(sprite_.get_mix());
+    }
 }
 
 
 void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
 {
+    const auto last_health = get_health();
+
+    const bool was_second_form = second_form();
+
     debit_health(1);
 
-    sprite_.set_mix({ColorConstant::aerospace_orange, 255});
-    head_.set_mix({ColorConstant::aerospace_orange, 255});
+    if (not was_second_form and second_form()) {
+        game.camera().shake();
 
-    if (not alive()) {
+        medium_explosion(pf, game, position_);
+    }
+
+    if (state_ not_eq State::big_laser_shooting) {
+        sprite_.set_mix({ColorConstant::aerospace_orange, 255});
+        head_.set_mix({ColorConstant::aerospace_orange, 255});
+    }
+
+    if (not alive() and last_health) {
 
         big_explosion(pf, game, position_);
 
-        auto neg = random_choice<2>();
-        const auto off = neg ? -56.f : 56.f;
+        const auto off = 50.f;
+
         big_explosion(pf, game, {position_.x - off, position_.y - off});
         big_explosion(pf, game, {position_.x + off, position_.y + off});
 
+        game.on_timeout(milliseconds(300),
+                        [pos = position_](Platform& pf, Game& game) {
+                            big_explosion(pf, game, pos);
+                            const auto off = -50.f;
 
-        game.stop_music(pf);
+                            big_explosion(pf, game, {pos.x - off, pos.y + off});
+                            big_explosion(pf, game, {pos.x + off, pos.y - off});
+                        });
+
+        pf.speaker().stop_music();
+        pf.sleep(10);
+
+        game.score() += 1000;
 
         game.transporter().set_position(position_);
     }

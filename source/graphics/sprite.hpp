@@ -152,6 +152,21 @@ public:
         }
     }
 
+    inline void reverse(Sprite& sprite, Microseconds dt)
+    {
+        const auto& cmix = sprite.get_mix();
+        if (cmix.color_ not_eq ColorConstant::null and cmix.amount_ < 255) {
+            timer_ += dt;
+            if (timer_ > Interval) {
+                timer_ -= Interval;
+                sprite.set_mix({cmix.color_, u8(cmix.amount_ + 5)});
+            }
+        } else {
+            timer_ = 0;
+            sprite.set_mix({});
+        }
+    }
+
 private:
     Microseconds timer_ = 0;
 };

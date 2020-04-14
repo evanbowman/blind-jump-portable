@@ -310,7 +310,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto enemy_timestep = delta;
     if (enemy_lethargy_timer > 0) {
         enemy_lethargy_timer -= delta;
-        enemy_timestep /= 4;
+        enemy_timestep /= 2;
     }
 
     bool enemies_remaining = false;
@@ -441,6 +441,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else {
         check_collisions(
             pfrm, game, player, game.enemies().get<TheFirstExplorer>());
+        check_collisions(
+            pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
+        check_collisions(pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
         check_collisions(pfrm,
                          game,
                          game.effects().get<Laser>(),

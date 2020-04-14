@@ -37,3 +37,19 @@ void big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
 
     game.camera().shake(Camera::ShakeMagnitude::two);
 }
+
+
+void medium_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
+{
+    game.effects().spawn<Explosion>(sample<18>(position));
+
+
+    game.on_timeout(milliseconds(60), [pos = position](Platform&, Game& game) {
+        game.effects().spawn<Explosion>(sample<18>(pos));
+
+        // Chaining these functions may uses less of the game's resources
+        game.on_timeout(milliseconds(120), [pos = pos](Platform&, Game& game) {
+            game.effects().spawn<Explosion>(sample<18>(pos));
+        });
+    });
+}

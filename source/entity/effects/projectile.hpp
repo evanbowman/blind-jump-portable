@@ -22,6 +22,11 @@ public:
         sprite_.set_position(position_);
     }
 
+    void rotate(Angle angle)
+    {
+        step_vector_ = ::rotate(step_vector_, angle);
+    }
+
 private:
     Vec2<Float> step_vector_;
 };

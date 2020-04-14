@@ -30,6 +30,8 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 
 set(SOURCES
+  ${SOURCE_DIR}/entity/effects/firstExplorerSmallLaser.cpp
+  ${SOURCE_DIR}/entity/effects/firstExplorerBigLaser.cpp
   ${SOURCE_DIR}/entity/bosses/theFirstExplorer.cpp
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/effects/explosion.cpp

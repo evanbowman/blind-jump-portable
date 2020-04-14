@@ -46,10 +46,25 @@ private:
         sleep,
         still,
         draw_weapon,
-        shooting,
+
+        big_laser_shooting,
+        big_laser1,
+        big_laser2,
+        big_laser3,
+
+        small_laser_prep,
+        small_laser,
+
+        done_shooting,
         prep_dash,
         dash,
+        after_dash,
+
+        final_form
     } state_ = State::sleep;
+
+    bool second_form() const;
+    bool third_form() const;
 
     Sprite head_;
     Sprite shadow_;
@@ -57,6 +72,17 @@ private:
     Microseconds timer_;
     Microseconds timer2_;
     Vec2<Float> speed_;
-    std::optional<u16> next_dir_;
+    int chase_player_;
+    int dashes_remaining_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
+
+    // The enemy fires scattershot spreads of bullets, and we want to leave a
+    // gap for the player to navigate through. It just wouldn't fun to play if
+    // you're facing a wall of bullets, and no amount of skill allows you to
+    // dodge!
+    //
+    // This is an angle away from the bullet's direction vector, not an
+    // cartesian angle away from the rightwards x-axis.
+    Angle bullet_spread_gap_;
+    Vec2<Float> scattershot_target_;
 };

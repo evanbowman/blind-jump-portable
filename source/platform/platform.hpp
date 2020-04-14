@@ -221,7 +221,7 @@ public:
 
         void play(Note n, Octave o, Channel c);
 
-        void load_music(const char* name);
+        void load_music(const char* name, bool loop);
         void stop_music();
 
     private:
