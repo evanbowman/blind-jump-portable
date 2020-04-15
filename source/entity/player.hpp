@@ -9,14 +9,12 @@
 
 class Game;
 class Platform;
-class Critter;
-class Dasher;
-class Turret;
-class Drone;
+
 class Item;
+class Enemy;
+class Drone;
 class OrbShot;
 class SnakeHead;
-class SnakeBody;
 class TheFirstExplorer;
 class FirstExplorerBigLaser;
 
@@ -55,11 +53,8 @@ public:
     void on_collision(Platform& pf, Game& game, FirstExplorerBigLaser&);
     void on_collision(Platform& pf, Game& game, TheFirstExplorer&);
     void on_collision(Platform& pf, Game& game, SnakeHead&);
-    void on_collision(Platform& pf, Game& game, SnakeBody&);
     void on_collision(Platform& pf, Game& game, OrbShot&);
-    void on_collision(Platform& pf, Game& game, Critter&);
-    void on_collision(Platform& pf, Game& game, Dasher&);
-    void on_collision(Platform& pf, Game& game, Turret&);
+    void on_collision(Platform& pf, Game& game, Enemy&);
     void on_collision(Platform& pf, Game& game, Drone&);
     void on_collision(Platform& pf, Game& game, Item&);
 

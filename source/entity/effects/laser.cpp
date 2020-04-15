@@ -6,7 +6,7 @@ static constexpr const Float move_rate = 0.0002f;
 
 
 Laser::Laser(const Vec2<Float>& position, Cardinal dir)
-    : dir_(dir), timer_(0), hitbox_{&position_, {16, 16}, {8, 8}}
+    : dir_(dir), timer_(0), hitbox_{&position_, {{16, 16}, {8, 8}}}
 {
     set_position(position);
 

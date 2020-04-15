@@ -6,11 +6,10 @@
 
 
 Dasher::Dasher(const Vec2<Float>& position)
-    : Entity(6), hitbox_{&position_, {16, 32}, {8, 16}}, timer_(0),
+    : Enemy(Entity::Health(6), position, {{16, 32}, {8, 16}}),
+      timer_(0),
       state_(State::sleep)
 {
-    position_ = position;
-
     sprite_.set_texture_index(TextureMap::dasher_idle);
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 16});

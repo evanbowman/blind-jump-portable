@@ -3,22 +3,18 @@
 #include "collision.hpp"
 #include "entity/entity.hpp"
 #include "graphics/sprite.hpp"
+#include "enemy.hpp"
 
 
 class Player;
 class Laser;
 
 
-class Dasher : public Entity {
+class Dasher : public Enemy {
 public:
     Dasher(const Vec2<Float>& position);
 
     void update(Platform&, Game&, Microseconds);
-
-    const Sprite& get_shadow() const
-    {
-        return shadow_;
-    }
 
     static constexpr bool multiface_sprite = true;
 
@@ -30,16 +26,8 @@ public:
         return ret;
     }
 
-    const HitBox& hitbox() const
-    {
-        return hitbox_;
-    }
-
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
-
     void on_collision(Platform&, Game&, Laser&);
+    void on_collision(Platform&, Game&, Player&) {}
 
 private:
     enum class State {
@@ -56,9 +44,7 @@ private:
         pause
     };
 
-    Sprite shadow_;
     Sprite head_;
-    HitBox hitbox_;
     Microseconds timer_;
     State state_;
     Vec2<Float> speed_;

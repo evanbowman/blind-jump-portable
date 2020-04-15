@@ -5,11 +5,10 @@
 
 
 Drone::Drone(const Vec2<Float>& pos)
-    : Entity(Entity::Health(4)), state_{State::sleep},
-      timer_(0), hitbox_{&position_, {16, 16}, {8, 13}}
+    : Enemy(Entity::Health(4), pos, {{16, 16}, {8, 13}}),
+      state_{State::sleep},
+      timer_(0)
 {
-    set_position(pos);
-
     sprite_.set_position(pos);
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 13});

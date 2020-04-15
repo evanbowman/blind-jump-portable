@@ -7,7 +7,7 @@ FirstExplorerBigLaser::FirstExplorerBigLaser(const Vec2<Float>& position,
                                              const Vec2<Float>& target,
                                              Float speed)
     : Projectile(position, target, speed), timer_(0),
-      flicker_timer_(0), hitbox_{&position_, {18, 18}, {16, 16}}
+      flicker_timer_(0), hitbox_{&position_, {{18, 18}, {16, 16}}}
 {
     sprite_.set_size(Sprite::Size::w32_h32);
     sprite_.set_origin({16, 16});

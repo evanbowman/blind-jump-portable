@@ -58,6 +58,7 @@ public:
         visible_ = visible;
     }
 
+    void on_death(Platform&, Game&) {}
 
 protected:
     void debit_health(Health amount = 1)

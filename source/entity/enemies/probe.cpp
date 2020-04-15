@@ -2,7 +2,7 @@
 
 
 Probe::Probe(const Vec2<Float>& position)
-    : hitbox_{&position_, {16, 16}, {8, 8}}
+    : hitbox_{&position_, {{16, 16}, {8, 8}}}
 {
     position_ = position;
     sprite_.set_size(Sprite::Size::w16_h32);

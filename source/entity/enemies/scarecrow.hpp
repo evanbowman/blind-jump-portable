@@ -4,19 +4,15 @@
 #include "collision.hpp"
 #include "entity/entity.hpp"
 #include "tileMap.hpp"
+#include "enemy.hpp"
 
 
 class Laser;
 
 
-class Scarecrow : public Entity {
+class Scarecrow : public Enemy {
 public:
     Scarecrow(const Vec2<Float>& pos);
-
-    const Sprite& get_shadow() const
-    {
-        return shadow_;
-    }
 
     static constexpr bool multiface_sprite = true;
 
@@ -26,11 +22,6 @@ public:
         ret[0] = &sprite_;
         ret[1] = &leg_;
         return ret;
-    }
-
-    const HitBox& hitbox() const
-    {
-        return hitbox_;
     }
 
     void update(Platform&, Game&, Microseconds);
@@ -52,9 +43,7 @@ private:
         landing,
     } state_ = State::idle_wait;
 
-    Sprite shadow_;
     Sprite leg_;
-    HitBox hitbox_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
     Microseconds timer_;
     Microseconds bounce_timer_;

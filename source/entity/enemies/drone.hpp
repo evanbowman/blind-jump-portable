@@ -3,27 +3,17 @@
 
 #include "collision.hpp"
 #include "entity/entity.hpp"
+#include "enemy.hpp"
 
 
 class Player;
 class Laser;
 
 
-class Drone : public Entity {
+class Drone : public Enemy {
 public:
     Drone(const Vec2<Float>& pos);
 
-    const Sprite& get_shadow() const
-    {
-        return shadow_;
-    }
-
-    const HitBox& hitbox() const
-    {
-        return hitbox_;
-    }
-
-    void on_collision(Platform&, Game&, Player&);
     void on_collision(Platform&, Game&, Laser&);
 
     void update(Platform&, Game&, Microseconds);
@@ -46,14 +36,13 @@ public:
         return state_;
     }
 
+    void on_collision(Platform&, Game&, Player&);
+
 private:
     State state_;
 
     Microseconds timer_;
 
     Vec2<Float> step_vector_;
-
-    Sprite shadow_;
-    HitBox hitbox_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

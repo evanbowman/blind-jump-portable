@@ -490,25 +490,7 @@ static bool music_track_loop;
 
 static void update_music()
 {
-    // Well, we have to put this code _somewhere_...
-    const auto dt = fixed_step + 50;
-    // Note about the +10: The code will never match the real hardware's screen
-    // refresh rate perfectly. The rate is supposed to be 60hz, but in practice,
-    // it's not _exactly_ 60hz. Any mismatch between the code's estimated
-    // refresh rate (a constant representing 60hz) and the real world refresh
-    // frequency will accumulate over time, which could cause us to overrun the
-    // length of the music track. So it's safer to over-estimate the delta time,
-    // and lose a few milliseconds of the end of the audio, than to overrun the
-    // end of the music track (which produces a screeching/beeping that sounds
-    // kind of like dial-up internet).
-    //
-    // Also note: ANY LAG WHATSOEVER WHICH CAUSES US TO DROP FRAMES WILL CAUSE
-    // THE DMA TRANSFER CHIP TO OVERRUN THE END OF THE AUDIO BUFFER. TODO: FIND
-    // A WAY TO DETECT DROPPED FRAMES, POSSIBLY BY READING THE VALUE OF THE
-    // SCANLINE REGISTER FROM THE DISPLAY FUNCTION. IF THE SCANLINE IS FAR
-    // BEHIND THE EXPECTED VALUE, MAYBE DOUBLE THE DELTA TIME? COULD BE USED
-    // WITHIN THE DELTACLOCK CLASS TOO TO MAKE THE WHOLE GAME LOGIC RESILIENT TO
-    // DROPPED FRAMES.
+    const auto dt = fixed_step;
     music_track_remaining -= dt;
 
     if (UNLIKELY(music_track_remaining <= 0)) {
@@ -1395,7 +1377,7 @@ void Platform::Speaker::play(Note n, Octave o, Channel c)
 #define DEF_MUSIC(__STR_NAME__, __TRACK_NAME__)                                \
     {                                                                          \
         STR(__STR_NAME__), __TRACK_NAME__,                                     \
-            seconds((__TRACK_NAME__##Len) / 16000)                             \
+            seconds((__TRACK_NAME__##Len) / 16000) - seconds(2)                \
     }
 
 static const struct MusicTrack {

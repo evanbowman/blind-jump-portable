@@ -7,13 +7,14 @@
 #include "collision.hpp"
 #include "entity/entity.hpp"
 #include "tileMap.hpp"
+#include "enemy.hpp"
 
 
 class Player;
 class Laser;
 
 
-class SnakeNode : public Entity {
+class SnakeNode : public Enemy {
 public:
     SnakeNode(SnakeNode* parent);
 
@@ -22,11 +23,6 @@ public:
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     const Vec2<TIdx>& tile_coord() const;
-
-    const HitBox& hitbox() const
-    {
-        return hitbox_;
-    }
 
     friend class SnakeTail;
 
@@ -38,7 +34,6 @@ protected:
 private:
     SnakeNode* parent_;
     Vec2<TIdx> tile_coord_;
-    HitBox hitbox_;
     Microseconds destruct_timer_;
 };
 
@@ -49,21 +44,13 @@ public:
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
     void on_collision(Platform&, Game&, Laser&)
     {
     }
 
-    const Sprite& get_shadow() const
-    {
-        return shadow_;
-    }
+    void on_collision(Platform&, Game&, Player&) {}
 
 private:
-    Sprite shadow_;
-
     enum class Dir { up, down, left, right } dir_;
 };
 
@@ -74,21 +61,13 @@ public:
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
     void on_collision(Platform&, Game&, Laser&)
     {
     }
 
-    const Sprite& get_shadow() const
-    {
-        return shadow_;
-    }
+    void on_collision(Platform&, Game&, Player&) {}
 
 private:
-    Sprite shadow_;
-
     Vec2<TIdx> next_coord_;
 };
 
@@ -100,6 +79,8 @@ public:
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     void on_collision(Platform& pf, Game& game, Laser&);
+
+    void on_collision(Platform&, Game&, Player&) {}
 
 private:
     Microseconds sleep_timer_;

@@ -318,6 +318,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto update_policy = [&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
             if (not(*it)->alive()) {
+                (*it)->on_death(pfrm, game);
                 it = entity_buf.erase(it);
             } else {
                 (*it)->update(pfrm, game, delta);
@@ -340,6 +341,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     game.enemies().transform([&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
             if (not(*it)->alive()) {
+                (*it)->on_death(pfrm, game);
                 it = entity_buf.erase(it);
                 enemies_destroyed = true;
             } else {
@@ -684,7 +686,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
         // backdoor into boss level, for debugging purposes.
         if (pfrm.keyboard().pressed<Key::alt_1>() and
             pfrm.keyboard().pressed<Key::alt_2>()) {
-            game.next_level(pfrm, 10);
+            game.next_level(pfrm, 8);
         } else {
             game.next_level(pfrm);
         }

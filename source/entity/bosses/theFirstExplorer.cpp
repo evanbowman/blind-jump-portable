@@ -12,7 +12,7 @@ static const Entity::Health initial_health = 100;
 
 
 TheFirstExplorer::TheFirstExplorer(const Vec2<Float>& position)
-    : Entity(initial_health), hitbox_{&position_, {16, 38}, {8, 24}}, timer_(0),
+    : Entity(initial_health), hitbox_{&position_, {{16, 38}, {8, 24}}}, timer_(0),
       timer2_(0), chase_player_(0), dashes_remaining_(0)
 {
     set_position(position);
@@ -450,8 +450,6 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
 void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
 {
-    const auto last_health = get_health();
-
     const bool was_second_form = second_form();
 
     debit_health(1);
@@ -468,32 +466,33 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
     }
 
     show_boss_health(pf, game, Float(get_health()) / initial_health);
+}
 
-    if (not alive() and last_health) {
 
-        hide_boss_health(game);
+void TheFirstExplorer::on_death(Platform& pf, Game& game)
+{
+    hide_boss_health(game);
 
-        big_explosion(pf, game, position_);
+    big_explosion(pf, game, position_);
 
-        const auto off = 50.f;
+    const auto off = 50.f;
 
-        big_explosion(pf, game, {position_.x - off, position_.y - off});
-        big_explosion(pf, game, {position_.x + off, position_.y + off});
+    big_explosion(pf, game, {position_.x - off, position_.y - off});
+    big_explosion(pf, game, {position_.x + off, position_.y + off});
 
-        game.on_timeout(milliseconds(300),
-                        [pos = position_](Platform& pf, Game& game) {
-                            big_explosion(pf, game, pos);
-                            const auto off = -50.f;
+    game.on_timeout(milliseconds(300),
+                    [pos = position_](Platform& pf, Game& game) {
+                        big_explosion(pf, game, pos);
+                        const auto off = -50.f;
 
-                            big_explosion(pf, game, {pos.x - off, pos.y + off});
-                            big_explosion(pf, game, {pos.x + off, pos.y - off});
-                        });
+                        big_explosion(pf, game, {pos.x - off, pos.y + off});
+                        big_explosion(pf, game, {pos.x + off, pos.y - off});
+                    });
 
-        pf.speaker().stop_music();
-        pf.sleep(10);
+    pf.speaker().stop_music();
+    pf.sleep(10);
 
-        game.score() += 1000;
+    game.score() += 1000;
 
-        game.transporter().set_position(position_);
-    }
+    game.transporter().set_position(position_);
 }
