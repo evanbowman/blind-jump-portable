@@ -141,6 +141,21 @@ private:
 };
 
 
+class BossHealthBar {
+public:
+    BossHealthBar(Platform& pfrm, u8 height, const OverlayCoord& position);
+    BossHealthBar(const BossHealthBar&) = delete;
+    ~BossHealthBar();
+
+    void set_health(Float percentage);
+
+private:
+    Platform& pfrm_;
+    OverlayCoord position_;
+    u8 height_;
+};
+
+
 inline OverlayCoord calc_screen_tiles(Platform& pfrm)
 {
     constexpr u32 overlay_tile_size = 8;

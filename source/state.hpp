@@ -4,6 +4,7 @@
 #include "function.hpp"
 #include "number/numeric.hpp"
 #include <memory>
+#include "graphics/overlay.hpp"
 
 
 class Platform;
@@ -39,3 +40,11 @@ class Text;
 void push_notification(Platform& pfrm,
                        Game& game,
                        Function<16, void(Text&)> notification_builder);
+
+
+// Yeah, this breaks encapsulation. But this is an edge case, where the boss
+// needs to display its own health, but due to state changes outside of an
+// individual entity's control, it doesn't make sense for the enemy itself to
+// own the GUI's health bar.
+void show_boss_health(Platform& pfrm, Game& game, Float percentage);
+void hide_boss_health(Game& game);

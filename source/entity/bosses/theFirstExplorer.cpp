@@ -140,6 +140,8 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                 timer_ = 0;
 
                 pf.speaker().load_music(boss_music, true);
+
+                show_boss_health(pf, game, Float(get_health()) / initial_health);
             }
         }
         break;
@@ -465,7 +467,11 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
         head_.set_mix({ColorConstant::aerospace_orange, 255});
     }
 
+    show_boss_health(pf, game, Float(get_health()) / initial_health);
+
     if (not alive() and last_health) {
+
+        hide_boss_health(game);
 
         big_explosion(pf, game, position_);
 

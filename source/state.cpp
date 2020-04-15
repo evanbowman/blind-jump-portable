@@ -38,12 +38,34 @@ public:
     void exit(Platform& pfrm, Game& game) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
+    std::optional<BossHealthBar> boss_health_bar_;
+
 private:
     std::optional<Text> text_;
     std::optional<Text> score_;
     std::optional<SmallIcon> heart_icon_;
     std::optional<SmallIcon> coin_icon_;
 };
+
+
+void show_boss_health(Platform& pfrm, Game& game, Float percentage)
+{
+    if (auto state = dynamic_cast<ActiveState*>(game.state())) {
+        if (not state->boss_health_bar_) {
+            state->boss_health_bar_.emplace(pfrm, 6, OverlayCoord{u8(pfrm.screen().size().x / 8 - 2), 1});
+        }
+
+        state->boss_health_bar_->set_health(percentage);
+    }
+}
+
+
+void hide_boss_health(Game& game)
+{
+    if (auto state = dynamic_cast<ActiveState*>(game.state())) {
+        state->boss_health_bar_.reset();
+    }
+}
 
 
 static std::optional<Text> notification_text;

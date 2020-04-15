@@ -367,3 +367,48 @@ DottedHorizontalLine::~DottedHorizontalLine()
         pfrm_.set_overlay_tile(i, y_, 0);
     }
 }
+
+
+BossHealthBar::BossHealthBar(Platform& pfrm, u8 height, const OverlayCoord& position) :
+    pfrm_(pfrm),
+    position_(position),
+    height_(height)
+{
+    pfrm_.set_overlay_tile(position_.x, position_.y, 81);
+    pfrm_.set_overlay_tile(position_.x, position_.y + height, 82);
+    set_health(0.f);
+}
+
+
+void BossHealthBar::set_health(Float percentage)
+{
+    constexpr int pixels_per_tile = 8;
+    const auto total_pixels = height_ * pixels_per_tile;
+
+    int fractional_pixels = percentage * total_pixels;
+    int current_tile = 0;
+
+    while (fractional_pixels >= 8) {
+        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 90);
+        fractional_pixels -= 8;
+        ++current_tile;
+    }
+
+    if (current_tile < height_ + 1 and fractional_pixels % 8 not_eq 0) {
+        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 82 + fractional_pixels % 8);
+        ++current_tile;
+    }
+
+    while (current_tile < height_ + 1) {
+        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 91);
+        ++current_tile;
+    }
+}
+
+
+BossHealthBar::~BossHealthBar()
+{
+    for (int y = 0; y < height_ + 2 /* +2 due to the header and footer */; ++y) {
+        pfrm_.set_overlay_tile(position_.x, position_.y + y, 0);
+    }
+}
