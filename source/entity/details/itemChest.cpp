@@ -26,11 +26,24 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
         if (visible()) {
             if (pfrm.keyboard().down_transition<Key::action_2>()) {
 
-
                 if (manhattan_length(player_pos, pos) < 32) {
+
                     int enemies_remaining = 0;
-                    game.enemies().transform(
-                        [&](auto& buf) { enemies_remaining += length(buf); });
+                    game.enemies().transform([&](auto& buf) {
+                        using T =
+                            typename std::remove_reference<decltype(buf)>::type;
+
+                        using VT = typename T::ValueType::element_type;
+
+                        // SnakeBody and SnakeTail are technically not
+                        // enemies, we only want to count each snake head
+                        // segment.
+                        if (not std::is_same<VT, SnakeBody>() and
+                            not std::is_same<VT, SnakeTail>()) {
+
+                            enemies_remaining += length(buf);
+                        }
+                    });
 
                     if (enemies_remaining) {
                         push_notification(

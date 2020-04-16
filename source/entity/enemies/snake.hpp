@@ -5,9 +5,9 @@
 
 
 #include "collision.hpp"
+#include "enemy.hpp"
 #include "entity/entity.hpp"
 #include "tileMap.hpp"
-#include "enemy.hpp"
 
 
 class Player;
@@ -48,7 +48,9 @@ public:
     {
     }
 
-    void on_collision(Platform&, Game&, Player&) {}
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
 
 private:
     enum class Dir { up, down, left, right } dir_;
@@ -65,7 +67,9 @@ public:
     {
     }
 
-    void on_collision(Platform&, Game&, Player&) {}
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
 
 private:
     Vec2<TIdx> next_coord_;
@@ -80,7 +84,9 @@ public:
 
     void on_collision(Platform& pf, Game& game, Laser&);
 
-    void on_collision(Platform&, Game&, Player&) {}
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
 
 private:
     Microseconds sleep_timer_;

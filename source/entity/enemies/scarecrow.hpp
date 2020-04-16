@@ -2,9 +2,9 @@
 
 
 #include "collision.hpp"
+#include "enemy.hpp"
 #include "entity/entity.hpp"
 #include "tileMap.hpp"
-#include "enemy.hpp"
 
 
 class Laser;

@@ -20,3 +20,7 @@ mv bgr_overlay.h source/graphics
 grit bgr_overlay_journal.png -gB4 -gTFF00FF
 mv bgr_overlay_journal.s source/graphics
 mv bgr_overlay_journal.h source/graphics
+
+grit bgr_old_poster_flattened.png -gB4 -gTFF00FF
+mv bgr_old_poster_flattened.s source/graphics
+mv bgr_old_poster_flattened.h source/graphics

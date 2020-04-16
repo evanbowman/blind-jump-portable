@@ -85,6 +85,10 @@ public:
         return speaker_;
     }
 
+
+    void fatal();
+
+
     void push_map(const TileMap& map);
 
     void set_overlay_tile(u16 x, u16 y, u16 val);

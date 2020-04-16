@@ -12,8 +12,8 @@ static const Entity::Health initial_health = 100;
 
 
 TheFirstExplorer::TheFirstExplorer(const Vec2<Float>& position)
-    : Entity(initial_health), hitbox_{&position_, {{16, 38}, {8, 24}}}, timer_(0),
-      timer2_(0), chase_player_(0), dashes_remaining_(0)
+    : Entity(initial_health), hitbox_{&position_, {{16, 38}, {8, 24}}},
+      timer_(0), timer2_(0), chase_player_(0), dashes_remaining_(0)
 {
     set_position(position);
 
@@ -141,7 +141,8 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
                 pf.speaker().load_music(boss_music, true);
 
-                show_boss_health(pf, game, Float(get_health()) / initial_health);
+                show_boss_health(
+                    pf, game, Float(get_health()) / initial_health);
             }
         }
         break;

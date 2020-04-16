@@ -12,6 +12,7 @@ enum class ColorConstant {
     null,
     electric_blue,    // #00FFFF
     picton_blue,      // #4DACFF
+    steel_blue,       // #345680
     spanish_crimson,  // #E81858
     aerospace_orange, // #FD5200
     rich_black,       // #000010

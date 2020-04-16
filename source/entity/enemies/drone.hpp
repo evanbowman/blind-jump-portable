@@ -2,8 +2,8 @@
 
 
 #include "collision.hpp"
-#include "entity/entity.hpp"
 #include "enemy.hpp"
+#include "entity/entity.hpp"
 
 
 class Player;
@@ -37,6 +37,8 @@ public:
     }
 
     void on_collision(Platform&, Game&, Player&);
+
+    void on_death(Platform&, Game&);
 
 private:
     State state_;

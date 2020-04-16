@@ -1,9 +1,9 @@
 #pragma once
 
 #include "collision.hpp"
+#include "enemy.hpp"
 #include "entity/entity.hpp"
 #include "graphics/sprite.hpp"
-#include "enemy.hpp"
 
 
 class Player;
@@ -27,7 +27,11 @@ public:
     }
 
     void on_collision(Platform&, Game&, Laser&);
-    void on_collision(Platform&, Game&, Player&) {}
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
+
+    void on_death(Platform&, Game&);
 
 private:
     enum class State {

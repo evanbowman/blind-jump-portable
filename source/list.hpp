@@ -15,6 +15,7 @@ template <typename T> struct BiNode {
 template <typename T, typename Pool> class List {
 public:
     using Node = BiNode<T>;
+    using ValueType = T;
 
     List(Pool& pool) : begin_(nullptr), pool_(&pool)
     {

@@ -9,8 +9,7 @@ static const Float long_jump_speed(0.00015f);
 
 
 Scarecrow::Scarecrow(const Vec2<Float>& position)
-    : Enemy(Entity::Health(3), position, {{16, 32}, {8, 16}}),
-      timer_(0),
+    : Enemy(Entity::Health(3), position, {{16, 32}, {8, 16}}), timer_(0),
       bounce_timer_(0), hit_(false)
 {
     position_ = {position.x, position.y - 32};

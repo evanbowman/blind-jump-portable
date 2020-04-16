@@ -84,7 +84,7 @@ inline Vec2<TIdx> to_tile_coord(const Vec2<s32>& wc)
 {
     return Vec2<s32>{
         wc.x / 32,
-        wc.y / 24 // This division by 24 is costly, oh well...
+        fast_divide(wc.y, 24) // This division by 24 is costly, oh well...
     }
         .cast<TIdx>();
 }
@@ -93,7 +93,7 @@ inline Vec2<TIdx> to_quarter_tile_coord(const Vec2<s32>& wc)
 {
     return Vec2<s32>{
         wc.x / 16,
-        wc.y / 12 // This division by 24 is costly, oh well...
+        fast_divide(wc.y, 12) // This division by 24 is costly, oh well...
     }
         .cast<TIdx>();
 }

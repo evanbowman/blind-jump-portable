@@ -75,7 +75,9 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ -= dt;
         } else {
             game.effects().spawn<OrbShot>(
-                position_, sample<8>(game.player().get_position()), 0.00011f);
+                position_ + Vec2<Float>{0.f, 4.f},
+                sample<8>(game.player().get_position()),
+                0.00011f);
             timer_ = milliseconds(830);
         }
 

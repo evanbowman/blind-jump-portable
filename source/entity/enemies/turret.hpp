@@ -2,9 +2,9 @@
 
 
 #include "collision.hpp"
+#include "enemy.hpp"
 #include "entity/entity.hpp"
 #include "graphics/animation.hpp"
-#include "enemy.hpp"
 
 
 class Player;
@@ -18,7 +18,9 @@ public:
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     void on_collision(Platform&, Game&, Laser&);
-    void on_collision(Platform&, Game&, Player&) {}
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
 
 private:
     Animation<TextureMap::turret, 5, milliseconds(50)> animation_;

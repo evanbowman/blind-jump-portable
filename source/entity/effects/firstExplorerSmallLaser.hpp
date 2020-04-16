@@ -1,7 +1,7 @@
 #pragma once
 
 #include "graphics/animation.hpp"
-#include "orbShot.hpp"
+#include "orbshot.hpp"
 
 
 class Player;

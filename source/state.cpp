@@ -52,7 +52,8 @@ void show_boss_health(Platform& pfrm, Game& game, Float percentage)
 {
     if (auto state = dynamic_cast<ActiveState*>(game.state())) {
         if (not state->boss_health_bar_) {
-            state->boss_health_bar_.emplace(pfrm, 6, OverlayCoord{u8(pfrm.screen().size().x / 8 - 2), 1});
+            state->boss_health_bar_.emplace(
+                pfrm, 6, OverlayCoord{u8(pfrm.screen().size().x / 8 - 2), 1});
         }
 
         state->boss_health_bar_->set_health(percentage);
@@ -236,6 +237,22 @@ private:
 };
 
 
+class ImageViewState : public State {
+public:
+
+    ImageViewState(const char* image_name, ColorConstant background_color);
+
+    void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    const char* image_name_;
+    ColorConstant background_color_;
+};
+
+
 class IntroCreditsState : public State {
 public:
     void enter(Platform& pfrm, Game& game) override;
@@ -283,7 +300,8 @@ static StatePool<ActiveState,
                  FadeOutState,
                  DeathFadeState,
                  InventoryState,
-                 NotebookState>
+                 NotebookState,
+                 ImageViewState>
     state_pool_;
 
 
@@ -832,12 +850,32 @@ struct InventoryItemHandler {
 };
 
 
+static void consume_selected_item(Game& game)
+{
+    game.inventory().remove_item(InventoryState::page_,
+                                 InventoryState::selector_coord_.x,
+                                 InventoryState::selector_coord_.y);
+}
+
+
 constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::null,
      0,
-     [](Platform&, Game&) { return null_state(); },
+     [](Platform&, Game&) {
+         return null_state();
+     },
      [] {
          static const auto str = "Empty";
+         return str;
+     }},
+    {Item::Type::old_poster_1,
+     193,
+      [](Platform&, Game&) {
+         static const auto str = "bgr_old_poster_flattened";
+         return state_pool_.create<ImageViewState>(str, ColorConstant::steel_blue);
+      },
+     []{
+         static const auto str = "Old poster (1)";
          return str;
      }},
     {Item::Type::surveyor_logbook,
@@ -859,9 +897,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::accelerator,
      185,
      [](Platform&, Game& game) {
-         game.inventory().remove_item(InventoryState::page_,
-                                      InventoryState::selector_coord_.x,
-                                      InventoryState::selector_coord_.y);
+         consume_selected_item(game);
 
          game.player().weapon().accelerate(3, milliseconds(150));
 
@@ -874,9 +910,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::lethargy,
      189,
      [](Platform&, Game& game) {
-         game.inventory().remove_item(InventoryState::page_,
-                                      InventoryState::selector_coord_.x,
-                                      InventoryState::selector_coord_.y);
+         consume_selected_item(game);
 
          enemy_lethargy_timer = seconds(18);
 
@@ -1205,6 +1239,65 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     return null_state();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// ImageViewState
+////////////////////////////////////////////////////////////////////////////////
+
+
+ImageViewState::ImageViewState(const char* image_name, ColorConstant background_color) :
+    image_name_(image_name), background_color_(background_color)
+{
+}
+
+
+StatePtr ImageViewState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    if (pfrm.keyboard().down_transition<Key::action_1>()) {
+        return state_pool_.create<InventoryState>(false);
+    }
+
+    return null_state();
+}
+
+
+template <typename F>
+void for_all_overlay_tiles(Platform& pfrm, F&& callback)
+{
+    const auto screen_tiles = calc_screen_tiles(pfrm);
+
+    for (int x = 0; x < screen_tiles.x; ++x) {
+        for (int y = 0; y < screen_tiles.y; ++y) {
+            callback(x, y);
+        }
+    }
+}
+
+
+void ImageViewState::enter(Platform& pfrm, Game& game)
+{
+    pfrm.screen().fade(1.f, background_color_);
+    pfrm.load_overlay_texture(image_name_);
+
+    const auto screen_tiles = calc_screen_tiles(pfrm);
+    for (int x = 0; x < screen_tiles.x - 2; ++x) {
+        for (int y = 0; y < screen_tiles.y - 3; ++y) {
+            pfrm.set_overlay_tile(x + 1, y + 1, y * 28 + x + 1);
+        }
+    }
+}
+
+
+void ImageViewState::exit(Platform& pfrm, Game& game)
+{
+    for_all_overlay_tiles(pfrm, [&](int x, int y) {
+                                    pfrm.set_overlay_tile(x, y, 0);
+                                });
+
+    pfrm.screen().fade(1.f);
+    pfrm.load_overlay_texture("bgr_overlay");
+
 }
 
 

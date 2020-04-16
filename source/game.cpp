@@ -882,7 +882,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     if (heart_count > 2) {
         const auto item_count = length(details_.get<Item>());
 
-        while (heart_count > 3) {
+        while (heart_count > 2) {
             auto choice = random_choice(item_count);
 
             if (auto item = list_ref(details_.get<Item>(), choice)) {

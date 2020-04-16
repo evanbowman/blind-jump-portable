@@ -16,8 +16,10 @@ struct HitBox {
     {
         const auto c = center();
         const auto oc = other.center();
-        if (c.x < (oc.x + other.dimension_.size_.x) and (c.x + dimension_.size_.x) > oc.x and
-            c.y < (oc.y + other.dimension_.size_.y) and (c.y + dimension_.size_.y) > oc.y) {
+        if (c.x < (oc.x + other.dimension_.size_.x) and
+            (c.x + dimension_.size_.x) > oc.x and
+            c.y < (oc.y + other.dimension_.size_.y) and
+            (c.y + dimension_.size_.y) > oc.y) {
             return true;
         } else {
             return false;

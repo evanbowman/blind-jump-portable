@@ -67,6 +67,7 @@ set(SOURCES
 if(GAMEBOY_ADVANCE)
   set(SOURCES
     ${SOURCES}
+    ${SOURCE_DIR}/platform/memcpy.s
     ${SOURCE_DIR}/platform/sb_omega.s
     ${SOURCE_DIR}/platform/frostellar.s
     ${SOURCE_DIR}/graphics/bgr_overlay.s
@@ -74,6 +75,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/bgr_spritesheet.s
     ${SOURCE_DIR}/graphics/bgr_overlay_journal.s
     ${SOURCE_DIR}/graphics/bgr_spritesheet_boss0.s
+    ${SOURCE_DIR}/graphics/bgr_old_poster_flattened.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()
   set(SOURCES

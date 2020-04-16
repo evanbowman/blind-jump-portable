@@ -11,9 +11,8 @@ class Enemy : public Entity {
 public:
     Enemy(Entity::Health health,
           const Vec2<Float>& position,
-          const HitBox::Dimension& dimension) :
-        Entity(health),
-        hitbox_{&position_, dimension}
+          const HitBox::Dimension& dimension)
+        : Entity(health), hitbox_{&position_, dimension}
     {
         position_ = position;
     }

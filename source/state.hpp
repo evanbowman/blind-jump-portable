@@ -2,9 +2,9 @@
 
 
 #include "function.hpp"
+#include "graphics/overlay.hpp"
 #include "number/numeric.hpp"
 #include <memory>
-#include "graphics/overlay.hpp"
 
 
 class Platform;

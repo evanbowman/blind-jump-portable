@@ -5,8 +5,7 @@
 
 
 Drone::Drone(const Vec2<Float>& pos)
-    : Enemy(Entity::Health(4), pos, {{16, 16}, {8, 13}}),
-      state_{State::sleep},
+    : Enemy(Entity::Health(4), pos, {{16, 16}, {8, 13}}), state_{State::sleep},
       timer_(0)
 {
     sprite_.set_position(pos);
@@ -140,17 +139,6 @@ void Drone::on_collision(Platform& pf, Game& game, Laser&)
     sprite_.set_mix({ColorConstant::aerospace_orange, 255});
 
     debit_health(1);
-
-    if (not alive()) {
-        game.score() += 3;
-
-        pf.sleep(5);
-
-        static const Item::Type item_drop_vec[] = {Item::Type::coin,
-                                                   Item::Type::null};
-
-        on_enemy_destroyed(pf, game, position_, 7, item_drop_vec);
-    }
 }
 
 
@@ -158,14 +146,18 @@ void Drone::on_collision(Platform& pf, Game& game, Player& player)
 {
     if (state_ == State::rush) {
         this->kill();
-
-        pf.sleep(2);
-
-        static const Item::Type item_drop_vec[] = {Item::Type::coin,
-                                                   Item::Type::coin,
-                                                   Item::Type::heart,
-                                                   Item::Type::null};
-
-        on_enemy_destroyed(pf, game, position_, 4, item_drop_vec);
     }
+}
+
+
+void Drone::on_death(Platform& pf, Game& game)
+{
+    game.score() += 3;
+
+    pf.sleep(5);
+
+    static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                               Item::Type::null};
+
+    on_enemy_destroyed(pf, game, position_, 7, item_drop_vec);
 }

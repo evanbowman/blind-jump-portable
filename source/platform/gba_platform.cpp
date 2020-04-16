@@ -16,6 +16,16 @@
 #include <algorithm>
 
 
+// These word and halfword versions of memcpy are written in assembly. They use
+// special ARM instructions to copy data faster than you could do with thumb
+// code.
+extern "C" {
+__attribute__((section(".iwram"), long_call)) void
+memcpy32(void* dst, const void* src, uint wcount);
+void memcpy16(void* dst, const void* src, uint hwcount);
+}
+
+
 void start(Platform&);
 
 
@@ -77,6 +87,7 @@ using ScreenBlock = u16[1024];
 #define ATTR2_PRIO(n) ((n) << ATTR2_PRIO_SHIFT)
 #define ATTR2_PRIORITY(n) ATTR2_PRIO(n)
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,9 +127,8 @@ static volatile u32* keys = (volatile u32*)0x04000130;
 
 void Platform::Keyboard::poll()
 {
-    for (size_t i = 0; i < int(Key::count); ++i) {
-        prev_[i] = states_[i];
-    }
+    std::copy(std::begin(states_), std::end(states_), std::begin(prev_));
+
     states_[int(Key::action_1)] = ~(*keys) & KEY_A;
     states_[int(Key::action_2)] = ~(*keys) & KEY_B;
     states_[int(Key::start)] = ~(*keys) & KEY_START;
@@ -154,6 +164,9 @@ constexpr u32 oam_count = Platform::Screen::sprite_limit;
 
 static ObjectAttributes* const object_attribute_memory = {
     (ObjectAttributes*)0x07000000};
+
+static ObjectAttributes
+    object_attribute_back_buffer[Platform::Screen::sprite_limit];
 
 
 #define OBJ_SHAPE(m) ((m) << 14)
@@ -291,6 +304,10 @@ const Color& real_color(ColorConstant k)
         static const Color stil_de_grain(30, 27, 11);
         return stil_de_grain;
 
+    case ColorConstant::steel_blue:
+        static const Color steel_blue(6, 10, 16);
+        return steel_blue;
+
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:
@@ -396,7 +413,7 @@ void Platform::Screen::draw(const Sprite& spr)
         }
         const auto position = spr.get_position().cast<s32>() - spr.get_origin();
         const auto view_center = view_.get_center().cast<s32>();
-        auto oa = object_attribute_memory + oam_write_index;
+        auto oa = object_attribute_back_buffer + oam_write_index;
         if (spr.get_alpha() not_eq Sprite::Alpha::translucent) {
             oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_TALL;
         } else {
@@ -505,12 +522,17 @@ static void update_music()
 
 void Platform::Screen::display()
 {
-    // The Sprites are technically already displayed, so all we really
-    // need to do is turn off the sprites in the table if the sprite
-    // draw count dropped since the last draw batch.
     for (u32 i = oam_write_index; i < last_oam_write_index; ++i) {
-        object_attribute_memory[i].attribute_0 |= attr0_mask::disabled;
+        object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
     }
+
+    // I noticed less graphical artifacts when using a back buffer. I thought I
+    // would see better performance when writing directly to OAM, rather than
+    // doing a copy later, but I did not notice any performance difference when
+    // adding a back buffer.
+    memcpy32(object_attribute_memory,
+             object_attribute_back_buffer,
+             (sizeof object_attribute_back_buffer) / 4);
 
     last_oam_write_index = oam_write_index;
     oam_write_index = 0;
@@ -542,32 +564,12 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-int strcmp(const char* p1, const char* p2)
-{
-    const unsigned char* s1 = (const unsigned char*)p1;
-    const unsigned char* s2 = (const unsigned char*)p2;
-
-    unsigned char c1, c2;
-
-    do {
-        c1 = (unsigned char)*s1++;
-        c2 = (unsigned char)*s2++;
-
-        if (c1 == '\0') {
-            return c1 - c2;
-        }
-
-    } while (c1 == c2);
-
-    return c1 - c2;
-}
-
-
 #include "graphics/bgr_overlay.h"
 #include "graphics/bgr_overlay_journal.h"
 #include "graphics/bgr_spritesheet.h"
 #include "graphics/bgr_spritesheet_boss0.h"
 #include "graphics/bgr_tilesheet.h"
+#include "graphics/bgr_old_poster_flattened.h"
 
 
 struct TextureData {
@@ -596,7 +598,8 @@ static const TextureData tile_textures[] = {TEXTURE_INFO(bgr_tilesheet)};
 
 static const TextureData overlay_textures[] = {
     TEXTURE_INFO(bgr_overlay),
-    TEXTURE_INFO(bgr_overlay_journal)};
+    TEXTURE_INFO(bgr_overlay_journal),
+    TEXTURE_INFO(bgr_old_poster_flattened)};
 
 
 static const TextureData* current_spritesheet = &sprite_textures[0];
@@ -627,9 +630,9 @@ void Platform::load_overlay_texture(const char* name)
 
             if (validate_texture_size(*this, info.tile_data_length_)) {
                 // NOTE: this is the last charblock
-                __builtin_memcpy((void*)&MEM_SCREENBLOCKS[24][0],
-                                 info.tile_data_,
-                                 info.tile_data_length_);
+                memcpy16((void*)&MEM_SCREENBLOCKS[24][0],
+                         info.tile_data_,
+                         info.tile_data_length_ / 2);
             }
         }
     }
@@ -749,6 +752,12 @@ COLD void Platform::push_map(const TileMap& map)
 }
 
 
+void Platform::fatal()
+{
+    SoftReset(ROM_RESTART);
+}
+
+
 void Platform::set_overlay_tile(u16 x, u16 y, u16 val)
 {
     if (x > 31 or y > 31) {
@@ -841,17 +850,13 @@ void Platform::load_sprite_texture(const char* name)
 
         if (strcmp(name, info.name_) == 0) {
 
-            // __builtin_memcpy((void*)MEM_PALETTE,
-            //                  info.palette_data_,
-            //                  info.palette_data_length_);
-
             current_spritesheet = &info;
 
             // NOTE: There are four tile blocks, so index four points to the
             // end of the tile memory.
-            __builtin_memcpy((void*)&MEM_TILE[4][1],
-                             info.tile_data_,
-                             info.tile_data_length_);
+            memcpy16((void*)&MEM_TILE[4][1],
+                     info.tile_data_,
+                     info.tile_data_length_ / 2);
 
             // We need to do this, otherwise whatever screen fade is currently
             // active will be overwritten by the copy.
@@ -887,9 +892,9 @@ void Platform::load_tile_texture(const char* name)
             }
 
             if (validate_texture_size(*this, info.tile_data_length_)) {
-                __builtin_memcpy((void*)&MEM_SCREENBLOCKS[0][0],
-                                 info.tile_data_,
-                                 info.tile_data_length_);
+                memcpy16((void*)&MEM_SCREENBLOCKS[0][0],
+                         info.tile_data_,
+                         info.tile_data_length_ / 2);
             }
         }
     }
@@ -1477,6 +1482,19 @@ Platform::Speaker::Speaker()
 
     // REG_SND2CNT = SSQR_ENV_BUILD(10, 0, 7) | SSQR_DUTY1_4;
     // REG_SND2FREQ = 0;
+}
+
+
+s32 fast_divide(s32 numerator, s32 denominator)
+{
+    // NOTE: This is a BIOS call, but still faster than real division.
+    return Div(numerator, denominator);
+}
+
+
+s32 fast_mod(s32 numerator, s32 denominator)
+{
+    return DivMod(numerator, denominator);
 }
 
 

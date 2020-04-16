@@ -369,10 +369,10 @@ DottedHorizontalLine::~DottedHorizontalLine()
 }
 
 
-BossHealthBar::BossHealthBar(Platform& pfrm, u8 height, const OverlayCoord& position) :
-    pfrm_(pfrm),
-    position_(position),
-    height_(height)
+BossHealthBar::BossHealthBar(Platform& pfrm,
+                             u8 height,
+                             const OverlayCoord& position)
+    : pfrm_(pfrm), position_(position), height_(height)
 {
     pfrm_.set_overlay_tile(position_.x, position_.y, 81);
     pfrm_.set_overlay_tile(position_.x, position_.y + height, 82);
@@ -395,7 +395,9 @@ void BossHealthBar::set_health(Float percentage)
     }
 
     if (current_tile < height_ + 1 and fractional_pixels % 8 not_eq 0) {
-        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 82 + fractional_pixels % 8);
+        pfrm_.set_overlay_tile(position_.x,
+                               position_.y + 1 + current_tile,
+                               82 + fractional_pixels % 8);
         ++current_tile;
     }
 
@@ -408,7 +410,8 @@ void BossHealthBar::set_health(Float percentage)
 
 BossHealthBar::~BossHealthBar()
 {
-    for (int y = 0; y < height_ + 2 /* +2 due to the header and footer */; ++y) {
+    for (int y = 0; y < height_ + 2 /* +2 due to the header and footer */;
+         ++y) {
         pfrm_.set_overlay_tile(position_.x, position_.y + y, 0);
     }
 }

@@ -17,7 +17,7 @@ template <u32 N> inline int random_choice()
 
 inline int random_choice(u32 n)
 {
-    return random_value() % n; // * n >> 15;
+    return fast_mod(random_value(), n); // * n >> 15;
 }
 
 

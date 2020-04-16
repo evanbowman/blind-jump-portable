@@ -19,8 +19,7 @@ static constexpr const Float y_move_rate = x_move_rate * (12.f / 16.f);
 
 
 SnakeNode::SnakeNode(SnakeNode* parent)
-    : Enemy(1, position_, {{16, 16}, {8, 8}}),
-      parent_(parent),
+    : Enemy(1, position_, {{16, 16}, {8, 8}}), parent_(parent),
       destruct_timer_(0)
 {
 }

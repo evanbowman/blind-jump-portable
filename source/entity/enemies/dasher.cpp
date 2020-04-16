@@ -6,8 +6,7 @@
 
 
 Dasher::Dasher(const Vec2<Float>& position)
-    : Enemy(Entity::Health(6), position, {{16, 32}, {8, 16}}),
-      timer_(0),
+    : Enemy(Entity::Health(6), position, {{16, 32}, {8, 16}}), timer_(0),
       state_(State::sleep)
 {
     sprite_.set_texture_index(TextureMap::dasher_idle);
@@ -230,26 +229,28 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
     sprite_.set_mix({ColorConstant::aerospace_orange, 255});
     head_.set_mix({ColorConstant::aerospace_orange, 255});
 
-    if (not alive()) {
-        game.score() += 15;
-
-        pf.sleep(5);
-
-        static const Item::Type item_drop_vec[] = {Item::Type::coin,
-                                                   Item::Type::coin,
-                                                   Item::Type::heart,
-                                                   Item::Type::null};
-
-        on_enemy_destroyed(pf, game, position_, 2, item_drop_vec);
-
-
-        if (random_choice<3>() == 0) {
-            game.details().spawn<Item>(position_, pf, Item::Type::coin);
-        }
-    }
-
     if (state_ == State::sleep) {
         timer_ = 0;
         state_ = State::shoot_begin;
+    }
+}
+
+
+void Dasher::on_death(Platform& pf, Game& game)
+{
+    game.score() += 15;
+
+    pf.sleep(5);
+
+    static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                               Item::Type::coin,
+                                               Item::Type::heart,
+                                               Item::Type::null};
+
+    on_enemy_destroyed(pf, game, position_, 2, item_drop_vec);
+
+
+    if (random_choice<3>() == 0) {
+        game.details().spawn<Item>(position_, pf, Item::Type::coin);
     }
 }
