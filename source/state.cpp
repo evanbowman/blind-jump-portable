@@ -1153,6 +1153,7 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 // NotebookState
 ////////////////////////////////////////////////////////////////////////////////
 
+constexpr u16 notebook_margin_tile = 39 + 26 + 6;
 
 NotebookState::NotebookState(const char* text) : str_(text), page_(0)
 {
@@ -1163,6 +1164,11 @@ void NotebookState::enter(Platform& pfrm, Game&)
 {
     pfrm.screen().fade(1.f);
     pfrm.load_overlay_texture("bgr_overlay_journal");
+
+    // This is to eliminate display tearing, see other comments on
+    // fill_overlay() calls.
+    pfrm.fill_overlay(notebook_margin_tile);
+
     auto screen_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm);
     text_->assign(str_,
@@ -1182,7 +1188,7 @@ void NotebookState::repaint_margin(Platform& pfrm)
         for (int y = 0; y < screen_tiles.y; ++y) {
             if (x == 0 or y == 0 or y == 1 or x == screen_tiles.x - 1 or
                 y == screen_tiles.y - 2 or y == screen_tiles.y - 1) {
-                pfrm.set_overlay_tile(x, y, 39 + 26 + 6);
+                pfrm.set_overlay_tile(x, y, notebook_margin_tile);
             }
         }
     }
@@ -1202,18 +1208,16 @@ void NotebookState::repaint_page(Platform& pfrm)
 
 void NotebookState::exit(Platform& pfrm, Game&)
 {
-    const auto screen_tiles = calc_screen_tiles(pfrm);
-
-    // clear margin
-    for (int x = 0; x < screen_tiles.x; ++x) {
-        for (int y = 0; y < screen_tiles.y; ++y) {
-            if (x == 0 or y == 0 or y == 1 or x == screen_tiles.x - 1 or
-                y == screen_tiles.y - 2 or y == screen_tiles.y - 1) {
-                pfrm.set_overlay_tile(x, y, 0);
-            }
-        }
-    }
-
+    pfrm.fill_overlay(0); // The TextView destructor cleans up anyway, but we
+                          // have ways of clearing the screen faster than the
+                          // TextView implementation is able to. The TextView
+                          // class needs to loop through each glyph and
+                          // individually zero them out, which can create
+                          // tearing in the display. The fill_overlay() function
+                          // doesn't need to work around sub-regions of the
+                          // screen, so it can use faster methods, like a single
+                          // memset, or special BIOS calls (depending on the
+                          // platform) to clear out the screen.
     text_.reset();
     pfrm.load_overlay_texture("bgr_overlay");
 }
@@ -1262,19 +1266,6 @@ StatePtr ImageViewState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
-template <typename F>
-void for_all_overlay_tiles(Platform& pfrm, F&& callback)
-{
-    const auto screen_tiles = calc_screen_tiles(pfrm);
-
-    for (int x = 0; x < screen_tiles.x; ++x) {
-        for (int y = 0; y < screen_tiles.y; ++y) {
-            callback(x, y);
-        }
-    }
-}
-
-
 void ImageViewState::enter(Platform& pfrm, Game& game)
 {
     pfrm.screen().fade(1.f, background_color_);
@@ -1291,9 +1282,7 @@ void ImageViewState::enter(Platform& pfrm, Game& game)
 
 void ImageViewState::exit(Platform& pfrm, Game& game)
 {
-    for_all_overlay_tiles(pfrm, [&](int x, int y) {
-                                    pfrm.set_overlay_tile(x, y, 0);
-                                });
+    pfrm.fill_overlay(0);
 
     pfrm.screen().fade(1.f);
     pfrm.load_overlay_texture("bgr_overlay");

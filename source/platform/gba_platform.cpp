@@ -14,6 +14,7 @@
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
+#include "graphics/overlay.hpp"
 
 
 // These word and halfword versions of memcpy are written in assembly. They use
@@ -765,6 +766,14 @@ void Platform::set_overlay_tile(u16 x, u16 y, u16 val)
     }
 
     MEM_SCREENBLOCKS[13][x + y * 32] = val | SE_PALBANK(1);
+}
+
+
+void Platform::fill_overlay(u16 tile)
+{
+    for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u16); ++i) {
+        MEM_SCREENBLOCKS[13][i] = tile | SE_PALBANK(1);
+    }
 }
 
 

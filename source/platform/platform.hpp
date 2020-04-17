@@ -94,6 +94,8 @@ public:
     void set_overlay_tile(u16 x, u16 y, u16 val);
     u16 get_overlay_tile(u16 x, u16 y);
 
+    void fill_overlay(u16 tile);
+
 
     void load_sprite_texture(const char* name);
     void load_tile_texture(const char* name);
