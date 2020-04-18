@@ -53,7 +53,9 @@ private:
 // items should also be unique.
 inline bool item_is_persistent(Item::Type type)
 {
-    return type == Item::Type::blaster or type == Item::Type::surveyor_logbook or type == Item::Type::old_poster_1;
+    return type == Item::Type::blaster or
+           type == Item::Type::surveyor_logbook or
+           type == Item::Type::old_poster_1;
 }
 
 

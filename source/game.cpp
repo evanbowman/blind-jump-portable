@@ -234,8 +234,7 @@ static const BossLevel* get_boss_level(Level current_level)
 {
     switch (current_level) {
     case 10: {
-        static constexpr const BossLevel ret{boss_level_0,
-                                             "spritesheet_boss0"};
+        static constexpr const BossLevel ret{boss_level_0, "spritesheet_boss0"};
         return &ret;
     }
 
@@ -271,7 +270,6 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 
     } else if (level() > 10) {
         pfrm.load_tile_texture("tilesheet2");
-
     }
 
     auto boss_level = get_boss_level(level());
@@ -599,7 +597,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         int max_level_ = std::numeric_limits<Level>::max();
         int max_allowed_ = 1000;
     } info[] = {
-         {0,
+        {0,
          [&]() {
              spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              if (game.level() > 6) {

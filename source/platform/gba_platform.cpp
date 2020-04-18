@@ -9,12 +9,12 @@
 
 #ifdef __GBA__
 
+#include "graphics/overlay.hpp"
 #include "number/random.hpp"
 #include "platform.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
-#include "graphics/overlay.hpp"
 
 
 // These word and halfword versions of memcpy are written in assembly. They use
@@ -565,13 +565,13 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
+#include "graphics/old_poster_flattened.h"
 #include "graphics/overlay.h"
 #include "graphics/overlay_journal.h"
 #include "graphics/spritesheet.h"
 #include "graphics/spritesheet_boss0.h"
 #include "graphics/tilesheet.h"
 #include "graphics/tilesheet2.h"
-#include "graphics/old_poster_flattened.h"
 
 
 struct TextureData {
@@ -590,9 +590,8 @@ struct TextureData {
     }
 
 
-static const TextureData sprite_textures[] = {
-    TEXTURE_INFO(spritesheet),
-    TEXTURE_INFO(spritesheet_boss0)};
+static const TextureData sprite_textures[] = {TEXTURE_INFO(spritesheet),
+                                              TEXTURE_INFO(spritesheet_boss0)};
 
 
 static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),

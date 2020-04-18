@@ -239,7 +239,6 @@ private:
 
 class ImageViewState : public State {
 public:
-
     ImageViewState(const char* image_name, ColorConstant background_color);
 
     void enter(Platform& pfrm, Game& game) override;
@@ -861,20 +860,19 @@ static void consume_selected_item(Game& game)
 constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::null,
      0,
-     [](Platform&, Game&) {
-         return null_state();
-     },
+     [](Platform&, Game&) { return null_state(); },
      [] {
          static const auto str = "Empty";
          return str;
      }},
     {Item::Type::old_poster_1,
      193,
-      [](Platform&, Game&) {
+     [](Platform&, Game&) {
          static const auto str = "old_poster_flattened";
-         return state_pool_.create<ImageViewState>(str, ColorConstant::steel_blue);
-      },
-     []{
+         return state_pool_.create<ImageViewState>(str,
+                                                   ColorConstant::steel_blue);
+     },
+     [] {
          static const auto str = "Old poster (1)";
          return str;
      }},
@@ -1250,8 +1248,9 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ImageViewState::ImageViewState(const char* image_name, ColorConstant background_color) :
-    image_name_(image_name), background_color_(background_color)
+ImageViewState::ImageViewState(const char* image_name,
+                               ColorConstant background_color)
+    : image_name_(image_name), background_color_(background_color)
 {
 }
 
@@ -1286,7 +1285,6 @@ void ImageViewState::exit(Platform& pfrm, Game& game)
 
     pfrm.screen().fade(1.f);
     pfrm.load_overlay_texture("overlay");
-
 }
 
 
