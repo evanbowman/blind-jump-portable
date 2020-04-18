@@ -230,6 +230,16 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::long_airborne: {
         if (timer_ > 0) {
 
+            auto coord = to_tile_coord(position_.cast<s32>());
+            coord.y += 1;
+
+            // Hide the shadow when we're jumping over empty space
+            if (not is_walkable(game.tiles().get_tile(coord.x, coord.y))) {
+                shadow_.set_alpha(Sprite::Alpha::transparent);
+            } else {
+                shadow_.set_alpha(Sprite::Alpha::translucent);
+            }
+
             timer_ -= dt;
 
             position_ = position_ + Float(dt) * move_vec_;
@@ -250,6 +260,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             bounce_timer_ = 0;
             state_ = State::landing;
+            shadow_.set_alpha(Sprite::Alpha::translucent);
 
             sprite_.set_position(position_);
             leg_.set_position(position_);
