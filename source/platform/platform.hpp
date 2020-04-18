@@ -168,14 +168,26 @@ public:
     public:
         void poll();
 
+        template <Key ...k>
+        bool all_pressed() const
+        {
+            return (... and states_[int(k)]);
+        }
+
+        template <Key ...k>
+        bool any_pressed() const
+        {
+            return (... or states_[int(k)]);
+        }
+
         template <Key k> bool pressed() const
         {
             return states_[int(k)];
         }
 
-        template <Key k> bool down_transition() const
+        template <Key ...k> bool down_transition() const
         {
-            return states_[int(k)] and not prev_[int(k)];
+            return (... or down_transition_helper<k>());
         }
 
         template <Key k> bool up_transition() const
@@ -184,6 +196,12 @@ public:
         }
 
     private:
+        template <Key k>
+        bool down_transition_helper() const
+        {
+            return states_[int(k)] and not prev_[int(k)];
+        }
+
         Keyboard()
         {
             for (int i = 0; i < int(Key::count); ++i) {

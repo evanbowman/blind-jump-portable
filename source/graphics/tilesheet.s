@@ -1,15 +1,15 @@
 
-@{{BLOCK(bgr_tilesheet)
+@{{BLOCK(tilesheet)
 
 @=======================================================================
 @
-@	bgr_tilesheet, 1344x24@4, 
+@	tilesheet, 1344x24@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 504 tiles Metatiled by 4x3 not compressed
 @	Total size: 512 + 16128 = 16640
 @
-@	Time-stamp: 2020-04-16, 17:14:24
+@	Time-stamp: 2020-04-18, 00:00:59
 @	Exported by Cearn's GBA Image Transmogrifier, v
 @	( http://www.coranac.com/projects/#grit )
 @
@@ -17,8 +17,8 @@
 
 	.section .rodata
 	.align	2
-	.global bgr_tilesheetTiles		@ 16128 bytes
-bgr_tilesheetTiles:
+	.global tilesheetTiles		@ 16128 bytes
+tilesheetTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -585,12 +585,12 @@ bgr_tilesheetTiles:
 	.word 0x00000033,0x00000333,0x00000337,0x00000007,0x00000007,0x00000007,0x00000007,0x00000033
 	.word 0x37000000,0x37000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000003,0x00000033,0x00000033,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
-	.size	bgr_tilesheetTiles, .-bgr_tilesheetTiles
+	.size	tilesheetTiles, .-tilesheetTiles
 
 	.section .rodata
 	.align	2
-	.global bgr_tilesheetPal		@ 512 bytes
-bgr_tilesheetPal:
+	.global tilesheetPal		@ 512 bytes
+tilesheetPal:
 	.hword 0x7C1F,0x3CEA,0x5ABD,0x52CE,0x6AD7,0x5354,0x779E,0x49EB
 	.hword 0x5EFF,0x6253,0x6BBA,0x731B,0x55CE,0x4D4A,0x6A95,0x7FFF
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -626,6 +626,6 @@ bgr_tilesheetPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	bgr_tilesheetPal, .-bgr_tilesheetPal
+	.size	tilesheetPal, .-tilesheetPal
 
-@}}BLOCK(bgr_tilesheet)
+@}}BLOCK(tilesheet)

@@ -547,7 +547,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<DeathFadeState>();
     }
 
-    if (pfrm.keyboard().down_transition<Key::start>()) {
+    if (pfrm.keyboard().down_transition<Key::start, Key::alt_2>()) {
         return state_pool_.create<InventoryState>(true);
     }
 
@@ -704,7 +704,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
         // backdoor into boss level, for debugging purposes.
         if (pfrm.keyboard().pressed<Key::alt_1>() and
             pfrm.keyboard().pressed<Key::alt_2>()) {
-            game.next_level(pfrm, 8);
+            game.next_level(pfrm, 11);
         } else {
             game.next_level(pfrm);
         }
@@ -871,7 +871,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::old_poster_1,
      193,
       [](Platform&, Game&) {
-         static const auto str = "bgr_old_poster_flattened";
+         static const auto str = "old_poster_flattened";
          return state_pool_.create<ImageViewState>(str, ColorConstant::steel_blue);
       },
      []{
@@ -946,7 +946,7 @@ const char* item_description(Item::Type type)
 
 StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::start>()) {
+    if (pfrm.keyboard().down_transition<Key::start, Key::alt_2>()) {
         return state_pool_.create<ActiveState>(true);
     }
 
@@ -1163,7 +1163,7 @@ NotebookState::NotebookState(const char* text) : str_(text), page_(0)
 void NotebookState::enter(Platform& pfrm, Game&)
 {
     pfrm.screen().fade(1.f);
-    pfrm.load_overlay_texture("bgr_overlay_journal");
+    pfrm.load_overlay_texture("overlay_journal");
 
     // This is to eliminate display tearing, see other comments on
     // fill_overlay() calls.
@@ -1219,7 +1219,7 @@ void NotebookState::exit(Platform& pfrm, Game&)
                           // memset, or special BIOS calls (depending on the
                           // platform) to clear out the screen.
     text_.reset();
-    pfrm.load_overlay_texture("bgr_overlay");
+    pfrm.load_overlay_texture("overlay");
 }
 
 
@@ -1285,7 +1285,7 @@ void ImageViewState::exit(Platform& pfrm, Game& game)
     pfrm.fill_overlay(0);
 
     pfrm.screen().fade(1.f);
-    pfrm.load_overlay_texture("bgr_overlay");
+    pfrm.load_overlay_texture("overlay");
 
 }
 

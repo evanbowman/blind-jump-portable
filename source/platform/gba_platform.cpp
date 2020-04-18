@@ -565,12 +565,13 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "graphics/bgr_overlay.h"
-#include "graphics/bgr_overlay_journal.h"
-#include "graphics/bgr_spritesheet.h"
-#include "graphics/bgr_spritesheet_boss0.h"
-#include "graphics/bgr_tilesheet.h"
-#include "graphics/bgr_old_poster_flattened.h"
+#include "graphics/overlay.h"
+#include "graphics/overlay_journal.h"
+#include "graphics/spritesheet.h"
+#include "graphics/spritesheet_boss0.h"
+#include "graphics/tilesheet.h"
+#include "graphics/tilesheet2.h"
+#include "graphics/old_poster_flattened.h"
 
 
 struct TextureData {
@@ -590,17 +591,18 @@ struct TextureData {
 
 
 static const TextureData sprite_textures[] = {
-    TEXTURE_INFO(bgr_spritesheet),
-    TEXTURE_INFO(bgr_spritesheet_boss0)};
+    TEXTURE_INFO(spritesheet),
+    TEXTURE_INFO(spritesheet_boss0)};
 
 
-static const TextureData tile_textures[] = {TEXTURE_INFO(bgr_tilesheet)};
+static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),
+                                            TEXTURE_INFO(tilesheet2)};
 
 
 static const TextureData overlay_textures[] = {
-    TEXTURE_INFO(bgr_overlay),
-    TEXTURE_INFO(bgr_overlay_journal),
-    TEXTURE_INFO(bgr_old_poster_flattened)};
+    TEXTURE_INFO(overlay),
+    TEXTURE_INFO(overlay_journal),
+    TEXTURE_INFO(old_poster_flattened)};
 
 
 static const TextureData* current_spritesheet = &sprite_textures[0];

@@ -3,7 +3,11 @@
 # graphics tools use RGBA.
 
 from PIL import Image
+import os
 
+
+if not os.path.exists('tmp'):
+    os.makedirs('tmp')
 
 
 def get_concat_h(im1, im2):
@@ -60,12 +64,13 @@ def rgb_to_bgr(file_name):
     r, g, b, a = im.split()
     im = Image.merge('RGBA', (b, g, r, a))
 
-    im.save('bgr_' + file_name)
+    im.save('tmp/' + file_name)
 
 
 for name in ['spritesheet.png',
              'spritesheet_boss0.png',
              'tilesheet.png',
+             'tilesheet2.png',
              'overlay.png',
              'overlay_journal.png',
              'old_poster_flattened.png']:

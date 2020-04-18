@@ -31,9 +31,9 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 
     random_seed() = persistent_data_.seed_;
 
-    pfrm.load_sprite_texture("bgr_spritesheet");
-    pfrm.load_tile_texture("bgr_tilesheet");
-    pfrm.load_overlay_texture("bgr_overlay");
+    pfrm.load_sprite_texture("spritesheet");
+    pfrm.load_tile_texture("tilesheet");
+    pfrm.load_overlay_texture("overlay");
 
     state_->enter(pfrm, *this);
 
@@ -235,7 +235,7 @@ static const BossLevel* get_boss_level(Level current_level)
     switch (current_level) {
     case 10: {
         static constexpr const BossLevel ret{boss_level_0,
-                                             "bgr_spritesheet_boss0"};
+                                             "spritesheet_boss0"};
         return &ret;
     }
 
@@ -266,6 +266,14 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         pfrm.speaker().load_music(ambience_music, true);
     }
 
+    if (level() <= 10) {
+        pfrm.load_tile_texture("tilesheet");
+
+    } else if (level() > 10) {
+        pfrm.load_tile_texture("tilesheet2");
+
+    }
+
     auto boss_level = get_boss_level(level());
     if (boss_level) {
         pfrm.speaker().stop_music();
@@ -277,7 +285,7 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         if (is_boss_level(level() - 1)) {
             pfrm.speaker().load_music(ambience_music, true);
         }
-        pfrm.load_sprite_texture("bgr_spritesheet");
+        pfrm.load_sprite_texture("spritesheet");
     }
 
 RETRY:
@@ -585,24 +593,26 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     const int spawn_count =
         std::max(std::min(max_enemies, int(free_spots.size() * density)), 1);
 
-
     struct EnemyInfo {
         int min_level_;
         Function<64, void()> spawn_;
+        int max_level_ = std::numeric_limits<Level>::max();
         int max_allowed_ = 1000;
     } info[] = {
-        {0,
+         {0,
          [&]() {
              spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              if (game.level() > 6) {
                  spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              }
-         }},
+         },
+         10},
         {5, [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); }},
         {6,
          [&]() {
              spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
          },
+         10,
          1},
         {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
         {11,
@@ -614,7 +624,8 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     while (not distribution.full()) {
         auto selected = &info[random_choice<sizeof info / sizeof(EnemyInfo)>()];
 
-        if (selected->min_level_ > std::max(Level(0), game.level())) {
+        if (selected->min_level_ > std::max(Level(0), game.level()) or
+            selected->max_level_ < game.level()) {
             continue;
         }
 

@@ -1,15 +1,15 @@
 
-@{{BLOCK(bgr_overlay)
+@{{BLOCK(overlay)
 
 @=======================================================================
 @
-@	bgr_overlay, 4032x8@4, 
+@	overlay, 4032x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 504 tiles not compressed
 @	Total size: 512 + 16128 = 16640
 @
-@	Time-stamp: 2020-04-16, 17:14:24
+@	Time-stamp: 2020-04-18, 00:01:00
 @	Exported by Cearn's GBA Image Transmogrifier, v
 @	( http://www.coranac.com/projects/#grit )
 @
@@ -17,8 +17,8 @@
 
 	.section .rodata
 	.align	2
-	.global bgr_overlayTiles		@ 16128 bytes
-bgr_overlayTiles:
+	.global overlayTiles		@ 16128 bytes
+overlayTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x44444444,0x44444444,0x44499444,0x44944944,0x44944944,0x44944944,0x44499444,0x44444444
 	.word 0x44444444,0x44444444,0x44499444,0x44494444,0x44494444,0x44494444,0x44494444,0x44444444
@@ -585,12 +585,12 @@ bgr_overlayTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
-	.size	bgr_overlayTiles, .-bgr_overlayTiles
+	.size	overlayTiles, .-overlayTiles
 
 	.section .rodata
 	.align	2
-	.global bgr_overlayPal		@ 512 bytes
-bgr_overlayPal:
+	.global overlayPal		@ 512 bytes
+overlayPal:
 	.hword 0x7C1F,0x55CE,0x2C7D,0x7FE0,0x0800,0x7719,0x2CC2,0x42D9
 	.hword 0x4146,0x737B,0x20AC,0x3D4B,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -626,6 +626,6 @@ bgr_overlayPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	bgr_overlayPal, .-bgr_overlayPal
+	.size	overlayPal, .-overlayPal
 
-@}}BLOCK(bgr_overlay)
+@}}BLOCK(overlay)
