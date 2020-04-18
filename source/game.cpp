@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
+#include "string.hpp"
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -29,8 +30,6 @@ Game::Game(Platform& pfrm) : state_(State::initial())
     if (not inventory().has_item(Item::Type::blaster)) {
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
-
-    Game::next_level(pfrm);
 }
 
 
@@ -239,10 +238,11 @@ bool is_boss_level(Level level)
 }
 
 
-static const ZoneInfo& get_zone_info(Level level)
+const ZoneInfo& zone_info(Level level)
 {
     if (level > 10) {
-        static constexpr const ZoneInfo zone_2{"spritesheet2",
+        static constexpr const ZoneInfo zone_2{"part II: the depths",
+                                               "spritesheet2",
                                                "tilesheet2",
                                                "ambience",
                                                ColorConstant::turquoise_blue,
@@ -250,7 +250,8 @@ static const ZoneInfo& get_zone_info(Level level)
         return zone_2;
 
     } else {
-        static constexpr const ZoneInfo zone_1{"spritesheet",
+        static constexpr const ZoneInfo zone_1{"part I: upper station ruins",
+                                               "spritesheet",
                                                "tilesheet",
                                                "ambience",
                                                ColorConstant::electric_blue,
@@ -262,7 +263,13 @@ static const ZoneInfo& get_zone_info(Level level)
 
 const ZoneInfo& current_zone(Game& game)
 {
-    return get_zone_info(game.level());
+    return zone_info(game.level());
+}
+
+
+bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
+{
+    return strcmp(lhs.title_, rhs.title_) == 0;
 }
 
 

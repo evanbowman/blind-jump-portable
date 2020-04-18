@@ -481,6 +481,12 @@ void TheFirstExplorer::on_death(Platform& pf, Game& game)
 
     const auto off = 50.f;
 
+    for (int i = 0; i < 3; ++i) {
+        game.details().spawn<Item>(sample<32>(position_),
+                                   pf,
+                                   Item::Type::heart);
+    }
+
     big_explosion(pf, game, {position_.x - off, position_.y - off});
     big_explosion(pf, game, {position_.x + off, position_.y + off});
 

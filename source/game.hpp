@@ -150,6 +150,7 @@ bool is_boss_level(Level level);
 
 
 struct ZoneInfo {
+    const char* title_;
     const char* spritesheet_name_;
     const char* tileset_name_;
     const char* music_name_;
@@ -159,4 +160,7 @@ struct ZoneInfo {
 };
 
 
+const ZoneInfo& zone_info(Level level);
 const ZoneInfo& current_zone(Game& game);
+
+bool operator==(const ZoneInfo&, const ZoneInfo&);

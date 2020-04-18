@@ -9,6 +9,23 @@ Item::Item(const Vec2<Float>& pos, Platform&, Type type)
 {
     position_ = pos - Vec2<Float>{8, 0};
     sprite_.set_position(position_);
+    sprite_.set_size(Sprite::Size::w16_h32);
+
+    set_type(type);
+}
+
+
+void Item::on_collision(Platform& pf, Game&, Player&)
+{
+    Entity::kill();
+    pf.sleep(5);
+}
+
+
+void Item::set_type(Type type)
+{
+    type_ = type;
+
     switch (type) {
     case Type::heart:
         sprite_.set_texture_index(TextureMap::heart);
@@ -25,14 +42,6 @@ Item::Item(const Vec2<Float>& pos, Platform&, Type type)
         // TODO: overworld sprite for all other items
         break;
     }
-    sprite_.set_size(Sprite::Size::w16_h32);
-}
-
-
-void Item::on_collision(Platform& pf, Game&, Player&)
-{
-    Entity::kill();
-    pf.sleep(5);
 }
 
 

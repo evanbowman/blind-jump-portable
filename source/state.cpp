@@ -170,6 +170,7 @@ public:
     {
     }
     void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
@@ -177,7 +178,6 @@ private:
     std::optional<Text> score_;
     std::optional<Text> highscore_;
     std::optional<Text> level_;
-    std::optional<Text> uptime_;
     Microseconds counter_ = 0;
     Microseconds counter2_ = 0;
 };
@@ -264,6 +264,20 @@ private:
 };
 
 
+class LevelTitleState : public State {
+public:
+    LevelTitleState(Level next_level) : next_level_(next_level) {}
+
+    void enter(Platform& pfrm, Game& game) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    std::optional<Text> text_;
+    Level next_level_;
+};
+
+
 static void state_deleter(State* s);
 
 static const StatePtr null_state()
@@ -300,7 +314,8 @@ static StatePool<ActiveState,
                  DeathFadeState,
                  InventoryState,
                  NotebookState,
-                 ImageViewState>
+                 ImageViewState,
+                 LevelTitleState>
     state_pool_;
 
 
@@ -412,7 +427,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             notification_status = NotificationStatus::exit;
 
             for (int x = 0; x < 32; ++x) {
-                pfrm.set_overlay_tile(x, 0, 73);
+                pfrm.set_overlay_tile(x, 0, 74);
             }
         }
         break;
@@ -423,7 +438,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             notification_text_timer -= delta;
 
             const auto tile = pfrm.get_overlay_tile(0, 0);
-            if (tile < 73 + 7) {
+            if (tile < 74 + 7) {
                 for (int x = 0; x < 32; ++x) {
                     pfrm.set_overlay_tile(x, 0, tile + 1);
                 }
@@ -690,24 +705,16 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (counter_ > fade_duration) {
         pfrm.screen().fade(1.f);
 
-        const auto s_tiles = calc_screen_tiles(pfrm);
+        Level next_level = game.level() + 1;
 
-        Text text(pfrm, {1, u8(s_tiles.y - 2)});
-
-        pfrm.sleep(10);
-
-        text.append("waypoint ");
-        text.append(game.level() + 1);
-        pfrm.sleep(45);
-
-        // backdoor into boss level, for debugging purposes.
+        // backdoor for debugging purposes.
         if (pfrm.keyboard().pressed<Key::alt_1>() and
             pfrm.keyboard().pressed<Key::alt_2>()) {
-            game.next_level(pfrm, 11);
-        } else {
-            game.next_level(pfrm);
+            next_level = 11;
         }
-        return state_pool_.create<FadeInState>();
+
+        return state_pool_.create<LevelTitleState>(next_level);
+
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::rich_black,
@@ -757,6 +764,15 @@ void DeathContinueState::enter(Platform& pfrm, Game& game)
 }
 
 
+void DeathContinueState::exit(Platform& pfrm, Game& game)
+{
+    text_.reset();
+    score_.reset();
+    highscore_.reset();
+    level_.reset();
+}
+
+
 StatePtr
 DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
@@ -769,6 +785,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
             1.f, ColorConstant::rich_black, current_zone(game).injury_glow_color_);
 
         constexpr auto stats_time = milliseconds(500);
+
         if (counter2_ < stats_time) {
             const bool show_stats = counter2_ + delta > stats_time;
 
@@ -778,8 +795,6 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 score_.emplace(pfrm, Vec2<u8>{1, 8});
                 highscore_.emplace(pfrm, Vec2<u8>{1, 10});
                 level_.emplace(pfrm, Vec2<u8>{1, 12});
-                uptime_.emplace(pfrm, Vec2<u8>{1, 14});
-
 
                 for (auto& score : reversed(game.highscores())) {
                     if (score < game.score()) {
@@ -812,18 +827,32 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
         }
 
-        if (pfrm.keyboard().pressed<Key::action_2>() or
-            pfrm.keyboard().pressed<Key::action_1>()) {
+        if (score_) {
+            if (pfrm.keyboard().pressed<Key::action_1>() or
+                pfrm.keyboard().pressed<Key::action_2>()) {
 
-            game.score() = 0;
-            game.player().revive();
-            game.next_level(pfrm, 0);
-            text_.reset();
-            return state_pool_.create<FadeInState>();
+                game.score() = 0;
+                game.player().revive();
 
-        } else {
-            return null_state();
+                // This is how you would return the player to the beginning of
+                // the last zone. Not sure yet whether I want to allow this
+                // mechanic yet though...
+                //
+                // Level lv = game.level();
+                // const ZoneInfo* zone = &zone_info(lv);
+                // const ZoneInfo* last_zone = &zone_info(lv - 1);
+                // while (*zone == *last_zone and lv > 0) {
+                //     --lv;
+                //     zone = &zone_info(lv);
+                //     last_zone = &zone_info(lv - 1);
+                // }
+                // return state_pool_.create<LevelTitleState>(lv);
+
+                return state_pool_.create<LevelTitleState>(0);
+            }
         }
+        return null_state();
+
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::rich_black,
@@ -1291,6 +1320,44 @@ void ImageViewState::exit(Platform& pfrm, Game& game)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// LevelTitleState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void LevelTitleState::enter(Platform& pfrm, Game& game)
+{
+    pfrm.sleep(15);
+
+    pfrm.screen().fade(1.f);
+
+    const auto s_tiles = calc_screen_tiles(pfrm);
+
+    text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
+
+    auto zone = zone_info(next_level_);
+    auto last_zone = zone_info(next_level_ - 1);
+    if (not (zone == last_zone) or next_level_ == 0) {
+        text_->append(zone.title_);
+        pfrm.sleep(120);
+
+    } else {
+        text_->append("waypoint ");
+        text_->append(game.level() + 1);
+        pfrm.sleep(60);
+
+    }
+
+    game.next_level(pfrm, next_level_);
+}
+
+
+StatePtr LevelTitleState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    return state_pool_.create<FadeInState>();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // IntroCreditsState
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1326,7 +1393,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.sleep(70);
         }
 
-        return state_pool_.create<FadeInState>();
+        return state_pool_.create<LevelTitleState>(0);
 
     } else {
         return null_state();

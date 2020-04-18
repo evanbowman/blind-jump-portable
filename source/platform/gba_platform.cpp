@@ -573,14 +573,7 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "graphics/old_poster_flattened.h"
-#include "graphics/overlay.h"
-#include "graphics/overlay_journal.h"
-#include "graphics/spritesheet.h"
-#include "graphics/spritesheet2.h"
-#include "graphics/spritesheet_boss0.h"
-#include "graphics/tilesheet.h"
-#include "graphics/tilesheet2.h"
+#include "graphics/images.h"
 
 
 struct TextureData {

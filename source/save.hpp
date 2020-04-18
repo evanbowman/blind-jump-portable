@@ -18,7 +18,7 @@ struct PersistentData {
 
     Identity id_ = 0;
     Magic magic_ = magic_val;
-    u32 seed_ = 42;
+    u32 seed_ = 11001;
     Entity::Health player_health_ = 0;
     Level level_ = -1;
     Score score_ = 0;

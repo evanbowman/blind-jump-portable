@@ -109,13 +109,15 @@ static void print_char(Platform& pfrm, char c, const OverlayCoord& coord)
         pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 4);
     } else if (c == ')') {
         pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 5);
+    } else if (c == ':') {
+        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 6);
     } else if (c == '"') {
         pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26);
     } else if (c > 64 and c < 65 + 27) {
         // FIXME: add uppercase letters
         pfrm.set_overlay_tile(coord.x, coord.y, (c - 65) + 39);
     } else {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 6);
+        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 7);
     }
 }
 
@@ -374,8 +376,8 @@ BossHealthBar::BossHealthBar(Platform& pfrm,
                              const OverlayCoord& position)
     : pfrm_(pfrm), position_(position), height_(height)
 {
-    pfrm_.set_overlay_tile(position_.x, position_.y, 81);
-    pfrm_.set_overlay_tile(position_.x, position_.y + height, 82);
+    pfrm_.set_overlay_tile(position_.x, position_.y, 82);
+    pfrm_.set_overlay_tile(position_.x, position_.y + height, 83);
     set_health(0.f);
 }
 
@@ -389,7 +391,7 @@ void BossHealthBar::set_health(Float percentage)
     int current_tile = 0;
 
     while (fractional_pixels >= 8) {
-        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 90);
+        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 91);
         fractional_pixels -= 8;
         ++current_tile;
     }
@@ -397,12 +399,12 @@ void BossHealthBar::set_health(Float percentage)
     if (current_tile < height_ + 1 and fractional_pixels % 8 not_eq 0) {
         pfrm_.set_overlay_tile(position_.x,
                                position_.y + 1 + current_tile,
-                               82 + fractional_pixels % 8);
+                               83 + fractional_pixels % 8);
         ++current_tile;
     }
 
     while (current_tile < height_ + 1) {
-        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 91);
+        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 92);
         ++current_tile;
     }
 }
