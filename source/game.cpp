@@ -11,15 +11,6 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
-// FIXME: Looping music should, perhaps, be the responsibility of the
-// Platform::Speaker class. While I contemplate the best way to implement
-// looping audio within Platform::Speaker (which currently does not have a
-// concept of time), the Game class instead handles looping audio by itself via
-// the existing Game::on_timeout() method.
-
-static const char* ambience_music = "ambience";
-
-
 Game::Game(Platform& pfrm) : state_(State::initial())
 {
     if (auto sd = pfrm.read_save()) {
@@ -31,8 +22,6 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 
     random_seed() = persistent_data_.seed_;
 
-    pfrm.load_sprite_texture("spritesheet");
-    pfrm.load_tile_texture("tilesheet");
     pfrm.load_overlay_texture("overlay");
 
     state_->enter(pfrm, *this);
@@ -250,6 +239,33 @@ bool is_boss_level(Level level)
 }
 
 
+static const ZoneInfo& get_zone_info(Level level)
+{
+    if (level > 10) {
+        static constexpr const ZoneInfo zone_2{"spritesheet2",
+                                               "tilesheet2",
+                                               "ambience",
+                                               ColorConstant::turquoise_blue,
+                                               ColorConstant::safety_orange};
+        return zone_2;
+
+    } else {
+        static constexpr const ZoneInfo zone_1{"spritesheet",
+                                               "tilesheet",
+                                               "ambience",
+                                               ColorConstant::electric_blue,
+                                               ColorConstant::aerospace_orange};
+        return zone_1;
+    }
+}
+
+
+const ZoneInfo& current_zone(Game& game)
+{
+    return get_zone_info(game.level());
+}
+
+
 COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
     persistent_data_.seed_ = random_seed();
@@ -262,15 +278,12 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     }
 
     if (level() == 0) {
-        pfrm.speaker().load_music(ambience_music, true);
+        pfrm.speaker().load_music(current_zone(*this).music_name_, true);
     }
 
-    if (level() <= 10) {
-        pfrm.load_tile_texture("tilesheet");
 
-    } else if (level() > 10) {
-        pfrm.load_tile_texture("tilesheet2");
-    }
+    pfrm.load_tile_texture(current_zone(*this).tileset_name_);
+
 
     auto boss_level = get_boss_level(level());
     if (boss_level) {
@@ -281,9 +294,10 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         // Boss defeated! We can change the music back, but we may also want to
         // stop the current music when the enemy is destroyed.
         if (is_boss_level(level() - 1)) {
-            pfrm.speaker().load_music(ambience_music, true);
+            pfrm.speaker().load_music(current_zone(*this).music_name_, true);
         }
-        pfrm.load_sprite_texture("spritesheet");
+
+        pfrm.load_sprite_texture(current_zone(*this).spritesheet_name_);
     }
 
 RETRY:

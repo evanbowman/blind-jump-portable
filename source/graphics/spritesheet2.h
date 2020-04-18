@@ -1,9 +1,9 @@
 
-//{{BLOCK(spritesheet)
+//{{BLOCK(spritesheet2)
 
 //======================================================================
 //
-//	spritesheet, 2016x32@4, 
+//	spritesheet2, 2016x32@4, 
 //	Transparent color : FF,00,FF
 //	+ palette 256 entries, not compressed
 //	+ 1008 tiles Metatiled by 2x4 not compressed
@@ -15,15 +15,15 @@
 //
 //======================================================================
 
-#ifndef GRIT_SPRITESHEET_H
-#define GRIT_SPRITESHEET_H
+#ifndef GRIT_SPRITESHEET2_H
+#define GRIT_SPRITESHEET2_H
 
-#define spritesheetTilesLen 32256
-extern const unsigned int spritesheetTiles[8064];
+#define spritesheet2TilesLen 32256
+extern const unsigned int spritesheet2Tiles[8064];
 
-#define spritesheetPalLen 512
-extern const unsigned short spritesheetPal[256];
+#define spritesheet2PalLen 512
+extern const unsigned short spritesheet2Pal[256];
 
-#endif // GRIT_SPRITESHEET_H
+#endif // GRIT_SPRITESHEET2_H
 
-//}}BLOCK(spritesheet)
+//}}BLOCK(spritesheet2)

@@ -226,8 +226,10 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
 {
     debit_health(1);
 
-    sprite_.set_mix({ColorConstant::aerospace_orange, 255});
-    head_.set_mix({ColorConstant::aerospace_orange, 255});
+    const auto c = current_zone(game).injury_glow_color_;
+
+    sprite_.set_mix({c, 255});
+    head_.set_mix({c, 255});
 
     if (state_ == State::sleep) {
         timer_ = 0;

@@ -94,7 +94,7 @@ private:
     template <u8 StepSize>
     void update_animation(Microseconds dt, u8 max_index, Microseconds count);
 
-    void injured(Platform& pf, Health damage);
+    void injured(Platform& pf, Game& game, Health damage);
 
     u32 frame_;
     ResourceLoc frame_base_;

@@ -74,6 +74,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/tilesheet.s
     ${SOURCE_DIR}/graphics/tilesheet2.s
     ${SOURCE_DIR}/graphics/spritesheet.s
+    ${SOURCE_DIR}/graphics/spritesheet2.s
     ${SOURCE_DIR}/graphics/overlay_journal.s
     ${SOURCE_DIR}/graphics/spritesheet_boss0.s
     ${SOURCE_DIR}/graphics/old_poster_flattened.s

@@ -11,10 +11,12 @@
 enum class ColorConstant {
     null,
     electric_blue,    // #00FFFF
+    turquoise_blue,   // #00FFDD
     picton_blue,      // #4DACFF
     steel_blue,       // #345680
     spanish_crimson,  // #E81858
     aerospace_orange, // #FD5200
+    safety_orange,    // #FC7500
     rich_black,       // #000010
     stil_de_grain,    // #F9DC5C
     count

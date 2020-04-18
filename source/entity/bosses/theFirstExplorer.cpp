@@ -462,8 +462,11 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
     }
 
     if (state_ not_eq State::big_laser_shooting) {
-        sprite_.set_mix({ColorConstant::aerospace_orange, 255});
-        head_.set_mix({ColorConstant::aerospace_orange, 255});
+
+        const auto c = current_zone(game).injury_glow_color_;
+
+        sprite_.set_mix({c, 255});
+        head_.set_mix({c, 255});
     }
 
     show_boss_health(pf, game, Float(get_health()) / initial_health);

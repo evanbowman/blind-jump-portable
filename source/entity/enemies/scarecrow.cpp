@@ -299,8 +299,10 @@ void Scarecrow::on_collision(Platform& pf, Game& game, Laser&)
 
     hit_ = true;
 
-    sprite_.set_mix({ColorConstant::aerospace_orange, 255});
-    leg_.set_mix({ColorConstant::aerospace_orange, 255});
+    const auto c = current_zone(game).injury_glow_color_;
+
+    sprite_.set_mix({c, 255});
+    leg_.set_mix({c, 255});
 
     if (not alive()) {
         game.score() += 15;

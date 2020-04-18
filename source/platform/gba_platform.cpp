@@ -293,6 +293,10 @@ const Color& real_color(ColorConstant k)
         static const Color el_blue(0, 31, 31);
         return el_blue;
 
+    case ColorConstant::turquoise_blue:
+        static const Color turquoise_blue(0, 31, 27);
+        return turquoise_blue;
+
     case ColorConstant::picton_blue:
         static const Color picton_blue(9, 20, 31);
         return picton_blue;
@@ -300,6 +304,10 @@ const Color& real_color(ColorConstant k)
     case ColorConstant::aerospace_orange:
         static const Color aerospace_orange(31, 10, 0);
         return aerospace_orange;
+
+    case ColorConstant::safety_orange:
+        static const Color safety_orange(31, 14, 0);
+        return safety_orange;
 
     case ColorConstant::stil_de_grain:
         static const Color stil_de_grain(30, 27, 11);
@@ -569,6 +577,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/overlay.h"
 #include "graphics/overlay_journal.h"
 #include "graphics/spritesheet.h"
+#include "graphics/spritesheet2.h"
 #include "graphics/spritesheet_boss0.h"
 #include "graphics/tilesheet.h"
 #include "graphics/tilesheet2.h"
@@ -591,6 +600,7 @@ struct TextureData {
 
 
 static const TextureData sprite_textures[] = {TEXTURE_INFO(spritesheet),
+                                              TEXTURE_INFO(spritesheet2),
                                               TEXTURE_INFO(spritesheet_boss0)};
 
 

@@ -41,12 +41,12 @@ void Player::revive()
 }
 
 
-void Player::injured(Platform& pf, Health damage)
+void Player::injured(Platform& pf, Game& game, Health damage)
 {
     if (not Player::is_invulnerable()) {
         pf.sleep(4);
         debit_health(damage);
-        sprite_.set_mix({ColorConstant::aerospace_orange, 255});
+        sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
         blaster_.get_sprite().set_mix(sprite_.get_mix());
         invulnerability_timer_ = milliseconds(700);
     }
@@ -59,36 +59,35 @@ void Player::on_collision(Platform& pf, Game& game, OrbShot&)
         game.camera().shake();
     }
 
-    Player::injured(pf, Health(1));
+    Player::injured(pf, game, Health(1));
 }
 
 void Player::on_collision(Platform& pf, Game& game, FirstExplorerBigLaser&)
 {
     medium_explosion(pf, game, position_);
-    Player::injured(pf, Health(2));
+    Player::injured(pf, game, Health(2));
 }
 
 void Player::on_collision(Platform& pf, Game& game, TheFirstExplorer&)
 {
-    Player::injured(pf, Health(1));
+    Player::injured(pf, game, Health(1));
 }
 
 void Player::on_collision(Platform& pf, Game& game, SnakeHead&)
 {
-    Player::injured(pf, Health(3));
+    Player::injured(pf, game, Health(3));
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Enemy&)
 {
-    Player::injured(pf, Health(1));
+    Player::injured(pf, game, Health(1));
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Drone& drone)
 {
-    Player::injured(
-        pf, drone.state() == Drone::State::rush ? Health(2) : Health(1));
+    Player::injured(pf, game, drone.state() == Drone::State::rush ? Health(2) : Health(1));
 }
 
 
@@ -101,7 +100,7 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
         break;
 
     case Item::Type::coin:
-        sprite_.set_mix({ColorConstant::electric_blue, 255});
+        sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
         game.score() += 4;
         break;
 

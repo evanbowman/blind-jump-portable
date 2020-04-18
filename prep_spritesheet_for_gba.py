@@ -69,6 +69,7 @@ def rgb_to_bgr(file_name):
 
 for name in ['spritesheet.png',
              'spritesheet_boss0.png',
+             'spritesheet2.png',
              'tilesheet.png',
              'tilesheet2.png',
              'overlay.png',

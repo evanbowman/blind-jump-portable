@@ -581,7 +581,7 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = milliseconds(800);
     if (counter_ > fade_duration) {
-        pfrm.screen().fade(1.f, ColorConstant::electric_blue);
+        pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
         pfrm.sleep(2);
         game.player().set_visible(true);
         return state_pool_.create<WarpInState>();
@@ -613,11 +613,11 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
     constexpr auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
         shook_ = false;
-        pfrm.screen().fade(0.f, ColorConstant::electric_blue);
+        pfrm.screen().fade(0.f, current_zone(game).energy_glow_color_);
         return state_pool_.create<ActiveState>(true);
     } else {
         pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_),
-                           ColorConstant::electric_blue);
+                           current_zone(game).energy_glow_color_);
         return null_state();
     }
 }
@@ -663,11 +663,11 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
-        pfrm.screen().fade(1.f, ColorConstant::electric_blue);
+        pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
         return state_pool_.create<FadeOutState>();
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
-                           ColorConstant::electric_blue);
+                           current_zone(game).energy_glow_color_);
         return null_state();
     }
 }
@@ -711,7 +711,8 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::rich_black,
-                           ColorConstant::electric_blue);
+                           current_zone(game).energy_glow_color_);
+
         return null_state();
     }
 }
@@ -733,7 +734,7 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<DeathContinueState>();
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
-                           ColorConstant::aerospace_orange);
+                           current_zone(game).injury_glow_color_);
         return null_state();
     }
 }
@@ -751,6 +752,7 @@ void DeathContinueState::enter(Platform& pfrm, Game& game)
 
     game.player().set_visible(false);
 
+    enemy_lethargy_timer = 0;
     game.inventory().remove_non_persistent();
 }
 
@@ -764,7 +766,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (counter_ > fade_duration) {
         counter_ -= delta;
         pfrm.screen().fade(
-            1.f, ColorConstant::rich_black, ColorConstant::aerospace_orange);
+            1.f, ColorConstant::rich_black, current_zone(game).injury_glow_color_);
 
         constexpr auto stats_time = milliseconds(500);
         if (counter2_ < stats_time) {
@@ -825,7 +827,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::rich_black,
-                           ColorConstant::aerospace_orange);
+                           current_zone(game).injury_glow_color_);
         return null_state();
     }
 }
