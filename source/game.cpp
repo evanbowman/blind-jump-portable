@@ -241,7 +241,8 @@ bool is_boss_level(Level level)
 const ZoneInfo& zone_info(Level level)
 {
     if (level > 10) {
-        static constexpr const ZoneInfo zone_2{"part II: the depths",
+        static constexpr const ZoneInfo zone_2{"part II:",
+                                               "the depths",
                                                "spritesheet2",
                                                "tilesheet2",
                                                "ambience",
@@ -250,7 +251,8 @@ const ZoneInfo& zone_info(Level level)
         return zone_2;
 
     } else {
-        static constexpr const ZoneInfo zone_1{"part I: upper station ruins",
+        static constexpr const ZoneInfo zone_1{"part I:",
+                                               "outer station ruins",
                                                "spritesheet",
                                                "tilesheet",
                                                "ambience",
@@ -269,7 +271,7 @@ const ZoneInfo& current_zone(Game& game)
 
 bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
 {
-    return strcmp(lhs.title_, rhs.title_) == 0;
+    return strcmp(lhs.title_line_2, rhs.title_line_2) == 0;
 }
 
 

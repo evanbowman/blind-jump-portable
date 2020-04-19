@@ -275,7 +275,7 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    std::optional<Text> text_;
+    std::optional<Text> text_[2];
     Level next_level_;
 };
 
@@ -1363,19 +1363,29 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
     auto last_zone = zone_info(next_level_ - 1);
     if (not(zone == last_zone) or next_level_ == 0) {
 
-        text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y * 0.35f)});
+        auto pos = OverlayCoord{1, u8(s_tiles.y * 0.3f)};
+        text_[0].emplace(pfrm, pos);
 
-        const auto margin = centered_text_margins(pfrm, str_len(zone.title_));
-        left_text_margin(*text_, std::max(0, int{margin} - 1));
+        pos.y += 2;
 
-        text_->append(zone.title_);
+        text_[1].emplace(pfrm, pos);
+
+        const auto margin = centered_text_margins(pfrm, str_len(zone.title_line_1));
+        left_text_margin(*text_[0], std::max(0, int{margin} - 1));
+
+        text_[0]->append(zone.title_line_1);
+
+        const auto margin2 = centered_text_margins(pfrm, str_len(zone.title_line_2));
+        left_text_margin(*text_[1], std::max(0, int{margin2} - 1));
+
+        text_[1]->append(zone.title_line_2);
 
         pfrm.sleep(120);
 
     } else {
-        text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
-        text_->append("waypoint ");
-        text_->append(next_level_);
+        text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
+        text_[0]->append("waypoint ");
+        text_[0]->append(next_level_);
         pfrm.sleep(60);
     }
 

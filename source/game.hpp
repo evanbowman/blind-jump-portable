@@ -150,7 +150,8 @@ bool is_boss_level(Level level);
 
 
 struct ZoneInfo {
-    const char* title_;
+    const char* title_line_1;
+    const char* title_line_2;
     const char* spritesheet_name_;
     const char* tileset_name_;
     const char* music_name_;
