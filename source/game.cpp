@@ -789,7 +789,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
         }
         const auto target = world_coord(*farthest);
-        transporter_.set_position({target.x, target.y + 16});
+        transporter_.set_position(sample<3>({target.x, target.y + 16}));
         free_spots.erase(farthest);
     } else {
         return false;

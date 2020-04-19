@@ -21,21 +21,24 @@ inline int random_choice(u32 n)
 }
 
 
+template <u32 offset> static Float sample(Float n)
+{
+    if (random_choice<2>()) {
+        return n + Float(random_choice<offset>());
+
+    } else {
+        return n - Float(random_choice<offset>());
+
+    }
+}
+
+
 template <u32 offset> static Vec2<Float> sample(const Vec2<Float>& position)
 {
     auto result = position;
 
-    if (random_choice<2>()) {
-        result.x += Float(random_choice<offset>());
-    } else {
-        result.x -= Float(random_choice<offset>());
-    }
-
-    if (random_choice<2>()) {
-        result.y += Float(random_choice<offset>());
-    } else {
-        result.y -= Float(random_choice<offset>());
-    }
+    result.x = sample<offset>(result.x);
+    result.y = sample<offset>(result.y);
 
     return result;
 }
