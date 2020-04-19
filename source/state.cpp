@@ -264,9 +264,11 @@ private:
 };
 
 
-class LevelTitleState : public State {
+class NewLevelState : public State {
 public:
-    LevelTitleState(Level next_level) : next_level_(next_level) {}
+    NewLevelState(Level next_level) : next_level_(next_level)
+    {
+    }
 
     void enter(Platform& pfrm, Game& game) override;
 
@@ -275,6 +277,31 @@ public:
 private:
     std::optional<Text> text_;
     Level next_level_;
+};
+
+
+// This is a hidden game state intended for debugging. The user can enter
+// various numeric codes, which trigger state changes within the game
+// (e.g. jumping to a boss fight/level, spawing specific enemies, setting the
+// random seed, etc.)
+class CommandCodeState : public State {
+public:
+    void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+
+    void handle_command_code(Platform& pfrm, Game& game);
+
+    StringBuffer<10> input_;
+    std::optional<Text> input_text_;
+    std::optional<Border> entry_box_;
+    std::optional<Border> selector_;
+    Microseconds selector_timer_ = 0;
+    bool selector_shaded_ = false;
+    u8 selector_index_ = 0;
 };
 
 
@@ -315,7 +342,7 @@ static StatePool<ActiveState,
                  InventoryState,
                  NotebookState,
                  ImageViewState,
-                 LevelTitleState>
+                 NewLevelState>
     state_pool_;
 
 
@@ -708,12 +735,11 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
         Level next_level = game.level() + 1;
 
         // backdoor for debugging purposes.
-        if (pfrm.keyboard().pressed<Key::alt_1>() and
-            pfrm.keyboard().pressed<Key::alt_2>()) {
-            next_level = 11;
+        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
+            return state_pool_.create<CommandCodeState>();
         }
 
-        return state_pool_.create<LevelTitleState>(next_level);
+        return state_pool_.create<NewLevelState>(next_level);
 
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
@@ -781,8 +807,9 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
     constexpr auto fade_duration = seconds(1);
     if (counter_ > fade_duration) {
         counter_ -= delta;
-        pfrm.screen().fade(
-            1.f, ColorConstant::rich_black, current_zone(game).injury_glow_color_);
+        pfrm.screen().fade(1.f,
+                           ColorConstant::rich_black,
+                           current_zone(game).injury_glow_color_);
 
         constexpr auto stats_time = milliseconds(500);
 
@@ -846,9 +873,9 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 //     zone = &zone_info(lv);
                 //     last_zone = &zone_info(lv - 1);
                 // }
-                // return state_pool_.create<LevelTitleState>(lv);
+                // return state_pool_.create<NewLevelState>(lv);
 
-                return state_pool_.create<LevelTitleState>(0);
+                return state_pool_.create<NewLevelState>(Level{0});
             }
         }
         return null_state();
@@ -1320,11 +1347,11 @@ void ImageViewState::exit(Platform& pfrm, Game& game)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// LevelTitleState
+// NewLevelState
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void LevelTitleState::enter(Platform& pfrm, Game& game)
+void NewLevelState::enter(Platform& pfrm, Game& game)
 {
     pfrm.sleep(15);
 
@@ -1332,26 +1359,31 @@ void LevelTitleState::enter(Platform& pfrm, Game& game)
 
     const auto s_tiles = calc_screen_tiles(pfrm);
 
-    text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
-
     auto zone = zone_info(next_level_);
     auto last_zone = zone_info(next_level_ - 1);
-    if (not (zone == last_zone) or next_level_ == 0) {
+    if (not(zone == last_zone) or next_level_ == 0) {
+
+        text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y * 0.35f)});
+
+        const auto margin = centered_text_margins(pfrm, str_len(zone.title_));
+        left_text_margin(*text_, std::max(0, int{margin} - 1));
+
         text_->append(zone.title_);
+
         pfrm.sleep(120);
 
     } else {
+        text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
         text_->append("waypoint ");
         text_->append(game.level() + 1);
         pfrm.sleep(60);
-
     }
 
     game.next_level(pfrm, next_level_);
 }
 
 
-StatePtr LevelTitleState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     return state_pool_.create<FadeInState>();
 }
@@ -1393,7 +1425,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.sleep(70);
         }
 
-        return state_pool_.create<LevelTitleState>(0);
+        return state_pool_.create<NewLevelState>(Level{0});
 
     } else {
         return null_state();
@@ -1404,4 +1436,121 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 StatePtr State::initial()
 {
     return state_pool_.create<IntroCreditsState>();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// CommandCodeState
+////////////////////////////////////////////////////////////////////////////////
+
+
+StatePtr
+CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    if (pfrm.keyboard().pressed<Key::action_2>()) {
+        return state_pool_.create<NewLevelState>(game.level() + 1);
+    }
+
+    auto update_selector = [&] {
+        selector_timer_ += delta;
+        if (selector_timer_ > milliseconds(75)) {
+            selector_timer_ = 0;
+
+            auto screen_tiles = calc_screen_tiles(pfrm);
+
+            const auto margin = centered_text_margins(pfrm, 20) - 1;
+
+            const OverlayCoord selector_pos{u8(margin + selector_index_ * 2),
+                                            u8(screen_tiles.y - 4)};
+
+            if (selector_shaded_) {
+                selector_.emplace(pfrm, OverlayCoord{3, 3}, selector_pos, false, 8);
+                selector_shaded_ = false;
+            } else {
+                selector_.emplace(
+                                  pfrm, OverlayCoord{3, 3}, selector_pos, false, 16);
+                selector_shaded_ = true;
+            }
+        }};
+
+    update_selector();
+
+    if (pfrm.keyboard().down_transition<Key::left>()) {
+        if (selector_index_ > 0) {
+            selector_index_ -= 1;
+        } else {
+            selector_index_ = 9;
+        }
+
+    } else if (pfrm.keyboard().down_transition<Key::right>()) {
+        if (selector_index_ < 9) {
+            selector_index_ += 1;
+        } else {
+            selector_index_ = 0;
+        }
+
+    } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
+        input_.push_back("0123456789"[selector_index_]);
+
+        auto screen_tiles = calc_screen_tiles(pfrm);
+
+        input_text_.emplace(pfrm, OverlayCoord{u8(centered_text_margins(pfrm, 10)),
+                                                   u8(screen_tiles.y / 2 - 2)});
+
+        input_text_->append(input_.c_str());
+
+        if (input_.full()) {
+
+            // Why am I even bothering with the way that the cheat system's UI
+            // will look!? No one will ever even see it... but I'll know how
+            // good/bad it looks, and I guess that's a reason...
+            while (not selector_shaded_) {
+                update_selector();
+            }
+
+            pfrm.sleep(60);
+
+            input_text_.reset();
+
+            handle_command_code(pfrm, game);
+
+            input_.clear();
+        }
+    }
+
+    return null_state();
+}
+
+
+void CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
+{
+    if (input_ == "0000000000") {
+        // TODO
+    } // etc...
+}
+
+
+void CommandCodeState::enter(Platform& pfrm, Game& game)
+{
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    const auto margin = centered_text_margins(pfrm, 20) - 1;
+
+    u8 write_xpos = margin + 1;
+    for (int i = 1; i < 11; ++i, write_xpos += 2) {
+        pfrm.set_overlay_tile(write_xpos, screen_tiles.y - 3, i);
+    }
+
+    entry_box_.emplace(pfrm,
+                       OverlayCoord{12, 3},
+                       OverlayCoord{u8(centered_text_margins(pfrm, 12)),
+                                    u8(screen_tiles.y / 2 - 3)},
+                       false,
+                       16);
+}
+
+
+void CommandCodeState::exit(Platform& pfrm, Game& game)
+{
+    pfrm.fill_overlay(0);
 }

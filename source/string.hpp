@@ -2,6 +2,7 @@
 
 
 #include "number/numeric.hpp"
+#include "memory/buffer.hpp"
 
 
 // For embedded systems, we cannot pull in all of libc, and we do not want to
@@ -56,3 +57,51 @@ inline int strcmp(const char* p1, const char* p2)
 
     return c1 - c2;
 }
+
+
+// A not great, but satisfactory implementation of a string class.
+template <u32 Capacity>
+class StringBuffer {
+public:
+
+    StringBuffer()
+    {
+        mem_.push_back('\0');
+    }
+
+    void push_back(char c)
+    {
+        if (not mem_.full()) {
+            mem_[mem_.size() - 1] = c;
+            mem_.push_back('\0');
+        }
+    }
+
+    bool operator==(const char* str)
+    {
+        if (str_len(str) not_eq str_len(this->c_str())) {
+            return false;
+        }
+
+        return strcmp(str, this->c_str()) == 0;
+    }
+
+    bool full() const
+    {
+        return mem_.full();
+    }
+
+    void clear()
+    {
+        mem_.clear();
+        mem_.push_back('\0');
+    }
+
+    const char* c_str() const
+    {
+        return mem_.data();
+    }
+
+private:
+    Buffer<char, Capacity + 1> mem_;
+};

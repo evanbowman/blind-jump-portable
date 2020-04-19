@@ -1,11 +1,11 @@
 #include "game.hpp"
 #include "function.hpp"
 #include "number/random.hpp"
+#include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
-#include "string.hpp"
 
 
 bool within_view_frustum(const Platform::Screen& screen,

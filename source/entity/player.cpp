@@ -87,7 +87,8 @@ void Player::on_collision(Platform& pf, Game& game, Enemy&)
 
 void Player::on_collision(Platform& pf, Game& game, Drone& drone)
 {
-    Player::injured(pf, game, drone.state() == Drone::State::rush ? Health(2) : Health(1));
+    Player::injured(
+        pf, game, drone.state() == Drone::State::rush ? Health(2) : Health(1));
 }
 
 

@@ -126,6 +126,10 @@ public:
         return end_ - begin_;
     }
 
+    const T* data() const
+    {
+        return reinterpret_cast<const T*>(mem_.data());
+    }
 
     bool empty() const
     {
