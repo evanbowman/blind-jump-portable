@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "number/numeric.hpp"
 #include "memory/buffer.hpp"
+#include "number/numeric.hpp"
 
 
 // For embedded systems, we cannot pull in all of libc, and we do not want to
@@ -60,10 +60,8 @@ inline int strcmp(const char* p1, const char* p2)
 
 
 // A not great, but satisfactory implementation of a string class.
-template <u32 Capacity>
-class StringBuffer {
+template <u32 Capacity> class StringBuffer {
 public:
-
     StringBuffer()
     {
         mem_.push_back('\0');

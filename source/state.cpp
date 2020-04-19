@@ -292,8 +292,7 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-
-    void handle_command_code(Platform& pfrm, Game& game);
+    bool handle_command_code(Platform& pfrm, Game& game);
 
     StringBuffer<10> input_;
     std::optional<Text> input_text_;
@@ -302,6 +301,7 @@ private:
     Microseconds selector_timer_ = 0;
     bool selector_shaded_ = false;
     u8 selector_index_ = 0;
+    Level next_level_;
 };
 
 
@@ -1448,7 +1448,7 @@ StatePtr
 CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     if (pfrm.keyboard().pressed<Key::action_2>()) {
-        return state_pool_.create<NewLevelState>(game.level() + 1);
+        return state_pool_.create<NewLevelState>(next_level_);
     }
 
     auto update_selector = [&] {
@@ -1464,14 +1464,16 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
                                             u8(screen_tiles.y - 4)};
 
             if (selector_shaded_) {
-                selector_.emplace(pfrm, OverlayCoord{3, 3}, selector_pos, false, 8);
+                selector_.emplace(
+                    pfrm, OverlayCoord{3, 3}, selector_pos, false, 8);
                 selector_shaded_ = false;
             } else {
                 selector_.emplace(
-                                  pfrm, OverlayCoord{3, 3}, selector_pos, false, 16);
+                    pfrm, OverlayCoord{3, 3}, selector_pos, false, 16);
                 selector_shaded_ = true;
             }
-        }};
+        }
+    };
 
     update_selector();
 
@@ -1494,8 +1496,9 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         auto screen_tiles = calc_screen_tiles(pfrm);
 
-        input_text_.emplace(pfrm, OverlayCoord{u8(centered_text_margins(pfrm, 10)),
-                                                   u8(screen_tiles.y / 2 - 2)});
+        input_text_.emplace(pfrm,
+                            OverlayCoord{u8(centered_text_margins(pfrm, 10)),
+                                         u8(screen_tiles.y / 2 - 2)});
 
         input_text_->append(input_.c_str());
 
@@ -1510,9 +1513,18 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             pfrm.sleep(60);
 
-            input_text_.reset();
+            input_text_->erase();
 
-            handle_command_code(pfrm, game);
+            if (handle_command_code(pfrm, game)) {
+                input_text_->append(" ACCEPTED");
+
+            } else {
+                input_text_->append(" REJECTED");
+            }
+
+            pfrm.sleep(60);
+
+            input_text_.reset();
 
             input_.clear();
         }
@@ -1522,11 +1534,64 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
-void CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
+bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
 {
-    if (input_ == "0000000000") {
-        // TODO
-    } // etc...
+    // The command interface interprets the leading three digits as a decimal
+    // opcode. Each operation will parse the rest of the trailing digits
+    // uniquely, if at all.
+    const char* input_str = input_.c_str();
+
+    auto to_num = [](char c) { return int{c} - 48; };
+
+    auto opcode = to_num(input_str[0]) * 100 + to_num(input_str[1]) * 10 +
+                  to_num(input_str[2]);
+
+    auto single_parameter = [&]() {
+        return to_num(input_str[3]) * 1000000 + to_num(input_str[4]) * 100000 +
+               to_num(input_str[5]) * 10000 + to_num(input_str[6]) * 1000 +
+               to_num(input_str[7]) * 100 + to_num(input_str[8]) * 10 +
+               to_num(input_str[9]);
+    };
+
+    switch (opcode) {
+    case 222: // Jump to next zone
+        for (Level level = next_level_; level < 1000; ++level) {
+            auto current_zone = zone_info(level);
+            auto next_zone = zone_info(level + 1);
+
+            if (not(current_zone == next_zone)) {
+                next_level_ = level + 1;
+                return true;
+            }
+        }
+        return false;
+
+    case 999: // Jump to the next boss
+        for (Level level = next_level_; level < 1000; ++level) {
+            if (is_boss_level(level)) {
+                next_level_ = level;
+                return true;
+            }
+        }
+        return false;
+
+    case 100: // Add player health
+        game.player().add_health(single_parameter());
+        return true;
+
+    case 200: { // Get item
+        const auto item = single_parameter();
+        if (item >= static_cast<int>(Item::Type::count) or
+            item <= static_cast<int>(Item::Type::coin)) {
+            return false;
+        }
+        game.inventory().push_item(pfrm, game, static_cast<Item::Type>(item));
+        return true;
+    }
+
+    default:
+        return false;
+    }
 }
 
 
@@ -1547,6 +1612,8 @@ void CommandCodeState::enter(Platform& pfrm, Game& game)
                                     u8(screen_tiles.y / 2 - 3)},
                        false,
                        16);
+
+    next_level_ = game.level() + 1;
 }
 
 
