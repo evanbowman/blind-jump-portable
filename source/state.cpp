@@ -1575,8 +1575,15 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
         }
         return false;
 
-    case 100: // Add player health
-        game.player().add_health(single_parameter());
+    case 100: // Add player health. The main reason that this command doesn't
+              // accept a parameter, is that someone could accidentally overflow
+              // the health variable and cause bugs.
+        game.player().add_health(100);
+        return true;
+
+    case 105: // Maybe you want to add some health, but not affect the gameplay
+              // too much.
+        game.player().add_health(5);
         return true;
 
     case 200: { // Get item
