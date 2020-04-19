@@ -1370,12 +1370,14 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
 
         text_[1].emplace(pfrm, pos);
 
-        const auto margin = centered_text_margins(pfrm, str_len(zone.title_line_1));
+        const auto margin =
+            centered_text_margins(pfrm, str_len(zone.title_line_1));
         left_text_margin(*text_[0], std::max(0, int{margin} - 1));
 
         text_[0]->append(zone.title_line_1);
 
-        const auto margin2 = centered_text_margins(pfrm, str_len(zone.title_line_2));
+        const auto margin2 =
+            centered_text_margins(pfrm, str_len(zone.title_line_2));
         left_text_margin(*text_[1], std::max(0, int{margin2} - 1));
 
         text_[1]->append(zone.title_line_2);
@@ -1457,10 +1459,6 @@ StatePtr State::initial()
 StatePtr
 CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().pressed<Key::action_2>()) {
-        return state_pool_.create<NewLevelState>(next_level_);
-    }
-
     auto update_selector = [&] {
         selector_timer_ += delta;
         if (selector_timer_ > milliseconds(75)) {
@@ -1538,6 +1536,15 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             input_.clear();
         }
+
+    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        if (input_.empty()) {
+            return state_pool_.create<NewLevelState>(next_level_);
+
+        } else {
+            input_.pop_back();
+            input_text_->assign(input_.c_str());
+        }
     }
 
     return null_state();
@@ -1605,6 +1612,19 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
         game.inventory().push_item(pfrm, game, static_cast<Item::Type>(item));
         return true;
     }
+
+    case 300: // Get all items
+        for (int i = static_cast<int>(Item::Type::coin) + 1;
+             i < static_cast<int>(Item::Type::count);
+             ++i) {
+
+            const auto item = static_cast<Item::Type>(i);
+
+            if (not game.inventory().has_item(item)) {
+                game.inventory().push_item(pfrm, game, item);
+            }
+        }
+        return true;
 
     default:
         return false;

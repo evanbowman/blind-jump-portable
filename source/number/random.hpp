@@ -28,7 +28,6 @@ template <u32 offset> static Float sample(Float n)
 
     } else {
         return n - Float(random_choice<offset>());
-
     }
 }
 

@@ -75,6 +75,13 @@ public:
         }
     }
 
+    void pop_back()
+    {
+        mem_.pop_back();
+        mem_.pop_back();
+        mem_.push_back('\0');
+    }
+
     bool operator==(const char* str)
     {
         if (str_len(str) not_eq str_len(this->c_str())) {
@@ -87,6 +94,11 @@ public:
     bool full() const
     {
         return mem_.full();
+    }
+
+    bool empty() const
+    {
+        return mem_.size() == 1;
     }
 
     void clear()
