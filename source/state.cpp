@@ -1375,7 +1375,7 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
     } else {
         text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
         text_->append("waypoint ");
-        text_->append(game.level() + 1);
+        text_->append(next_level_);
         pfrm.sleep(60);
     }
 
