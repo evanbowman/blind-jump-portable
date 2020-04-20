@@ -510,23 +510,8 @@ void Platform::Screen::clear()
 
 
 static const char* music_track_name;
-static Microseconds music_track_remaining;
+static size_t music_track_remaining;
 static bool music_track_loop;
-
-
-static void update_music()
-{
-    const auto dt = fixed_step;
-    music_track_remaining -= dt;
-
-    if (UNLIKELY(music_track_remaining <= 0)) {
-        if (music_track_name and music_track_loop) {
-            ::platform->speaker().load_music(music_track_name, true);
-        } else {
-            ::platform->speaker().stop_music();
-        }
-    }
-}
 
 
 void Platform::Screen::display()
@@ -556,8 +541,6 @@ void Platform::Screen::display()
     *bg0_y_scroll = view_offset.y;
     *bg1_x_scroll = view_offset.x * 0.3f;
     *bg1_y_scroll = view_offset.y * 0.3f;
-
-    update_music();
 }
 
 
@@ -918,12 +901,6 @@ void Platform::sleep(u32 frames)
 {
     while (frames--) {
         VBlankIntrWait();
-
-        // Usually the Screen::display function is responsible for updating the
-        // music. But because we're essentially skipping display calls while
-        // asleep, we need to continue to update the music.
-        // FIXME: is this one-too-many update calls?
-        update_music();
     }
 }
 
@@ -1390,18 +1367,18 @@ void Platform::Speaker::play(Note n, Octave o, Channel c)
 #include "sb_omega.hpp"
 
 
-// NOTE: Music plays at 16000 kHz, so if you divide the number of samples by
-// 16k, you get the number of seconds in the track length
+// FIXME: For some reason, the DMA overruns the length of the audio track, I
+// have no idea why... but that's why I've subtracted some number of samples
+// from the audio length.
 #define DEF_MUSIC(__STR_NAME__, __TRACK_NAME__)                                \
     {                                                                          \
-        STR(__STR_NAME__), __TRACK_NAME__,                                     \
-            seconds((__TRACK_NAME__##Len) / 16000) - seconds(2)                \
+        STR(__STR_NAME__), __TRACK_NAME__, __TRACK_NAME__##Len - 0xffff        \
     }
 
 static const struct MusicTrack {
     const char* name_;
     const uint8_t* data_;
-    Microseconds length_;
+    size_t length_;
 } tracks[] = {DEF_MUSIC(ambience, frostellar), DEF_MUSIC(sb_omega, sb_omega)};
 
 
@@ -1418,6 +1395,16 @@ static const MusicTrack* find_track(const char* name)
 }
 
 
+static void stop_music()
+{
+    REG_TM0CNT_H = 0;  //disable timer 0
+    REG_DMA1CNT_H = 0; //stop DMA
+    REG_IF |= REG_IF;
+
+    irqDisable(IRQ_TIMER1);
+}
+
+
 void Platform::Speaker::stop_music()
 {
     // FIXME!!! Part of this block needs to be placed in an interrupt handler!!! When
@@ -1426,25 +1413,15 @@ void Platform::Speaker::stop_music()
     // handler. Also, clearing out the interrupt flags outside the interrupt
     // handler is _really_ hacky, but probably only causes bugs in rare
     // cases...
-    REG_TM0CNT_H = 0;  //disable timer 0
-    REG_DMA1CNT_H = 0; //stop DMA
-    REG_IF |= REG_IF;
+    ::stop_music();
 
-    music_track_remaining = std::numeric_limits<Microseconds>::max();
-    music_track_name = nullptr;
+    // music_track_remaining = std::numeric_limits<Microseconds>::max();
+    // music_track_name = nullptr;
 }
 
 
-void Platform::Speaker::load_music(const char* name, bool loop)
+static void play_music(const char* name, bool loop)
 {
-    // NOTE: The sound sample needs to be mono, and 8-bit signed. To export this
-    // format from Audacity, convert the tracks to mono via the Tracks dropdown,
-    // and then export as raw, in the format 8-bit signed.
-    //
-    // Also, important to convert the sound file frequency to 16kHz.
-
-    stop_music();
-
     const auto track = find_track(name);
     if (track == nullptr) {
         return;
@@ -1467,13 +1444,54 @@ void Platform::Speaker::load_music(const char* name, bool loop)
     REG_DMA1CNT_H =
         0xb600; // dma control: DMA enabled+ start on FIFO+32bit+repeat
 
-    REG_TM1CNT_L = 0xff98; // 0xffff-the number of samples to play
-    REG_TM1CNT_H = 0xC4;   // enable timer1 + irq and cascade from timer 0
+    // Timer 1: 0xffff-the number of samples to play
+    if (music_track_remaining > 0xffff) {
+        REG_TM1CNT_L = 0;
+        music_track_remaining -= 0xffff;
 
+    } else {
+        REG_TM1CNT_L = 0xffff - music_track_remaining;
+        music_track_remaining = 0;
+    }
+
+    REG_TM1CNT_H = 0xC4; // enable timer1 + irq and cascade from timer 0
+
+    irqEnable(IRQ_TIMER1);
+    irqSet(IRQ_TIMER1, []() {
+        if (music_track_remaining > 0xffff) {
+            REG_TM1CNT_L = 0;
+            music_track_remaining -= 0xffff;
+
+        } else if (music_track_remaining > 0) {
+            REG_TM1CNT_L = 0xffff - music_track_remaining;
+            music_track_remaining = 0;
+
+        } else {
+            stop_music();
+
+            if (music_track_loop) {
+                play_music(music_track_name, music_track_loop);
+            }
+        }
+    });
 
     // Formula for playback frequency is: 0xFFFF-round(cpuFreq/playbackFreq)
     REG_TM0CNT_L = 0xFBE8; // 16khz playback freq
     REG_TM0CNT_H = 0x0080; // enable timer at CPU freq
+}
+
+
+void Platform::Speaker::load_music(const char* name, bool loop)
+{
+    // NOTE: The sound sample needs to be mono, and 8-bit signed. To export this
+    // format from Audacity, convert the tracks to mono via the Tracks dropdown,
+    // and then export as raw, in the format 8-bit signed.
+    //
+    // Also, important to convert the sound file frequency to 16kHz.
+
+    this->stop_music();
+
+    ::play_music(name, loop);
 }
 
 
