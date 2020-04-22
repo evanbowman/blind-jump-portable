@@ -10,6 +10,9 @@ if not os.path.exists('tmp'):
     os.makedirs('tmp')
 
 
+image_dir = "images/"
+
+
 def get_concat_h(im1, im2):
     dst = Image.new('RGBA', (im1.width + im2.width, im1.height))
     dst.paste(im1, (0, 0))
@@ -21,7 +24,7 @@ def get_concat_h(im1, im2):
 # At least one tile in the image needs to contain some transparency, for the
 # image to be displayed opaquely. So append this 8x8 image onto flattened
 # images, so that they will appear entirely opaque.
-transparency_key = Image.open('transparency_reference.png')
+transparency_key = Image.open(image_dir + 'transparency_reference.png')
 
 
 
@@ -30,7 +33,7 @@ def flatten_image(file_name):
     Slice an image into 8-pixel tall strips, and join them end-to-end. Much
     easier than trying to meta-tile a 240x160 image!
     """
-    im = Image.open(file_name)
+    im = Image.open(image_dir + file_name)
 
     strips = []
 
@@ -46,7 +49,7 @@ def flatten_image(file_name):
 
     result = get_concat_h(transparency_key, result)
 
-    result.save(file_name.split('.')[0] + '_flattened.png')
+    result.save(image_dir + file_name.split('.')[0] + '_flattened.png')
 
 
 
@@ -59,7 +62,7 @@ def rgb_to_bgr(file_name):
     """
     Convert rgb image file to bgr
     """
-    im = Image.open(file_name)
+    im = Image.open(image_dir + file_name)
 
     r, g, b, a = im.split()
     im = Image.merge('RGBA', (b, g, r, a))
@@ -76,9 +79,3 @@ for name in ['spritesheet.png',
              'overlay_journal.png',
              'old_poster_flattened.png']:
     rgb_to_bgr(name)
-
-
-
-# Now the spritesheet just needs to be converted to a tileset. Use:
-# grit bgr_spritesheet.png -gB4 -Mw 4 -Mh 4 -gTFF00FF
-# And then move the output files into the source/ directory.

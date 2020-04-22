@@ -58,82 +58,87 @@ DeltaClock::~DeltaClock()
 
 void Platform::Keyboard::poll()
 {
-    for (size_t i = 0; i < size_t(Key::count); ++i) {
-        prev_[i] = states_[i];
-    }
-    sf::Event event;
-    while (::window->pollEvent(event)) {
-        switch (event.type) {
-        case sf::Event::Closed:
-            ::window->close();
-            break;
+    // FIXME: poll is now called from the logic thread, which means that the
+    // graphics loop needs to window enqueue events in a synchronized buffer,
+    // and then the logic thread will read events from the buffer and process
+    // them.
 
-        case sf::Event::KeyPressed:
-            switch (event.key.code) {
-            case sf::Keyboard::Left:
-                states_[size_t(Key::left)] = true;
-                break;
+    // for (size_t i = 0; i < size_t(Key::count); ++i) {
+    //     prev_[i] = states_[i];
+    // }
+    // sf::Event event;
+    // while (::window->pollEvent(event)) {
+    //     switch (event.type) {
+    //     case sf::Event::Closed:
+    //         ::window->close();
+    //         break;
 
-            case sf::Keyboard::Right:
-                states_[size_t(Key::right)] = true;
-                break;
+    //     case sf::Event::KeyPressed:
+    //         switch (event.key.code) {
+    //         case sf::Keyboard::Left:
+    //             states_[size_t(Key::left)] = true;
+    //             break;
 
-            case sf::Keyboard::Up:
-                states_[size_t(Key::up)] = true;
-                break;
+    //         case sf::Keyboard::Right:
+    //             states_[size_t(Key::right)] = true;
+    //             break;
 
-            case sf::Keyboard::Down:
-                states_[size_t(Key::down)] = true;
-                break;
+    //         case sf::Keyboard::Up:
+    //             states_[size_t(Key::up)] = true;
+    //             break;
 
-            case sf::Keyboard::A:
-                states_[size_t(Key::action_1)] = true;
-                break;
+    //         case sf::Keyboard::Down:
+    //             states_[size_t(Key::down)] = true;
+    //             break;
 
-            case sf::Keyboard::B:
-                states_[size_t(Key::action_2)] = true;
-                break;
+    //         case sf::Keyboard::A:
+    //             states_[size_t(Key::action_1)] = true;
+    //             break;
 
-            default:
-                break;
-            }
-            break;
+    //         case sf::Keyboard::B:
+    //             states_[size_t(Key::action_2)] = true;
+    //             break;
 
-        case sf::Event::KeyReleased:
-            switch (event.key.code) {
-            case sf::Keyboard::Left:
-                states_[size_t(Key::left)] = false;
-                break;
+    //         default:
+    //             break;
+    //         }
+    //         break;
 
-            case sf::Keyboard::Right:
-                states_[size_t(Key::right)] = false;
-                break;
+    //     case sf::Event::KeyReleased:
+    //         switch (event.key.code) {
+    //         case sf::Keyboard::Left:
+    //             states_[size_t(Key::left)] = false;
+    //             break;
 
-            case sf::Keyboard::Up:
-                states_[size_t(Key::up)] = false;
-                break;
+    //         case sf::Keyboard::Right:
+    //             states_[size_t(Key::right)] = false;
+    //             break;
 
-            case sf::Keyboard::Down:
-                states_[size_t(Key::down)] = false;
-                break;
+    //         case sf::Keyboard::Up:
+    //             states_[size_t(Key::up)] = false;
+    //             break;
 
-            case sf::Keyboard::A:
-                states_[size_t(Key::action_1)] = false;
-                break;
+    //         case sf::Keyboard::Down:
+    //             states_[size_t(Key::down)] = false;
+    //             break;
 
-            case sf::Keyboard::B:
-                states_[size_t(Key::action_2)] = false;
-                break;
+    //         case sf::Keyboard::A:
+    //             states_[size_t(Key::action_1)] = false;
+    //             break;
 
-            default:
-                break;
-            }
-            break;
+    //         case sf::Keyboard::B:
+    //             states_[size_t(Key::action_2)] = false;
+    //             break;
 
-        default:
-            break;
-        }
-    }
+    //         default:
+    //             break;
+    //         }
+    //         break;
+
+    //     default:
+    //         break;
+    //     }
+    // }
 }
 
 

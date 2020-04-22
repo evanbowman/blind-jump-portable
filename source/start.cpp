@@ -24,6 +24,8 @@ void UpdateTask::run()
 {
     if (pf_->is_running()) {
         game_->acquire([this](Game& game) {
+            pf_->keyboard().poll();
+
             game.update(*pf_, DeltaClock::instance().reset());
         });
     } else {
@@ -40,8 +42,6 @@ void start(Platform& pf)
     pf.push_task(&update);
 
     while (pf.is_running()) {
-
-        pf.keyboard().poll();
 
         pf.screen().clear();
         game.acquire([&](Game& gm) { gm.render(pf); });

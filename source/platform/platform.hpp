@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include "graphics/sprite.hpp"
 #include "graphics/view.hpp"
 #include "memory/buffer.hpp"
@@ -42,6 +43,7 @@ enum class Key {
     action_1,
     action_2,
     start,
+    select,
     left,
     right,
     up,
@@ -63,7 +65,7 @@ public:
     class Keyboard;
     class Logger;
     class Speaker;
-
+    class Stopwatch;
 
     inline Screen& screen()
     {
@@ -85,6 +87,10 @@ public:
         return speaker_;
     }
 
+    inline Stopwatch& stopwatch()
+    {
+        return stopwatch_;
+    }
 
     void fatal();
 
@@ -168,6 +174,8 @@ public:
     public:
         void poll();
 
+        using KeyStates = std::array<bool, int(Key::count)>;
+
         template <Key... k> bool all_pressed() const
         {
             return (... and states_[int(k)]);
@@ -193,6 +201,20 @@ public:
             return not states_[int(k)] and prev_[int(k)];
         }
 
+        KeyStates dump_state()
+        {
+            return states_;
+        }
+
+        void restore_state(const KeyStates& state)
+        {
+            // NOTE: we're assigning both the current and previous state to the
+            // restored state. Otherwise, we could re-trigger a keypress that
+            // already happened
+            prev_ = state;
+            states_ = state;
+        }
+
     private:
         template <Key k> bool down_transition_helper() const
         {
@@ -209,8 +231,8 @@ public:
 
         friend class Platform;
 
-        std::array<bool, int(Key::count)> prev_;
-        std::array<bool, int(Key::count)> states_;
+        KeyStates prev_;
+        KeyStates states_;
     };
 
 
@@ -249,6 +271,22 @@ public:
         friend class Platform;
 
         Speaker();
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Stopwatch
+    ////////////////////////////////////////////////////////////////////////////
+
+    class Stopwatch {
+    public:
+        Stopwatch();
+
+        void start();
+        int stop();
+
+    private:
+        void* impl_;
     };
 
 
@@ -308,6 +346,7 @@ private:
     Keyboard keyboard_;
     Speaker speaker_;
     Logger logger_;
+    Stopwatch stopwatch_;
     Data* data_ = nullptr;
 };
 

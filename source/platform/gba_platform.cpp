@@ -133,6 +133,7 @@ void Platform::Keyboard::poll()
     states_[int(Key::action_1)] = ~(*keys) & KEY_A;
     states_[int(Key::action_2)] = ~(*keys) & KEY_B;
     states_[int(Key::start)] = ~(*keys) & KEY_START;
+    states_[int(Key::select)] = ~(*keys) & KEY_SELECT;
     states_[int(Key::right)] = ~(*keys) & KEY_RIGHT;
     states_[int(Key::left)] = ~(*keys) & KEY_LEFT;
     states_[int(Key::down)] = ~(*keys) & KEY_DOWN;
@@ -504,6 +505,31 @@ void Platform::Screen::clear()
         }
     }
 
+    static int index;
+    constexpr int sample_count = 32;
+    static int buffer[32];
+    static std::optional<Text> text;
+
+    auto tm = platform->stopwatch().stop();
+
+    if (index < sample_count) {
+        buffer[index++] = tm;
+
+    } else {
+        index = 0;
+
+        int accum = 0;
+        for (int i = 0; i < sample_count; ++i) {
+            accum += buffer[i];
+        }
+
+        accum /= 32;
+
+        text.emplace(*platform, OverlayCoord{1, 1});
+        text->assign(((accum * 59.59f) / 16666666.66) * 100);
+        text->append(" percent");
+    }
+
     // VSync
     VBlankIntrWait();
 }
@@ -516,6 +542,8 @@ static bool music_track_loop;
 
 void Platform::Screen::display()
 {
+    platform->stopwatch().start();
+
     for (u32 i = oam_write_index; i < last_oam_write_index; ++i) {
         object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
     }
@@ -1034,19 +1062,6 @@ std::optional<PersistentData> Platform::read_save()
 }
 
 
-Platform::Platform()
-{
-    irqInit();
-    irqEnable(IRQ_VBLANK | IRQ_TIMER0);
-
-    for (int i = 0; i < 32; ++i) {
-        for (int j = 0; j < 32; ++j) {
-            set_overlay_tile(i, j, 0);
-        }
-    }
-}
-
-
 void SynchronizedBase::init(Platform& pf)
 {
 }
@@ -1516,6 +1531,54 @@ Platform::Speaker::Speaker()
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// Stopwatch
+////////////////////////////////////////////////////////////////////////////////
+
+
+#define REG_TM2CNT   *(vu32*)(0x04000000 + 0x108)
+#define REG_TM2CNT_L *(vu16*)(REG_BASE + 0x108)
+#define REG_TM2CNT_H *(vu16*)(REG_BASE + 0x10a)
+
+
+struct StopwatchData {
+
+};
+
+
+Platform::Stopwatch::Stopwatch()
+{
+    // ... TODO ...
+}
+
+static size_t stopwatch_total;
+
+void Platform::Stopwatch::start()
+{
+    // auto sd = reinterpret_cast<StopwatchData*>(impl_);
+    stopwatch_total = 0;
+
+    REG_TM2CNT_L = 0;
+    REG_TM2CNT_H = 1 << 7 | 1 << 6;
+}
+
+
+int Platform::Stopwatch::stop()
+{
+    // auto sd = reinterpret_cast<StopwatchData*>(impl_);
+    auto ret = REG_TM2CNT_L;
+    REG_TM2CNT_H = 0;
+
+    return ret + stopwatch_total;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Misc
+////////////////////////////////////////////////////////////////////////////////
+
+
+
 s32 fast_divide(s32 numerator, s32 denominator)
 {
     // NOTE: This is a BIOS call, but still faster than real division.
@@ -1526,6 +1589,30 @@ s32 fast_divide(s32 numerator, s32 denominator)
 s32 fast_mod(s32 numerator, s32 denominator)
 {
     return DivMod(numerator, denominator);
+}
+
+
+
+Platform::Platform()
+{
+    irqInit();
+    irqEnable(IRQ_VBLANK | IRQ_TIMER0);
+
+    irqEnable(IRQ_TIMER2);
+    irqSet(IRQ_TIMER2, [] {
+                           stopwatch_total += 0xffff;
+
+                           REG_TM2CNT_H = 0;
+                           REG_TM2CNT_L = 0;
+                           REG_TM2CNT_H = 1 << 7 | 1 << 6;
+                       });
+
+
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            set_overlay_tile(i, j, 0);
+        }
+    }
 }
 
 

@@ -215,6 +215,10 @@ private:
 };
 
 
+// FIXME: this shouldn't be global...
+static std::optional<Platform::Keyboard::KeyStates> restore_keystates;
+
+
 class NotebookState : public State {
 public:
     // NOTE: The NotebookState class does not store a local copy of the text
@@ -541,6 +545,12 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void ActiveState::enter(Platform& pfrm, Game& game)
 {
+    if (restore_keystates) {
+        pfrm.keyboard().restore_state(*restore_keystates);
+        restore_keystates.reset();
+
+    }
+
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     text_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 3)});
@@ -589,6 +599,13 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (pfrm.keyboard().down_transition<Key::start, Key::alt_2>()) {
+
+        // We don't update entities, e.g. the player entity, while in the
+        // inventory state, so the player will not receive the up_transition
+        // keystate unless we push the keystates, and restore after exiting the
+        // inventory screen.
+        restore_keystates = pfrm.keyboard().dump_state();
+
         return state_pool_.create<InventoryState>(true);
     }
 
