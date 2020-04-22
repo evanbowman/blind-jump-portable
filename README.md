@@ -10,6 +10,11 @@ The game uses procedural algorithms to generate the levels, so the game changes 
   <img src="screen1.png"/>
 </p>
 
+## Gameplay
+
+See here:
+[![Alt text](https://img.youtube.com/vi/ReGPURk1Xnw/0.jpg)](https://www.youtube.com/watch?v=ReGPURk1Xnw)
+
 ## Implementation
 
 This repository contains a substantial re-write of the original BlindJump code. In the current iteration, the core parts of the code have no external dependencies, and target a [theoretically] platform-neutral hardware abstraction layer. The embedded version of BlindJump runs on Gameboy Advance, and the game can easily support desktop OSs, although most of the graphics reoutines are yet unimplemented for desktop platforms. When porting the game to a new platform, one only needs to re-implement the Platform class in source/platform/.
