@@ -505,30 +505,30 @@ void Platform::Screen::clear()
         }
     }
 
-    static int index;
-    constexpr int sample_count = 32;
-    static int buffer[32];
-    static std::optional<Text> text;
+    // static int index;
+    // constexpr int sample_count = 32;
+    // static int buffer[32];
+    // static std::optional<Text> text;
 
-    auto tm = platform->stopwatch().stop();
+    // auto tm = platform->stopwatch().stop();
 
-    if (index < sample_count) {
-        buffer[index++] = tm;
+    // if (index < sample_count) {
+    //     buffer[index++] = tm;
 
-    } else {
-        index = 0;
+    // } else {
+    //     index = 0;
 
-        int accum = 0;
-        for (int i = 0; i < sample_count; ++i) {
-            accum += buffer[i];
-        }
+    //     int accum = 0;
+    //     for (int i = 0; i < sample_count; ++i) {
+    //         accum += buffer[i];
+    //     }
 
-        accum /= 32;
+    //     accum /= 32;
 
-        text.emplace(*platform, OverlayCoord{1, 1});
-        text->assign(((accum * 59.59f) / 16666666.66) * 100);
-        text->append(" percent");
-    }
+    //     text.emplace(*platform, OverlayCoord{1, 1});
+    //     text->assign(((accum * 59.59f) / 16666666.66) * 100);
+    //     text->append(" percent");
+    // }
 
     // VSync
     VBlankIntrWait();
@@ -542,7 +542,7 @@ static bool music_track_loop;
 
 void Platform::Screen::display()
 {
-    platform->stopwatch().start();
+    // platform->stopwatch().start();
 
     for (u32 i = oam_write_index; i < last_oam_write_index; ++i) {
         object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
