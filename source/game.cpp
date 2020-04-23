@@ -278,7 +278,6 @@ bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
 COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
     persistent_data_.seed_ = random_seed();
-    persistent_data_.player_health_ = player_.get_health();
 
     if (set_level) {
         persistent_data_.level_ = *set_level;
@@ -288,6 +287,7 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 
     if (level() == 0) {
         pfrm.speaker().load_music(current_zone(*this).music_name_, true);
+        pfrm.write_save(persistent_data_);
     }
 
 
