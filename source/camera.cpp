@@ -32,7 +32,7 @@ void Camera::update(Platform& pfrm,
     const auto center = interpolate(
         target,
         view_center,
-        dt * speed_ * (ballast_.divisor_ ? 0.0000016f : 0.000004f));
+        dt * speed_ * (ballast_.divisor_ ? 0.0000016f : 0.0000044f));
 
     ballast_.divisor_ = 0;
 

@@ -404,6 +404,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         camera_snap_timer_ = seconds(2) + milliseconds(250);
     }
 
+    // When the player is fighting enemies, the camera centers on the player and the let
+
     if (camera_snap_timer_ > 0) {
         if (pfrm.keyboard().down_transition<Key::action_2>()) {
             camera_snap_timer_ = 0;
@@ -413,6 +415,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     bool enemies_remaining = false;
     bool enemies_destroyed = false;
+    bool enemies_visible = false;
     game.enemies().transform([&](auto& entity_buf) {
         for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
             if (not(*it)->alive()) {
@@ -434,6 +437,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                                   not std::is_same<decltype(**it),
                                                    SnakeHead>()) {
                         if ((*it)->visible()) {
+                            enemies_visible = true;
                             game.camera().push_ballast((*it)->get_position());
                         }
                     }
@@ -442,6 +446,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
         }
     });
+
+    if (not enemies_visible) {
+        camera_snap_timer_ = 0;
+    }
 
     if (not enemies_remaining and enemies_destroyed) {
 
