@@ -14,10 +14,11 @@ public:
         heart,
         coin,
         surveyor_logbook,
-        old_poster_1,
         blaster,
         accelerator,
         lethargy,
+        old_poster_1,
+        map_system,
         count
     };
 
@@ -52,7 +53,8 @@ inline bool item_is_persistent(Item::Type type)
 {
     return type == Item::Type::blaster or
            type == Item::Type::surveyor_logbook or
-           type == Item::Type::old_poster_1;
+           type == Item::Type::old_poster_1 or
+           type == Item::Type::map_system;
 }
 
 

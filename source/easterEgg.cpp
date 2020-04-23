@@ -115,7 +115,7 @@ void riff(Platform& pf)
             if (not note) {
                 riff_timer = time_step * 5 * 2;
             } else {
-                pf.speaker().play(
+                pf.speaker().play_note(
                     std::get<0>(*note), 4 + std::get<2>(*note), 0);
                 riff_timer = time_step * 5 * std::get<1>(*note);
             }
@@ -128,7 +128,7 @@ void riff(Platform& pf)
             if (not note) {
                 baseline_timer = time_step * 5 * 2;
             } else {
-                pf.speaker().play(
+                pf.speaker().play_note(
                     std::get<0>(*note), 3 + std::get<2>(*note), 1);
                 baseline_timer = time_step * 5 * std::get<1>(*note);
             }

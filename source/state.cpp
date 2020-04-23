@@ -26,6 +26,7 @@ public:
 
 private:
     const bool camera_tracking_;
+    Microseconds camera_snap_timer_ = 0;
 };
 
 
@@ -399,6 +400,17 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         enemy_timestep /= 2;
     }
 
+    if (pfrm.keyboard().up_transition<Key::action_1>()) {
+        camera_snap_timer_ = seconds(2) + milliseconds(250);
+    }
+
+    if (camera_snap_timer_ > 0) {
+        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            camera_snap_timer_ = 0;
+        }
+        camera_snap_timer_ -= delta;
+    }
+
     bool enemies_remaining = false;
     bool enemies_destroyed = false;
     game.enemies().transform([&](auto& entity_buf) {
@@ -412,8 +424,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 (*it)->update(pfrm, game, enemy_timestep);
 
-                if (camera_tracking_ &&
-                    pfrm.keyboard().pressed<Key::action_1>()) {
+                if (camera_tracking_ and
+                    (pfrm.keyboard().pressed<Key::action_1>() or
+                     camera_snap_timer_ > 0)) {
                     // NOTE: snake body segments do not make much sense to
                     // center the camera on, so exclude them.
                     if constexpr (not std::is_same<decltype(**it),
@@ -548,7 +561,6 @@ void ActiveState::enter(Platform& pfrm, Game& game)
     if (restore_keystates) {
         pfrm.keyboard().restore_state(*restore_keystates);
         restore_keystates.reset();
-
     }
 
     auto screen_tiles = calc_screen_tiles(pfrm);
@@ -932,16 +944,29 @@ static void consume_selected_item(Game& game)
 }
 
 
+constexpr int item_icon(Item::Type item)
+{
+    int icon_base = 177;
+
+    return icon_base + (static_cast<int>(item) - (static_cast<int>(Item::Type::coin) + 1)) * 4;
+}
+
+
+// Just so we don't have to type so much stuff. Some items will invariably use
+// icons from existing items, so we still want the flexibility of setting icon
+// values manually.
+#define STANDARD_ITEM_HANDLER(TYPE) \
+    Item::Type::TYPE, item_icon(Item::Type::TYPE)
+
+
 constexpr static const InventoryItemHandler inventory_handlers[] = {
-    {Item::Type::null,
-     0,
+    {Item::Type::null, 0,
      [](Platform&, Game&) { return null_state(); },
      [] {
          static const auto str = "Empty";
          return str;
      }},
-    {Item::Type::old_poster_1,
-     193,
+    {STANDARD_ITEM_HANDLER(old_poster_1),
      [](Platform&, Game&) {
          static const auto str = "old_poster_flattened";
          return state_pool_.create<ImageViewState>(str,
@@ -951,8 +976,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          static const auto str = "Old poster (1)";
          return str;
      }},
-    {Item::Type::surveyor_logbook,
-     177,
+    {STANDARD_ITEM_HANDLER(surveyor_logbook),
      [](Platform&, Game&) {
          return state_pool_.create<NotebookState>(surveyor_logbook_str);
      },
@@ -960,15 +984,13 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          static const auto str = "Surveyor's logbook";
          return str;
      }},
-    {Item::Type::blaster,
-     181,
+    {STANDARD_ITEM_HANDLER(blaster),
      [](Platform&, Game&) { return null_state(); },
      [] {
          static const auto str = "Blaster";
          return str;
      }},
-    {Item::Type::accelerator,
-     185,
+    {STANDARD_ITEM_HANDLER(accelerator),
      [](Platform&, Game& game) {
          consume_selected_item(game);
 
@@ -980,8 +1002,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          static const auto str = "Accelerator (60 shots)";
          return str;
      }},
-    {Item::Type::lethargy,
-     189,
+    {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform&, Game& game) {
          consume_selected_item(game);
 
@@ -991,6 +1012,14 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      },
      [] {
          static const auto str = "Lethargy (18 sec)";
+         return str;
+     }},
+    {STANDARD_ITEM_HANDLER(map_system),
+     [](Platform&, Game&) {
+         return null_state();
+     },
+     [] {
+         static const auto str = "Map system";
          return str;
      }}};
 
@@ -1454,6 +1483,11 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.sleep(70);
         }
 
+        // backdoor for debugging purposes.
+        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
+            return state_pool_.create<CommandCodeState>();
+        }
+
         return state_pool_.create<NewLevelState>(Level{0});
 
     } else {
@@ -1640,6 +1674,12 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
             if (not game.inventory().has_item(item)) {
                 game.inventory().push_item(pfrm, game, item);
             }
+        }
+        return true;
+
+    case 404: // Drop all items
+        while (game.inventory().get_item(0, 0, 0) not_eq Item::Type::null) {
+            game.inventory().remove_item(0, 0, 0);
         }
         return true;
 

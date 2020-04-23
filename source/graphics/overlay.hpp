@@ -193,8 +193,7 @@ inline void right_text_margin(Text& text, Margin margin)
 u32 integer_text_length(int n);
 
 
-template <typename F>
-void instrument(Platform& pfrm, F&& callback)
+template <typename F> void instrument(Platform& pfrm, F&& callback)
 {
     static int index;
     constexpr int sample_count = 32;

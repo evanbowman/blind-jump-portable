@@ -1137,13 +1137,39 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Speaker
+//
+// For music, the Speaker class uses the GameBoy's direct sound chip to play
+// 8-bit signed raw audio, at 16kHz. For everything else, the game uses the
+// waveform generators.
+//
 ////////////////////////////////////////////////////////////////////////////////
 
-#define REG_SND1SWEEP *(volatile u16*)(0x04000000 + 0x0060) //!< Channel 1 Sweep
-#define REG_SND1CNT *(volatile u16*)(0x04000000 + 0x0062) //!< Channel 1 Control
-#define REG_SND1FREQ                                                           \
-    *(volatile u16*)(0x04000000 + 0x0064) //!< Channel 1 frequency
-#define REG_SND1FREQ *(volatile u16*)(0x04000000 + 0x0064)
+//! \name Channel 1: Square wave with sweep
+//\{
+#define REG_SND1SWEEP *(vu16*)(0x04000000 + 0x0060) //!< Channel 1 Sweep
+#define REG_SND1CNT *(vu16*)(0x04000000 + 0x0062)   //!< Channel 1 Control
+#define REG_SND1FREQ *(vu16*)(0x04000000 + 0x0064)  //!< Channel 1 frequency
+//\}
+
+//! \name Channel 2: Simple square wave
+//\{
+#define REG_SND2CNT *(vu16*)(0x04000000 + 0x0068)  //!< Channel 2 control
+#define REG_SND2FREQ *(vu16*)(0x04000000 + 0x006C) //!< Channel 2 frequency
+//\}
+
+//! \name Channel 3: Wave player
+//\{
+#define REG_SND3SEL *(vu16*)(0x04000000 + 0x0070)  //!< Channel 3 wave select
+#define REG_SND3CNT *(vu16*)(0x04000000 + 0x0072)  //!< Channel 3 control
+#define REG_SND3FREQ *(vu16*)(0x04000000 + 0x0074) //!< Channel 3 frequency
+//\}
+
+//! \name Channel 4: Noise generator
+//\{
+#define REG_SND4CNT *(vu16*)(0x04000000 + 0x0078)  //!< Channel 4 control
+#define REG_SND4FREQ *(vu16*)(0x04000000 + 0x007C) //!< Channel 4 frequency
+//\}
+
 #define REG_SNDCNT *(volatile u32*)(0x04000000 + 0x0080) //!< Main sound control
 #define REG_SNDDMGCNT                                                          \
     *(volatile u16*)(0x04000000 + 0x0080) //!< DMG channel control
@@ -1151,9 +1177,6 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
     *(volatile u16*)(0x04000000 + 0x0082) //!< Direct Sound control
 #define REG_SNDSTAT *(volatile u16*)(0x04000000 + 0x0084) //!< Sound status
 #define REG_SNDBIAS *(volatile u16*)(0x04000000 + 0x0088) //!< Sound bias
-#define REG_SND2CNT *(volatile u16*)(0x04000000 + 0x0068) //!< Channel 2 control
-#define REG_SND2FREQ                                                           \
-    *(volatile u16*)(0x04000000 + 0x006C) //!< Channel 2 frequency
 
 
 // --- REG_SND1SWEEP ---------------------------------------------------
@@ -1352,7 +1375,7 @@ const u32 __snd_rates[12] = {
 #define SND_RATE(note, oct) (2048 - (__snd_rates[note] >> ((oct))))
 
 
-void Platform::Speaker::play(Note n, Octave o, Channel c)
+void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 {
     switch (c) {
     case 0:
@@ -1361,6 +1384,14 @@ void Platform::Speaker::play(Note n, Octave o, Channel c)
 
     case 1:
         REG_SND2FREQ = SFREQ_RESET | SND_RATE(int(n), o);
+        break;
+
+    case 2:
+        REG_SND3FREQ = SFREQ_RESET | SND_RATE(int(n), o);
+        break;
+
+    case 3:
+        REG_SND4FREQ = SFREQ_RESET | SND_RATE(int(n), o);
         break;
     }
 }
@@ -1422,16 +1453,7 @@ static void stop_music()
 
 void Platform::Speaker::stop_music()
 {
-    // FIXME!!! Part of this block needs to be placed in an interrupt handler!!! When
-    // the music sample finishes playing, we can loop back to the beginning,
-    // potentially more easily, if we perform the action in the interrupt
-    // handler. Also, clearing out the interrupt flags outside the interrupt
-    // handler is _really_ hacky, but probably only causes bugs in rare
-    // cases...
     ::stop_music();
-
-    // music_track_remaining = std::numeric_limits<Microseconds>::max();
-    // music_track_name = nullptr;
 }
 
 
@@ -1449,7 +1471,6 @@ static void play_music(const char* name, bool loop)
     // Play a mono sound at 16khz in DMA mode Direct Sound
     // uses timer 0 as sampling rate source
     // uses timer 1 to count the samples played in order to stop the sound
-    REG_SOUNDCNT_L = 0;
     REG_SOUNDCNT_H =
         0x0b0F; // DS A&B + fifo reset + timer0 + max volume to L and R
     REG_SOUNDCNT_X = 0x0080; // turn sound chip on
@@ -1512,22 +1533,23 @@ void Platform::Speaker::load_music(const char* name, bool loop)
 
 Platform::Speaker::Speaker()
 {
-    // // turn sound on
-    // REG_SNDSTAT = SSTAT_ENABLE;
-    // // snd1 on left/right ; both full volume
-    // REG_SNDDMGCNT = SDMG_BUILD_LR(SDMG_SQR1 | SDMG_SQR2, 7);
-    // // DMG ratio to 100%
-    // REG_SNDDSCNT = SDS_DMG100;
+    // turn sound on
+    REG_SNDSTAT = SSTAT_ENABLE;
+    // snd1 on left/right ; both full volume
+    REG_SNDDMGCNT =
+        SDMG_BUILD_LR(SDMG_SQR1 | SDMG_SQR2 | SDMG_WAVE | SDMG_NOISE, 7);
+    // DMG ratio to 100%
+    REG_SNDDSCNT = SDS_DMG50;
 
-    // // no sweep
-    // REG_SND1SWEEP = SSW_OFF;
+    // no sweep
+    REG_SND1SWEEP = SSW_INC;
 
-    // // envelope: vol=12, decay, max step time (7) ; 50% duty
-    // REG_SND1CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY1_4;
-    // REG_SND1FREQ = 0;
+    // envelope: vol=12, decay, max step time (7) ; 50% duty
+    REG_SND1CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY3_4;
+    REG_SND1FREQ = 0;
 
-    // REG_SND2CNT = SSQR_ENV_BUILD(10, 0, 7) | SSQR_DUTY1_4;
-    // REG_SND2FREQ = 0;
+    REG_SND2CNT = SSQR_ENV_BUILD(10, 0, 7) | SSQR_DUTY1_4;
+    REG_SND2FREQ = 0;
 }
 
 
@@ -1536,13 +1558,12 @@ Platform::Speaker::Speaker()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#define REG_TM2CNT   *(vu32*)(0x04000000 + 0x108)
+#define REG_TM2CNT *(vu32*)(0x04000000 + 0x108)
 #define REG_TM2CNT_L *(vu16*)(REG_BASE + 0x108)
 #define REG_TM2CNT_H *(vu16*)(REG_BASE + 0x10a)
 
 
 struct StopwatchData {
-
 };
 
 
@@ -1578,7 +1599,6 @@ int Platform::Stopwatch::stop()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 s32 fast_divide(s32 numerator, s32 denominator)
 {
     // NOTE: This is a BIOS call, but still faster than real division.
@@ -1592,7 +1612,6 @@ s32 fast_mod(s32 numerator, s32 denominator)
 }
 
 
-
 Platform::Platform()
 {
     irqInit();
@@ -1600,12 +1619,12 @@ Platform::Platform()
 
     irqEnable(IRQ_TIMER2);
     irqSet(IRQ_TIMER2, [] {
-                           stopwatch_total += 0xffff;
+        stopwatch_total += 0xffff;
 
-                           REG_TM2CNT_H = 0;
-                           REG_TM2CNT_L = 0;
-                           REG_TM2CNT_H = 1 << 7 | 1 << 6;
-                       });
+        REG_TM2CNT_H = 0;
+        REG_TM2CNT_L = 0;
+        REG_TM2CNT_H = 1 << 7 | 1 << 6;
+    });
 
 
     for (int i = 0; i < 32; ++i) {
