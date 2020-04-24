@@ -257,6 +257,12 @@ private:
 };
 
 
+class MapSystemState : public State {
+public:
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+};
+
+
 class IntroCreditsState : public State {
 public:
     void enter(Platform& pfrm, Game& game) override;
@@ -321,6 +327,9 @@ template <typename... States> class StatePool {
 public:
     template <typename TState, typename... Args> StatePtr create(Args&&... args)
     {
+        static_assert(std::disjunction<std::is_same<TState, States>...>(),
+                      "State missing from state pool");
+
         if (auto mem = pool_.get()) {
             new (mem) TState(std::forward<Args>(args)...);
 
@@ -347,7 +356,11 @@ static StatePool<ActiveState,
                  InventoryState,
                  NotebookState,
                  ImageViewState,
-                 NewLevelState>
+                 NewLevelState,
+                 CommandCodeState,
+                 MapSystemState,
+                 IntroCreditsState,
+                 DeathContinueState>
     state_pool_;
 
 
@@ -1024,7 +1037,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      }},
     {STANDARD_ITEM_HANDLER(map_system),
      [](Platform&, Game&) {
-         return null_state();
+         return state_pool_.create<MapSystemState>();
      },
      [] {
          static const auto str = "Map system";
@@ -1397,6 +1410,22 @@ void ImageViewState::exit(Platform& pfrm, Game& game)
 
     pfrm.screen().fade(1.f);
     pfrm.load_overlay_texture("overlay");
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// MapSystemState
+////////////////////////////////////////////////////////////////////////////////
+
+
+StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    if (pfrm.keyboard().down_transition<Key::action_1>()) {
+        return state_pool_.create<InventoryState>(false);
+    }
+
+    return null_state();
 }
 
 
