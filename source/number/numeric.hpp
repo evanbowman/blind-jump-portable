@@ -223,7 +223,7 @@ inline UnitVec direction(const Vec2<Float>& origin, const Vec2<Float>& target)
 }
 
 
-inline Vec2<Float> rotate(const Vec2<Float>& input, Angle angle)
+inline Vec2<Float> rotate(const Vec2<Float>& input, Float angle)
 {
     const s16 converted_angle = INT16_MAX * (angle / 360.f);
     const Float cos_theta = Float(cosine(converted_angle)) / INT16_MAX;

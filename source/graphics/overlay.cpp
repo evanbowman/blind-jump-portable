@@ -377,7 +377,7 @@ BossHealthBar::BossHealthBar(Platform& pfrm,
     : pfrm_(pfrm), position_(position), height_(height)
 {
     pfrm_.set_overlay_tile(position_.x, position_.y, 82);
-    pfrm_.set_overlay_tile(position_.x, position_.y + height, 83);
+    pfrm_.set_overlay_tile(position_.x, position_.y + height + 1, 83);
     set_health(0.f);
 }
 
@@ -396,14 +396,14 @@ void BossHealthBar::set_health(Float percentage)
         ++current_tile;
     }
 
-    if (current_tile < height_ + 1 and fractional_pixels % 8 not_eq 0) {
+    if (current_tile < height_ and fractional_pixels % 8 not_eq 0) {
         pfrm_.set_overlay_tile(position_.x,
                                position_.y + 1 + current_tile,
                                83 + fractional_pixels % 8);
         ++current_tile;
     }
 
-    while (current_tile < height_ + 1) {
+    while (current_tile < height_) {
         pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 92);
         ++current_tile;
     }

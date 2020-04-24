@@ -318,6 +318,10 @@ const Color& real_color(ColorConstant k)
         static const Color steel_blue(6, 10, 16);
         return steel_blue;
 
+    case ColorConstant::silver_white:
+        static const Color silver_white(29, 29, 30);
+        return silver_white;
+
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:
