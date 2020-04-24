@@ -23,7 +23,6 @@
 #include "entity/entityGroup.hpp"
 #include "entity/player.hpp"
 #include "function.hpp"
-#include "graphics/overlay.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"
 

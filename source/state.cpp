@@ -323,6 +323,7 @@ static const StatePtr null_state()
     return {nullptr, state_deleter};
 }
 
+
 template <typename... States> class StatePool {
 public:
     template <typename TState, typename... Args> StatePtr create(Args&&... args)
@@ -335,6 +336,7 @@ public:
 
             return {reinterpret_cast<TState*>(mem), state_deleter};
         } else {
+
             return null_state();
         }
     }
@@ -969,19 +971,22 @@ constexpr int item_icon(Item::Type item)
 {
     int icon_base = 177;
 
-    return icon_base + (static_cast<int>(item) - (static_cast<int>(Item::Type::coin) + 1)) * 4;
+    return icon_base +
+           (static_cast<int>(item) - (static_cast<int>(Item::Type::coin) + 1)) *
+               4;
 }
 
 
 // Just so we don't have to type so much stuff. Some items will invariably use
 // icons from existing items, so we still want the flexibility of setting icon
 // values manually.
-#define STANDARD_ITEM_HANDLER(TYPE) \
+#define STANDARD_ITEM_HANDLER(TYPE)                                            \
     Item::Type::TYPE, item_icon(Item::Type::TYPE)
 
 
 constexpr static const InventoryItemHandler inventory_handlers[] = {
-    {Item::Type::null, 0,
+    {Item::Type::null,
+     0,
      [](Platform&, Game&) { return null_state(); },
      [] {
          static const auto str = "Empty";
@@ -1036,9 +1041,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return str;
      }},
     {STANDARD_ITEM_HANDLER(map_system),
-     [](Platform&, Game&) {
-         return state_pool_.create<MapSystemState>();
-     },
+     [](Platform&, Game&) { return state_pool_.create<MapSystemState>(); },
      [] {
          static const auto str = "Map system";
          return str;
@@ -1411,7 +1414,6 @@ void ImageViewState::exit(Platform& pfrm, Game& game)
     pfrm.screen().fade(1.f);
     pfrm.load_overlay_texture("overlay");
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

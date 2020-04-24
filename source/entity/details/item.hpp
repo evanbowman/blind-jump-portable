@@ -53,8 +53,7 @@ inline bool item_is_persistent(Item::Type type)
 {
     return type == Item::Type::blaster or
            type == Item::Type::surveyor_logbook or
-           type == Item::Type::old_poster_1 or
-           type == Item::Type::map_system;
+           type == Item::Type::old_poster_1 or type == Item::Type::map_system;
 }
 
 
