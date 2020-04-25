@@ -166,3 +166,6 @@ const ZoneInfo& zone_info(Level level);
 const ZoneInfo& current_zone(Game& game);
 
 bool operator==(const ZoneInfo&, const ZoneInfo&);
+
+
+Game::DeferredCallback screen_flash_animation(int remaining);

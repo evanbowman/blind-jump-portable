@@ -28,8 +28,14 @@ public:
     {
     }
 
+    void on_death(Platform&, Game&);
 
 private:
+
+    enum class State { idle, jump, airborne, landing };
+
     Sprite head_;
+    State state_;
+    Microseconds timer_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

@@ -953,3 +953,19 @@ bool within_view_frustum(const Platform::Screen& screen, const Vec2<Float>& pos)
     return pos.x > view_center.x - 32 and pos.x < view_br.x + 32 and
            pos.y > view_center.y - 32 and pos.y < view_br.y + 32;
 }
+
+
+Game::DeferredCallback screen_flash_animation(int remaining)
+{
+    return [remain = remaining](Platform& pf, Game& game) {
+        if (remain > 0) {
+            pf.screen().fade(255 - remain, ColorConstant::silver_white);
+
+            game.on_timeout(milliseconds(20),
+                            screen_flash_animation(remain - 1));
+
+        } else {
+            pf.screen().fade(0);
+        }
+    };
+}

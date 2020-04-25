@@ -3,6 +3,7 @@
 #include "game.hpp"
 #include "number/random.hpp"
 #include "wallCollision.hpp"
+#include "boss.hpp"
 
 
 static const char* boss_music = "sb_omega";
@@ -473,55 +474,7 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
 }
 
 
-Game::DeferredCallback screen_flash_animation(int remaining)
-{
-    return [remain = remaining](Platform& pf, Game& game) {
-        if (remain > 0) {
-            pf.screen().fade(255 - remain, ColorConstant::silver_white);
-
-            game.on_timeout(milliseconds(20),
-                            screen_flash_animation(remain - 1));
-
-        } else {
-            pf.screen().fade(0);
-        }
-    };
-}
-
-
 void TheFirstExplorer::on_death(Platform& pf, Game& game)
 {
-    hide_boss_health(game);
-
-    big_explosion(pf, game, position_);
-
-    const auto off = 50.f;
-
-    big_explosion(pf, game, {position_.x - off, position_.y - off});
-    big_explosion(pf, game, {position_.x + off, position_.y + off});
-
-    game.on_timeout(
-        milliseconds(300), [pos = position_](Platform& pf, Game& game) {
-            big_explosion(pf, game, pos);
-            const auto off = -50.f;
-
-            big_explosion(pf, game, {pos.x - off, pos.y + off});
-            big_explosion(pf, game, {pos.x + off, pos.y - off});
-
-            game.on_timeout(milliseconds(100), [pos](Platform& pf, Game& game) {
-                for (int i = 0; i < 3; ++i) {
-                    game.details().spawn<Item>(
-                        sample<32>(pos), pf, Item::Type::heart);
-                }
-
-                game.transporter().set_position(pos);
-
-                screen_flash_animation(255)(pf, game);
-            });
-        });
-
-    pf.speaker().stop_music();
-    pf.sleep(10);
-
-    game.score() += 1000;
+    boss_explosion(pf, game, position_);
 }
