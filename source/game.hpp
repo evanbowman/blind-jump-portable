@@ -3,8 +3,8 @@
 #include <algorithm>
 
 #include "camera.hpp"
-#include "entity/bosses/theFirstExplorer.hpp"
 #include "entity/bosses/gatekeeper.hpp"
+#include "entity/bosses/theFirstExplorer.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/rubble.hpp"
@@ -55,7 +55,8 @@ public:
                                    SnakeTail,
                                    Scarecrow,
                                    TheFirstExplorer,
-                                   Gatekeeper>;
+                                   Gatekeeper,
+                                   GatekeeperShield>;
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
     using EffectGroup = EntityGroup<20,

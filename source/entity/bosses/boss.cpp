@@ -38,7 +38,6 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
     pf.sleep(10);
 
     game.score() += 1000;
-
 }
 
 

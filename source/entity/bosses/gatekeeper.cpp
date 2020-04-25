@@ -1,16 +1,15 @@
 #include "gatekeeper.hpp"
+#include "boss.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
-#include "boss.hpp"
 
 
 static const Entity::Health initial_health = 100;
 
 
-Gatekeeper::Gatekeeper(const Vec2<Float>& position) :
-    Enemy(initial_health, position, {{32, 50}, {16, 36}}),
-    state_(State::idle),
-    timer_(0)
+Gatekeeper::Gatekeeper(const Vec2<Float>& position, Game& game)
+    : Enemy(initial_health, position, {{32, 50}, {16, 36}}),
+      state_(State::idle), timer_(0)
 {
     sprite_.set_texture_index(7);
     sprite_.set_size(Sprite::Size::w32_h32);
@@ -28,6 +27,9 @@ Gatekeeper::Gatekeeper(const Vec2<Float>& position) :
     sprite_.set_position(position);
     head_.set_position(position);
     shadow_.set_position(position);
+
+    game.enemies().spawn<GatekeeperShield>(position, 0);
+    game.enemies().spawn<GatekeeperShield>(position, INT16_MAX / 2);
 }
 
 
@@ -55,6 +57,10 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
             }
         };
 
+    auto dist_from_player = [&](Float dist) {
+        return distance(position_, game.player().get_position()) > dist;
+    };
+
     switch (state_) {
     case State::idle:
         face_player();
@@ -63,8 +69,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > milliseconds(400)) {
             timer_ = 0;
 
-            if (distance(position_, game.player().get_position()) > 100 or
-                random_choice<4>() == 0) {
+            if (dist_from_player(120) or random_choice<4>() == 0) {
                 state_ = State::jump;
 
                 sprite_.set_texture_index(48);
@@ -72,7 +77,6 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 
             } else {
                 // TODO: attack...
-
             }
         }
         break;
@@ -93,30 +97,31 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 Vec2<Float> dest;
                 Vec2<Float> unit;
 
-                int tries = 0;
+                int tries = not dist_from_player(65) ? 1 : 0;
 
                 do {
 
                     if (tries++ > 0) {
-                        const s16 dir = ((static_cast<float>(random_choice<359>())) / 360) *
+                        const s16 dir =
+                            ((static_cast<float>(random_choice<359>())) / 360) *
                             INT16_MAX;
 
                         unit = {(float(cosine(dir)) / INT16_MAX),
                                 (float(sine(dir)) / INT16_MAX)};
 
                     } else {
-                        unit = direction(position_, game.player().get_position());
-
+                        unit =
+                            direction(position_, game.player().get_position());
                     }
 
                     move_vec_ = 5.f * unit;
 
                     const auto tolerance = milliseconds(90);
                     dest = position_ +
-                        move_vec_ * ((jump_duration + tolerance) * movement_rate);
+                           move_vec_ *
+                               ((jump_duration + tolerance) * movement_rate);
 
                 } while (wall_in_path(unit, position_, game, dest));
-
             }
         }
         break;
@@ -124,9 +129,9 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::airborne: {
         timer_ += dt;
 
-        const Float offset =
-                10 * Float(sine(4 * 3.14 * 0.0027f * timer_ + 180)) /
-                std::numeric_limits<s16>::max();
+        const Float offset = 10 *
+                             Float(sine(4 * 3.14 * 0.0027f * timer_ + 180)) /
+                             std::numeric_limits<s16>::max();
 
         position_.x += move_vec_.x * dt * movement_rate;
         position_.y += move_vec_.y * dt * movement_rate;
@@ -164,7 +169,6 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 state_ = State::idle;
                 sprite_.set_texture_index(7);
                 head_.set_texture_index(6);
-
             }
         }
         break;
@@ -192,4 +196,80 @@ void Gatekeeper::on_collision(Platform& pfrm, Game& game, Laser&)
 void Gatekeeper::on_death(Platform& pfrm, Game& game)
 {
     boss_explosion(pfrm, game, position_);
+}
+
+
+GatekeeperShield::GatekeeperShield(const Vec2<Float>& position, int offset)
+    : Enemy(1, position, {{16, 32}, {8, 16}}), timer_(0), offset_(offset)
+{
+    shadow_.set_alpha(Sprite::Alpha::translucent);
+    shadow_.set_size(Sprite::Size::w16_h32);
+    shadow_.set_texture_index(TextureMap::drop_shadow);
+    shadow_.set_origin({8, -11});
+
+    sprite_.set_size(Sprite::Size::w16_h32);
+    sprite_.set_texture_index(16);
+    sprite_.set_origin({8, 16});
+}
+
+
+void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
+{
+    timer_ += dt / 32;
+
+    if (game.enemies().get<Gatekeeper>().empty()) {
+        this->kill();
+        return;
+    }
+
+    fade_color_anim_.advance(sprite_, dt);
+
+    const auto& parent_pos =
+        (*game.enemies().get<Gatekeeper>().begin())->get_position();
+
+    constexpr auto radius = 27;
+
+    const auto x_part = (Float(cosine(timer_ + offset_)) / INT16_MAX);
+    const auto y_part = (Float(sine(timer_ + offset_)) / INT16_MAX);
+
+    if (abs(y_part) > 0.8) {
+        sprite_.set_texture_index(16);
+    } else if (abs(y_part) > 0.6) {
+        sprite_.set_texture_index(17);
+    } else if (abs(y_part) > 0.4) {
+        sprite_.set_texture_index(18);
+    } else {
+        sprite_.set_texture_index(19);
+    }
+
+    // Rather than draw keyframes for the whole rotation animation, which is
+    // relatively simple, I animated a quarter of the shield rotation, and
+    // mirrored the sprite accordingly.
+    if (y_part > 0) {
+        if (x_part > 0) {
+            sprite_.set_flip({true, false});
+        } else {
+            sprite_.set_flip({false, false});
+        }
+    } else {
+        if (x_part > 0) {
+            sprite_.set_flip({false, false});
+        } else {
+            sprite_.set_flip({true, false});
+        }
+    }
+
+    position_ = {parent_pos.x + radius * x_part,
+                 (parent_pos.y - 2) + radius * y_part};
+
+    sprite_.set_position(position_);
+    shadow_.set_position(position_);
+}
+
+
+void GatekeeperShield::on_collision(Platform& pfrm, Game& game, Laser&)
+{
+    const auto c = current_zone(game).energy_glow_color_;
+
+    sprite_.set_mix({c, 255});
 }

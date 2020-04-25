@@ -1,9 +1,9 @@
 #include "theFirstExplorer.hpp"
+#include "boss.hpp"
 #include "entity/effects/explosion.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 #include "wallCollision.hpp"
-#include "boss.hpp"
 
 
 static const char* boss_music = "sb_omega";

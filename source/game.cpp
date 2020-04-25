@@ -212,6 +212,26 @@ static constexpr const bool boss_level_0[TileMap::width][TileMap::height] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 };
 
+READ_ONLY_DATA
+static constexpr const bool boss_level_1[TileMap::width][TileMap::height] = {
+    {},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+};
+
 
 struct BossLevel {
     const bool (*map_)[TileMap::height];
@@ -228,7 +248,7 @@ static const BossLevel* get_boss_level(Level current_level)
     }
 
     case 20: {
-        static constexpr const BossLevel ret{boss_level_0, "spritesheet_boss1"};
+        static constexpr const BossLevel ret{boss_level_1, "spritesheet_boss1"};
         return &ret;
     }
 
@@ -762,8 +782,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             enemies_.spawn<TheFirstExplorer>(target);
 
         } else {
-            enemies_.spawn<Gatekeeper>(target);
-
+            enemies_.spawn<Gatekeeper>(target, *this);
         }
 
         // Place two hearts in the level. The game is supposed to be difficult,

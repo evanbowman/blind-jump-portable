@@ -572,6 +572,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                          game,
                          game.effects().get<Laser>(),
                          game.enemies().get<Gatekeeper>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<GatekeeperShield>());
     }
 
     return null_state();
