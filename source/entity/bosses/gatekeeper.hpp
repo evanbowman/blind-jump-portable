@@ -49,8 +49,13 @@ public:
 
     void on_collision(Platform&, Game&, Laser&);
 
+    void on_death(Platform&, Game&);
+
 private:
+    enum class State { orbit, detached };
+
     Microseconds timer_;
+    State state_;
     int offset_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

@@ -521,12 +521,12 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 
     check_collisions(pfrm, game, player, game.details().get<Item>());
+    check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
 
     if (not is_boss_level(game.level())) {
         check_collisions(pfrm, game, player, game.enemies().get<Drone>());
         check_collisions(pfrm, game, player, game.enemies().get<Turret>());
         check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
-        check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
         check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
         check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
         check_collisions(pfrm,

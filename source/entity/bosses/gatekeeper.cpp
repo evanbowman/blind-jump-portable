@@ -2,9 +2,10 @@
 #include "boss.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
+#include "entity/enemies/common.hpp"
 
 
-static const Entity::Health initial_health = 100;
+static const Entity::Health initial_health = 2;
 
 
 Gatekeeper::Gatekeeper(const Vec2<Float>& position, Game& game)
@@ -195,12 +196,14 @@ void Gatekeeper::on_collision(Platform& pfrm, Game& game, Laser&)
 
 void Gatekeeper::on_death(Platform& pfrm, Game& game)
 {
-    boss_explosion(pfrm, game, position_);
+    auto loc = position_ + sprite_.get_origin().cast<Float>();
+    loc.x -= 16;
+    boss_explosion(pfrm, game, loc);
 }
 
 
 GatekeeperShield::GatekeeperShield(const Vec2<Float>& position, int offset)
-    : Enemy(1, position, {{16, 32}, {8, 16}}), timer_(0), offset_(offset)
+    : Enemy(1, position, {{16, 32}, {8, 16}}), timer_(0), state_(State::orbit), offset_(offset)
 {
     shadow_.set_alpha(Sprite::Alpha::translucent);
     shadow_.set_size(Sprite::Size::w16_h32);
@@ -215,55 +218,72 @@ GatekeeperShield::GatekeeperShield(const Vec2<Float>& position, int offset)
 
 void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
 {
-    timer_ += dt / 32;
-
-    if (game.enemies().get<Gatekeeper>().empty()) {
-        this->kill();
-        return;
-    }
-
     fade_color_anim_.advance(sprite_, dt);
 
-    const auto& parent_pos =
-        (*game.enemies().get<Gatekeeper>().begin())->get_position();
+    switch (state_) {
+    case State::orbit: {
+        if (game.enemies().get<Gatekeeper>().empty()) {
+            timer_ = seconds(2) + milliseconds(random_choice<900>());
+            // sprite_.set_texture_index(16);
+            state_ = State::detached;
+            return;
+        }
 
-    constexpr auto radius = 27;
+        timer_ += dt / 32;
 
-    const auto x_part = (Float(cosine(timer_ + offset_)) / INT16_MAX);
-    const auto y_part = (Float(sine(timer_ + offset_)) / INT16_MAX);
+        const auto& parent_pos =
+            (*game.enemies().get<Gatekeeper>().begin())->get_position();
 
-    if (abs(y_part) > 0.8) {
-        sprite_.set_texture_index(16);
-    } else if (abs(y_part) > 0.6) {
-        sprite_.set_texture_index(17);
-    } else if (abs(y_part) > 0.4) {
-        sprite_.set_texture_index(18);
-    } else {
-        sprite_.set_texture_index(19);
+        constexpr auto radius = 29;
+
+        const auto x_part = (Float(cosine(timer_ + offset_)) / INT16_MAX);
+        const auto y_part = (Float(sine(timer_ + offset_)) / INT16_MAX);
+
+        if (abs(y_part) > 0.8) {
+            sprite_.set_texture_index(16);
+        } else if (abs(y_part) > 0.6) {
+            sprite_.set_texture_index(17);
+        } else if (abs(y_part) > 0.4) {
+            sprite_.set_texture_index(18);
+        } else {
+            sprite_.set_texture_index(19);
+        }
+
+        // Rather than draw keyframes for the whole rotation animation, which is
+        // relatively simple, I animated a quarter of the shield rotation, and
+        // mirrored the sprite accordingly.
+        if (y_part > 0) {
+            if (x_part > 0) {
+                sprite_.set_flip({true, false});
+            } else {
+                sprite_.set_flip({false, false});
+            }
+        } else {
+            if (x_part > 0) {
+                sprite_.set_flip({false, false});
+            } else {
+                sprite_.set_flip({true, false});
+            }
+        }
+
+        position_ = {parent_pos.x + radius * x_part,
+                     (parent_pos.y - 2) + radius * y_part};
+
+        sprite_.set_position(position_);
+        shadow_.set_position(position_);
+
+        break;
     }
 
-    // Rather than draw keyframes for the whole rotation animation, which is
-    // relatively simple, I animated a quarter of the shield rotation, and
-    // mirrored the sprite accordingly.
-    if (y_part > 0) {
-        if (x_part > 0) {
-            sprite_.set_flip({true, false});
-        } else {
-            sprite_.set_flip({false, false});
+    case State::detached:
+        timer_ -= dt;
+
+        if (timer_ <= 0) {
+            this->kill();
         }
-    } else {
-        if (x_part > 0) {
-            sprite_.set_flip({false, false});
-        } else {
-            sprite_.set_flip({true, false});
-        }
+        break;
     }
 
-    position_ = {parent_pos.x + radius * x_part,
-                 (parent_pos.y - 2) + radius * y_part};
-
-    sprite_.set_position(position_);
-    shadow_.set_position(position_);
 }
 
 
@@ -272,4 +292,16 @@ void GatekeeperShield::on_collision(Platform& pfrm, Game& game, Laser&)
     const auto c = current_zone(game).energy_glow_color_;
 
     sprite_.set_mix({c, 255});
+}
+
+
+void GatekeeperShield::on_death(Platform& pfrm, Game& game)
+{
+    pfrm.sleep(5);
+
+    static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                               Item::Type::null};
+
+    on_enemy_destroyed(pfrm, game, position_, 2, item_drop_vec);
+
 }
