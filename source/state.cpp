@@ -448,12 +448,14 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                     // NOTE: snake body segments do not make much sense to
                     // center the camera on, so exclude them. Same for various
                     // other enemies...
-                    if constexpr (not std::is_same<decltype(**it),
-                                                   SnakeBody>() and
-                                  not std::is_same<decltype(**it),
-                                                   SnakeHead>() and
-                                  not std::is_same<decltype(**it),
-                                                   GatekeeperShield>()) {
+                    using T =
+                        typename std::remove_reference<decltype(entity_buf)>::type;
+
+                    using VT = typename T::ValueType::element_type;
+
+                    if constexpr (not std::is_same<VT, SnakeBody>() and
+                                  not std::is_same<VT, SnakeHead>() and
+                                  not std::is_same<VT, GatekeeperShield>()) {
                         if ((*it)->visible()) {
                             enemies_visible = true;
                             game.camera().push_ballast((*it)->get_position());

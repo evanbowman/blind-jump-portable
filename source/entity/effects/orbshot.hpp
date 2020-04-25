@@ -11,7 +11,8 @@ class OrbShot : public Projectile {
 public:
     OrbShot(const Vec2<Float>& position,
             const Vec2<Float>& target,
-            Float speed);
+            Float speed,
+            Microseconds duration = seconds(2));
 
     void update(Platform& pf, Game& game, Microseconds dt);
 

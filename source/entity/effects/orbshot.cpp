@@ -4,9 +4,10 @@
 
 OrbShot::OrbShot(const Vec2<Float>& position,
                  const Vec2<Float>& target,
-                 Float speed)
+                 Float speed,
+                 Microseconds duration)
     : Projectile(position, target, speed),
-      timer_(0), hitbox_{&position_, {{12, 12}, {8, 8}}}
+      timer_(duration), hitbox_{&position_, {{12, 12}, {8, 8}}}
 {
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 8});
@@ -19,9 +20,9 @@ void OrbShot::update(Platform& pf, Game& game, Microseconds dt)
 {
     Projectile::update(pf, game, dt);
 
-    timer_ += dt;
+    timer_ -= dt;
 
-    if (timer_ > seconds(2)) {
+    if (timer_ <= 0) {
         Entity::kill();
     }
 

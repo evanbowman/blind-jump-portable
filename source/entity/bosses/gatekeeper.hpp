@@ -35,8 +35,24 @@ public:
         return shield_radius_;
     }
 
+    int shield_radius2() const
+    {
+        return shield_radius2_;
+    }
+
+    bool second_form() const
+    {
+        return not third_form() and get_health() < 80;
+    }
+
+    bool third_form() const
+    {
+        return get_health() < 45;
+    }
+
 private:
     enum class State {
+        sleep,
         idle,
         jump,
         airborne,
@@ -44,6 +60,13 @@ private:
         shield_sweep_out,
         shield_sweep_in1,
         shield_sweep_in2,
+
+        second_form_enter,
+        encircle_sweep_show,
+        encircle_receede,
+
+        third_form_enter,
+        third_form_sweep_in,
     };
 
     Sprite head_;
@@ -52,13 +75,18 @@ private:
     Microseconds charge_timer_;
     Vec2<Float> move_vec_;
     int shield_radius_;
+    int shield_radius2_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };
 
 
 class GatekeeperShield : public Enemy {
 public:
-    GatekeeperShield(const Vec2<Float>& position, int offset);
+    enum class State { orbit, encircle, detached };
+
+    GatekeeperShield(const Vec2<Float>& position,
+                     int offset,
+                     State initial_state = State::orbit);
 
     void update(Platform&, Game&, Microseconds);
 
@@ -69,13 +97,14 @@ public:
 
     void on_death(Platform&, Game&);
 
-private:
-    enum class State { orbit, detached };
+    void detach(Microseconds keepalive);
 
+private:
     Microseconds timer_;
     Microseconds reload_;
     int shot_count_;
     State state_;
     int offset_;
+    Vec2<Float> seek_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };
