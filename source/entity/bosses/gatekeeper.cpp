@@ -8,7 +8,7 @@ static const Entity::Health initial_health = 100;
 
 
 Gatekeeper::Gatekeeper(const Vec2<Float>& position) :
-    Enemy(initial_health, position, {{32, 32}, {16, 16}}),
+    Enemy(initial_health, position, {{32, 50}, {16, 36}}),
     state_(State::idle),
     timer_(0)
 {
@@ -34,7 +34,7 @@ Gatekeeper::Gatekeeper(const Vec2<Float>& position) :
 void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     static constexpr const Microseconds jump_duration = milliseconds(500);
-    static constexpr const Float movement_rate = 0.000029f;
+    static constexpr const Float movement_rate = 0.000033f;
 
     auto face_left = [this] {
         sprite_.set_flip({1, 0});
