@@ -5,7 +5,7 @@
 #include "entity/enemies/common.hpp"
 
 
-static const Entity::Health initial_health = 2;
+static const Entity::Health initial_health = 100;
 
 
 Gatekeeper::Gatekeeper(const Vec2<Float>& position, Game& game)
