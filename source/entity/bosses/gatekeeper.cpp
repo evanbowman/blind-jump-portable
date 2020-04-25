@@ -33,6 +33,9 @@ Gatekeeper::Gatekeeper(const Vec2<Float>& position) :
 
 void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    static constexpr const Microseconds jump_duration = milliseconds(500);
+    static constexpr const Float movement_rate = 0.000029f;
+
     auto face_left = [this] {
         sprite_.set_flip({1, 0});
         head_.set_flip({1, 0});
@@ -59,10 +62,18 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         timer_ += dt;
         if (timer_ > milliseconds(400)) {
             timer_ = 0;
-            state_ = State::jump;
 
-            sprite_.set_texture_index(48);
-            head_.set_texture_index(42);
+            if (distance(position_, game.player().get_position()) > 100 or
+                random_choice<4>() == 0) {
+                state_ = State::jump;
+
+                sprite_.set_texture_index(48);
+                head_.set_texture_index(42);
+
+            } else {
+                // TODO: attack...
+
+            }
         }
         break;
 
@@ -79,6 +90,33 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
             } else {
                 state_ = State::airborne;
 
+                Vec2<Float> dest;
+                Vec2<Float> unit;
+
+                int tries = 0;
+
+                do {
+
+                    if (tries++ > 0) {
+                        const s16 dir = ((static_cast<float>(random_choice<359>())) / 360) *
+                            INT16_MAX;
+
+                        unit = {(float(cosine(dir)) / INT16_MAX),
+                                (float(sine(dir)) / INT16_MAX)};
+
+                    } else {
+                        unit = direction(position_, game.player().get_position());
+
+                    }
+
+                    move_vec_ = 5.f * unit;
+
+                    const auto tolerance = milliseconds(90);
+                    dest = position_ +
+                        move_vec_ * ((jump_duration + tolerance) * movement_rate);
+
+                } while (wall_in_path(unit, position_, game, dest));
+
             }
         }
         break;
@@ -90,14 +128,18 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 10 * Float(sine(4 * 3.14 * 0.0027f * timer_ + 180)) /
                 std::numeric_limits<s16>::max();
 
+        position_.x += move_vec_.x * dt * movement_rate;
+        position_.y += move_vec_.y * dt * movement_rate;
+
         sprite_.set_position({position_.x, position_.y - abs(offset)});
         head_.set_position({position_.x, position_.y - abs(offset)});
+        shadow_.set_position(position_);
 
         if (timer_ > milliseconds(300)) {
             sprite_.set_texture_index(53);
             head_.set_texture_index(47);
         }
-        if (timer_ > milliseconds(500)) {
+        if (timer_ > jump_duration) {
             head_.set_position(position_);
             sprite_.set_position(position_);
 

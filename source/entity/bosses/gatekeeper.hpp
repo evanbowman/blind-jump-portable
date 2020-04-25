@@ -37,5 +37,6 @@ private:
     Sprite head_;
     State state_;
     Microseconds timer_;
+    Vec2<Float> move_vec_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };
