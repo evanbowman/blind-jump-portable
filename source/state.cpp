@@ -446,11 +446,14 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                     (pfrm.keyboard().pressed<Key::action_1>() or
                      camera_snap_timer_ > 0)) {
                     // NOTE: snake body segments do not make much sense to
-                    // center the camera on, so exclude them.
+                    // center the camera on, so exclude them. Same for various
+                    // other enemies...
                     if constexpr (not std::is_same<decltype(**it),
                                                    SnakeBody>() and
                                   not std::is_same<decltype(**it),
-                                                   SnakeHead>()) {
+                                                   SnakeHead>() and
+                                  not std::is_same<decltype(**it),
+                                                   GatekeeperShield>()) {
                         if ((*it)->visible()) {
                             enemies_visible = true;
                             game.camera().push_ballast((*it)->get_position());
@@ -564,6 +567,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
         check_collisions(
             pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
+        check_collisions(
+            pfrm, game, player, game.enemies().get<Gatekeeper>());
+        check_collisions(
+            pfrm, game, player, game.enemies().get<GatekeeperShield>());
         check_collisions(pfrm,
                          game,
                          game.effects().get<Laser>(),

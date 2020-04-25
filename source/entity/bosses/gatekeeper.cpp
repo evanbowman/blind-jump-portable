@@ -5,12 +5,15 @@
 #include "entity/enemies/common.hpp"
 
 
-static const Entity::Health initial_health = 100;
+static const Entity::Health initial_health = 125;
+static const int default_shield_radius = 24;
+static const int max_shield_radius = 100;
 
 
 Gatekeeper::Gatekeeper(const Vec2<Float>& position, Game& game)
     : Enemy(initial_health, position, {{32, 50}, {16, 36}}),
-      state_(State::idle), timer_(0)
+      state_(State::idle), timer_(0), charge_timer_(0),
+      shield_radius_(default_shield_radius)
 {
     sprite_.set_texture_index(7);
     sprite_.set_size(Sprite::Size::w32_h32);
@@ -39,6 +42,8 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
     static constexpr const Microseconds jump_duration = milliseconds(500);
     static constexpr const Float movement_rate = 0.000033f;
 
+    charge_timer_ += dt;
+
     auto face_left = [this] {
         sprite_.set_flip({1, 0});
         head_.set_flip({1, 0});
@@ -62,22 +67,27 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         return distance(position_, game.player().get_position()) > dist;
     };
 
+    // auto second_form = [&] { return get_health() < 85; };
+
     switch (state_) {
     case State::idle:
         face_player();
 
         timer_ += dt;
-        if (timer_ > milliseconds(400)) {
+        if (timer_ > milliseconds(600)) {
             timer_ = 0;
 
-            if (dist_from_player(120) or random_choice<4>() == 0) {
+            if (dist_from_player(80)) {
                 state_ = State::jump;
 
                 sprite_.set_texture_index(48);
                 head_.set_texture_index(42);
 
             } else {
-                // TODO: attack...
+                if (charge_timer_ > seconds(9)) {
+                    charge_timer_ = 0;
+                    state_ = State::shield_sweep_out;
+                }
             }
         }
         break;
@@ -98,7 +108,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 Vec2<Float> dest;
                 Vec2<Float> unit;
 
-                int tries = not dist_from_player(65) ? 1 : 0;
+                int tries = 0;
 
                 do {
 
@@ -152,6 +162,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
             head_.set_texture_index(45);
             sprite_.set_texture_index(45 + 6);
             state_ = State::landing;
+            game.camera().shake();
         }
         break;
     }
@@ -173,6 +184,43 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
             }
         }
         break;
+
+    case State::shield_sweep_out:
+        timer_ += dt;
+        if (timer_ > milliseconds(20)) {
+            timer_ = 0;
+            if (shield_radius_ < max_shield_radius) {
+                ++shield_radius_;
+            } else {
+                state_ = State::shield_sweep_in1;
+            }
+        }
+        break;
+
+    case State::shield_sweep_in1:
+        timer_ += dt;
+        if (timer_ > milliseconds(25)) {
+            timer_ = 0;
+            if (shield_radius_ > max_shield_radius / 2) {
+                --shield_radius_;
+            } else {
+                state_ = State::shield_sweep_in2;
+            }
+        }
+        break;
+
+    case State::shield_sweep_in2:
+        timer_ += dt;
+        if (timer_ > milliseconds(40)) {
+            timer_ = 0;
+            if (shield_radius_ > default_shield_radius) {
+                --shield_radius_;
+            } else {
+                state_ = State::idle;
+            }
+        }
+        break;
+
     }
 
 
@@ -203,7 +251,7 @@ void Gatekeeper::on_death(Platform& pfrm, Game& game)
 
 
 GatekeeperShield::GatekeeperShield(const Vec2<Float>& position, int offset)
-    : Enemy(1, position, {{16, 32}, {8, 16}}), timer_(0), state_(State::orbit), offset_(offset)
+    : Enemy(Health(30), position, {{14, 32}, {8, 16}}), timer_(0), state_(State::orbit), offset_(offset)
 {
     shadow_.set_alpha(Sprite::Alpha::translucent);
     shadow_.set_size(Sprite::Size::w16_h32);
@@ -229,23 +277,56 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
             return;
         }
 
-        timer_ += dt / 32;
-
         const auto& parent_pos =
             (*game.enemies().get<Gatekeeper>().begin())->get_position();
 
-        constexpr auto radius = 29;
+        const auto radius =
+            (*game.enemies().get<Gatekeeper>().begin())->shield_radius();
+
+        if (radius not_eq default_shield_radius) {
+            timer_ += (dt / 48) * (1.f - smoothstep(0.f, 1.f, Float(radius) / max_shield_radius));
+        } else {
+            timer_ += dt / 48;
+            reload_ = milliseconds(200);
+            shot_count_ = 0;
+        }
 
         const auto x_part = (Float(cosine(timer_ + offset_)) / INT16_MAX);
         const auto y_part = (Float(sine(timer_ + offset_)) / INT16_MAX);
 
-        if (abs(y_part) > 0.8) {
+        if (abs(radius - max_shield_radius) < 30) {
+            sprite_.set_size(Sprite::Size::w32_h32);
+            sprite_.set_texture_index(33);
+
+            reload_ -= dt;
+            if (reload_ <= 0) {
+                reload_ = milliseconds(40 + shot_count_ * 10);
+
+                game.effects().spawn<OrbShot>(position_,
+                                              sample<24>(game.player().get_position()),
+                                              0.00019f - 0.00002f * shot_count_);
+
+                if (++shot_count_ == 4) {
+                    shot_count_ = 0;
+                    reload_ = milliseconds(375);
+                }
+
+            }
+
+        } else if (abs(y_part) > 0.8) {
+            sprite_.set_size(Sprite::Size::w16_h32);
             sprite_.set_texture_index(16);
+
         } else if (abs(y_part) > 0.6) {
+            sprite_.set_size(Sprite::Size::w16_h32);
             sprite_.set_texture_index(17);
+
         } else if (abs(y_part) > 0.4) {
+            sprite_.set_size(Sprite::Size::w16_h32);
             sprite_.set_texture_index(18);
+
         } else {
+            sprite_.set_size(Sprite::Size::w16_h32);
             sprite_.set_texture_index(19);
         }
 
@@ -289,9 +370,19 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
 
 void GatekeeperShield::on_collision(Platform& pfrm, Game& game, Laser&)
 {
-    const auto c = current_zone(game).energy_glow_color_;
+    if (sprite_.get_size() == Sprite::Size::w32_h32) {
+        const auto c = current_zone(game).injury_glow_color_;
+        sprite_.set_mix({c, 255});
+        debit_health(1);
 
-    sprite_.set_mix({c, 255});
+    } else {
+        const auto c = current_zone(game).energy_glow_color_;
+        sprite_.set_mix({c, 255});
+
+        // if (not game.enemies().get<Gatekeeper>().empty()) {
+        //     (*game.enemies().get<Gatekeeper>().begin())->add_charge();
+        // }
+    }
 }
 
 

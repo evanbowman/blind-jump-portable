@@ -30,13 +30,28 @@ public:
 
     void on_death(Platform&, Game&);
 
+    int shield_radius() const
+    {
+        return shield_radius_;
+    }
+
 private:
-    enum class State { idle, jump, airborne, landing };
+    enum class State {
+        idle,
+        jump,
+        airborne,
+        landing,
+        shield_sweep_out,
+        shield_sweep_in1,
+        shield_sweep_in2,
+    };
 
     Sprite head_;
     State state_;
     Microseconds timer_;
+    Microseconds charge_timer_;
     Vec2<Float> move_vec_;
+    int shield_radius_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };
 
@@ -48,6 +63,9 @@ public:
     void update(Platform&, Game&, Microseconds);
 
     void on_collision(Platform&, Game&, Laser&);
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
 
     void on_death(Platform&, Game&);
 
@@ -55,6 +73,8 @@ private:
     enum class State { orbit, detached };
 
     Microseconds timer_;
+    Microseconds reload_;
+    int shot_count_;
     State state_;
     int offset_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
