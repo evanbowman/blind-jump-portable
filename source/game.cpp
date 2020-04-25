@@ -227,6 +227,11 @@ static const BossLevel* get_boss_level(Level current_level)
         return &ret;
     }
 
+    case 20: {
+        static constexpr const BossLevel ret{boss_level_0, "spritesheet_boss1"};
+        return &ret;
+    }
+
     default:
         return nullptr;
     }
@@ -753,7 +758,13 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         }
         const auto target = world_coord(*farthest);
 
-        enemies_.spawn<TheFirstExplorer>(target);
+        if (level() == 10) {
+            enemies_.spawn<TheFirstExplorer>(target);
+
+        } else {
+            enemies_.spawn<Gatekeeper>(target);
+
+        }
 
         // Place two hearts in the level. The game is supposed to be difficult,
         // but not cruel!

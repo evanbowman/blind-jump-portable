@@ -33,6 +33,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/effects/firstExplorerSmallLaser.cpp
   ${SOURCE_DIR}/entity/effects/firstExplorerBigLaser.cpp
   ${SOURCE_DIR}/entity/bosses/theFirstExplorer.cpp
+  ${SOURCE_DIR}/entity/bosses/gatekeeper.cpp
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/effects/explosion.cpp
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
@@ -77,6 +78,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/spritesheet2.s
     ${SOURCE_DIR}/graphics/overlay_journal.s
     ${SOURCE_DIR}/graphics/spritesheet_boss0.s
+    ${SOURCE_DIR}/graphics/spritesheet_boss1.s
     ${SOURCE_DIR}/graphics/old_poster_flattened.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()

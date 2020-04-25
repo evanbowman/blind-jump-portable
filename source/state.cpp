@@ -568,6 +568,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                          game,
                          game.effects().get<Laser>(),
                          game.enemies().get<TheFirstExplorer>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<Gatekeeper>());
     }
 
     return null_state();
@@ -1609,7 +1613,7 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
                 update_selector();
             }
 
-            pfrm.sleep(60);
+            pfrm.sleep(25);
 
             input_text_->erase();
 
@@ -1620,7 +1624,7 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
                 input_text_->append(" REJECTED");
             }
 
-            pfrm.sleep(60);
+            pfrm.sleep(25);
 
             input_text_.reset();
 

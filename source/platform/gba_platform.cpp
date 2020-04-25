@@ -609,7 +609,8 @@ struct TextureData {
 
 static const TextureData sprite_textures[] = {TEXTURE_INFO(spritesheet),
                                               TEXTURE_INFO(spritesheet2),
-                                              TEXTURE_INFO(spritesheet_boss0)};
+                                              TEXTURE_INFO(spritesheet_boss0),
+                                              TEXTURE_INFO(spritesheet_boss1)};
 
 
 static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),
