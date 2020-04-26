@@ -129,8 +129,10 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 
         timer_ += dt;
         if (timer_ > [&]() {
-                         if (second_form() or third_form()) {
-                             return milliseconds(550);
+                         if (third_form()) {
+                             return milliseconds(470);
+                         } else if (second_form()) {
+                             return milliseconds(500);
                          } else {
                              return milliseconds(600);
                          }
@@ -262,7 +264,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::shield_sweep_out:
         timer_ += dt;
-        if (timer_ > milliseconds(20)) {
+        if (timer_ > milliseconds(third_form() ? 15 : 20)) {
             timer_ = 0;
             if (shield_radius_ < max_shield_radius) {
                 ++shield_radius_;
@@ -274,7 +276,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::shield_sweep_in1:
         timer_ += dt;
-        if (timer_ > milliseconds(25)) {
+        if (timer_ > milliseconds(third_form() ? 20 : 25)) {
             timer_ = 0;
             if (shield_radius_ > max_shield_radius / 2) {
                 --shield_radius_;
@@ -377,6 +379,16 @@ void GatekeeperShield::detach(Microseconds keepalive)
 void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     fade_color_anim_.advance(sprite_, dt);
+
+    auto coord = to_tile_coord(position_.cast<s32>());
+    coord.y += 1;
+
+    // Hide the shadow when we're jumping over empty space
+    if (not is_walkable(game.tiles().get_tile(coord.x, coord.y))) {
+        shadow_.set_alpha(Sprite::Alpha::transparent);
+    } else {
+        shadow_.set_alpha(Sprite::Alpha::translucent);
+    }
 
     auto set_flip = [this](Float x_part, Float y_part) {
                         // Rather than draw additional artwork and waste vram
@@ -485,10 +497,13 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
         const auto radius =
             (*game.enemies().get<Gatekeeper>().begin())->shield_radius();
 
+        const bool third_form = (*game.enemies().get<Gatekeeper>().begin())->third_form();
+        const int divisor = [&] { if (third_form) return 32; else return 48; }();
+
         if (radius not_eq default_shield_radius) {
-            timer_ += (dt / 48) * (1.f - smoothstep(0.f, 1.f, Float(radius) / max_shield_radius));
+            timer_ += (dt / divisor) * (1.f - smoothstep(0.f, 1.f, Float(radius) / max_shield_radius));
         } else {
-            timer_ += dt / 48;
+            timer_ += dt / divisor;
             reload_ = milliseconds(200);
             shot_count_ = 0;
         }
@@ -510,7 +525,7 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
                                               seconds(2));
 
                 if (++shot_count_ == [&] {
-                                         if ((*game.enemies().get<Gatekeeper>().begin())->third_form()) {
+                                         if (third_form) {
                                              return 5;
                                          } else {
                                              return 3;
@@ -560,9 +575,6 @@ void GatekeeperShield::on_collision(Platform& pfrm, Game& game, Laser&)
         const auto c = current_zone(game).energy_glow_color_;
         sprite_.set_mix({c, 255});
 
-        // if (not game.enemies().get<Gatekeeper>().empty()) {
-        //     (*game.enemies().get<Gatekeeper>().begin())->add_charge();
-        // }
     }
 }
 
