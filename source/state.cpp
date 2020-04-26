@@ -448,8 +448,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                     // NOTE: snake body segments do not make much sense to
                     // center the camera on, so exclude them. Same for various
                     // other enemies...
-                    using T =
-                        typename std::remove_reference<decltype(entity_buf)>::type;
+                    using T = typename std::remove_reference<decltype(
+                        entity_buf)>::type;
 
                     using VT = typename T::ValueType::element_type;
 
@@ -569,8 +569,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
         check_collisions(
             pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
-        check_collisions(
-            pfrm, game, player, game.enemies().get<Gatekeeper>());
+        check_collisions(pfrm, game, player, game.enemies().get<Gatekeeper>());
         check_collisions(
             pfrm, game, player, game.enemies().get<GatekeeperShield>());
         check_collisions(pfrm,
