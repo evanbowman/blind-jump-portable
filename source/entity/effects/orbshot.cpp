@@ -26,7 +26,17 @@ void OrbShot::update(Platform& pf, Game& game, Microseconds dt)
         Entity::kill();
     }
 
-    animation_.advance(sprite_, dt);
+    if (animation_.advance(sprite_, dt)) {
+        // We don't want to prevent off-screen enemies from attacking the
+        // player, but we also want to limit the number of entities that the
+        // system needs to process. So if the entity's been alive for a while,
+        // and is now off-screen, then it's ok to get rid of it.
+        if (timer_ < milliseconds(750)) {
+            if (not visible()) {
+                Entity::kill();
+            }
+        }
+    }
 }
 
 

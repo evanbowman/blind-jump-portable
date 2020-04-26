@@ -554,17 +554,17 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
                     position_,
                     sample<22>(game.player().get_position()),
                     0.00019f - 0.00002f * shot_count_,
-                    seconds(2));
+                    seconds(2) - milliseconds(550));
 
                 if (++shot_count_ == [&] {
                         if (third_form) {
-                            return 5;
+                            return 4;
                         } else {
                             return 3;
                         }
                     }()) {
                     shot_count_ = 0;
-                    reload_ = milliseconds(375);
+                    reload_ = milliseconds(600);
                 }
             }
 

@@ -81,7 +81,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                         pfrm.sleep(10);
                         state_ = State::opening;
 
-                        pfrm.speaker().play_sound("creak", 0);
+                        pfrm.speaker().play_sound("creak", 1);
                     }
                 }
             }

@@ -272,6 +272,7 @@ public:
         // sounds with a lower priority will be evicted, to make room for
         // higher-priority sounds.
         void play_sound(const char* name, int priority);
+        bool is_sound_playing(const char* name);
 
     private:
         friend class Platform;

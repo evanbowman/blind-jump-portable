@@ -572,7 +572,7 @@ void Blaster::shoot(Platform& pf, Game& game)
         if (length(game.effects().get<Laser>()) < max_lasers_) {
             reload_ = reload_interval_;
 
-            pf.speaker().play_sound("blaster", 0);
+            pf.speaker().play_sound("blaster", 4);
 
             game.effects().spawn<Laser>(position_, dir_);
 

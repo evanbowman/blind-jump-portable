@@ -1465,29 +1465,53 @@ struct ActiveSoundInfo {
 #include "sound_footstep3.hpp"
 #include "sound_footstep4.hpp"
 
-static const AudioTrack sounds[] = {DEF_AUDIO(creak, sound_creak),
-                                    DEF_AUDIO(openbag, sound_openbag),
-                                    DEF_AUDIO(blaster, sound_blaster),
-                                    DEF_AUDIO(footstep1, sound_footstep1),
+static const AudioTrack sounds[] = {DEF_AUDIO(footstep1, sound_footstep1),
                                     DEF_AUDIO(footstep2, sound_footstep2),
                                     DEF_AUDIO(footstep3, sound_footstep3),
-                                    DEF_AUDIO(footstep4, sound_footstep4)};
+                                    DEF_AUDIO(footstep4, sound_footstep4),
+                                    DEF_AUDIO(openbag, sound_openbag),
+                                    DEF_AUDIO(blaster, sound_blaster),
+                                    DEF_AUDIO(creak, sound_creak)};
+
+
+static const AudioTrack* get_sound(const char* name)
+{
+    for (auto& sound : sounds) {
+        if (strcmp(name, sound.name_) == 0) {
+            return &sound;
+        }
+    }
+    return nullptr;
+}
 
 
 static std::optional<ActiveSoundInfo> make_sound(const char* name)
 {
-    for (auto& track : sounds) {
-        if (strcmp(name, track.name_) == 0) {
-            return ActiveSoundInfo{
-                0, track.length_, (const AudioSample*)track.data_, 0
+    if (auto sound = get_sound(name)) {
+        return ActiveSoundInfo{
+                0, sound->length_, (const AudioSample*)sound->data_, 0
             };
-        }
+    } else {
+        return {};
     }
-    return {};
 }
 
 
-static Buffer<ActiveSoundInfo, 4> active_sounds;
+// Only three sounds will play at a time... hey, sound mixing's expensive!
+static Buffer<ActiveSoundInfo, 3> active_sounds;
+
+
+bool Platform::Speaker::is_sound_playing(const char* name)
+{
+    if (auto sound = get_sound(name)) {
+        for (const auto& info : active_sounds) {
+            if ((s8*)sound->data_ == info.data_) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 
 void Platform::Speaker::play_sound(const char* name, int priority)
