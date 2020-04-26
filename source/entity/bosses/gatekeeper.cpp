@@ -149,10 +149,24 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 if (not second_form()) {
                     if (charge_timer_ > seconds(9)) {
                         charge_timer_ = 0;
-                        state_ = State::shield_sweep_out;
+                        state_ = State::prep_shield_sweep;
+
+                        sprite_.set_texture_index(12);
+                        head_.set_texture_index(10);
                     }
                 }
             }
+        }
+        break;
+
+    case State::prep_shield_sweep:
+        timer_ += dt;
+        if (timer_ > milliseconds(50)) {
+            sprite_.set_texture_index(13);
+            head_.set_texture_index(11);
+
+            timer_ = 0;
+            state_ = State::shield_sweep_out;
         }
         break;
 
@@ -263,6 +277,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case State::shield_sweep_out:
+        face_player();
         timer_ += dt;
         if (timer_ > milliseconds(third_form() ? 15 : 20)) {
             timer_ = 0;
@@ -270,11 +285,14 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 ++shield_radius_;
             } else {
                 state_ = State::shield_sweep_in1;
+                sprite_.set_texture_index(7);
+                head_.set_texture_index(6);
             }
         }
         break;
 
     case State::shield_sweep_in1:
+        face_player();
         timer_ += dt;
         if (timer_ > milliseconds(third_form() ? 20 : 25)) {
             timer_ = 0;
@@ -581,7 +599,8 @@ void GatekeeperShield::on_collision(Platform& pfrm, Game& game, Laser&)
     if (sprite_.get_size() == Sprite::Size::w32_h32) {
         const auto c = current_zone(game).injury_glow_color_;
         sprite_.set_mix({c, 255});
-        debit_health(1);
+        debit_health(1); // So, technically you can destroy the shield, but it's
+                         // probably not worth the trouble of trying.
 
     } else {
         const auto c = current_zone(game).energy_glow_color_;

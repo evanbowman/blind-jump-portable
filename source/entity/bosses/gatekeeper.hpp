@@ -57,6 +57,7 @@ private:
         jump,
         airborne,
         landing,
+        prep_shield_sweep,
         shield_sweep_out,
         shield_sweep_in1,
         shield_sweep_in2,
