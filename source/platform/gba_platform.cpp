@@ -1415,8 +1415,8 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 
 
 #include "frostellar.hpp"
-#include "sb_omega.hpp"
 #include "october.hpp"
+#include "sb_omega.hpp"
 
 
 #define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \
@@ -1459,16 +1459,20 @@ struct ActiveSoundInfo {
 
 #include "sound_blaster.hpp"
 #include "sound_creak.hpp"
-#include "sound_openbag.hpp"
 #include "sound_footstep1.hpp"
 #include "sound_footstep2.hpp"
 #include "sound_footstep3.hpp"
 #include "sound_footstep4.hpp"
+#include "sound_open_book.hpp"
+#include "sound_openbag.hpp"
+#include "sound_page_flip.hpp"
 
 static const AudioTrack sounds[] = {DEF_AUDIO(footstep1, sound_footstep1),
                                     DEF_AUDIO(footstep2, sound_footstep2),
                                     DEF_AUDIO(footstep3, sound_footstep3),
                                     DEF_AUDIO(footstep4, sound_footstep4),
+                                    DEF_AUDIO(open_book, sound_open_book),
+                                    DEF_AUDIO(page_flip, sound_page_flip),
                                     DEF_AUDIO(openbag, sound_openbag),
                                     DEF_AUDIO(blaster, sound_blaster),
                                     DEF_AUDIO(creak, sound_creak)};
@@ -1489,8 +1493,7 @@ static std::optional<ActiveSoundInfo> make_sound(const char* name)
 {
     if (auto sound = get_sound(name)) {
         return ActiveSoundInfo{
-                0, sound->length_, (const AudioSample*)sound->data_, 0
-            };
+            0, sound->length_, (const AudioSample*)sound->data_, 0};
     } else {
         return {};
     }
@@ -1501,14 +1504,30 @@ static std::optional<ActiveSoundInfo> make_sound(const char* name)
 static Buffer<ActiveSoundInfo, 3> active_sounds;
 
 
+// If you're going to edit any of the variables used by the interrupt handler
+// for audio playback, you should use this helper function.
+template <typename F> auto modify_audio(F&& callback)
+{
+    irqDisable(IRQ_TIMER0);
+    callback();
+    irqEnable(IRQ_TIMER0);
+}
+
+
 bool Platform::Speaker::is_sound_playing(const char* name)
 {
     if (auto sound = get_sound(name)) {
-        for (const auto& info : active_sounds) {
-            if ((s8*)sound->data_ == info.data_) {
-                return true;
+        bool playing = false;
+        modify_audio([&] {
+            for (const auto& info : active_sounds) {
+                if ((s8*)sound->data_ == info.data_) {
+                    playing = true;
+                    return;
+                }
             }
-        }
+        });
+
+        return playing;
     }
     return false;
 }
@@ -1523,22 +1542,26 @@ void Platform::Speaker::play_sound(const char* name, int priority)
     if (auto info = make_sound(name)) {
         info->priority_ = priority;
 
-        if (not active_sounds.full()) {
-            active_sounds.push_back(*info);
+        modify_audio([&] {
+            if (not active_sounds.full()) {
+                active_sounds.push_back(*info);
 
-        } else {
-            ActiveSoundInfo* lowest = active_sounds.begin();
-            for (auto it = active_sounds.begin(); it not_eq active_sounds.end(); ++it) {
-                if (it->priority_ < lowest->priority_) {
-                    lowest = it;
+            } else {
+                ActiveSoundInfo* lowest = active_sounds.begin();
+                for (auto it = active_sounds.begin();
+                     it not_eq active_sounds.end();
+                     ++it) {
+                    if (it->priority_ < lowest->priority_) {
+                        lowest = it;
+                    }
+                }
+
+                if (lowest->priority_ < priority) {
+                    active_sounds.erase(lowest);
+                    active_sounds.push_back(*info);
                 }
             }
-
-            if (lowest->priority_ < priority) {
-                active_sounds.erase(lowest);
-                active_sounds.push_back(*info);
-            }
-        }
+        });
     }
 }
 
@@ -1550,13 +1573,7 @@ static int music_track_pos;
 
 static void stop_music()
 {
-    // REG_TM0CNT_H = 0;  //disable timer 0
-    // REG_DMA1CNT_H = 0; //stop DMA
-    // REG_IF |= REG_IF;
-
-    // irqDisable(IRQ_TIMER1);
-
-    music_track = nullptr;
+    modify_audio([] { music_track = nullptr; });
 }
 
 
@@ -1566,7 +1583,6 @@ void Platform::Speaker::stop_music()
 }
 
 
-
 static void play_music(const char* name, bool loop)
 {
     const auto track = find_track(name);
@@ -1574,94 +1590,14 @@ static void play_music(const char* name, bool loop)
         return;
     }
 
-    music_track_name = name;
+    modify_audio([&] {
+        music_track_name = name;
 
-    music_track_length = track->length_;
-    music_track_loop = loop;
-    music_track = track->data_;
-    music_track_pos = 0;
-
-    // REG_SOUNDCNT_H=0x0B0F;  //DirectSound A + fifo reset + max volume to L and R
-    // REG_SOUNDCNT_X=0x0080;  //turn sound chip on
-
-    // irqEnable(IRQ_TIMER0);
-    // irqSet(IRQ_TIMER0,
-    //        [] {
-    //            static u32 control = 0;
-    //            if (control++ % 4) {
-    //                return;
-    //            }
-
-    //            s8 mixing_buffer[4];
-
-    //            for (int i = 0; i < 4; ++i) {
-    //                mixing_buffer[i] = music_track[music_track_pos + i];
-    //            }
-
-    //            REG_SGFIFOA = *((u32*)mixing_buffer);
-
-    //            music_track_pos += 4;
-
-    //            if (music_track_pos > music_track_length) {
-    //                irqDisable(IRQ_TIMER0);
-    //            }
-    //        });
-
-    //set playback frequency
-    //note: using anything else thank clock multipliers to serve as sample frequencies
-    //		tends to generate distortion in the output. It has probably to do with timing and
-    //		FIFO reloading.
-
-    // REG_TM0CNT_L=0xffff;
-    // REG_TM0CNT_H=0x00C3;	//enable timer at CPU freq/1024 +irq =16386Khz sample rate
-
-
-    // // Play a mono sound at 16khz in DMA mode Direct Sound
-    // // uses timer 0 as sampling rate source
-    // // uses timer 1 to count the samples played in order to stop the sound
-    // REG_SOUNDCNT_H =
-    //     0x0b0F; // DS A&B + fifo reset + timer0 + max volume to L and R
-    // REG_SOUNDCNT_X = 0x0080; // turn sound chip on
-
-    // REG_DMA1SAD = (unsigned long)track->data_; // dma1 source
-    // REG_DMA1DAD = 0x040000a0;                  // write to FIFO A address
-    // REG_DMA1CNT_H =
-    //     0xb600; // dma control: DMA enabled+ start on FIFO+32bit+repeat
-
-    // // Timer 1: 0xffff-the number of samples to play
-    // if (music_track_remaining > 0xffff) {
-    //     REG_TM1CNT_L = 0;
-    //     music_track_remaining -= 0xffff;
-
-    // } else {
-    //     REG_TM1CNT_L = 0xffff - music_track_remaining;
-    //     music_track_remaining = 0;
-    // }
-
-    // REG_TM1CNT_H = 0xC4; // enable timer1 + irq and cascade from timer 0
-
-    // irqEnable(IRQ_TIMER1);
-    // irqSet(IRQ_TIMER1, []() {
-    //     if (music_track_remaining > 0xffff) {
-    //         REG_TM1CNT_L = 0;
-    //         music_track_remaining -= 0xffff;
-
-    //     } else if (music_track_remaining > 0) {
-    //         REG_TM1CNT_L = 0xffff - music_track_remaining;
-    //         music_track_remaining = 0;
-
-    //     } else {
-    //         stop_music();
-
-    //         if (music_track_loop) {
-    //             play_music(music_track_name, music_track_loop);
-    //         }
-    //     }
-    // });
-
-    // // Formula for playback frequency is: 0xFFFF-round(cpuFreq/playbackFreq)
-    // REG_TM0CNT_L = 0xFBE8; // 16khz playback freq
-    // REG_TM0CNT_H = 0x0080; // enable timer at CPU freq
+        music_track_length = track->length_;
+        music_track_loop = loop;
+        music_track = track->data_;
+        music_track_pos = 0;
+    });
 }
 
 
@@ -1705,7 +1641,6 @@ static void audio_update()
         for (auto& val : mixing_buffer) {
             val = 0;
         }
-
     }
 
     // Maybe the world's worst sound mixing code...
@@ -1813,14 +1748,15 @@ Platform::Platform()
         }
     }
 
-    REG_SOUNDCNT_H=0x0B0F;  //DirectSound A + fifo reset + max volume to L and R
-    REG_SOUNDCNT_X=0x0080;  //turn sound chip on
+    REG_SOUNDCNT_H =
+        0x0B0F; //DirectSound A + fifo reset + max volume to L and R
+    REG_SOUNDCNT_X = 0x0080; //turn sound chip on
 
     irqEnable(IRQ_TIMER0);
     irqSet(IRQ_TIMER0, audio_update);
 
-    REG_TM0CNT_L=0xffff;
-    REG_TM0CNT_H=0x00C3;
+    REG_TM0CNT_L = 0xffff;
+    REG_TM0CNT_H = 0x00C3;
 }
 
 

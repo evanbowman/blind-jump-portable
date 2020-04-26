@@ -1,8 +1,8 @@
 #include "player.hpp"
 #include "game.hpp"
+#include "number/random.hpp"
 #include "platform/platform.hpp"
 #include "wallCollision.hpp"
-#include "number/random.hpp"
 
 
 // NOTE: The player code was ported over from the original version of
@@ -234,7 +234,10 @@ static uint8_t remap_vframe(uint8_t index)
 
 
 template <u8 StepSize>
-void Player::update_animation(Platform& pf, Microseconds dt, u8 max_index, Microseconds count)
+void Player::update_animation(Platform& pf,
+                              Microseconds dt,
+                              u8 max_index,
+                              Microseconds count)
 {
     anim_timer_ += dt;
     if (anim_timer_ > count) {

@@ -294,7 +294,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::shield_sweep_in1:
         face_player();
         timer_ += dt;
-        if (timer_ > milliseconds(third_form() ? 20 : 25)) {
+        if (timer_ > milliseconds(third_form() ? 22 : 25)) {
             timer_ = 0;
             if (shield_radius_ > max_shield_radius / 2) {
                 --shield_radius_;
@@ -564,7 +564,8 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
                         }
                     }()) {
                     shot_count_ = 0;
-                    reload_ = milliseconds(600);
+                    reload_ =
+                        third_form ? milliseconds(700) : milliseconds(600);
                 }
             }
 

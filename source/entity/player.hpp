@@ -92,7 +92,10 @@ private:
     void on_key_released(bool k2, bool k3, bool k4, bool x);
 
     template <u8 StepSize>
-    void update_animation(Platform& pf, Microseconds dt, u8 max_index, Microseconds count);
+    void update_animation(Platform& pf,
+                          Microseconds dt,
+                          u8 max_index,
+                          Microseconds count);
 
     void injured(Platform& pf, Game& game, Health damage);
 

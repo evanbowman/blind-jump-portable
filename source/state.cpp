@@ -1306,6 +1306,8 @@ NotebookState::NotebookState(const char* text) : str_(text), page_(0)
 
 void NotebookState::enter(Platform& pfrm, Game&)
 {
+    pfrm.speaker().play_sound("open_book", 0);
+
     pfrm.screen().fade(1.f);
     pfrm.load_overlay_texture("overlay_journal");
 
@@ -1377,12 +1379,14 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (text_->parsed() not_eq str_len(str_)) {
             page_ += 1;
             repaint_page(pfrm);
+            pfrm.speaker().play_sound("open_book", 0);
         }
 
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
         if (page_ > 0) {
             page_ -= 1;
             repaint_page(pfrm);
+            pfrm.speaker().play_sound("open_book", 0);
         }
     }
 

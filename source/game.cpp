@@ -326,7 +326,6 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 
     } else {
         pfrm.load_sprite_texture(current_zone(*this).spritesheet_name_);
-
     }
 
 RETRY:
