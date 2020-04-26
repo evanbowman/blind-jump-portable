@@ -62,7 +62,6 @@ private:
         shield_sweep_in2,
 
         second_form_enter,
-        encircle_sweep_show,
         encircle_receede,
 
         third_form_enter,
@@ -105,6 +104,6 @@ private:
     int shot_count_;
     State state_;
     int offset_;
-    Vec2<Float> seek_;
+    Vec2<Float> target_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

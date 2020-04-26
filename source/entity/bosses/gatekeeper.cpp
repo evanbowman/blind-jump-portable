@@ -94,27 +94,20 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case State::second_form_enter:
-        if (length(game.enemies().get<GatekeeperShield>()) == 0) {
-            const auto s = GatekeeperShield::State::encircle;
-
-            game.enemies().spawn<GatekeeperShield>(position_, 0, s);
-            game.enemies().spawn<GatekeeperShield>(position_, INT16_MAX * (1.f / 4), s);
-            game.enemies().spawn<GatekeeperShield>(position_, INT16_MAX * (2.f / 4), s);
-            game.enemies().spawn<GatekeeperShield>(position_, INT16_MAX * (3.f / 4), s);
-
-            state_ = State::encircle_sweep_show;
-            timer_ = 0;
+        timer_ += dt;
+        if (timer_ > milliseconds(25)) {
+            if (shield_radius_ < max_shield_radius + 90) {
+                ++shield_radius_;
+            } else {
+                state_ = State::encircle_receede;
+                timer_ = 0;
+            }
         }
         break;
 
     case State::third_form_enter:
-        if (length(game.enemies().get<GatekeeperShield>()) == 0) {
-            game.enemies().spawn<GatekeeperShield>(position_, 0);
-            game.enemies().spawn<GatekeeperShield>(position_, INT16_MAX / 2);
-
-            state_ = State::third_form_sweep_in;
-            timer_ = 0;
-        }
+        state_ = State::third_form_sweep_in;
+        timer_ = 0;
         break;
 
     case State::third_form_sweep_in:
@@ -161,26 +154,13 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         break;
 
-    case State::encircle_sweep_show:
-        timer_ += dt;
-        if (timer_ > milliseconds(25)) {
-            timer_ = 0;
-
-            if (shield_radius_ > max_shield_radius) {
-                --shield_radius_;
-            } else {
-                state_ = State::encircle_receede;
-            }
-        }
-        break;
-
     case State::encircle_receede:
         timer_ += dt;
         if (timer_ > milliseconds(25)) {
             timer_ = 0;
 
-            if (shield_radius_ < max_shield_radius + 35) {
-                ++shield_radius_;
+            if (shield_radius_ > max_shield_radius + 30) {
+                --shield_radius_;
             } else {
                 state_ = State::idle;
             }
@@ -331,10 +311,6 @@ void Gatekeeper::on_collision(Platform& pfrm, Game& game, Laser&)
     debit_health(1);
 
     if (not was_second_form and second_form()) {
-        for (auto& shield : game.enemies().get<GatekeeperShield>()) {
-            shield->detach(milliseconds(200) + milliseconds(random_choice<400>()));
-        }
-        shield_radius_ = max_shield_radius + 90;
         state_ = State::second_form_enter;
         timer_ = 0;
         sprite_.set_position(position_);
@@ -347,11 +323,6 @@ void Gatekeeper::on_collision(Platform& pfrm, Game& game, Laser&)
 
 
     } else if (not was_third_form and third_form()) {
-        for (auto& shield : game.enemies().get<GatekeeperShield>()) {
-            shield->detach(seconds(2) + milliseconds(random_choice<300>()));
-        }
-
-        shield_radius_ = max_shield_radius + 90;
         state_ = State::third_form_enter;
         timer_ = 0;
         sprite_.set_position(position_);
@@ -393,10 +364,6 @@ GatekeeperShield::GatekeeperShield(const Vec2<Float>& position, int offset, Stat
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_texture_index(16);
     sprite_.set_origin({8, 16});
-
-    if (initial_state == State::encircle) {
-        reload_ = milliseconds(100) + milliseconds(random_choice<900>());
-    }
 }
 
 
@@ -452,11 +419,21 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
 
     switch (state_) {
     case State::encircle: {
+
         const auto& parent_pos =
             (*game.enemies().get<Gatekeeper>().begin())->get_position();
 
         const auto radius =
             (*game.enemies().get<Gatekeeper>().begin())->shield_radius();
+
+
+        if ((*game.enemies().get<Gatekeeper>().begin())->third_form() and radius == default_shield_radius) {
+            state_ = State::orbit;
+            timer_ = 0;
+            reload_ = seconds(4) + milliseconds(random_choice<900>());
+            return;
+        }
+
 
         timer_ += dt / 64;
 
@@ -483,7 +460,7 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
                                           sample<48>(game.player().get_position()),
                                           0.00011f);
 
-            reload_ = seconds(3) + milliseconds(500) + seconds(random_choice<3>());
+            reload_ = seconds(1) + milliseconds(500) + seconds(random_choice<3>());
         }
 
         break;
@@ -492,6 +469,13 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::orbit: {
         if (game.enemies().get<Gatekeeper>().empty()) {
             this->detach(seconds(2) + milliseconds(random_choice<900>()));
+            return;
+        }
+
+        if ((*game.enemies().get<Gatekeeper>().begin())->second_form()) {
+            state_ = State::encircle;
+
+            reload_ = seconds(4) + milliseconds(random_choice<900>());
             return;
         }
 
@@ -521,13 +505,13 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
                 reload_ = milliseconds(40 + shot_count_ * 10);
 
                 game.effects().spawn<OrbShot>(position_,
-                                              sample<24>(game.player().get_position()),
+                                              sample<22>(game.player().get_position()),
                                               0.00019f - 0.00002f * shot_count_,
-                                              seconds(1) + milliseconds(500));
+                                              seconds(2));
 
                 if (++shot_count_ == [&] {
                                          if ((*game.enemies().get<Gatekeeper>().begin())->third_form()) {
-                                             return 4;
+                                             return 5;
                                          } else {
                                              return 3;
                                          }
