@@ -80,8 +80,8 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                     } else {
                         pfrm.sleep(10);
                         state_ = State::opening;
-                        // sprite_.set_mix({ColorConstant::null, 0});
-                        game.inventory().push_item(pfrm, game, item_);
+
+                        pfrm.speaker().play_sound("creak", 0);
                     }
                 }
             }
@@ -104,6 +104,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::settle:
         if (animation_.reverse(sprite_, dt)) {
             state_ = State::opened;
+            game.inventory().push_item(pfrm, game, item_);
             game.score() += 100;
         }
         break;

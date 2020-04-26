@@ -1427,7 +1427,7 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 static const struct AudioTrack {
     const char* name_;
     const uint8_t* data_;
-    size_t length_;
+    int length_;
 } music_tracks[] = {DEF_AUDIO(ambience, frostellar),
                     DEF_AUDIO(sb_omega, sb_omega),
                     DEF_AUDIO(october, October)};
@@ -1446,98 +1446,73 @@ static const AudioTrack* find_track(const char* name)
 }
 
 
-static void stop_music()
-{
-    REG_TM0CNT_H = 0;  //disable timer 0
-    REG_DMA1CNT_H = 0; //stop DMA
-    REG_IF |= REG_IF;
-
-    irqDisable(IRQ_TIMER1);
-}
-
-
-void Platform::Speaker::stop_music()
-{
-    ::stop_music();
-}
-
-
 using AudioSample = s8;
 
 
 struct ActiveSoundInfo {
-    u32 position_;
-    const u32 length_;
-    AudioSample* data_;
+    int position_;
+    const int length_;
+    const AudioSample* data_;
     int priority_;
 };
 
 
-#include "blaster.hpp"
+#include "sound_blaster.hpp"
+#include "sound_creak.hpp"
+#include "sound_openbag.hpp"
+#include "sound_footstep1.hpp"
+#include "sound_footstep2.hpp"
+#include "sound_footstep3.hpp"
+#include "sound_footstep4.hpp"
 
-
-static const AudioTrack sounds[] = {DEF_AUDIO(blaster, blaster)};
+static const AudioTrack sounds[] = {DEF_AUDIO(creak, sound_creak),
+                                    DEF_AUDIO(openbag, sound_openbag),
+                                    DEF_AUDIO(blaster, sound_blaster),
+                                    DEF_AUDIO(footstep1, sound_footstep1),
+                                    DEF_AUDIO(footstep2, sound_footstep2),
+                                    DEF_AUDIO(footstep3, sound_footstep3),
+                                    DEF_AUDIO(footstep4, sound_footstep4)};
 
 
 static std::optional<ActiveSoundInfo> make_sound(const char* name)
 {
+    for (auto& track : sounds) {
+        if (strcmp(name, track.name_) == 0) {
+            return ActiveSoundInfo{
+                0, track.length_, (const AudioSample*)track.data_, 0
+            };
+        }
+    }
     return {};
 }
 
 
-static Buffer<ActiveSoundInfo, 4> active_sounds_;
-
-
-AudioSample sound_next()
-{
-    s16 aggregate = 0;
-    u8 count = 0;
-
-    for (auto it = active_sounds_.begin(); it not_eq active_sounds_.end();) {
-        aggregate += it->data_[it->position_++];
-        ++count;
-
-        if (it->position_ == it->length_) {
-            it = active_sounds_.erase(it);
-
-        } else {
-            ++it;
-
-        }
-    }
-
-    if (count) {
-        return aggregate / count;
-
-    } else {
-        return 0;
-
-    }
-}
+static Buffer<ActiveSoundInfo, 4> active_sounds;
 
 
 void Platform::Speaker::play_sound(const char* name, int priority)
 {
-    // FIXME: WE'LL NEED TO DISABLE INTERRUPTS BEFORE TOUCHING THE ACTIVE_SOUNDS_
-    // BUFFER, OTHERWISE THERE'S A RACE CONDITION.
+    // FIXME: we may want to disable interrupts before touching the
+    // active_sounds_ buffer, otherwise there's a race condition (if an
+    // interrupt occurs).
 
     if (auto info = make_sound(name)) {
         info->priority_ = priority;
 
-        if (not active_sounds_.full()) {
-            active_sounds_.push_back(*info);
+        if (not active_sounds.full()) {
+            active_sounds.push_back(*info);
 
         } else {
-            ActiveSoundInfo* lowest = active_sounds_.begin();
-            for (auto it = active_sounds_.begin(); it not_eq active_sounds_.end(); ++it) {
+            ActiveSoundInfo* lowest = active_sounds.begin();
+            for (auto it = active_sounds.begin(); it not_eq active_sounds.end(); ++it) {
                 if (it->priority_ < lowest->priority_) {
                     lowest = it;
                 }
             }
 
             if (lowest->priority_ < priority) {
-                active_sounds_.erase(lowest);
-                active_sounds_.push_back(*info);
+                active_sounds.erase(lowest);
+                active_sounds.push_back(*info);
             }
         }
     }
@@ -1547,6 +1522,25 @@ void Platform::Speaker::play_sound(const char* name, int priority)
 static const u8* music_track = nullptr;
 static int music_track_length;
 static int music_track_pos;
+
+
+static void stop_music()
+{
+    // REG_TM0CNT_H = 0;  //disable timer 0
+    // REG_DMA1CNT_H = 0; //stop DMA
+    // REG_IF |= REG_IF;
+
+    // irqDisable(IRQ_TIMER1);
+
+    music_track = nullptr;
+}
+
+
+void Platform::Speaker::stop_music()
+{
+    ::stop_music();
+}
+
 
 
 static void play_music(const char* name, bool loop)
@@ -1563,39 +1557,39 @@ static void play_music(const char* name, bool loop)
     music_track = track->data_;
     music_track_pos = 0;
 
-    REG_SOUNDCNT_H=0x0B0F;  //DirectSound A + fifo reset + max volume to L and R
-    REG_SOUNDCNT_X=0x0080;  //turn sound chip on
+    // REG_SOUNDCNT_H=0x0B0F;  //DirectSound A + fifo reset + max volume to L and R
+    // REG_SOUNDCNT_X=0x0080;  //turn sound chip on
 
-    irqEnable(IRQ_TIMER0);
-    irqSet(IRQ_TIMER0,
-           [] {
-               static u32 control = 0;
-               if (control++ % 4) {
-                   return;
-               }
+    // irqEnable(IRQ_TIMER0);
+    // irqSet(IRQ_TIMER0,
+    //        [] {
+    //            static u32 control = 0;
+    //            if (control++ % 4) {
+    //                return;
+    //            }
 
-               s8 mixing_buffer[4];
+    //            s8 mixing_buffer[4];
 
-               for (int i = 0; i < 4; ++i) {
-                   mixing_buffer[i] = music_track[music_track_pos + i];
-               }
+    //            for (int i = 0; i < 4; ++i) {
+    //                mixing_buffer[i] = music_track[music_track_pos + i];
+    //            }
 
-               REG_SGFIFOA = *((u32*)mixing_buffer);
+    //            REG_SGFIFOA = *((u32*)mixing_buffer);
 
-               music_track_pos += 4;
+    //            music_track_pos += 4;
 
-               if (music_track_pos > music_track_length) {
-                   irqDisable(IRQ_TIMER0);
-               }
-           });
+    //            if (music_track_pos > music_track_length) {
+    //                irqDisable(IRQ_TIMER0);
+    //            }
+    //        });
 
     //set playback frequency
     //note: using anything else thank clock multipliers to serve as sample frequencies
     //		tends to generate distortion in the output. It has probably to do with timing and
     //		FIFO reloading.
 
-    REG_TM0CNT_L=0xffff;
-    REG_TM0CNT_H=0x00C3;	//enable timer at CPU freq/1024 +irq =16386Khz sample rate
+    // REG_TM0CNT_L=0xffff;
+    // REG_TM0CNT_H=0x00C3;	//enable timer at CPU freq/1024 +irq =16386Khz sample rate
 
 
     // // Play a mono sound at 16khz in DMA mode Direct Sound
@@ -1661,45 +1655,55 @@ void Platform::Speaker::load_music(const char* name, bool loop)
 }
 
 
-// static void audio_update()
-// {
-//     // 1024 cycles is the SLOWEST that I can possibly set the timer interrupt,
-//     // but because we copy four bytes at a time, we really don't have anything
-//     // to do three quarters of the time that this interrupt fires off. Maybe I
-//     // can initialize timer 0 to four, and cascade to timer 1?
-//     static u32 skip = 0;
-//     if (skip++ % 4) {
-//         return;
-//     }
+static void audio_update()
+{
+    // 1024 cycles is the SLOWEST that I can possibly set the timer interrupt,
+    // but because we copy four bytes at a time, we really don't have anything
+    // to do three quarters of the time that this interrupt fires off. Maybe I
+    // can initialize timer 0 to four, and cascade to timer 1?
+    static u32 control = 0;
+    if (control++ % 4) {
+        return;
+    }
 
-//     s8 mixing_buffer[4];
+    AudioSample mixing_buffer[4];
 
-//     if (music_track) {
-//         for (int i = 0; i < 4; ++i) {
-//             mixing_buffer[i] = music_track[music_track_pos + 1];
-//         }
+    if (music_track) {
+        for (int i = 0; i < 4; ++i) {
+            mixing_buffer[i] = music_track[music_track_pos++];
+        }
 
-//         music_track_pos += 4;
+        if (music_track_pos > music_track_length) {
+            music_track_pos = 0;
+        }
 
-//         if (music_track_pos > music_track_length) {
-//             music_track_pos = 0;
-//         }
-//     }
+    } else {
+        for (auto& val : mixing_buffer) {
+            val = 0;
+        }
 
-//     REG_SGFIFOA = *((u32*)mixing_buffer);
-// }
+    }
+
+    // Maybe the world's worst sound mixing code...
+    for (auto it = active_sounds.begin(); it not_eq active_sounds.end();) {
+        if (UNLIKELY(it->position_ + 4 >= it->length_)) {
+            it = active_sounds.erase(it);
+
+        } else {
+            for (int i = 0; i < 4; ++i) {
+                mixing_buffer[i] += it->data_[it->position_++];
+            }
+
+            ++it;
+        }
+    }
+
+    REG_SGFIFOA = *((u32*)mixing_buffer);
+}
 
 
 Platform::Speaker::Speaker()
 {
-    // REG_SOUNDCNT_H=0x0B0F;  //DirectSound A + fifo reset + max volume to L and R
-    // REG_SOUNDCNT_X=0x0080;  //turn sound chip on
-
-    // irqEnable(IRQ_TIMER0);
-    // irqSet(IRQ_TIMER0, audio_update);
-
-    // REG_TM0CNT_L=0xffff;
-    // REG_TM0CNT_H=0x00C3;
 }
 
 
@@ -1729,18 +1733,20 @@ void Platform::Stopwatch::start()
     // auto sd = reinterpret_cast<StopwatchData*>(impl_);
     stopwatch_total = 0;
 
-    REG_TM2CNT_L = 0;
-    REG_TM2CNT_H = 1 << 7 | 1 << 6;
+    // FIXME: use TM3, TM2 is now in use
+    // REG_TM2CNT_L = 0;
+    // REG_TM2CNT_H = 1 << 7 | 1 << 6;
 }
 
 
 int Platform::Stopwatch::stop()
 {
     // auto sd = reinterpret_cast<StopwatchData*>(impl_);
-    auto ret = REG_TM2CNT_L;
-    REG_TM2CNT_H = 0;
+    // FIXME: use TM3, TM2 is now in use
+    // auto ret = REG_TM2CNT_L;
+    // REG_TM2CNT_H = 0;
 
-    return ret + stopwatch_total;
+    return 0; // ret + stopwatch_total;
 }
 
 
@@ -1765,22 +1771,32 @@ s32 fast_mod(s32 numerator, s32 denominator)
 Platform::Platform()
 {
     irqInit();
-    irqEnable(IRQ_VBLANK | IRQ_TIMER0);
+    irqEnable(IRQ_VBLANK);
 
-    irqEnable(IRQ_TIMER2);
-    irqSet(IRQ_TIMER2, [] {
-        stopwatch_total += 0xffff;
+    // irqEnable(IRQ_TIMER2);
+    // irqSet(IRQ_TIMER2, [] {
+    //     stopwatch_total += 0xffff;
 
-        REG_TM2CNT_H = 0;
-        REG_TM2CNT_L = 0;
-        REG_TM2CNT_H = 1 << 7 | 1 << 6;
-    });
+    // FIXME: use TM3, TM2 is now in use
+    //     REG_TM2CNT_H = 0;
+    //     REG_TM2CNT_L = 0;
+    //     REG_TM2CNT_H = 1 << 7 | 1 << 6;
+    // });
 
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
             set_overlay_tile(i, j, 0);
         }
     }
+
+    REG_SOUNDCNT_H=0x0B0F;  //DirectSound A + fifo reset + max volume to L and R
+    REG_SOUNDCNT_X=0x0080;  //turn sound chip on
+
+    irqEnable(IRQ_TIMER0);
+    irqSet(IRQ_TIMER0, audio_update);
+
+    REG_TM0CNT_L=0xffff;
+    REG_TM0CNT_H=0x00C3;
 }
 
 

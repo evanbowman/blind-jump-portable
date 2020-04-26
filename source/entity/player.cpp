@@ -2,6 +2,7 @@
 #include "game.hpp"
 #include "platform/platform.hpp"
 #include "wallCollision.hpp"
+#include "number/random.hpp"
 
 
 // NOTE: The player code was ported over from the original version of
@@ -233,12 +234,30 @@ static uint8_t remap_vframe(uint8_t index)
 
 
 template <u8 StepSize>
-void Player::update_animation(Microseconds dt, u8 max_index, Microseconds count)
+void Player::update_animation(Platform& pf, Microseconds dt, u8 max_index, Microseconds count)
 {
     anim_timer_ += dt;
     if (anim_timer_ > count) {
         anim_timer_ -= count;
         frame_ += 1;
+
+        switch (max_index) {
+        case 9:
+            if (frame_ == 3 or frame_ == 6) {
+                footstep(pf);
+            }
+            break;
+
+        case 5:
+            if (frame_ == 2) {
+                footstep(pf);
+            }
+            break;
+
+        default:
+            error(pf, "logic error in code");
+            break;
+        }
     }
     if (frame_ > max_index) {
         frame_ = 0;
@@ -375,28 +394,28 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case ResourceLoc::player_walk_up:
-        update_animation<1>(dt, 9, frame_persist);
+        update_animation<1>(pfrm, dt, 9, frame_persist);
         sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
         sprite_.set_size(Sprite::Size::w16_h32);
         sprite_.set_origin(v_origin);
         break;
 
     case ResourceLoc::player_walk_down:
-        update_animation<1>(dt, 9, frame_persist);
+        update_animation<1>(pfrm, dt, 9, frame_persist);
         sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
         sprite_.set_size(Sprite::Size::w16_h32);
         sprite_.set_origin(v_origin);
         break;
 
     case ResourceLoc::player_walk_left:
-        update_animation<2>(dt, 5, frame_persist);
+        update_animation<2>(pfrm, dt, 5, frame_persist);
         sprite_.set_texture_index(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::player_walk_right:
-        update_animation<2>(dt, 5, frame_persist);
+        update_animation<2>(pfrm, dt, 5, frame_persist);
         sprite_.set_texture_index(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin(h_origin);
@@ -525,11 +544,35 @@ void Blaster::update(Platform& pf, Game& game, Microseconds dt, Cardinal dir)
 }
 
 
+void Player::footstep(Platform& pf)
+{
+    switch (random_choice<4>()) {
+    case 0:
+        pf.speaker().play_sound("footstep1", 0);
+        break;
+
+    case 1:
+        pf.speaker().play_sound("footstep2", 0);
+        break;
+
+    case 2:
+        pf.speaker().play_sound("footstep3", 0);
+        break;
+
+    case 3:
+        pf.speaker().play_sound("footstep4", 0);
+        break;
+    }
+}
+
+
 void Blaster::shoot(Platform& pf, Game& game)
 {
     if (reload_ <= 0) {
         if (length(game.effects().get<Laser>()) < max_lasers_) {
             reload_ = reload_interval_;
+
+            pf.speaker().play_sound("blaster", 0);
 
             game.effects().spawn<Laser>(position_, dir_);
 

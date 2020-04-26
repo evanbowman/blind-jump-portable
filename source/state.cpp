@@ -657,6 +657,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         // inventory screen.
         restore_keystates = pfrm.keyboard().dump_state();
 
+        pfrm.speaker().play_sound("openbag", 0);
+
         return state_pool_.create<InventoryState>(true);
     }
 
