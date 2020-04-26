@@ -373,6 +373,9 @@ void GatekeeperShield::detach(Microseconds keepalive)
 {
     timer_ = keepalive;
     state_ = State::detached;
+
+    sprite_.set_size(Sprite::Size::w32_h32);
+    sprite_.set_texture_index(33);
 }
 
 
