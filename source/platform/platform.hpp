@@ -267,6 +267,12 @@ public:
         void load_music(const char* name, bool loop);
         void stop_music();
 
+        // A platform's speaker may only have the resources to handle a limited
+        // number of overlapping sounds. For such platforms, currently running
+        // sounds with a lower priority will be evicted, to make room for
+        // higher-priority sounds.
+        void play_sound(const char* name, int priority);
+
     private:
         friend class Platform;
 

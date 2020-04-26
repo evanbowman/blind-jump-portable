@@ -540,7 +540,6 @@ void Platform::Screen::clear()
 
 
 static const char* music_track_name;
-static size_t music_track_remaining;
 static bool music_track_loop;
 
 
@@ -1412,30 +1411,31 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #define REG_TM1CNT_H *(u16*)0x4000106            //Timer 2 control
 #define REG_TM0CNT_L *(u16*)0x4000100            //Timer 0 count value
 #define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
+#define REG_SGFIFOA *(vu32*)0x40000A0
 
 
 #include "frostellar.hpp"
 #include "sb_omega.hpp"
+#include "october.hpp"
 
 
-// FIXME: For some reason, the DMA overruns the length of the audio track, I
-// have no idea why... but that's why I've subtracted some number of samples
-// from the audio length.
-#define DEF_MUSIC(__STR_NAME__, __TRACK_NAME__)                                \
+#define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \
     {                                                                          \
-        STR(__STR_NAME__), __TRACK_NAME__, __TRACK_NAME__##Len - 0xffff        \
+        STR(__STR_NAME__), __TRACK_NAME__, __TRACK_NAME__##Len                 \
     }
 
-static const struct MusicTrack {
+static const struct AudioTrack {
     const char* name_;
     const uint8_t* data_;
     size_t length_;
-} tracks[] = {DEF_MUSIC(ambience, frostellar), DEF_MUSIC(sb_omega, sb_omega)};
+} music_tracks[] = {DEF_AUDIO(ambience, frostellar),
+                    DEF_AUDIO(sb_omega, sb_omega),
+                    DEF_AUDIO(october, October)};
 
 
-static const MusicTrack* find_track(const char* name)
+static const AudioTrack* find_track(const char* name)
 {
-    for (auto& track : tracks) {
+    for (auto& track : music_tracks) {
 
         if (strcmp(name, track.name_) == 0) {
             return &track;
@@ -1462,6 +1462,93 @@ void Platform::Speaker::stop_music()
 }
 
 
+using AudioSample = s8;
+
+
+struct ActiveSoundInfo {
+    u32 position_;
+    const u32 length_;
+    AudioSample* data_;
+    int priority_;
+};
+
+
+#include "blaster.hpp"
+
+
+static const AudioTrack sounds[] = {DEF_AUDIO(blaster, blaster)};
+
+
+static std::optional<ActiveSoundInfo> make_sound(const char* name)
+{
+    return {};
+}
+
+
+static Buffer<ActiveSoundInfo, 4> active_sounds_;
+
+
+AudioSample sound_next()
+{
+    s16 aggregate = 0;
+    u8 count = 0;
+
+    for (auto it = active_sounds_.begin(); it not_eq active_sounds_.end();) {
+        aggregate += it->data_[it->position_++];
+        ++count;
+
+        if (it->position_ == it->length_) {
+            it = active_sounds_.erase(it);
+
+        } else {
+            ++it;
+
+        }
+    }
+
+    if (count) {
+        return aggregate / count;
+
+    } else {
+        return 0;
+
+    }
+}
+
+
+void Platform::Speaker::play_sound(const char* name, int priority)
+{
+    // FIXME: WE'LL NEED TO DISABLE INTERRUPTS BEFORE TOUCHING THE ACTIVE_SOUNDS_
+    // BUFFER, OTHERWISE THERE'S A RACE CONDITION.
+
+    if (auto info = make_sound(name)) {
+        info->priority_ = priority;
+
+        if (not active_sounds_.full()) {
+            active_sounds_.push_back(*info);
+
+        } else {
+            ActiveSoundInfo* lowest = active_sounds_.begin();
+            for (auto it = active_sounds_.begin(); it not_eq active_sounds_.end(); ++it) {
+                if (it->priority_ < lowest->priority_) {
+                    lowest = it;
+                }
+            }
+
+            if (lowest->priority_ < priority) {
+                active_sounds_.erase(lowest);
+                active_sounds_.push_back(*info);
+            }
+        }
+    }
+}
+
+
+static const u8* music_track = nullptr;
+static int music_track_length;
+static int music_track_pos;
+
+
 static void play_music(const char* name, bool loop)
 {
     const auto track = find_track(name);
@@ -1470,55 +1557,93 @@ static void play_music(const char* name, bool loop)
     }
 
     music_track_name = name;
-    music_track_remaining = track->length_;
+
+    music_track_length = track->length_;
     music_track_loop = loop;
+    music_track = track->data_;
+    music_track_pos = 0;
 
-    // Play a mono sound at 16khz in DMA mode Direct Sound
-    // uses timer 0 as sampling rate source
-    // uses timer 1 to count the samples played in order to stop the sound
-    REG_SOUNDCNT_H =
-        0x0b0F; // DS A&B + fifo reset + timer0 + max volume to L and R
-    REG_SOUNDCNT_X = 0x0080; // turn sound chip on
+    REG_SOUNDCNT_H=0x0B0F;  //DirectSound A + fifo reset + max volume to L and R
+    REG_SOUNDCNT_X=0x0080;  //turn sound chip on
 
-    REG_DMA1SAD = (unsigned long)track->data_; // dma1 source
-    REG_DMA1DAD = 0x040000a0;                  // write to FIFO A address
-    REG_DMA1CNT_H =
-        0xb600; // dma control: DMA enabled+ start on FIFO+32bit+repeat
+    irqEnable(IRQ_TIMER0);
+    irqSet(IRQ_TIMER0,
+           [] {
+               static u32 control = 0;
+               if (control++ % 4) {
+                   return;
+               }
 
-    // Timer 1: 0xffff-the number of samples to play
-    if (music_track_remaining > 0xffff) {
-        REG_TM1CNT_L = 0;
-        music_track_remaining -= 0xffff;
+               s8 mixing_buffer[4];
 
-    } else {
-        REG_TM1CNT_L = 0xffff - music_track_remaining;
-        music_track_remaining = 0;
-    }
+               for (int i = 0; i < 4; ++i) {
+                   mixing_buffer[i] = music_track[music_track_pos + i];
+               }
 
-    REG_TM1CNT_H = 0xC4; // enable timer1 + irq and cascade from timer 0
+               REG_SGFIFOA = *((u32*)mixing_buffer);
 
-    irqEnable(IRQ_TIMER1);
-    irqSet(IRQ_TIMER1, []() {
-        if (music_track_remaining > 0xffff) {
-            REG_TM1CNT_L = 0;
-            music_track_remaining -= 0xffff;
+               music_track_pos += 4;
 
-        } else if (music_track_remaining > 0) {
-            REG_TM1CNT_L = 0xffff - music_track_remaining;
-            music_track_remaining = 0;
+               if (music_track_pos > music_track_length) {
+                   irqDisable(IRQ_TIMER0);
+               }
+           });
 
-        } else {
-            stop_music();
+    //set playback frequency
+    //note: using anything else thank clock multipliers to serve as sample frequencies
+    //		tends to generate distortion in the output. It has probably to do with timing and
+    //		FIFO reloading.
 
-            if (music_track_loop) {
-                play_music(music_track_name, music_track_loop);
-            }
-        }
-    });
+    REG_TM0CNT_L=0xffff;
+    REG_TM0CNT_H=0x00C3;	//enable timer at CPU freq/1024 +irq =16386Khz sample rate
 
-    // Formula for playback frequency is: 0xFFFF-round(cpuFreq/playbackFreq)
-    REG_TM0CNT_L = 0xFBE8; // 16khz playback freq
-    REG_TM0CNT_H = 0x0080; // enable timer at CPU freq
+
+    // // Play a mono sound at 16khz in DMA mode Direct Sound
+    // // uses timer 0 as sampling rate source
+    // // uses timer 1 to count the samples played in order to stop the sound
+    // REG_SOUNDCNT_H =
+    //     0x0b0F; // DS A&B + fifo reset + timer0 + max volume to L and R
+    // REG_SOUNDCNT_X = 0x0080; // turn sound chip on
+
+    // REG_DMA1SAD = (unsigned long)track->data_; // dma1 source
+    // REG_DMA1DAD = 0x040000a0;                  // write to FIFO A address
+    // REG_DMA1CNT_H =
+    //     0xb600; // dma control: DMA enabled+ start on FIFO+32bit+repeat
+
+    // // Timer 1: 0xffff-the number of samples to play
+    // if (music_track_remaining > 0xffff) {
+    //     REG_TM1CNT_L = 0;
+    //     music_track_remaining -= 0xffff;
+
+    // } else {
+    //     REG_TM1CNT_L = 0xffff - music_track_remaining;
+    //     music_track_remaining = 0;
+    // }
+
+    // REG_TM1CNT_H = 0xC4; // enable timer1 + irq and cascade from timer 0
+
+    // irqEnable(IRQ_TIMER1);
+    // irqSet(IRQ_TIMER1, []() {
+    //     if (music_track_remaining > 0xffff) {
+    //         REG_TM1CNT_L = 0;
+    //         music_track_remaining -= 0xffff;
+
+    //     } else if (music_track_remaining > 0) {
+    //         REG_TM1CNT_L = 0xffff - music_track_remaining;
+    //         music_track_remaining = 0;
+
+    //     } else {
+    //         stop_music();
+
+    //         if (music_track_loop) {
+    //             play_music(music_track_name, music_track_loop);
+    //         }
+    //     }
+    // });
+
+    // // Formula for playback frequency is: 0xFFFF-round(cpuFreq/playbackFreq)
+    // REG_TM0CNT_L = 0xFBE8; // 16khz playback freq
+    // REG_TM0CNT_H = 0x0080; // enable timer at CPU freq
 }
 
 
@@ -1536,25 +1661,45 @@ void Platform::Speaker::load_music(const char* name, bool loop)
 }
 
 
+// static void audio_update()
+// {
+//     // 1024 cycles is the SLOWEST that I can possibly set the timer interrupt,
+//     // but because we copy four bytes at a time, we really don't have anything
+//     // to do three quarters of the time that this interrupt fires off. Maybe I
+//     // can initialize timer 0 to four, and cascade to timer 1?
+//     static u32 skip = 0;
+//     if (skip++ % 4) {
+//         return;
+//     }
+
+//     s8 mixing_buffer[4];
+
+//     if (music_track) {
+//         for (int i = 0; i < 4; ++i) {
+//             mixing_buffer[i] = music_track[music_track_pos + 1];
+//         }
+
+//         music_track_pos += 4;
+
+//         if (music_track_pos > music_track_length) {
+//             music_track_pos = 0;
+//         }
+//     }
+
+//     REG_SGFIFOA = *((u32*)mixing_buffer);
+// }
+
+
 Platform::Speaker::Speaker()
 {
-    // turn sound on
-    REG_SNDSTAT = SSTAT_ENABLE;
-    // snd1 on left/right ; both full volume
-    REG_SNDDMGCNT =
-        SDMG_BUILD_LR(SDMG_SQR1 | SDMG_SQR2 | SDMG_WAVE | SDMG_NOISE, 7);
-    // DMG ratio to 100%
-    REG_SNDDSCNT = SDS_DMG50;
+    // REG_SOUNDCNT_H=0x0B0F;  //DirectSound A + fifo reset + max volume to L and R
+    // REG_SOUNDCNT_X=0x0080;  //turn sound chip on
 
-    // no sweep
-    REG_SND1SWEEP = SSW_INC;
+    // irqEnable(IRQ_TIMER0);
+    // irqSet(IRQ_TIMER0, audio_update);
 
-    // envelope: vol=12, decay, max step time (7) ; 50% duty
-    REG_SND1CNT = SSQR_ENV_BUILD(12, 0, 7) | SSQR_DUTY3_4;
-    REG_SND1FREQ = 0;
-
-    REG_SND2CNT = SSQR_ENV_BUILD(10, 0, 7) | SSQR_DUTY1_4;
-    REG_SND2FREQ = 0;
+    // REG_TM0CNT_L=0xffff;
+    // REG_TM0CNT_H=0x00C3;
 }
 
 
@@ -1630,7 +1775,6 @@ Platform::Platform()
         REG_TM2CNT_L = 0;
         REG_TM2CNT_H = 1 << 7 | 1 << 6;
     });
-
 
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {

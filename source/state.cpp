@@ -1485,6 +1485,8 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
 
         pfrm.sleep(120);
 
+        pfrm.speaker().load_music(zone.music_name_, true);
+
     } else {
         text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
         text_[0]->append("waypoint ");

@@ -271,7 +271,7 @@ const ZoneInfo& zone_info(Level level)
                                                "the depths",
                                                "spritesheet2",
                                                "tilesheet2",
-                                               "ambience",
+                                               "october",
                                                ColorConstant::turquoise_blue,
                                                ColorConstant::safety_orange};
         return zone_2;
@@ -312,7 +312,6 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     }
 
     if (level() == 0) {
-        pfrm.speaker().load_music(current_zone(*this).music_name_, true);
         pfrm.write_save(persistent_data_);
     }
 
@@ -326,13 +325,8 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         pfrm.load_sprite_texture(boss_level->spritesheet_);
 
     } else {
-        // Boss defeated! We can change the music back, but we may also want to
-        // stop the current music when the enemy is destroyed.
-        if (is_boss_level(level() - 1)) {
-            pfrm.speaker().load_music(current_zone(*this).music_name_, true);
-        }
-
         pfrm.load_sprite_texture(current_zone(*this).spritesheet_name_);
+
     }
 
 RETRY:

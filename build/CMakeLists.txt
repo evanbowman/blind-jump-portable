@@ -72,6 +72,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/memcpy.s
     ${SOURCE_DIR}/platform/sb_omega.s
     ${SOURCE_DIR}/platform/frostellar.s
+    ${SOURCE_DIR}/platform/October.s
     ${SOURCE_DIR}/graphics/overlay.s
     ${SOURCE_DIR}/graphics/tilesheet.s
     ${SOURCE_DIR}/graphics/tilesheet2.s
