@@ -85,7 +85,6 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/sound_footstep3.s
     ${SOURCE_DIR}/platform/sound_footstep4.s
     ${SOURCE_DIR}/platform/sound_open_book.s
-    ${SOURCE_DIR}/platform/sound_page_flip.s
     ${SOURCE_DIR}/graphics/spritesheet2.s
     ${SOURCE_DIR}/graphics/overlay_journal.s
     ${SOURCE_DIR}/graphics/spritesheet_boss0.s

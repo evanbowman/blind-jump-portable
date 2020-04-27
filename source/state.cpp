@@ -208,6 +208,7 @@ private:
     std::optional<SmallIcon> right_icon_;
     std::optional<Text> page_text_;
     std::optional<Text> item_description_;
+    std::optional<Text> label_;
     std::optional<MediumIcon> item_icons_[Inventory::cols][Inventory::rows];
 
     Microseconds selector_timer_ = 0;
@@ -1196,6 +1197,8 @@ InventoryState::InventoryState(bool fade_in)
 
 void InventoryState::enter(Platform& pfrm, Game& game)
 {
+    label_.emplace(pfrm, OverlayCoord{23, 1});
+
     update_arrow_icons(pfrm);
     for (int i = 0; i < 6; ++i) {
         pfrm.set_overlay_tile(2 + i * 5, 2, 176);
@@ -1273,6 +1276,8 @@ void InventoryState::clear_items()
 void InventoryState::display_items(Platform& pfrm, Game& game)
 {
     clear_items();
+
+    label_->assign("items");
 
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 2; ++j) {

@@ -539,10 +539,6 @@ void Platform::Screen::clear()
 }
 
 
-static const char* music_track_name;
-static bool music_track_loop;
-
-
 void Platform::Screen::display()
 {
     // platform->stopwatch().start();
@@ -1411,7 +1407,7 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #define REG_TM1CNT_H *(u16*)0x4000106            //Timer 2 control
 #define REG_TM0CNT_L *(u16*)0x4000100            //Timer 0 count value
 #define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
-#define REG_SGFIFOA *(vu32*)0x40000A0
+
 
 
 #include "frostellar.hpp"
@@ -1425,7 +1421,11 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
     }
 
 
-using AudioSample = s8;
+
+#include "gba_platform_soundcontext.hpp"
+
+
+SoundContext snd_ctx;
 
 
 static const struct AudioTrack {
@@ -1450,14 +1450,9 @@ static const AudioTrack* find_track(const char* name)
 }
 
 
-struct ActiveSoundInfo {
-    int position_;
-    const int length_;
-    const AudioSample* data_;
-    int priority_;
-};
-
-
+// NOTE: Between remixing the audio track down to 8-bit 16kHz signed, generating
+// assembly output, adding the file to CMake, adding the include, and adding the
+// sound to the sounds array, it's just too tedious to keep working this way...
 #include "sound_blaster.hpp"
 #include "sound_creak.hpp"
 #include "sound_footstep1.hpp"
@@ -1466,14 +1461,12 @@ struct ActiveSoundInfo {
 #include "sound_footstep4.hpp"
 #include "sound_open_book.hpp"
 #include "sound_openbag.hpp"
-#include "sound_page_flip.hpp"
 
 static const AudioTrack sounds[] = {DEF_AUDIO(footstep1, sound_footstep1),
                                     DEF_AUDIO(footstep2, sound_footstep2),
                                     DEF_AUDIO(footstep3, sound_footstep3),
                                     DEF_AUDIO(footstep4, sound_footstep4),
                                     DEF_AUDIO(open_book, sound_open_book),
-                                    DEF_AUDIO(page_flip, sound_page_flip),
                                     DEF_AUDIO(openbag, sound_openbag),
                                     DEF_AUDIO(blaster, sound_blaster),
                                     DEF_AUDIO(creak, sound_creak)};
@@ -1501,10 +1494,6 @@ static std::optional<ActiveSoundInfo> make_sound(const char* name)
 }
 
 
-// Only three sounds will play at a time... hey, sound mixing's expensive!
-static Buffer<ActiveSoundInfo, 3> active_sounds;
-
-
 // If you're going to edit any of the variables used by the interrupt handler
 // for audio playback, you should use this helper function.
 template <typename F> auto modify_audio(F&& callback)
@@ -1520,7 +1509,7 @@ bool Platform::Speaker::is_sound_playing(const char* name)
     if (auto sound = get_sound(name)) {
         bool playing = false;
         modify_audio([&] {
-            for (const auto& info : active_sounds) {
+            for (const auto& info : snd_ctx.active_sounds) {
                 if ((s8*)sound->data_ == info.data_) {
                     playing = true;
                     return;
@@ -1536,30 +1525,27 @@ bool Platform::Speaker::is_sound_playing(const char* name)
 
 void Platform::Speaker::play_sound(const char* name, int priority)
 {
-    // FIXME: we may want to disable interrupts before touching the
-    // active_sounds_ buffer, otherwise there's a race condition (if an
-    // interrupt occurs).
-
     if (auto info = make_sound(name)) {
         info->priority_ = priority;
 
         modify_audio([&] {
-            if (not active_sounds.full()) {
-                active_sounds.push_back(*info);
+            if (not snd_ctx.active_sounds.full()) {
+                snd_ctx.active_sounds.push_back(*info);
 
             } else {
-                ActiveSoundInfo* lowest = active_sounds.begin();
-                for (auto it = active_sounds.begin();
-                     it not_eq active_sounds.end();
+                ActiveSoundInfo* lowest = snd_ctx.active_sounds.begin();
+                for (auto it = snd_ctx.active_sounds.begin();
+                     it not_eq snd_ctx.active_sounds.end();
                      ++it) {
                     if (it->priority_ < lowest->priority_) {
                         lowest = it;
                     }
                 }
 
-                if (lowest->priority_ < priority) {
-                    active_sounds.erase(lowest);
-                    active_sounds.push_back(*info);
+                if (lowest not_eq snd_ctx.active_sounds.end() and
+                    lowest->priority_ < priority) {
+                    snd_ctx.active_sounds.erase(lowest);
+                    snd_ctx.active_sounds.push_back(*info);
                 }
             }
         });
@@ -1567,14 +1553,9 @@ void Platform::Speaker::play_sound(const char* name, int priority)
 }
 
 
-static const AudioSample* music_track = nullptr;
-static int music_track_length;
-static int music_track_pos;
-
-
 static void stop_music()
 {
-    modify_audio([] { music_track = nullptr; });
+    modify_audio([] { snd_ctx.music_track = nullptr; });
 }
 
 
@@ -1592,12 +1573,10 @@ static void play_music(const char* name, bool loop)
     }
 
     modify_audio([&] {
-        music_track_name = name;
-
-        music_track_length = track->length_;
-        music_track_loop = loop;
-        music_track = track->data_;
-        music_track_pos = 0;
+        snd_ctx.music_track_length = track->length_;
+        snd_ctx.music_track_loop = loop;
+        snd_ctx.music_track = track->data_;
+        snd_ctx.music_track_pos = 0;
     });
 }
 
@@ -1613,51 +1592,6 @@ void Platform::Speaker::load_music(const char* name, bool loop)
     this->stop_music();
 
     ::play_music(name, loop);
-}
-
-
-static void audio_update()
-{
-    alignas(4) AudioSample mixing_buffer[4];
-
-    if (music_track) {
-
-        for (int i = 0; i < 4; ++i) {
-            mixing_buffer[i] = music_track[music_track_pos++];
-        }
-
-        if (music_track_pos > music_track_length) {
-            if (music_track_loop) {
-                music_track_pos = 0;
-
-            } else {
-                music_track = nullptr;
-
-            }
-        }
-
-    } else {
-
-        for (auto& val : mixing_buffer) {
-            val = 0;
-        }
-    }
-
-    // Maybe the world's worst sound mixing code...
-    for (auto it = active_sounds.begin(); it not_eq active_sounds.end();) {
-        if (UNLIKELY(it->position_ + 4 >= it->length_)) {
-            it = active_sounds.erase(it);
-
-        } else {
-            for (int i = 0; i < 4; ++i) {
-                mixing_buffer[i] += it->data_[it->position_++];
-            }
-
-            ++it;
-        }
-    }
-
-    REG_SGFIFOA = *((u32*)mixing_buffer);
 }
 
 
@@ -1724,6 +1658,55 @@ s32 fast_divide(s32 numerator, s32 denominator)
 s32 fast_mod(s32 numerator, s32 denominator)
 {
     return DivMod(numerator, denominator);
+}
+
+
+#define REG_SGFIFOA *(volatile u32*)0x40000A0
+
+
+static void audio_update()
+{
+    alignas(4) AudioSample mixing_buffer[4];
+
+    if (snd_ctx.music_track) {
+
+        for (int i = 0; i < 4; ++i) {
+            mixing_buffer[i] =
+                snd_ctx.music_track[snd_ctx.music_track_pos++];
+        }
+
+        if (snd_ctx.music_track_pos > snd_ctx.music_track_length) {
+            if (snd_ctx.music_track_loop) {
+                snd_ctx.music_track_pos = 0;
+
+            } else {
+                snd_ctx.music_track = nullptr;
+
+            }
+        }
+
+    } else {
+
+        for (auto& val : mixing_buffer) {
+            val = 0;
+        }
+    }
+
+    // Maybe the world's worst sound mixing code...
+    for (auto it = snd_ctx.active_sounds.begin(); it not_eq snd_ctx.active_sounds.end();) {
+        if (UNLIKELY(it->position_ + 4 >= it->length_)) {
+            it = snd_ctx.active_sounds.erase(it);
+
+        } else {
+            for (int i = 0; i < 4; ++i) {
+                mixing_buffer[i] += it->data_[it->position_++];
+            }
+
+            ++it;
+        }
+    }
+
+    REG_SGFIFOA = *((u32*)mixing_buffer);
 }
 
 
