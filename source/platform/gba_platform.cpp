@@ -1421,12 +1421,16 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 
 #define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \
     {                                                                          \
-        STR(__STR_NAME__), __TRACK_NAME__, __TRACK_NAME__##Len                 \
+        STR(__STR_NAME__), (AudioSample*)__TRACK_NAME__, __TRACK_NAME__##Len   \
     }
+
+
+using AudioSample = s8;
+
 
 static const struct AudioTrack {
     const char* name_;
-    const uint8_t* data_;
+    const AudioSample* data_;
     int length_;
 } music_tracks[] = {DEF_AUDIO(ambience, frostellar),
                     DEF_AUDIO(sb_omega, sb_omega),
@@ -1444,9 +1448,6 @@ static const AudioTrack* find_track(const char* name)
 
     return nullptr;
 }
-
-
-using AudioSample = s8;
 
 
 struct ActiveSoundInfo {
@@ -1493,7 +1494,7 @@ static std::optional<ActiveSoundInfo> make_sound(const char* name)
 {
     if (auto sound = get_sound(name)) {
         return ActiveSoundInfo{
-            0, sound->length_, (const AudioSample*)sound->data_, 0};
+            0, sound->length_, sound->data_, 0};
     } else {
         return {};
     }
@@ -1566,7 +1567,7 @@ void Platform::Speaker::play_sound(const char* name, int priority)
 }
 
 
-static const u8* music_track = nullptr;
+static const AudioSample* music_track = nullptr;
 static int music_track_length;
 static int music_track_pos;
 
@@ -1617,27 +1618,26 @@ void Platform::Speaker::load_music(const char* name, bool loop)
 
 static void audio_update()
 {
-    // 1024 cycles is the SLOWEST that I can possibly set the timer interrupt,
-    // but because we copy four bytes at a time, we really don't have anything
-    // to do three quarters of the time that this interrupt fires off. Maybe I
-    // can initialize timer 0 to four, and cascade to timer 1?
-    static u32 control = 0;
-    if (control++ % 4) {
-        return;
-    }
-
-    AudioSample mixing_buffer[4];
+    alignas(4) AudioSample mixing_buffer[4];
 
     if (music_track) {
+
         for (int i = 0; i < 4; ++i) {
             mixing_buffer[i] = music_track[music_track_pos++];
         }
 
         if (music_track_pos > music_track_length) {
-            music_track_pos = 0;
+            if (music_track_loop) {
+                music_track_pos = 0;
+
+            } else {
+                music_track = nullptr;
+
+            }
         }
 
     } else {
+
         for (auto& val : mixing_buffer) {
             val = 0;
         }
@@ -1752,11 +1752,19 @@ Platform::Platform()
         0x0B0F; //DirectSound A + fifo reset + max volume to L and R
     REG_SOUNDCNT_X = 0x0080; //turn sound chip on
 
-    irqEnable(IRQ_TIMER0);
-    irqSet(IRQ_TIMER0, audio_update);
+    irqEnable(IRQ_TIMER1);
+    irqSet(IRQ_TIMER1, audio_update);
 
     REG_TM0CNT_L = 0xffff;
+    REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
+                               // certain... so we want to play four samples at
+                               // a time, which means that by subtracting three
+                               // from the initial count, the timer will only
+                               // overflow at the correct rate?
+
     REG_TM0CNT_H = 0x00C3;
+    REG_TM1CNT_H = 0x00C3;
+
 }
 
 
