@@ -104,6 +104,7 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
     case Item::Type::coin:
         sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
         game.score() += 4;
+        pf.speaker().play_sound("coin", 1);
         break;
 
     case Item::Type::null:
