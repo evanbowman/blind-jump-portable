@@ -1493,6 +1493,15 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
 
         pfrm.speaker().load_music(zone.music_name_, true);
 
+        // FIXME!!!!!! Mysteriously, when running on the actual GameBoy Advance
+        // hardware (not an emulator), there's a weird audio glitch, where the
+        // sound effects, but not the music, get all glitched out until two
+        // sounds are played consecutively. I've spent hours trying to figure
+        // out what's going wrong, and I haven't solved this one yet, so for
+        // now, just play a couple quiet sounds.
+        pfrm.speaker().play_sound("footstep1", 0);
+        pfrm.speaker().play_sound("footstep2", 0);
+
     } else {
         text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
         text_[0]->append("waypoint ");

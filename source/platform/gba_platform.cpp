@@ -1759,8 +1759,8 @@ Platform::Platform()
     REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
                                // certain... so we want to play four samples at
                                // a time, which means that by subtracting three
-                               // from the initial count, the timer will only
-                               // overflow at the correct rate?
+                               // from the initial count, the timer will
+                               // overflow at the correct rate, right?
 
     REG_TM0CNT_H = 0x00C3;
     REG_TM1CNT_H = 0x00C3;
