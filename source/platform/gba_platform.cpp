@@ -1409,7 +1409,6 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
 
 
-
 #include "frostellar.hpp"
 #include "october.hpp"
 #include "sb_omega.hpp"
@@ -1419,7 +1418,6 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
     {                                                                          \
         STR(__STR_NAME__), (AudioSample*)__TRACK_NAME__, __TRACK_NAME__##Len   \
     }
-
 
 
 #include "gba_platform_soundcontext.hpp"
@@ -1486,8 +1484,7 @@ static const AudioTrack* get_sound(const char* name)
 static std::optional<ActiveSoundInfo> make_sound(const char* name)
 {
     if (auto sound = get_sound(name)) {
-        return ActiveSoundInfo{
-            0, sound->length_, sound->data_, 0};
+        return ActiveSoundInfo{0, sound->length_, sound->data_, 0};
     } else {
         return {};
     }
@@ -1671,8 +1668,7 @@ static void audio_update()
     if (snd_ctx.music_track) {
 
         for (int i = 0; i < 4; ++i) {
-            mixing_buffer[i] =
-                snd_ctx.music_track[snd_ctx.music_track_pos++];
+            mixing_buffer[i] = snd_ctx.music_track[snd_ctx.music_track_pos++];
         }
 
         if (snd_ctx.music_track_pos > snd_ctx.music_track_length) {
@@ -1681,7 +1677,6 @@ static void audio_update()
 
             } else {
                 snd_ctx.music_track = nullptr;
-
             }
         }
 
@@ -1693,7 +1688,8 @@ static void audio_update()
     }
 
     // Maybe the world's worst sound mixing code...
-    for (auto it = snd_ctx.active_sounds.begin(); it not_eq snd_ctx.active_sounds.end();) {
+    for (auto it = snd_ctx.active_sounds.begin();
+         it not_eq snd_ctx.active_sounds.end();) {
         if (UNLIKELY(it->position_ + 4 >= it->length_)) {
             it = snd_ctx.active_sounds.erase(it);
 
@@ -1747,7 +1743,6 @@ Platform::Platform()
 
     REG_TM0CNT_H = 0x00C3;
     REG_TM1CNT_H = 0x00C3;
-
 }
 
 

@@ -1524,39 +1524,38 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         const int i = ease_out(timer_, 0, max_i, seconds(1));
 
-        auto repaint =
-            [&pfrm, this](int max_i) {
+        auto repaint = [&pfrm, this](int max_i) {
+            while (true) {
+                int i = 0, j = 0;
+
+                auto center = calc_screen_tiles(pfrm).x / 2 - 1;
+
                 while (true) {
-                    int i = 0, j = 0;
+                    pfrm.set_overlay_tile(center - j, pos_.y - 3, 93 + i);
+                    pfrm.set_overlay_tile(center - j, pos_.y + 2, 93 + i);
 
-                    auto center = calc_screen_tiles(pfrm).x / 2 - 1;
+                    pfrm.set_overlay_tile(center + 1 + j, pos_.y - 3, 100 + i);
+                    pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 100 + i);
 
-                    while (true) {
-                        pfrm.set_overlay_tile(center - j, pos_.y - 3, 93 + i);
-                        pfrm.set_overlay_tile(center - j, pos_.y + 2, 93 + i);
+                    i++;
 
-                        pfrm.set_overlay_tile(center + 1 + j, pos_.y - 3, 100 + i);
-                        pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 100 + i);
+                    if (i == 8) {
+                        pfrm.set_overlay_tile(center - j, pos_.y - 3, 107);
+                        pfrm.set_overlay_tile(center - j, pos_.y + 2, 107);
 
-                        i++;
+                        pfrm.set_overlay_tile(center + 1 + j, pos_.y - 3, 107);
+                        pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 107);
 
-                        if (i == 8) {
-                            pfrm.set_overlay_tile(center - j, pos_.y - 3, 107);
-                            pfrm.set_overlay_tile(center - j, pos_.y + 2, 107);
+                        i = 0;
+                        j++;
+                    }
 
-                            pfrm.set_overlay_tile(center + 1 + j, pos_.y - 3, 107);
-                            pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 107);
-
-                            i = 0;
-                            j++;
-                        }
-
-                        if (j * 8 + i > max_i) {
-                            return;
-                        }
+                    if (j * 8 + i > max_i) {
+                        return;
                     }
                 }
-            };
+            }
+        };
 
         repaint(std::min(max_i, i));
 
