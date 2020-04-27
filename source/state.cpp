@@ -278,16 +278,19 @@ private:
 
 class NewLevelState : public State {
 public:
-    NewLevelState(Level next_level) : next_level_(next_level)
+    NewLevelState(Level next_level) : timer_(0), next_level_(next_level)
     {
     }
 
     void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     std::optional<Text> text_[2];
+    Microseconds timer_;
+    OverlayCoord pos_;
     Level next_level_;
 };
 
@@ -1216,6 +1219,7 @@ void InventoryState::exit(Platform& pfrm, Game& game)
     right_icon_.reset();
     page_text_.reset();
     item_description_.reset();
+    label_.reset();
 
     for (int i = 0; i < 6; ++i) {
         pfrm.set_overlay_tile(2 + i * 5, 2, 0);
@@ -1475,12 +1479,12 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
     auto last_zone = zone_info(next_level_ - 1);
     if (not(zone == last_zone) or next_level_ == 0) {
 
-        auto pos = OverlayCoord{1, u8(s_tiles.y * 0.3f)};
-        text_[0].emplace(pfrm, pos);
+        pos_ = OverlayCoord{1, u8(s_tiles.y * 0.3f)};
+        text_[0].emplace(pfrm, pos_);
 
-        pos.y += 2;
+        pos_.y += 2;
 
-        text_[1].emplace(pfrm, pos);
+        text_[1].emplace(pfrm, pos_);
 
         const auto margin =
             centered_text_margins(pfrm, str_len(zone.title_line_1));
@@ -1494,18 +1498,7 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
 
         text_[1]->append(zone.title_line_2);
 
-        pfrm.sleep(120);
-
-        pfrm.speaker().load_music(zone.music_name_, true);
-
-        // FIXME!!!!!! Mysteriously, when running on the actual GameBoy Advance
-        // hardware (not an emulator), there's a weird audio glitch, where the
-        // sound effects, but not the music, get all glitched out until two
-        // sounds are played consecutively. I've spent hours trying to figure
-        // out what's going wrong, and I haven't solved this one yet, so for
-        // now, just play a couple quiet sounds.
-        pfrm.speaker().play_sound("footstep1", 0);
-        pfrm.speaker().play_sound("footstep2", 0);
+        pfrm.sleep(5);
 
     } else {
         text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
@@ -1513,14 +1506,93 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
         text_[0]->append(next_level_);
         pfrm.sleep(60);
     }
-
-    game.next_level(pfrm, next_level_);
 }
 
 
 StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    return state_pool_.create<FadeInState>();
+    auto zone = zone_info(next_level_);
+    auto last_zone = zone_info(next_level_ - 1);
+
+
+    if (not(zone == last_zone) or next_level_ == 0) {
+
+        timer_ += delta;
+
+        const auto max_j = (int)str_len(zone.title_line_2) / 2 + 1;
+        const auto max_i = max_j * 8;
+
+        const int i = ease_out(timer_, 0, max_i, seconds(1));
+
+        auto repaint =
+            [&pfrm, this](int max_i) {
+                while (true) {
+                    int i = 0, j = 0;
+
+                    auto center = calc_screen_tiles(pfrm).x / 2 - 1;
+
+                    while (true) {
+                        pfrm.set_overlay_tile(center - j, pos_.y - 3, 93 + i);
+                        pfrm.set_overlay_tile(center - j, pos_.y + 2, 93 + i);
+
+                        pfrm.set_overlay_tile(center + 1 + j, pos_.y - 3, 100 + i);
+                        pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 100 + i);
+
+                        i++;
+
+                        if (i == 8) {
+                            pfrm.set_overlay_tile(center - j, pos_.y - 3, 107);
+                            pfrm.set_overlay_tile(center - j, pos_.y + 2, 107);
+
+                            pfrm.set_overlay_tile(center + 1 + j, pos_.y - 3, 107);
+                            pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 107);
+
+                            i = 0;
+                            j++;
+                        }
+
+                        if (j * 8 + i > max_i) {
+                            return;
+                        }
+                    }
+                }
+            };
+
+        repaint(std::min(max_i, i));
+
+        if (i >= max_i) {
+            pfrm.sleep(50);
+
+            pfrm.speaker().load_music(zone.music_name_, true);
+
+            // FIXME!!!!!! Mysteriously, when running on the actual GameBoy Advance
+            // hardware (not an emulator), there's a weird audio glitch, where the
+            // sound effects, but not the music, get all glitched out until two
+            // sounds are played consecutively. I've spent hours trying to figure
+            // out what's going wrong, and I haven't solved this one yet, so for
+            // now, just play a couple quiet sounds.
+            pfrm.speaker().play_sound("footstep1", 0);
+            pfrm.speaker().play_sound("footstep2", 0);
+
+            return state_pool_.create<FadeInState>();
+        }
+
+    } else {
+        return state_pool_.create<FadeInState>();
+    }
+
+    return null_state();
+}
+
+
+void NewLevelState::exit(Platform& pfrm, Game& game)
+{
+    game.next_level(pfrm, next_level_);
+
+    text_[0].reset();
+    text_[1].reset();
+
+    pfrm.fill_overlay(0);
 }
 
 

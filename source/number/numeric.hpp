@@ -175,6 +175,12 @@ template <typename T> T interpolate(const T& a, const T& b, Float t)
 }
 
 
+inline Float ease_out(Float time, Float b, Float c, Float duration) {
+    time = time / duration - 1;
+    return c * (time * time * time + 1) + b;
+}
+
+
 inline u8 fast_interpolate(u8 a, u8 b, u8 t)
 {
     return b + (u8)(((u16)(a - b) * t) >> 8);
