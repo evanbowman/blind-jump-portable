@@ -1459,7 +1459,10 @@ static const AudioTrack* find_track(const char* name)
 #include "sound_footstep4.hpp"
 #include "sound_open_book.hpp"
 #include "sound_openbag.hpp"
+#include "sound_heart.hpp"
 #include "sound_coin.hpp"
+#include "sound_bell.hpp"
+
 
 static const AudioTrack sounds[] = {DEF_AUDIO(footstep1, sound_footstep1),
                                     DEF_AUDIO(footstep2, sound_footstep2),
@@ -1469,7 +1472,9 @@ static const AudioTrack sounds[] = {DEF_AUDIO(footstep1, sound_footstep1),
                                     DEF_AUDIO(openbag, sound_openbag),
                                     DEF_AUDIO(blaster, sound_blaster),
                                     DEF_AUDIO(creak, sound_creak),
-                                    DEF_AUDIO(coin, sound_coin)};
+                                    DEF_AUDIO(heart, sound_heart),
+                                    DEF_AUDIO(coin, sound_coin),
+                                    DEF_AUDIO(bell, sound_bell)};
 
 
 static const AudioTrack* get_sound(const char* name)

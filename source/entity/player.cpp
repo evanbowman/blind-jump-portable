@@ -99,6 +99,7 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
     case Item::Type::heart:
         sprite_.set_mix({ColorConstant::spanish_crimson, 255});
         add_health(1);
+        // pf.speaker().play_sound("heart", 1);
         break;
 
     case Item::Type::coin:

@@ -669,6 +669,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
     if (manhattan_length(game.player().get_position(), t_pos) < 16) {
         game.player().move(t_pos);
+        pfrm.speaker().play_sound("bell", 5);
         return state_pool_.create<PreFadePauseState>();
     } else {
         return null_state();

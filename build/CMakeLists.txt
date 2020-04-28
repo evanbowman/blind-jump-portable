@@ -78,6 +78,8 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/tilesheet2.s
     ${SOURCE_DIR}/graphics/spritesheet.s
     ${SOURCE_DIR}/platform/sound_coin.s
+    ${SOURCE_DIR}/platform/sound_bell.s
+    ${SOURCE_DIR}/platform/sound_heart.s
     ${SOURCE_DIR}/platform/sound_creak.s
     ${SOURCE_DIR}/platform/sound_openbag.s
     ${SOURCE_DIR}/platform/sound_blaster.s
