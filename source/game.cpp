@@ -648,7 +648,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          },
          10},
         {5, [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); }},
-        {6,
+        {7,
          [&]() {
              spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
          },

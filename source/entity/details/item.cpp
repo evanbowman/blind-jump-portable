@@ -5,7 +5,7 @@
 
 Item::Item(const Vec2<Float>& pos, Platform&, Type type)
     : timer_(random_value()),
-      type_(type), hitbox_{&position_, {{16, 16}, {8, 8}}}
+      type_(type), hitbox_{&position_, {{10, 10}, {2, 2}}}
 {
     position_ = pos - Vec2<Float>{8, 0};
     sprite_.set_position(position_);
