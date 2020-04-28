@@ -155,6 +155,11 @@ public:
                   ColorConstant color = ColorConstant::rich_black,
                   std::optional<ColorConstant> base = {});
 
+        void pixelate(u8 amount,
+                      bool include_overlay = true,
+                      bool include_background = true,
+                      bool include_sprites = true);
+
     private:
         Screen();
 

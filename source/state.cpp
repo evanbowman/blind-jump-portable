@@ -626,12 +626,22 @@ void ActiveState::exit(Platform& pfrm, Game& game)
     score_.reset();
     heart_icon_.reset();
     coin_icon_.reset();
+
+    pfrm.screen().pixelate(0);
 }
 
 
 StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().update(pfrm, game, delta);
+
+    const auto& player_spr = game.player().get_sprite();
+    if (auto amt = player_spr.get_mix().amount_) {
+        if (player_spr.get_mix().color_ ==
+            current_zone(game).injury_glow_color_) {
+            pfrm.screen().pixelate(amt / 8, false);
+        }
+    }
 
     const auto last_health = game.player().get_health();
     const auto last_score = game.score();
@@ -701,9 +711,12 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
         pfrm.sleep(2);
         game.player().set_visible(true);
+        pfrm.screen().pixelate(0);
         return state_pool_.create<WarpInState>();
     } else {
-        pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, counter_));
+        const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
+        pfrm.screen().fade(amount);
+        pfrm.screen().pixelate(amount * 86);
         return null_state();
     }
 }
@@ -781,10 +794,14 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
     constexpr auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
         pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
+        pfrm.screen().pixelate(0);
         return state_pool_.create<FadeOutState>();
     } else {
-        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
-                           current_zone(game).energy_glow_color_);
+        const auto amount = smoothstep(0.f, fade_duration, counter_);
+        pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
+        if (amount > 0.25) {
+            pfrm.screen().pixelate((amount - 0.25) * 60);
+        }
         return null_state();
     }
 }

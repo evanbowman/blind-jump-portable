@@ -88,6 +88,29 @@ using ScreenBlock = u16[1024];
 #define ATTR2_PRIO(n) ((n) << ATTR2_PRIO_SHIFT)
 #define ATTR2_PRIORITY(n) ATTR2_PRIO(n)
 
+#define REG_MOSAIC *(vu16*)(0x04000000 + 0x4c)
+
+#define BG_MOSAIC (1 << 6)
+
+#define MOS_BH_MASK 0x000F
+#define MOS_BH_SHIFT 0
+#define MOS_BH(n) ((n) << MOS_BH_SHIFT)
+
+#define MOS_BV_MASK 0x00F0
+#define MOS_BV_SHIFT 4
+#define MOS_BV(n) ((n) << MOS_BV_SHIFT)
+
+#define MOS_OH_MASK 0x0F00
+#define MOS_OH_SHIFT 8
+#define MOS_OH(n) ((n) << MOS_OH_SHIFT)
+
+#define MOS_OV_MASK 0xF000
+#define MOS_OV_SHIFT 12
+#define MOS_OV(n) ((n) << MOS_OV_SHIFT)
+
+#define MOS_BUILD(bh, bv, oh, ov)                                              \
+    ((((ov)&15) << 12) | (((oh)&15) << 8) | (((bv)&15) << 4) | ((bh)&15))
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
@@ -174,6 +197,7 @@ static ObjectAttributes
 #define OBJ_SHAPE(m) ((m) << 14)
 #define ATTR0_COLOR_16 (0 << 13)
 #define ATTR0_COLOR_256 (1 << 13)
+#define ATTR0_MOSAIC (1 << 12)
 #define ATTR0_SQUARE OBJ_SHAPE(0)
 #define ATTR0_TALL OBJ_SHAPE(2)
 #define ATTR0_WIDE OBJ_SHAPE(1)
@@ -270,12 +294,14 @@ Platform::Screen::Screen() : userdata_(nullptr)
 
     *reg_blendalpha = BLDA_BUILD(0x40 / 8, 0x40 / 8);
 
-    *bg0_control = BG_SBB(8) | BG_REG_64x64 | BG_PRIORITY(3);
+    *bg0_control = BG_SBB(8) | BG_REG_64x64 | BG_PRIORITY(3) | BG_MOSAIC;
     //        0xC800; // 64x64, 0x0100 for 32x32
-    *bg1_control = BG_SBB(12) | BG_PRIORITY(3);
-    *bg2_control = BG_SBB(13) | BG_PRIORITY(0) | BG_CBB(3);
+    *bg1_control = BG_SBB(12) | BG_PRIORITY(3) | BG_MOSAIC;
+    *bg2_control = BG_SBB(13) | BG_PRIORITY(0) | BG_CBB(3) | BG_MOSAIC;
 
     view_.set_size(this->size().cast<Float>());
+
+    REG_MOSAIC = MOS_BUILD(0, 0, 1, 1);
 }
 
 
@@ -336,6 +362,9 @@ constexpr PaletteBank available_palettes = 3;
 constexpr PaletteBank palette_count = 16;
 
 static PaletteBank palette_counter = available_palettes;
+
+
+static u8 screen_pixelate_amount = 0;
 
 
 // For the purpose of saving cpu cycles. The color_mix function scans a list of
@@ -408,8 +437,9 @@ void Platform::Screen::draw(const Sprite& spr)
         return;
     }
 
+    const auto& mix = spr.get_mix();
+
     const auto pb = [&]() -> PaletteBank {
-        const auto& mix = spr.get_mix();
         if (UNLIKELY(mix.color_ not_eq ColorConstant::null)) {
             if (const auto pal_bank = color_mix(mix.color_, mix.amount_)) {
                 return ATTR2_PALBANK(pal_bank);
@@ -442,6 +472,13 @@ void Platform::Screen::draw(const Sprite& spr)
         const auto abs_position = position - view_center;
         oa->attribute_0 &= 0xff00;
         oa->attribute_0 |= abs_position.y & 0x00ff;
+
+        if ((mix.amount_ > 215 and mix.amount_ < 255) or
+            screen_pixelate_amount not_eq 0) {
+
+            oa->attribute_0 |= ATTR0_MOSAIC;
+        }
+
         oa->attribute_1 &= 0xfe00;
         oa->attribute_1 |= (abs_position.x + x_off) & 0x01ff;
         oa->attribute_2 = 2 + spr.get_texture_index() * scale + tex_off;
@@ -863,6 +900,38 @@ void Platform::Screen::fade(float amount,
             MEM_PALETTE[i] = blend(real_color(*base), c, amt);
             MEM_BG_PALETTE[i] = blend(real_color(*base), c, amt);
             // MEM_BG_PALETTE[16 + i] = blend(real_color(*base));
+        }
+    }
+}
+
+
+void Platform::Screen::pixelate(u8 amount,
+                                bool include_overlay,
+                                bool include_background,
+                                bool include_sprites)
+{
+    screen_pixelate_amount = amount;
+
+    if (amount == 0) {
+        REG_MOSAIC = MOS_BUILD(0, 0, 1, 1);
+    } else {
+        REG_MOSAIC = MOS_BUILD(amount >> 4,
+                               amount >> 4,
+                               include_sprites ? amount >> 4 : 0,
+                               include_sprites ? amount >> 4 : 0);
+
+        if (include_overlay) {
+            *bg2_control |= BG_MOSAIC;
+        } else {
+            *bg2_control &= ~BG_MOSAIC;
+        }
+
+        if (include_background) {
+            *bg0_control |= BG_MOSAIC;
+            *bg1_control |= BG_MOSAIC;
+        } else {
+            *bg0_control &= ~BG_MOSAIC;
+            *bg1_control &= ~BG_MOSAIC;
         }
     }
 }
@@ -1451,17 +1520,17 @@ static const AudioTrack* find_track(const char* name)
 // NOTE: Between remixing the audio track down to 8-bit 16kHz signed, generating
 // assembly output, adding the file to CMake, adding the include, and adding the
 // sound to the sounds array, it's just too tedious to keep working this way...
+#include "sound_bell.hpp"
 #include "sound_blaster.hpp"
+#include "sound_coin.hpp"
 #include "sound_creak.hpp"
 #include "sound_footstep1.hpp"
 #include "sound_footstep2.hpp"
 #include "sound_footstep3.hpp"
 #include "sound_footstep4.hpp"
+#include "sound_heart.hpp"
 #include "sound_open_book.hpp"
 #include "sound_openbag.hpp"
-#include "sound_heart.hpp"
-#include "sound_coin.hpp"
-#include "sound_bell.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_AUDIO(footstep1, sound_footstep1),
