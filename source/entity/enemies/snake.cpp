@@ -87,7 +87,7 @@ SnakeHead::SnakeHead(const Vec2<Float>& pos, Game& game)
     shadow_.set_origin({8, -11});
     shadow_.set_alpha(Sprite::Alpha::translucent);
 
-    game.enemies().spawn<SnakeBody>(pos, this, game, 4);
+    game.enemies().spawn<SnakeBody>(pos, this, game, 3);
 }
 
 
