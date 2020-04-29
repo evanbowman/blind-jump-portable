@@ -265,7 +265,7 @@ const ZoneInfo& zone_info(Level level)
                                                "spritesheet2",
                                                "tilesheet2",
                                                "sb_computations",
-                                               seconds(5),
+                                               seconds(8) + milliseconds(700),
                                                ColorConstant::turquoise_blue,
                                                ColorConstant::safety_orange};
         return zone_2;
