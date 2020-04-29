@@ -71,7 +71,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCES}
     ${SOURCE_DIR}/platform/memcpy.s
     ${SOURCE_DIR}/platform/sb_omega.s
-    ${SOURCE_DIR}/platform/sb_ephemera.s
+    ${SOURCE_DIR}/platform/sb_computations.s
     ${SOURCE_DIR}/platform/frostellar.s
     ${SOURCE_DIR}/graphics/overlay.s
     ${SOURCE_DIR}/graphics/tilesheet.s

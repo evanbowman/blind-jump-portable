@@ -1471,7 +1471,7 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
 
 
-#include "sb_ephemera.hpp"
+#include "sb_computations.hpp"
 #include "frostellar.hpp"
 #include "sb_omega.hpp"
 
@@ -1494,7 +1494,7 @@ static const struct AudioTrack {
     int length_;
 } music_tracks[] = {DEF_AUDIO(ambience, frostellar),
                     DEF_AUDIO(sb_omega, sb_omega),
-                    DEF_AUDIO(sb_ephemera, sb_ephemera)};
+                    DEF_AUDIO(sb_computations, sb_computations)};
 
 
 static const AudioTrack* find_track(const char* name)

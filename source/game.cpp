@@ -264,7 +264,7 @@ const ZoneInfo& zone_info(Level level)
                                                "the depths",
                                                "spritesheet2",
                                                "tilesheet2",
-                                               "sb_ephemera",
+                                               "sb_computations",
                                                seconds(5),
                                                ColorConstant::turquoise_blue,
                                                ColorConstant::safety_orange};
