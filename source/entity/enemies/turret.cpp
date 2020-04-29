@@ -104,7 +104,7 @@ void Turret::on_collision(Platform& pf, Game& game, Laser&)
         debit_health(1);
 
         if (not alive()) {
-            game.score() += 10;
+            game.score() += 12;
 
             pf.sleep(5);
 

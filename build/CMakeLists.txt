@@ -71,8 +71,8 @@ if(GAMEBOY_ADVANCE)
     ${SOURCES}
     ${SOURCE_DIR}/platform/memcpy.s
     ${SOURCE_DIR}/platform/sb_omega.s
+    ${SOURCE_DIR}/platform/sb_ephemera.s
     ${SOURCE_DIR}/platform/frostellar.s
-    ${SOURCE_DIR}/platform/October.s
     ${SOURCE_DIR}/graphics/overlay.s
     ${SOURCE_DIR}/graphics/tilesheet.s
     ${SOURCE_DIR}/graphics/tilesheet2.s
@@ -109,7 +109,7 @@ add_executable(BlindJump
 
 if(GAMEBOY_ADVANCE)
   set(CMAKE_EXE_LINKER_FLAGS
-    "-g -mthumb -mthumb-interwork -Wl,-Map,BlindJump.elf.map -specs=gba.specs"
+    "-mthumb -mthumb-interwork -Wl,-Map,BlindJump.elf.map -specs=gba.specs"
     CACHE INTERNAL "" FORCE)
 
   target_link_libraries(BlindJump PRIVATE
@@ -120,6 +120,8 @@ if(GAMEBOY_ADVANCE)
     -mthumb-interwork
     -mcpu=arm7tdmi
     -mtune=arm7tdmi)
+
+
 
   add_custom_command(TARGET BlindJump POST_BUILD
     COMMENT "building cartridge"

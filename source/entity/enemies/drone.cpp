@@ -152,7 +152,7 @@ void Drone::on_collision(Platform& pf, Game& game, Player& player)
 
 void Drone::on_death(Platform& pf, Game& game)
 {
-    game.score() += 3;
+    game.score() += 10;
 
     pf.sleep(5);
 

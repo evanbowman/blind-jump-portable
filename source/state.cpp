@@ -46,6 +46,7 @@ private:
     std::optional<Text> score_;
     std::optional<SmallIcon> heart_icon_;
     std::optional<SmallIcon> coin_icon_;
+    bool pixelated_ = false;
 };
 
 
@@ -396,6 +397,15 @@ void OverworldState::exit(Platform&, Game&)
 
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    // Every update, advance the random number engine, so that the
+    // amount of time spent on a level contributes some entropy to the
+    // number stream. This makes the game somewhat less predictable,
+    // because, knowing the state of the random number engine, you
+    // would have to beat the current level in some microsecond
+    // granularity to get to a new level that's possible to
+    // anticipate.
+    random_value();
+
     Player& player = game.player();
 
     auto update_policy = [&](auto& entity_buf) {
@@ -640,7 +650,11 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (player_spr.get_mix().color_ ==
             current_zone(game).injury_glow_color_) {
             pfrm.screen().pixelate(amt / 8, false);
+            pixelated_ = true;
         }
+    } else if (pixelated_) {
+        pfrm.screen().pixelate(0);
+        pixelated_ = false;
     }
 
     const auto last_health = game.player().get_health();
@@ -663,7 +677,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<DeathFadeState>();
     }
 
-    if (pfrm.keyboard().down_transition<Key::start, Key::alt_2>()) {
+    if (pfrm.keyboard().down_transition<Key::alt_2>()) {
 
         // We don't update entities, e.g. the player entity, while in the
         // inventory state, so the player will not receive the up_transition
@@ -748,8 +762,8 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount,
                            current_zone(game).energy_glow_color_);
-        if (amount > 0.25) {
-            pfrm.screen().pixelate((amount - 0.25) * 60);
+        if (amount > 0.5) {
+            pfrm.screen().pixelate((amount - 0.5) * 60);
         }
         return null_state();
     }
@@ -859,10 +873,13 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = seconds(2);
     if (counter_ > fade_duration) {
+        pfrm.screen().pixelate(0);
         return state_pool_.create<DeathContinueState>();
     } else {
-        pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
+        const auto amount = smoothstep(0.f, fade_duration, counter_);
+        pfrm.screen().fade(amount,
                            current_zone(game).injury_glow_color_);
+        pfrm.screen().pixelate(amount * 100);
         return null_state();
     }
 }
@@ -1115,7 +1132,7 @@ const char* item_description(Item::Type type)
 
 StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::start, Key::alt_2>()) {
+    if (pfrm.keyboard().down_transition<Key::alt_2>()) {
         return state_pool_.create<ActiveState>(true);
     }
 
@@ -1530,10 +1547,25 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
 }
 
 
+static bool startup = true;
+
+
 StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     auto zone = zone_info(next_level_);
     auto last_zone = zone_info(next_level_ - 1);
+
+    auto sound_sync_hack =
+        [&pfrm] {
+            // FIXME!!!!!! Mysteriously, when running on the actual GameBoy Advance
+            // hardware (not an emulator), there's a weird audio glitch, where the
+            // sound effects, but not the music, get all glitched out until two
+            // sounds are played consecutively. I've spent hours trying to figure
+            // out what's going wrong, and I haven't solved this one yet, so for
+            // now, just play a couple quiet sounds.
+            pfrm.speaker().play_sound("footstep1", 0);
+            pfrm.speaker().play_sound("footstep2", 0);
+        };
 
 
     if (not(zone == last_zone) or next_level_ == 0) {
@@ -1583,21 +1615,24 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (i >= max_i) {
             pfrm.sleep(50);
 
-            pfrm.speaker().load_music(zone.music_name_, true);
+            pfrm.speaker().play_music(zone.music_name_, true, zone.music_offset_);
 
-            // FIXME!!!!!! Mysteriously, when running on the actual GameBoy Advance
-            // hardware (not an emulator), there's a weird audio glitch, where the
-            // sound effects, but not the music, get all glitched out until two
-            // sounds are played consecutively. I've spent hours trying to figure
-            // out what's going wrong, and I haven't solved this one yet, so for
-            // now, just play a couple quiet sounds.
-            pfrm.speaker().play_sound("footstep1", 0);
-            pfrm.speaker().play_sound("footstep2", 0);
+            if (startup) {
+                sound_sync_hack();
+            }
 
+            startup = false;
             return state_pool_.create<FadeInState>();
         }
 
     } else {
+        // If we're loading from a save state, we need to start the music, which
+        // normally starts when we enter a new zone.
+        if (startup) {
+            pfrm.speaker().play_music(zone.music_name_, true, zone.music_offset_);
+            sound_sync_hack();
+        }
+        startup = false;
         return state_pool_.create<FadeInState>();
     }
 
@@ -1657,7 +1692,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             return state_pool_.create<CommandCodeState>();
         }
 
-        return state_pool_.create<NewLevelState>(Level{0});
+        return state_pool_.create<NewLevelState>(game.level());
 
     } else {
         return null_state();
@@ -1851,6 +1886,13 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
             game.inventory().remove_item(0, 0, 0);
         }
         return true;
+
+    case 592: { // Factory reset
+        PersistentData data;
+        pfrm.write_save(data);
+        pfrm.fatal();
+        return true;
+    }
 
     default:
         return false;

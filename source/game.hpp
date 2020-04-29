@@ -157,6 +157,7 @@ struct ZoneInfo {
     const char* spritesheet_name_;
     const char* tileset_name_;
     const char* music_name_;
+    Microseconds music_offset_;
 
     ColorConstant energy_glow_color_;
     ColorConstant injury_glow_color_;

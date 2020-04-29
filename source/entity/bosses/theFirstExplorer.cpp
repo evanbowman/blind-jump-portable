@@ -117,7 +117,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                 state_ = State::still;
                 timer_ = 0;
 
-                pf.speaker().load_music(boss_music, true);
+                pf.speaker().play_music(boss_music, true, 0);
 
                 show_boss_health(
                     pf, game, Float(get_health()) / initial_health);

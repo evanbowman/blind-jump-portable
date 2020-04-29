@@ -269,7 +269,7 @@ public:
 
         void play_note(Note n, Octave o, Channel c);
 
-        void load_music(const char* name, bool loop);
+        void play_music(const char* name, bool loop, Microseconds offset);
         void stop_music();
 
         // A platform's speaker may only have the resources to handle a limited

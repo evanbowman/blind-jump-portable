@@ -575,7 +575,6 @@ void Platform::Screen::clear()
     VBlankIntrWait();
 }
 
-
 void Platform::Screen::display()
 {
     // platform->stopwatch().start();
@@ -1111,12 +1110,6 @@ bool Platform::write_save(const PersistentData& data)
     if (not flash_save(data, 0)) {
         return false;
     }
-
-    // Sanity check, that writing the save file succeeded.
-    const auto d = flash_load<PersistentData>(0);
-    if (d.magic_ not_eq PersistentData::magic_val) {
-        return false;
-    }
     return true;
 }
 
@@ -1478,8 +1471,8 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
 
 
+#include "sb_ephemera.hpp"
 #include "frostellar.hpp"
-#include "october.hpp"
 #include "sb_omega.hpp"
 
 
@@ -1501,7 +1494,7 @@ static const struct AudioTrack {
     int length_;
 } music_tracks[] = {DEF_AUDIO(ambience, frostellar),
                     DEF_AUDIO(sb_omega, sb_omega),
-                    DEF_AUDIO(october, October)};
+                    DEF_AUDIO(sb_ephemera, sb_ephemera)};
 
 
 static const AudioTrack* find_track(const char* name)
@@ -1638,23 +1631,27 @@ void Platform::Speaker::stop_music()
 }
 
 
-static void play_music(const char* name, bool loop)
+static void play_music(const char* name, bool loop, Microseconds offset)
 {
     const auto track = find_track(name);
     if (track == nullptr) {
         return;
     }
 
-    modify_audio([&] {
-        snd_ctx.music_track_length = track->length_;
-        snd_ctx.music_track_loop = loop;
-        snd_ctx.music_track = track->data_;
-        snd_ctx.music_track_pos = 0;
-    });
+    const auto sample_offset = offset * 0.016f; // NOTE: because 16kHz
+
+    if (sample_offset < track->length_) {
+        modify_audio([&] {
+            snd_ctx.music_track_length = track->length_;
+            snd_ctx.music_track_loop = loop;
+            snd_ctx.music_track = track->data_;
+            snd_ctx.music_track_pos = sample_offset;
+        });
+    }
 }
 
 
-void Platform::Speaker::load_music(const char* name, bool loop)
+void Platform::Speaker::play_music(const char* name, bool loop, Microseconds offset)
 {
     // NOTE: The sound sample needs to be mono, and 8-bit signed. To export this
     // format from Audacity, convert the tracks to mono via the Tracks dropdown,
@@ -1664,7 +1661,7 @@ void Platform::Speaker::load_music(const char* name, bool loop)
 
     this->stop_music();
 
-    ::play_music(name, loop);
+    ::play_music(name, loop, offset);
 }
 
 
@@ -1744,6 +1741,9 @@ static void audio_update()
     if (snd_ctx.music_track) {
 
         for (int i = 0; i < 4; ++i) {
+            // FIXME: Is the stuff stored in the data segment guaranteed to be
+            // word-aligned? If so, we can potentially copy faster by casting to
+            // u32.
             mixing_buffer[i] = snd_ctx.music_track[snd_ctx.music_track_pos++];
         }
 

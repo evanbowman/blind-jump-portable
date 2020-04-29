@@ -24,6 +24,3 @@ struct SoundContext {
     int music_track_pos = 0;
     bool music_track_loop = false;
 };
-
-
-extern SoundContext snd_ctx;

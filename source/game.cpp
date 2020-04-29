@@ -22,6 +22,8 @@ Game::Game(Platform& pfrm) : state_(State::initial())
         info(pfrm, "no save file found");
     }
 
+    player_.set_health(persistent_data_.player_health_);
+
     random_seed() = persistent_data_.seed_;
 
     pfrm.load_overlay_texture("overlay");
@@ -36,15 +38,6 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 
 HOT void Game::update(Platform& pfrm, Microseconds delta)
 {
-    // Every update, advance the random number engine, so that the
-    // amount of time spent on a level contributes some entropy to the
-    // number stream. This makes the game somewhat less predictable,
-    // because, knowing the state of the random number engine, you
-    // would have to beat the current level in some microsecond
-    // granularity to get to a new level that's possible to
-    // anticipate.
-    random_value();
-
     for (auto it = deferred_callbacks_.begin();
          it not_eq deferred_callbacks_.end();) {
 
@@ -271,7 +264,8 @@ const ZoneInfo& zone_info(Level level)
                                                "the depths",
                                                "spritesheet2",
                                                "tilesheet2",
-                                               "october",
+                                               "sb_ephemera",
+                                               seconds(5),
                                                ColorConstant::turquoise_blue,
                                                ColorConstant::safety_orange};
         return zone_2;
@@ -282,6 +276,7 @@ const ZoneInfo& zone_info(Level level)
                                                "spritesheet",
                                                "tilesheet",
                                                "ambience",
+                                               Microseconds{0},
                                                ColorConstant::electric_blue,
                                                ColorConstant::aerospace_orange};
         return zone_1;
@@ -303,7 +298,7 @@ bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
 
 COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
-    persistent_data_.seed_ = random_seed();
+    const auto& last_zone = zone_info(level());
 
     if (set_level) {
         persistent_data_.level_ = *set_level;
@@ -311,9 +306,8 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         persistent_data_.level_ += 1;
     }
 
-    if (level() == 0) {
-        pfrm.write_save(persistent_data_);
-    }
+    persistent_data_.player_health_ = player_.get_health();
+    persistent_data_.seed_ = random_seed();
 
 
     pfrm.load_tile_texture(current_zone(*this).tileset_name_);
@@ -342,6 +336,10 @@ RETRY:
     const auto ssize = pfrm.screen().size();
     camera_.set_position(
         pfrm, {player_pos.x - ssize.x / 2, player_pos.y - float(ssize.y)});
+
+    if ((set_level and *set_level == 0) or not (zone_info(level()) == last_zone)) {
+        pfrm.write_save(persistent_data_);
+    }
 }
 
 

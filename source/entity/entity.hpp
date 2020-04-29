@@ -44,6 +44,12 @@ public:
     static constexpr bool multiface_sprite = false;
 
 
+    void set_health(Health health)
+    {
+        health_ = health;
+    }
+
+
     bool visible() const
     {
         return visible_;
