@@ -241,8 +241,8 @@ static volatile short* bg0_x_scroll = (volatile short*)0x4000010;
 static volatile short* bg0_y_scroll = (volatile short*)0x4000012;
 static volatile short* bg1_x_scroll = (volatile short*)0x4000014;
 static volatile short* bg1_y_scroll = (volatile short*)0x4000016;
-// static volatile short* bg2_x_scroll = (volatile short*)0x4000018;
-// static volatile short* bg2_y_scroll = (volatile short*)0x400001a;
+static volatile short* bg2_x_scroll = (volatile short*)0x4000018;
+static volatile short* bg2_y_scroll = (volatile short*)0x400001a;
 // static volatile short* bg3_x_scroll = (volatile short*)0x400001c;
 // static volatile short* bg3_y_scroll = (volatile short*)0x400001e;
 
@@ -825,6 +825,13 @@ void Platform::fill_overlay(u16 tile)
     for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u16); ++i) {
         MEM_SCREENBLOCKS[13][i] = tile | SE_PALBANK(1);
     }
+}
+
+
+void Platform::set_overlay_origin(s16 x, s16 y)
+{
+    *bg2_x_scroll = x;
+    *bg2_y_scroll = y;
 }
 
 
@@ -1524,9 +1531,11 @@ static const AudioTrack* find_track(const char* name)
 #include "sound_heart.hpp"
 #include "sound_open_book.hpp"
 #include "sound_openbag.hpp"
+#include "sound_explosion1.hpp"
 
 
-static const AudioTrack sounds[] = {DEF_AUDIO(footstep1, sound_footstep1),
+static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
+                                    DEF_AUDIO(footstep1, sound_footstep1),
                                     DEF_AUDIO(footstep2, sound_footstep2),
                                     DEF_AUDIO(footstep3, sound_footstep3),
                                     DEF_AUDIO(footstep4, sound_footstep4),

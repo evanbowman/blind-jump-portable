@@ -268,6 +268,7 @@ public:
 class IntroCreditsState : public State {
 public:
     void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
@@ -1673,9 +1674,22 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game)
 }
 
 
+void IntroCreditsState::exit(Platform& pfrm, Game& game)
+{
+    text_.reset();
+    pfrm.set_overlay_origin(0, 0);
+}
+
+
 StatePtr
 IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    // Because the overlay uses 8x8 tiles, to truely center something, you
+    // sometimes need to translate the whole layer.
+    if (text_->len() % 2 == 0) {
+        pfrm.set_overlay_origin(-4, 0);
+    }
+
     timer_ += delta;
 
     const auto skip = pfrm.keyboard().down_transition<Key::action_1>();

@@ -13,6 +13,8 @@ void on_enemy_destroyed(Platform& pfrm,
 
     game.effects().spawn<Explosion>(sample<18>(position));
 
+    pfrm.speaker().play_sound("explosion1", 3);
+
 
     game.on_timeout(milliseconds(60), [pos = position](Platform&, Game& game) {
         game.effects().spawn<Explosion>(sample<18>(pos));
