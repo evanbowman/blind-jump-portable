@@ -37,7 +37,6 @@ set(SOURCES
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/effects/explosion.cpp
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
-  ${SOURCE_DIR}/entity/enemies/critter.cpp
   ${SOURCE_DIR}/entity/effects/orbshot.cpp
   ${SOURCE_DIR}/entity/enemies/common.cpp
   ${SOURCE_DIR}/entity/enemies/turret.cpp
@@ -79,6 +78,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/spritesheet.s
     ${SOURCE_DIR}/platform/sound_coin.s
     ${SOURCE_DIR}/platform/sound_bell.s
+    ${SOURCE_DIR}/platform/sound_click.s
     ${SOURCE_DIR}/platform/sound_heart.s
     ${SOURCE_DIR}/platform/sound_creak.s
     ${SOURCE_DIR}/platform/sound_openbag.s
@@ -89,6 +89,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/sound_footstep4.s
     ${SOURCE_DIR}/platform/sound_open_book.s
     ${SOURCE_DIR}/platform/sound_explosion1.s
+    ${SOURCE_DIR}/platform/sound_explosion2.s
     ${SOURCE_DIR}/graphics/spritesheet2.s
     ${SOURCE_DIR}/graphics/overlay_journal.s
     ${SOURCE_DIR}/graphics/spritesheet_boss0.s

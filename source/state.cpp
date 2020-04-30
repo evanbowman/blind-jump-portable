@@ -761,8 +761,7 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<ActiveState>(true);
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
-        pfrm.screen().fade(amount,
-                           current_zone(game).energy_glow_color_);
+        pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
         if (amount > 0.5) {
             pfrm.screen().pixelate((amount - 0.5) * 60);
         }
@@ -878,8 +877,7 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<DeathContinueState>();
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);
-        pfrm.screen().fade(amount,
-                           current_zone(game).injury_glow_color_);
+        pfrm.screen().fade(amount, current_zone(game).injury_glow_color_);
         pfrm.screen().pixelate(amount * 100);
         return null_state();
     }
@@ -1556,17 +1554,16 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto zone = zone_info(next_level_);
     auto last_zone = zone_info(next_level_ - 1);
 
-    auto sound_sync_hack =
-        [&pfrm] {
-            // FIXME!!!!!! Mysteriously, when running on the actual GameBoy Advance
-            // hardware (not an emulator), there's a weird audio glitch, where the
-            // sound effects, but not the music, get all glitched out until two
-            // sounds are played consecutively. I've spent hours trying to figure
-            // out what's going wrong, and I haven't solved this one yet, so for
-            // now, just play a couple quiet sounds.
-            pfrm.speaker().play_sound("footstep1", 0);
-            pfrm.speaker().play_sound("footstep2", 0);
-        };
+    auto sound_sync_hack = [&pfrm] {
+        // FIXME!!!!!! Mysteriously, when running on the actual GameBoy Advance
+        // hardware (not an emulator), there's a weird audio glitch, where the
+        // sound effects, but not the music, get all glitched out until two
+        // sounds are played consecutively. I've spent hours trying to figure
+        // out what's going wrong, and I haven't solved this one yet, so for
+        // now, just play a couple quiet sounds.
+        pfrm.speaker().play_sound("footstep1", 0);
+        pfrm.speaker().play_sound("footstep2", 0);
+    };
 
 
     if (not(zone == last_zone) or next_level_ == 0) {
@@ -1616,7 +1613,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (i >= max_i) {
             pfrm.sleep(50);
 
-            pfrm.speaker().play_music(zone.music_name_, true, zone.music_offset_);
+            pfrm.speaker().play_music(
+                zone.music_name_, true, zone.music_offset_);
 
             if (startup) {
                 sound_sync_hack();
@@ -1630,7 +1628,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
         // If we're loading from a save state, we need to start the music, which
         // normally starts when we enter a new zone.
         if (startup) {
-            pfrm.speaker().play_music(zone.music_name_, true, zone.music_offset_);
+            pfrm.speaker().play_music(
+                zone.music_name_, true, zone.music_offset_);
             sound_sync_hack();
         }
         startup = false;

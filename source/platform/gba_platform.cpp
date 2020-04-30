@@ -1478,8 +1478,8 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
 
 
-#include "sb_computations.hpp"
 #include "frostellar.hpp"
+#include "sb_computations.hpp"
 #include "sb_omega.hpp"
 
 
@@ -1522,8 +1522,11 @@ static const AudioTrack* find_track(const char* name)
 // sound to the sounds array, it's just too tedious to keep working this way...
 #include "sound_bell.hpp"
 #include "sound_blaster.hpp"
+#include "sound_click.hpp"
 #include "sound_coin.hpp"
 #include "sound_creak.hpp"
+#include "sound_explosion1.hpp"
+#include "sound_explosion2.hpp"
 #include "sound_footstep1.hpp"
 #include "sound_footstep2.hpp"
 #include "sound_footstep3.hpp"
@@ -1531,10 +1534,10 @@ static const AudioTrack* find_track(const char* name)
 #include "sound_heart.hpp"
 #include "sound_open_book.hpp"
 #include "sound_openbag.hpp"
-#include "sound_explosion1.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
+                                    DEF_AUDIO(explosion1, sound_explosion2),
                                     DEF_AUDIO(footstep1, sound_footstep1),
                                     DEF_AUDIO(footstep2, sound_footstep2),
                                     DEF_AUDIO(footstep3, sound_footstep3),
@@ -1544,6 +1547,7 @@ static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
                                     DEF_AUDIO(blaster, sound_blaster),
                                     DEF_AUDIO(creak, sound_creak),
                                     DEF_AUDIO(heart, sound_heart),
+                                    DEF_AUDIO(click, sound_click),
                                     DEF_AUDIO(coin, sound_coin),
                                     DEF_AUDIO(bell, sound_bell)};
 
@@ -1660,7 +1664,9 @@ static void play_music(const char* name, bool loop, Microseconds offset)
 }
 
 
-void Platform::Speaker::play_music(const char* name, bool loop, Microseconds offset)
+void Platform::Speaker::play_music(const char* name,
+                                   bool loop,
+                                   Microseconds offset)
 {
     // NOTE: The sound sample needs to be mono, and 8-bit signed. To export this
     // format from Audacity, convert the tracks to mono via the Tracks dropdown,

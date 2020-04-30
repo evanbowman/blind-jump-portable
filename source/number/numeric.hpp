@@ -181,7 +181,8 @@ inline Float ease_out(Float time, Float b, Float c, Float duration)
     return c * (time * time * time + 1) + b;
 }
 
-inline Float ease_in(Float time, Float b, Float c, Float duration) {
+inline Float ease_in(Float time, Float b, Float c, Float duration)
+{
     time /= duration;
     return c * time * time * time + b;
 }

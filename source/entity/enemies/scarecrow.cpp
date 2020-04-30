@@ -297,33 +297,31 @@ void Scarecrow::on_collision(Platform& pf, Game& game, Laser&)
 {
     debit_health(1);
 
+    if (alive()) {
+        pf.speaker().play_sound("click", 1);
+    }
+
     hit_ = true;
 
     const auto c = current_zone(game).injury_glow_color_;
 
     sprite_.set_mix({c, 255});
     leg_.set_mix({c, 255});
-
-    if (not alive()) {
-        game.score() += 15;
-
-        pf.sleep(5);
-
-        static const Item::Type item_drop_vec[] = {Item::Type::coin,
-                                                   Item::Type::coin,
-                                                   Item::Type::coin,
-                                                   Item::Type::heart,
-                                                   Item::Type::null};
-
-        on_enemy_destroyed(pf,
-                           game,
-                           Vec2<Float>{position_.x, position_.y + 32},
-                           3,
-                           item_drop_vec);
+}
 
 
-        if (random_choice<3>() == 0) {
-            game.details().spawn<Item>(position_, pf, Item::Type::coin);
-        }
-    }
+void Scarecrow::on_death(Platform& pf, Game& game)
+{
+    game.score() += 15;
+
+    pf.sleep(5);
+
+    static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                               Item::Type::coin,
+                                               Item::Type::coin,
+                                               Item::Type::heart,
+                                               Item::Type::null};
+
+    on_enemy_destroyed(
+        pf, game, Vec2<Float>{position_.x, position_.y + 32}, 3, item_drop_vec);
 }

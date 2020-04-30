@@ -14,7 +14,6 @@
 #include "entity/effects/firstExplorerSmallLaser.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
-#include "entity/enemies/critter.hpp"
 #include "entity/enemies/dasher.hpp"
 #include "entity/enemies/drone.hpp"
 #include "entity/enemies/probe.hpp"

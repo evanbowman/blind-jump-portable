@@ -337,7 +337,8 @@ RETRY:
     camera_.set_position(
         pfrm, {player_pos.x - ssize.x / 2, player_pos.y - float(ssize.y)});
 
-    if ((set_level and *set_level == 0) or not (zone_info(level()) == last_zone)) {
+    if ((set_level and *set_level == 0) or
+        not(zone_info(level()) == last_zone)) {
         pfrm.write_save(persistent_data_);
     }
 }

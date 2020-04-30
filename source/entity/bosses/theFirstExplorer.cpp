@@ -241,7 +241,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         face_player();
 
         timer_ += dt;
-        if (timer_ > milliseconds(620)) {
+        if (timer_ > milliseconds(10)) {
             timer_ = 0;
             state_ = State::big_laser1;
         }
@@ -251,7 +251,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         face_player();
 
         timer_ += dt;
-        if (timer_ > milliseconds(10)) {
+        if (timer_ > milliseconds(620)) {
             game.camera().shake();
             medium_explosion(pf, game, position_ + shoot_offset());
 
@@ -433,13 +433,18 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
 
     debit_health(1);
 
+    if (alive()) {
+        pf.speaker().play_sound("click", 1);
+    }
+
     if (not was_second_form and second_form()) {
         game.camera().shake();
 
         medium_explosion(pf, game, position_);
     }
 
-    if (state_ not_eq State::big_laser_shooting) {
+    if (state_ not_eq State::big_laser_shooting and
+        state_ not_eq State::big_laser1) {
 
         const auto c = current_zone(game).injury_glow_color_;
 

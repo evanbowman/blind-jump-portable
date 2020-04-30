@@ -103,6 +103,10 @@ void Turret::on_collision(Platform& pf, Game& game, Laser&)
         sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
         debit_health(1);
 
+        if (alive()) {
+            pf.speaker().play_sound("click", 1);
+        }
+
         if (not alive()) {
             game.score() += 12;
 

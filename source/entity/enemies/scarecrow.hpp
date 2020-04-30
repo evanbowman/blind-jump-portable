@@ -28,6 +28,8 @@ public:
 
     void on_collision(Platform&, Game&, Laser&);
 
+    void on_death(Platform&, Game&);
+
 
 private:
     enum class State {

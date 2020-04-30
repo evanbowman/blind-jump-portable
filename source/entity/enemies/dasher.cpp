@@ -228,6 +228,10 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
 
     const auto c = current_zone(game).injury_glow_color_;
 
+    if (alive()) {
+        pf.speaker().play_sound("click", 1);
+    }
+
     sprite_.set_mix({c, 255});
     head_.set_mix({c, 255});
 
@@ -250,9 +254,4 @@ void Dasher::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(pf, game, position_, 2, item_drop_vec);
-
-
-    if (random_choice<3>() == 0) {
-        game.details().spawn<Item>(position_, pf, Item::Type::coin);
-    }
 }

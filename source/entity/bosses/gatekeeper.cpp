@@ -329,6 +329,10 @@ void Gatekeeper::on_collision(Platform& pfrm, Game& game, Laser&)
     const bool was_third_form = third_form();
     debit_health(1);
 
+    if (alive()) {
+        pfrm.speaker().play_sound("click", 1);
+    }
+
     if (not was_second_form and second_form()) {
         state_ = State::second_form_enter;
         timer_ = 0;
