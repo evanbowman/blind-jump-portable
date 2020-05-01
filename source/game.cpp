@@ -510,7 +510,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
             switch (match) {
             case Tile::plate:
             case Tile::sand:
-                grass_overlay.set_tile(x, y, Tile(int(Tile::grass_start) + bitmask[x][y]));
+                grass_overlay.set_tile(
+                    x, y, Tile(int(Tile::grass_start) + bitmask[x][y]));
                 break;
 
             case Tile::ledge:
@@ -531,13 +532,14 @@ COLD void Game::regenerate_map(Platform& pfrm)
     pfrm.push_tile1_map(grass_overlay);
 
 
-    tiles_.for_each([&](Tile& tile, int, int) {
+    tiles_.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::plate) {
             if (random_choice<7>() == 0) {
                 tile = Tile::damaged_plate;
             }
         } else if (tile == Tile::sand) {
-            if (random_choice<4>() == 0) {
+            if (random_choice<4>() == 0 and
+                grass_overlay.get_tile(x, y) == Tile::none) {
                 tile = Tile::sand_sprouted;
             }
         }

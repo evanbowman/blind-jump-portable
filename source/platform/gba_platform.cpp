@@ -339,8 +339,8 @@ static constexpr const int cbb_bg_texture = sbb_bg_texture / ssb_per_cbb;
 
 Platform::Screen::Screen() : userdata_(nullptr)
 {
-    REG_DISPCNT =
-        MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE | BG2_ENABLE | BG3_ENABLE;
+    REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE |
+                  BG2_ENABLE | BG3_ENABLE;
 
     *reg_blendcnt = BLD_BUILD(BLD_OBJ, BLD_BG0 | BLD_BG1 | BLD_BG3, 0);
 
@@ -786,7 +786,8 @@ COLD static void set_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
     // Tiles at y=10 need to jump across a gap between screen blocks.
     if (y == 10 and x > 7) {
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[base + 1][i + ref(x % 8, y)] = (tile_id * 12 + i) | SE_PALBANK(palette);
+            MEM_SCREENBLOCKS[base + 1][i + ref(x % 8, y)] =
+                (tile_id * 12 + i) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[base + 1][i + ref(x % 8, y) + 32] =
@@ -799,13 +800,16 @@ COLD static void set_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
         return;
     } else if (y == 10) {
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[base][i + ref(x, y)] = (tile_id * 12 + i) | SE_PALBANK(palette);
+            MEM_SCREENBLOCKS[base][i + ref(x, y)] =
+                (tile_id * 12 + i) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[base][i + ref(x, y) + 32] = (tile_id * 12 + i + 4) | SE_PALBANK(palette);
+            MEM_SCREENBLOCKS[base][i + ref(x, y) + 32] =
+                (tile_id * 12 + i + 4) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[base + 2][i + ref(x, 0)] = (tile_id * 12 + i + 8) | SE_PALBANK(palette);
+            MEM_SCREENBLOCKS[base + 2][i + ref(x, 0)] =
+                (tile_id * 12 + i + 8) | SE_PALBANK(palette);
         }
         return;
     }
@@ -841,7 +845,8 @@ COLD static void set_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
         }
     } else {
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y)] = (tile_id * 12 + i) | SE_PALBANK(palette);
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y)] =
+                (tile_id * 12 + i) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] =
@@ -859,7 +864,8 @@ COLD void Platform::push_tile0_map(const TileMap& map)
 {
     for (u32 i = 0; i < TileMap::width; ++i) {
         for (u32 j = 0; j < TileMap::height; ++j) {
-            set_tile(sbb_t0_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 0);
+            set_tile(
+                sbb_t0_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 0);
         }
     }
 
@@ -885,7 +891,8 @@ COLD void Platform::push_tile1_map(const TileMap& map)
 {
     for (u32 i = 0; i < TileMap::width; ++i) {
         for (u32 j = 0; j < TileMap::height; ++j) {
-            set_tile(sbb_t1_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 2);
+            set_tile(
+                sbb_t1_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 2);
         }
     }
 }
