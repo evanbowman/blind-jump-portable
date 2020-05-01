@@ -1478,9 +1478,9 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
 
 
-#include "frostellar.hpp"
-#include "sb_computations.hpp"
-#include "sb_omega.hpp"
+#include "lenkaland_frostellar.hpp"
+#include "scottbuckley_computations.hpp"
+#include "scottbuckley_omega.hpp"
 
 
 #define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \
@@ -1499,9 +1499,9 @@ static const struct AudioTrack {
     const char* name_;
     const AudioSample* data_;
     int length_;
-} music_tracks[] = {DEF_AUDIO(ambience, frostellar),
-                    DEF_AUDIO(sb_omega, sb_omega),
-                    DEF_AUDIO(sb_computations, sb_computations)};
+} music_tracks[] = {DEF_AUDIO(frostellar, lenkaland_frostellar),
+                    DEF_AUDIO(omega, scottbuckley_omega),
+                    DEF_AUDIO(computations, scottbuckley_computations)};
 
 
 static const AudioTrack* find_track(const char* name)
@@ -1532,6 +1532,7 @@ static const AudioTrack* find_track(const char* name)
 #include "sound_footstep3.hpp"
 #include "sound_footstep4.hpp"
 #include "sound_heart.hpp"
+#include "sound_laser1.hpp"
 #include "sound_open_book.hpp"
 #include "sound_openbag.hpp"
 
@@ -1545,6 +1546,7 @@ static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
                                     DEF_AUDIO(open_book, sound_open_book),
                                     DEF_AUDIO(openbag, sound_openbag),
                                     DEF_AUDIO(blaster, sound_blaster),
+                                    DEF_AUDIO(laser1, sound_laser1),
                                     DEF_AUDIO(creak, sound_creak),
                                     DEF_AUDIO(heart, sound_heart),
                                     DEF_AUDIO(click, sound_click),

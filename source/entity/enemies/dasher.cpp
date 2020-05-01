@@ -115,6 +115,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(50);
             state_ = State::shot2;
 
+            pf.speaker().play_sound("laser1", 4);
             game.effects().spawn<OrbShot>(
                 position_, sample<8>(game.player().get_position()), 0.00015f);
         }
@@ -125,6 +126,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(150);
             state_ = State::shot3;
 
+            pf.speaker().play_sound("laser1", 4);
             game.effects().spawn<OrbShot>(
                 position_, sample<16>(game.player().get_position()), 0.00015f);
         }
@@ -135,6 +137,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(150);
             state_ = State::pause;
 
+            pf.speaker().play_sound("laser1", 4);
             game.effects().spawn<OrbShot>(
                 position_, sample<32>(game.player().get_position()), 0.00015f);
         }

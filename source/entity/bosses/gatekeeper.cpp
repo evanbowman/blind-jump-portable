@@ -10,7 +10,7 @@ static const int default_shield_radius = 24;
 static const int max_shield_radius = 100;
 
 
-static const char* boss_music = "sb_omega";
+static const char* boss_music = "omega";
 
 
 Gatekeeper::Gatekeeper(const Vec2<Float>& position, Game& game)

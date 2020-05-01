@@ -278,6 +278,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 sprite_.set_position({sprite_pos.x, sprite_pos.y + 1});
             } else {
                 if (visible()) {
+                    pfrm.speaker().play_sound("laser1", 4);
                     game.effects().spawn<OrbShot>(
                         position_,
                         sample<8>(game.player().get_position()),

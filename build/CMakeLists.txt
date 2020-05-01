@@ -69,9 +69,9 @@ if(GAMEBOY_ADVANCE)
   set(SOURCES
     ${SOURCES}
     ${SOURCE_DIR}/platform/memcpy.s
-    ${SOURCE_DIR}/platform/sb_omega.s
-    ${SOURCE_DIR}/platform/sb_computations.s
-    ${SOURCE_DIR}/platform/frostellar.s
+    ${SOURCE_DIR}/platform/scottbuckley_omega.s
+    ${SOURCE_DIR}/platform/scottbuckley_computations.s
+    ${SOURCE_DIR}/platform/lenkaland_frostellar.s
     ${SOURCE_DIR}/graphics/overlay.s
     ${SOURCE_DIR}/graphics/tilesheet.s
     ${SOURCE_DIR}/graphics/tilesheet2.s
@@ -81,6 +81,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/sound_click.s
     ${SOURCE_DIR}/platform/sound_heart.s
     ${SOURCE_DIR}/platform/sound_creak.s
+    ${SOURCE_DIR}/platform/sound_laser1.s
     ${SOURCE_DIR}/platform/sound_openbag.s
     ${SOURCE_DIR}/platform/sound_blaster.s
     ${SOURCE_DIR}/platform/sound_footstep1.s

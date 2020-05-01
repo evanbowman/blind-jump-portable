@@ -278,6 +278,19 @@ private:
 };
 
 
+// TODO...
+class EndingCreditsState : public State {
+public:
+    void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    // ...
+};
+
+
 class NewLevelState : public State {
 public:
     NewLevelState(Level next_level) : timer_(0), next_level_(next_level)
@@ -368,7 +381,8 @@ static StatePool<ActiveState,
                  CommandCodeState,
                  MapSystemState,
                  IntroCreditsState,
-                 DeathContinueState>
+                 DeathContinueState,
+                 EndingCreditsState>
     state_pool_;
 
 

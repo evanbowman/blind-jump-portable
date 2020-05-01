@@ -6,7 +6,7 @@
 #include "wallCollision.hpp"
 
 
-static const char* boss_music = "sb_omega";
+static const char* boss_music = "omega";
 
 
 static const Entity::Health initial_health = 100;

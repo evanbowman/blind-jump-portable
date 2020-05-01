@@ -74,6 +74,8 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > 0) {
             timer_ -= dt;
         } else {
+            pfrm.speaker().play_sound("laser1", 4);
+
             game.effects().spawn<OrbShot>(
                 position_ + Vec2<Float>{0.f, 4.f},
                 sample<8>(game.player().get_position()),

@@ -264,7 +264,7 @@ const ZoneInfo& zone_info(Level level)
                                                "the depths",
                                                "spritesheet2",
                                                "tilesheet2",
-                                               "sb_computations",
+                                               "computations",
                                                seconds(8) + milliseconds(700),
                                                ColorConstant::turquoise_blue,
                                                ColorConstant::safety_orange};
@@ -275,7 +275,7 @@ const ZoneInfo& zone_info(Level level)
                                                "outer station ruins",
                                                "spritesheet",
                                                "tilesheet",
-                                               "ambience",
+                                               "frostellar",
                                                Microseconds{0},
                                                ColorConstant::electric_blue,
                                                ColorConstant::aerospace_orange};
