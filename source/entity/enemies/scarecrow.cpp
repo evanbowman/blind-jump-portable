@@ -200,7 +200,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
                     const Tile t =
                         game.tiles().get_tile(selected.x, selected.y);
-                    if (is_walkable(t) and
+                    if (is_walkable__fast(t) and
                         manhattan_length(selected, player_coord) > 3 and
                         selected not_eq anchor_) {
                         anchor_ = selected;
@@ -234,7 +234,8 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             coord.y += 1;
 
             // Hide the shadow when we're jumping over empty space
-            if (not is_walkable(game.tiles().get_tile(coord.x, coord.y))) {
+            if (not is_walkable__fast(
+                    game.tiles().get_tile(coord.x, coord.y))) {
                 shadow_.set_alpha(Sprite::Alpha::transparent);
             } else {
                 shadow_.set_alpha(Sprite::Alpha::translucent);

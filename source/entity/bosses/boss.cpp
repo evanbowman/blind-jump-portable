@@ -54,7 +54,7 @@ bool wall_in_path(const Vec2<Float>& direction,
 
         auto tile_coord = to_tile_coord(pos.cast<s32>());
 
-        if (not is_walkable(
+        if (not is_walkable__fast(
                 game.tiles().get_tile(tile_coord.x, tile_coord.y))) {
             return true;
         }

@@ -257,30 +257,33 @@ bool is_boss_level(Level level)
 }
 
 
+static constexpr const ZoneInfo zone_1{"part I:",
+                                       "outer station ruins",
+                                       "spritesheet",
+                                       "tilesheet",
+                                       "tilesheet_top",
+                                       "frostellar",
+                                       Microseconds{0},
+                                       ColorConstant::electric_blue,
+                                       ColorConstant::aerospace_orange};
+
+
+static constexpr const ZoneInfo zone_2{"part II:",
+                                       "the depths",
+                                       "spritesheet2",
+                                       "tilesheet2",
+                                       "tilesheet2_top",
+                                       "computations",
+                                       seconds(8) + milliseconds(700),
+                                       ColorConstant::turquoise_blue,
+                                       ColorConstant::safety_orange};
+
+
 const ZoneInfo& zone_info(Level level)
 {
     if (level > 10) {
-        static constexpr const ZoneInfo zone_2{"part II:",
-                                               "the depths",
-                                               "spritesheet2",
-                                               "tilesheet2",
-                                               "tilesheet2_top",
-                                               "computations",
-                                               seconds(8) + milliseconds(700),
-                                               ColorConstant::turquoise_blue,
-                                               ColorConstant::safety_orange};
         return zone_2;
-
     } else {
-        static constexpr const ZoneInfo zone_1{"part I:",
-                                               "outer station ruins",
-                                               "spritesheet",
-                                               "tilesheet",
-                                               "tilesheet_top",
-                                               "frostellar",
-                                               Microseconds{0},
-                                               ColorConstant::electric_blue,
-                                               ColorConstant::aerospace_orange};
         return zone_1;
     }
 }
@@ -334,6 +337,28 @@ RETRY:
     }
 
     pfrm.push_tile0_map(tiles_);
+
+    // We're doing this to speed up collision checking with walls. While it
+    // might be nice to have more info about the tilemap, it's costly to check
+    // all of the enumerations. At this point, we've already pushed the tilemap
+    // to the platform for rendering, so we can simplify to just the data that
+    // we absolutely need.
+    tiles_.for_each([&](Tile& tile, int, int) {
+        if (is_walkable__precise(tile)) {
+            switch (tile) {
+            case Tile::plate:
+            case Tile::damaged_plate:
+                tile = Tile::plate;
+                break;
+
+            default:
+                tile = Tile::sand;
+                break;
+            }
+        } else {
+            tile = Tile::none;
+        }
+    });
 
     const auto player_pos = player_.get_position();
     const auto ssize = pfrm.screen().size();
@@ -424,7 +449,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     // Create a mask of the tileset by filling the temporary tileset
     // with all walkable tiles from the tilemap.
     tiles_.for_each([&](const Tile& tile, TIdx x, TIdx y) {
-        if (is_walkable(tile)) {
+        if (is_walkable__precise(tile)) {
             temporary.set_tile(x, y, Tile(1));
         } else {
             temporary.set_tile(x, y, Tile(0));
@@ -529,6 +554,26 @@ COLD void Game::regenerate_map(Platform& pfrm)
     });
 
 
+    if (zone_info(level()) == zone_1) {
+        tiles_.for_each([&](Tile& tile, int x, int y) {
+            if (tile == Tile::ledge) {
+                if (tiles_.get_tile(x + 1, y) == Tile::plate) {
+                    tile = Tile::beam_br;
+                } else if (tiles_.get_tile(x - 1, y) == Tile::plate) {
+                    tile = Tile::beam_bl;
+                }
+            } else if (tile == Tile::none and
+                       tiles_.get_tile(x, y + 1) == Tile::plate) {
+                if (tiles_.get_tile(x + 1, y) == Tile::plate) {
+                    tile = Tile::beam_ur;
+                } else if (tiles_.get_tile(x - 1, y) == Tile::plate) {
+                    tile = Tile::beam_ul;
+                }
+            }
+        });
+    }
+
+
     pfrm.push_tile1_map(grass_overlay);
 
 
@@ -556,7 +601,7 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
     MapCoordBuf output;
 
     map.for_each([&](const Tile& tile, TIdx x, TIdx y) {
-        if (is_walkable(tile)) {
+        if (is_walkable__precise(tile)) {
             output.push_back({x, y});
         }
     });

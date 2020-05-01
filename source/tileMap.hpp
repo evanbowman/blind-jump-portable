@@ -15,6 +15,10 @@ enum class Tile : u8 {
     __reserved_2,
     grass_ledge,
     grass_ledge_vines,
+    beam_ul,
+    beam_ur,
+    beam_bl,
+    beam_br,
     t0_count,
     // Tile layer 1 is reserved for adding detail to maps, t1 renders overtop of
     // t0 (the enumerations above)
@@ -99,13 +103,26 @@ inline Vec2<TIdx> to_quarter_tile_coord(const Vec2<s32>& wc)
         .cast<TIdx>();
 }
 
-inline bool is_walkable(Tile t)
+
+// This function is only intended to be called during map
+// generation. Afterwards, the game code simplifies the tile map by removing all
+// non-essential tiles. Unless you're writing map generation code, you should
+// call is_walkable.
+inline bool is_walkable__precise(Tile t)
 {
     return t not_eq Tile::none and t not_eq Tile::ledge and
-           t not_eq Tile::grass_ledge and t not_eq Tile::grass_ledge_vines;
+           t not_eq Tile::grass_ledge and t not_eq Tile::grass_ledge_vines and
+           t not_eq Tile::beam_ul and t not_eq Tile::beam_ur and
+           t not_eq Tile::beam_bl and t not_eq Tile::beam_br;
 }
+
+inline bool is_walkable__fast(Tile t)
+{
+    return static_cast<bool>(t);
+}
+
 
 inline bool is_border(Tile t)
 {
-    return t == Tile::plate or t == Tile::damaged_plate;
+    return t == Tile::plate;
 }
