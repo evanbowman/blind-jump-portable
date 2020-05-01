@@ -397,7 +397,7 @@ void Platform::load_sprite_texture(const char* name)
 }
 
 
-void Platform::load_tile_texture(const char* name)
+void Platform::load_tile0_texture(const char* name)
 {
 }
 

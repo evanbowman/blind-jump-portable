@@ -7,6 +7,8 @@ grit tmp/spritesheet_boss0.png -gB4 -Mw 2 -Mh 4 -gTFF00FF
 grit tmp/spritesheet_boss1.png -gB4 -Mw 2 -Mh 4 -gTFF00FF
 grit tmp/tilesheet.png -gB4 -Mw 4 -Mh 3 -gTFF00FF
 grit tmp/tilesheet2.png -gB4 -Mw 4 -Mh 3 -gTFF00FF
+grit tmp/tilesheet_top.png -gB4 -Mw 4 -Mh 3 -gTFF00FF
+grit tmp/tilesheet2_top.png -gB4 -Mw 4 -Mh 3 -gTFF00FF
 grit tmp/overlay.png -gB4 -gTFF00FF
 grit tmp/overlay_journal.png -gB4 -gTFF00FF
 grit tmp/old_poster_flattened.png -gB4 -gTFF00FF

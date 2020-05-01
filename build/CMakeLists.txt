@@ -75,6 +75,8 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/overlay.s
     ${SOURCE_DIR}/graphics/tilesheet.s
     ${SOURCE_DIR}/graphics/tilesheet2.s
+    ${SOURCE_DIR}/graphics/tilesheet_top.s
+    ${SOURCE_DIR}/graphics/tilesheet2_top.s
     ${SOURCE_DIR}/graphics/spritesheet.s
     ${SOURCE_DIR}/platform/sound_coin.s
     ${SOURCE_DIR}/platform/sound_bell.s

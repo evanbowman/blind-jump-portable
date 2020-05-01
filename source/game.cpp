@@ -264,6 +264,7 @@ const ZoneInfo& zone_info(Level level)
                                                "the depths",
                                                "spritesheet2",
                                                "tilesheet2",
+                                               "tilesheet2_top",
                                                "computations",
                                                seconds(8) + milliseconds(700),
                                                ColorConstant::turquoise_blue,
@@ -275,6 +276,7 @@ const ZoneInfo& zone_info(Level level)
                                                "outer station ruins",
                                                "spritesheet",
                                                "tilesheet",
+                                               "tilesheet_top",
                                                "frostellar",
                                                Microseconds{0},
                                                ColorConstant::electric_blue,
@@ -310,7 +312,8 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     persistent_data_.seed_ = random_seed();
 
 
-    pfrm.load_tile_texture(current_zone(*this).tileset_name_);
+    pfrm.load_tile0_texture(current_zone(*this).tileset0_name_);
+    pfrm.load_tile1_texture(current_zone(*this).tileset1_name_);
 
 
     auto boss_level = get_boss_level(level());
@@ -330,7 +333,7 @@ RETRY:
         goto RETRY;
     }
 
-    pfrm.push_map(tiles_);
+    pfrm.push_tile0_map(tiles_);
 
     const auto player_pos = player_.get_position();
     const auto ssize = pfrm.screen().size();
@@ -504,16 +507,10 @@ COLD void Game::regenerate_map(Platform& pfrm)
     grass_overlay.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::plate) {
             auto match = tiles_.get_tile(x, y);
-            u8 val;
             switch (match) {
             case Tile::plate:
-                val = int(Tile::grass_plate) + bitmask[x][y];
-                tiles_.set_tile(x, y, Tile(val));
-                break;
-
             case Tile::sand:
-                val = int(Tile::grass_sand) + bitmask[x][y];
-                tiles_.set_tile(x, y, Tile(val));
+                grass_overlay.set_tile(x, y, Tile(int(Tile::grass_start) + bitmask[x][y]));
                 break;
 
             case Tile::ledge:
@@ -521,6 +518,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
                                 y,
                                 (random_choice<2>()) ? Tile::grass_ledge
                                                      : Tile::grass_ledge_vines);
+                grass_overlay.set_tile(x, y, Tile::none);
                 break;
 
             default:
@@ -528,6 +526,10 @@ COLD void Game::regenerate_map(Platform& pfrm)
             }
         }
     });
+
+
+    pfrm.push_tile1_map(grass_overlay);
+
 
     tiles_.for_each([&](Tile& tile, int, int) {
         if (tile == Tile::plate) {
@@ -559,9 +561,12 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 
     for (auto it = output.begin(); it not_eq output.end();) {
         const Tile tile = map.get_tile(it->x, it->y);
-        if (not(tile == Tile::sand or tile == Tile::sand_sprouted or
-                (u8(tile) >= u8(Tile::grass_sand) and
-                 u8(tile) < u8(Tile::grass_plate)))) {
+        if (not(tile == Tile::sand or tile == Tile::sand_sprouted
+                // FIXME-TILES
+                //  or
+                // (u8(tile) >= u8(Tile::grass_sand) and
+                //  u8(tile) < u8(Tile::grass_plate))
+                )) {
             output.erase(it);
         } else {
             ++it;
@@ -748,12 +753,18 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     }
 
     auto is_plate = [&](Tile t) {
-        return t == Tile::plate or
-               (t >= Tile::grass_plate and t < Tile::grass_ledge);
+        return t == Tile::plate
+            // FIXME-TILES
+            //  or
+            // (t >= Tile::grass_plate and t < Tile::grass_ledge)
+            ;
     };
     auto is_sand = [&](Tile t) {
-        return t == Tile::sand or t == Tile::sand_sprouted or
-               (t >= Tile::grass_sand and t < Tile::grass_plate);
+        return t == Tile::sand or t == Tile::sand_sprouted
+            // FIXME-TILES
+            //  or
+            // (t >= Tile::grass_sand and t < Tile::grass_plate)
+            ;
     };
 
 

@@ -13,11 +13,12 @@ enum class Tile : u8 {
     __reserved_0, // Used for rendering the parallax scrolling starfield
     sand_sprouted,
     __reserved_2,
-    grass_sand,
-    grass_plate = grass_sand + 16,
-    grass_ledge = grass_plate + 16,
+    grass_ledge,
     grass_ledge_vines,
-    count,
+    t0_count,
+    // Tile layer 1 is reserved for adding detail to maps, t1 renders overtop of
+    // t0 (the enumerations above)
+    grass_start = 1,
 };
 
 
@@ -106,6 +107,5 @@ inline bool is_walkable(Tile t)
 
 inline bool is_border(Tile t)
 {
-    return t == Tile::plate or
-           (t >= Tile::grass_plate and t < Tile::grass_ledge);
+    return t == Tile::plate or t == Tile::damaged_plate;
 }

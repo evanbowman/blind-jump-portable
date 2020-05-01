@@ -76,6 +76,8 @@ for name in ['spritesheet.png',
              'spritesheet2.png',
              'tilesheet.png',
              'tilesheet2.png',
+             'tilesheet_top.png',
+             'tilesheet2_top.png',
              'overlay.png',
              'overlay_journal.png',
              'old_poster_flattened.png']:

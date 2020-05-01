@@ -95,7 +95,8 @@ public:
     void fatal();
 
 
-    void push_map(const TileMap& map);
+    void push_tile0_map(const TileMap& map);
+    void push_tile1_map(const TileMap& map);
 
     void set_overlay_tile(u16 x, u16 y, u16 val);
     u16 get_overlay_tile(u16 x, u16 y);
@@ -106,7 +107,8 @@ public:
 
 
     void load_sprite_texture(const char* name);
-    void load_tile_texture(const char* name);
+    void load_tile0_texture(const char* name);
+    void load_tile1_texture(const char* name);
     void load_overlay_texture(const char* name);
 
     // Sleep halts the game for an amount of time equal to some number

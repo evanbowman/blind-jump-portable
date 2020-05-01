@@ -154,7 +154,8 @@ struct ZoneInfo {
     const char* title_line_1;
     const char* title_line_2;
     const char* spritesheet_name_;
-    const char* tileset_name_;
+    const char* tileset0_name_;
+    const char* tileset1_name_;
     const char* music_name_;
     Microseconds music_offset_;
 

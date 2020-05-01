@@ -234,7 +234,7 @@ static ObjectAttributes
 static volatile u16* bg0_control = (volatile u16*)0x4000008;
 static volatile u16* bg1_control = (volatile u16*)0x400000a;
 static volatile u16* bg2_control = (volatile u16*)0x400000c;
-// static volatile u16* bg3_control = (volatile u16*)0x400000e;
+static volatile u16* bg3_control = (volatile u16*)0x400000e;
 
 
 static volatile short* bg0_x_scroll = (volatile short*)0x4000010;
@@ -243,8 +243,8 @@ static volatile short* bg1_x_scroll = (volatile short*)0x4000014;
 static volatile short* bg1_y_scroll = (volatile short*)0x4000016;
 static volatile short* bg2_x_scroll = (volatile short*)0x4000018;
 static volatile short* bg2_y_scroll = (volatile short*)0x400001a;
-// static volatile short* bg3_x_scroll = (volatile short*)0x400001c;
-// static volatile short* bg3_y_scroll = (volatile short*)0x400001e;
+static volatile short* bg3_x_scroll = (volatile short*)0x400001c;
+static volatile short* bg3_y_scroll = (volatile short*)0x400001e;
 
 
 static u8 last_fade_amt;
@@ -259,6 +259,7 @@ static volatile u16* reg_blendalpha = (volatile u16*)0x04000052;
 #define BLD_OBJ 0x0010
 #define BLD_BG0 0x0001
 #define BLD_BG1 0x0002
+#define BLD_BG3 0x0008
 #define BLDA_BUILD(eva, evb) (((eva)&31) | (((evb)&31) << 8))
 
 
@@ -285,19 +286,81 @@ public:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Tile Memory Layout:
+//
+// The game uses every single available screen block, so the data is fairly
+// tightly packed. Here's a chart representing the layout:
+//
+// All units of length are in screen blocks, followed by the screen block
+// indices in parentheses. The texture data needs to be aligned to char block
+// boundaries (eight screen blocks in a char block), which is why there is
+// tilemap data packed into the screen blocks between sets of texture data.
+//
+//        charblock 0                      charblock 1
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// o============================================================
+// |  t0 texture   | overlay mem |   t1 texture   |   bg mem   |
+// | len 7 (0 - 6) |  len 1 (7)  | len 7 (8 - 14) | len 1 (15) | ...
+// o============================================================
+//
+//        charblock 2                 charblock 3
+//     ~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//     ======================================================o
+//     | overlay texture |     t0 mem      |     t1 mem      |
+// ... | len 8 (16 - 23) | len 4 (24 - 27) | len 4 (28 - 31) |
+//     ======================================================o
+//
+
+static constexpr const int ssb_per_cbb = 8;
+
+static constexpr const int sbb_overlay_tiles = 7;
+static constexpr const int sbb_bg_tiles = 15;
+static constexpr const int sbb_t0_tiles = 24;
+static constexpr const int sbb_t1_tiles = 28;
+
+static constexpr const int sbb_overlay_texture = 16;
+static constexpr const int sbb_t0_texture = 0;
+static constexpr const int sbb_t1_texture = 8;
+static constexpr const int sbb_bg_texture = sbb_t0_texture;
+
+static constexpr const int cbb_overlay_texture =
+    sbb_overlay_texture / ssb_per_cbb;
+
+static constexpr const int cbb_t0_texture = sbb_t0_texture / ssb_per_cbb;
+static constexpr const int cbb_t1_texture = sbb_t1_texture / ssb_per_cbb;
+static constexpr const int cbb_bg_texture = sbb_bg_texture / ssb_per_cbb;
+
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
 Platform::Screen::Screen() : userdata_(nullptr)
 {
     REG_DISPCNT =
-        MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE | BG2_ENABLE;
+        MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE | BG2_ENABLE | BG3_ENABLE;
 
-    *reg_blendcnt = BLD_BUILD(BLD_OBJ, BLD_BG0 | BLD_BG1, 0);
+    *reg_blendcnt = BLD_BUILD(BLD_OBJ, BLD_BG0 | BLD_BG1 | BLD_BG3, 0);
 
     *reg_blendalpha = BLDA_BUILD(0x40 / 8, 0x40 / 8);
 
-    *bg0_control = BG_SBB(8) | BG_REG_64x64 | BG_PRIORITY(3) | BG_MOSAIC;
-    //        0xC800; // 64x64, 0x0100 for 32x32
-    *bg1_control = BG_SBB(12) | BG_PRIORITY(3) | BG_MOSAIC;
-    *bg2_control = BG_SBB(13) | BG_PRIORITY(0) | BG_CBB(3) | BG_MOSAIC;
+    // Tilemap layer 0
+    *bg0_control = BG_CBB(cbb_t0_texture) | BG_SBB(sbb_t0_tiles) |
+                   BG_REG_64x64 | BG_PRIORITY(3) | BG_MOSAIC;
+
+    // Tilemap layer 1 (TODO)
+    *bg3_control = BG_CBB(cbb_t1_texture) | BG_SBB(sbb_t1_tiles) |
+                   BG_REG_64x64 | BG_PRIORITY(2) | BG_MOSAIC;
+
+    // The starfield background
+    *bg1_control = BG_CBB(cbb_bg_texture) | BG_SBB(sbb_bg_tiles) |
+                   BG_PRIORITY(3) | BG_MOSAIC;
+
+    // The overlay
+    *bg2_control = BG_CBB(cbb_overlay_texture) | BG_SBB(sbb_overlay_tiles) |
+                   BG_PRIORITY(0) | BG_MOSAIC;
 
     view_.set_size(this->size().cast<Float>());
 
@@ -602,6 +665,10 @@ void Platform::Screen::display()
     auto view_offset = view_.get_center().cast<s32>();
     *bg0_x_scroll = view_offset.x;
     *bg0_y_scroll = view_offset.y;
+
+    *bg3_x_scroll = view_offset.x;
+    *bg3_y_scroll = view_offset.y;
+
     *bg1_x_scroll = view_offset.x * 0.3f;
     *bg1_y_scroll = view_offset.y * 0.3f;
 }
@@ -645,7 +712,9 @@ static const TextureData sprite_textures[] = {TEXTURE_INFO(spritesheet),
 
 
 static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),
-                                            TEXTURE_INFO(tilesheet2)};
+                                            TEXTURE_INFO(tilesheet_top),
+                                            TEXTURE_INFO(tilesheet2),
+                                            TEXTURE_INFO(tilesheet2_top)};
 
 
 static const TextureData overlay_textures[] = {
@@ -655,14 +724,28 @@ static const TextureData overlay_textures[] = {
 
 
 static const TextureData* current_spritesheet = &sprite_textures[0];
-static const TextureData* current_tilesheet = &tile_textures[0];
+static const TextureData* current_tilesheet0 = &tile_textures[0];
+static const TextureData* current_tilesheet1 = &tile_textures[1];
 
 
-static bool validate_texture_size(Platform& pfrm, size_t size)
+static bool validate_tilemap_texture_size(Platform& pfrm, size_t size)
+{
+    constexpr auto charblock_size = sizeof(ScreenBlock) * 7;
+    if (size > charblock_size) {
+        error(pfrm, "tileset exceeds charblock size");
+        pfrm.fatal();
+        return false;
+    }
+    return true;
+}
+
+
+static bool validate_overlay_texture_size(Platform& pfrm, size_t size)
 {
     constexpr auto charblock_size = sizeof(ScreenBlock) * 8;
     if (size > charblock_size) {
         error(pfrm, "tileset exceeds charblock size");
+        pfrm.fatal();
         return false;
     }
     return true;
@@ -680,9 +763,8 @@ void Platform::load_overlay_texture(const char* name)
                 MEM_BG_PALETTE[16 + i] = from.bgr_hex_555();
             }
 
-            if (validate_texture_size(*this, info.tile_data_length_)) {
-                // NOTE: this is the last charblock
-                memcpy16((void*)&MEM_SCREENBLOCKS[24][0],
+            if (validate_overlay_texture_size(*this, info.tile_data_length_)) {
+                memcpy16((void*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0],
                          info.tile_data_,
                          info.tile_data_length_ / 2);
             }
@@ -691,14 +773,7 @@ void Platform::load_overlay_texture(const char* name)
 }
 
 
-// NOTE: ScreenBlock layout:
-
-// The first screenblock starts at 8, and the game uses four
-// screenblocks for drawing the background maps.  The whole first
-// charblock is used up by the tileset image.
-
-
-COLD static void set_tile(u16 x, u16 y, u16 tile_id)
+COLD static void set_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
 {
     // NOTE: The game's tiles are 32x24px in size. GBA tiles are each
     // 8x8. To further complicate things, the GBA's VRAM is
@@ -711,24 +786,26 @@ COLD static void set_tile(u16 x, u16 y, u16 tile_id)
     // Tiles at y=10 need to jump across a gap between screen blocks.
     if (y == 10 and x > 7) {
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[9][i + ref(x % 8, y)] = tile_id * 12 + i;
+            MEM_SCREENBLOCKS[base + 1][i + ref(x % 8, y)] = (tile_id * 12 + i) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[9][i + ref(x % 8, y) + 32] = tile_id * 12 + i + 4;
+            MEM_SCREENBLOCKS[base + 1][i + ref(x % 8, y) + 32] =
+                (tile_id * 12 + i + 4) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[11][i + ref(x % 8, 0)] = tile_id * 12 + i + 8;
+            MEM_SCREENBLOCKS[base + 3][i + ref(x % 8, 0)] =
+                (tile_id * 12 + i + 8) | SE_PALBANK(palette);
         }
         return;
     } else if (y == 10) {
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[8][i + ref(x, y)] = tile_id * 12 + i;
+            MEM_SCREENBLOCKS[base][i + ref(x, y)] = (tile_id * 12 + i) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[8][i + ref(x, y) + 32] = tile_id * 12 + i + 4;
+            MEM_SCREENBLOCKS[base][i + ref(x, y) + 32] = (tile_id * 12 + i + 4) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[10][i + ref(x, 0)] = tile_id * 12 + i + 8;
+            MEM_SCREENBLOCKS[base + 2][i + ref(x, 0)] = (tile_id * 12 + i + 8) | SE_PALBANK(palette);
         }
         return;
     }
@@ -737,68 +814,78 @@ COLD static void set_tile(u16 x, u16 y, u16 tile_id)
         if (x > 7 and y > 9) {
             x %= 8;
             y %= 10;
-            return 11;
+            return base + 3;
         } else if (y > 9) {
             y %= 10;
-            return 10;
+            return base + 2;
         } else if (x > 7) {
             x %= 8;
-            return 9;
+            return base + 1;
         } else {
-            return 8;
+            return base;
         }
     }();
 
-    if (screen_block == 10 or screen_block == 11) {
+    if (screen_block == base + 2 or screen_block == base + 3) {
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[screen_block][i + ref(x, y - 1) + 32] =
-                tile_id * 12 + i;
+                (tile_id * 12 + i) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[screen_block][i + ref(x, y - 1) + 64] =
-                tile_id * 12 + i + 4;
+                (tile_id * 12 + i + 4) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[screen_block][i + ref(x, y - 1) + 96] =
-                tile_id * 12 + i + 8;
+                (tile_id * 12 + i + 8) | SE_PALBANK(palette);
         }
     } else {
         for (u32 i = 0; i < 4; ++i) {
-            MEM_SCREENBLOCKS[screen_block][i + ref(x, y)] = tile_id * 12 + i;
+            MEM_SCREENBLOCKS[screen_block][i + ref(x, y)] = (tile_id * 12 + i) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 32] =
-                tile_id * 12 + i + 4;
+                (tile_id * 12 + i + 4) | SE_PALBANK(palette);
         }
         for (u32 i = 0; i < 4; ++i) {
             MEM_SCREENBLOCKS[screen_block][i + ref(x, y) + 64] =
-                tile_id * 12 + i + 8;
+                (tile_id * 12 + i + 8) | SE_PALBANK(palette);
         }
     }
 }
 
 
-COLD void Platform::push_map(const TileMap& map)
+COLD void Platform::push_tile0_map(const TileMap& map)
 {
     for (u32 i = 0; i < TileMap::width; ++i) {
         for (u32 j = 0; j < TileMap::height; ++j) {
-            set_tile(i, j, static_cast<u16>(map.get_tile(i, j)));
+            set_tile(sbb_t0_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 0);
         }
     }
 
-    // Note: we want to reload the space background so that it looks
+    // Note: we want to reload the starfield background so that it looks
     // different with each new map.
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
             if (random_choice<8>()) {
-                MEM_SCREENBLOCKS[12][i + j * 32] = 67;
+                MEM_SCREENBLOCKS[sbb_bg_tiles][i + j * 32] = 67;
             } else {
                 if (random_choice<2>()) {
-                    MEM_SCREENBLOCKS[12][i + j * 32] = 70;
+                    MEM_SCREENBLOCKS[sbb_bg_tiles][i + j * 32] = 70;
                 } else {
-                    MEM_SCREENBLOCKS[12][i + j * 32] = 71;
+                    MEM_SCREENBLOCKS[sbb_bg_tiles][i + j * 32] = 71;
                 }
             }
+        }
+    }
+}
+
+
+COLD void Platform::push_tile1_map(const TileMap& map)
+{
+    for (u32 i = 0; i < TileMap::width; ++i) {
+        for (u32 j = 0; j < TileMap::height; ++j) {
+            set_tile(sbb_t1_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 2);
         }
     }
 }
@@ -816,14 +903,14 @@ void Platform::set_overlay_tile(u16 x, u16 y, u16 val)
         return;
     }
 
-    MEM_SCREENBLOCKS[13][x + y * 32] = val | SE_PALBANK(1);
+    MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(1);
 }
 
 
 void Platform::fill_overlay(u16 tile)
 {
     for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u16); ++i) {
-        MEM_SCREENBLOCKS[13][i] = tile | SE_PALBANK(1);
+        MEM_SCREENBLOCKS[sbb_overlay_tiles][i] = tile | SE_PALBANK(1);
     }
 }
 
@@ -841,7 +928,7 @@ u16 Platform::get_overlay_tile(u16 x, u16 y)
         return 0;
     }
 
-    return MEM_SCREENBLOCKS[13][x + y * 32] & ~(SE_PALBANK(1));
+    return MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] & ~(SE_PALBANK(1));
 }
 
 
@@ -890,8 +977,13 @@ void Platform::Screen::fade(float amount,
         }
         for (int i = 0; i < 16; ++i) {
             auto from =
-                Color::from_bgr_hex_555(current_tilesheet->palette_data_[i]);
+                Color::from_bgr_hex_555(current_tilesheet0->palette_data_[i]);
             MEM_BG_PALETTE[i] = blend(from, c, amt);
+        }
+        for (int i = 0; i < 16; ++i) {
+            auto from =
+                Color::from_bgr_hex_555(current_tilesheet1->palette_data_[i]);
+            MEM_BG_PALETTE[32 + i] = blend(from, c, amt);
         }
         // Should the overlay really be part of the fade...? Tricky, sometimes
         // one wants do display some text over a faded out screen, so let's
@@ -905,6 +997,7 @@ void Platform::Screen::fade(float amount,
         for (int i = 0; i < 16; ++i) {
             MEM_PALETTE[i] = blend(real_color(*base), c, amt);
             MEM_BG_PALETTE[i] = blend(real_color(*base), c, amt);
+            MEM_BG_PALETTE[32 + i] = blend(real_color(*base), c, amt);
             // MEM_BG_PALETTE[16 + i] = blend(real_color(*base));
         }
     }
@@ -970,13 +1063,13 @@ void Platform::load_sprite_texture(const char* name)
 }
 
 
-void Platform::load_tile_texture(const char* name)
+void Platform::load_tile0_texture(const char* name)
 {
     for (auto& info : tile_textures) {
 
         if (strcmp(name, info.name_) == 0) {
 
-            current_tilesheet = &info;
+            current_tilesheet0 = &info;
 
             // We don't want to load the whole palette into memory, we might
             // overwrite palettes used by someone else, e.g. the overlay...
@@ -986,12 +1079,42 @@ void Platform::load_tile_texture(const char* name)
             const auto& c = real_color(last_color);
             for (int i = 0; i < 16; ++i) {
                 auto from = Color::from_bgr_hex_555(
-                    current_tilesheet->palette_data_[i]);
+                    current_tilesheet0->palette_data_[i]);
                 MEM_BG_PALETTE[i] = blend(from, c, last_fade_amt);
             }
 
-            if (validate_texture_size(*this, info.tile_data_length_)) {
-                memcpy16((void*)&MEM_SCREENBLOCKS[0][0],
+            if (validate_tilemap_texture_size(*this, info.tile_data_length_)) {
+                memcpy16((void*)&MEM_SCREENBLOCKS[sbb_t0_texture][0],
+                         info.tile_data_,
+                         info.tile_data_length_ / 2);
+            }
+        }
+    }
+}
+
+
+void Platform::load_tile1_texture(const char* name)
+{
+    for (auto& info : tile_textures) {
+
+        if (strcmp(name, info.name_) == 0) {
+
+            current_tilesheet1 = &info;
+
+            // We don't want to load the whole palette into memory, we might
+            // overwrite palettes used by someone else, e.g. the overlay...
+            //
+            // Also, like the sprite texture, we need to apply the currently
+            // active screen fade while modifying the color palette.
+            const auto& c = real_color(last_color);
+            for (int i = 0; i < 16; ++i) {
+                auto from = Color::from_bgr_hex_555(
+                    current_tilesheet1->palette_data_[i]);
+                MEM_BG_PALETTE[32 + i] = blend(from, c, last_fade_amt);
+            }
+
+            if (validate_tilemap_texture_size(*this, info.tile_data_length_)) {
+                memcpy16((void*)&MEM_SCREENBLOCKS[sbb_t1_texture][0],
                          info.tile_data_,
                          info.tile_data_length_ / 2);
             }
