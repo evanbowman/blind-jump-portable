@@ -56,12 +56,13 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
 
                         str += buffer.data();
                         str += [&] {
-                                   if (enemies_remaining == 1) {
-                                       return " enemy left";
-                                   } else {
-                                       return " enemies left";
-                                   }
-                               }();;
+                            if (enemies_remaining == 1) {
+                                return " enemy left";
+                            } else {
+                                return " enemies left";
+                            }
+                        }();
+                        ;
 
                         push_notification(pfrm, game, str);
 

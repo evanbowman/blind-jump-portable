@@ -53,7 +53,6 @@ public:
     }
 
 private:
-
     void injured(Platform&, Game&, Health amount);
 
     enum class State {

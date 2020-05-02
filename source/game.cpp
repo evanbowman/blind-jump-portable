@@ -240,7 +240,7 @@ static const BossLevel* get_boss_level(Level current_level)
         return &ret;
     }
 
-    case 20: {
+    case 21: {
         static constexpr const BossLevel ret{boss_level_1, "spritesheet_boss1"};
         return &ret;
     }
@@ -272,7 +272,6 @@ static void draw_starfield(Platform& pfrm)
                     } else {
                         return 71;
                     }
-
                 }
             }());
         }
@@ -295,7 +294,8 @@ static constexpr const ZoneInfo zone_1{"part I:",
                                            const int x = 16;
                                            const int y = 16;
 
-                                           draw_background_image(pfrm, 61, x, y, 3, 3);
+                                           draw_background_image(
+                                               pfrm, 61, x, y, 3, 3);
                                        }};
 
 
@@ -314,7 +314,8 @@ static constexpr const ZoneInfo zone_2{"part II:",
                                            const int x = 16;
                                            const int y = 16;
 
-                                           draw_background_image(pfrm, 120, x, y, 5, 5);
+                                           draw_background_image(
+                                               pfrm, 120, x, y, 5, 5);
                                        }};
 
 
@@ -844,9 +845,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
-    auto is_plate = [&](Tile t) {
-        return t == Tile::plate;
-    };
+    auto is_plate = [&](Tile t) { return t == Tile::plate; };
     auto is_sand = [&](Tile t) {
         return t == Tile::sand or t == Tile::sand_sprouted;
     };

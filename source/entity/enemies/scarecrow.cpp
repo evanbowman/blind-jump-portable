@@ -324,7 +324,6 @@ void Scarecrow::on_collision(Platform& pf, Game& game, LaserExplosion&)
 }
 
 
-
 void Scarecrow::on_death(Platform& pf, Game& game)
 {
     game.score() += 15;

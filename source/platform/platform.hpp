@@ -410,7 +410,8 @@ inline void draw_background_image(Platform& pfrm,
                                   u16 start_x,
                                   u16 start_y,
                                   u16 width,
-                                  u16 height) {
+                                  u16 height)
+{
 
     u16 tile = start_tile;
 

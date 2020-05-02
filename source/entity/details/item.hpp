@@ -19,6 +19,7 @@ public:
         lethargy,
         old_poster_1,
         map_system,
+        explosive_rounds_2,
         count
     };
 

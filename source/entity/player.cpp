@@ -579,7 +579,16 @@ void Blaster::shoot(Platform& pf, Game& game)
 
             pf.speaker().play_sound("blaster", 4);
 
-            game.effects().spawn<Laser>(position_, dir_, Laser::Mode::normal);
+            if (explosive_rounds_ > 0) {
+                --explosive_rounds_;
+                game.camera().shake();
+                medium_explosion(pf, game, position_);
+                game.effects().spawn<Laser>(
+                    position_, dir_, Laser::Mode::explosive);
+            } else {
+                game.effects().spawn<Laser>(
+                    position_, dir_, Laser::Mode::normal);
+            }
 
             if (powerup_remaining_) {
                 --powerup_remaining_;
@@ -611,8 +620,16 @@ void Blaster::accelerate(u8 max_lasers, Microseconds reload_interval)
 }
 
 
+void Blaster::add_explosive_rounds(u8 count)
+{
+    explosive_rounds_ += count;
+    powerup_remaining_ = std::max(powerup_remaining_, (u16)explosive_rounds_);
+}
+
+
 void Blaster::reset()
 {
     max_lasers_ = 2;
     reload_interval_ = milliseconds(250);
+    explosive_rounds_ = 0;
 }

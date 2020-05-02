@@ -1,6 +1,6 @@
 #include "laser.hpp"
-#include "number/random.hpp"
 #include "game.hpp"
+#include "number/random.hpp"
 
 
 static constexpr const Float move_rate = 0.0002f;
@@ -89,7 +89,8 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
 }
 
 
-class LaserExplosion {};
+class LaserExplosion {
+};
 
 
 void Laser::handle_collision(Platform& pfrm, Game& game)
@@ -102,12 +103,12 @@ void Laser::handle_collision(Platform& pfrm, Game& game)
         LaserExplosion exp;
         big_explosion(pfrm, game, position_);
         game.enemies().transform([&, this](auto& buf) {
-                                     for (auto& entity : buf) {
-                                         if (distance(position_, entity->get_position()) < 70) {
-                                             entity->on_collision(pfrm, game, exp);
-                                         }
-                                     }
-                                 });
+            for (auto& entity : buf) {
+                if (distance(position_, entity->get_position()) < 70) {
+                    entity->on_collision(pfrm, game, exp);
+                }
+            }
+        });
         break;
     }
 }

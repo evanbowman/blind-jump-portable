@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include "string.hpp"
 #include "graphics/overlay.hpp"
 #include "number/numeric.hpp"
+#include "string.hpp"
 #include <memory>
 
 

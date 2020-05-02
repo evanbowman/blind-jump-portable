@@ -27,7 +27,6 @@ public:
     void on_death(Platform&, Game&);
 
 private:
-
     void injured(Platform&, Game&, Health amount);
 
     Animation<TextureMap::turret, 5, milliseconds(50)> animation_;

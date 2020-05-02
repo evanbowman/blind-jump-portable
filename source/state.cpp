@@ -537,7 +537,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             notification_text.emplace(pfrm, OverlayCoord{0, 0});
 
-            const auto margin = centered_text_margins(pfrm, notification_str.length());
+            const auto margin =
+                centered_text_margins(pfrm, notification_str.length());
 
             left_text_margin(*notification_text, margin);
             notification_text->append(notification_str.c_str());
@@ -938,7 +939,8 @@ void RespawnWaitState::enter(Platform& pfrm, Game& game)
 }
 
 
-StatePtr RespawnWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+RespawnWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     counter_ += delta;
 
@@ -1169,6 +1171,18 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [](Platform&, Game&) { return state_pool_.create<MapSystemState>(); },
      [] {
          static const auto str = "Map system";
+         return str;
+     }},
+    {STANDARD_ITEM_HANDLER(explosive_rounds_2),
+     [](Platform&, Game& game) {
+         consume_selected_item(game);
+
+         game.player().weapon().add_explosive_rounds(2);
+
+         return null_state();
+     },
+     [] {
+         static const auto str = "Explosive rounds (2)";
          return str;
      }}};
 

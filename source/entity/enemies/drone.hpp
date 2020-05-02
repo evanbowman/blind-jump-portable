@@ -43,7 +43,6 @@ public:
     void on_death(Platform&, Game&);
 
 private:
-
     void injured(Platform&, Game&, Health amount);
 
     State state_;

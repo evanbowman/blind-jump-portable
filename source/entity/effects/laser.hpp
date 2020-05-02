@@ -31,7 +31,6 @@ public:
     }
 
 private:
-
     void handle_collision(Platform&, Game&);
 
     Cardinal dir_;

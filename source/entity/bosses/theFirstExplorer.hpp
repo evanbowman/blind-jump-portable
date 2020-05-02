@@ -46,7 +46,6 @@ public:
     void on_death(Platform&, Game&);
 
 private:
-
     void injured(Platform&, Game&, Health amount);
 
     enum class State {
