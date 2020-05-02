@@ -822,18 +822,10 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     }
 
     auto is_plate = [&](Tile t) {
-        return t == Tile::plate
-            // FIXME-TILES
-            //  or
-            // (t >= Tile::grass_plate and t < Tile::grass_ledge)
-            ;
+        return t == Tile::plate;
     };
     auto is_sand = [&](Tile t) {
-        return t == Tile::sand or t == Tile::sand_sprouted
-            // FIXME-TILES
-            //  or
-            // (t >= Tile::grass_sand and t < Tile::grass_plate)
-            ;
+        return t == Tile::sand or t == Tile::sand_sprouted;
     };
 
 
