@@ -292,15 +292,6 @@ static constexpr const ZoneInfo zone_1{"part I:",
                                        [](Platform& pfrm, Game&) {
                                            draw_starfield(pfrm);
 
-                                           // Draw sun. TODO: Place the star in
-                                           // a random location. Doing this is
-                                           // sort of tricky, because when the
-                                           // background wraps, the sun appears
-                                           // at the other side of the screen,
-                                           // which looks strange. The given x,
-                                           // y coordinates were selected by
-                                           // trial and error as safe
-                                           // coordinates, with no wrapping.
                                            const int x = 16;
                                            const int y = 16;
 
