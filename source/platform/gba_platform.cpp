@@ -907,6 +907,10 @@ void Platform::set_overlay_tile(u16 x, u16 y, u16 val)
 
 void Platform::set_background_tile(u16 x, u16 y, u16 val)
 {
+    if (x > 31 or y > 32) {
+        return;
+    }
+
     MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32] = val;
 }
 

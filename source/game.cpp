@@ -257,6 +257,29 @@ bool is_boss_level(Level level)
 }
 
 
+static void draw_starfield(Platform& pfrm)
+{
+    // Redraw the starfield background. Due to memory constraints, the
+    // background needs to source its 8x8 pixel tiles from the tile0 texture.
+    for (int x = 0; x < 32; ++x) {
+        for (int y = 0; y < 32; ++y) {
+            pfrm.set_background_tile(x, y, [] {
+                if (random_choice<9>()) {
+                    return 60;
+                } else {
+                    if (random_choice<2>()) {
+                        return 70;
+                    } else {
+                        return 71;
+                    }
+
+                }
+            }());
+        }
+    }
+}
+
+
 static constexpr const ZoneInfo zone_1{"part I:",
                                        "outer station ruins",
                                        "spritesheet",
@@ -265,18 +288,43 @@ static constexpr const ZoneInfo zone_1{"part I:",
                                        "frostellar",
                                        Microseconds{0},
                                        ColorConstant::electric_blue,
-                                       ColorConstant::aerospace_orange};
+                                       ColorConstant::aerospace_orange,
+                                       [](Platform& pfrm, Game&) {
+                                           draw_starfield(pfrm);
+
+                                           // Draw sun. TODO: Place the star in
+                                           // a random location. Doing this is
+                                           // sort of tricky, because when the
+                                           // background wraps, the sun appears
+                                           // at the other side of the screen,
+                                           // which looks strange. The given x,
+                                           // y coordinates were selected by
+                                           // trial and error as safe
+                                           // coordinates, with no wrapping.
+                                           const int x = 16;
+                                           const int y = 16;
+
+                                           draw_background_image(pfrm, 61, x, y, 3, 3);
+                                       }};
 
 
 static constexpr const ZoneInfo zone_2{"part II:",
-                                       "the depths",
+                                       "the descent",
                                        "spritesheet2",
                                        "tilesheet2",
                                        "tilesheet2_top",
                                        "computations",
                                        seconds(8) + milliseconds(700),
                                        ColorConstant::turquoise_blue,
-                                       ColorConstant::safety_orange};
+                                       ColorConstant::safety_orange,
+                                       [](Platform& pfrm, Game&) {
+                                           draw_starfield(pfrm);
+
+                                           const int x = 16;
+                                           const int y = 16;
+
+                                           draw_background_image(pfrm, 120, x, y, 5, 5);
+                                       }};
 
 
 const ZoneInfo& zone_info(Level level)
@@ -338,31 +386,7 @@ RETRY:
 
     pfrm.push_tile0_map(tiles_);
 
-    // Redraw the starfield background. Due to memory constraints, the
-    // background needs to source its 8x8 pixel tiles from the tile0 texture.
-    for (int x = 0; x < 32; ++x) {
-        for (int y = 0; y < 32; ++y) {
-            pfrm.set_background_tile(x, y, [] {
-                if (random_choice<9>()) {
-                    return 67;
-                } else {
-                    if (random_choice<7>() == 0) {
-                        if (random_choice<2>()) {
-                            return 68;
-                        } else {
-                            return 69;
-                        }
-                    } else {
-                        if (random_choice<2>()) {
-                            return 70;
-                        } else {
-                            return 71;
-                        }
-                    }
-                }
-            }());
-        }
-    }
+    current_zone(*this).generate_background_(pfrm, *this);
 
     // We're doing this to speed up collision checking with walls. While it
     // might be nice to have more info about the tilemap, it's costly to check

@@ -153,6 +153,16 @@ private:
 };
 
 
+class RespawnWaitState : public State {
+public:
+    void enter(Platform& pfrm, Game& game) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    Microseconds counter_ = 0;
+};
+
+
 class DeathFadeState : public OverworldState {
 public:
     DeathFadeState() : OverworldState(false)
@@ -380,6 +390,7 @@ static StatePool<ActiveState,
                  MapSystemState,
                  IntroCreditsState,
                  DeathContinueState,
+                 RespawnWaitState,
                  EndingCreditsState>
     state_pool_;
 
@@ -917,6 +928,29 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// RespawnState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void RespawnWaitState::enter(Platform& pfrm, Game& game)
+{
+    pfrm.speaker().play_sound("bell", 5);
+}
+
+
+StatePtr RespawnWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    counter_ += delta;
+
+    if (counter_ > milliseconds(1900)) {
+        return state_pool_.create<NewLevelState>(Level{0});
+    }
+
+    return null_state();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // DeathContinueState
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1018,7 +1052,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 // }
                 // return state_pool_.create<NewLevelState>(lv);
 
-                return state_pool_.create<NewLevelState>(Level{0});
+                return state_pool_.create<RespawnWaitState>();
             }
         }
         return null_state();

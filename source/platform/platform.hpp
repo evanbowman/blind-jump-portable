@@ -404,6 +404,24 @@ private:
 };
 
 
+// Helper function for drawing background tiles larger than the default size (8x8 pixels)
+inline void draw_background_image(Platform& pfrm,
+                                  u16 start_tile,
+                                  u16 start_x,
+                                  u16 start_y,
+                                  u16 width,
+                                  u16 height) {
+
+    u16 tile = start_tile;
+
+    for (u16 y = start_y; y < start_y + height; ++y) {
+        for (u16 x = start_x; x < start_x + width; ++x) {
+            pfrm.set_background_tile(x, y, tile++);
+        }
+    }
+}
+
+
 #ifdef __BLINDJUMP_ENABLE_LOGS
 #ifdef __GBA__
 // #pragma message "Warning: logging can wear down Flash memory, be careful using this on physical hardware!"

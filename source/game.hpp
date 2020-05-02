@@ -150,6 +150,9 @@ private:
 bool is_boss_level(Level level);
 
 
+using BackgroundGenerator = void (*)(Platform&, Game&);
+
+
 struct ZoneInfo {
     const char* title_line_1;
     const char* title_line_2;
@@ -161,6 +164,8 @@ struct ZoneInfo {
 
     ColorConstant energy_glow_color_;
     ColorConstant injury_glow_color_;
+
+    BackgroundGenerator generate_background_;
 };
 
 
