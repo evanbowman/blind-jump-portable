@@ -343,13 +343,21 @@ RETRY:
     for (int x = 0; x < 32; ++x) {
         for (int y = 0; y < 32; ++y) {
             pfrm.set_background_tile(x, y, [] {
-                if (random_choice<8>()) {
+                if (random_choice<9>()) {
                     return 67;
                 } else {
-                    if (random_choice<2>()) {
-                        return 70;
+                    if (random_choice<7>() == 0) {
+                        if (random_choice<2>()) {
+                            return 68;
+                        } else {
+                            return 69;
+                        }
                     } else {
-                        return 71;
+                        if (random_choice<2>()) {
+                            return 70;
+                        } else {
+                            return 71;
+                        }
                     }
                 }
             }());
