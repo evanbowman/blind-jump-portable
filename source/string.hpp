@@ -62,9 +62,21 @@ inline int strcmp(const char* p1, const char* p2)
 // A not great, but satisfactory implementation of a string class.
 template <u32 Capacity> class StringBuffer {
 public:
+    using Buffer = ::Buffer<char, Capacity + 1>;
+
     StringBuffer()
     {
         mem_.push_back('\0');
+    }
+
+    template <u32 OtherCapacity>
+    StringBuffer& operator=(const StringBuffer<OtherCapacity>& other)
+    {
+        clear();
+
+        for (auto it = other.begin(); it not_eq other.end(); ++it) {
+            push_back(*it);
+        }
     }
 
     void push_back(char c)
@@ -82,18 +94,37 @@ public:
         mem_.push_back('\0');
     }
 
+    typename Buffer::Iterator begin() const
+    {
+        return mem_.begin();
+    }
+
+    typename Buffer::Iterator end() const
+    {
+        return mem_.end() - 1;
+    }
+
+    StringBuffer& operator+=(const char* str)
+    {
+        while (*str not_eq '\0') {
+            push_back(*(str++));
+        }
+        return *this;
+    }
+
     bool operator==(const char* str)
     {
-        if (str_len(str) not_eq str_len(this->c_str())) {
-            return false;
-        }
-
         return strcmp(str, this->c_str()) == 0;
     }
 
     bool full() const
     {
         return mem_.full();
+    }
+
+    u32 length() const
+    {
+        return mem_.size() - 1;
     }
 
     bool empty() const
@@ -113,7 +144,7 @@ public:
     }
 
 private:
-    Buffer<char, Capacity + 1> mem_;
+    Buffer mem_;
 };
 
 

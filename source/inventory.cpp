@@ -26,38 +26,21 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
 
             if (description) {
 
-                push_notification(pfrm, game, [description, &pfrm](Text& text) {
-                    static const auto prefix = "got \"";
-                    static const auto suffix = "\"";
+                NotificationStr str;
 
-                    const auto width = str_len(prefix) + str_len(description) +
-                                       str_len(suffix);
+                str += "got \"";
+                str += description;
+                str += "\"";
 
-                    const auto margin = centered_text_margins(pfrm, width);
-
-
-                    left_text_margin(text, margin);
-
-                    text.append(prefix);
-                    text.append(description);
-                    text.append(suffix);
-
-                    right_text_margin(text, margin);
-                });
+                push_notification(pfrm, game, str);
             }
 
             return;
         }
     }
 
-    // Inventory full!
-    push_notification(pfrm, game, [&pfrm](Text& text) {
-        static const auto str = "Inventory full";
+    NotificationStr str;
+    str += "Inventory full";
 
-        const auto margin = centered_text_margins(pfrm, str_len(str));
-
-        left_text_margin(text, margin);
-        text.append(str);
-        right_text_margin(text, margin);
-    });
+    push_notification(pfrm, game, str);
 }

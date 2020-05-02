@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "function.hpp"
+#include "string.hpp"
 #include "graphics/overlay.hpp"
 #include "number/numeric.hpp"
 #include <memory>
@@ -36,10 +36,10 @@ public:
 };
 
 
-class Text;
+using NotificationStr = StringBuffer<40>;
 void push_notification(Platform& pfrm,
                        Game& game,
-                       Function<16, void(Text&)> notification_builder);
+                       const NotificationStr& string);
 
 
 // Yeah, this breaks encapsulation. But this is an edge case, where the boss

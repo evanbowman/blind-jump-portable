@@ -46,36 +46,24 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                     });
 
                     if (enemies_remaining) {
-                        push_notification(
-                            pfrm, game, [enemies_remaining, &pfrm](Text& text) {
-                                static const auto prefix = "locked, ";
-                                static const auto suffix1 = " enemies left";
-                                static const auto suffix2 = " enemy left";
 
-                                const char* suffix = [&] {
-                                    if (enemies_remaining == 1) {
-                                        return suffix2;
-                                    } else {
-                                        return suffix1;
-                                    }
-                                }();
+                        NotificationStr str;
 
-                                const auto width =
-                                    str_len(prefix) +
-                                    integer_text_length(enemies_remaining) +
-                                    str_len(suffix);
+                        str += "locked, ";
 
-                                const auto margin =
-                                    centered_text_margins(pfrm, width);
+                        std::array<char, 40> buffer;
+                        to_string(enemies_remaining, buffer.data(), 10);
 
-                                left_text_margin(text, margin);
+                        str += buffer.data();
+                        str += [&] {
+                                   if (enemies_remaining == 1) {
+                                       return " enemy left";
+                                   } else {
+                                       return " enemies left";
+                                   }
+                               }();;
 
-                                text.append(prefix);
-                                text.append(enemies_remaining);
-                                text.append(suffix);
-
-                                right_text_margin(text, margin);
-                            });
+                        push_notification(pfrm, game, str);
 
                     } else {
                         pfrm.sleep(10);

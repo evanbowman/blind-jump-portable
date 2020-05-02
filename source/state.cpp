@@ -24,6 +24,18 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
     void exit(Platform& pfrm, Game& game) override;
 
+
+    std::optional<Text> notification_text;
+    NotificationStr notification_str;
+    Microseconds notification_text_timer = 0;
+    enum class NotificationStatus {
+        flash,
+        wait,
+        display,
+        exit,
+        hidden
+    } notification_status = NotificationStatus::hidden;
+
 private:
     const bool camera_tracking_;
     Microseconds camera_snap_timer_ = 0;
@@ -71,27 +83,13 @@ void hide_boss_health(Game& game)
 }
 
 
-static std::optional<Text> notification_text;
-static Microseconds notification_text_timer;
-static enum class NotificationStatus {
-    display,
-    exit,
-    hidden
-} notification_status;
-
-
 void push_notification(Platform& pfrm,
                        Game& game,
-                       Function<16, void(Text&)> notification_builder)
+                       const NotificationStr& string)
 {
-    if (dynamic_cast<OverworldState*>(game.state())) {
-
-        notification_text_timer = seconds(3);
-        notification_text.emplace(pfrm, OverlayCoord{0, 0});
-
-        notification_status = NotificationStatus::display;
-
-        notification_builder(*notification_text);
+    if (auto state = dynamic_cast<OverworldState*>(game.state())) {
+        state->notification_status = OverworldState::NotificationStatus::flash;
+        state->notification_str = string;
     }
 }
 
@@ -502,20 +500,40 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (not enemies_remaining and enemies_destroyed) {
 
-        push_notification(pfrm, game, [&pfrm](Text& text) {
-            static const auto str = "level clear";
+        NotificationStr str;
+        str += "level clear";
 
-            const auto margin = centered_text_margins(pfrm, str_len(str));
-
-            left_text_margin(text, margin);
-            text.append(str);
-            right_text_margin(text, margin);
-        });
+        push_notification(pfrm, game, str);
     }
 
 
     switch (notification_status) {
     case NotificationStatus::hidden:
+        break;
+
+    case NotificationStatus::flash:
+        for (int x = 0; x < 32; ++x) {
+            pfrm.set_overlay_tile(x, 0, 108);
+        }
+        notification_status = NotificationStatus::wait;
+        notification_text_timer = milliseconds(80);
+        break;
+
+    case NotificationStatus::wait:
+        notification_text_timer -= delta;
+        if (notification_text_timer <= 0) {
+            notification_text_timer = seconds(3);
+
+            notification_text.emplace(pfrm, OverlayCoord{0, 0});
+
+            const auto margin = centered_text_margins(pfrm, notification_str.length());
+
+            left_text_margin(*notification_text, margin);
+            notification_text->append(notification_str.c_str());
+            right_text_margin(*notification_text, margin);
+
+            notification_status = NotificationStatus::display;
+        }
         break;
 
     case NotificationStatus::display:
