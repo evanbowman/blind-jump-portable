@@ -427,11 +427,11 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 }
 
 
-void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
+void TheFirstExplorer::injured(Platform& pf, Game& game, Health amount)
 {
     const bool was_second_form = second_form();
 
-    debit_health(1);
+    debit_health(amount);
 
     if (alive()) {
         pf.speaker().play_sound("click", 1);
@@ -453,6 +453,18 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
     }
 
     show_boss_health(pf, game, Float(get_health()) / initial_health);
+}
+
+
+void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
+{
+    injured(pf, game, Health{1});
+}
+
+
+void TheFirstExplorer::on_collision(Platform& pf, Game& game, LaserExplosion&)
+{
+    injured(pf, game, Health{8});
 }
 
 

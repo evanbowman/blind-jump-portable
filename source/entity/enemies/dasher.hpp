@@ -6,6 +6,7 @@
 #include "graphics/sprite.hpp"
 
 
+class LaserExplosion;
 class Player;
 class Laser;
 
@@ -27,6 +28,7 @@ public:
     }
 
     void on_collision(Platform&, Game&, Laser&);
+    void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, Player&)
     {
     }
@@ -47,6 +49,8 @@ private:
         shoot_begin,
         pause
     };
+
+    void injured(Platform&, Game&, Health amount);
 
     Sprite head_;
     Microseconds timer_;

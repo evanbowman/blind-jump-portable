@@ -1,12 +1,13 @@
 #include "laser.hpp"
 #include "number/random.hpp"
+#include "game.hpp"
 
 
 static constexpr const Float move_rate = 0.0002f;
 
 
-Laser::Laser(const Vec2<Float>& position, Cardinal dir)
-    : dir_(dir), timer_(0), hitbox_{&position_, {{16, 16}, {8, 8}}}
+Laser::Laser(const Vec2<Float>& position, Cardinal dir, Mode mode)
+    : dir_(dir), timer_(0), hitbox_{&position_, {{16, 16}, {8, 8}}}, mode_(mode)
 {
     set_position(position);
 
@@ -85,4 +86,28 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
     }
 
     sprite_.set_position(position_);
+}
+
+
+class LaserExplosion {};
+
+
+void Laser::handle_collision(Platform& pfrm, Game& game)
+{
+    switch (mode_) {
+    case Mode::normal:
+        break;
+
+    case Mode::explosive:
+        LaserExplosion exp;
+        big_explosion(pfrm, game, position_);
+        game.enemies().transform([&, this](auto& buf) {
+                                     for (auto& entity : buf) {
+                                         if (distance(position_, entity->get_position()) < 70) {
+                                             entity->on_collision(pfrm, game, exp);
+                                         }
+                                     }
+                                 });
+        break;
+    }
 }

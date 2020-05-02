@@ -5,6 +5,7 @@
 #include <optional>
 
 
+class LaserExplosion;
 class Player;
 class Laser;
 
@@ -39,11 +40,15 @@ public:
     {
     }
 
+    void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, Laser&);
 
     void on_death(Platform&, Game&);
 
 private:
+
+    void injured(Platform&, Game&, Health amount);
+
     enum class State {
         sleep,
         still,

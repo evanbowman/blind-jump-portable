@@ -6,6 +6,7 @@
 #include "entity/entity.hpp"
 
 
+class LaserExplosion;
 class Player;
 class Laser;
 
@@ -14,6 +15,7 @@ class Drone : public Enemy {
 public:
     Drone(const Vec2<Float>& pos);
 
+    void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, Laser&);
 
     void update(Platform&, Game&, Microseconds);
@@ -41,6 +43,9 @@ public:
     void on_death(Platform&, Game&);
 
 private:
+
+    void injured(Platform&, Game&, Health amount);
+
     State state_;
 
     Microseconds timer_;

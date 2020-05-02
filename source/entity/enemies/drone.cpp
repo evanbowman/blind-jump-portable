@@ -134,15 +134,27 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-void Drone::on_collision(Platform& pf, Game& game, Laser&)
+void Drone::injured(Platform& pf, Game& game, Health amount)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-    debit_health(1);
+    debit_health(amount);
 
     if (alive()) {
         pf.speaker().play_sound("click", 1);
     }
+}
+
+
+void Drone::on_collision(Platform& pf, Game& game, Laser&)
+{
+    injured(pf, game, Health{1});
+}
+
+
+void Drone::on_collision(Platform& pf, Game& game, LaserExplosion&)
+{
+    injured(pf, game, Health{8});
 }
 
 

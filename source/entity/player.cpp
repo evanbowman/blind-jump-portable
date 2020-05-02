@@ -579,7 +579,7 @@ void Blaster::shoot(Platform& pf, Game& game)
 
             pf.speaker().play_sound("blaster", 4);
 
-            game.effects().spawn<Laser>(position_, dir_);
+            game.effects().spawn<Laser>(position_, dir_, Laser::Mode::normal);
 
             if (powerup_remaining_) {
                 --powerup_remaining_;

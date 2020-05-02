@@ -3,6 +3,7 @@
 #include "entity/enemies/enemy.hpp"
 
 
+class LaserExplosion;
 class Player;
 class Laser;
 
@@ -23,6 +24,7 @@ public:
         return ret;
     }
 
+    void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, Laser&);
     void on_collision(Platform&, Game&, Player&)
     {
@@ -51,6 +53,9 @@ public:
     }
 
 private:
+
+    void injured(Platform&, Game&, Health amount);
+
     enum class State {
         sleep,
         idle,
@@ -92,6 +97,9 @@ public:
 
     void on_collision(Platform&, Game&, Laser&);
     void on_collision(Platform&, Game&, Player&)
+    {
+    }
+    void on_collision(Platform&, Game&, LaserExplosion&)
     {
     }
 

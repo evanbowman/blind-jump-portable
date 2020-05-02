@@ -1,3 +1,5 @@
+#pragma once
+
 #include "collision.hpp"
 #include "entity/entity.hpp"
 
@@ -11,13 +13,16 @@ class Drone;
 
 class Laser : public Entity {
 public:
-    Laser(const Vec2<Float>& position, Cardinal dir);
+    enum class Mode { normal, explosive };
+
+    Laser(const Vec2<Float>& position, Cardinal dir, Mode mode);
 
     void update(Platform& pf, Game& game, Microseconds dt);
 
-    template <typename T> void on_collision(Platform&, Game&, T&)
+    template <typename T> void on_collision(Platform& pfrm, Game& game, T&)
     {
         this->kill();
+        handle_collision(pfrm, game);
     }
 
     const HitBox& hitbox() const
@@ -26,7 +31,11 @@ public:
     }
 
 private:
+
+    void handle_collision(Platform&, Game&);
+
     Cardinal dir_;
     Microseconds timer_;
     HitBox hitbox_;
+    Mode mode_;
 };

@@ -10,6 +10,7 @@
 #include "tileMap.hpp"
 
 
+class LaserExplosion;
 class Player;
 class Laser;
 
@@ -48,6 +49,10 @@ public:
     {
     }
 
+    void on_collision(Platform&, Game&, LaserExplosion&)
+    {
+    }
+
     void on_collision(Platform&, Game&, Player&)
     {
     }
@@ -64,6 +69,10 @@ public:
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     void on_collision(Platform&, Game&, Laser&)
+    {
+    }
+
+    void on_collision(Platform&, Game&, LaserExplosion&)
     {
     }
 
@@ -84,9 +93,13 @@ public:
 
     void on_collision(Platform& pf, Game& game, Laser&);
 
+    void on_collision(Platform&, Game&, LaserExplosion&);
+
     void on_collision(Platform&, Game&, Player&)
     {
     }
+
+    void on_death(Platform&, Game&);
 
 private:
     Microseconds sleep_timer_;

@@ -308,25 +308,34 @@ void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
+void SnakeTail::on_death(Platform& pf, Game& game)
+{
+    pf.sleep(5);
+
+    static const Item::Type item_drop_vec[] = {Item::Type::null};
+    on_enemy_destroyed(pf, game, position_, 0, item_drop_vec);
+
+    SnakeNode* current = parent();
+    while (current) {
+        current->sprite_.set_mix({});
+        current = current->parent();
+    }
+
+    parent()->destroy();
+}
+
+
 void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
     debit_health();
+}
 
-    if (not alive()) {
 
-        pf.sleep(5);
+void SnakeTail::on_collision(Platform& pf, Game& game, LaserExplosion&)
+{
+    sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-        static const Item::Type item_drop_vec[] = {Item::Type::null};
-        on_enemy_destroyed(pf, game, position_, 0, item_drop_vec);
-
-        SnakeNode* current = parent();
-        while (current) {
-            current->sprite_.set_mix({});
-            current = current->parent();
-        }
-
-        parent()->destroy();
-    }
+    debit_health(8);
 }

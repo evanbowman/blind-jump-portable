@@ -99,27 +99,40 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
+void Turret::injured(Platform& pf, Game& game, Health amount)
+{
+    sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
+    debit_health(amount);
+
+    if (alive()) {
+        pf.speaker().play_sound("click", 1);
+    }
+}
+
 void Turret::on_collision(Platform& pf, Game& game, Laser&)
 {
     if (state_ not_eq State::closed) {
-        sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
-        debit_health(1);
-
-        if (alive()) {
-            pf.speaker().play_sound("click", 1);
-        }
-
-        if (not alive()) {
-            game.score() += 12;
-
-            pf.sleep(5);
-
-            static const Item::Type item_drop_vec[] = {Item::Type::coin,
-                                                       Item::Type::coin,
-                                                       Item::Type::heart,
-                                                       Item::Type::null};
-
-            on_enemy_destroyed(pf, game, position_, 4, item_drop_vec);
-        }
+        injured(pf, game, Health{1});
     }
+}
+
+
+void Turret::on_collision(Platform& pf, Game& game, LaserExplosion&)
+{
+    injured(pf, game, Health{8});
+}
+
+
+void Turret::on_death(Platform& pf, Game& game)
+{
+    game.score() += 12;
+
+    pf.sleep(5);
+
+    static const Item::Type item_drop_vec[] = {Item::Type::coin,
+                                               Item::Type::coin,
+                                               Item::Type::heart,
+                                               Item::Type::null};
+
+    on_enemy_destroyed(pf, game, position_, 4, item_drop_vec);
 }

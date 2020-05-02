@@ -323,11 +323,11 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-void Gatekeeper::on_collision(Platform& pfrm, Game& game, Laser&)
+void Gatekeeper::injured(Platform& pfrm, Game& game, Health amount)
 {
     const bool was_second_form = second_form();
     const bool was_third_form = third_form();
-    debit_health(1);
+    debit_health(amount);
 
     if (alive()) {
         pfrm.speaker().play_sound("click", 1);
@@ -365,6 +365,17 @@ void Gatekeeper::on_collision(Platform& pfrm, Game& game, Laser&)
     show_boss_health(pfrm, game, Float(get_health()) / initial_health);
 }
 
+
+void Gatekeeper::on_collision(Platform& pfrm, Game& game, Laser&)
+{
+    injured(pfrm, game, Health{1});
+}
+
+
+void Gatekeeper::on_collision(Platform& pfrm, Game& game, LaserExplosion&)
+{
+    injured(pfrm, game, Health{8});
+}
 
 void Gatekeeper::on_death(Platform& pfrm, Game& game)
 {

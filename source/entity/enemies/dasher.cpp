@@ -225,9 +225,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 }
 
 
-void Dasher::on_collision(Platform& pf, Game& game, Laser&)
+void Dasher::injured(Platform& pf, Game& game, Health amount)
 {
-    debit_health(1);
+    debit_health(amount);
 
     const auto c = current_zone(game).injury_glow_color_;
 
@@ -240,8 +240,20 @@ void Dasher::on_collision(Platform& pf, Game& game, Laser&)
 
     if (state_ == State::sleep) {
         timer_ = 0;
-        state_ = State::shoot_begin;
+        state_ = State::idle;
     }
+}
+
+
+void Dasher::on_collision(Platform& pf, Game& game, Laser&)
+{
+    injured(pf, game, Health(1));
+}
+
+
+void Dasher::on_collision(Platform& pf, Game& game, LaserExplosion&)
+{
+    injured(pf, game, Health(8));
 }
 
 
