@@ -100,6 +100,7 @@ public:
 
     void set_overlay_tile(u16 x, u16 y, u16 val);
     u16 get_overlay_tile(u16 x, u16 y);
+    void set_background_tile(u16 x, u16 y, u16 val);
 
     void fill_overlay(u16 tile);
 

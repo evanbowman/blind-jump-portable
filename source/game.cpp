@@ -338,6 +338,24 @@ RETRY:
 
     pfrm.push_tile0_map(tiles_);
 
+    // Redraw the starfield background. Due to memory constraints, the
+    // background needs to source its 8x8 pixel tiles from the tile0 texture.
+    for (int x = 0; x < 32; ++x) {
+        for (int y = 0; y < 32; ++y) {
+            pfrm.set_background_tile(x, y, [] {
+                if (random_choice<8>()) {
+                    return 67;
+                } else {
+                    if (random_choice<2>()) {
+                        return 70;
+                    } else {
+                        return 71;
+                    }
+                }
+            }());
+        }
+    }
+
     // We're doing this to speed up collision checking with walls. While it
     // might be nice to have more info about the tilemap, it's costly to check
     // all of the enumerations. At this point, we've already pushed the tilemap
@@ -748,9 +766,13 @@ spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 
     auto item = Item::Type::heart;
 
-    // FIXME: this is just debugging code:
+    // FIXME: this is just debugging code (I added this code just to make items
+    // show up, but items won't necessarily be well proportioned in terms of
+    // their value, it's just random right now).
     while ((game.inventory().has_item(item) and item_is_persistent(item)) or
-           item == Item::Type::heart or item == Item::Type::coin) {
+           item == Item::Type::heart or item == Item::Type::coin or
+           (item == Item::Type::lethargy and
+            game.inventory().has_item(Item::Type::lethargy))) {
 
         item = static_cast<Item::Type>(
             random_choice(static_cast<int>(Item::Type::count)));

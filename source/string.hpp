@@ -115,3 +115,6 @@ public:
 private:
     Buffer<char, Capacity + 1> mem_;
 };
+
+
+void to_string(int num, char* buffer, int base);

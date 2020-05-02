@@ -27,12 +27,73 @@ void memcpy16(void* dst, const void* src, uint hwcount);
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Tile Memory Layout:
+//
+// The game uses every single available screen block, so the data is fairly
+// tightly packed. Here's a chart representing the layout:
+//
+// All units of length are in screen blocks, followed by the screen block
+// indices in parentheses. The texture data needs to be aligned to char block
+// boundaries (eight screen blocks in a char block), which is why there is
+// tilemap data packed into the screen blocks between sets of texture data.
+//
+//        charblock 0                      charblock 1
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// o============================================================
+// |  t0 texture   | overlay mem |   t1 texture   |   bg mem   |
+// | len 7 (0 - 6) |  len 1 (7)  | len 7 (8 - 14) | len 1 (15) | ...
+// o============================================================
+//
+//        charblock 2                 charblock 3
+//     ~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//     ======================================================o
+//     | overlay texture |     t0 mem      |     t1 mem      |
+// ... | len 8 (16 - 23) | len 4 (24 - 27) | len 4 (28 - 31) |
+//     ======================================================o
+//
+
+static constexpr const int ssb_per_cbb = 8;
+
+static constexpr const int sbb_overlay_tiles = 7;
+static constexpr const int sbb_bg_tiles = 15;
+static constexpr const int sbb_t0_tiles = 24;
+static constexpr const int sbb_t1_tiles = 28;
+
+static constexpr const int sbb_overlay_texture = 16;
+static constexpr const int sbb_t0_texture = 0;
+static constexpr const int sbb_t1_texture = 8;
+static constexpr const int sbb_bg_texture = sbb_t0_texture;
+
+static constexpr const int cbb_overlay_texture =
+    sbb_overlay_texture / ssb_per_cbb;
+
+static constexpr const int cbb_t0_texture = sbb_t0_texture / ssb_per_cbb;
+static constexpr const int cbb_t1_texture = sbb_t1_texture / ssb_per_cbb;
+static constexpr const int cbb_bg_texture = sbb_bg_texture / ssb_per_cbb;
+
+using HardwareTile = u32[16];
+using TileBlock = HardwareTile[256];
+using ScreenBlock = u16[1024];
+
+#define MEM_TILE ((TileBlock*)0x6000000)
+#define MEM_PALETTE ((u16*)(0x05000200))
+#define MEM_BG_PALETTE ((u16*)(0x05000000))
+#define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
+
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
 void start(Platform&);
 
 
 static Platform* platform;
 
 
+// Thanks to Windows, main is technically platform specific (WinMain)
 int main()
 {
     Platform pf;
@@ -66,15 +127,6 @@ int main()
 #define KEY_DOWN 0x0080
 #define KEY_R 0x0100
 #define KEY_L 0x0200
-
-using HardwareTile = u32[16];
-using TileBlock = HardwareTile[256];
-using ScreenBlock = u16[1024];
-
-#define MEM_TILE ((TileBlock*)0x6000000)
-#define MEM_PALETTE ((u16*)(0x05000200))
-#define MEM_BG_PALETTE ((u16*)(0x05000000))
-#define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
 #define SE_PALBANK_MASK 0xF000
 #define SE_PALBANK_SHIFT 12
@@ -122,9 +174,14 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 }
 
 
-static volatile u16* const scanline = (u16*)0x4000006;
-
-
+//
+// IMPORTANT: Already well into development, I discovered that the Gameboy
+// Advance does not refresh at exactly 60 frames per second. Rather than change
+// all of the code, I am going to keep the timestep as-is. Anyone porting the
+// code to a new platform should make the appropriate adjustments in their
+// implementation of DeltaClock. I believe the actual refresh rate on the GBA is
+// something like 59.59.
+//
 constexpr Microseconds fixed_step = 16667;
 
 
@@ -132,6 +189,7 @@ Microseconds DeltaClock::reset()
 {
     // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) =
     // 16,666.6...
+
     return fixed_step;
 }
 
@@ -284,57 +342,6 @@ public:
     u8 g_;
     u8 b_;
 };
-
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// Tile Memory Layout:
-//
-// The game uses every single available screen block, so the data is fairly
-// tightly packed. Here's a chart representing the layout:
-//
-// All units of length are in screen blocks, followed by the screen block
-// indices in parentheses. The texture data needs to be aligned to char block
-// boundaries (eight screen blocks in a char block), which is why there is
-// tilemap data packed into the screen blocks between sets of texture data.
-//
-//        charblock 0                      charblock 1
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// o============================================================
-// |  t0 texture   | overlay mem |   t1 texture   |   bg mem   |
-// | len 7 (0 - 6) |  len 1 (7)  | len 7 (8 - 14) | len 1 (15) | ...
-// o============================================================
-//
-//        charblock 2                 charblock 3
-//     ~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//     ======================================================o
-//     | overlay texture |     t0 mem      |     t1 mem      |
-// ... | len 8 (16 - 23) | len 4 (24 - 27) | len 4 (28 - 31) |
-//     ======================================================o
-//
-
-static constexpr const int ssb_per_cbb = 8;
-
-static constexpr const int sbb_overlay_tiles = 7;
-static constexpr const int sbb_bg_tiles = 15;
-static constexpr const int sbb_t0_tiles = 24;
-static constexpr const int sbb_t1_tiles = 28;
-
-static constexpr const int sbb_overlay_texture = 16;
-static constexpr const int sbb_t0_texture = 0;
-static constexpr const int sbb_t1_texture = 8;
-static constexpr const int sbb_bg_texture = sbb_t0_texture;
-
-static constexpr const int cbb_overlay_texture =
-    sbb_overlay_texture / ssb_per_cbb;
-
-static constexpr const int cbb_t0_texture = sbb_t0_texture / ssb_per_cbb;
-static constexpr const int cbb_t1_texture = sbb_t1_texture / ssb_per_cbb;
-static constexpr const int cbb_bg_texture = sbb_bg_texture / ssb_per_cbb;
-
-//
-//
-////////////////////////////////////////////////////////////////////////////////
 
 
 Platform::Screen::Screen() : userdata_(nullptr)
@@ -868,22 +875,6 @@ COLD void Platform::push_tile0_map(const TileMap& map)
                 sbb_t0_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 0);
         }
     }
-
-    // Note: we want to reload the starfield background so that it looks
-    // different with each new map.
-    for (int i = 0; i < 32; ++i) {
-        for (int j = 0; j < 32; ++j) {
-            if (random_choice<8>()) {
-                MEM_SCREENBLOCKS[sbb_bg_tiles][i + j * 32] = 67;
-            } else {
-                if (random_choice<2>()) {
-                    MEM_SCREENBLOCKS[sbb_bg_tiles][i + j * 32] = 70;
-                } else {
-                    MEM_SCREENBLOCKS[sbb_bg_tiles][i + j * 32] = 71;
-                }
-            }
-        }
-    }
 }
 
 
@@ -911,6 +902,12 @@ void Platform::set_overlay_tile(u16 x, u16 y, u16 val)
     }
 
     MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(1);
+}
+
+
+void Platform::set_background_tile(u16 x, u16 y, u16 val)
+{
+    MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32] = val;
 }
 
 
