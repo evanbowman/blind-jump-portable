@@ -7,8 +7,17 @@ Blind Jump is an action/adventure game for the Nintendo GameBoy Advance. Evan Bo
 The game uses procedural algorithms to generate the levels, so the game changes each time you play. While the game is designed to be difficult, it will also be possible to beat the whole game in under an hour. At time of writing, the game has one boss after the first ten levels, but there will be a boss fight after every set of ten levels. Enemies and environments change after each boss fight.
 
 <p align="center">
-  <img src="screen1.png"/>
+  <img src="s1.png"/>
 </p>
+
+<p align="center">
+  <img src="s2.png"/>
+</p>
+
+<p align="center">
+  <img src="s3.png"/>
+</p>
+
 
 ## Implementation
 
