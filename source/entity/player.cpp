@@ -624,7 +624,8 @@ void Blaster::add_explosive_rounds(u8 count)
 {
     explosive_rounds_ += count;
     if (powerup_remaining_) {
-        powerup_remaining_ = std::max(powerup_remaining_, (u16)explosive_rounds_);
+        powerup_remaining_ =
+            std::max(powerup_remaining_, (u16)explosive_rounds_);
     }
 }
 

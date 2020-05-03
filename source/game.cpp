@@ -343,7 +343,6 @@ static constexpr const ZoneInfo epilogue{nullptr,
                                          }};
 
 
-
 const ZoneInfo& zone_info(Level level)
 {
     if (level > boss_1_level) {

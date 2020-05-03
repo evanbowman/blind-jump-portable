@@ -1721,7 +1721,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                     pfrm.set_overlay_tile(center - j, pos_.y - y_off, 93 + i);
                     pfrm.set_overlay_tile(center - j, pos_.y + 2, 93 + i);
 
-                    pfrm.set_overlay_tile(center + 1 + j, pos_.y - y_off, 100 + i);
+                    pfrm.set_overlay_tile(
+                        center + 1 + j, pos_.y - y_off, 100 + i);
                     pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 100 + i);
 
                     i++;
@@ -1730,7 +1731,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                         pfrm.set_overlay_tile(center - j, pos_.y - y_off, 107);
                         pfrm.set_overlay_tile(center - j, pos_.y + 2, 107);
 
-                        pfrm.set_overlay_tile(center + 1 + j, pos_.y - y_off, 107);
+                        pfrm.set_overlay_tile(
+                            center + 1 + j, pos_.y - y_off, 107);
                         pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 107);
 
                         i = 0;
@@ -2095,10 +2097,9 @@ void EndingCreditsState::enter(Platform& pfrm, Game& game)
 
     next_y_ = screen_tiles.y + 2;
 
-    game.on_timeout(milliseconds(500),
-                    [](Platform& pfrm, Game&) {
-                        pfrm.speaker().play_music("clair_de_lune", false, 0);
-                    });
+    game.on_timeout(milliseconds(500), [](Platform& pfrm, Game&) {
+        pfrm.speaker().play_music("clair_de_lune", false, 0);
+    });
 }
 
 
@@ -2137,15 +2138,22 @@ static const std::array<const char*, 30> credits_lines = {
     "",
     "",
     "",
-    "the end"
-};
+    "the end"};
 
 
-StatePtr EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     timer_ += delta;
 
-    if (timer_ > milliseconds(60)) {
+    if (timer_ > milliseconds([&] {
+            if (pfrm.keyboard().pressed<Key::action_1>()) {
+                return 15;
+            } else {
+                return 60;
+            }
+        }())) {
+
         timer_ = 0;
 
         pfrm.set_overlay_origin(0, scroll_++);
@@ -2157,12 +2165,14 @@ StatePtr EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds del
 
             auto screen_tiles = calc_screen_tiles(pfrm);
 
-            if (scroll_ > ((screen_tiles.y + 2) * tile_height) and not lines_.empty()) {
+            if (scroll_ > ((screen_tiles.y + 2) * tile_height) and
+                not lines_.empty()) {
                 lines_.erase(lines_.begin());
             }
 
             if (next_ < int{credits_lines.size()}) {
-                const u8 y = next_y_ % 32; // The overlay tile layer is 32x32 tiles.
+                const u8 y =
+                    next_y_ % 32; // The overlay tile layer is 32x32 tiles.
                 next_y_ += 2;
                 lines_.emplace_back(pfrm, OverlayCoord{1, y});
                 lines_.back().assign(credits_lines[next_++]);

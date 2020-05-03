@@ -1609,10 +1609,10 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
 
 
+#include "clair_de_lune.hpp"
 #include "lenkaland_frostellar.hpp"
 #include "scottbuckley_computations.hpp"
 #include "scottbuckley_omega.hpp"
-#include "clair_de_lune.hpp"
 
 
 #define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \

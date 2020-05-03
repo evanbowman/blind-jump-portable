@@ -35,7 +35,8 @@ void Text::erase()
 }
 
 
-Text::Text(Text&& from) : pfrm_(from.pfrm_), coord_(from.coord_), len_(from.len_)
+Text::Text(Text&& from)
+    : pfrm_(from.pfrm_), coord_(from.coord_), len_(from.len_)
 {
     from.len_ = 0;
 }
