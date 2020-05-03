@@ -1654,11 +1654,13 @@ void NewLevelState::enter(Platform& pfrm, Game& game)
 
         text_[1].emplace(pfrm, pos_);
 
-        const auto margin =
-            centered_text_margins(pfrm, str_len(zone.title_line_1));
-        left_text_margin(*text_[0], std::max(0, int{margin} - 1));
+        if (zone.title_line_1) {
+            const auto margin =
+                centered_text_margins(pfrm, str_len(zone.title_line_1));
+            left_text_margin(*text_[0], std::max(0, int{margin} - 1));
 
-        text_[0]->append(zone.title_line_1);
+            text_[0]->append(zone.title_line_1);
+        }
 
         const auto margin2 =
             centered_text_margins(pfrm, str_len(zone.title_line_2));
@@ -1706,26 +1708,29 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         const int i = ease_out(timer_, 0, max_i, seconds(1));
 
-        auto repaint = [&pfrm, this](int max_i) {
+        auto repaint = [&pfrm, this, &zone](int max_i) {
             while (true) {
                 int i = 0, j = 0;
 
                 auto center = calc_screen_tiles(pfrm).x / 2 - 1;
 
                 while (true) {
-                    pfrm.set_overlay_tile(center - j, pos_.y - 3, 93 + i);
+
+                    const int y_off = zone.title_line_1 ? 3 : 1;
+
+                    pfrm.set_overlay_tile(center - j, pos_.y - y_off, 93 + i);
                     pfrm.set_overlay_tile(center - j, pos_.y + 2, 93 + i);
 
-                    pfrm.set_overlay_tile(center + 1 + j, pos_.y - 3, 100 + i);
+                    pfrm.set_overlay_tile(center + 1 + j, pos_.y - y_off, 100 + i);
                     pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 100 + i);
 
                     i++;
 
                     if (i == 8) {
-                        pfrm.set_overlay_tile(center - j, pos_.y - 3, 107);
+                        pfrm.set_overlay_tile(center - j, pos_.y - y_off, 107);
                         pfrm.set_overlay_tile(center - j, pos_.y + 2, 107);
 
-                        pfrm.set_overlay_tile(center + 1 + j, pos_.y - 3, 107);
+                        pfrm.set_overlay_tile(center + 1 + j, pos_.y - y_off, 107);
                         pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 107);
 
                         i = 0;
@@ -2101,6 +2106,7 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game)
 {
     lines_.clear();
     pfrm.set_overlay_origin(0, 0);
+    pfrm.speaker().stop_music();
 }
 
 
@@ -2161,9 +2167,7 @@ StatePtr EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds del
                 lines_.emplace_back(pfrm, OverlayCoord{1, y});
                 lines_.back().assign(credits_lines[next_++]);
             } else if (lines_.empty()) {
-                pfrm.sleep(20);
-                pfrm.fatal(); // FIXME: For now, this is the easiest way to
-                              // reset the game state.
+                return state_pool_.create<NewLevelState>(game.level() + 1);
             }
         }
     }

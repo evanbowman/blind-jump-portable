@@ -232,15 +232,19 @@ struct BossLevel {
 };
 
 
+static const Level boss_0_level = 10;
+static const Level boss_1_level = 21;
+
+
 static const BossLevel* get_boss_level(Level current_level)
 {
     switch (current_level) {
-    case 10: {
+    case boss_0_level: {
         static constexpr const BossLevel ret{boss_level_0, "spritesheet_boss0"};
         return &ret;
     }
 
-    case 21: {
+    case boss_1_level: {
         static constexpr const BossLevel ret{boss_level_1, "spritesheet_boss1"};
         return &ret;
     }
@@ -319,9 +323,32 @@ static constexpr const ZoneInfo zone_2{"part II:",
                                        }};
 
 
+static constexpr const ZoneInfo epilogue{nullptr,
+                                         "epilogue",
+                                         "spritesheet2",
+                                         "tilesheet2",
+                                         "tilesheet2_top",
+                                         "computations",
+                                         seconds(8) + milliseconds(700),
+                                         ColorConstant::turquoise_blue,
+                                         ColorConstant::safety_orange,
+                                         [](Platform& pfrm, Game&) {
+                                             draw_starfield(pfrm);
+
+                                             const int x = 16;
+                                             const int y = 16;
+
+                                             draw_background_image(
+                                                 pfrm, 120, x, y, 5, 5);
+                                         }};
+
+
+
 const ZoneInfo& zone_info(Level level)
 {
-    if (level > 10) {
+    if (level > boss_1_level) {
+        return epilogue;
+    } else if (level > boss_0_level) {
         return zone_2;
     } else {
         return zone_1;
@@ -864,7 +891,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         }
         const auto target = world_coord(*farthest);
 
-        if (level() == 10) {
+        if (level() == boss_0_level) {
             enemies_.spawn<TheFirstExplorer>(target);
 
         } else {
