@@ -421,7 +421,7 @@ void OverworldState::exit(Platform& pfrm, Game&)
 
     // In case we're in the middle of an entry/exit animation for the
     // notification bar.
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         pfrm.set_overlay_tile(i, 0, 0);
     }
 
@@ -744,6 +744,9 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (game.player().get_health() == 0) {
         pfrm.sleep(5);
+        pfrm.speaker().stop_music();
+        // TODO: add a unique explosion sound effect
+        pfrm.speaker().play_sound("explosion1", 3);
         big_explosion(pfrm, game, game.player().get_position());
 
         return state_pool_.create<DeathFadeState>();

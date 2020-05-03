@@ -357,7 +357,7 @@ Platform::Screen::Screen() : userdata_(nullptr)
     *bg0_control = BG_CBB(cbb_t0_texture) | BG_SBB(sbb_t0_tiles) |
                    BG_REG_64x64 | BG_PRIORITY(3) | BG_MOSAIC;
 
-    // Tilemap layer 1 (TODO)
+    // Tilemap layer 1
     *bg3_control = BG_CBB(cbb_t1_texture) | BG_SBB(sbb_t1_tiles) |
                    BG_REG_64x64 | BG_PRIORITY(2) | BG_MOSAIC;
 
