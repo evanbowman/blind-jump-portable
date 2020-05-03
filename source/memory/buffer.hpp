@@ -97,6 +97,12 @@ public:
     }
 
 
+    T& back()
+    {
+        return *(end_ - 1);
+    }
+
+
     const T& back() const
     {
         return *(end_ - 1);

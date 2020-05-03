@@ -25,6 +25,7 @@ public:
     Text(Platform& pfrm, const char* str, const OverlayCoord& coord);
     Text(Platform& pfrm, const OverlayCoord& coord);
     Text(const Text&) = delete;
+    Text(Text&&);
 
     ~Text();
 

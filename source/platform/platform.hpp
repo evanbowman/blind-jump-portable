@@ -98,6 +98,9 @@ public:
     void push_tile0_map(const TileMap& map);
     void push_tile1_map(const TileMap& map);
 
+    // NOTE: For the overlay and background, the tile layers consist of 32x32
+    // tiles, where each tiles is 8x8 pixels. The overlay and the background
+    // wrap when scrolled.
     void set_overlay_tile(u16 x, u16 y, u16 val);
     u16 get_overlay_tile(u16 x, u16 y);
     void set_background_tile(u16 x, u16 y, u16 val);

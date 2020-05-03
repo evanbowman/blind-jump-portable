@@ -289,7 +289,6 @@ private:
 };
 
 
-// TODO...
 class EndingCreditsState : public State {
 public:
     void enter(Platform& pfrm, Game& game) override;
@@ -298,7 +297,13 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    // ...
+    Microseconds timer_ = 0;
+    Buffer<Text, 12> lines_; // IMPORTANT: If you're porting this code to a
+                             // platform with a taller screen size, you may need
+                             // to increase the line capacity here.
+    int scroll_ = 0;
+    int next_ = 0;
+    int next_y_ = 0;
 };
 
 
@@ -922,7 +927,23 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
             return state_pool_.create<CommandCodeState>();
         }
 
-        return state_pool_.create<NewLevelState>(next_level);
+        // For now, to determine whether the game's complete, scan through a
+        // bunch of levels. If there are no more bosses remaining, the game is
+        // complete.
+        bool bosses_remaining = false;
+        for (Level l = next_level; l < next_level + 1000; ++l) {
+            if (is_boss_level(l)) {
+                bosses_remaining = true;
+                break;
+            }
+        }
+
+        if (bosses_remaining) {
+            return state_pool_.create<NewLevelState>(next_level);
+        } else {
+            pfrm.sleep(120);
+            return state_pool_.create<EndingCreditsState>();
+        }
 
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
@@ -2051,4 +2072,92 @@ void CommandCodeState::exit(Platform& pfrm, Game& game)
     entry_box_.reset();
     selector_.reset();
     pfrm.fill_overlay(0);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// EndingCreditsState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void EndingCreditsState::enter(Platform& pfrm, Game& game)
+{
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    next_y_ = screen_tiles.y + 2;
+}
+
+
+void EndingCreditsState::exit(Platform& pfrm, Game& game)
+{
+    lines_.clear();
+    pfrm.set_overlay_origin(0, 0);
+}
+
+
+// FIXME: we could be using smarter formatting here... right now, all this stuff
+// is sort of algined for the gameboy advance screen...
+static const std::array<const char*, 30> credits_lines = {
+    "Artwork and Animation",
+    "Evan Bowman",
+    "",
+    "Programming",
+    "Evan Bowman",
+    "",
+    "           Music",
+    "Frostellar.........Lenkaland",
+    "Omega..........Scott Buckley",
+    "Computations...Scott Buckley",
+    "",
+    "Special Thanks",
+    "My Family",
+    "Jasper Vijn (Tonc)",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "the end"
+};
+
+
+StatePtr EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    timer_ += delta;
+
+    if (timer_ > milliseconds(60)) {
+        timer_ = 0;
+
+        pfrm.set_overlay_origin(0, scroll_++);
+
+        constexpr int tile_height = 8;
+        const bool scrolled_two_lines = scroll_ % (tile_height * 2) == 0;
+
+        if (scrolled_two_lines) {
+
+            auto screen_tiles = calc_screen_tiles(pfrm);
+
+            if (scroll_ > ((screen_tiles.y + 2) * tile_height) and not lines_.empty()) {
+                lines_.erase(lines_.begin());
+            }
+
+            if (next_ < int{credits_lines.size()}) {
+                const u8 y = next_y_ % 32; // The overlay tile layer is 32x32 tiles.
+                next_y_ += 2;
+                lines_.emplace_back(pfrm, OverlayCoord{1, y});
+                lines_.back().assign(credits_lines[next_++]);
+            } else if (lines_.empty()) {
+                pfrm.sleep(20);
+                pfrm.fatal(); // FIXME: For now, this is the easiest way to
+                              // reset the game state.
+            }
+        }
+    }
+
+    return null_state();
 }
