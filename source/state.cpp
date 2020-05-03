@@ -1836,6 +1836,10 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             return state_pool_.create<CommandCodeState>();
         }
 
+        if (pfrm.keyboard().pressed<Key::start>()) {
+            return state_pool_.create<EndingCreditsState>();
+        }
+
         return state_pool_.create<NewLevelState>(game.level());
 
     } else {
@@ -2085,6 +2089,11 @@ void EndingCreditsState::enter(Platform& pfrm, Game& game)
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     next_y_ = screen_tiles.y + 2;
+
+    game.on_timeout(milliseconds(500),
+                    [](Platform& pfrm, Game&) {
+                        pfrm.speaker().play_music("clair_de_lune", false, 0);
+                    });
 }
 
 
@@ -2108,11 +2117,11 @@ static const std::array<const char*, 30> credits_lines = {
     "Frostellar.........Lenkaland",
     "Omega..........Scott Buckley",
     "Computations...Scott Buckley",
+    "Clair De Lune....Chad Crouch",
     "",
     "Special Thanks",
     "My Family",
     "Jasper Vijn (Tonc)",
-    "",
     "",
     "",
     "",

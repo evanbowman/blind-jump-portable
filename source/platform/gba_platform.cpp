@@ -1612,6 +1612,7 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #include "lenkaland_frostellar.hpp"
 #include "scottbuckley_computations.hpp"
 #include "scottbuckley_omega.hpp"
+#include "clair_de_lune.hpp"
 
 
 #define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \
@@ -1632,7 +1633,8 @@ static const struct AudioTrack {
     int length_;
 } music_tracks[] = {DEF_AUDIO(frostellar, lenkaland_frostellar),
                     DEF_AUDIO(omega, scottbuckley_omega),
-                    DEF_AUDIO(computations, scottbuckley_computations)};
+                    DEF_AUDIO(computations, scottbuckley_computations),
+                    DEF_AUDIO(clair_de_lune, clair_de_lune)};
 
 
 static const AudioTrack* find_track(const char* name)
