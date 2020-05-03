@@ -42,6 +42,19 @@ public:
         return end_;
     }
 
+
+    const Iterator begin() const
+    {
+        return begin_;
+    }
+
+
+    const Iterator end() const
+    {
+        return end_;
+    }
+
+
     template <typename... Args> bool emplace_back(Args&&... args)
     {
         if (Buffer::size() < Buffer::capacity()) {
