@@ -139,7 +139,7 @@ public:
 
     bool empty() const
     {
-        return Buffer::size() == 0;
+        return begin() == end();
     }
 
 
