@@ -15,6 +15,10 @@ Laser::Laser(const Vec2<Float>& position, Cardinal dir, Mode mode)
     sprite_.set_origin({8, 16});
     sprite_.set_position(position);
 
+    if (mode == Mode::explosive) {
+        sprite_.set_mix({ColorConstant::rich_black, 200});
+    }
+
     sprite_.set_texture_index([this] {
         switch (dir_) {
         case Cardinal::north:

@@ -623,7 +623,9 @@ void Blaster::accelerate(u8 max_lasers, Microseconds reload_interval)
 void Blaster::add_explosive_rounds(u8 count)
 {
     explosive_rounds_ += count;
-    powerup_remaining_ = std::max(powerup_remaining_, (u16)explosive_rounds_);
+    if (powerup_remaining_) {
+        powerup_remaining_ = std::max(powerup_remaining_, (u16)explosive_rounds_);
+    }
 }
 
 
