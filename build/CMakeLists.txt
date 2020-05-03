@@ -56,7 +56,6 @@ set(SOURCES
   ${SOURCE_DIR}/entity/player.cpp
   ${SOURCE_DIR}/inventory.cpp
   ${SOURCE_DIR}/collision.cpp
-  ${SOURCE_DIR}/easterEgg.cpp
   ${SOURCE_DIR}/tileMap.cpp
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/string.cpp

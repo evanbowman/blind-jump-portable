@@ -1690,7 +1690,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         repaint(std::min(max_i, i));
 
-        if (i >= max_i) {
+        if (timer_ > seconds(1)) {
             pfrm.sleep(50);
 
             pfrm.speaker().play_music(
@@ -2017,5 +2017,8 @@ void CommandCodeState::enter(Platform& pfrm, Game& game)
 
 void CommandCodeState::exit(Platform& pfrm, Game& game)
 {
+    input_text_.reset();
+    entry_box_.reset();
+    selector_.reset();
     pfrm.fill_overlay(0);
 }
