@@ -415,9 +415,16 @@ static void state_deleter(State* s)
 static Microseconds enemy_lethargy_timer;
 
 
-void OverworldState::exit(Platform&, Game&)
+void OverworldState::exit(Platform& pfrm, Game&)
 {
     notification_text.reset();
+
+    // In case we're in the middle of an entry/exit animation for the
+    // notification bar.
+    for (int i = 0; i < 31; ++i) {
+        pfrm.set_overlay_tile(i, 0, 0);
+    }
+
     notification_status = NotificationStatus::hidden;
 }
 
