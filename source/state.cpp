@@ -30,6 +30,7 @@ public:
     Microseconds notification_text_timer = 0;
     enum class NotificationStatus {
         flash,
+        flash_animate,
         wait,
         display,
         exit,
@@ -87,6 +88,8 @@ void push_notification(Platform& pfrm,
                        Game& game,
                        const NotificationStr& string)
 {
+    pfrm.sleep(3);
+
     if (auto state = dynamic_cast<OverworldState*>(game.state())) {
         state->notification_status = OverworldState::NotificationStatus::flash;
         state->notification_str = string;
@@ -526,8 +529,25 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         for (int x = 0; x < 32; ++x) {
             pfrm.set_overlay_tile(x, 0, 108);
         }
-        notification_status = NotificationStatus::wait;
-        notification_text_timer = milliseconds(80);
+        notification_status = NotificationStatus::flash_animate;
+        notification_text_timer = -1 * milliseconds(5);
+        break;
+
+    case NotificationStatus::flash_animate:
+        notification_text_timer += delta;
+        if (notification_text_timer > milliseconds(10)) {
+            notification_text_timer = 0;
+
+            const auto current_tile = pfrm.get_overlay_tile(0, 0);
+            if (current_tile < 110) {
+                for (int x = 0; x < 32; ++x) {
+                    pfrm.set_overlay_tile(x, 0, current_tile + 1);
+                }
+            } else {
+                notification_status = NotificationStatus::wait;
+                notification_text_timer = milliseconds(80);
+            }
+        }
         break;
 
     case NotificationStatus::wait:
