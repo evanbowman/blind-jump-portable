@@ -938,12 +938,15 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
         }
 
-        if (bosses_remaining) {
-            return state_pool_.create<NewLevelState>(next_level);
-        } else {
+        auto zone = zone_info(next_level);
+        auto last_zone = zone_info(game.level());
+
+        if (not bosses_remaining and not(zone == last_zone)) {
             pfrm.sleep(120);
             return state_pool_.create<EndingCreditsState>();
         }
+
+        return state_pool_.create<NewLevelState>(next_level);
 
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),

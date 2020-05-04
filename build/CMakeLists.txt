@@ -76,9 +76,13 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/overlay.s
     ${SOURCE_DIR}/graphics/tilesheet.s
     ${SOURCE_DIR}/graphics/tilesheet2.s
+    ${SOURCE_DIR}/graphics/tilesheet3.s
     ${SOURCE_DIR}/graphics/tilesheet_top.s
     ${SOURCE_DIR}/graphics/tilesheet2_top.s
+    ${SOURCE_DIR}/graphics/tilesheet3_top.s
     ${SOURCE_DIR}/graphics/spritesheet.s
+    ${SOURCE_DIR}/graphics/spritesheet2.s
+    ${SOURCE_DIR}/graphics/spritesheet3.s
     ${SOURCE_DIR}/platform/sound_coin.s
     ${SOURCE_DIR}/platform/sound_bell.s
     ${SOURCE_DIR}/platform/sound_click.s
@@ -94,7 +98,6 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/sound_open_book.s
     ${SOURCE_DIR}/platform/sound_explosion1.s
     ${SOURCE_DIR}/platform/sound_explosion2.s
-    ${SOURCE_DIR}/graphics/spritesheet2.s
     ${SOURCE_DIR}/graphics/overlay_journal.s
     ${SOURCE_DIR}/graphics/spritesheet_boss0.s
     ${SOURCE_DIR}/graphics/spritesheet_boss1.s

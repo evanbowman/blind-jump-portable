@@ -9,7 +9,7 @@
 //	+ 477 tiles not compressed
 //	Total size: 512 + 15264 = 15776
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:17
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -38,7 +38,7 @@ extern const unsigned short old_poster_flattenedPal[256];
 //	+ 504 tiles not compressed
 //	Total size: 512 + 16128 = 16640
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:17
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -67,7 +67,7 @@ extern const unsigned short overlayPal[256];
 //	+ 73 tiles not compressed
 //	Total size: 512 + 2336 = 2848
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:17
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -96,7 +96,7 @@ extern const unsigned short overlay_journalPal[256];
 //	+ 1008 tiles Metatiled by 2x4 not compressed
 //	Total size: 512 + 32256 = 32768
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:16
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -125,7 +125,7 @@ extern const unsigned short spritesheetPal[256];
 //	+ 1008 tiles Metatiled by 2x4 not compressed
 //	Total size: 512 + 32256 = 32768
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:16
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -144,6 +144,35 @@ extern const unsigned short spritesheet2Pal[256];
 
 //}}BLOCK(spritesheet2)
 
+//{{BLOCK(spritesheet3)
+
+//======================================================================
+//
+//	spritesheet3, 2016x32@4, 
+//	Transparent color : FF,00,FF
+//	+ palette 256 entries, not compressed
+//	+ 1008 tiles Metatiled by 2x4 not compressed
+//	Total size: 512 + 32256 = 32768
+//
+//	Time-stamp: 2020-05-03, 23:36:16
+//	Exported by Cearn's GBA Image Transmogrifier, v
+//	( http://www.coranac.com/projects/#grit )
+//
+//======================================================================
+
+#ifndef GRIT_SPRITESHEET3_H
+#define GRIT_SPRITESHEET3_H
+
+#define spritesheet3TilesLen 32256
+extern const unsigned int spritesheet3Tiles[8064];
+
+#define spritesheet3PalLen 512
+extern const unsigned short spritesheet3Pal[256];
+
+#endif // GRIT_SPRITESHEET3_H
+
+//}}BLOCK(spritesheet3)
+
 //{{BLOCK(spritesheet_boss0)
 
 //======================================================================
@@ -154,7 +183,7 @@ extern const unsigned short spritesheet2Pal[256];
 //	+ 1008 tiles Metatiled by 2x4 not compressed
 //	Total size: 512 + 32256 = 32768
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:16
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -183,7 +212,7 @@ extern const unsigned short spritesheet_boss0Pal[256];
 //	+ 1008 tiles Metatiled by 2x4 not compressed
 //	Total size: 512 + 32256 = 32768
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:16
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -212,7 +241,7 @@ extern const unsigned short spritesheet_boss1Pal[256];
 //	+ 444 tiles Metatiled by 4x3 not compressed
 //	Total size: 512 + 14208 = 14720
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:16
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -241,7 +270,7 @@ extern const unsigned short tilesheetPal[256];
 //	+ 444 tiles Metatiled by 4x3 not compressed
 //	Total size: 512 + 14208 = 14720
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:17
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -270,7 +299,7 @@ extern const unsigned short tilesheet2Pal[256];
 //	+ 384 tiles Metatiled by 4x3 not compressed
 //	Total size: 512 + 12288 = 12800
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:17
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -289,6 +318,64 @@ extern const unsigned short tilesheet2_topPal[256];
 
 //}}BLOCK(tilesheet2_top)
 
+//{{BLOCK(tilesheet3)
+
+//======================================================================
+//
+//	tilesheet3, 1184x24@4, 
+//	Transparent color : FF,00,FF
+//	+ palette 256 entries, not compressed
+//	+ 444 tiles Metatiled by 4x3 not compressed
+//	Total size: 512 + 14208 = 14720
+//
+//	Time-stamp: 2020-05-03, 23:36:17
+//	Exported by Cearn's GBA Image Transmogrifier, v
+//	( http://www.coranac.com/projects/#grit )
+//
+//======================================================================
+
+#ifndef GRIT_TILESHEET3_H
+#define GRIT_TILESHEET3_H
+
+#define tilesheet3TilesLen 14208
+extern const unsigned int tilesheet3Tiles[3552];
+
+#define tilesheet3PalLen 512
+extern const unsigned short tilesheet3Pal[256];
+
+#endif // GRIT_TILESHEET3_H
+
+//}}BLOCK(tilesheet3)
+
+//{{BLOCK(tilesheet3_top)
+
+//======================================================================
+//
+//	tilesheet3_top, 1024x24@4, 
+//	Transparent color : FF,00,FF
+//	+ palette 256 entries, not compressed
+//	+ 384 tiles Metatiled by 4x3 not compressed
+//	Total size: 512 + 12288 = 12800
+//
+//	Time-stamp: 2020-05-03, 23:36:17
+//	Exported by Cearn's GBA Image Transmogrifier, v
+//	( http://www.coranac.com/projects/#grit )
+//
+//======================================================================
+
+#ifndef GRIT_TILESHEET3_TOP_H
+#define GRIT_TILESHEET3_TOP_H
+
+#define tilesheet3_topTilesLen 12288
+extern const unsigned int tilesheet3_topTiles[3072];
+
+#define tilesheet3_topPalLen 512
+extern const unsigned short tilesheet3_topPal[256];
+
+#endif // GRIT_TILESHEET3_TOP_H
+
+//}}BLOCK(tilesheet3_top)
+
 //{{BLOCK(tilesheet_top)
 
 //======================================================================
@@ -299,7 +386,7 @@ extern const unsigned short tilesheet2_topPal[256];
 //	+ 384 tiles Metatiled by 4x3 not compressed
 //	Total size: 512 + 12288 = 12800
 //
-//	Time-stamp: 2020-05-03, 08:42:44
+//	Time-stamp: 2020-05-03, 23:36:17
 //	Exported by Cearn's GBA Image Transmogrifier, v
 //	( http://www.coranac.com/projects/#grit )
 //

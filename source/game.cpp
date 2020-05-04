@@ -323,30 +323,30 @@ static constexpr const ZoneInfo zone_2{"part II:",
                                        }};
 
 
-static constexpr const ZoneInfo epilogue{nullptr,
-                                         "epilogue",
-                                         "spritesheet2",
-                                         "tilesheet2",
-                                         "tilesheet2_top",
-                                         "computations",
-                                         seconds(8) + milliseconds(700),
-                                         ColorConstant::turquoise_blue,
-                                         ColorConstant::safety_orange,
-                                         [](Platform& pfrm, Game&) {
-                                             draw_starfield(pfrm);
+static constexpr const ZoneInfo zone_3{"part III:",
+                                       "moonlight kingdom",
+                                       "spritesheet3",
+                                       "tilesheet3",
+                                       "tilesheet3_top",
+                                       "computations",
+                                       seconds(8) + milliseconds(700),
+                                       ColorConstant::cerulean_blue,
+                                       ColorConstant::aerospace_orange,
+                                       [](Platform& pfrm, Game&) {
+                                           draw_starfield(pfrm);
 
-                                             const int x = 16;
-                                             const int y = 16;
+                                           const int x = 12;
+                                           const int y = 12;
 
-                                             draw_background_image(
-                                                 pfrm, 120, x, y, 5, 5);
-                                         }};
+                                           draw_background_image(
+                                               pfrm, 120, x, y, 9, 9);
+                                       }};
 
 
 const ZoneInfo& zone_info(Level level)
 {
     if (level > boss_1_level) {
-        return epilogue;
+        return zone_3;
     } else if (level > boss_0_level) {
         return zone_2;
     } else {
@@ -641,6 +641,16 @@ COLD void Game::regenerate_map(Platform& pfrm)
         });
     }
 
+    if (zone_info(level()) == zone_3) {
+        tiles_.for_each([&](Tile& tile, int x, int y) {
+            if (not is_walkable__precise(tile)) {
+                if (is_walkable__precise(tiles_.get_tile(x, y + 1))) {
+                    grass_overlay.set_tile(x, y, static_cast<Tile>(17));
+                }
+            }
+        });
+    }
+
 
     pfrm.push_tile1_map(grass_overlay);
 
@@ -766,16 +776,19 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
              }
          },
          10},
-        {5, [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); }},
+        {5,
+         [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); },
+         boss_1_level},
         {7,
          [&]() {
              spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
          },
-         10,
+         boss_0_level,
          1},
         {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
         {11,
-         [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); }}};
+         [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
+         boss_1_level}};
 
 
     Buffer<EnemyInfo*, 100> distribution;

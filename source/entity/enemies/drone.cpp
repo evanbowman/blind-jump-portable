@@ -6,7 +6,8 @@
 
 Drone::Drone(const Vec2<Float>& pos)
     : Enemy(Entity::Health(4), pos, {{16, 16}, {8, 13}}), state_{State::sleep},
-      timer_(0)
+      timer_(0), shadow_check_timer_(milliseconds(500) +
+                                     random_choice<milliseconds(300)>())
 {
     sprite_.set_position(pos);
     sprite_.set_size(Sprite::Size::w16_h32);
@@ -32,6 +33,26 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     timer_ += dt;
+
+    if (visible()) {
+        // Calculating our current tile coordinate is costly, but we do want to hide
+        // our shadow from view when floating over empty space. So run the check
+        // every so often.
+        shadow_check_timer_ -= dt;
+        if (shadow_check_timer_ < 0) {
+
+            shadow_check_timer_ = milliseconds(100);
+
+            auto coord = to_tile_coord(position_.cast<s32>());
+
+            if (not is_walkable__fast(
+                    game.tiles().get_tile(coord.x, coord.y))) {
+                shadow_.set_alpha(Sprite::Alpha::transparent);
+            } else {
+                shadow_.set_alpha(Sprite::Alpha::translucent);
+            }
+        }
+    }
 
     switch (state_) {
     case State::sleep:

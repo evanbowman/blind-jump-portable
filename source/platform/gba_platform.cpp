@@ -394,6 +394,10 @@ const Color& real_color(ColorConstant k)
         static const Color turquoise_blue(0, 31, 27);
         return turquoise_blue;
 
+    case ColorConstant::cerulean_blue:
+        static const Color cerulean_blue(12, 27, 31);
+        return cerulean_blue;
+
     case ColorConstant::picton_blue:
         static const Color picton_blue(9, 20, 31);
         return picton_blue;
@@ -714,6 +718,7 @@ struct TextureData {
 
 static const TextureData sprite_textures[] = {TEXTURE_INFO(spritesheet),
                                               TEXTURE_INFO(spritesheet2),
+                                              TEXTURE_INFO(spritesheet3),
                                               TEXTURE_INFO(spritesheet_boss0),
                                               TEXTURE_INFO(spritesheet_boss1)};
 
@@ -721,7 +726,9 @@ static const TextureData sprite_textures[] = {TEXTURE_INFO(spritesheet),
 static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),
                                             TEXTURE_INFO(tilesheet_top),
                                             TEXTURE_INFO(tilesheet2),
-                                            TEXTURE_INFO(tilesheet2_top)};
+                                            TEXTURE_INFO(tilesheet2_top),
+                                            TEXTURE_INFO(tilesheet3),
+                                            TEXTURE_INFO(tilesheet3_top)};
 
 
 static const TextureData overlay_textures[] = {

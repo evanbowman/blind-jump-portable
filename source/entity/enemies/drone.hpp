@@ -48,6 +48,7 @@ private:
     State state_;
 
     Microseconds timer_;
+    Microseconds shadow_check_timer_;
 
     Vec2<Float> step_vector_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;

@@ -10,7 +10,7 @@ static const Float long_jump_speed(0.00015f);
 
 Scarecrow::Scarecrow(const Vec2<Float>& position)
     : Enemy(Entity::Health(3), position, {{16, 32}, {8, 16}}), timer_(0),
-      bounce_timer_(0), hit_(false)
+      bounce_timer_(0), shadow_check_timer_(0), hit_(false)
 {
     position_ = {position.x, position.y - 32};
 
@@ -233,12 +233,19 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             auto coord = to_tile_coord(position_.cast<s32>());
             coord.y += 1;
 
-            // Hide the shadow when we're jumping over empty space
-            if (not is_walkable__fast(
-                    game.tiles().get_tile(coord.x, coord.y))) {
-                shadow_.set_alpha(Sprite::Alpha::transparent);
-            } else {
-                shadow_.set_alpha(Sprite::Alpha::translucent);
+            if (visible()) {
+                shadow_check_timer_ += dt;
+                if (shadow_check_timer_ > milliseconds(100)) {
+                    shadow_check_timer_ = milliseconds(0);
+
+                    // Hide the shadow when we're jumping over empty space
+                    if (not is_walkable__fast(
+                            game.tiles().get_tile(coord.x, coord.y))) {
+                        shadow_.set_alpha(Sprite::Alpha::transparent);
+                    } else {
+                        shadow_.set_alpha(Sprite::Alpha::translucent);
+                    }
+                }
             }
 
             timer_ -= dt;
