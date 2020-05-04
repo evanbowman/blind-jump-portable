@@ -324,7 +324,7 @@ static constexpr const ZoneInfo zone_2{"part II:",
 
 
 static constexpr const ZoneInfo zone_3{"part III:",
-                                       "moonlight",
+                                       "by moonlight",
                                        "spritesheet3",
                                        "tilesheet3",
                                        "tilesheet3_top",
