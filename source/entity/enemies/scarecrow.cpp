@@ -63,6 +63,14 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
     switch (state_) {
     case State::sleep:
+        timer_ += dt;
+        if (timer_ > seconds(2)) {
+            timer_ = 0;
+            state_ = State::inactive;
+        }
+        break;
+
+    case State::inactive:
         if (visible()) {
             state_ = State::idle_wait;
         }

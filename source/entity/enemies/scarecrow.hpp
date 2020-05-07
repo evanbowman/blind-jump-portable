@@ -38,6 +38,7 @@ private:
 
     enum class State {
         sleep,
+        inactive,
         idle_airborne,
         idle_wait,
         idle_crouch,

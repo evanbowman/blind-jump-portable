@@ -30,7 +30,7 @@ private:
     void injured(Platform&, Game&, Health amount);
 
     Animation<TextureMap::turret, 5, milliseconds(50)> animation_;
-    enum class State { sleep, closed, opening, open, closing } state_;
+    enum class State { sleep, closed, opening, open1, open2, closing } state_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
     Microseconds timer_;
 };

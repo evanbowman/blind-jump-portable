@@ -38,11 +38,40 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto& player_pos = game.player().get_position();
     const auto& screen_size = pfrm.screen().size();
+
+    static const auto bullet_speed = 0.00011f;
+
+    auto target =
+        [&]
+        {
+            return sample<8>(game.player().get_position());
+        };
+
+    auto origin =
+        [&]
+        {
+            return position_ + Vec2<Float>{0.f, 4.f};
+        };
+
+    auto try_close =
+        [&] {
+            if (manhattan_length(player_pos, position_) >
+                std::min(screen_size.x, screen_size.y) / 2 + 48 + 40) {
+                state_ = State::closing;
+            }
+
+        };
+
     switch (state_) {
     case State::sleep:
         if (timer_ > 0) {
             timer_ -= dt;
         } else {
+            if (game.level() > boss_1_level) {
+                add_health(2);
+            } else if (game.level() > boss_0_level) {
+                add_health(1);
+            }
             state_ = State::closed;
         }
         break;
@@ -61,28 +90,60 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
             animate_shadow(shadow_, sprite_);
         }
         if (animation_.done(sprite_)) {
-            state_ = State::open;
+            state_ = State::open1;
             timer_ = milliseconds(110);
         }
         break;
 
-    case State::open:
-        if (manhattan_length(player_pos, position_) >
-            std::min(screen_size.x, screen_size.y) / 2 + 48 + 40) {
-            state_ = State::closing;
-        }
+    case State::open1:
+        try_close();
+
+        static constexpr const Microseconds reload{milliseconds(830)};
+
         if (timer_ > 0) {
             timer_ -= dt;
         } else {
             pfrm.speaker().play_sound("laser1", 4);
 
-            game.effects().spawn<OrbShot>(
-                position_ + Vec2<Float>{0.f, 4.f},
-                sample<8>(game.player().get_position()),
-                0.00011f);
-            timer_ = milliseconds(830);
+            game.effects().spawn<OrbShot>(origin(),
+                                          target(),
+                                          bullet_speed);
+            timer_ = reload;
+
+            if (game.level() > boss_1_level) {
+                state_ = State::open2;
+                timer_ = reload * 0.75;
+            }
         }
 
+        break;
+
+    case State::open2:
+        try_close();
+
+        if (timer_ > 0) {
+            timer_ -= dt;
+        } else {
+            pfrm.speaker().play_sound("laser1", 4);
+
+            const auto angle = 25;
+
+            if (game.effects().spawn<OrbShot>(origin(),
+                                              target(),
+                                              bullet_speed)) {
+                (*game.effects().get<OrbShot>().begin())->rotate(angle);
+            }
+
+            if (game.effects().spawn<OrbShot>(origin(),
+                                              target(),
+                                              bullet_speed)) {
+                (*game.effects().get<OrbShot>().begin())->rotate(365 - angle);
+            }
+
+            timer_ = reload * 0.75;
+
+            state_ = State::open1;
+        }
         break;
 
     case State::closing:

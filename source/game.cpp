@@ -232,11 +232,6 @@ struct BossLevel {
 };
 
 
-static const Level boss_0_level = 10;
-static const Level boss_1_level = 21;
-static const Level boss_2_level = 32;
-
-
 static const BossLevel* get_boss_level(Level current_level)
 {
     switch (current_level) {

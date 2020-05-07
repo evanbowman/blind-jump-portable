@@ -29,10 +29,10 @@ void Camera::update(Platform& pfrm,
         shake_constants = {
             {{3.f, -5.f, 3.f, -2.f, 1.f}, {6.f, -10.f, 6.f, -4.f, 2.f}}};
 
-    const auto center = interpolate(
+    auto center = interpolate(
         target,
         view_center,
-        dt * speed_ * (ballast_.divisor_ ? 0.0000016f : 0.0000044f));
+        dt * speed_ * (ballast_.divisor_ ? 0.0000016f : 0.0000071f));
 
     ballast_.divisor_ = 0;
 
