@@ -898,7 +898,7 @@ COLD void Platform::push_tile1_map(const TileMap& map)
 
 void Platform::fatal()
 {
-    SoftReset(ROM_RESTART);
+    SoftReset(ROM_RESTART), __builtin_unreachable();
 }
 
 
@@ -1618,6 +1618,7 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 
 #include "clair_de_lune.hpp"
 #include "lenkaland_frostellar.hpp"
+#include "september.hpp"
 #include "scottbuckley_computations.hpp"
 #include "scottbuckley_omega.hpp"
 
@@ -1641,7 +1642,8 @@ static const struct AudioTrack {
 } music_tracks[] = {DEF_AUDIO(frostellar, lenkaland_frostellar),
                     DEF_AUDIO(omega, scottbuckley_omega),
                     DEF_AUDIO(computations, scottbuckley_computations),
-                    DEF_AUDIO(clair_de_lune, clair_de_lune)};
+                    DEF_AUDIO(clair_de_lune, clair_de_lune),
+                    DEF_AUDIO(september, september)};
 
 
 static const AudioTrack* find_track(const char* name)

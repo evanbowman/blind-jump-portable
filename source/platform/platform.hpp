@@ -92,7 +92,7 @@ public:
         return stopwatch_;
     }
 
-    void fatal();
+    [[noreturn]] void fatal();
 
 
     void push_tile0_map(const TileMap& map);

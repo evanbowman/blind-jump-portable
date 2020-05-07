@@ -1964,6 +1964,14 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
+[[noreturn]] static void factory_reset(Platform& pfrm)
+{
+    PersistentData data;
+    pfrm.write_save(data);
+    pfrm.fatal();
+}
+
+
 bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
 {
     // The command interface interprets the leading three digits as a decimal
@@ -2045,15 +2053,12 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
         }
         return true;
 
-    case 592: { // Factory reset
-        PersistentData data;
-        pfrm.write_save(data);
-        pfrm.fatal();
-        return true;
-    }
 
     default:
         return false;
+
+    case 592:
+        factory_reset(pfrm);
     }
 }
 
@@ -2127,6 +2132,7 @@ static const std::array<const char*, 30> credits_lines = {
     "Frostellar.........Lenkaland",
     "Omega..........Scott Buckley",
     "Computations...Scott Buckley",
+    "September..........Kai Engel",
     "Clair De Lune....Chad Crouch",
     "",
     "Special Thanks",
@@ -2179,8 +2185,10 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                 next_y_ += 2;
                 lines_.emplace_back(pfrm, OverlayCoord{1, y});
                 lines_.back().assign(credits_lines[next_++]);
+
             } else if (lines_.empty()) {
-                return state_pool_.create<NewLevelState>(game.level() + 1);
+                factory_reset(pfrm);
+
             }
         }
     }

@@ -234,6 +234,7 @@ struct BossLevel {
 
 static const Level boss_0_level = 10;
 static const Level boss_1_level = 21;
+static const Level boss_2_level = 32;
 
 
 static const BossLevel* get_boss_level(Level current_level)
@@ -246,6 +247,11 @@ static const BossLevel* get_boss_level(Level current_level)
 
     case boss_1_level: {
         static constexpr const BossLevel ret{boss_level_1, "spritesheet_boss1"};
+        return &ret;
+    }
+
+    case boss_2_level: { // FIXME_ADD_BOSS2!!!
+        static constexpr const BossLevel ret{boss_level_0, "spritesheet_boss2"};
         return &ret;
     }
 
@@ -328,8 +334,8 @@ static constexpr const ZoneInfo zone_3{"part III:",
                                        "spritesheet3",
                                        "tilesheet3",
                                        "tilesheet3_top",
-                                       "computations",
-                                       seconds(8) + milliseconds(700),
+                                       "september",
+                                       Microseconds{0},
                                        ColorConstant::cerulean_blue,
                                        ColorConstant::aerospace_orange,
                                        [](Platform& pfrm, Game&) {
@@ -345,7 +351,19 @@ static constexpr const ZoneInfo zone_3{"part III:",
 
 const ZoneInfo& zone_info(Level level)
 {
-    if (level > boss_1_level) {
+    if (UNLIKELY(level > boss_2_level)) {
+        static const ZoneInfo null_zone{"NULL",
+                                        "",
+                                        "",
+                                        "",
+                                        "",
+                                        "",
+                                        0,
+                                        ColorConstant::null,
+                                        ColorConstant::null,
+                                        [](Platform&, Game&) {}};
+        return null_zone;
+    } else if (level > boss_1_level) {
         return zone_3;
     } else if (level > boss_0_level) {
         return zone_2;
@@ -890,9 +908,34 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     };
 
 
+    auto place_transporter = [&] {
+        if (not free_spots.empty()) {
+            MapCoord* farthest = free_spots.begin();
+            for (auto& elem : free_spots) {
+                if (manhattan_length(elem, *player_coord) >
+                    manhattan_length(*farthest, *player_coord)) {
+                    farthest = &elem;
+                }
+            }
+            const auto target = world_coord(*farthest);
+            transporter_.set_position(sample<3>({target.x, target.y + 16}));
+            free_spots.erase(farthest);
+
+            return true;
+
+        } else {
+            return false;
+        }
+    };
+
+
     // When the current level is one of the pre-generated boss levels, we do not
     // want to spawn all of the other stuff in the level, just the player.
-    if (get_boss_level(level())) {
+    const auto boss_level = get_boss_level(level());
+
+    if (boss_level) {
+
+        transporter_.set_position({0, 0});
 
         MapCoord* farthest = free_spots.begin();
         for (auto& elem : free_spots) {
@@ -903,11 +946,19 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         }
         const auto target = world_coord(*farthest);
 
-        if (level() == boss_0_level) {
+        switch (level()) {
+        case boss_0_level:
             enemies_.spawn<TheFirstExplorer>(target);
+            break;
 
-        } else {
+        case boss_1_level:
             enemies_.spawn<Gatekeeper>(target, *this);
+            break;
+
+        case boss_2_level:
+            // FIXME ADD BOSS2
+            place_transporter();
+            break;
         }
 
         // Place two hearts in the level. The game is supposed to be difficult,
@@ -931,23 +982,10 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
         }
 
-        transporter_.set_position({0, 0});
-
         return true;
     }
 
-    if (not free_spots.empty()) {
-        MapCoord* farthest = free_spots.begin();
-        for (auto& elem : free_spots) {
-            if (manhattan_length(elem, *player_coord) >
-                manhattan_length(*farthest, *player_coord)) {
-                farthest = &elem;
-            }
-        }
-        const auto target = world_coord(*farthest);
-        transporter_.set_position(sample<3>({target.x, target.y + 16}));
-        free_spots.erase(farthest);
-    } else {
+    if (not place_transporter()) {
         return false;
     }
 
