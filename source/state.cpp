@@ -103,6 +103,7 @@ public:
     {
     }
     void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
@@ -789,6 +790,13 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 void FadeInState::enter(Platform& pfrm, Game& game)
 {
     game.player().set_visible(false);
+    game.camera().set_speed(0.75);
+}
+
+
+void FadeInState::exit(Platform& pfrm, Game& game)
+{
+    game.camera().set_speed(1.f);
 }
 
 
@@ -857,7 +865,7 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
 StatePtr
 PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    game.camera().set_speed(1.5f);
+    game.camera().set_speed(0.75f);
 
     game.player().soft_update(pfrm, game, delta);
 
