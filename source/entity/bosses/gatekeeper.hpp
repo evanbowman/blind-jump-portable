@@ -15,6 +15,7 @@ public:
     void update(Platform&, Game&, Microseconds);
 
     static constexpr bool multiface_sprite = true;
+    static constexpr bool has_shadow = true;
 
     auto get_sprites() const
     {
