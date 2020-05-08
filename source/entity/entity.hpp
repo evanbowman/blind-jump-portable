@@ -42,6 +42,7 @@ public:
 
 
     static constexpr bool multiface_sprite = false;
+    static constexpr bool has_shadow = false;
 
 
     void set_health(Health health)

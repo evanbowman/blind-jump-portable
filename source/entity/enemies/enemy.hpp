@@ -17,6 +17,8 @@ public:
         position_ = position;
     }
 
+    static constexpr bool has_shadow = true;
+
     const Sprite& get_shadow() const
     {
         return shadow_;

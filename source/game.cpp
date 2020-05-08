@@ -66,9 +66,25 @@ HOT void Game::render(Platform& pfrm)
 {
     Buffer<const Sprite*, Platform::Screen::sprite_limit> display_buffer;
 
-    auto show_sprite = [&](Entity& e) {
+    Buffer<const Sprite*, 30> shadows_buffer;
+
+    auto show_sprite = [&](auto& e) {
         if (within_view_frustum(pfrm.screen(), e.get_sprite().get_position())) {
-            display_buffer.push_back(&e.get_sprite());
+
+            using T = typename std::remove_reference<decltype(e)>::type;
+
+            if constexpr (T::has_shadow) {
+                shadows_buffer.push_back(&e.get_shadow());
+            }
+
+            if constexpr (T::multiface_sprite) {
+                for (const auto& spr : e.get_sprites()) {
+                    display_buffer.push_back(spr);
+                }
+            } else {
+                display_buffer.push_back(&e.get_sprite());
+            }
+
             e.mark_visible(true);
         } else {
             e.mark_visible(false);
@@ -92,35 +108,7 @@ HOT void Game::render(Platform& pfrm)
     display_buffer.push_back(&player_.get_sprite());
     display_buffer.push_back(&player_.weapon().get_sprite());
 
-    Buffer<const Sprite*, 30> shadows_buffer;
-
-    enemies_.transform([&](auto& entity_buf) {
-        for (auto& entity : entity_buf) {
-            if (within_view_frustum(pfrm.screen(), entity->get_position())) {
-
-                entity->mark_visible(true);
-
-                if constexpr (std::remove_reference<decltype(
-                                  *entity)>::type::multiface_sprite) {
-
-                    const auto sprs = entity->get_sprites();
-
-                    for (const auto& spr : sprs) {
-                        display_buffer.push_back(spr);
-                    }
-
-                    shadows_buffer.push_back(&entity->get_shadow());
-
-                } else {
-                    const auto& spr = entity->get_sprite();
-                    display_buffer.push_back(&spr);
-                    shadows_buffer.push_back(&entity->get_shadow());
-                }
-            } else {
-                entity->mark_visible(false);
-            }
-        }
-    });
+    enemies_.transform(show_sprites);
     details_.transform(show_sprites);
 
     std::sort(display_buffer.begin(),

@@ -41,26 +41,16 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 
     static const auto bullet_speed = 0.00011f;
 
-    auto target =
-        [&]
-        {
-            return sample<8>(game.player().get_position());
-        };
+    auto target = [&] { return sample<8>(game.player().get_position()); };
 
-    auto origin =
-        [&]
-        {
-            return position_ + Vec2<Float>{0.f, 4.f};
-        };
+    auto origin = [&] { return position_ + Vec2<Float>{0.f, 4.f}; };
 
-    auto try_close =
-        [&] {
-            if (manhattan_length(player_pos, position_) >
-                std::min(screen_size.x, screen_size.y) / 2 + 48 + 40) {
-                state_ = State::closing;
-            }
-
-        };
+    auto try_close = [&] {
+        if (manhattan_length(player_pos, position_) >
+            std::min(screen_size.x, screen_size.y) / 2 + 48 + 40) {
+            state_ = State::closing;
+        }
+    };
 
     switch (state_) {
     case State::sleep:
@@ -105,9 +95,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         } else {
             pfrm.speaker().play_sound("laser1", 4);
 
-            game.effects().spawn<OrbShot>(origin(),
-                                          target(),
-                                          bullet_speed);
+            game.effects().spawn<OrbShot>(origin(), target(), bullet_speed);
             timer_ = reload;
 
             if (game.level() > boss_1_level) {
@@ -128,15 +116,13 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 
             const auto angle = 25;
 
-            if (game.effects().spawn<OrbShot>(origin(),
-                                              target(),
-                                              bullet_speed)) {
+            if (game.effects().spawn<OrbShot>(
+                    origin(), target(), bullet_speed)) {
                 (*game.effects().get<OrbShot>().begin())->rotate(angle);
             }
 
-            if (game.effects().spawn<OrbShot>(origin(),
-                                              target(),
-                                              bullet_speed)) {
+            if (game.effects().spawn<OrbShot>(
+                    origin(), target(), bullet_speed)) {
                 (*game.effects().get<OrbShot>().begin())->rotate(365 - angle);
             }
 

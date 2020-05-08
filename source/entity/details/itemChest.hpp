@@ -12,11 +12,18 @@ public:
 
     void update(Platform&, Game&, Microseconds dt);
 
+    static constexpr bool has_shadow = true;
+
+    const Sprite& get_shadow() const
+    {
+        return shadow_;
+    }
+
 private:
     enum class State { closed, opening, settle, opened };
 
     Animation<TextureMap::item_chest, 6, Microseconds(50000)> animation_;
-    // FadeColorAnimation<milliseconds(20)> fade_color_anim_;
+    Sprite shadow_;
     State state_;
     Item::Type item_;
 };

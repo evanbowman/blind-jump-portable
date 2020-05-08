@@ -1618,9 +1618,9 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 
 #include "clair_de_lune.hpp"
 #include "lenkaland_frostellar.hpp"
-#include "september.hpp"
 #include "scottbuckley_computations.hpp"
 #include "scottbuckley_omega.hpp"
+#include "september.hpp"
 
 
 #define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \
@@ -1665,7 +1665,6 @@ static const AudioTrack* find_track(const char* name)
 #include "sound_bell.hpp"
 #include "sound_blaster.hpp"
 #include "sound_click.hpp"
-#include "sound_pop.hpp"
 #include "sound_coin.hpp"
 #include "sound_creak.hpp"
 #include "sound_explosion1.hpp"
@@ -1678,6 +1677,7 @@ static const AudioTrack* find_track(const char* name)
 #include "sound_laser1.hpp"
 #include "sound_open_book.hpp"
 #include "sound_openbag.hpp"
+#include "sound_pop.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),

@@ -2196,7 +2196,6 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             } else if (lines_.empty()) {
                 factory_reset(pfrm);
-
             }
         }
     }

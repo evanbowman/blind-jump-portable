@@ -12,6 +12,16 @@ ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item)
     sprite_.set_position({pos.x, pos.y});
     sprite_.set_origin({8, 16});
     animation_.bind(sprite_);
+
+    // This is such a hack... but when flipped upside-down, the turret shadow
+    // acts as the shadow for item chests, saves some vram.
+    shadow_.set_texture_index(TextureMap::turret_shadow);
+    shadow_.set_flip({false, true});
+
+    shadow_.set_alpha(Sprite::Alpha::translucent);
+    shadow_.set_size(Sprite::Size::w16_h32);
+    shadow_.set_origin({8, 16});
+    shadow_.set_position({pos.x, pos.y + 9});
 }
 
 
