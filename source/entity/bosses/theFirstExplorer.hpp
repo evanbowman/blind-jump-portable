@@ -20,6 +20,7 @@ public:
     }
 
     static constexpr bool multiface_sprite = true;
+    static constexpr bool has_shadow = true;
 
     void update(Platform& pf, Game& game, Microseconds dt);
 
