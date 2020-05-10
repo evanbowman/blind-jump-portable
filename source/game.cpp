@@ -821,6 +821,31 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 }
 
 
+using LevelRange = std::array<Level, 2>;
+
+
+inline LevelRange  level_range(Item::Type item)
+{
+    static const auto max = std::numeric_limits<Level>::max();
+    static const auto min = std::numeric_limits<Level>::min();
+
+    switch (item) {
+    case Item::Type::old_poster_1:
+    case Item::Type::surveyor_logbook:
+        return {min, boss_0_level};
+
+    default:
+        return {min, max};
+    }
+}
+
+
+inline bool level_in_range(Level level, LevelRange range)
+{
+    return level >= range[0] and level < range[1];
+}
+
+
 static void
 spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 {
@@ -836,7 +861,8 @@ spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     while ((game.inventory().has_item(item) and item_is_persistent(item)) or
            item == Item::Type::heart or item == Item::Type::coin or
            (item == Item::Type::lethargy and
-            game.inventory().has_item(Item::Type::lethargy))) {
+            game.inventory().has_item(Item::Type::lethargy)) or
+           not level_in_range(game.level(), level_range(item))) {
 
         item = static_cast<Item::Type>(
             random_choice(static_cast<int>(Item::Type::count)));
