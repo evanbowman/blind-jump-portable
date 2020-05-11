@@ -824,7 +824,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 using LevelRange = std::array<Level, 2>;
 
 
-inline LevelRange  level_range(Item::Type item)
+inline LevelRange level_range(Item::Type item)
 {
     static const auto max = std::numeric_limits<Level>::max();
     static const auto min = std::numeric_limits<Level>::min();
