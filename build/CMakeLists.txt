@@ -104,6 +104,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/spritesheet_boss0.s
     ${SOURCE_DIR}/graphics/spritesheet_boss1.s
     ${SOURCE_DIR}/graphics/old_poster_flattened.s
+    ${SOURCE_DIR}/graphics/seed_packet_flattened.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()
   set(SOURCES

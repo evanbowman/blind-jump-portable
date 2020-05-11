@@ -53,7 +53,8 @@ def flatten_image(file_name):
 
 
 
-for name in ['old_poster.png']:
+for name in ['old_poster.png',
+             'seed_packet.png']:
     flatten_image(name)
 
 
@@ -83,5 +84,6 @@ for name in ['spritesheet.png',
              'tilesheet3_top.png',
              'overlay.png',
              'overlay_journal.png',
-             'old_poster_flattened.png']:
+             'old_poster_flattened.png',
+             'seed_packet_flattened.png']:
     rgb_to_bgr(name)

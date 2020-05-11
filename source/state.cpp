@@ -1246,6 +1246,16 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [] {
          static const auto str = "Explosive rounds (2)";
          return str;
+     }},
+    {STANDARD_ITEM_HANDLER(seed_packet),
+     [](Platform&, Game&) {
+         static const auto str = "seed_packet_flattened";
+         return state_pool_.create<ImageViewState>(str,
+                                                   ColorConstant::steel_blue);
+     },
+     [] {
+         static const auto str = "Seed packet";
+         return str;
      }}};
 
 

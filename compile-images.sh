@@ -15,6 +15,7 @@ grit tmp/tilesheet3_top.png -gB4 -Mw 4 -Mh 3 -gTFF00FF
 grit tmp/overlay.png -gB4 -gTFF00FF
 grit tmp/overlay_journal.png -gB4 -gTFF00FF
 grit tmp/old_poster_flattened.png -gB4 -gTFF00FF
+grit tmp/seed_packet_flattened.png -gB4 -gTFF00FF
 
 cat *.h >> images.h
 

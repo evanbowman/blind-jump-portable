@@ -734,7 +734,8 @@ static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),
 static const TextureData overlay_textures[] = {
     TEXTURE_INFO(overlay),
     TEXTURE_INFO(overlay_journal),
-    TEXTURE_INFO(old_poster_flattened)};
+    TEXTURE_INFO(old_poster_flattened),
+    TEXTURE_INFO(seed_packet_flattened)};
 
 
 static const TextureData* current_spritesheet = &sprite_textures[0];
