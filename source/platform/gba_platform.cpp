@@ -978,7 +978,7 @@ void Platform::Screen::fade(float amount,
 {
     const u8 amt = amount * 255;
 
-    if (amt == 0) {
+    if (amt < 128) {
         color_mix_disabled = false;
     } else {
         color_mix_disabled = true;
