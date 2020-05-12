@@ -6,7 +6,7 @@
 
 
 Dasher::Dasher(const Vec2<Float>& position)
-    : Enemy(Entity::Health(6), position, {{16, 32}, {8, 16}}), timer_(0),
+    : Enemy(Entity::Health(4), position, {{16, 32}, {8, 16}}), timer_(0),
       state_(State::sleep)
 {
     sprite_.set_texture_index(TextureMap::dasher_idle);
@@ -63,6 +63,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > seconds(2)) {
             timer_ = 0;
             state_ = State::inactive;
+            if (game.level() > boss_0_level) {
+                add_health(2);
+            }
         }
         break;
 

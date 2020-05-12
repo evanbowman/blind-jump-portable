@@ -274,7 +274,13 @@ private:
 
 class MapSystemState : public State {
 public:
+    void enter(Platform& pfrm, Game& game) override;
+    void exit(Platform& pfrm, Game& game) override;
+
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    std::optional<Text> level_text_;
 };
 
 
@@ -1410,11 +1416,7 @@ void InventoryState::exit(Platform& pfrm, Game& game)
     item_description2_.reset();
     label_.reset();
 
-    for (int i = 0; i < 6; ++i) {
-        pfrm.set_tile(Layer::overlay, 2 + i * 5, 2, 0);
-        pfrm.set_tile(Layer::overlay, 2 + i * 5, 7, 0);
-        pfrm.set_tile(Layer::overlay, 2 + i * 5, 12, 0);
-    }
+    pfrm.fill_overlay(0);
 
     clear_items();
 }
@@ -1646,6 +1648,60 @@ void ImageViewState::exit(Platform& pfrm, Game& game)
 ////////////////////////////////////////////////////////////////////////////////
 // MapSystemState
 ////////////////////////////////////////////////////////////////////////////////
+
+
+void MapSystemState::enter(Platform& pfrm, Game& game)
+{
+    pfrm.screen().fade(1.f);
+
+    game.tiles().for_each([&](Tile t, s8 x, s8 y) {
+        if (is_walkable__fast(t)) {
+            pfrm.set_tile(Layer::overlay, x, y, 143);
+        } else {
+            pfrm.set_tile(Layer::overlay, x, y, 144);
+        }
+    });
+
+    game.tiles().for_each([&](Tile t, s8 x, s8 y) {
+        if (not is_walkable__fast(t)) {
+            if (is_walkable__fast(game.tiles().get_tile(x, y - 1))) {
+                pfrm.set_tile(Layer::overlay, x, y, 140);
+            }
+        }
+    });
+
+    const auto transporter_tile =
+        to_tile_coord(game.transporter().get_position().cast<s32>());
+    pfrm.set_tile(Layer::overlay, transporter_tile.x, transporter_tile.y, 141);
+
+    auto player_tile = to_tile_coord(game.player().get_position().cast<s32>());
+
+    if (not is_walkable__fast(
+            game.tiles().get_tile(player_tile.x, player_tile.y))) {
+        // Player movement isn't constrained to tiles exactly, and sometimes the
+        // player's map icon displays as inside of a wall.
+        if (is_walkable__fast(
+                game.tiles().get_tile(player_tile.x + 1, player_tile.y))) {
+            player_tile.x += 1;
+        } else if (is_walkable__fast(game.tiles().get_tile(
+                       player_tile.x, player_tile.y + 1))) {
+            player_tile.y += 1;
+        }
+    }
+    pfrm.set_tile(Layer::overlay, player_tile.x, player_tile.y, 142);
+
+    level_text_.emplace(pfrm, OverlayCoord{TileMap::width + 1, 1});
+    level_text_->assign("waypoint ");
+    level_text_->append(game.level());
+}
+
+
+void MapSystemState::exit(Platform& pfrm, Game& game)
+{
+    pfrm.screen().fade(1.f);
+    pfrm.fill_overlay(0);
+    level_text_.reset();
+}
 
 
 StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
