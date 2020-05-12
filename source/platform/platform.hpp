@@ -7,7 +7,6 @@
 #include "number/numeric.hpp"
 #include "save.hpp"
 #include "sound.hpp"
-#include "tileMap.hpp"
 #include <array>
 #include <optional>
 
@@ -59,6 +58,9 @@ enum class Key {
 ////////////////////////////////////////////////////////////////////////////////
 
 
+enum class Layer { overlay, map_1, map_0, background };
+
+
 class Platform {
 public:
     class Screen;
@@ -95,15 +97,16 @@ public:
     [[noreturn]] void fatal();
 
 
-    void push_tile0_map(const TileMap& map);
-    void push_tile1_map(const TileMap& map);
-
     // NOTE: For the overlay and background, the tile layers consist of 32x32
     // tiles, where each tiles is 8x8 pixels. The overlay and the background
-    // wrap when scrolled.
-    void set_overlay_tile(u16 x, u16 y, u16 val);
-    u16 get_overlay_tile(u16 x, u16 y);
-    void set_background_tile(u16 x, u16 y, u16 val);
+    // wrap when scrolled. Map tiles, on the other hand, are 32x24 pixels, and
+    // the whole map consists of 64x64 8x8 pixel tiles.
+    void set_tile(Layer layer, u16 x, u16 y, u16 val);
+
+    // This function is not necessarily implemented efficiently, may in fact be
+    // very slow.
+    u16 get_tile(Layer layer, u16 x, u16 y);
+
 
     void fill_overlay(u16 tile);
 
@@ -420,7 +423,7 @@ inline void draw_background_image(Platform& pfrm,
 
     for (u16 y = start_y; y < start_y + height; ++y) {
         for (u16 x = start_x; x < start_x + width; ++x) {
-            pfrm.set_background_tile(x, y, tile++);
+            pfrm.set_tile(Layer::background, x, y, tile++);
         }
     }
 }

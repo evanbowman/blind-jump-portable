@@ -788,7 +788,7 @@ void Platform::load_overlay_texture(const char* name)
 }
 
 
-COLD static void set_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
+COLD static void set_map_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
 {
     // NOTE: The game's tiles are 32x24px in size. GBA tiles are each
     // 8x8. To further complicate things, the GBA's VRAM is
@@ -875,51 +875,69 @@ COLD static void set_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
 }
 
 
-COLD void Platform::push_tile0_map(const TileMap& map)
+void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
 {
-    for (u32 i = 0; i < TileMap::width; ++i) {
-        for (u32 j = 0; j < TileMap::height; ++j) {
-            set_tile(
-                sbb_t0_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 0);
+    switch (layer) {
+    case Layer::overlay:
+        if (x > 31 or y > 31) {
+            return;
         }
+        MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(1);
+        break;
+
+    case Layer::map_1:
+        if (x > 15 or y > 19) {
+            return;
+        }
+        set_map_tile(sbb_t1_tiles, x, y, val, 2);
+        break;
+
+    case Layer::map_0:
+        if (x > 15 or y > 19) {
+            return;
+        }
+        set_map_tile(sbb_t0_tiles, x, y, val, 0);
+        break;
+
+    case Layer::background:
+        if (x > 31 or y > 32) {
+            return;
+        }
+        MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32] = val;
+        break;
     }
 }
 
 
-COLD void Platform::push_tile1_map(const TileMap& map)
+u16 Platform::get_tile(Layer layer, u16 x, u16 y)
 {
-    for (u32 i = 0; i < TileMap::width; ++i) {
-        for (u32 j = 0; j < TileMap::height; ++j) {
-            set_tile(
-                sbb_t1_tiles, i, j, static_cast<u16>(map.get_tile(i, j)), 2);
+    switch (layer) {
+    case Layer::overlay:
+        if (x > 31 or y > 31) {
+            return 0;
         }
+        return MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] &
+               ~(SE_PALBANK(1));
+
+    case Layer::background:
+        if (x > 31 or y > 31) {
+            return 0;
+        }
+        return MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32];
+
+    case Layer::map_0:
+    case Layer::map_1:
+        // TODO: we don't need this functionality yet, and the implementation is
+        // complicated (see set_map_tile), so lets not bother for now...
+        break;
     }
+    return 0;
 }
 
 
 void Platform::fatal()
 {
     SoftReset(ROM_RESTART), __builtin_unreachable();
-}
-
-
-void Platform::set_overlay_tile(u16 x, u16 y, u16 val)
-{
-    if (x > 31 or y > 31) {
-        return;
-    }
-
-    MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(1);
-}
-
-
-void Platform::set_background_tile(u16 x, u16 y, u16 val)
-{
-    if (x > 31 or y > 32) {
-        return;
-    }
-
-    MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32] = val;
 }
 
 
@@ -935,16 +953,6 @@ void Platform::set_overlay_origin(s16 x, s16 y)
 {
     *bg2_x_scroll = x;
     *bg2_y_scroll = y;
-}
-
-
-u16 Platform::get_overlay_tile(u16 x, u16 y)
-{
-    if (x > 31 or y > 31) {
-        return 0;
-    }
-
-    return MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] & ~(SE_PALBANK(1));
 }
 
 
@@ -1959,11 +1967,7 @@ Platform::Platform()
     //     REG_TM2CNT_H = 1 << 7 | 1 << 6;
     // });
 
-    for (int i = 0; i < 32; ++i) {
-        for (int j = 0; j < 32; ++j) {
-            set_overlay_tile(i, j, 0);
-        }
-    }
+    fill_overlay(0);
 
     REG_SOUNDCNT_H =
         0x0B0F; //DirectSound A + fifo reset + max volume to L and R

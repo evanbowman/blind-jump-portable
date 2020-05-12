@@ -28,7 +28,7 @@ Text::Text(Platform& pfrm, const OverlayCoord& coord)
 void Text::erase()
 {
     for (int i = 0; i < len_; ++i) {
-        pfrm_.set_overlay_tile(coord_.x + i, coord_.y, 0);
+        pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y, 0);
     }
 
     len_ = 0;
@@ -60,32 +60,32 @@ void Text::assign(int val)
 static void print_char(Platform& pfrm, char c, const OverlayCoord& coord)
 {
     if (c > 47 and c < 58) { // Number
-        pfrm.set_overlay_tile(coord.x, coord.y, (c - 48) + 1);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 48) + 1);
     } else if (c > 96 and c < 97 + 27) {
-        pfrm.set_overlay_tile(coord.x, coord.y, (c - 97) + 11);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 97) + 11);
     } else if (c == ',') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 38);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 38);
     } else if (c == '.') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 37);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 37);
     } else if (c == '\'') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 1);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 1);
     } else if (c == '[') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 2);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 2);
     } else if (c == ']') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 3);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 3);
     } else if (c == '(') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 4);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 4);
     } else if (c == ')') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 5);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 5);
     } else if (c == ':') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 6);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 6);
     } else if (c == '"') {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26);
     } else if (c > 64 and c < 65 + 27) {
         // FIXME: add uppercase letters
-        pfrm.set_overlay_tile(coord.x, coord.y, (c - 65) + 39);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 65) + 39);
     } else {
-        pfrm.set_overlay_tile(coord.x, coord.y, 39 + 26 + 7);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 7);
     }
 }
 
@@ -130,32 +130,32 @@ void Text::append(int num)
 SmallIcon::SmallIcon(Platform& pfrm, int tile, const OverlayCoord& coord)
     : pfrm_(pfrm), coord_(coord)
 {
-    pfrm_.set_overlay_tile(coord_.x, coord_.y, tile);
+    pfrm_.set_tile(Layer::overlay, coord_.x, coord_.y, tile);
 }
 
 
 SmallIcon::~SmallIcon()
 {
-    pfrm_.set_overlay_tile(coord_.x, coord_.y, 0);
+    pfrm_.set_tile(Layer::overlay, coord_.x, coord_.y, 0);
 }
 
 
 MediumIcon::MediumIcon(Platform& pfrm, int tile, const OverlayCoord& coord)
     : pfrm_(pfrm), coord_(coord)
 {
-    pfrm_.set_overlay_tile(coord_.x, coord_.y, tile);
-    pfrm_.set_overlay_tile(coord_.x + 1, coord_.y, tile + 1);
-    pfrm_.set_overlay_tile(coord_.x, coord_.y + 1, tile + 2);
-    pfrm_.set_overlay_tile(coord_.x + 1, coord_.y + 1, tile + 3);
+    pfrm_.set_tile(Layer::overlay, coord_.x, coord_.y, tile);
+    pfrm_.set_tile(Layer::overlay, coord_.x + 1, coord_.y, tile + 1);
+    pfrm_.set_tile(Layer::overlay, coord_.x, coord_.y + 1, tile + 2);
+    pfrm_.set_tile(Layer::overlay, coord_.x + 1, coord_.y + 1, tile + 3);
 }
 
 
 MediumIcon::~MediumIcon()
 {
-    pfrm_.set_overlay_tile(coord_.x, coord_.y, 0);
-    pfrm_.set_overlay_tile(coord_.x + 1, coord_.y, 0);
-    pfrm_.set_overlay_tile(coord_.x, coord_.y + 1, 0);
-    pfrm_.set_overlay_tile(coord_.x + 1, coord_.y + 1, 0);
+    pfrm_.set_tile(Layer::overlay, coord_.x, coord_.y, 0);
+    pfrm_.set_tile(Layer::overlay, coord_.x + 1, coord_.y, 0);
+    pfrm_.set_tile(Layer::overlay, coord_.x, coord_.y + 1, 0);
+    pfrm_.set_tile(Layer::overlay, coord_.x + 1, coord_.y + 1, 0);
 }
 
 
@@ -167,7 +167,7 @@ TextView::~TextView()
 {
     for (int i = position_.x; i < position_.x + size_.x; ++i) {
         for (int j = position_.y; j < position_.y + size_.y; ++j) {
-            pfrm_.set_overlay_tile(i, j, 0);
+            pfrm_.set_tile(Layer::overlay, i, j, 0);
         }
     }
 }
@@ -257,31 +257,31 @@ Border::Border(Platform& pfrm,
         for (int y = position_.y; y < stopy; ++y) {
 
             if (x == position_.x and y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 67 + 86 + tile_offset);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 86 + tile_offset);
 
             } else if (x == position_.x and y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 67 + 88 + tile_offset);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 88 + tile_offset);
 
             } else if (x == stopx - 1 and y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 67 + 85 + tile_offset);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 85 + tile_offset);
 
             } else if (x == stopx - 1 and y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 67 + 87 + tile_offset);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 87 + tile_offset);
 
             } else if (x == position_.x) {
-                pfrm.set_overlay_tile(x, y, 67 + 84 + tile_offset);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 84 + tile_offset);
 
             } else if (y == position_.y) {
-                pfrm.set_overlay_tile(x, y, 67 + 81 + tile_offset);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 81 + tile_offset);
 
             } else if (x == stopx - 1) {
-                pfrm.set_overlay_tile(x, y, 67 + 82 + tile_offset);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 82 + tile_offset);
 
             } else if (y == stopy - 1) {
-                pfrm.set_overlay_tile(x, y, 67 + 83 + tile_offset);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 83 + tile_offset);
 
             } else if (fill) {
-                pfrm.set_overlay_tile(x, y, 67 + 80);
+                pfrm.set_tile(Layer::overlay, x, y, 67 + 80);
             }
         }
     }
@@ -301,22 +301,22 @@ Border::~Border()
                 (x == position_.x and y == stopy - 1) or
                 (x == stopx - 1 and y == position_.y) or
                 (x == stopx - 1 and y == stopy - 1)) {
-                pfrm_.set_overlay_tile(x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, 0);
 
             } else if (x == position_.x) {
-                pfrm_.set_overlay_tile(x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, 0);
 
             } else if (y == position_.y) {
-                pfrm_.set_overlay_tile(x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, 0);
 
             } else if (x == stopx - 1) {
-                pfrm_.set_overlay_tile(x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, 0);
 
             } else if (y == stopy - 1) {
-                pfrm_.set_overlay_tile(x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, 0);
 
             } else if (filled_) {
-                pfrm_.set_overlay_tile(x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, 0);
             }
         }
     }
@@ -327,7 +327,7 @@ DottedHorizontalLine::DottedHorizontalLine(Platform& pfrm, u8 y)
     : pfrm_(pfrm), y_(y)
 {
     for (int i = 0; i < 30; ++i) {
-        pfrm.set_overlay_tile(i, y, 109);
+        pfrm.set_tile(Layer::overlay, i, y, 109);
     }
 }
 
@@ -335,7 +335,7 @@ DottedHorizontalLine::DottedHorizontalLine(Platform& pfrm, u8 y)
 DottedHorizontalLine::~DottedHorizontalLine()
 {
     for (int i = 0; i < 30; ++i) {
-        pfrm_.set_overlay_tile(i, y_, 0);
+        pfrm_.set_tile(Layer::overlay, i, y_, 0);
     }
 }
 
@@ -345,8 +345,8 @@ BossHealthBar::BossHealthBar(Platform& pfrm,
                              const OverlayCoord& position)
     : pfrm_(pfrm), position_(position), height_(height)
 {
-    pfrm_.set_overlay_tile(position_.x, position_.y, 82);
-    pfrm_.set_overlay_tile(position_.x, position_.y + height + 1, 83);
+    pfrm_.set_tile(Layer::overlay, position_.x, position_.y, 82);
+    pfrm_.set_tile(Layer::overlay, position_.x, position_.y + height + 1, 83);
     set_health(0.f);
 }
 
@@ -360,20 +360,23 @@ void BossHealthBar::set_health(Float percentage)
     int current_tile = 0;
 
     while (fractional_pixels >= 8) {
-        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 91);
+        pfrm_.set_tile(
+            Layer::overlay, position_.x, position_.y + 1 + current_tile, 91);
         fractional_pixels -= 8;
         ++current_tile;
     }
 
     if (current_tile < height_ and fractional_pixels % 8 not_eq 0) {
-        pfrm_.set_overlay_tile(position_.x,
-                               position_.y + 1 + current_tile,
-                               83 + fractional_pixels % 8);
+        pfrm_.set_tile(Layer::overlay,
+                       position_.x,
+                       position_.y + 1 + current_tile,
+                       83 + fractional_pixels % 8);
         ++current_tile;
     }
 
     while (current_tile < height_) {
-        pfrm_.set_overlay_tile(position_.x, position_.y + 1 + current_tile, 92);
+        pfrm_.set_tile(
+            Layer::overlay, position_.x, position_.y + 1 + current_tile, 92);
         ++current_tile;
     }
 }
@@ -383,6 +386,6 @@ BossHealthBar::~BossHealthBar()
 {
     for (int y = 0; y < height_ + 2 /* +2 due to the header and footer */;
          ++y) {
-        pfrm_.set_overlay_tile(position_.x, position_.y + y, 0);
+        pfrm_.set_tile(Layer::overlay, position_.x, position_.y + y, 0);
     }
 }

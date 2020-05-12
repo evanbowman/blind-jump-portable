@@ -428,7 +428,7 @@ void OverworldState::exit(Platform& pfrm, Game&)
     // In case we're in the middle of an entry/exit animation for the
     // notification bar.
     for (int i = 0; i < 32; ++i) {
-        pfrm.set_overlay_tile(i, 0, 0);
+        pfrm.set_tile(Layer::overlay, i, 0, 0);
     }
 
     notification_status = NotificationStatus::hidden;
@@ -540,7 +540,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case NotificationStatus::flash:
         for (int x = 0; x < 32; ++x) {
-            pfrm.set_overlay_tile(x, 0, 108);
+            pfrm.set_tile(Layer::overlay, x, 0, 108);
         }
         notification_status = NotificationStatus::flash_animate;
         notification_text_timer = -1 * milliseconds(5);
@@ -551,10 +551,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (notification_text_timer > milliseconds(10)) {
             notification_text_timer = 0;
 
-            const auto current_tile = pfrm.get_overlay_tile(0, 0);
+            const auto current_tile = pfrm.get_tile(Layer::overlay, 0, 0);
             if (current_tile < 110) {
                 for (int x = 0; x < 32; ++x) {
-                    pfrm.set_overlay_tile(x, 0, current_tile + 1);
+                    pfrm.set_tile(Layer::overlay, x, 0, current_tile + 1);
                 }
             } else {
                 notification_status = NotificationStatus::wait;
@@ -591,7 +591,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             notification_status = NotificationStatus::exit;
 
             for (int x = 0; x < 32; ++x) {
-                pfrm.set_overlay_tile(x, 0, 74);
+                pfrm.set_tile(Layer::overlay, x, 0, 74);
             }
         }
         break;
@@ -601,10 +601,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (notification_text_timer > milliseconds(50)) {
             notification_text_timer -= delta;
 
-            const auto tile = pfrm.get_overlay_tile(0, 0);
+            const auto tile = pfrm.get_tile(Layer::overlay, 0, 0);
             if (tile < 74 + 7) {
                 for (int x = 0; x < 32; ++x) {
-                    pfrm.set_overlay_tile(x, 0, tile + 1);
+                    pfrm.set_tile(Layer::overlay, x, 0, tile + 1);
                 }
             } else {
                 notification_status = NotificationStatus::hidden;
@@ -1393,9 +1393,9 @@ void InventoryState::enter(Platform& pfrm, Game& game)
 
     update_arrow_icons(pfrm);
     for (int i = 0; i < 6; ++i) {
-        pfrm.set_overlay_tile(2 + i * 5, 2, 176);
-        pfrm.set_overlay_tile(2 + i * 5, 7, 176);
-        pfrm.set_overlay_tile(2 + i * 5, 12, 176);
+        pfrm.set_tile(Layer::overlay, 2 + i * 5, 2, 176);
+        pfrm.set_tile(Layer::overlay, 2 + i * 5, 7, 176);
+        pfrm.set_tile(Layer::overlay, 2 + i * 5, 12, 176);
     }
 }
 
@@ -1411,9 +1411,9 @@ void InventoryState::exit(Platform& pfrm, Game& game)
     label_.reset();
 
     for (int i = 0; i < 6; ++i) {
-        pfrm.set_overlay_tile(2 + i * 5, 2, 0);
-        pfrm.set_overlay_tile(2 + i * 5, 7, 0);
-        pfrm.set_overlay_tile(2 + i * 5, 12, 0);
+        pfrm.set_tile(Layer::overlay, 2 + i * 5, 2, 0);
+        pfrm.set_tile(Layer::overlay, 2 + i * 5, 7, 0);
+        pfrm.set_tile(Layer::overlay, 2 + i * 5, 12, 0);
     }
 
     clear_items();
@@ -1532,7 +1532,7 @@ void NotebookState::repaint_margin(Platform& pfrm)
         for (int y = 0; y < screen_tiles.y; ++y) {
             if (x == 0 or y == 0 or y == 1 or x == screen_tiles.x - 1 or
                 y == screen_tiles.y - 2 or y == screen_tiles.y - 1) {
-                pfrm.set_overlay_tile(x, y, notebook_margin_tile);
+                pfrm.set_tile(Layer::overlay, x, y, notebook_margin_tile);
             }
         }
     }
@@ -1621,7 +1621,7 @@ void ImageViewState::enter(Platform& pfrm, Game& game)
     const auto screen_tiles = calc_screen_tiles(pfrm);
     for (int x = 0; x < screen_tiles.x - 2; ++x) {
         for (int y = 0; y < screen_tiles.y - 3; ++y) {
-            pfrm.set_overlay_tile(x + 1, y + 1, y * 28 + x + 1);
+            pfrm.set_tile(Layer::overlay, x + 1, y + 1, y * 28 + x + 1);
         }
     }
 }
@@ -1739,22 +1739,32 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                     const int y_off = zone.title_line_1 ? 3 : 1;
 
-                    pfrm.set_overlay_tile(center - j, pos_.y - y_off, 93 + i);
-                    pfrm.set_overlay_tile(center - j, pos_.y + 2, 93 + i);
+                    pfrm.set_tile(
+                        Layer::overlay, center - j, pos_.y - y_off, 93 + i);
+                    pfrm.set_tile(
+                        Layer::overlay, center - j, pos_.y + 2, 93 + i);
 
-                    pfrm.set_overlay_tile(
-                        center + 1 + j, pos_.y - y_off, 100 + i);
-                    pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 100 + i);
+                    pfrm.set_tile(Layer::overlay,
+                                  center + 1 + j,
+                                  pos_.y - y_off,
+                                  100 + i);
+                    pfrm.set_tile(
+                        Layer::overlay, center + 1 + j, pos_.y + 2, 100 + i);
 
                     i++;
 
                     if (i == 8) {
-                        pfrm.set_overlay_tile(center - j, pos_.y - y_off, 107);
-                        pfrm.set_overlay_tile(center - j, pos_.y + 2, 107);
+                        pfrm.set_tile(
+                            Layer::overlay, center - j, pos_.y - y_off, 107);
+                        pfrm.set_tile(
+                            Layer::overlay, center - j, pos_.y + 2, 107);
 
-                        pfrm.set_overlay_tile(
-                            center + 1 + j, pos_.y - y_off, 107);
-                        pfrm.set_overlay_tile(center + 1 + j, pos_.y + 2, 107);
+                        pfrm.set_tile(Layer::overlay,
+                                      center + 1 + j,
+                                      pos_.y - y_off,
+                                      107);
+                        pfrm.set_tile(
+                            Layer::overlay, center + 1 + j, pos_.y + 2, 107);
 
                         i = 0;
                         j++;
@@ -2089,7 +2099,7 @@ void CommandCodeState::enter(Platform& pfrm, Game& game)
 
     u8 write_xpos = margin + 1;
     for (int i = 1; i < 11; ++i, write_xpos += 2) {
-        pfrm.set_overlay_tile(write_xpos, screen_tiles.y - 3, i);
+        pfrm.set_tile(Layer::overlay, write_xpos, screen_tiles.y - 3, i);
     }
 
     entry_box_.emplace(pfrm,

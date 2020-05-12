@@ -256,7 +256,7 @@ static void draw_starfield(Platform& pfrm)
     // background needs to source its 8x8 pixel tiles from the tile0 texture.
     for (int x = 0; x < 32; ++x) {
         for (int y = 0; y < 32; ++y) {
-            pfrm.set_background_tile(x, y, [] {
+            pfrm.set_tile(Layer::background, x, y, [] {
                 if (random_choice<9>()) {
                     return 60;
                 } else {
@@ -403,7 +403,9 @@ RETRY:
         goto RETRY;
     }
 
-    pfrm.push_tile0_map(tiles_);
+    tiles_.for_each([&](Tile t, s8 x, s8 y) {
+        pfrm.set_tile(Layer::map_0, x, y, static_cast<s16>(t));
+    });
 
     current_zone(*this).generate_background_(pfrm, *this);
 
@@ -653,7 +655,9 @@ COLD void Game::regenerate_map(Platform& pfrm)
     }
 
 
-    pfrm.push_tile1_map(grass_overlay);
+    grass_overlay.for_each([&](Tile t, s8 x, s8 y) {
+        pfrm.set_tile(Layer::map_1, x, y, static_cast<u16>(t));
+    });
 
 
     tiles_.for_each([&](Tile& tile, int x, int y) {
