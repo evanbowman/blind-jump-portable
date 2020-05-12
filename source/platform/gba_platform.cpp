@@ -54,7 +54,7 @@ void memcpy16(void* dst, const void* src, uint hwcount);
 //     ======================================================o
 //
 
-static constexpr const int ssb_per_cbb = 8;
+static constexpr const int sbb_per_cbb = 8; // ScreenBaseBlock per CharBaseBlock
 
 static constexpr const int sbb_overlay_tiles = 7;
 static constexpr const int sbb_bg_tiles = 15;
@@ -67,11 +67,11 @@ static constexpr const int sbb_t1_texture = 8;
 static constexpr const int sbb_bg_texture = sbb_t0_texture;
 
 static constexpr const int cbb_overlay_texture =
-    sbb_overlay_texture / ssb_per_cbb;
+    sbb_overlay_texture / sbb_per_cbb;
 
-static constexpr const int cbb_t0_texture = sbb_t0_texture / ssb_per_cbb;
-static constexpr const int cbb_t1_texture = sbb_t1_texture / ssb_per_cbb;
-static constexpr const int cbb_bg_texture = sbb_bg_texture / ssb_per_cbb;
+static constexpr const int cbb_t0_texture = sbb_t0_texture / sbb_per_cbb;
+static constexpr const int cbb_t1_texture = sbb_t1_texture / sbb_per_cbb;
+static constexpr const int cbb_bg_texture = sbb_bg_texture / sbb_per_cbb;
 
 using HardwareTile = u32[16];
 using TileBlock = HardwareTile[256];
