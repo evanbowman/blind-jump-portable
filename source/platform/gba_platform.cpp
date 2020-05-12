@@ -1806,16 +1806,14 @@ static void play_music(const char* name, bool loop, Microseconds offset)
         return;
     }
 
-    const auto sample_offset = offset * 0.016f; // NOTE: because 16kHz
+    const Microseconds sample_offset = offset * 0.016f; // NOTE: because 16kHz
 
-    if (sample_offset < track->length_) {
-        modify_audio([&] {
-            snd_ctx.music_track_length = track->length_;
-            snd_ctx.music_track_loop = loop;
-            snd_ctx.music_track = track->data_;
-            snd_ctx.music_track_pos = sample_offset;
-        });
-    }
+    modify_audio([&] {
+        snd_ctx.music_track_length = track->length_;
+        snd_ctx.music_track_loop = loop;
+        snd_ctx.music_track = track->data_;
+        snd_ctx.music_track_pos = sample_offset % track->length_;
+    });
 }
 
 
