@@ -19,6 +19,10 @@ enum class Tile : u8 {
     beam_ur,
     beam_bl,
     beam_br,
+    plate_left,
+    plate_top,
+    plate_right,
+    plate_bottom,
     t0_count,
     // Tile layer 1 is reserved for adding detail to maps, t1 renders overtop of
     // t0 (the enumerations above)

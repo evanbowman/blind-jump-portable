@@ -221,6 +221,7 @@ private:
     std::optional<SmallIcon> right_icon_;
     std::optional<Text> page_text_;
     std::optional<Text> item_description_;
+    std::optional<Text> item_description2_;
     std::optional<Text> label_;
     std::optional<MediumIcon> item_icons_[Inventory::cols][Inventory::rows];
 
@@ -1145,6 +1146,7 @@ struct InventoryItemHandler {
     int icon_;
     StatePtr (*callback_)(Platform& pfrm, Game& game);
     const char* (*description_)();
+    bool single_use_ = false;
 };
 
 
@@ -1207,28 +1209,24 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      }},
     {STANDARD_ITEM_HANDLER(accelerator),
      [](Platform&, Game& game) {
-         consume_selected_item(game);
-
          game.player().weapon().accelerate(3, milliseconds(150));
-
          return null_state();
      },
      [] {
          static const auto str = "Accelerator (60 shots)";
          return str;
-     }},
+     },
+     true},
     {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform&, Game& game) {
-         consume_selected_item(game);
-
          enemy_lethargy_timer = seconds(18);
-
          return null_state();
      },
      [] {
          static const auto str = "Lethargy (18 sec)";
          return str;
-     }},
+     },
+     true},
     {STANDARD_ITEM_HANDLER(map_system),
      [](Platform&, Game&) { return state_pool_.create<MapSystemState>(); },
      [] {
@@ -1237,16 +1235,14 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      }},
     {STANDARD_ITEM_HANDLER(explosive_rounds_2),
      [](Platform&, Game& game) {
-         consume_selected_item(game);
-
          game.player().weapon().add_explosive_rounds(2);
-
          return null_state();
      },
      [] {
          static const auto str = "Explosive rounds (2)";
          return str;
-     }},
+     },
+     true},
     {STANDARD_ITEM_HANDLER(seed_packet),
      [](Platform&, Game&) {
          static const auto str = "seed_packet_flattened";
@@ -1337,6 +1333,9 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
             page_, selector_coord_.x, selector_coord_.y);
 
         if (auto handler = inventory_item_handler(item)) {
+            if (handler->single_use_) {
+                consume_selected_item(game);
+            }
             if (auto new_state = handler->callback_(pfrm, game)) {
                 return new_state;
             } else {
@@ -1408,6 +1407,7 @@ void InventoryState::exit(Platform& pfrm, Game& game)
     right_icon_.reset();
     page_text_.reset();
     item_description_.reset();
+    item_description2_.reset();
     label_.reset();
 
     for (int i = 0; i < 6; ++i) {
@@ -1452,6 +1452,13 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
     if (auto handler = inventory_item_handler(item)) {
         item_description_.emplace(pfrm, handler->description_(), text_loc);
         item_description_->append(".");
+
+        if (handler->single_use_) {
+            item_description2_.emplace(
+                pfrm, "(SINGLE USE)", OverlayCoord{text_loc.x, text_loc.y + 2});
+        } else {
+            item_description2_.reset();
+        }
     }
 }
 

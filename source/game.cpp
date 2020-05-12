@@ -419,6 +419,10 @@ RETRY:
             switch (tile) {
             case Tile::plate:
             case Tile::damaged_plate:
+            case Tile::plate_left:
+            case Tile::plate_top:
+            case Tile::plate_right:
+            case Tile::plate_bottom:
                 tile = Tile::plate;
                 break;
 
@@ -654,6 +658,48 @@ COLD void Game::regenerate_map(Platform& pfrm)
         });
     }
 
+    auto is_sand = [&](Tile t) {
+        return t == Tile::sand or t == Tile::sand_sprouted;
+    };
+
+    if (zone_info(level()) == zone_1) {
+        tiles_.for_each([&](Tile& tile, int x, int y) {
+            if (tile == Tile::plate and
+                grass_overlay.get_tile(x, y) == Tile::none) {
+                const auto up = tiles_.get_tile(x, y + 1);
+                const auto down = tiles_.get_tile(x, y - 1);
+                const auto left = tiles_.get_tile(x - 1, y);
+                const auto right = tiles_.get_tile(x + 1, y);
+
+                if (is_sand(tiles_.get_tile(x + 1, y)) and
+                    is_walkable__precise(up) and is_walkable__precise(down) and
+                    not(is_sand(up) and is_sand(down))) {
+
+                    tiles_.set_tile(x, y, Tile::plate_left);
+                }
+                if (is_sand(tiles_.get_tile(x - 1, y)) and
+                    is_walkable__precise(up) and is_walkable__precise(down) and
+                    not(is_sand(up) and is_sand(down))) {
+
+                    tiles_.set_tile(x, y, Tile::plate_right);
+                }
+                if (is_sand(tiles_.get_tile(x, y + 1)) and
+                    is_walkable__precise(right) and
+                    is_walkable__precise(left) and
+                    not(is_sand(left) and is_sand(right))) {
+
+                    tiles_.set_tile(x, y, Tile::plate_top);
+                }
+                if (is_sand(tiles_.get_tile(x, y - 1)) and
+                    is_walkable__precise(right) and
+                    is_walkable__precise(left) and
+                    not(is_sand(left) and is_sand(right))) {
+
+                    tiles_.set_tile(x, y, Tile::plate_bottom);
+                }
+            }
+        });
+    }
 
     grass_overlay.for_each([&](Tile t, s8 x, s8 y) {
         pfrm.set_tile(Layer::map_1, x, y, static_cast<u16>(t));
@@ -662,7 +708,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     tiles_.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::plate) {
-            if (random_choice<7>() == 0) {
+            if (random_choice<4>() == 0) {
                 tile = Tile::damaged_plate;
             }
         } else if (tile == Tile::sand) {
