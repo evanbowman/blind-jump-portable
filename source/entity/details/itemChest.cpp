@@ -8,6 +8,8 @@
 ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item)
     : state_(State::closed), item_(item)
 {
+    position_ = pos;
+
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_position({pos.x, pos.y});
     sprite_.set_origin({8, 16});

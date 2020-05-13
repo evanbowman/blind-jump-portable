@@ -292,6 +292,8 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
+    void center(Platform& pfrm);
+
     std::optional<Text> text_;
     Microseconds timer_ = 0;
 };
@@ -1289,68 +1291,6 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<ActiveState>(true);
     }
 
-    if (pfrm.keyboard().down_transition<Key::left>()) {
-        if (selector_coord_.x > 0) {
-            selector_coord_.x -= 1;
-        } else {
-            if (page_ > 0) {
-                page_ -= 1;
-                selector_coord_.x = 4;
-                if (page_text_) {
-                    page_text_->assign(page_ + 1);
-                }
-                update_arrow_icons(pfrm);
-                display_items(pfrm, game);
-            }
-        }
-        update_item_description(pfrm, game);
-
-    } else if (pfrm.keyboard().down_transition<Key::right>()) {
-        if (selector_coord_.x < 4) {
-            selector_coord_.x += 1;
-        } else {
-            if (page_ < Inventory::pages - 1) {
-                page_ += 1;
-                selector_coord_.x = 0;
-                if (page_text_) {
-                    page_text_->assign(page_ + 1);
-                }
-                update_arrow_icons(pfrm);
-                display_items(pfrm, game);
-            }
-        }
-        update_item_description(pfrm, game);
-
-    } else if (pfrm.keyboard().down_transition<Key::down>()) {
-        if (selector_coord_.y < 1) {
-            selector_coord_.y += 1;
-        }
-        update_item_description(pfrm, game);
-
-    } else if (pfrm.keyboard().down_transition<Key::up>()) {
-        if (selector_coord_.y > 0) {
-            selector_coord_.y -= 1;
-        }
-        update_item_description(pfrm, game);
-
-    } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
-
-        const auto item = game.inventory().get_item(
-            page_, selector_coord_.x, selector_coord_.y);
-
-        if (auto handler = inventory_item_handler(item)) {
-            if (handler->single_use_) {
-                consume_selected_item(game);
-            }
-            if (auto new_state = handler->callback_(pfrm, game)) {
-                return new_state;
-            } else {
-                update_item_description(pfrm, game);
-                display_items(pfrm, game);
-            }
-        }
-    }
-
     selector_timer_ += delta;
 
     constexpr auto fade_duration = milliseconds(400);
@@ -1365,6 +1305,69 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
 
         pfrm.screen().fade(smoothstep(0.f, fade_duration, fade_timer_));
+
+    } else {
+        if (pfrm.keyboard().down_transition<Key::left>()) {
+            if (selector_coord_.x > 0) {
+                selector_coord_.x -= 1;
+            } else {
+                if (page_ > 0) {
+                    page_ -= 1;
+                    selector_coord_.x = 4;
+                    if (page_text_) {
+                        page_text_->assign(page_ + 1);
+                    }
+                    update_arrow_icons(pfrm);
+                    display_items(pfrm, game);
+                }
+            }
+            update_item_description(pfrm, game);
+
+        } else if (pfrm.keyboard().down_transition<Key::right>()) {
+            if (selector_coord_.x < 4) {
+                selector_coord_.x += 1;
+            } else {
+                if (page_ < Inventory::pages - 1) {
+                    page_ += 1;
+                    selector_coord_.x = 0;
+                    if (page_text_) {
+                        page_text_->assign(page_ + 1);
+                    }
+                    update_arrow_icons(pfrm);
+                    display_items(pfrm, game);
+                }
+            }
+            update_item_description(pfrm, game);
+
+        } else if (pfrm.keyboard().down_transition<Key::down>()) {
+            if (selector_coord_.y < 1) {
+                selector_coord_.y += 1;
+            }
+            update_item_description(pfrm, game);
+
+        } else if (pfrm.keyboard().down_transition<Key::up>()) {
+            if (selector_coord_.y > 0) {
+                selector_coord_.y -= 1;
+            }
+            update_item_description(pfrm, game);
+
+        } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
+
+            const auto item = game.inventory().get_item(
+                page_, selector_coord_.x, selector_coord_.y);
+
+            if (auto handler = inventory_item_handler(item)) {
+                if (handler->single_use_) {
+                    consume_selected_item(game);
+                }
+                if (auto new_state = handler->callback_(pfrm, game)) {
+                    return new_state;
+                } else {
+                    update_item_description(pfrm, game);
+                    display_items(pfrm, game);
+                }
+            }
+        }
     }
 
     if (selector_timer_ > milliseconds(75)) {
@@ -1670,12 +1673,34 @@ void MapSystemState::enter(Platform& pfrm, Game& game)
         }
     });
 
-    const auto transporter_tile =
-        to_tile_coord(game.transporter().get_position().cast<s32>());
-    pfrm.set_tile(Layer::overlay, transporter_tile.x, transporter_tile.y, 141);
+    bool enemies_remaining = false;
+
+    auto render_map_icon = [&](Entity& entity, s16 icon)
+                           {
+                               auto t = to_tile_coord(entity.get_position().cast<s32>());
+                               if (is_walkable__fast(game.tiles().get_tile(t.x, t.y))) {
+                                   pfrm.set_tile(Layer::overlay, t.x, t.y, icon);
+                               }
+                           };
+
+    game.enemies().transform([&](auto& buf) {
+                                 for (auto& entity : buf) {
+                                     enemies_remaining = true;
+                                     render_map_icon(*entity, 139);
+                                 }
+                             });
+
+    if (not enemies_remaining) {
+        render_map_icon(game.transporter(), 141);
+        for (auto& chest : game.details().get<ItemChest>()) {
+            if (chest->state() not_eq ItemChest::State::opened) {
+                render_map_icon(*chest, 138);
+            }
+        }
+    }
 
     auto player_tile = to_tile_coord(game.player().get_position().cast<s32>());
-
+    //u32 integer_text_length(int n);
     if (not is_walkable__fast(
             game.tiles().get_tile(player_tile.x, player_tile.y))) {
         // Player movement isn't constrained to tiles exactly, and sometimes the
@@ -1690,8 +1715,16 @@ void MapSystemState::enter(Platform& pfrm, Game& game)
     }
     pfrm.set_tile(Layer::overlay, player_tile.x, player_tile.y, 142);
 
-    level_text_.emplace(pfrm, OverlayCoord{TileMap::width + 1, 1});
-    level_text_->assign("waypoint ");
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    const char* level_str = "waypoint ";
+
+    level_text_.emplace(
+        pfrm,
+        OverlayCoord{u8(screen_tiles.x - (1 + str_len(level_str) +
+                                          integer_text_length(game.level()))),
+                     1});
+    level_text_->assign(level_str);
     level_text_->append(game.level());
 }
 
@@ -1888,6 +1921,16 @@ void NewLevelState::exit(Platform& pfrm, Game& game)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void IntroCreditsState::center(Platform& pfrm)
+{
+    // Because the overlay uses 8x8 tiles, to truely center something, you
+    // sometimes need to translate the whole layer.
+    if (text_ and text_->len() % 2 == 0) {
+        pfrm.set_overlay_origin(-4, 0);
+    }
+}
+
+
 void IntroCreditsState::enter(Platform& pfrm, Game& game)
 {
     static const char* credits = "Evan Bowman presents";
@@ -1900,6 +1943,8 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game)
     pos.y *= 0.35f;
 
     text_.emplace(pfrm, credits, pos);
+
+    center(pfrm);
 
     pfrm.screen().fade(1.f);
 }
@@ -1915,11 +1960,7 @@ void IntroCreditsState::exit(Platform& pfrm, Game& game)
 StatePtr
 IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    // Because the overlay uses 8x8 tiles, to truely center something, you
-    // sometimes need to translate the whole layer.
-    if (text_->len() % 2 == 0) {
-        pfrm.set_overlay_origin(-4, 0);
-    }
+    center(pfrm);
 
     timer_ += delta;
 

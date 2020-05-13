@@ -19,8 +19,14 @@ public:
         return shadow_;
     }
 
-private:
     enum class State { closed, opening, settle, opened };
+
+    State state() const
+    {
+        return state_;
+    }
+
+private:
 
     Animation<TextureMap::item_chest, 6, Microseconds(50000)> animation_;
     Sprite shadow_;
