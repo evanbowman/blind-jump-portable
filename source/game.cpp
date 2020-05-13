@@ -28,10 +28,17 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 
     pfrm.load_overlay_texture("overlay");
 
-    state_->enter(pfrm, *this);
+    // NOTE: Because we're the initial state, unclear what to pass as a previous
+    // state to the enter function, so, paradoxically, the initial state is it's
+    // own parent.
+    state_->enter(pfrm, *this, *state_);
 
     if (not inventory().has_item(Item::Type::blaster)) {
         inventory().push_item(pfrm, *this, Item::Type::blaster);
+    }
+
+    if (not inventory().has_item(Item::Type::map_system)) {
+        inventory().push_item(pfrm, *this, Item::Type::map_system);
     }
 }
 
@@ -55,7 +62,7 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
 
     if (new_state) {
         state_->exit(pfrm, *this, *new_state);
-        new_state->enter(pfrm, *this);
+        new_state->enter(pfrm, *this, *state_);
 
         state_ = std::move(new_state);
     }

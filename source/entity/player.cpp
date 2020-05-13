@@ -13,6 +13,7 @@ const Vec2<s32> v_origin{8, 16};
 const Vec2<s32> h_origin{16, 16};
 static const Player::Health initial_health{3};
 
+
 Player::Player()
     : Entity(initial_health), frame_(0),
       frame_base_(ResourceLoc::player_still_down), anim_timer_(0),

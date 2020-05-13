@@ -1,8 +1,17 @@
 #include "state.hpp"
+#include "bitvector.hpp"
 #include "game.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
 #include "string.hpp"
+
+
+void State::enter(Platform&, Game&, State&)
+{
+}
+void State::exit(Platform&, Game&, State&)
+{
+}
 
 
 constexpr static const char* surveyor_logbook_str =
@@ -14,6 +23,9 @@ constexpr static const char* surveyor_logbook_str =
 
 bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
+
+
+static Bitmatrix<TileMap::width, TileMap::height> visited;
 
 
 class OverworldState : public State {
@@ -48,7 +60,7 @@ public:
     ActiveState(bool camera_tracking) : OverworldState(camera_tracking)
     {
     }
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
@@ -102,7 +114,7 @@ public:
     FadeInState() : OverworldState(false)
     {
     }
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
@@ -159,7 +171,7 @@ private:
 
 class RespawnWaitState : public State {
 public:
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
@@ -183,7 +195,7 @@ public:
     DeathContinueState()
     {
     }
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
@@ -201,7 +213,7 @@ class InventoryState : public State {
 public:
     InventoryState(bool fade_in);
 
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
@@ -241,7 +253,7 @@ public:
     // string! Do not pass in pointers to a local buffer, only static strings!
     NotebookState(const char* text);
 
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -261,7 +273,7 @@ class ImageViewState : public State {
 public:
     ImageViewState(const char* image_name, ColorConstant background_color);
 
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -280,7 +292,7 @@ static const std::array<const char*, 4> legend_strings = {"you",
 
 class MapSystemState : public State {
 public:
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -294,22 +306,41 @@ private:
 
 class IntroCreditsState : public State {
 public:
-    void enter(Platform& pfrm, Game& game) override;
+    IntroCreditsState(const char* str) : str_(str)
+    {
+    }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
+    virtual StatePtr next_state(Platform& pfrm, Game& game);
+
 private:
     void center(Platform& pfrm);
 
+    const char* str_;
     std::optional<Text> text_;
     Microseconds timer_ = 0;
 };
 
 
+class IntroLegalMessage : public IntroCreditsState {
+public:
+    static constexpr const char* msg = "Unlicensed by Nintendo";
+
+    IntroLegalMessage() : IntroCreditsState(msg)
+    {
+    }
+
+    StatePtr next_state(Platform& pfrm, Game& game) override;
+};
+
+
 class EndingCreditsState : public State {
 public:
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -331,7 +362,7 @@ public:
     {
     }
 
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -350,7 +381,7 @@ private:
 // random seed, etc.)
 class CommandCodeState : public State {
 public:
-    void enter(Platform& pfrm, Game& game) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -415,6 +446,7 @@ static StatePool<ActiveState,
                  CommandCodeState,
                  MapSystemState,
                  IntroCreditsState,
+                 IntroLegalMessage,
                  DeathContinueState,
                  RespawnWaitState,
                  EndingCreditsState>
@@ -704,7 +736,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void ActiveState::enter(Platform& pfrm, Game& game)
+void ActiveState::enter(Platform& pfrm, Game& game, State&)
 {
     if (restore_keystates) {
         pfrm.keyboard().restore_state(*restore_keystates);
@@ -739,6 +771,10 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().update(pfrm, game, delta);
+
+    const Vec2<TIdx> tile_coords =
+        to_tile_coord(game.player().get_position().cast<s32>());
+    visited.set(tile_coords.x, tile_coords.y, true);
 
     const auto& player_spr = game.player().get_sprite();
     if (auto amt = player_spr.get_mix().amount_) {
@@ -804,7 +840,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void FadeInState::enter(Platform& pfrm, Game& game)
+void FadeInState::enter(Platform& pfrm, Game& game, State&)
 {
     game.player().set_visible(false);
     game.camera().set_speed(0.75);
@@ -1012,7 +1048,7 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void RespawnWaitState::enter(Platform& pfrm, Game& game)
+void RespawnWaitState::enter(Platform& pfrm, Game& game, State&)
 {
     pfrm.speaker().play_sound("bell", 5);
 }
@@ -1036,7 +1072,7 @@ RespawnWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void DeathContinueState::enter(Platform& pfrm, Game& game)
+void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
 {
     text_.emplace(pfrm, OverlayCoord{11, 4});
     text_->assign("you died");
@@ -1313,8 +1349,10 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
 
         pfrm.screen().fade(smoothstep(0.f, fade_duration, fade_timer_));
+    }
 
-    } else {
+    if (fade_timer_ > fade_duration / 2) {
+
         if (pfrm.keyboard().down_transition<Key::left>()) {
             if (selector_coord_.x > 0) {
                 selector_coord_.x -= 1;
@@ -1358,22 +1396,23 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
                 selector_coord_.y -= 1;
             }
             update_item_description(pfrm, game);
+        }
+    }
 
-        } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
+    if (pfrm.keyboard().down_transition<Key::action_1>()) {
 
-            const auto item = game.inventory().get_item(
-                page_, selector_coord_.x, selector_coord_.y);
+        const auto item = game.inventory().get_item(
+            page_, selector_coord_.x, selector_coord_.y);
 
-            if (auto handler = inventory_item_handler(item)) {
-                if (handler->single_use_) {
-                    consume_selected_item(game);
-                }
-                if (auto new_state = handler->callback_(pfrm, game)) {
-                    return new_state;
-                } else {
-                    update_item_description(pfrm, game);
-                    display_items(pfrm, game);
-                }
+        if (auto handler = inventory_item_handler(item)) {
+            if (handler->single_use_) {
+                consume_selected_item(game);
+            }
+            if (auto new_state = handler->callback_(pfrm, game)) {
+                return new_state;
+            } else {
+                update_item_description(pfrm, game);
+                display_items(pfrm, game);
             }
         }
     }
@@ -1403,7 +1442,7 @@ InventoryState::InventoryState(bool fade_in)
 }
 
 
-void InventoryState::enter(Platform& pfrm, Game& game)
+void InventoryState::enter(Platform& pfrm, Game& game, State&)
 {
     label_.emplace(pfrm, OverlayCoord{23, 1});
 
@@ -1503,13 +1542,12 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 
             const auto item = game.inventory().get_item(page_, i, j);
 
+            const OverlayCoord coord{static_cast<u8>(4 + i * 5),
+                                     static_cast<u8>(4 + j * 5)};
+
             if (item not_eq Item::Type::null) {
                 if (auto handler = inventory_item_handler(item)) {
-                    item_icons_[i][j].emplace(
-                        pfrm,
-                        handler->icon_,
-                        OverlayCoord{static_cast<u8>(4 + i * 5),
-                                     static_cast<u8>(4 + j * 5)});
+                    item_icons_[i][j].emplace(pfrm, handler->icon_, coord);
                 }
             }
         }
@@ -1528,7 +1566,7 @@ NotebookState::NotebookState(const char* text) : str_(text), page_(0)
 }
 
 
-void NotebookState::enter(Platform& pfrm, Game&)
+void NotebookState::enter(Platform& pfrm, Game&, State&)
 {
     pfrm.speaker().play_sound("open_book", 0);
 
@@ -1639,7 +1677,7 @@ StatePtr ImageViewState::update(Platform& pfrm, Game& game, Microseconds delta)
 }
 
 
-void ImageViewState::enter(Platform& pfrm, Game& game)
+void ImageViewState::enter(Platform& pfrm, Game& game, State&)
 {
     pfrm.screen().fade(1.f, background_color_);
     pfrm.load_overlay_texture(image_name_);
@@ -1667,33 +1705,47 @@ void ImageViewState::exit(Platform& pfrm, Game& game, State&)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void MapSystemState::enter(Platform& pfrm, Game& game)
+void MapSystemState::enter(Platform& pfrm, Game& game, State&)
 {
     pfrm.screen().fade(1.f);
 
-    auto set_tile = [&](s8 x, s8 y, int icon) {
-        pfrm.set_tile(Layer::overlay, x + 1, y, icon);
+    auto set_tile = [&](s8 x, s8 y, int icon, bool dodge = true) {
+        const auto tile = pfrm.get_tile(Layer::overlay, x + 1, y);
+        if (dodge and (tile == 133 or tile == 132)) {
+            // ...
+        } else {
+            pfrm.set_tile(Layer::overlay, x + 1, y, icon);
+        }
     };
 
     game.tiles().for_each([&](Tile t, s8 x, s8 y) {
-        if (is_walkable__fast(t)) {
-            set_tile(x, y, 143);
-        } else {
-            set_tile(x, y, 144);
+        bool visited_nearby = false;
+        static const int offset = 3;
+        for (int x2 = std::max(0, x - (offset + 1));
+             x2 < std::min((int)TileMap::width, x + offset + 1);
+             ++x2) {
+            for (int y2 = std::max(0, y - offset);
+                 y2 < std::min((int)TileMap::height, y + offset);
+                 ++y2) {
+                if (visited.get(x2, y2)) {
+                    visited_nearby = true;
+                }
+            }
         }
-    });
-
-    game.tiles().for_each([&](Tile t, s8 x, s8 y) {
-        if (not is_walkable__fast(t)) {
+        if (not visited_nearby) {
+            set_tile(x, y, is_walkable__fast(t) ? 132 : 133, false);
+        } else if (is_walkable__fast(t)) {
+            set_tile(x, y, 143, false);
+        } else {
             if (is_walkable__fast(game.tiles().get_tile(x, y - 1))) {
                 set_tile(x, y, 140);
+            } else {
+                set_tile(x, y, 144, false);
             }
         }
     });
 
-    pfrm.sleep(8);
-
-    bool enemies_remaining = false;
+    pfrm.sleep(2);
 
     auto render_map_icon = [&](Entity& entity, s16 icon) {
         auto t = to_tile_coord(entity.get_position().cast<s32>());
@@ -1704,17 +1756,14 @@ void MapSystemState::enter(Platform& pfrm, Game& game)
 
     game.enemies().transform([&](auto& buf) {
         for (auto& entity : buf) {
-            enemies_remaining = true;
             render_map_icon(*entity, 139);
         }
     });
 
-    if (not enemies_remaining) {
-        render_map_icon(game.transporter(), 141);
-        for (auto& chest : game.details().get<ItemChest>()) {
-            if (chest->state() not_eq ItemChest::State::opened) {
-                render_map_icon(*chest, 138);
-            }
+    render_map_icon(game.transporter(), 141);
+    for (auto& chest : game.details().get<ItemChest>()) {
+        if (chest->state() not_eq ItemChest::State::opened) {
+            render_map_icon(*chest, 138);
         }
     }
 
@@ -1738,7 +1787,7 @@ void MapSystemState::enter(Platform& pfrm, Game& game)
 
     const char* level_str = "waypoint ";
 
-    pfrm.sleep(8);
+    pfrm.sleep(2);
 
     level_text_.emplace(
         pfrm,
@@ -1748,12 +1797,12 @@ void MapSystemState::enter(Platform& pfrm, Game& game)
     level_text_->assign(level_str);
     level_text_->append(game.level());
 
-    pfrm.sleep(8);
+    pfrm.sleep(2);
 
-    set_tile(TileMap::width + 2, 11, 137); // you
-    set_tile(TileMap::width + 2, 13, 135); // enemy
-    set_tile(TileMap::width + 2, 15, 136); // transporter
-    set_tile(TileMap::width + 2, 17, 134); // item
+    set_tile(TileMap::width + 2, 11, 137, false); // you
+    set_tile(TileMap::width + 2, 13, 135, false); // enemy
+    set_tile(TileMap::width + 2, 15, 136, false); // transporter
+    set_tile(TileMap::width + 2, 17, 134, false); // item
 
     legend_border_.emplace(pfrm,
                            OverlayCoord{11, 9},
@@ -1796,8 +1845,10 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void NewLevelState::enter(Platform& pfrm, Game& game)
+void NewLevelState::enter(Platform& pfrm, Game& game, State&)
 {
+    visited.clear();
+
     pfrm.sleep(15);
 
     pfrm.screen().fade(1.f);
@@ -1975,18 +2026,16 @@ void IntroCreditsState::center(Platform& pfrm)
 }
 
 
-void IntroCreditsState::enter(Platform& pfrm, Game& game)
+void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 {
-    static const char* credits = "Evan Bowman presents";
-
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
     // Center horizontally, and place text vertically in top third of screen
-    pos.x -= str_len(credits) + 1;
+    pos.x -= str_len(str_) + 1;
     pos.x /= 2;
     pos.y *= 0.35f;
 
-    text_.emplace(pfrm, credits, pos);
+    text_.emplace(pfrm, str_, pos);
 
     center(pfrm);
 
@@ -2001,6 +2050,28 @@ void IntroCreditsState::exit(Platform& pfrm, Game& game, State&)
 }
 
 
+StatePtr IntroLegalMessage::next_state(Platform& pfrm, Game& game)
+{
+    static const char* credits = "Evan Bowman presents";
+    return state_pool_.create<IntroCreditsState>(credits);
+}
+
+
+StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
+{
+    // backdoor for debugging purposes.
+    if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
+        return state_pool_.create<CommandCodeState>();
+    }
+
+    if (pfrm.keyboard().pressed<Key::start>()) {
+        return state_pool_.create<EndingCreditsState>();
+    }
+
+    return state_pool_.create<NewLevelState>(game.level());
+}
+
+
 StatePtr
 IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
@@ -2010,23 +2081,14 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     const auto skip = pfrm.keyboard().down_transition<Key::action_1>();
 
-    if (timer_ > seconds(2) or skip) {
+    if (timer_ > seconds(2) + milliseconds(500) or skip) {
         text_.reset();
 
         if (not skip) {
             pfrm.sleep(70);
         }
 
-        // backdoor for debugging purposes.
-        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
-            return state_pool_.create<CommandCodeState>();
-        }
-
-        if (pfrm.keyboard().pressed<Key::start>()) {
-            return state_pool_.create<EndingCreditsState>();
-        }
-
-        return state_pool_.create<NewLevelState>(game.level());
+        return next_state(pfrm, game);
 
     } else {
         return null_state();
@@ -2036,7 +2098,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 StatePtr State::initial()
 {
-    return state_pool_.create<IntroCreditsState>();
+    return state_pool_.create<IntroLegalMessage>();
 }
 
 
@@ -2239,7 +2301,7 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
 }
 
 
-void CommandCodeState::enter(Platform& pfrm, Game& game)
+void CommandCodeState::enter(Platform& pfrm, Game& game, State&)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
@@ -2275,7 +2337,7 @@ void CommandCodeState::exit(Platform& pfrm, Game& game, State&)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void EndingCreditsState::enter(Platform& pfrm, Game& game)
+void EndingCreditsState::enter(Platform& pfrm, Game& game, State&)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
