@@ -33,6 +33,10 @@ Game::Game(Platform& pfrm) : state_(State::initial())
     if (not inventory().has_item(Item::Type::blaster)) {
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
+
+    if (not inventory().has_item(Item::Type::map_system)) {
+        inventory().push_item(pfrm, *this, Item::Type::map_system);
+    }
 }
 
 
@@ -54,7 +58,7 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     auto new_state = state_->update(pfrm, *this, delta);
 
     if (new_state) {
-        state_->exit(pfrm, *this);
+        state_->exit(pfrm, *this, *new_state);
         new_state->enter(pfrm, *this);
 
         state_ = std::move(new_state);

@@ -27,7 +27,6 @@ public:
     }
 
 private:
-
     Animation<TextureMap::item_chest, 6, Microseconds(50000)> animation_;
     Sprite shadow_;
     State state_;
