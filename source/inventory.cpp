@@ -1,5 +1,6 @@
 #include "inventory.hpp"
 #include "graphics/overlay.hpp"
+#include "localization.hpp"
 #include "state.hpp"
 #include "string.hpp"
 
@@ -16,8 +17,7 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
                     // Technically, the description for null is Empty, but that
                     // doesn't make sense contextually, so lets use this text
                     // instead.
-                    static const auto nothing = "Nothing";
-                    return nothing;
+                    return locale_string(LocaleString::nothing);
 
                 } else {
                     return item_description(insert);
@@ -28,9 +28,9 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
 
                 NotificationStr str;
 
-                str += "got \"";
+                str += locale_string(LocaleString::got_item_before);
                 str += description;
-                str += "\"";
+                str += locale_string(LocaleString::got_item_after);
 
                 push_notification(pfrm, game, str);
             }
@@ -40,7 +40,7 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
     }
 
     NotificationStr str;
-    str += "Inventory full";
+    str += locale_string(LocaleString::inventory_full);
 
     push_notification(pfrm, game, str);
 }

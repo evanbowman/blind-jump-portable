@@ -23,6 +23,7 @@
 #include "entity/entityGroup.hpp"
 #include "entity/player.hpp"
 #include "function.hpp"
+#include "localization.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"
 
@@ -154,8 +155,8 @@ using BackgroundGenerator = void (*)(Platform&, Game&);
 
 
 struct ZoneInfo {
-    const char* title_line_1;
-    const char* title_line_2;
+    LocaleString title_line_1;
+    LocaleString title_line_2;
     const char* spritesheet_name_;
     const char* tileset0_name_;
     const char* tileset1_name_;

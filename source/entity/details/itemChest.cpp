@@ -61,20 +61,19 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
 
                         NotificationStr str;
 
-                        str += "locked, ";
+                        str += locale_string(LocaleString::locked);
 
                         std::array<char, 40> buffer;
                         to_string(enemies_remaining, buffer.data(), 10);
 
                         str += buffer.data();
-                        str += [&] {
+                        str += locale_string([&] {
                             if (enemies_remaining == 1) {
-                                return " enemy left";
+                                return LocaleString::enemies_remaining_singular;
                             } else {
-                                return " enemies left";
+                                return LocaleString::enemies_remaining_plural;
                             }
-                        }();
-                        ;
+                        }());
 
                         push_notification(pfrm, game, str);
 

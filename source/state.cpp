@@ -2,6 +2,7 @@
 #include "bitvector.hpp"
 #include "game.hpp"
 #include "graphics/overlay.hpp"
+#include "localization.hpp"
 #include "number/random.hpp"
 #include "string.hpp"
 
@@ -12,13 +13,6 @@ void State::enter(Platform&, Game&, State&)
 void State::exit(Platform&, Game&, State&)
 {
 }
-
-
-constexpr static const char* surveyor_logbook_str =
-    "[2.11.2081]  We've been experiencing strange power surges lately on the "
-    "station. The director reassured me that everthing will run smoothly from "
-    "now on. The robots have been acting up ever since the last "
-    "communications blackout though, I'm afraid next time they'll go mad...";
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -284,10 +278,11 @@ private:
 };
 
 
-static const std::array<const char*, 4> legend_strings = {"you",
-                                                          "enemy",
-                                                          "exit",
-                                                          "item"};
+static const std::array<LocaleString, 4> legend_strings = {
+    LocaleString::map_legend_1,
+    LocaleString::map_legend_2,
+    LocaleString::map_legend_3,
+    LocaleString::map_legend_4};
 
 
 class MapSystemState : public State {
@@ -328,9 +323,8 @@ private:
 
 class IntroLegalMessage : public IntroCreditsState {
 public:
-    static constexpr const char* msg = "Unlicensed by Nintendo";
-
-    IntroLegalMessage() : IntroCreditsState(msg)
+    IntroLegalMessage()
+        : IntroCreditsState(locale_string(LocaleString::intro_text_1))
     {
     }
 
@@ -577,7 +571,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (not enemies_remaining and enemies_destroyed) {
 
         NotificationStr str;
-        str += "level clear";
+        str += locale_string(LocaleString::level_clear);
 
         push_notification(pfrm, game, str);
     }
@@ -1075,7 +1069,7 @@ RespawnWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
 {
     text_.emplace(pfrm, OverlayCoord{11, 4});
-    text_->assign("you died");
+    text_->assign(locale_string(LocaleString::you_died));
 
     game.player().set_visible(false);
 
@@ -1142,9 +1136,14 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                         target.append(num);
                     };
 
-                print_metric(*score_, "score ", game.score());
-                print_metric(*highscore_, "high score ", game.highscores()[0]);
-                print_metric(*level_, "waypoints ", game.level());
+                print_metric(
+                    *score_, locale_string(LocaleString::score), game.score());
+                print_metric(*highscore_,
+                             locale_string(LocaleString::high_score),
+                             game.highscores()[0]);
+                print_metric(*level_,
+                             locale_string(LocaleString::waypoints),
+                             game.level());
             }
         }
 
@@ -1197,7 +1196,7 @@ struct InventoryItemHandler {
     Item::Type type_;
     int icon_;
     StatePtr (*callback_)(Platform& pfrm, Game& game);
-    const char* (*description_)();
+    LocaleString description_;
     bool single_use_ = false;
 };
 
@@ -1231,69 +1230,46 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::null,
      0,
      [](Platform&, Game&) { return null_state(); },
-     [] {
-         static const auto str = "Empty";
-         return str;
-     }},
+     LocaleString::empty_inventory_str},
     {STANDARD_ITEM_HANDLER(old_poster_1),
      [](Platform&, Game&) {
          static const auto str = "old_poster_flattened";
          return state_pool_.create<ImageViewState>(str,
                                                    ColorConstant::steel_blue);
      },
-     [] {
-         static const auto str = "Old poster (1)";
-         return str;
-     }},
+     LocaleString::old_poster_title},
     {STANDARD_ITEM_HANDLER(surveyor_logbook),
      [](Platform&, Game&) {
-         return state_pool_.create<NotebookState>(surveyor_logbook_str);
+         return state_pool_.create<NotebookState>(
+             locale_string(LocaleString::logbook_str_1));
      },
-     [] {
-         static const auto str = "Surveyor's logbook";
-         return str;
-     }},
+     LocaleString::surveyor_logbook_title},
     {STANDARD_ITEM_HANDLER(blaster),
      [](Platform&, Game&) { return null_state(); },
-     [] {
-         static const auto str = "Blaster";
-         return str;
-     }},
+     LocaleString::blaster_title},
     {STANDARD_ITEM_HANDLER(accelerator),
      [](Platform&, Game& game) {
          game.player().weapon().accelerate(3, milliseconds(150));
          return null_state();
      },
-     [] {
-         static const auto str = "Accelerator (60 shots)";
-         return str;
-     },
+     LocaleString::accelerator_title,
      true},
     {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform&, Game& game) {
          enemy_lethargy_timer = seconds(18);
          return null_state();
      },
-     [] {
-         static const auto str = "Lethargy (18 sec)";
-         return str;
-     },
+     LocaleString::lethargy_title,
      true},
     {STANDARD_ITEM_HANDLER(map_system),
      [](Platform&, Game&) { return state_pool_.create<MapSystemState>(); },
-     [] {
-         static const auto str = "Map system";
-         return str;
-     }},
+     LocaleString::map_system_title},
     {STANDARD_ITEM_HANDLER(explosive_rounds_2),
      [](Platform&, Game& game) {
          game.player().weapon().add_explosive_rounds(2);
          return null_state();
      },
-     [] {
-         static const auto str = "Explosive rounds (2)";
-         return str;
-     },
+     LocaleString::explosive_rounds_title,
      true},
     {STANDARD_ITEM_HANDLER(seed_packet),
      [](Platform&, Game&) {
@@ -1301,10 +1277,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool_.create<ImageViewState>(str,
                                                    ColorConstant::steel_blue);
      },
-     [] {
-         static const auto str = "Seed packet";
-         return str;
-     }}};
+     LocaleString::seed_packet_title}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)
@@ -1321,7 +1294,7 @@ static const InventoryItemHandler* inventory_item_handler(Item::Type type)
 const char* item_description(Item::Type type)
 {
     if (auto handler = inventory_item_handler(type)) {
-        return handler->description_();
+        return locale_string(handler->description_);
 
     } else {
         return nullptr;
@@ -1508,12 +1481,15 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
     constexpr static const OverlayCoord text_loc{3, 15};
 
     if (auto handler = inventory_item_handler(item)) {
-        item_description_.emplace(pfrm, handler->description_(), text_loc);
+        item_description_.emplace(
+            pfrm, locale_string(handler->description_), text_loc);
         item_description_->append(".");
 
         if (handler->single_use_) {
             item_description2_.emplace(
-                pfrm, "(SINGLE USE)", OverlayCoord{text_loc.x, text_loc.y + 2});
+                pfrm,
+                locale_string(LocaleString::single_use_warning),
+                OverlayCoord{text_loc.x, text_loc.y + 2});
         } else {
             item_description2_.reset();
         }
@@ -1535,7 +1511,7 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 {
     clear_items();
 
-    label_->assign("items");
+    label_->assign(locale_string(LocaleString::items));
 
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 2; ++j) {
@@ -1785,7 +1761,7 @@ void MapSystemState::enter(Platform& pfrm, Game& game, State&)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    const char* level_str = "waypoint ";
+    const char* level_str = locale_string(LocaleString::waypoint_text);
 
     pfrm.sleep(2);
 
@@ -1812,8 +1788,9 @@ void MapSystemState::enter(Platform& pfrm, Game& game, State&)
 
     for (size_t i = 0; i < legend_strings.size(); ++i) {
         const u8 y = 11 + (i * 2);
-        legend_text_[i].emplace(
-            pfrm, legend_strings[i], OverlayCoord{TileMap::width + 5, y});
+        legend_text_[i].emplace(pfrm,
+                                locale_string(legend_strings[i]),
+                                OverlayCoord{TileMap::width + 5, y});
     }
 }
 
@@ -1866,25 +1843,23 @@ void NewLevelState::enter(Platform& pfrm, Game& game, State&)
 
         text_[1].emplace(pfrm, pos_);
 
-        if (zone.title_line_1) {
-            const auto margin =
-                centered_text_margins(pfrm, str_len(zone.title_line_1));
-            left_text_margin(*text_[0], std::max(0, int{margin} - 1));
+        const auto l1str = locale_string(zone.title_line_1);
+        const auto margin = centered_text_margins(pfrm, str_len(l1str));
+        left_text_margin(*text_[0], std::max(0, int{margin} - 1));
 
-            text_[0]->append(zone.title_line_1);
-        }
+        text_[0]->append(l1str);
 
-        const auto margin2 =
-            centered_text_margins(pfrm, str_len(zone.title_line_2));
+        const auto l2str = locale_string(zone.title_line_2);
+        const auto margin2 = centered_text_margins(pfrm, str_len(l2str));
         left_text_margin(*text_[1], std::max(0, int{margin2} - 1));
 
-        text_[1]->append(zone.title_line_2);
+        text_[1]->append(l2str);
 
         pfrm.sleep(5);
 
     } else {
         text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
-        text_[0]->append("waypoint ");
+        text_[0]->append(locale_string(LocaleString::waypoint_text));
         text_[0]->append(next_level_);
         pfrm.sleep(60);
     }
@@ -1915,7 +1890,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         timer_ += delta;
 
-        const auto max_j = (int)str_len(zone.title_line_2) / 2 + 1;
+        const auto max_j =
+            (int)str_len(locale_string(zone.title_line_2)) / 2 + 1;
         const auto max_i = max_j * 8;
 
         const int i = ease_out(timer_, 0, max_i, seconds(1));
@@ -1928,7 +1904,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 while (true) {
 
-                    const int y_off = zone.title_line_1 ? 3 : 1;
+                    const int y_off = 3;
 
                     pfrm.set_tile(
                         Layer::overlay, center - j, pos_.y - y_off, 93 + i);
@@ -2052,8 +2028,8 @@ void IntroCreditsState::exit(Platform& pfrm, Game& game, State&)
 
 StatePtr IntroLegalMessage::next_state(Platform& pfrm, Game& game)
 {
-    static const char* credits = "Evan Bowman presents";
-    return state_pool_.create<IntroCreditsState>(credits);
+    return state_pool_.create<IntroCreditsState>(
+        locale_string(LocaleString::intro_text_2));
 }
 
 
@@ -2359,6 +2335,7 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
 
 // FIXME: we could be using smarter formatting here... right now, all this stuff
 // is sort of algined for the gameboy advance screen...
+// FIXME: localize the credits?
 static const std::array<const char*, 30> credits_lines = {
     "Artwork and Animation",
     "Evan Bowman",

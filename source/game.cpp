@@ -279,8 +279,8 @@ static void draw_starfield(Platform& pfrm)
 }
 
 
-static constexpr const ZoneInfo zone_1{"part I:",
-                                       "outer station ruins",
+static constexpr const ZoneInfo zone_1{LocaleString::part_1_text,
+                                       LocaleString::part_1_title,
                                        "spritesheet",
                                        "tilesheet",
                                        "tilesheet_top",
@@ -299,8 +299,8 @@ static constexpr const ZoneInfo zone_1{"part I:",
                                        }};
 
 
-static constexpr const ZoneInfo zone_2{"part II:",
-                                       "the descent",
+static constexpr const ZoneInfo zone_2{LocaleString::part_2_text,
+                                       LocaleString::part_2_title,
                                        "spritesheet2",
                                        "tilesheet2",
                                        "tilesheet2_top",
@@ -319,8 +319,8 @@ static constexpr const ZoneInfo zone_2{"part II:",
                                        }};
 
 
-static constexpr const ZoneInfo zone_3{"part III:",
-                                       "by moonlight",
+static constexpr const ZoneInfo zone_3{LocaleString::part_3_text,
+                                       LocaleString::part_3_title,
                                        "spritesheet3",
                                        "tilesheet3",
                                        "tilesheet3_top",
@@ -342,8 +342,8 @@ static constexpr const ZoneInfo zone_3{"part III:",
 const ZoneInfo& zone_info(Level level)
 {
     if (UNLIKELY(level > boss_2_level)) {
-        static const ZoneInfo null_zone{"NULL",
-                                        "",
+        static const ZoneInfo null_zone{LocaleString::count,
+                                        LocaleString::count,
                                         "",
                                         "",
                                         "",
@@ -371,7 +371,7 @@ const ZoneInfo& current_zone(Game& game)
 
 bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
 {
-    return strcmp(lhs.title_line_2, rhs.title_line_2) == 0;
+    return lhs.title_line_2 == rhs.title_line_2;
 }
 
 
