@@ -33,10 +33,6 @@ Game::Game(Platform& pfrm) : state_(State::initial())
     if (not inventory().has_item(Item::Type::blaster)) {
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
-
-    if (not inventory().has_item(Item::Type::map_system)) {
-        inventory().push_item(pfrm, *this, Item::Type::map_system);
-    }
 }
 
 
