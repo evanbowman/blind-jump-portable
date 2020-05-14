@@ -978,9 +978,10 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
         Level next_level = game.level() + 1;
 
         // backdoor for debugging purposes.
-        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
-            return state_pool_.create<CommandCodeState>();
-        }
+        // if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2,
+        //     Key::start>()) {
+        //     return state_pool_.create<CommandCodeState>();
+        // }
 
         // For now, to determine whether the game's complete, scan through a
         // bunch of levels. If there are no more bosses remaining, the game is
@@ -1512,7 +1513,8 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     const char* label_str = locale_string(LocaleString::items);
-    label_.emplace(pfrm, OverlayCoord{u8(screen_tiles.x - (str_len(label_str) + 1)), 1});
+    label_.emplace(
+        pfrm, OverlayCoord{u8(screen_tiles.x - (str_len(label_str) + 1)), 1});
     label_->assign(label_str);
 
     for (int i = 0; i < 5; ++i) {
@@ -1657,6 +1659,8 @@ StatePtr ImageViewState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void ImageViewState::enter(Platform& pfrm, Game& game, State&)
 {
+    pfrm.enable_glyph_mode(false);
+
     pfrm.screen().fade(1.f, background_color_);
     pfrm.load_overlay_texture(image_name_);
 
@@ -1674,6 +1678,8 @@ void ImageViewState::exit(Platform& pfrm, Game& game, State&)
     pfrm.fill_overlay(0);
 
     pfrm.screen().fade(1.f);
+
+    pfrm.enable_glyph_mode(true);
     pfrm.load_overlay_texture("overlay");
 }
 
@@ -2006,6 +2012,8 @@ void IntroCreditsState::center(Platform& pfrm)
 
 void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 {
+    pfrm.enable_glyph_mode(true);
+
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
     // Center horizontally, and place text vertically in top third of screen
@@ -2038,9 +2046,9 @@ StatePtr IntroLegalMessage::next_state(Platform& pfrm, Game& game)
 StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
 {
     // backdoor for debugging purposes.
-    if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
-        return state_pool_.create<CommandCodeState>();
-    }
+    // if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
+    //     return state_pool_.create<CommandCodeState>();
+    // }
 
     if (pfrm.keyboard().pressed<Key::start>()) {
         return state_pool_.create<EndingCreditsState>();

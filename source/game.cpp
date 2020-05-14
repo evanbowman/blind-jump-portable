@@ -40,6 +40,10 @@ Game::Game(Platform& pfrm) : state_(State::initial())
     if (not inventory().has_item(Item::Type::map_system)) {
         inventory().push_item(pfrm, *this, Item::Type::map_system);
     }
+
+    if (not inventory().has_item(Item::Type::surveyor_logbook)) {
+        inventory().push_item(pfrm, *this, Item::Type::surveyor_logbook);
+    }
 }
 
 

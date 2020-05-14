@@ -25,6 +25,9 @@ inline u32 str_len(const char* str)
 }
 
 
+
+
+
 inline void str_reverse(char str[], int length)
 {
     int start = 0;

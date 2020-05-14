@@ -76,6 +76,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/september.s
     ${SOURCE_DIR}/platform/clair_de_lune.s
     ${SOURCE_DIR}/graphics/overlay.s
+    ${SOURCE_DIR}/graphics/ascii.s
     ${SOURCE_DIR}/graphics/tilesheet.s
     ${SOURCE_DIR}/graphics/tilesheet2.s
     ${SOURCE_DIR}/graphics/tilesheet3.s

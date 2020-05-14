@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "function.hpp"
 #include "graphics/sprite.hpp"
 #include "graphics/view.hpp"
 #include "memory/buffer.hpp"
@@ -9,6 +10,16 @@
 #include "sound.hpp"
 #include <array>
 #include <optional>
+
+
+namespace utf8 {
+
+using Codepoint = u32;
+
+}
+
+
+using TileDesc = u16;
 
 
 // Anything platform specific should be defined here.
@@ -97,18 +108,37 @@ public:
     [[noreturn]] void fatal();
 
 
+    struct TextureMapping {
+        const char* texture_name_;
+        u16 offset_;
+    };
+
+    // Supplied with a unicode codepoint, this function should provide an offset
+    // into a texture image from which to load a glyph image.
+    using TextureCpMapper =
+        Function<16, TextureMapping(const utf8::Codepoint&)>;
+
+    // Map a glyph into the vram space reserved for the overlay tile layer.
+    std::optional<TileDesc> map_glyph(const utf8::Codepoint& glyph,
+                                      TextureCpMapper);
+
+    // In glyph mode, the platform will automatically unmap glyphs when their
+    // tiles are overwritten by set_tile.
+    void enable_glyph_mode(bool enabled);
+
+
     // NOTE: For the overlay and background, the tile layers consist of 32x32
     // tiles, where each tiles is 8x8 pixels. The overlay and the background
     // wrap when scrolled. Map tiles, on the other hand, are 32x24 pixels, and
     // the whole map consists of 64x64 8x8 pixel tiles.
-    void set_tile(Layer layer, u16 x, u16 y, u16 val);
+    void set_tile(Layer layer, u16 x, u16 y, TileDesc val);
 
     // This function is not necessarily implemented efficiently, may in fact be
     // very slow.
-    u16 get_tile(Layer layer, u16 x, u16 y);
+    TileDesc get_tile(Layer layer, u16 x, u16 y);
 
 
-    void fill_overlay(u16 tile);
+    void fill_overlay(u16 TileDesc);
 
     void set_overlay_origin(s16 x, s16 y);
 
@@ -412,7 +442,7 @@ private:
 
 // Helper function for drawing background tiles larger than the default size (8x8 pixels)
 inline void draw_background_image(Platform& pfrm,
-                                  u16 start_tile,
+                                  TileDesc start_tile,
                                   u16 start_x,
                                   u16 start_y,
                                   u16 width,

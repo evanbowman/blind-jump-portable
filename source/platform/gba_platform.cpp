@@ -732,6 +732,7 @@ static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),
 
 
 static const TextureData overlay_textures[] = {
+    TEXTURE_INFO(ascii),
     TEXTURE_INFO(overlay),
     TEXTURE_INFO(overlay_journal),
     TEXTURE_INFO(old_poster_flattened),
@@ -875,40 +876,6 @@ COLD static void set_map_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
 }
 
 
-void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
-{
-    switch (layer) {
-    case Layer::overlay:
-        if (x > 31 or y > 31) {
-            return;
-        }
-        MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(1);
-        break;
-
-    case Layer::map_1:
-        if (x > 15 or y > 19) {
-            return;
-        }
-        set_map_tile(sbb_t1_tiles, x, y, val, 2);
-        break;
-
-    case Layer::map_0:
-        if (x > 15 or y > 19) {
-            return;
-        }
-        set_map_tile(sbb_t0_tiles, x, y, val, 0);
-        break;
-
-    case Layer::background:
-        if (x > 31 or y > 32) {
-            return;
-        }
-        MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32] = val;
-        break;
-    }
-}
-
-
 u16 Platform::get_tile(Layer layer, u16 x, u16 y)
 {
     switch (layer) {
@@ -938,14 +905,6 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
 void Platform::fatal()
 {
     SoftReset(ROM_RESTART), __builtin_unreachable();
-}
-
-
-void Platform::fill_overlay(u16 tile)
-{
-    for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u16); ++i) {
-        MEM_SCREENBLOCKS[sbb_overlay_tiles][i] = tile | SE_PALBANK(1);
-    }
 }
 
 
@@ -1983,6 +1942,197 @@ Platform::Platform()
 
     REG_TM0CNT_H = 0x00C3;
     REG_TM1CNT_H = 0x00C3;
+}
+
+
+struct GlyphMapping {
+    utf8::Codepoint character_;
+
+    // -1 represents unassigned. Mapping a tile into memory sets the reference
+    //  count to zero. When a call to Platform::set_tile reduces the reference
+    //  count back to zero, the tile is once again considered to be unassigned,
+    //  and will be set to -1.
+    s16 reference_count_ = -1;
+
+    bool valid() const
+    {
+        return reference_count_ != -1;
+    }
+};
+
+
+static constexpr const auto glyph_start_offset = 1;
+static constexpr const auto glyph_mapping_count = 72;
+static GlyphMapping glyph_mapping_table[glyph_mapping_count];
+
+
+static bool glyph_mode = false;
+
+
+void Platform::enable_glyph_mode(bool enabled)
+{
+    if (enabled) {
+        for (auto& gm : glyph_mapping_table) {
+            gm.reference_count_ = -1;
+        }
+    }
+    glyph_mode = enabled;
+}
+
+
+// This code uses a lot of naive algorithms for searching the glyph mapping
+// table, potentially could be sped up, but we don't want to use any extra
+// memory, we've only got 256K to work with, and the table is big enough as it
+// is.
+std::optional<TileDesc> Platform::map_glyph(const utf8::Codepoint& glyph,
+                                            TextureCpMapper mapper)
+{
+    if (not glyph_mode) {
+        return {};
+    }
+
+    for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
+        auto& gm = glyph_mapping_table[tile];
+        if (gm.valid() and gm.character_ == glyph) {
+            return glyph_start_offset + tile;
+        }
+    }
+
+    const auto mapping_info = mapper(glyph);
+
+    for (auto& info : overlay_textures) {
+        if (strcmp(mapping_info.texture_name_, info.name_) == 0) {
+            for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
+                auto& gm = glyph_mapping_table[t];
+                if (not gm.valid()) {
+                    gm.character_ = glyph;
+                    gm.reference_count_ = 0;
+
+                    // 8 x 8 x (4 bitsperpixel / 8 bitsperbyte)
+                    static const int tile_size = 32;
+
+                    // FIXME: Why do these magic constants work? I wish better
+                    // documentation existed for how the gba tile memory worked.
+                    // I thought, that the tile size would be 32, because we
+                    // have 4 bits per pixel, and 8x8 pixel tiles. But the
+                    // actual number of bytes in a tile seems to be half of the
+                    // expected number. Also, in vram, it seems like the tiles
+                    // do seem to be 32 bytes apart after all...
+                    memcpy16((u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
+                                 ((t + glyph_start_offset) * tile_size),
+                             info.tile_data_ +
+                                 (mapping_info.offset_ * tile_size) /
+                                     sizeof(decltype(info.tile_data_)),
+                             tile_size / 2);
+
+                    return t + glyph_start_offset;
+                }
+            }
+        }
+    }
+    return {};
+}
+
+
+bool is_glyph(u16 t)
+{
+    return t >= glyph_start_offset and
+        t - glyph_start_offset < glyph_mapping_count;
+}
+
+
+void Platform::fill_overlay(u16 tile)
+{
+    if (glyph_mode and is_glyph(tile)) {
+        // This is moderately complicated to implement, better off just not
+        // allowing fills for character tiles.
+        return;
+    }
+
+    for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u16); ++i) {
+        MEM_SCREENBLOCKS[sbb_overlay_tiles][i] = tile | SE_PALBANK(1);
+    }
+
+    if (glyph_mode) {
+        for (auto& gm : glyph_mapping_table) {
+            gm.reference_count_ = -1;
+        }
+    }
+}
+
+
+void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
+{
+    switch (layer) {
+    case Layer::overlay:
+        if (x > 31 or y > 31) {
+            return;
+        }
+        if (glyph_mode) {
+            // This is where we handle the reference count for mapped glyphs. If
+            // we are overwriting a glyph with different tile, then we can
+            // decrement a glyph's reference count. Then, we want to increment
+            // the incoming glyph's reference count if the incoming tile is
+            // within the range of the glyph table.
+
+            auto is_glyph = [](u16 t) {
+                return t >= glyph_start_offset and
+                       t - glyph_start_offset < glyph_mapping_count;
+            };
+
+            const auto old_tile = get_tile(layer, x, y);
+            if (old_tile not_eq val) {
+                if (is_glyph(old_tile)) {
+                    auto& gm =
+                        glyph_mapping_table[old_tile - glyph_start_offset];
+                    if (gm.valid()) {
+                        gm.reference_count_ -= 1;
+
+                        if (gm.reference_count_ == 0) {
+                            gm.reference_count_ = -1;
+                            gm.character_ = 0;
+                        }
+                    }
+                }
+
+                if (is_glyph(val)) {
+                    auto& gm = glyph_mapping_table[val - glyph_start_offset];
+                    if (not gm.valid()) {
+                        // Not clear exactly what to do here... Somehow we've
+                        // gotten into an erroneous state, but not a permanently
+                        // unrecoverable state (tile isn't valid, so it'll be
+                        // overwritten upon the next call to map_tile).
+                        return;
+                    }
+                    gm.reference_count_++;
+                }
+            }
+        }
+
+        MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(1);
+        break;
+
+    case Layer::map_1:
+        if (x > 15 or y > 19) {
+            return;
+        }
+        set_map_tile(sbb_t1_tiles, x, y, val, 2);
+        break;
+
+    case Layer::map_0:
+        if (x > 15 or y > 19) {
+            return;
+        }
+        set_map_tile(sbb_t0_tiles, x, y, val, 0);
+        break;
+
+    case Layer::background:
+        if (x > 31 or y > 32) {
+            return;
+        }
+        MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32] = val;
+        break;
+    }
 }
 
 

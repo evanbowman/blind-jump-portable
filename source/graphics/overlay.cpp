@@ -57,38 +57,169 @@ void Text::assign(int val)
 }
 
 
+auto english_us_texture_map(const utf8::Codepoint& cp)
+{
+    return Platform::TextureMapping{"ascii", [&]() -> u16 {
+                                        switch (cp) {
+                                        case '0':
+                                            return 1;
+                                        case '1':
+                                            return 2;
+                                        case '2':
+                                            return 3;
+                                        case '3':
+                                            return 4;
+                                        case '4':
+                                            return 5;
+                                        case '5':
+                                            return 6;
+                                        case '6':
+                                            return 7;
+                                        case '7':
+                                            return 8;
+                                        case '8':
+                                            return 9;
+                                        case '9':
+                                            return 10;
+                                        case 'a':
+                                            return 11;
+                                        case 'b':
+                                            return 12;
+                                        case 'c':
+                                            return 13;
+                                        case 'd':
+                                            return 14;
+                                        case 'e':
+                                            return 15;
+                                        case 'f':
+                                            return 16;
+                                        case 'g':
+                                            return 17;
+                                        case 'h':
+                                            return 18;
+                                        case 'i':
+                                            return 19;
+                                        case 'j':
+                                            return 20;
+                                        case 'k':
+                                            return 21;
+                                        case 'l':
+                                            return 22;
+                                        case 'm':
+                                            return 23;
+                                        case 'n':
+                                            return 24;
+                                        case 'o':
+                                            return 25;
+                                        case 'p':
+                                            return 26;
+                                        case 'q':
+                                            return 27;
+                                        case 'r':
+                                            return 28;
+                                        case 's':
+                                            return 29;
+                                        case 't':
+                                            return 30;
+                                        case 'u':
+                                            return 31;
+                                        case 'v':
+                                            return 32;
+                                        case 'w':
+                                            return 33;
+                                        case 'x':
+                                            return 34;
+                                        case 'y':
+                                            return 35;
+                                        case 'z':
+                                            return 36;
+                                        case '.':
+                                            return 37;
+                                        case ',':
+                                            return 38;
+                                        case 'A':
+                                            return 39;
+                                        case 'B':
+                                            return 40;
+                                        case 'C':
+                                            return 41;
+                                        case 'D':
+                                            return 42;
+                                        case 'E':
+                                            return 43;
+                                        case 'F':
+                                            return 44;
+                                        case 'G':
+                                            return 45;
+                                        case 'H':
+                                            return 46;
+                                        case 'I':
+                                            return 47;
+                                        case 'J':
+                                            return 48;
+                                        case 'K':
+                                            return 49;
+                                        case 'L':
+                                            return 50;
+                                        case 'M':
+                                            return 51;
+                                        case 'N':
+                                            return 52;
+                                        case 'O':
+                                            return 53;
+                                        case 'P':
+                                            return 54;
+                                        case 'Q':
+                                            return 55;
+                                        case 'R':
+                                            return 56;
+                                        case 'S':
+                                            return 57;
+                                        case 'T':
+                                            return 58;
+                                        case 'U':
+                                            return 59;
+                                        case 'V':
+                                            return 60;
+                                        case 'W':
+                                            return 61;
+                                        case 'X':
+                                            return 62;
+                                        case 'Y':
+                                            return 63;
+                                        case 'Z':
+                                            return 64;
+                                        case '"':
+                                            return 65;
+                                        case '\'':
+                                            return 66;
+                                        case '[':
+                                            return 67;
+                                        case ']':
+                                            return 68;
+                                        case '(':
+                                            return 69;
+                                        case ')':
+                                            return 70;
+                                        case ':':
+                                            return 71;
+                                        case ' ':
+                                            return 72;
+                                        default:
+                                            return 0;
+                                        }
+                                    }()};
+}
+
+
 static void print_char(Platform& pfrm, char c, const OverlayCoord& coord)
 {
-    if (c > 47 and c < 58) { // Number
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 48) + 1);
-    } else if (c > 96 and c < 97 + 27) {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 97) + 11);
-    } else if (c == ',') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 38);
-    } else if (c == '.') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 37);
-    } else if (c == '\'') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 1);
-    } else if (c == '[') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 2);
-    } else if (c == ']') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 3);
-    } else if (c == '(') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 4);
-    } else if (c == ')') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 5);
-    } else if (c == ':') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 6);
-    } else if (c == '"') {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26);
-    } else if (c > 127) {
-        // special extended ascii glyphs:
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 128) + 111);
-    } else if (c > 64 and c < 65 + 27) {
-        // FIXME: add uppercase letters
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 65) + 39);
+    if (c not_eq 0) {
+        const auto t = pfrm.map_glyph(c, english_us_texture_map);
+
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, t ? *t : 0);
     } else {
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 7);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 0);
     }
 }
 

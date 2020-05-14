@@ -83,6 +83,7 @@ for name in ['spritesheet.png',
              'tilesheet2_top.png',
              'tilesheet3_top.png',
              'overlay.png',
+             'ascii.png',
              'overlay_journal.png',
              'old_poster_flattened.png',
              'seed_packet_flattened.png']:
