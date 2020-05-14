@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <iostream>
 
 
 // A fixed-space version of std::function, does not allocate.
