@@ -8,15 +8,9 @@
 #include "number/numeric.hpp"
 #include "save.hpp"
 #include "sound.hpp"
+#include "unicode.hpp"
 #include <array>
 #include <optional>
-
-
-namespace utf8 {
-
-using Codepoint = u32;
-
-}
 
 
 using TileDesc = u16;
@@ -116,11 +110,10 @@ public:
     // Supplied with a unicode codepoint, this function should provide an offset
     // into a texture image from which to load a glyph image.
     using TextureCpMapper =
-        Function<16, TextureMapping(const utf8::Codepoint&)>;
+        std::optional<TextureMapping> (*)(const utf8::Codepoint&);
 
     // Map a glyph into the vram space reserved for the overlay tile layer.
-    std::optional<TileDesc> map_glyph(const utf8::Codepoint& glyph,
-                                      TextureCpMapper);
+    TileDesc map_glyph(const utf8::Codepoint& glyph, TextureCpMapper);
 
     // In glyph mode, the platform will automatically unmap glyphs when their
     // tiles are overwritten by set_tile.

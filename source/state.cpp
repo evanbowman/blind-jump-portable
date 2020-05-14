@@ -1129,7 +1129,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                         const auto iters =
                             screen_tiles.x -
-                            (str_len(str) + 2 + integer_text_length(num));
+                            (utf8::len(str) + 2 + integer_text_length(num));
                         for (u32 i = 0; i < iters; ++i) {
                             target.append(".");
                         }
@@ -1514,7 +1514,7 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 
     const char* label_str = locale_string(LocaleString::items);
     label_.emplace(
-        pfrm, OverlayCoord{u8(screen_tiles.x - (str_len(label_str) + 1)), 1});
+        pfrm, OverlayCoord{u8(screen_tiles.x - (utf8::len(label_str) + 1)), 1});
     label_->assign(label_str);
 
     for (int i = 0; i < 5; ++i) {
@@ -1618,7 +1618,7 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (pfrm.keyboard().down_transition<Key::down>()) {
-        if (text_->parsed() not_eq str_len(str_)) {
+        if (text_->parsed() not_eq utf8::len(str_)) {
             page_ += 1;
             repaint_page(pfrm);
             pfrm.speaker().play_sound("open_book", 0);
@@ -1775,7 +1775,7 @@ void MapSystemState::enter(Platform& pfrm, Game& game, State&)
 
     level_text_.emplace(
         pfrm,
-        OverlayCoord{u8(screen_tiles.x - (1 + str_len(level_str) +
+        OverlayCoord{u8(screen_tiles.x - (1 + utf8::len(level_str) +
                                           integer_text_length(game.level()))),
                      1});
     level_text_->assign(level_str);
@@ -1852,13 +1852,13 @@ void NewLevelState::enter(Platform& pfrm, Game& game, State&)
         text_[1].emplace(pfrm, pos_);
 
         const auto l1str = locale_string(zone.title_line_1);
-        const auto margin = centered_text_margins(pfrm, str_len(l1str));
+        const auto margin = centered_text_margins(pfrm, utf8::len(l1str));
         left_text_margin(*text_[0], std::max(0, int{margin} - 1));
 
         text_[0]->append(l1str);
 
         const auto l2str = locale_string(zone.title_line_2);
-        const auto margin2 = centered_text_margins(pfrm, str_len(l2str));
+        const auto margin2 = centered_text_margins(pfrm, utf8::len(l2str));
         left_text_margin(*text_[1], std::max(0, int{margin2} - 1));
 
         text_[1]->append(l2str);
@@ -1899,7 +1899,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
         timer_ += delta;
 
         const auto max_j =
-            (int)str_len(locale_string(zone.title_line_2)) / 2 + 1;
+            (int)utf8::len(locale_string(zone.title_line_2)) / 2 + 1;
         const auto max_i = max_j * 8;
 
         const int i = ease_out(timer_, 0, max_i, seconds(1));
@@ -2017,7 +2017,7 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
     // Center horizontally, and place text vertically in top third of screen
-    pos.x -= str_len(str_) + 1;
+    pos.x -= utf8::len(str_) + 1;
     pos.x /= 2;
     pos.y *= 0.35f;
 

@@ -22,6 +22,8 @@ Game::Game(Platform& pfrm) : state_(State::initial())
         info(pfrm, "no save file found");
     }
 
+    locale_set_language(LocaleLanguage::english);
+
     player_.set_health(persistent_data_.player_health_);
 
     random_seed() = persistent_data_.seed_;
@@ -39,10 +41,6 @@ Game::Game(Platform& pfrm) : state_(State::initial())
 
     if (not inventory().has_item(Item::Type::map_system)) {
         inventory().push_item(pfrm, *this, Item::Type::map_system);
-    }
-
-    if (not inventory().has_item(Item::Type::surveyor_logbook)) {
-        inventory().push_item(pfrm, *this, Item::Type::surveyor_logbook);
     }
 }
 

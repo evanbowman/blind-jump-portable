@@ -1980,15 +1980,18 @@ void Platform::enable_glyph_mode(bool enabled)
 }
 
 
+static const TileDesc bad_glyph = 111;
+
+
 // This code uses a lot of naive algorithms for searching the glyph mapping
 // table, potentially could be sped up, but we don't want to use any extra
 // memory, we've only got 256K to work with, and the table is big enough as it
 // is.
-std::optional<TileDesc> Platform::map_glyph(const utf8::Codepoint& glyph,
-                                            TextureCpMapper mapper)
+TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
+                             TextureCpMapper mapper)
 {
     if (not glyph_mode) {
-        return {};
+        return bad_glyph;
     }
 
     for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
@@ -2000,8 +2003,12 @@ std::optional<TileDesc> Platform::map_glyph(const utf8::Codepoint& glyph,
 
     const auto mapping_info = mapper(glyph);
 
+    if (not mapping_info) {
+        return bad_glyph;
+    }
+
     for (auto& info : overlay_textures) {
-        if (strcmp(mapping_info.texture_name_, info.name_) == 0) {
+        if (strcmp(mapping_info->texture_name_, info.name_) == 0) {
             for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
                 auto& gm = glyph_mapping_table[t];
                 if (not gm.valid()) {
@@ -2021,7 +2028,7 @@ std::optional<TileDesc> Platform::map_glyph(const utf8::Codepoint& glyph,
                     memcpy16((u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
                                  ((t + glyph_start_offset) * tile_size),
                              info.tile_data_ +
-                                 (mapping_info.offset_ * tile_size) /
+                                 (mapping_info->offset_ * tile_size) /
                                      sizeof(decltype(info.tile_data_)),
                              tile_size / 2);
 
@@ -2030,14 +2037,14 @@ std::optional<TileDesc> Platform::map_glyph(const utf8::Codepoint& glyph,
             }
         }
     }
-    return {};
+    return bad_glyph;
 }
 
 
 bool is_glyph(u16 t)
 {
     return t >= glyph_start_offset and
-        t - glyph_start_offset < glyph_mapping_count;
+           t - glyph_start_offset < glyph_mapping_count;
 }
 
 
