@@ -81,6 +81,9 @@ static void print_char(Platform& pfrm, char c, const OverlayCoord& coord)
         pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26 + 6);
     } else if (c == '"') {
         pfrm.set_tile(Layer::overlay, coord.x, coord.y, 39 + 26);
+    } else if (c > 127) {
+        // special extended ascii glyphs:
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 128) + 111);
     } else if (c > 64 and c < 65 + 27) {
         // FIXME: add uppercase letters
         pfrm.set_tile(Layer::overlay, coord.x, coord.y, (c - 65) + 39);

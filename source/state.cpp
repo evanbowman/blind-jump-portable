@@ -1417,8 +1417,6 @@ InventoryState::InventoryState(bool fade_in)
 
 void InventoryState::enter(Platform& pfrm, Game& game, State&)
 {
-    label_.emplace(pfrm, OverlayCoord{23, 1});
-
     update_arrow_icons(pfrm);
     for (int i = 0; i < 6; ++i) {
         pfrm.set_tile(Layer::overlay, 2 + i * 5, 2, 176);
@@ -1511,7 +1509,11 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 {
     clear_items();
 
-    label_->assign(locale_string(LocaleString::items));
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    const char* label_str = locale_string(LocaleString::items);
+    label_.emplace(pfrm, OverlayCoord{u8(screen_tiles.x - (str_len(label_str) + 1)), 1});
+    label_->assign(label_str);
 
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 2; ++j) {
