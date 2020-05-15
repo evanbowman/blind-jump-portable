@@ -396,7 +396,7 @@ private:
 
 static void state_deleter(State* s);
 
-static const StatePtr null_state()
+StatePtr null_state()
 {
     return {nullptr, state_deleter};
 }
@@ -634,7 +634,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             notification_status = NotificationStatus::exit;
 
             for (int x = 0; x < 32; ++x) {
-                pfrm.set_tile(Layer::overlay, x, 0, 74);
+                pfrm.set_tile(Layer::overlay, x, 0, 112);
             }
         }
         break;
@@ -645,7 +645,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             notification_text_timer -= delta;
 
             const auto tile = pfrm.get_tile(Layer::overlay, 0, 0);
-            if (tile < 74 + 7) {
+            if (tile < 120) {
                 for (int x = 0; x < 32; ++x) {
                     pfrm.set_tile(Layer::overlay, x, 0, tile + 1);
                 }
@@ -1131,7 +1131,8 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                             screen_tiles.x -
                             (utf8::len(str) + 2 + integer_text_length(num));
                         for (u32 i = 0; i < iters; ++i) {
-                            target.append(".");
+                            target.append(locale_string(
+                                LocaleString::punctuation_period));
                         }
 
                         target.append(num);
@@ -2089,7 +2090,11 @@ StatePtr State::initial()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// CommandCodeState
+// CommandCodeState FIXME
+//
+// This code broke after the transition from ascii to unicode. May need some
+// more work. But it's not essential to the game in any way.
+//
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -2291,12 +2296,12 @@ void CommandCodeState::enter(Platform& pfrm, Game& game, State&)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    const auto margin = centered_text_margins(pfrm, 20) - 1;
+    // const auto margin = centered_text_margins(pfrm, 20) - 1;
 
-    u8 write_xpos = margin + 1;
-    for (int i = 1; i < 11; ++i, write_xpos += 2) {
-        pfrm.set_tile(Layer::overlay, write_xpos, screen_tiles.y - 3, i);
-    }
+    // u8 write_xpos = margin + 1;
+    // for (int i = 1; i < 11; ++i, write_xpos += 2) {
+    //     pfrm.set_tile(Layer::overlay, write_xpos, screen_tiles.y - 3, i);
+    // }
 
     entry_box_.emplace(pfrm,
                        OverlayCoord{12, 3},

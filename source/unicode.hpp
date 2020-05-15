@@ -10,6 +10,7 @@ namespace utf8 {
 
     using Codepoint = u32;
 
+
     namespace detail {
         inline bool is_little_endian()
         {

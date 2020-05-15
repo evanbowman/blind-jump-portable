@@ -1962,7 +1962,7 @@ struct GlyphMapping {
 
 
 static constexpr const auto glyph_start_offset = 1;
-static constexpr const auto glyph_mapping_count = 72;
+static constexpr const auto glyph_mapping_count = 78;
 static GlyphMapping glyph_mapping_table[glyph_mapping_count];
 
 
@@ -2018,6 +2018,48 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     // 8 x 8 x (4 bitsperpixel / 8 bitsperbyte)
                     static const int tile_size = 32;
 
+                    // Rather than doing tons of extra work to keep the palettes
+                    // coordinated between different image files, use tile index
+                    // 81 as a registration block, which holds a set of colors
+                    // to use when mapping glyphs into vram.
+
+                    u8 buffer[tile_size] = {0};
+                    memcpy16(buffer,
+                             (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
+                             ((81) * tile_size),
+                             tile_size / 2);
+
+                    const auto c1 = buffer[0] & 0x0f;
+                    const auto c2 = buffer[1] & 0x0f;
+
+                    // We need to know which color to use as the background
+                    // color, and which color to use as the foreground
+                    // color. Each charset needs to store a reference pixel in
+                    // the top left corner, representing the background color,
+                    // otherwise, we have no way of knowing which pixel color to
+                    // substitute where!
+                    const auto bg_color = ((u8*)info.tile_data_)[0] & 0x0f;
+
+                    memcpy16(buffer,
+                             info.tile_data_ +
+                             (mapping_info->offset_ * tile_size) /
+                             sizeof(decltype(info.tile_data_)),
+                             tile_size / 2);
+
+                    for (int i = 0; i < tile_size; ++i) {
+                        auto c = buffer[i];
+                        if (c&bg_color) {
+                            buffer[i] = c2;
+                        } else {
+                            buffer[i] = c1;
+                        }
+                        if (c&(bg_color << 4)) {
+                            buffer[i] |= c2 << 4;
+                        } else {
+                            buffer[i] |= c1 << 4;
+                        }
+                    }
+
                     // FIXME: Why do these magic constants work? I wish better
                     // documentation existed for how the gba tile memory worked.
                     // I thought, that the tile size would be 32, because we
@@ -2027,9 +2069,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     // do seem to be 32 bytes apart after all...
                     memcpy16((u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
                                  ((t + glyph_start_offset) * tile_size),
-                             info.tile_data_ +
-                                 (mapping_info->offset_ * tile_size) /
-                                     sizeof(decltype(info.tile_data_)),
+                             buffer,
                              tile_size / 2);
 
                     return t + glyph_start_offset;

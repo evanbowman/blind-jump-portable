@@ -13,7 +13,7 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
-Game::Game(Platform& pfrm) : state_(State::initial())
+Game::Game(Platform& pfrm) : state_(null_state())
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
@@ -23,6 +23,8 @@ Game::Game(Platform& pfrm) : state_(State::initial())
     }
 
     locale_set_language(LocaleLanguage::english);
+
+    state_ = State::initial();
 
     player_.set_health(persistent_data_.player_health_);
 

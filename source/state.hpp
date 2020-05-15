@@ -24,7 +24,6 @@ public:
     // if the next state will be the same state, returns an empty state
     // pointer.
 
-
     virtual StatePtr
     update(Platform& platform, Game& game, Microseconds delta) = 0;
 
@@ -34,6 +33,9 @@ public:
 
     static StatePtr initial();
 };
+
+
+StatePtr null_state();
 
 
 using NotificationStr = StringBuffer<40>;
