@@ -8,7 +8,7 @@
 // there is very little texture memory available for displaying glyphs. You may
 // only be able to display 80 or so unique characters at a time.
 std::optional<Platform::TextureMapping>
-english_us_texture_map(const utf8::Codepoint& cp)
+english_spanish_french_texture_map(const utf8::Codepoint& cp)
 {
     auto mapping = [&]() -> std::optional<u16> {
         switch (cp) {
@@ -157,6 +157,47 @@ english_us_texture_map(const utf8::Codepoint& cp)
         case ' ':
             return 72;
         default:
+            if (cp == utf8::getc("ñ")) {
+                return 73;
+            } else if (cp == utf8::getc("á")) {
+                return 74;
+            } else if (cp == utf8::getc("é")) {
+                return 75;
+            } else if (cp == utf8::getc("í")) {
+                return 76;
+            } else if (cp == utf8::getc("ó")) {
+                return 77;
+            } else if (cp == utf8::getc("ú")) {
+                return 78;
+            } else if (cp == utf8::getc("â")) {
+                return 79;
+            } else if (cp == utf8::getc("ê")) {
+                return 80;
+            } else if (cp == utf8::getc("î")) {
+                return 81;
+            } else if (cp == utf8::getc("ô")) {
+                return 82;
+            } else if (cp == utf8::getc("û")) {
+                return 83;
+            } else if (cp == utf8::getc("à")) {
+                return 84;
+            } else if (cp == utf8::getc("è")) {
+                return 85;
+            } else if (cp == utf8::getc("ù")) {
+                return 86;
+            } else if (cp == utf8::getc("ë")) {
+                return 87;
+            } else if (cp == utf8::getc("ï")) {
+                return 88;
+            } else if (cp == utf8::getc("ü")) {
+                return 89;
+            } else if (cp == utf8::getc("ç")) {
+                return 90;
+            } else if (cp == utf8::getc("Ç")) {
+                return 91;
+            } else if (cp == utf8::getc("ö")) {
+                return 92;
+            }
             return {};
         }
     }();
@@ -177,7 +218,7 @@ std::optional<Platform::TextureMapping> null_texture_map(const utf8::Codepoint&)
 static const Platform::TextureCpMapper
     texture_codepoint_mappers[static_cast<int>(LocaleLanguage::count)] = {
         null_texture_map,
-        english_us_texture_map};
+        english_spanish_french_texture_map};
 
 
 static LocaleLanguage language = LocaleLanguage::null;

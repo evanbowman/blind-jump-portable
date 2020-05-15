@@ -4,21 +4,13 @@
 #include "function.hpp"
 #include "bitvector.hpp"
 #include "string.hpp"
+#include <optional>
 
 
 namespace utf8 {
 
     using Codepoint = u32;
 
-
-    namespace detail {
-        inline bool is_little_endian()
-        {
-            short int number = 0x1;
-            char *numPtr = (char*)&number;
-            return (numPtr[0] == 1);
-        }
-    }
 
     inline bool scan(Function<32, void(const Codepoint& cp)> callback,
                      const char* data,
@@ -31,39 +23,20 @@ namespace utf8 {
                 callback(data[index]);
                 index += 1;
             } else if (parsed[7] == 1 and parsed[6] == 1 and parsed[5] == 0) {
-                std::array<char, 4> cp;
-                if (detail::is_little_endian()) {
-                    cp = {0, 0, data[index + 1], data[index]};
-                } else {
-                    cp = {data[index], data[index + 1], 0, 0};
-                }
+                callback(data[index] | (data[index + 1] << 8));
                 index += 2;
-                callback(*reinterpret_cast<Codepoint*>(cp.data()));
             } else if (parsed[7] == 1 and parsed[6] == 1 and parsed[5] == 1 and
                        parsed[4] == 0) {
-                std::array<char, 4> cp;
-                if (detail::is_little_endian()) {
-                    cp = {0, data[index + 2], data[index + 1], data[index]};
-                } else {
-                    cp = {data[index], data[index + 1], data[index + 2]};
-                }
+                callback(data[index]
+                         | (data[index + 1] << 8)
+                         | (data[index + 2] << 16));
                 index += 3;
-                callback(*reinterpret_cast<Codepoint*>(cp.data()));
             } else if (parsed[7] == 1 and parsed[6] == 1 and parsed[5] == 1 and
                        parsed[4] == 1 and parsed[3] == 0) {
-                std::array<char, 4> cp;
-                if (detail::is_little_endian()) {
-                    cp = {data[index + 3],
-                          data[index + 2],
-                          data[index + 1],
-                          data[index]};
-                } else {
-                    cp = {data[index],
-                          data[index + 1],
-                          data[index + 2],
-                          data[index + 3]};
-                }
-                callback(*reinterpret_cast<Codepoint*>(cp.data()));
+                callback(data[index]
+                         | (data[index + 1] << 8)
+                         | (data[index + 2] << 16)
+                         | (data[index + 3] << 24));
                 index += 4;
             } else {
                 return false;
@@ -71,6 +44,22 @@ namespace utf8 {
         }
         return true;
     }
+
+
+    inline Codepoint getc(const char* data)
+    {
+        std::optional<Codepoint> front;
+        scan([&front](const Codepoint& cp) {
+                 if (not front) front = cp;
+             }, data, str_len(data));
+
+        if (front) {
+            return *front;
+        } else {
+            return '\0';
+        }
+    }
+
 
     inline size_t len(const char* data)
     {

@@ -1960,7 +1960,7 @@ struct GlyphMapping {
 
     bool valid() const
     {
-        return reference_count_ != -1;
+        return reference_count_ > -1;
     }
 };
 
@@ -2143,6 +2143,8 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
                             gm.reference_count_ = -1;
                             gm.character_ = 0;
                         }
+                    } else {
+                        while (true) ;
                     }
                 }
 
