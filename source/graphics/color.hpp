@@ -21,6 +21,7 @@ enum class ColorConstant {
     rich_black,       // #000010
     stil_de_grain,    // #F9DC5C
     silver_white,     // #F4F4F8
+    aged_paper,       // #DEC397
     count
 };
 

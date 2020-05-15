@@ -1551,12 +1551,8 @@ void NotebookState::enter(Platform& pfrm, Game&, State&)
 {
     pfrm.speaker().play_sound("open_book", 0);
 
-    pfrm.screen().fade(1.f);
     pfrm.load_overlay_texture("overlay_journal");
-
-    // This is to eliminate display tearing, see other comments on
-    // fill_overlay() calls.
-    pfrm.fill_overlay(notebook_margin_tile);
+    pfrm.screen().fade(1.f, ColorConstant::aged_paper);
 
     auto screen_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm);
@@ -1607,6 +1603,9 @@ void NotebookState::exit(Platform& pfrm, Game&, State&)
                           // screen, so it can use faster methods, like a single
                           // memset, or special BIOS calls (depending on the
                           // platform) to clear out the screen.
+
+    pfrm.screen().fade(1.f);
+
     text_.reset();
     pfrm.load_overlay_texture("overlay");
 }
@@ -2018,10 +2017,14 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
     // Center horizontally, and place text vertically in top third of screen
-    pos.x -= utf8::len(str_) + 1;
+    const auto len = utf8::len(str_);
+    pos.x -= len + 1;
     pos.x /= 2;
     pos.y *= 0.35f;
 
+    if (len % 2 == 0) {
+        pfrm.set_overlay_origin(-4, 0);
+    }
     text_.emplace(pfrm, str_, pos);
 
     center(pfrm);
