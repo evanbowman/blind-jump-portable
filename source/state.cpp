@@ -385,6 +385,7 @@ private:
 
     StringBuffer<10> input_;
     std::optional<Text> input_text_;
+    std::optional<Text> numbers_;
     std::optional<Border> entry_box_;
     std::optional<Border> selector_;
     Microseconds selector_timer_ = 0;
@@ -978,10 +979,10 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
         Level next_level = game.level() + 1;
 
         // backdoor for debugging purposes.
-        // if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2,
-        //     Key::start>()) {
-        //     return state_pool_.create<CommandCodeState>();
-        // }
+        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2,
+            Key::start>()) {
+            return state_pool_.create<CommandCodeState>();
+        }
 
         // For now, to determine whether the game's complete, scan through a
         // bunch of levels. If there are no more bosses remaining, the game is
@@ -2050,9 +2051,9 @@ StatePtr IntroLegalMessage::next_state(Platform& pfrm, Game& game)
 StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
 {
     // backdoor for debugging purposes.
-    // if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
-    //     return state_pool_.create<CommandCodeState>();
-    // }
+    if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
+        return state_pool_.create<CommandCodeState>();
+    }
 
     if (pfrm.keyboard().pressed<Key::start>()) {
         return state_pool_.create<EndingCreditsState>();
@@ -2299,12 +2300,14 @@ void CommandCodeState::enter(Platform& pfrm, Game& game, State&)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    // const auto margin = centered_text_margins(pfrm, 20) - 1;
+    const auto margin = centered_text_margins(pfrm, 20) - 1;
 
-    // u8 write_xpos = margin + 1;
-    // for (int i = 1; i < 11; ++i, write_xpos += 2) {
-    //     pfrm.set_tile(Layer::overlay, write_xpos, screen_tiles.y - 3, i);
-    // }
+    numbers_.emplace(pfrm, OverlayCoord{u8(margin + 1), u8(screen_tiles.y - 3)});
+
+    for (int i = 0; i < 10; ++i) {
+        numbers_->append(i);
+        numbers_->append(" ");
+    }
 
     entry_box_.emplace(pfrm,
                        OverlayCoord{12, 3},
@@ -2322,6 +2325,7 @@ void CommandCodeState::exit(Platform& pfrm, Game& game, State&)
     input_text_.reset();
     entry_box_.reset();
     selector_.reset();
+    numbers_.reset();
     pfrm.fill_overlay(0);
 }
 
