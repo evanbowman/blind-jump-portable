@@ -148,4 +148,14 @@ private:
 };
 
 
-void to_string(int num, char* buffer, int base);
+// I was trying to track down certain bugs, where invalid strings were being
+// passed to str_len.
+inline bool validate_str(const char* str)
+{
+    for (int i = 0; i < 100000; ++i) {
+        if (str[i] == '\0') {
+            return true;
+        }
+    }
+    return false;
+}

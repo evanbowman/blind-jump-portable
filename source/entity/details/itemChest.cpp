@@ -64,7 +64,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                         str += locale_string(LocaleString::locked);
 
                         std::array<char, 40> buffer;
-                        to_string(enemies_remaining, buffer.data(), 10);
+                        locale_num2str(enemies_remaining, buffer.data(), 10);
 
                         str += buffer.data();
                         str += locale_string([&] {

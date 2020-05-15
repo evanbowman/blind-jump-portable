@@ -2144,7 +2144,7 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
                             gm.character_ = 0;
                         }
                     } else {
-                        while (true) ;
+                        // while (true) ;
                     }
                 }
 

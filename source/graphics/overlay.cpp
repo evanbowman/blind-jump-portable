@@ -1,12 +1,13 @@
 #include "overlay.hpp"
 #include "string.hpp"
+#include "localization.hpp"
 
 
 u32 integer_text_length(int n)
 {
     std::array<char, 40> buffer = {0};
 
-    to_string(n, buffer.data(), 10);
+    locale_num2str(n, buffer.data(), 10);
 
     return str_len(buffer.data());
 }
@@ -52,7 +53,7 @@ void Text::assign(int val)
 {
     std::array<char, 40> buffer = {0};
 
-    to_string(val, buffer.data(), 10);
+    locale_num2str(val, buffer.data(), 10);
     this->assign(buffer.data());
 }
 
@@ -83,7 +84,7 @@ void Text::assign(const char* str)
 
 void Text::append(const char* str)
 {
-    if (str == nullptr) {
+    if (str == nullptr or not validate_str(str)) {
         return;
     }
 
@@ -104,7 +105,7 @@ void Text::append(int num)
 {
     std::array<char, 40> buffer = {0};
 
-    to_string(num, buffer.data(), 10);
+    locale_num2str(num, buffer.data(), 10);
     this->append(buffer.data());
 }
 

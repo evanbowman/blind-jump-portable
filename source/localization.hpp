@@ -51,3 +51,6 @@ void locale_set_language(LocaleLanguage ll);
 
 
 const char* locale_string(LocaleString ls);
+
+
+void locale_num2str(int num, char* buffer, int base);

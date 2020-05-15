@@ -153,6 +153,7 @@ endif()
 
 
 target_compile_options(BlindJump PRIVATE
+  -g
   -Os
   -Wall
   -flto

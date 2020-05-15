@@ -1126,6 +1126,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 auto print_metric =
                     [&](Text& target, const char* str, int num) {
+
                         target.append(str);
 
                         const auto iters =
