@@ -2359,22 +2359,26 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
 // is sort of algined for the gameboy advance screen...
 // FIXME: localize the credits?
 static const std::array<const char*, 30> credits_lines = {
-    "Artwork and Animation",
+    "Artwork and Source Code by",
     "Evan Bowman",
     "",
-    "Programming",
-    "Evan Bowman",
     "",
-    "           Music",
+    "Music",
     "Frostellar.........Lenkaland",
     "Omega..........Scott Buckley",
     "Computations...Scott Buckley",
     "September..........Kai Engel",
     "Clair De Lune....Chad Crouch",
     "",
+    "",
+    "Playtesting",
+    "Benjamin Casler",
+    "",
+    "",
     "Special Thanks",
     "My Family",
     "Jasper Vijn (Tonc)",
+    "The DevkitARM Project"
     "",
     "",
     "",
@@ -2384,7 +2388,7 @@ static const std::array<const char*, 30> credits_lines = {
     "",
     "",
     "",
-    "the end"};
+    "THE END"};
 
 
 StatePtr
@@ -2416,12 +2420,17 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                 lines_.erase(lines_.begin());
             }
 
-            if (next_ < int{credits_lines.size()}) {
+            if (next_ < int{credits_lines.size() - 1}) {
                 const u8 y =
                     next_y_ % 32; // The overlay tile layer is 32x32 tiles.
                 next_y_ += 2;
-                lines_.emplace_back(pfrm, OverlayCoord{1, y});
-                lines_.back().assign(credits_lines[next_++]);
+
+                const auto str = credits_lines[next_++];
+                const auto len = utf8::len(str);
+                const u8 left_margin = (screen_tiles.x - len) / 2;
+
+                lines_.emplace_back(pfrm, OverlayCoord{left_margin, y});
+                lines_.back().assign(str);
 
             } else if (lines_.empty()) {
                 factory_reset(pfrm);
