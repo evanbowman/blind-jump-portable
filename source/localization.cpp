@@ -347,6 +347,5 @@ void locale_num2str(int num, char* buffer, int base)
     case LocaleLanguage::null:
         buffer[0] = '\0';
         break;
-
     }
 }

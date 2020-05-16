@@ -1,6 +1,6 @@
 #include "overlay.hpp"
-#include "string.hpp"
 #include "localization.hpp"
+#include "string.hpp"
 
 
 u32 integer_text_length(int n)

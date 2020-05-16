@@ -979,8 +979,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
         Level next_level = game.level() + 1;
 
         // backdoor for debugging purposes.
-        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2,
-            Key::start>()) {
+        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
             return state_pool_.create<CommandCodeState>();
         }
 
@@ -1126,7 +1125,6 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 auto print_metric =
                     [&](Text& target, const char* str, int num) {
-
                         target.append(str);
 
                         const auto iters =
@@ -2303,7 +2301,8 @@ void CommandCodeState::enter(Platform& pfrm, Game& game, State&)
 
     const auto margin = centered_text_margins(pfrm, 20) - 1;
 
-    numbers_.emplace(pfrm, OverlayCoord{u8(margin + 1), u8(screen_tiles.y - 3)});
+    numbers_.emplace(pfrm,
+                     OverlayCoord{u8(margin + 1), u8(screen_tiles.y - 3)});
 
     for (int i = 0; i < 10; ++i) {
         numbers_->append(i);

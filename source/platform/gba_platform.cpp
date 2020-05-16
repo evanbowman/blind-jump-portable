@@ -270,19 +270,19 @@ static ObjectAttributes
 #define BG2_ENABLE 0x400
 #define BG3_ENABLE 0x800
 #define WIN0_ENABLE (1 << 13)
-#define WIN_BG0			0x0001	//!< Windowed bg 0
-#define WIN_BG1			0x0002	//!< Windowed bg 1
-#define WIN_BG2			0x0004	//!< Windowed bg 2
-#define WIN_BG3			0x0008	//!< Windowed bg 3
-#define WIN_OBJ			0x0010	//!< Windowed objects
-#define WIN_ALL			0x001F	//!< All layers in window.
-#define WIN_BLD			0x0020	//!< Windowed blending
-#define REG_WIN0H       *((volatile u16 *)(0x04000000 + 0x40))
-#define REG_WIN1H       *((volatile u16 *)(0x04000000 + 0x42))
-#define REG_WIN0V       *((volatile u16 *)(0x04000000 + 0x44))
-#define REG_WIN1V       *((volatile u16 *)(0x04000000 + 0x46))
-#define REG_WININ       *((volatile u16 *)(0x04000000 + 0x48))
-#define REG_WINOUT      *((volatile u16 *)(0x04000000 + 0x4A))
+#define WIN_BG0 0x0001 //!< Windowed bg 0
+#define WIN_BG1 0x0002 //!< Windowed bg 1
+#define WIN_BG2 0x0004 //!< Windowed bg 2
+#define WIN_BG3 0x0008 //!< Windowed bg 3
+#define WIN_OBJ 0x0010 //!< Windowed objects
+#define WIN_ALL 0x001F //!< All layers in window.
+#define WIN_BLD 0x0020 //!< Windowed blending
+#define REG_WIN0H *((volatile u16*)(0x04000000 + 0x40))
+#define REG_WIN1H *((volatile u16*)(0x04000000 + 0x42))
+#define REG_WIN0V *((volatile u16*)(0x04000000 + 0x44))
+#define REG_WIN1V *((volatile u16*)(0x04000000 + 0x46))
+#define REG_WININ *((volatile u16*)(0x04000000 + 0x48))
+#define REG_WINOUT *((volatile u16*)(0x04000000 + 0x4A))
 
 #define BG_CBB_MASK 0x000C
 #define BG_CBB_SHIFT 2
@@ -715,7 +715,8 @@ void Platform::Screen::display()
     const s32 scroll_limit_x_max = 512 - size().x;
     const s32 scroll_limit_y_max = 480 - size().y;
     if (view_offset.x > scroll_limit_x_max) {
-        REG_WIN0H = (0 << 8) | (size().x - (view_offset.x - scroll_limit_x_max));
+        REG_WIN0H =
+            (0 << 8) | (size().x - (view_offset.x - scroll_limit_x_max));
     } else if (view_offset.x < 0) {
         REG_WIN0H = ((view_offset.x * -1) << 8) | (0);
     } else {
@@ -723,7 +724,8 @@ void Platform::Screen::display()
     }
 
     if (view_offset.y > scroll_limit_y_max) {
-        REG_WIN0V = (0 << 8) | (size().y - (view_offset.y - scroll_limit_y_max));
+        REG_WIN0V =
+            (0 << 8) | (size().y - (view_offset.y - scroll_limit_y_max));
     } else if (view_offset.y < 0) {
         REG_WIN0V = ((view_offset.y * -1) << 8) | (0);
     } else {
@@ -2076,7 +2078,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     u8 buffer[tile_size] = {0};
                     memcpy16(buffer,
                              (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
-                             ((81) * tile_size),
+                                 ((81) * tile_size),
                              tile_size / 2);
 
                     const auto c1 = buffer[0] & 0x0f;
@@ -2092,18 +2094,18 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
 
                     memcpy16(buffer,
                              info.tile_data_ +
-                             (mapping_info->offset_ * tile_size) /
-                             sizeof(decltype(info.tile_data_)),
+                                 (mapping_info->offset_ * tile_size) /
+                                     sizeof(decltype(info.tile_data_)),
                              tile_size / 2);
 
                     for (int i = 0; i < tile_size; ++i) {
                         auto c = buffer[i];
-                        if (c&bg_color) {
+                        if (c & bg_color) {
                             buffer[i] = c2;
                         } else {
                             buffer[i] = c1;
                         }
-                        if (c&(bg_color << 4)) {
+                        if (c & (bg_color << 4)) {
                             buffer[i] |= c2 << 4;
                         } else {
                             buffer[i] |= c1 << 4;
