@@ -269,6 +269,21 @@ static ObjectAttributes
 #define BG1_ENABLE 0x200
 #define BG2_ENABLE 0x400
 #define BG3_ENABLE 0x800
+#define WIN0_ENABLE (1 << 13)
+#define WIN_BG0			0x0001	//!< Windowed bg 0
+#define WIN_BG1			0x0002	//!< Windowed bg 1
+#define WIN_BG2			0x0004	//!< Windowed bg 2
+#define WIN_BG3			0x0008	//!< Windowed bg 3
+#define WIN_OBJ			0x0010	//!< Windowed objects
+#define WIN_ALL			0x001F	//!< All layers in window.
+#define WIN_BLD			0x0020	//!< Windowed blending
+#define REG_WIN0H       *((volatile u16 *)(0x04000000 + 0x40))
+#define REG_WIN1H       *((volatile u16 *)(0x04000000 + 0x42))
+#define REG_WIN0V       *((volatile u16 *)(0x04000000 + 0x44))
+#define REG_WIN1V       *((volatile u16 *)(0x04000000 + 0x46))
+#define REG_WININ       *((volatile u16 *)(0x04000000 + 0x48))
+#define REG_WINOUT      *((volatile u16 *)(0x04000000 + 0x4A))
+
 #define BG_CBB_MASK 0x000C
 #define BG_CBB_SHIFT 2
 #define BG_CBB(n) ((n) << BG_CBB_SHIFT)
@@ -347,7 +362,14 @@ public:
 Platform::Screen::Screen() : userdata_(nullptr)
 {
     REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE |
-                  BG2_ENABLE | BG3_ENABLE;
+                  BG2_ENABLE | BG3_ENABLE | WIN0_ENABLE;
+
+    REG_WININ = WIN_ALL;
+
+    // Always display the starfield and the overlay in the outer window. We just
+    // want to mask off areas of the game map that have wrapped to the other
+    // side of the screen.
+    REG_WINOUT = WIN_OBJ | WIN_BG1 | WIN_BG2;
 
     *reg_blendcnt = BLD_BUILD(BLD_OBJ, BLD_BG0 | BLD_BG1 | BLD_BG3, 0);
 
@@ -683,6 +705,30 @@ void Platform::Screen::display()
 
     *bg3_x_scroll = view_offset.x;
     *bg3_y_scroll = view_offset.y;
+
+    // Depending on the amount of the background scroll, we want to mask off
+    // certain parts of bg0 and bg3. The background tiles wrap when they scroll
+    // a certain distance, and wrapping looks strange (although it might be
+    // useful if you were making certain kinds of games, like some kind of
+    // Civilization clone, but for BlindJump, it doesn't make sense to display
+    // the wrapped area).
+    const s32 scroll_limit_x_max = 512 - size().x;
+    const s32 scroll_limit_y_max = 480 - size().y;
+    if (view_offset.x > scroll_limit_x_max) {
+        REG_WIN0H = (0 << 8) | (size().x - (view_offset.x - scroll_limit_x_max));
+    } else if (view_offset.x < 0) {
+        REG_WIN0H = ((view_offset.x * -1) << 8) | (0);
+    } else {
+        REG_WIN0H = (0 << 8) | (size().x);
+    }
+
+    if (view_offset.y > scroll_limit_y_max) {
+        REG_WIN0V = (0 << 8) | (size().y - (view_offset.y - scroll_limit_y_max));
+    } else if (view_offset.y < 0) {
+        REG_WIN0V = ((view_offset.y * -1) << 8) | (0);
+    } else {
+        REG_WIN0V = (0 << 8) | (size().y);
+    }
 
     *bg1_x_scroll = view_offset.x * 0.3f;
     *bg1_y_scroll = view_offset.y * 0.3f;
