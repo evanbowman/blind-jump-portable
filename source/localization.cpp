@@ -198,7 +198,7 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
             } else if (cp == utf8::getc("ö")) {
                 return 92;
             }
-            return {};
+            return std::nullopt;
         }
     }();
     if (mapping) {

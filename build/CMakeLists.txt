@@ -164,6 +164,7 @@ target_compile_options(BlindJump PRIVATE
   -ffast-math
   -fno-exceptions
   -fno-math-errno
+  -Wdouble-promotion
   -fomit-frame-pointer
   -D__BLINDJUMP_ENABLE_LOGS)
 

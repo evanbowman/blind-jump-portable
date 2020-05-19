@@ -897,8 +897,8 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
-        if (amount > 0.5) {
-            pfrm.screen().pixelate((amount - 0.5) * 60);
+        if (amount > 0.5f) {
+            pfrm.screen().pixelate((amount - 0.5f) * 60);
         }
         return null_state();
     }
@@ -951,8 +951,8 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
-        if (amount > 0.25) {
-            pfrm.screen().pixelate((amount - 0.25) * 60);
+        if (amount > 0.25f) {
+            pfrm.screen().pixelate((amount - 0.25f) * 60);
         }
         return null_state();
     }

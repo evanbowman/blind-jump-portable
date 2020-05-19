@@ -129,7 +129,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             position_ = position_ + Float(dt) * move_vec_;
 
             const Float offset =
-                8 * float(sine(4 * 3.14 * 0.0027f * bounce_timer_ + 180)) /
+                8 * float(sine(4 * 3.14f * 0.0027f * bounce_timer_ + 180)) /
                 std::numeric_limits<s16>::max();
 
 
@@ -262,7 +262,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
             const Float offset =
                 8 *
-                float(sine(4 * 3.14 *
+                float(sine(4 * 3.14f *
                                (360 * (1 - (bounce_timer_ - timer_) /
                                                Float(bounce_timer_))) +
                            180)) /

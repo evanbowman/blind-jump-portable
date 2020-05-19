@@ -232,7 +232,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         timer_ += dt;
 
         const Float offset = 10 *
-                             Float(sine(4 * 3.14 * 0.0027f * timer_ + 180)) /
+                             Float(sine(4 * 3.14f * 0.0027f * timer_ + 180)) /
                              std::numeric_limits<s16>::max();
 
         position_.x += move_vec_.x * dt * movement_rate;
@@ -448,15 +448,15 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
     };
 
     auto set_keyframe = [this](Float y_part) {
-        if (abs(y_part) > 0.8) {
+        if (abs(y_part) > 0.8f) {
             sprite_.set_size(Sprite::Size::w16_h32);
             sprite_.set_texture_index(16);
 
-        } else if (abs(y_part) > 0.6) {
+        } else if (abs(y_part) > 0.6f) {
             sprite_.set_size(Sprite::Size::w16_h32);
             sprite_.set_texture_index(17);
 
-        } else if (abs(y_part) > 0.4) {
+        } else if (abs(y_part) > 0.4f) {
             sprite_.set_size(Sprite::Size::w16_h32);
             sprite_.set_texture_index(18);
 
