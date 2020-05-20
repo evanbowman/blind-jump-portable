@@ -6,7 +6,7 @@
 // where in the texture data to look for the glyph corresponding to a given utf8
 // codepoint. Keep in mind, that on some platforms, like the Gameboy Advance,
 // there is very little texture memory available for displaying glyphs. You may
-// only be able to display 80 or so unique characters at a time.
+// only be able to display 80 or so unique characters on the screen at a time.
 std::optional<Platform::TextureMapping>
 english_spanish_french_texture_map(const utf8::Codepoint& cp)
 {
@@ -202,7 +202,7 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
         }
     }();
     if (mapping) {
-        return Platform::TextureMapping{"ascii", *mapping};
+        return Platform::TextureMapping{"charset_en_spn_fr", *mapping};
     } else {
         return {};
     }

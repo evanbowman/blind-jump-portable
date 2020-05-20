@@ -784,7 +784,7 @@ static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),
 
 
 static const TextureData overlay_textures[] = {
-    TEXTURE_INFO(ascii),
+    TEXTURE_INFO(charset_en_spn_fr),
     TEXTURE_INFO(overlay),
     TEXTURE_INFO(overlay_journal),
     TEXTURE_INFO(old_poster_flattened),
