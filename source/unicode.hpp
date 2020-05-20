@@ -43,6 +43,10 @@ inline bool scan(Function<32, void(const Codepoint& cp)> callback,
 }
 
 
+// This returns the first utf8 Codepoint in a string, meant mostly as a utility
+// for creating codepoint literals from strings. Unfortunately, C++ doesn't
+// offer unicode character literals... I guess I could specify them in hex, but
+// that's no fun (and not so easy for other people to read).
 inline Codepoint getc(const char* data)
 {
     std::optional<Codepoint> front;
