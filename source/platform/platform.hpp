@@ -434,19 +434,20 @@ private:
 
 
 // Helper function for drawing background tiles larger than the default size (8x8 pixels)
-inline void draw_background_image(Platform& pfrm,
-                                  TileDesc start_tile,
-                                  u16 start_x,
-                                  u16 start_y,
-                                  u16 width,
-                                  u16 height)
+inline void draw_image(Platform& pfrm,
+                       TileDesc start_tile,
+                       u16 start_x,
+                       u16 start_y,
+                       u16 width,
+                       u16 height,
+                       Layer layer)
 {
 
     u16 tile = start_tile;
 
     for (u16 y = start_y; y < start_y + height; ++y) {
         for (u16 x = start_x; x < start_x + width; ++x) {
-            pfrm.set_tile(Layer::background, x, y, tile++);
+            pfrm.set_tile(layer, x, y, tile++);
         }
     }
 }

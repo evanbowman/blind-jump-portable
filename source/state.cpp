@@ -194,7 +194,6 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    std::optional<Text> text_;
     std::optional<Text> score_;
     std::optional<Text> highscore_;
     std::optional<Text> level_;
@@ -1028,6 +1027,9 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
     constexpr auto fade_duration = seconds(2);
     if (counter_ > fade_duration) {
         pfrm.screen().pixelate(0);
+
+        draw_image(pfrm, 416, 4, 2, 22, 4, Layer::overlay);
+
         return state_pool_.create<DeathContinueState>();
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);
@@ -1069,9 +1071,6 @@ RespawnWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
 {
-    text_.emplace(pfrm, OverlayCoord{11, 4});
-    text_->assign(locale_string(LocaleString::you_died));
-
     game.player().set_visible(false);
 
     enemy_lethargy_timer = 0;
@@ -1081,10 +1080,11 @@ void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
 
 void DeathContinueState::exit(Platform& pfrm, Game& game, State&)
 {
-    text_.reset();
     score_.reset();
     highscore_.reset();
     level_.reset();
+
+    pfrm.fill_overlay(0);
 }
 
 

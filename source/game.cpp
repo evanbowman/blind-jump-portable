@@ -279,64 +279,64 @@ static void draw_starfield(Platform& pfrm)
 }
 
 
-static constexpr const ZoneInfo zone_1{LocaleString::part_1_text,
-                                       LocaleString::part_1_title,
-                                       "spritesheet",
-                                       "tilesheet",
-                                       "tilesheet_top",
-                                       "frostellar",
-                                       Microseconds{0},
-                                       ColorConstant::electric_blue,
-                                       ColorConstant::aerospace_orange,
-                                       [](Platform& pfrm, Game&) {
-                                           draw_starfield(pfrm);
+static constexpr const ZoneInfo zone_1{
+    LocaleString::part_1_text,
+    LocaleString::part_1_title,
+    "spritesheet",
+    "tilesheet",
+    "tilesheet_top",
+    "frostellar",
+    Microseconds{0},
+    ColorConstant::electric_blue,
+    ColorConstant::aerospace_orange,
+    [](Platform& pfrm, Game&) {
+        draw_starfield(pfrm);
 
-                                           const int x = 16;
-                                           const int y = 16;
+        const int x = 16;
+        const int y = 16;
 
-                                           draw_background_image(
-                                               pfrm, 61, x, y, 3, 3);
-                                       }};
-
-
-static constexpr const ZoneInfo zone_2{LocaleString::part_2_text,
-                                       LocaleString::part_2_title,
-                                       "spritesheet2",
-                                       "tilesheet2",
-                                       "tilesheet2_top",
-                                       "computations",
-                                       seconds(8) + milliseconds(700),
-                                       ColorConstant::turquoise_blue,
-                                       ColorConstant::safety_orange,
-                                       [](Platform& pfrm, Game&) {
-                                           draw_starfield(pfrm);
-
-                                           const int x = 16;
-                                           const int y = 16;
-
-                                           draw_background_image(
-                                               pfrm, 120, x, y, 5, 5);
-                                       }};
+        draw_image(pfrm, 61, x, y, 3, 3, Layer::background);
+    }};
 
 
-static constexpr const ZoneInfo zone_3{LocaleString::part_3_text,
-                                       LocaleString::part_3_title,
-                                       "spritesheet3",
-                                       "tilesheet3",
-                                       "tilesheet3_top",
-                                       "september",
-                                       Microseconds{0},
-                                       ColorConstant::cerulean_blue,
-                                       ColorConstant::aerospace_orange,
-                                       [](Platform& pfrm, Game&) {
-                                           draw_starfield(pfrm);
+static constexpr const ZoneInfo zone_2{
+    LocaleString::part_2_text,
+    LocaleString::part_2_title,
+    "spritesheet2",
+    "tilesheet2",
+    "tilesheet2_top",
+    "computations",
+    seconds(8) + milliseconds(700),
+    ColorConstant::turquoise_blue,
+    ColorConstant::safety_orange,
+    [](Platform& pfrm, Game&) {
+        draw_starfield(pfrm);
 
-                                           const int x = 12;
-                                           const int y = 12;
+        const int x = 16;
+        const int y = 16;
 
-                                           draw_background_image(
-                                               pfrm, 120, x, y, 9, 9);
-                                       }};
+        draw_image(pfrm, 120, x, y, 5, 5, Layer::background);
+    }};
+
+
+static constexpr const ZoneInfo zone_3{
+    LocaleString::part_3_text,
+    LocaleString::part_3_title,
+    "spritesheet3",
+    "tilesheet3",
+    "tilesheet3_top",
+    "september",
+    Microseconds{0},
+    ColorConstant::cerulean_blue,
+    ColorConstant::aerospace_orange,
+    [](Platform& pfrm, Game&) {
+        draw_starfield(pfrm);
+
+        const int x = 12;
+        const int y = 12;
+
+        draw_image(pfrm, 120, x, y, 9, 9, Layer::background);
+    }};
 
 
 const ZoneInfo& zone_info(Level level)
