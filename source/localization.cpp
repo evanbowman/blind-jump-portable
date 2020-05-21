@@ -157,45 +157,45 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
         case ' ':
             return 72;
         default:
-            if (cp == utf8::getc("ñ")) {
+            if (cp == utf8::getc(u8"ñ")) {
                 return 73;
-            } else if (cp == utf8::getc("á")) {
+            } else if (cp == utf8::getc(u8"á")) {
                 return 74;
-            } else if (cp == utf8::getc("é")) {
+            } else if (cp == utf8::getc(u8"é")) {
                 return 75;
-            } else if (cp == utf8::getc("í")) {
+            } else if (cp == utf8::getc(u8"í")) {
                 return 76;
-            } else if (cp == utf8::getc("ó")) {
+            } else if (cp == utf8::getc(u8"ó")) {
                 return 77;
-            } else if (cp == utf8::getc("ú")) {
+            } else if (cp == utf8::getc(u8"ú")) {
                 return 78;
-            } else if (cp == utf8::getc("â")) {
+            } else if (cp == utf8::getc(u8"â")) {
                 return 79;
-            } else if (cp == utf8::getc("ê")) {
+            } else if (cp == utf8::getc(u8"ê")) {
                 return 80;
-            } else if (cp == utf8::getc("î")) {
+            } else if (cp == utf8::getc(u8"î")) {
                 return 81;
-            } else if (cp == utf8::getc("ô")) {
+            } else if (cp == utf8::getc(u8"ô")) {
                 return 82;
-            } else if (cp == utf8::getc("û")) {
+            } else if (cp == utf8::getc(u8"û")) {
                 return 83;
-            } else if (cp == utf8::getc("à")) {
+            } else if (cp == utf8::getc(u8"à")) {
                 return 84;
-            } else if (cp == utf8::getc("è")) {
+            } else if (cp == utf8::getc(u8"è")) {
                 return 85;
-            } else if (cp == utf8::getc("ù")) {
+            } else if (cp == utf8::getc(u8"ù")) {
                 return 86;
-            } else if (cp == utf8::getc("ë")) {
+            } else if (cp == utf8::getc(u8"ë")) {
                 return 87;
-            } else if (cp == utf8::getc("ï")) {
+            } else if (cp == utf8::getc(u8"ï")) {
                 return 88;
-            } else if (cp == utf8::getc("ü")) {
+            } else if (cp == utf8::getc(u8"ü")) {
                 return 89;
-            } else if (cp == utf8::getc("ç")) {
+            } else if (cp == utf8::getc(u8"ç")) {
                 return 90;
-            } else if (cp == utf8::getc("Ç")) {
+            } else if (cp == utf8::getc(u8"Ç")) {
                 return 91;
-            } else if (cp == utf8::getc("ö")) {
+            } else if (cp == utf8::getc(u8"ö")) {
                 return 92;
             }
             return std::nullopt;
