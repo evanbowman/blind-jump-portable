@@ -1665,11 +1665,8 @@ void ImageViewState::enter(Platform& pfrm, Game& game, State&)
     pfrm.load_overlay_texture(image_name_);
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
-    for (int x = 0; x < screen_tiles.x - 2; ++x) {
-        for (int y = 0; y < screen_tiles.y - 3; ++y) {
-            pfrm.set_tile(Layer::overlay, x + 1, y + 1, y * 28 + x + 1);
-        }
-    }
+
+    draw_image(pfrm, 1, 1, 1, screen_tiles.x - 2, screen_tiles.y - 3, Layer::overlay);
 }
 
 

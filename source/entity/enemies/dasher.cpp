@@ -241,7 +241,7 @@ void Dasher::injured(Platform& pf, Game& game, Health amount)
     sprite_.set_mix({c, 255});
     head_.set_mix({c, 255});
 
-    if (state_ == State::sleep) {
+    if (state_ == State::inactive) {
         timer_ = 0;
         state_ = State::idle;
     }

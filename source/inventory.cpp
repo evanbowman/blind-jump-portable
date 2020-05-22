@@ -7,6 +7,11 @@
 
 void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
 {
+    if (item_is_persistent(insert) and has_item(insert)) {
+        error(pfrm, "attempt to add duplicate persistent item to inventory");
+        return;
+    }
+
     for (auto& item : data_) {
         if (item.type_ == Item::Type::null) {
             item.type_ = insert;

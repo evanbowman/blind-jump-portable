@@ -881,7 +881,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 using LevelRange = std::array<Level, 2>;
 
 
-inline LevelRange level_range(Item::Type item)
+static LevelRange level_range(Item::Type item)
 {
     static const auto max = std::numeric_limits<Level>::max();
     static const auto min = std::numeric_limits<Level>::min();
@@ -897,7 +897,48 @@ inline LevelRange level_range(Item::Type item)
 }
 
 
-inline bool level_in_range(Level level, LevelRange range)
+using ItemRarity = int;
+
+
+// Higher rarity value makes an item more common
+ItemRarity rarity(Item::Type item)
+{
+    switch (item) {
+    case Item::Type::heart:
+    case Item::Type::coin:
+    case Item::Type::blaster:
+    case Item::Type::count:
+        return 0;
+
+    case Item::Type::null:
+        return 1;
+
+    case Item::Type::surveyor_logbook:
+        return 1;
+
+    case Item::Type::lethargy:
+        return 1;
+
+    case Item::Type::old_poster_1:
+        return 1;
+
+    case Item::Type::seed_packet:
+        return 1;
+
+    case Item::Type::accelerator:
+        return 3;
+
+    case Item::Type::explosive_rounds_2:
+        return 3;
+
+    case Item::Type::map_system:
+        return 5;
+    }
+    return 0;
+}
+
+
+static bool level_in_range(Level level, LevelRange range)
 {
     return level >= range[0] and level < range[1];
 }
@@ -906,26 +947,47 @@ inline bool level_in_range(Level level, LevelRange range)
 static void
 spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 {
-    // Certain items only appear once, and some items are more likely to appear
-    // than others. Some items, like hearts and coins, only appear in the
-    // outside of item chests, so should not be included.
+    Buffer<Item::Type, static_cast<int>(Item::Type::count)> items_in_range;
 
-    auto item = Item::Type::heart;
+    for (int i = 0; i < static_cast<int>(Item::Type::count); ++i) {
+        auto item = static_cast<Item::Type>(i);
 
-    // FIXME: this is just debugging code (I added this code just to make items
-    // show up, but items won't necessarily be well proportioned in terms of
-    // their value, it's just random right now).
-    while ((game.inventory().has_item(item) and item_is_persistent(item)) or
-           item == Item::Type::heart or item == Item::Type::coin or
-           (item == Item::Type::lethargy and
-            game.inventory().has_item(Item::Type::lethargy)) or
-           not level_in_range(game.level(), level_range(item))) {
+        if (level_in_range(game.level(), level_range(item)) and
+            not(game.inventory().has_item(item) and
+                item_is_persistent(item)) and
+            not(item == Item::Type::lethargy and
+                game.inventory().has_item(Item::Type::lethargy))) {
 
-        item = static_cast<Item::Type>(
-            random_choice(static_cast<int>(Item::Type::count)));
+            items_in_range.push_back(item);
+        }
     }
 
-    spawn_entity<ItemChest>(pfrm, free_spots, game.details(), item);
+    Buffer<Item::Type, 300> distribution;
+
+    ItemRarity cumulative_rarity = 0;
+    for (auto item : items_in_range) {
+        cumulative_rarity += rarity(item);
+    }
+
+    if (cumulative_rarity == 0) {
+        error(pfrm,
+              "logic error when spawning item chest, "
+              "exit to avoid possible division by zero");
+        return;
+    }
+
+    for (auto item : items_in_range) {
+        const auto iters = distribution.capacity() * (Float(rarity(item)) / cumulative_rarity);
+
+        for (int i = 0; i < iters; ++i) {
+            distribution.push_back(item);
+        }
+    }
+
+    spawn_entity<ItemChest>(pfrm,
+                            free_spots,
+                            game.details(),
+                            distribution[random_choice(distribution.size())]);
 }
 
 
