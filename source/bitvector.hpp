@@ -6,21 +6,25 @@
 
 template <u32 bits> class Bitvector {
 public:
-    Bitvector(u8 init)
+    explicit constexpr Bitvector(u8 init)
     {
         static_assert(sizeof(init) * 8 == bits);
-        u8* data = &init;
-        for (size_t i = 0; i < data_.size(); ++i) {
-            data_[i] = data[i];
+        data_[0] = init;
+    }
+
+    constexpr Bitvector(const std::array<bool, bits> init) : data_({})
+    {
+        for (size_t bit = 0; bit < init.size(); ++bit) {
+            this->set(bit, init[bit]);
         }
     }
 
-    Bitvector()
+    constexpr Bitvector() : data_({})
     {
         clear();
     }
 
-    void set(u32 index, bool value)
+    constexpr void set(u32 index, bool value)
     {
         auto& byte = data_[index / 8];
         const auto bit = index % 8;
@@ -32,12 +36,7 @@ public:
         }
     }
 
-    bool operator[](u32 index) const
-    {
-        return get(index);
-    }
-
-    bool get(u32 index) const
+    constexpr bool get(u32 index) const
     {
         auto& byte = data_[index / 8];
         const auto bit = index % 8;
@@ -45,7 +44,12 @@ public:
         return byte & mask;
     }
 
-    void clear()
+    constexpr bool operator[](u32 index) const
+    {
+        return get(index);
+    }
+
+    constexpr void clear()
     {
         for (u8& byte : data_) {
             byte = 0;
@@ -59,12 +63,25 @@ private:
 
 template <int width, int height> class Bitmatrix {
 public:
-    bool get(int x, int y) const
+    constexpr Bitmatrix() : data_{}
+    {
+    }
+
+    constexpr Bitmatrix(const std::array<std::array<bool, height>, width>& init)
+    {
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height; ++y) {
+                this->set(x, y, init[x][y]);
+            }
+        }
+    }
+
+    constexpr bool get(int x, int y) const
     {
         return data_.get(y * width + x);
     }
 
-    void set(int x, int y, bool val)
+    constexpr void set(int x, int y, bool val)
     {
         static_assert(width % 8 == 0,
                       "Warning: this code runs faster when you use power-of-two"

@@ -180,8 +180,11 @@ static void condense(TileMap& map, TileMap& maptemp)
 }
 
 
+using BossLevelMap = Bitmatrix<TileMap::width, TileMap::height>;
+
+
 READ_ONLY_DATA
-static constexpr const bool boss_level_0[TileMap::width][TileMap::height] = {
+static constexpr const BossLevelMap boss_level_0({{
     {},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -198,10 +201,11 @@ static constexpr const bool boss_level_0[TileMap::width][TileMap::height] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-};
+}});
+
 
 READ_ONLY_DATA
-static constexpr const bool boss_level_1[TileMap::width][TileMap::height] = {
+static constexpr const BossLevelMap boss_level_1({{
     {},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -218,11 +222,11 @@ static constexpr const bool boss_level_1[TileMap::width][TileMap::height] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-};
+}});
 
 
 struct BossLevel {
-    const bool (*map_)[TileMap::height];
+    const BossLevelMap* map_;
     const char* spritesheet_;
 };
 
@@ -231,17 +235,17 @@ static const BossLevel* get_boss_level(Level current_level)
 {
     switch (current_level) {
     case boss_0_level: {
-        static constexpr const BossLevel ret{boss_level_0, "spritesheet_boss0"};
+        static constexpr const BossLevel ret{&boss_level_0, "spritesheet_boss0"};
         return &ret;
     }
 
     case boss_1_level: {
-        static constexpr const BossLevel ret{boss_level_1, "spritesheet_boss1"};
+        static constexpr const BossLevel ret{&boss_level_1, "spritesheet_boss1"};
         return &ret;
     }
 
     case boss_2_level: { // FIXME_ADD_BOSS2!!!
-        static constexpr const BossLevel ret{boss_level_0, "spritesheet_boss2"};
+        static constexpr const BossLevel ret{&boss_level_0, "spritesheet_boss2"};
         return &ret;
     }
 
@@ -496,7 +500,7 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
     if (auto l = get_boss_level(level())) {
         for (int x = 0; x < TileMap::width; ++x) {
             for (int y = 0; y < TileMap::height; ++y) {
-                tiles_.set_tile(x, y, static_cast<Tile>(l->map_[x][y]));
+                tiles_.set_tile(x, y, static_cast<Tile>(l->map_->get(x, y)));
             }
         }
     } else {
