@@ -237,7 +237,7 @@ private:
 
 
 // FIXME: this shouldn't be global...
-static std::optional<Platform::Keyboard::KeyStates> restore_keystates;
+static std::optional<Platform::Keyboard::RestoreState> restore_keystates;
 
 
 class NotebookState : public State {
@@ -480,14 +480,7 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    // Every update, advance the random number engine, so that the
-    // amount of time spent on a level contributes some entropy to the
-    // number stream. This makes the game somewhat less predictable,
-    // because, knowing the state of the random number engine, you
-    // would have to beat the current level in some microsecond
-    // granularity to get to a new level that's possible to
-    // anticipate.
-    random_value();
+    animate_starfield(pfrm, delta);
 
     Player& player = game.player();
 
@@ -1666,7 +1659,8 @@ void ImageViewState::enter(Platform& pfrm, Game& game, State&)
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    draw_image(pfrm, 1, 1, 1, screen_tiles.x - 2, screen_tiles.y - 3, Layer::overlay);
+    draw_image(
+        pfrm, 1, 1, 1, screen_tiles.x - 2, screen_tiles.y - 3, Layer::overlay);
 }
 
 

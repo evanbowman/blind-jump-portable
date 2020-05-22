@@ -210,10 +210,13 @@ public:
 
 
     class Keyboard {
+    private:
+        using KeyStates = std::array<bool, int(Key::count)>;
+
     public:
         void poll();
 
-        using KeyStates = std::array<bool, int(Key::count)>;
+        using RestoreState = Bitvector<KeyStates{}.size()>;
 
         template <Key... k> bool all_pressed() const
         {
@@ -240,18 +243,20 @@ public:
             return not states_[int(k)] and prev_[int(k)];
         }
 
-        KeyStates dump_state()
+        RestoreState dump_state()
         {
             return states_;
         }
 
-        void restore_state(const KeyStates& state)
+        void restore_state(const RestoreState& state)
         {
             // NOTE: we're assigning both the current and previous state to the
             // restored state. Otherwise, we could re-trigger a keypress that
             // already happened
-            prev_ = state;
-            states_ = state;
+            for (u32 i = 0; i < state.size(); ++i) {
+                prev_[i] = state[i];
+                states_[i] = state[i];
+            }
         }
 
     private:

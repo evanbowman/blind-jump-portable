@@ -235,17 +235,20 @@ static const BossLevel* get_boss_level(Level current_level)
 {
     switch (current_level) {
     case boss_0_level: {
-        static constexpr const BossLevel ret{&boss_level_0, "spritesheet_boss0"};
+        static constexpr const BossLevel ret{&boss_level_0,
+                                             "spritesheet_boss0"};
         return &ret;
     }
 
     case boss_1_level: {
-        static constexpr const BossLevel ret{&boss_level_1, "spritesheet_boss1"};
+        static constexpr const BossLevel ret{&boss_level_1,
+                                             "spritesheet_boss1"};
         return &ret;
     }
 
     case boss_2_level: { // FIXME_ADD_BOSS2!!!
-        static constexpr const BossLevel ret{&boss_level_0, "spritesheet_boss2"};
+        static constexpr const BossLevel ret{&boss_level_0,
+                                             "spritesheet_boss2"};
         return &ret;
     }
 
@@ -261,6 +264,49 @@ bool is_boss_level(Level level)
 }
 
 
+enum { star_empty = 60, star_1 = 70, star_2 = 71 };
+
+
+void animate_starfield(Platform& pfrm, Microseconds delta)
+{
+    static Microseconds timer;
+
+    timer += delta;
+
+    struct AnimInfo {
+        Vec2<int> pos_;
+        int tile_;
+    };
+
+    static Buffer<AnimInfo, 3> selected;
+
+    if (timer > milliseconds(90)) {
+        timer = 0;
+
+
+        for (auto& info : selected) {
+            pfrm.set_tile(
+                Layer::background, info.pos_.x, info.pos_.y, info.tile_);
+        }
+
+        selected.clear();
+
+        for (u32 i = 0; i < selected.capacity(); ++i) {
+
+            const int x = random_choice<32>();
+            const int y = random_choice<32>();
+
+            const auto tile = pfrm.get_tile(Layer::background, x, y);
+            if (selected.push_back({{x, y}, tile})) {
+                if (tile == star_1 or tile == star_2) {
+                    pfrm.set_tile(Layer::background, x, y, star_empty);
+                }
+            }
+        }
+    }
+}
+
+
 static void draw_starfield(Platform& pfrm)
 {
     // Redraw the starfield background. Due to memory constraints, the
@@ -269,12 +315,12 @@ static void draw_starfield(Platform& pfrm)
         for (int y = 0; y < 32; ++y) {
             pfrm.set_tile(Layer::background, x, y, [] {
                 if (random_choice<9>()) {
-                    return 60;
+                    return star_empty;
                 } else {
                     if (random_choice<2>()) {
-                        return 70;
+                        return star_1;
                     } else {
-                        return 71;
+                        return star_2;
                     }
                 }
             }());
@@ -981,7 +1027,8 @@ spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     }
 
     for (auto item : items_in_range) {
-        const auto iters = distribution.capacity() * (Float(rarity(item)) / cumulative_rarity);
+        const auto iters =
+            distribution.capacity() * (Float(rarity(item)) / cumulative_rarity);
 
         for (int i = 0; i < iters; ++i) {
             distribution.push_back(item);

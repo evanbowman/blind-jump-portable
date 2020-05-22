@@ -24,6 +24,17 @@ public:
         clear();
     }
 
+    Bitvector& operator=(const Bitvector& other)
+    {
+        data_ = other.data_;
+        return *this;
+    }
+
+    constexpr u32 size() const
+    {
+        return bits;
+    }
+
     constexpr void set(u32 index, bool value)
     {
         auto& byte = data_[index / 8];
@@ -93,6 +104,11 @@ public:
     void clear()
     {
         data_.clear();
+    }
+
+    constexpr Vec2<int> size() const
+    {
+        return {width, height};
     }
 
 private:

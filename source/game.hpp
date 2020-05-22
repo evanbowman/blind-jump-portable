@@ -184,3 +184,6 @@ enum {
     boss_1_level = 21,
     boss_2_level = 32,
 };
+
+
+void animate_starfield(Platform& pfrm, Microseconds delta);
