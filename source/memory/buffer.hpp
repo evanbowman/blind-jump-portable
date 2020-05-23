@@ -14,6 +14,10 @@ public:
     // (only for stl compatibility)
     using iterator = Iterator;
     using value_type = ValueType;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+
+    using ReverseIterator = reverse_iterator;
+
 
     Buffer() : begin_((Iterator)mem_.data()), end_(begin_)
     {
@@ -40,6 +44,18 @@ public:
     Iterator end()
     {
         return end_;
+    }
+
+
+    ReverseIterator rbegin()
+    {
+        return ReverseIterator(end());
+    }
+
+
+    ReverseIterator rend()
+    {
+        return ReverseIterator(begin());
     }
 
 

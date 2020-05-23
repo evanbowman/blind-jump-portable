@@ -285,8 +285,7 @@ void animate_starfield(Platform& pfrm, Microseconds delta)
 
         // Because a coord may have been selected twice, undo the flicker effect
         // in reverse order.
-        std::reverse(selected.begin(), selected.end());
-        for (auto& info : selected) {
+        for (auto& info : reversed(selected)) {
             pfrm.set_tile(
                 Layer::background, info.pos_.x, info.pos_.y, info.tile_);
         }
