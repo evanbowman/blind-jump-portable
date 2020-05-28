@@ -1021,7 +1021,11 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (counter_ > fade_duration) {
         pfrm.screen().pixelate(0);
 
-        draw_image(pfrm, 416, 4, 2, 22, 4, Layer::overlay);
+        auto screen_tiles = calc_screen_tiles(pfrm);
+
+        const auto image_width = 18;
+
+        draw_image(pfrm, 450, (screen_tiles.x - image_width) / 2, 3, image_width, 3, Layer::overlay);
 
         return state_pool_.create<DeathContinueState>();
     } else {
