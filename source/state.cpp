@@ -662,10 +662,15 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
         check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
         check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
+        check_collisions(pfrm, game, player, game.enemies().get<Theif>());
         check_collisions(pfrm,
                          game,
                          game.effects().get<Laser>(),
                          game.enemies().get<Drone>());
+        check_collisions(pfrm,
+                         game,
+                         game.effects().get<Laser>(),
+                         game.enemies().get<Theif>());
         check_collisions(pfrm,
                          game,
                          game.effects().get<Laser>(),
@@ -1025,7 +1030,13 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         const auto image_width = 18;
 
-        draw_image(pfrm, 450, (screen_tiles.x - image_width) / 2, 3, image_width, 3, Layer::overlay);
+        draw_image(pfrm,
+                   450,
+                   (screen_tiles.x - image_width) / 2,
+                   3,
+                   image_width,
+                   3,
+                   Layer::overlay);
 
         return state_pool_.create<DeathContinueState>();
     } else {
@@ -2353,17 +2364,17 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
 // FIXME: we could be using smarter formatting here... right now, all this stuff
 // is sort of algined for the gameboy advance screen...
 // FIXME: localize the credits?
-static const std::array<const char*, 30> credits_lines = {
+static const std::array<const char*, 32> credits_lines = {
     "Artwork and Source Code by",
     "Evan Bowman",
     "",
     "",
     "Music",
-    "Frostellar.........Lenkaland",
-    "Omega..........Scott Buckley",
-    "Computations...Scott Buckley",
-    "September..........Kai Engel",
-    "Clair De Lune....Chad Crouch",
+    "Frostellar%Lenkaland",
+    "Omega%Scott Buckley",
+    "Computations%Scott Buckley",
+    "September%Kai Engel",
+    "Clair De Lune%Chad Crouch",
     "",
     "",
     "Playtesting",
@@ -2374,6 +2385,8 @@ static const std::array<const char*, 30> credits_lines = {
     "My Family",
     "Jasper Vijn (Tonc)",
     "The DevkitARM Project"
+    "",
+    "",
     "",
     "",
     "",
@@ -2421,13 +2434,54 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                 next_y_ += 2;
 
                 const auto str = credits_lines[next_++];
-                const auto len = utf8::len(str);
-                const u8 left_margin = (screen_tiles.x - len) / 2;
 
-                lines_.emplace_back(pfrm, OverlayCoord{left_margin, y});
-                lines_.back().assign(str);
 
-            } else if (lines_.empty()) {
+                bool contains_fill_char = false;
+                utf8::scan(
+                    [&contains_fill_char, &pfrm](const utf8::Codepoint& cp,
+                                                 const char*) {
+                        if (cp == '%') {
+                            if (contains_fill_char) {
+                                error(pfrm, "two fill chars not allowed");
+                                pfrm.fatal();
+                            }
+                            contains_fill_char = true;
+                        }
+                    },
+                    str,
+                    str_len(str));
+
+                if (utf8::len(str) > u32(screen_tiles.x - 2)) {
+                    error(pfrm, "credits text too large");
+                    pfrm.fatal();
+                }
+
+                if (contains_fill_char) {
+                    const auto fill =
+                        screen_tiles.x - ((utf8::len(str) - 1) + 2);
+                    lines_.emplace_back(pfrm, OverlayCoord{1, y});
+                    utf8::scan(
+                        [this, fill](const utf8::Codepoint&, const char* raw) {
+                            if (str_len(raw) == 1 and raw[0] == '%') {
+                                for (size_t i = 0; i < fill; ++i) {
+                                    lines_.back().append(".");
+                                }
+                            } else {
+                                lines_.back().append(raw);
+                            }
+                        },
+                        str,
+                        str_len(str));
+                } else {
+                    const auto len = utf8::len(str);
+                    const u8 left_margin = (screen_tiles.x - len) / 2;
+                    lines_.emplace_back(pfrm, OverlayCoord{left_margin, y});
+                    lines_.back().assign(str);
+                }
+
+
+            } else if (lines_.size() == screen_tiles.y / 4) {
+                pfrm.sleep(160);
                 factory_reset(pfrm);
             }
         }

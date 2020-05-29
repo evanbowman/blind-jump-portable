@@ -42,10 +42,17 @@ public:
 
     void update(Platform&, Game&, Microseconds dt);
 
+    void scatter();
+
+    bool ready() const;
+
 private:
+    enum class State { idle, scatter } state_;
+
     Microseconds timer_;
     Type type_;
     HitBox hitbox_;
+    Vec2<Float> step_;
 };
 
 

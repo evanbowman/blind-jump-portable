@@ -353,6 +353,18 @@ public:
             u8(0x1F & val), u8((0x3E0 & val) >> 5), u8((0x7C00 & val) >> 10)};
     }
 
+    inline Color invert() const
+    {
+        constexpr u8 max{31};
+        return {u8(max - r_), u8(max - g_), u8(max - b_)};
+    }
+
+    inline Color grayscale() const
+    {
+        const u8 val = 0.3f * r_ + 0.59f * g_ + 0.11f * b_;
+        return {val, val, val};
+    }
+
     u8 r_;
     u8 g_;
     u8 b_;
@@ -466,6 +478,29 @@ static PaletteBank palette_counter = available_palettes;
 
 static u8 screen_pixelate_amount = 0;
 
+static bool inverted = false;
+
+
+void Platform::Screen::invert()
+{
+    ::inverted = !::inverted;
+
+    for (int i = 0; i < 16; ++i) {
+        const auto before = Color::from_bgr_hex_555(MEM_PALETTE[i]);
+        MEM_PALETTE[i] = before.invert().bgr_hex_555();
+    }
+
+    for (int i = 0; i < 16; ++i) {
+        const auto before = Color::from_bgr_hex_555(MEM_BG_PALETTE[i]);
+        MEM_BG_PALETTE[i] = before.invert().bgr_hex_555();
+    }
+
+    for (int i = 0; i < 16; ++i) {
+        const auto before = Color::from_bgr_hex_555(MEM_BG_PALETTE[32 + i]);
+        MEM_BG_PALETTE[32 + i] = before.invert().bgr_hex_555();
+    }
+}
+
 
 // For the purpose of saving cpu cycles. The color_mix function scans a list of
 // previous results, and if one matches the current blend parameters, the caller
@@ -490,7 +525,7 @@ static bool color_mix_disabled = false;
 // display 12 mixed colors at a time, because the first four banks are in use.
 static PaletteBank color_mix(ColorConstant k, u8 amount)
 {
-    if (UNLIKELY(color_mix_disabled)) {
+    if (UNLIKELY(color_mix_disabled or inverted)) {
         return 0;
     }
 
@@ -987,6 +1022,8 @@ void Platform::Screen::fade(float amount,
                             ColorConstant k,
                             std::optional<ColorConstant> base)
 {
+    ::inverted = false;
+
     const u8 amt = amount * 255;
 
     if (amt < 128) {

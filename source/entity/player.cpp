@@ -51,6 +51,7 @@ void Player::injured(Platform& pf, Game& game, Health damage)
         sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
         blaster_.get_sprite().set_mix(sprite_.get_mix());
         invulnerability_timer_ = milliseconds(700);
+        // If 'injured' sound not playing, play sound...
     }
 }
 
@@ -94,8 +95,35 @@ void Player::on_collision(Platform& pf, Game& game, Drone& drone)
 }
 
 
+void Player::on_collision(Platform& pf, Game& game, Theif&)
+{
+    if (this->is_invulnerable()) {
+        return;
+    }
+
+    if (get_health() > 1) {
+        pf.sleep(8);
+        sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
+        blaster_.get_sprite().set_mix(sprite_.get_mix());
+        invulnerability_timer_ = milliseconds(700);
+    }
+
+    while (get_health() > 1) {
+        if (game.details().spawn<Item>(position_, pf, Item::Type::heart)) {
+            (*game.details().get<Item>().begin())->scatter();
+            debit_health(1);
+        } else {
+            break;
+        }
+    }
+}
+
+
 void Player::on_collision(Platform& pf, Game& game, Item& item)
 {
+    if (not item.ready()) {
+        return;
+    }
     switch (item.get_type()) {
     case Item::Type::heart:
         sprite_.set_mix({ColorConstant::spanish_crimson, 255});

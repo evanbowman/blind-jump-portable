@@ -225,6 +225,27 @@ static constexpr const BossLevelMap boss_level_1({{
 }});
 
 
+READ_ONLY_DATA
+static constexpr const BossLevelMap boss_level_2({{
+    {},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+}});
+
+
 struct BossLevel {
     const BossLevelMap* map_;
     const char* spritesheet_;
@@ -247,8 +268,7 @@ static const BossLevel* get_boss_level(Level current_level)
     }
 
     case boss_2_level: { // FIXME_ADD_BOSS2!!!
-        static constexpr const BossLevel ret{&boss_level_0,
-                                             "spritesheet_boss2"};
+        static constexpr const BossLevel ret{&boss_level_2, "spritesheet3"};
         return &ret;
     }
 
@@ -895,9 +915,13 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          boss_0_level,
          1},
         {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
-        {11,
+        {boss_0_level,
          [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
-         boss_1_level}};
+         boss_1_level},
+        {boss_1_level,
+         [&]() { spawn_entity<Theif>(pfrm, free_spots, game.enemies()); },
+         boss_2_level,
+         1}};
 
 
     Buffer<EnemyInfo*, 100> distribution;

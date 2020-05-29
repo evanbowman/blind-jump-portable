@@ -13,6 +13,7 @@ class Platform;
 class Item;
 class Enemy;
 class Drone;
+class Theif;
 class OrbShot;
 class SnakeHead;
 class TheFirstExplorer;
@@ -58,6 +59,7 @@ public:
     void on_collision(Platform& pf, Game& game, OrbShot&);
     void on_collision(Platform& pf, Game& game, Enemy&);
     void on_collision(Platform& pf, Game& game, Drone&);
+    void on_collision(Platform& pf, Game& game, Theif&);
     void on_collision(Platform& pf, Game& game, Item&);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);

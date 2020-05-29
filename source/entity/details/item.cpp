@@ -1,10 +1,12 @@
 #include "item.hpp"
+#include "game.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
+#include "wallCollision.hpp"
 
 
 Item::Item(const Vec2<Float>& pos, Platform&, Type type)
-    : timer_(random_value()),
+    : state_(State::idle), timer_(random_value()),
       type_(type), hitbox_{&position_, {{10, 10}, {2, 2}}}
 {
     position_ = pos - Vec2<Float>{8, 0};
@@ -17,6 +19,9 @@ Item::Item(const Vec2<Float>& pos, Platform&, Type type)
 
 void Item::on_collision(Platform& pf, Game&, Player&)
 {
+    if (not ready()) {
+        return;
+    }
     Entity::kill();
     pf.sleep(5);
 }
@@ -45,7 +50,7 @@ void Item::set_type(Type type)
 }
 
 
-void Item::update(Platform&, Game&, Microseconds dt)
+void Item::update(Platform&, Game& game, Microseconds dt)
 {
     timer_ += dt;
 
@@ -56,4 +61,41 @@ void Item::update(Platform&, Game&, Microseconds dt)
                              std::numeric_limits<s16>::max();
         sprite_.set_position({position_.x, position_.y + offset});
     }
+
+    if (state_ == State::scatter) {
+
+        constexpr auto duration = seconds(1);
+
+        const auto wc = check_wall_collisions(game.tiles(), *this);
+        if (wc.any()) {
+            if ((wc.left and step_.x < 0.f) or (wc.right and step_.x > 0.f)) {
+                step_.x = -step_.x;
+            }
+            if ((wc.up and step_.y < 0.f) or (wc.down and step_.y > 0.f)) {
+                step_.y = -step_.y;
+            }
+        }
+
+        position_.x += step_.x * dt;
+        position_.y += step_.y * dt;
+
+        if (timer_ > duration) {
+            state_ = State::idle;
+        }
+    }
+}
+
+
+void Item::scatter()
+{
+    timer_ = 0;
+    state_ = State::scatter;
+    auto target = sample<64>(position_);
+    step_ = direction(position_, target) * 0.00013f;
+}
+
+
+bool Item::ready() const
+{
+    return state_ == State::idle;
 }

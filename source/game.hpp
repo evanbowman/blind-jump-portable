@@ -16,9 +16,9 @@
 #include "entity/effects/orbshot.hpp"
 #include "entity/enemies/dasher.hpp"
 #include "entity/enemies/drone.hpp"
-#include "entity/enemies/probe.hpp"
 #include "entity/enemies/scarecrow.hpp"
 #include "entity/enemies/snake.hpp"
+#include "entity/enemies/theif.hpp"
 #include "entity/enemies/turret.hpp"
 #include "entity/entityGroup.hpp"
 #include "entity/player.hpp"
@@ -56,7 +56,8 @@ public:
                                    Scarecrow,
                                    TheFirstExplorer,
                                    Gatekeeper,
-                                   GatekeeperShield>;
+                                   GatekeeperShield,
+                                   Theif>;
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
     using EffectGroup = EntityGroup<20,

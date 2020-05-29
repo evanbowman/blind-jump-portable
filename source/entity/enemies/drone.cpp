@@ -68,7 +68,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             const auto screen_size = pfrm.screen().size();
             if (manhattan_length(game.player().get_position(), position_) <
                 std::min(screen_size.x, screen_size.y)) {
-                state_ = State::idle2;
+                state_ = State::idle1;
             }
         }
         break;

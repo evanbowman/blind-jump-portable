@@ -194,6 +194,8 @@ public:
                       bool include_background = true,
                       bool include_sprites = true);
 
+        void invert();
+
     private:
         Screen();
 

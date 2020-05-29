@@ -91,7 +91,7 @@ void Text::append(const char* str)
     auto write_pos = static_cast<u8>(coord_.x + len_);
 
     utf8::scan(
-        [&](const utf8::Codepoint& cp) {
+        [&](const utf8::Codepoint& cp, const char* raw) {
             print_char(pfrm_, cp, {write_pos, coord_.y});
             ++write_pos;
             ++len_;
@@ -181,7 +181,7 @@ void TextView::assign(const char* str,
     {
         int i = 0;
         utf8::scan(
-            [&ustr, &i](const utf8::Codepoint& cp) {
+            [&ustr, &i](const utf8::Codepoint& cp, const char* raw) {
                 if (i < buffer_size) {
                     ustr[i++] = cp;
                 }

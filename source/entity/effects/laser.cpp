@@ -105,6 +105,7 @@ void Laser::handle_collision(Platform& pfrm, Game& game)
 
     case Mode::explosive:
         LaserExplosion exp;
+
         big_explosion(pfrm, game, position_);
         game.enemies().transform([&, this](auto& buf) {
             for (auto& entity : buf) {
