@@ -151,6 +151,15 @@ public:
     bool is_running() const;
 
 
+    // If the watchdog is not fed every ten seconds, the game will reset itself,
+    // after calling the user-supplied watchdog handler (obviously, don't spend
+    // more than ten seconds in the watchdog handler!).
+    void feed_watchdog();
+
+    using WatchdogCallback = Function<16, void(Platform& pfrm)>;
+    void on_watchdog_timeout(WatchdogCallback callback);
+
+
     bool write_save(const PersistentData& data);
     std::optional<PersistentData> read_save();
 

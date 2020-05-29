@@ -40,6 +40,16 @@ Game::Game(Platform& pfrm) : state_(null_state())
     if (not inventory().has_item(Item::Type::blaster)) {
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
+
+    pfrm.on_watchdog_timeout([this](Platform& pfrm) {
+        error(pfrm,
+              "update loop stuck for unknown reason, system reset by watchdog");
+
+        // Not sure what else to do... but at least if the code breaks because
+        // we got stuck in a loop, we can return the user to where they left
+        // off...
+        pfrm.write_save(persistent_data_);
+    });
 }
 
 

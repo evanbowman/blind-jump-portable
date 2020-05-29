@@ -84,9 +84,7 @@ inline Codepoint getc(const char* data)
 inline size_t len(const char* data)
 {
     size_t ret = 0;
-    scan([&ret](const Codepoint&, const char*) { ++ret; },
-         data,
-         str_len(data));
+    scan([&ret](const Codepoint&, const char*) { ++ret; }, data, str_len(data));
     return ret;
 }
 } // namespace utf8

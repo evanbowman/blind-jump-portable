@@ -43,6 +43,8 @@ void start(Platform& pf)
 
     while (pf.is_running()) {
 
+        pf.feed_watchdog();
+
         pf.screen().clear();
         game.acquire([&](Game& gm) { gm.render(pf); });
         pf.screen().display();

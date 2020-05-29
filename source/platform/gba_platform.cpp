@@ -1998,6 +1998,42 @@ static void audio_update()
 }
 
 
+static Microseconds watchdog_counter;
+
+
+static std::optional<Platform::WatchdogCallback> watchdog_callback;
+
+
+static void watchdog_update()
+{
+    // NOTE: The watchdog timer is configured to have a period of 61.04
+    // microseconds. 0xffff is the max counter value upon overflow.
+    ::watchdog_counter += 61 * 0xffff;
+
+    if (::watchdog_counter > seconds(10)) {
+        ::watchdog_counter = 0;
+
+        if (::platform and ::watchdog_callback) {
+            (*::watchdog_callback)(*platform);
+        }
+
+        SoftReset(ROM_RESTART);
+    }
+}
+
+
+void Platform::feed_watchdog()
+{
+    ::watchdog_counter = 0;
+}
+
+
+void Platform::on_watchdog_timeout(WatchdogCallback callback)
+{
+    ::watchdog_callback.emplace(callback);
+}
+
+
 Platform::Platform()
 {
     irqInit();
@@ -2029,8 +2065,16 @@ Platform::Platform()
                                // from the initial count, the timer will
                                // overflow at the correct rate, right?
 
-    REG_TM0CNT_H = 0x00C3;
+    // While it may look like TM0 is unused, it is in fact used for setting the
+    // sample rate for the digital audio chip.
+    REG_TM0CNT_H = 0x0083;
     REG_TM1CNT_H = 0x00C3;
+
+    irqEnable(IRQ_TIMER2);
+    irqSet(IRQ_TIMER2, watchdog_update);
+
+    REG_TM2CNT_H = 0x00C3;
+    REG_TM2CNT_L = 0;
 }
 
 
