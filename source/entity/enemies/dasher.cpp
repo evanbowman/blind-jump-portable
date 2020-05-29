@@ -124,16 +124,22 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         }
         break;
 
-    case State::shot2:
-        if (timer_ > milliseconds(150)) {
-            timer_ -= milliseconds(150);
-            state_ = State::shot3;
+    case State::shot2: {
+        const auto t = milliseconds(game.level() > boss_0_level ? 150 : 230);
+        if (timer_ > t) {
+            timer_ -= t;
+            if (game.level() > boss_0_level) {
+                state_ = State::shot3;
+            } else {
+                state_ = State::pause;
+            }
 
             pf.speaker().play_sound("laser1", 4);
             game.effects().spawn<OrbShot>(
                 position_, sample<16>(game.player().get_position()), 0.00015f);
         }
         break;
+    }
 
     case State::shot3:
         if (timer_ > milliseconds(150)) {
