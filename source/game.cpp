@@ -1,4 +1,5 @@
 #include "game.hpp"
+#include "conf.hpp"
 #include "function.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
@@ -19,7 +20,7 @@ void Game::save(Platform& pfrm)
 }
 
 
-Game::Game(Platform& pfrm) : score_(0), state_(null_state())
+Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
@@ -36,7 +37,10 @@ Game::Game(Platform& pfrm) : score_(0), state_(null_state())
         info(pfrm, "no save file found");
     }
 
-    locale_set_language(LocaleLanguage::english);
+    const auto lang = Conf(pfrm).expect<Conf::String>("locale", "language");
+    if (lang == "english") {
+        locale_set_language(LocaleLanguage::english);
+    }
 
     state_ = State::initial();
 
@@ -905,9 +909,24 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     // Some other enemies require a lot of map space to fight effectively, so
     // they are banned from tiny maps.
 
-    const auto density = std::min(0.16f, 0.07f + game.level() * 0.004f);
+    const char* setup = "level-setup";
 
-    constexpr auto max_enemies = 6;
+    const auto max_density =
+        Conf(pfrm).expect<Conf::Integer>(setup, "max_enemy_density");
+
+    const auto min_density =
+        Conf(pfrm).expect<Conf::Integer>(setup, "min_enemy_density");
+
+    const auto density_incr =
+        Conf(pfrm).expect<Conf::Integer>(setup, "enemy_density_incr");
+
+
+    const auto density = std::min(
+        Float(max_density) / 1000,
+        Float(min_density) / 1000 + game.level() * Float(density_incr) / 1000);
+
+    const auto max_enemies =
+        Conf(pfrm).expect<Conf::Integer>(setup, "max_enemies");
 
     const int spawn_count =
         std::max(std::min(max_enemies, int(free_spots.size() * density)), 1);
@@ -1186,9 +1205,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             break;
         }
 
-        // Place two hearts in the level. The game is supposed to be difficult,
-        // but not cruel!
-        int heart_count = 2;
+        int heart_count =
+            Conf(pfrm).expect<Conf::Integer>("level-setup", "max_hearts");
 
         while (true) {
             const s8 x = random_choice<TileMap::width>();
@@ -1215,7 +1233,10 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     }
 
     // Sometimes for small maps, and always for large maps, place an item chest
-    if (random_choice<2>() or initial_free_spaces > 25) {
+    if (random_choice<2>() or
+        (int) initial_free_spaces >
+            Conf(pfrm).expect<Conf::Integer>("level-setup",
+                                             "item_chest_spawn_threshold")) {
         spawn_item_chest(pfrm, *this, free_spots);
     }
 

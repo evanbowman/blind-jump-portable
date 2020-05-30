@@ -1,5 +1,6 @@
 #include "scarecrow.hpp"
 #include "common.hpp"
+#include "conf.hpp"
 #include "game.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
@@ -341,7 +342,7 @@ void Scarecrow::on_collision(Platform& pf, Game& game, LaserExplosion&)
 
 void Scarecrow::on_death(Platform& pf, Game& game)
 {
-    game.score() += 15;
+    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "scarecrow");
 
     pf.sleep(5);
 

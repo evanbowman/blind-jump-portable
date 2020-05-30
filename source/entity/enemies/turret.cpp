@@ -1,5 +1,6 @@
 #include "turret.hpp"
 #include "common.hpp"
+#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 #include <algorithm>
@@ -172,7 +173,7 @@ void Turret::on_collision(Platform& pf, Game& game, LaserExplosion&)
 
 void Turret::on_death(Platform& pf, Game& game)
 {
-    game.score() += 12;
+    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "turret");
 
     pf.sleep(5);
 

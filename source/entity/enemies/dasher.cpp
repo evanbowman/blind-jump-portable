@@ -1,5 +1,6 @@
 #include "dasher.hpp"
 #include "common.hpp"
+#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 #include "wallCollision.hpp"
@@ -268,7 +269,7 @@ void Dasher::on_collision(Platform& pf, Game& game, LaserExplosion&)
 
 void Dasher::on_death(Platform& pf, Game& game)
 {
-    game.score() += 15;
+    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "dasher");
 
     pf.sleep(5);
 

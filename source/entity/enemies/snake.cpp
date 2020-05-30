@@ -1,5 +1,6 @@
 #include "snake.hpp"
 #include "common.hpp"
+#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 
@@ -54,7 +55,9 @@ void SnakeNode::update(Platform& pfrm, Game& game, Microseconds dt)
                     Item::Type::heart, Item::Type::coin, Item::Type::null};
                 on_enemy_destroyed(pfrm, game, position_, 1, item_drop_vec);
             }
-            game.score() += 8;
+            game.score() +=
+                Conf(pfrm).expect<Conf::Integer>("scoring", "snake");
+
             kill();
         }
     }

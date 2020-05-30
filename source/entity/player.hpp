@@ -51,7 +51,7 @@ private:
 
 class Player : public Entity {
 public:
-    Player();
+    Player(Platform& pfrm);
 
     void on_collision(Platform& pf, Game& game, FirstExplorerBigLaser&);
     void on_collision(Platform& pf, Game& game, TheFirstExplorer&);
@@ -73,12 +73,14 @@ public:
 
     void move(const Vec2<Float>& pos);
 
-    void revive();
+    void revive(Platform& pfrm);
 
     void set_visible(bool visible);
 
 private:
     using ResourceLoc = TextureMap;
+
+    Health initial_health(Platform& pfrm) const;
 
     template <ResourceLoc L>
     void key_response(bool k1,

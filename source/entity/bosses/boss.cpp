@@ -1,4 +1,5 @@
 #include "boss.hpp"
+#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 
@@ -37,7 +38,7 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
     pf.speaker().stop_music();
     pf.sleep(10);
 
-    game.score() += 1000;
+    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "boss");
 }
 
 

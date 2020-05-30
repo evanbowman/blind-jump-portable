@@ -24,8 +24,7 @@ public:
     // if the next state will be the same state, returns an empty state
     // pointer.
 
-    virtual StatePtr
-    update(Platform& platform, Game& game, Microseconds delta);
+    virtual StatePtr update(Platform& platform, Game& game, Microseconds delta);
 
     virtual ~State()
     {

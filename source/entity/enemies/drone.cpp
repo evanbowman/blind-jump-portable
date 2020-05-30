@@ -1,5 +1,6 @@
 #include "drone.hpp"
 #include "common.hpp"
+#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 
@@ -189,7 +190,7 @@ void Drone::on_collision(Platform& pf, Game& game, Player& player)
 
 void Drone::on_death(Platform& pf, Game& game)
 {
-    game.score() += 10;
+    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "drone");
 
     pf.sleep(5);
 

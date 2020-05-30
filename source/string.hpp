@@ -112,6 +112,15 @@ public:
         return *this;
     }
 
+    StringBuffer& operator=(const char* str)
+    {
+        this->clear();
+
+        *this += str;
+
+        return *this;
+    }
+
     bool operator==(const char* str)
     {
         return strcmp(str, this->c_str()) == 0;
@@ -146,6 +155,13 @@ public:
 private:
     Buffer mem_;
 };
+
+
+template <u32 Capacity>
+bool operator==(StringBuffer<Capacity> buf, const char* str)
+{
+    return strcmp(str, buf.c_str()) == 0;
+}
 
 
 // I was trying to track down certain bugs, where invalid strings were being

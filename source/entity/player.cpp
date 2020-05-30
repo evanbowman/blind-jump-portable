@@ -1,4 +1,5 @@
 #include "player.hpp"
+#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
@@ -11,11 +12,17 @@
 
 const Vec2<s32> v_origin{8, 16};
 const Vec2<s32> h_origin{16, 16};
-static const Player::Health initial_health{3};
+// static const Player::Health initial_health{3};
 
 
-Player::Player()
-    : Entity(initial_health), frame_(0),
+Entity::Health Player::initial_health(Platform& pfrm) const
+{
+    return Conf(pfrm).expect<Conf::Integer>("player", "init_health");
+}
+
+
+Player::Player(Platform& pfrm)
+    : Entity(initial_health(pfrm)), frame_(0),
       frame_base_(ResourceLoc::player_still_down), anim_timer_(0),
       invulnerability_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
       d_speed_(0.f), hitbox_{&position_, {{10, 22}, {9, 14}}}
@@ -30,10 +37,10 @@ Player::Player()
 }
 
 
-void Player::revive()
+void Player::revive(Platform& pfrm)
 {
     if (not alive()) {
-        add_health(initial_health);
+        add_health(initial_health(pfrm));
 
         invulnerability_timer_ = seconds(1);
         sprite_.set_mix({});
@@ -133,7 +140,7 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
 
     case Item::Type::coin:
         sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
-        game.score() += 10;
+        game.score() += Conf(pf).expect<Conf::Integer>("scoring", "coin");
         pf.speaker().play_sound("coin", 1);
         break;
 

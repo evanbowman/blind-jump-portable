@@ -19,8 +19,6 @@ StatePtr State::update(Platform&, Game&, Microseconds)
 }
 
 
-
-
 bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
@@ -1180,7 +1178,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 pfrm.keyboard().pressed<Key::action_2>()) {
 
                 game.score() = 0;
-                game.player().revive();
+                game.player().revive(pfrm);
 
                 return state_pool_.create<RespawnWaitState>();
             }
