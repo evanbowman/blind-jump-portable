@@ -43,6 +43,8 @@ enum class LocaleString {
     high_score,
     waypoints,
     punctuation_period,
+    menu_resume,
+    menu_save_and_quit,
     count
 };
 

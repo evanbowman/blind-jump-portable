@@ -44,6 +44,11 @@ public:
         return len_;
     }
 
+    const OverlayCoord& coord() const
+    {
+        return coord_;
+    }
+
 private:
     Platform& pfrm_;
     const OverlayCoord coord_;

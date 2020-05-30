@@ -55,7 +55,7 @@ private:
 
 class ActiveState : public OverworldState {
 public:
-    ActiveState(bool camera_tracking) : OverworldState(camera_tracking)
+    ActiveState(bool camera_tracking = true) : OverworldState(camera_tracking)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -378,6 +378,24 @@ public:
 };
 
 
+class PauseScreenState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    void draw_cursor(Platform& pfrm);
+
+    Microseconds fade_timer_ = 0;
+    int cursor_loc_ = 0;
+    int anim_index_ = 0;
+    Microseconds anim_timer_ = 0;
+    std::optional<Text> resume_text_;
+    std::optional<Text> save_and_quit_text_;
+};
+
+
 // This is a hidden game state intended for debugging. The user can enter
 // various numeric codes, which trigger state changes within the game
 // (e.g. jumping to a boss fight/level, spawing specific enemies, setting the
@@ -449,6 +467,7 @@ static StatePool<ActiveState,
                  ImageViewState,
                  NewLevelState,
                  CommandCodeState,
+                 PauseScreenState,
                  MapSystemState,
                  IntroCreditsState,
                  IntroLegalMessage,
@@ -827,9 +846,12 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<InventoryState>(true);
     }
 
-    if (pfrm.keyboard().down_transition<Key::alt_1>() and
+    if (pfrm.keyboard().down_transition<Key::start>() and
         not is_boss_level(game.level())) {
-        return state_pool_.create<GoodbyeState>();
+
+        restore_keystates = pfrm.keyboard().dump_state();
+
+        return state_pool_.create<PauseScreenState>();
     }
 
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
@@ -906,7 +928,7 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         shook_ = false;
         pfrm.screen().fade(0.f, current_zone(game).energy_glow_color_);
         pfrm.screen().pixelate(0);
-        return state_pool_.create<ActiveState>(true);
+        return state_pool_.create<ActiveState>();
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
@@ -1317,7 +1339,7 @@ const char* item_description(Item::Type type)
 StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     if (pfrm.keyboard().down_transition<Key::alt_2>()) {
-        return state_pool_.create<ActiveState>(true);
+        return state_pool_.create<ActiveState>();
     }
 
     selector_timer_ += delta;
@@ -1384,7 +1406,7 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
-    if (pfrm.keyboard().down_transition<Key::action_1>()) {
+    if (pfrm.keyboard().down_transition<Key::action_2>()) {
 
         const auto item = game.inventory().get_item(
             page_, selector_coord_.x, selector_coord_.y);
@@ -1427,14 +1449,20 @@ InventoryState::InventoryState(bool fade_in)
 }
 
 
-void InventoryState::enter(Platform& pfrm, Game& game, State&)
+static void draw_dot_grid(Platform& pfrm)
 {
-    update_arrow_icons(pfrm);
     for (int i = 0; i < 6; ++i) {
         pfrm.set_tile(Layer::overlay, 2 + i * 5, 2, 176);
         pfrm.set_tile(Layer::overlay, 2 + i * 5, 7, 176);
         pfrm.set_tile(Layer::overlay, 2 + i * 5, 12, 176);
     }
+}
+
+
+void InventoryState::enter(Platform& pfrm, Game& game, State&)
+{
+    update_arrow_icons(pfrm);
+    draw_dot_grid(pfrm);
 }
 
 
@@ -1623,7 +1651,7 @@ void NotebookState::exit(Platform& pfrm, Game&, State&)
 
 StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::action_1>()) {
+    if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<InventoryState>(false);
     }
 
@@ -1659,7 +1687,7 @@ ImageViewState::ImageViewState(const char* image_name,
 
 StatePtr ImageViewState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::action_1>()) {
+    if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<InventoryState>(false);
     }
 
@@ -1825,7 +1853,7 @@ void MapSystemState::exit(Platform& pfrm, Game& game, State&)
 
 StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::action_1>()) {
+    if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<InventoryState>(false);
     }
 
@@ -2077,7 +2105,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     timer_ += delta;
 
-    const auto skip = pfrm.keyboard().down_transition<Key::action_1>();
+    const auto skip = pfrm.keyboard().down_transition<Key::action_2>();
 
     if (timer_ > seconds(2) + milliseconds(500) or skip) {
         text_.reset();
@@ -2152,7 +2180,7 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
             selector_index_ = 0;
         }
 
-    } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
+    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
         input_.push_back("0123456789"[selector_index_]);
 
         auto screen_tiles = calc_screen_tiles(pfrm);
@@ -2190,7 +2218,7 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
             input_.clear();
         }
 
-    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+    } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
         if (input_.empty()) {
             return state_pool_.create<NewLevelState>(next_level_);
 
@@ -2407,7 +2435,7 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
     timer_ += delta;
 
     if (timer_ > milliseconds([&] {
-            if (pfrm.keyboard().pressed<Key::action_1>()) {
+            if (pfrm.keyboard().pressed<Key::action_2>()) {
                 return 15;
             } else {
                 return 60;
@@ -2494,6 +2522,134 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 
 /////////////////////////////////////////////////////////////////////////////////
+// PauseScreenState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void PauseScreenState::draw_cursor(Platform& pfrm)
+{
+    // draw_dot_grid(pfrm);
+
+    if (not resume_text_ or not save_and_quit_text_) {
+        return;
+    }
+
+    auto draw_cursor = [&pfrm](Text* target, int tile1, int tile2) {
+        const auto pos = target->coord();
+        pfrm.set_tile(Layer::overlay, pos.x - 2, pos.y, tile1);
+        pfrm.set_tile(Layer::overlay, pos.x + target->len() + 1, pos.y, tile2);
+    };
+
+    auto [left, right] = [&]() -> Vec2<int> {
+        switch (anim_index_) {
+        default:
+        case 0:
+            return {147, 148};
+        case 1:
+            return {149, 150};
+        }
+    }();
+
+    switch (cursor_loc_) {
+    default:
+    case 0:
+        draw_cursor(&(*resume_text_), left, right);
+        draw_cursor(&(*save_and_quit_text_), 0, 0);
+        break;
+
+    case 1:
+        draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*save_and_quit_text_), left, right);
+        break;
+    }
+}
+
+
+void PauseScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    // ...
+}
+
+
+StatePtr
+PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    constexpr auto fade_duration = milliseconds(400);
+    if (fade_timer_ < fade_duration) {
+        fade_timer_ += delta;
+
+        if (fade_timer_ >= fade_duration) {
+            const auto screen_tiles = calc_screen_tiles(pfrm);
+
+            const auto resume_text_len =
+                utf8::len(locale_string(LocaleString::menu_resume));
+
+            const auto snq_text_len =
+                utf8::len(locale_string(LocaleString::menu_save_and_quit));
+
+            const u8 resume_x_loc = (screen_tiles.x - resume_text_len) / 2;
+            const u8 snq_x_loc = (screen_tiles.x - snq_text_len) / 2;
+
+            const u8 y = screen_tiles.y / 2;
+
+            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 2)});
+            save_and_quit_text_.emplace(pfrm, OverlayCoord{snq_x_loc, u8(y)});
+
+            resume_text_->assign(locale_string(LocaleString::menu_resume));
+            save_and_quit_text_->assign(
+                locale_string(LocaleString::menu_save_and_quit));
+
+            draw_cursor(pfrm);
+        }
+
+        pfrm.screen().fade(smoothstep(0.f, fade_duration, fade_timer_));
+    } else {
+        anim_timer_ += delta;
+        if (anim_timer_ > milliseconds(75)) {
+            anim_timer_ = 0;
+            if (++anim_index_ > 1) {
+                anim_index_ = 0;
+            }
+            draw_cursor(pfrm);
+        }
+
+        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 1) {
+            cursor_loc_ += 1;
+            draw_cursor(pfrm);
+        } else if (pfrm.keyboard().down_transition<Key::up>() and
+                   cursor_loc_ > 0) {
+            cursor_loc_ -= 1;
+            draw_cursor(pfrm);
+        } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            switch (cursor_loc_) {
+            case 0:
+                return state_pool_.create<ActiveState>();
+            case 1:
+                return state_pool_.create<GoodbyeState>();
+            }
+        } else if (pfrm.keyboard().down_transition<Key::start>()) {
+            return state_pool_.create<ActiveState>();
+        }
+    }
+
+    return null_state();
+}
+
+
+void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+    resume_text_.reset();
+    save_and_quit_text_.reset();
+
+    pfrm.fill_overlay(0);
+
+    if (dynamic_cast<ActiveState*>(&next_state)) {
+        pfrm.screen().fade(0.f);
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
 // GoodbyeState
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2501,5 +2657,4 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     game.save(pfrm);
-    pfrm.screen().fade(1.f);
 }

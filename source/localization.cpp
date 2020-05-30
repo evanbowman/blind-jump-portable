@@ -289,6 +289,8 @@ const char* locale_string(LocaleString ls)
         case LocaleString::high_score: return "high score ";
         case LocaleString::waypoints: return "waypoints ";
         case LocaleString::punctuation_period: return ".";
+        case LocaleString::menu_resume: return "Resume";
+        case LocaleString::menu_save_and_quit: return "Save and Quit";
         default: return empty_str;
         }
         break;
