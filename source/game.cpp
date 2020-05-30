@@ -13,11 +13,25 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
-Game::Game(Platform& pfrm) : state_(null_state())
+void Game::save(Platform& pfrm)
+{
+    pfrm.write_save(persistent_data_);
+}
+
+
+Game::Game(Platform& pfrm) : score_(0), state_(null_state())
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
         persistent_data_ = *sd;
+
+        // When we've loaded from a save, we want to write back an empty
+        // save. We don't want the player to be able to cheat by switching the
+        // game off and returning to where they left off.
+        auto save_copy = *sd;
+
+        pfrm.write_save(save_copy.reset());
+
     } else {
         info(pfrm, "no save file found");
     }
@@ -27,6 +41,8 @@ Game::Game(Platform& pfrm) : state_(null_state())
     state_ = State::initial();
 
     player_.set_health(persistent_data_.player_health_);
+    score_ = persistent_data_.score_;
+    inventory_ = persistent_data_.inventory_;
 
     random_seed() = persistent_data_.seed_;
 
@@ -458,16 +474,16 @@ bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
 
 COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
-    const auto& last_zone = zone_info(level());
-
     if (set_level) {
         persistent_data_.level_ = *set_level;
     } else {
         persistent_data_.level_ += 1;
     }
 
+    persistent_data_.score_ = score_;
     persistent_data_.player_health_ = player_.get_health();
     persistent_data_.seed_ = random_seed();
+    persistent_data_.inventory_ = inventory_;
 
 
     pfrm.load_tile0_texture(current_zone(*this).tileset0_name_);
@@ -527,11 +543,6 @@ RETRY:
     const auto ssize = pfrm.screen().size();
     camera_.set_position(
         pfrm, {player_pos.x - ssize.x / 2, player_pos.y - float(ssize.y)});
-
-    if ((set_level and *set_level == 0) or
-        not(zone_info(level()) == last_zone)) {
-        pfrm.write_save(persistent_data_);
-    }
 }
 
 

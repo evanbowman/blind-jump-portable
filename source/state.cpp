@@ -13,6 +13,12 @@ void State::enter(Platform&, Game&, State&)
 void State::exit(Platform&, Game&, State&)
 {
 }
+StatePtr State::update(Platform&, Game&, Microseconds)
+{
+    return null_state();
+}
+
+
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -368,6 +374,12 @@ private:
 };
 
 
+class GoodbyeState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+};
+
+
 // This is a hidden game state intended for debugging. The user can enter
 // various numeric codes, which trigger state changes within the game
 // (e.g. jumping to a boss fight/level, spawing specific enemies, setting the
@@ -432,6 +444,7 @@ static StatePool<ActiveState,
                  PreFadePauseState,
                  GlowFadeState,
                  FadeOutState,
+                 GoodbyeState,
                  DeathFadeState,
                  InventoryState,
                  NotebookState,
@@ -816,6 +829,11 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<InventoryState>(true);
     }
 
+    if (pfrm.keyboard().down_transition<Key::alt_1>() and
+        not is_boss_level(game.level())) {
+        return state_pool_.create<GoodbyeState>();
+    }
+
     const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
     if (manhattan_length(game.player().get_position(), t_pos) < 16) {
         game.player().move(t_pos);
@@ -1163,20 +1181,6 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 game.score() = 0;
                 game.player().revive();
-
-                // This is how you would return the player to the beginning of
-                // the last zone. Not sure yet whether I want to allow this
-                // mechanic yet though...
-                //
-                // Level lv = game.level();
-                // const ZoneInfo* zone = &zone_info(lv);
-                // const ZoneInfo* last_zone = &zone_info(lv - 1);
-                // while (*zone == *last_zone and lv > 0) {
-                //     --lv;
-                //     zone = &zone_info(lv);
-                //     last_zone = &zone_info(lv - 1);
-                // }
-                // return state_pool_.create<NewLevelState>(lv);
 
                 return state_pool_.create<RespawnWaitState>();
             }
@@ -2488,4 +2492,16 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     return null_state();
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// GoodbyeState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    game.save(pfrm);
+    pfrm.screen().fade(1.f);
 }

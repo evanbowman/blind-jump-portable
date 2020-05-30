@@ -25,7 +25,7 @@ public:
     // pointer.
 
     virtual StatePtr
-    update(Platform& platform, Game& game, Microseconds delta) = 0;
+    update(Platform& platform, Game& game, Microseconds delta);
 
     virtual ~State()
     {

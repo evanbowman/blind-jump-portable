@@ -28,4 +28,14 @@ struct PersistentData {
     HighScores highscores_ = {0};
 
     Inventory inventory_;
+
+    inline PersistentData& reset()
+    {
+        inventory_.remove_non_persistent();
+        level_ = 0;
+        score_ = 0;
+        player_health_ = 3;
+
+        return *this;
+    }
 };

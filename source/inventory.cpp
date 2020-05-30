@@ -15,7 +15,6 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
     for (auto& item : data_) {
         if (item.type_ == Item::Type::null) {
             item.type_ = insert;
-            item.parameter_ = 0;
 
             auto description = [&] {
                 if (insert == Item::Type::null) {

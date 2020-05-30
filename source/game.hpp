@@ -106,12 +106,12 @@ public:
 
     Score& score()
     {
-        return persistent_data_.score_;
+        return score_;
     }
 
     auto& inventory()
     {
-        return persistent_data_.inventory_;
+        return inventory_;
     }
 
     State* state()
@@ -127,6 +127,8 @@ public:
         return deferred_callbacks_.push_back({callback, expire_time});
     }
 
+    void save(Platform& pfrm);
+
 private:
     TileMap tiles_;
     Camera camera_;
@@ -136,6 +138,8 @@ private:
     EffectGroup effects_;
     // BossGroup bosses_;
     Transporter transporter_;
+    Score score_;
+    Inventory inventory_;
     PersistentData persistent_data_;
     StatePtr state_;
 

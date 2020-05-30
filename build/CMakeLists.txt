@@ -63,13 +63,26 @@ set(SOURCES
   ${SOURCE_DIR}/string.cpp
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/state.cpp
-  ${SOURCE_DIR}/game.cpp)
+  ${SOURCE_DIR}/game.cpp
+  ${SOURCE_DIR}/conf.cpp)
 
 
 
 if(GAMEBOY_ADVANCE)
+  set(CONF_INI "${SOURCE_DIR}/../config.ini")
+  set(CONF_SRC "${SOURCE_DIR}/config.cpp")
+
+  add_custom_command(OUTPUT ${CONF_SRC}
+    COMMAND echo "extern const unsigned char config_ini[] = {" > ${CONF_SRC}
+    COMMAND cat ${CONF_INI} | xxd -i | tee -a ${CONF_SRC} > /dev/null
+    COMMAND echo ", 0x00}\;" | tee -a ${CONF_SRC}
+    DEPENDS ${CONF_INI})
+
+  add_custom_target(generate_config DEPENDS ${CONF_SRC})
+
   set(SOURCES
     ${SOURCES}
+    ${CONF_SRC}
     ${SOURCE_DIR}/platform/memcpy.s
     ${SOURCE_DIR}/platform/scottbuckley_omega.s
     ${SOURCE_DIR}/platform/scottbuckley_computations.s
@@ -122,10 +135,13 @@ add_executable(BlindJump
 
 
 
+
 if(GAMEBOY_ADVANCE)
   set(CMAKE_EXE_LINKER_FLAGS
     "-mthumb -mthumb-interwork -Wl,-Map,BlindJump.elf.map -specs=gba.specs"
     CACHE INTERNAL "" FORCE)
+
+  add_dependencies(BlindJump generate_config)
 
   target_link_libraries(BlindJump PRIVATE
     ${DEVKITPRO}/libgba/lib/libgba.a)
@@ -136,12 +152,11 @@ if(GAMEBOY_ADVANCE)
     -mcpu=arm7tdmi
     -mtune=arm7tdmi)
 
-
-
   add_custom_command(TARGET BlindJump POST_BUILD
     COMMENT "building cartridge"
     COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary BlindJump BlindJump.gba
     COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump BlindJump.gba)
+
 elseif(APPLE)
   target_link_libraries(BlindJump
     "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio")

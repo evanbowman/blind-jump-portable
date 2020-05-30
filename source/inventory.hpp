@@ -17,7 +17,6 @@ public:
 
     struct ItemInfo {
         Item::Type type_;
-        u8 parameter_; // Misc parameter for setting various item properties
     };
 
     void push_item(Platform& pfrm, Game& game, Item::Type insert);
@@ -72,7 +71,7 @@ private:
                 new (item) ItemInfo(std::move(*(item + 1)));
             }
         }
-        *(std::end(data_) - 1) = ItemInfo{Item::Type::null, 0};
+        *(std::end(data_) - 1) = ItemInfo{Item::Type::null};
     }
 
     ItemInfo data_[pages * rows * cols] = {};

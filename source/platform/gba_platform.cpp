@@ -2034,6 +2034,15 @@ void Platform::on_watchdog_timeout(WatchdogCallback callback)
 }
 
 
+extern const unsigned char config_ini[];
+
+
+const char* Platform::config_data() const
+{
+    return (const char*)config_ini;
+}
+
+
 Platform::Platform()
 {
     irqInit();
