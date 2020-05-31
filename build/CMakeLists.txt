@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 
 
-
-set(SOURCE_DIR ${PROJECT_BINARY_DIR}/../source)
-
+set(ROOT_DIR ${PROJECT_BINARY_DIR}/..)
+set(SOURCE_DIR ${ROOT_DIR}/source)
+set(IMAGE_DIR ${ROOT_DIR}/images)
 
 
 set(CMAKE_CXX_STANDARD 17)
@@ -13,6 +13,7 @@ enable_language(ASM)
 
 
 option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
+option(GBA_AUTOBUILD_IMG "AutobuildImg" OFF)
 
 
 
@@ -136,8 +137,66 @@ add_executable(BlindJump
 
 
 
+function(compile_image filename mw mh flatten)
+  if(${flatten} STREQUAL "YES")
+    message("here")
+    add_custom_command(OUTPUT ${SOURCE_DIR}/graphics/${filename}_flattened.s
+      COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png yes
+      COMMAND grit tmp/${filename}_flattened.png -gB4 -gTFF00FF
+      COMMAND mv ${filename}_flattened.s ${SOURCE_DIR}/graphics/${filename}_flattened.s
+      COMMAND mv ${filename}_flattened.h ${SOURCE_DIR}/graphics/${filename}_flattened.h
+      DEPENDS ${IMAGE_DIR}/${filename}.png)
+
+    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/graphics/${filename}_flattened.s)
+
+  elseif(${mw} STREQUAL "0" AND ${mh} STREQUAL "0")
+    add_custom_command(OUTPUT ${SOURCE_DIR}/graphics/${filename}.s
+      COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
+      COMMAND grit tmp/${filename}.png -gB4 -gTFF00FF
+      COMMAND mv ${filename}.s ${SOURCE_DIR}/graphics/${filename}.s
+      COMMAND mv ${filename}.h ${SOURCE_DIR}/graphics/${filename}.h
+      DEPENDS ${IMAGE_DIR}/${filename}.png)
+
+    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/graphics/${filename}.s)
+
+  else()
+    add_custom_command(OUTPUT ${SOURCE_DIR}/graphics/${filename}.s
+      COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
+      COMMAND grit tmp/${filename}.png -gB4 -Mw ${mw} -Mh ${mh} -gTFF00FF
+      COMMAND mv ${filename}.s ${SOURCE_DIR}/graphics/${filename}.s
+      COMMAND mv ${filename}.h ${SOURCE_DIR}/graphics/${filename}.h
+      DEPENDS ${IMAGE_DIR}/${filename}.png)
+
+    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/graphics/${filename}.s)
+
+  endif()
+
+  add_dependencies(BlindJump compile_image_${filename})
+endfunction()
+
+
 
 if(GAMEBOY_ADVANCE)
+
+  if(GBA_AUTOBUILD_IMG)
+    compile_image(spritesheet 2 4 NO)
+    compile_image(spritesheet2 2 4 NO)
+    compile_image(spritesheet3 2 4 NO)
+    compile_image(spritesheet_boss0 2 4 NO)
+    compile_image(spritesheet_boss1 2 4 NO)
+    compile_image(tilesheet 4 3 NO)
+    compile_image(tilesheet2 4 3 NO)
+    compile_image(tilesheet3 4 3 NO)
+    compile_image(tilesheet_top 4 3 NO)
+    compile_image(tilesheet2_top 4 3 NO)
+    compile_image(tilesheet3_top 4 3 NO)
+    compile_image(overlay 0 0 NO)
+    compile_image(charset_en_spn_fr 0 0 NO)
+    compile_image(overlay_journal 0 0 NO)
+    compile_image(old_poster 0 0 YES)
+    compile_image(seed_packet 0 0 YES)
+  endif()
+
   set(CMAKE_EXE_LINKER_FLAGS
     "-mthumb -mthumb-interwork -Wl,-Map,BlindJump.elf.map -specs=gba.specs"
     CACHE INTERNAL "" FORCE)

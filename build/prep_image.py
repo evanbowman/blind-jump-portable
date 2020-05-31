@@ -4,13 +4,10 @@
 
 from PIL import Image
 import os
+import sys
 
 
-if not os.path.exists('tmp'):
-    os.makedirs('tmp')
-
-
-image_dir = "images/"
+image_dir = None
 
 
 def get_concat_h(im1, im2):
@@ -24,7 +21,7 @@ def get_concat_h(im1, im2):
 # At least one tile in the image needs to contain some transparency, for the
 # image to be displayed opaquely. So append this 8x8 image onto flattened
 # images, so that they will appear entirely opaque.
-transparency_key = Image.open(image_dir + 'transparency_reference.png')
+transparency_key = None
 
 
 
@@ -53,9 +50,9 @@ def flatten_image(file_name):
 
 
 
-for name in ['old_poster.png',
-             'seed_packet.png']:
-    flatten_image(name)
+# for name in ['old_poster.png',
+#              'seed_packet.png']:
+#     flatten_image(name)
 
 
 
@@ -71,20 +68,37 @@ def rgb_to_bgr(file_name):
     im.save('tmp/' + file_name)
 
 
-for name in ['spritesheet.png',
-             'spritesheet_boss0.png',
-             'spritesheet_boss1.png',
-             'spritesheet2.png',
-             'spritesheet3.png',
-             'tilesheet.png',
-             'tilesheet2.png',
-             'tilesheet3.png',
-             'tilesheet_top.png',
-             'tilesheet2_top.png',
-             'tilesheet3_top.png',
-             'overlay.png',
-             'charset_en_spn_fr.png',
-             'overlay_journal.png',
-             'old_poster_flattened.png',
-             'seed_packet_flattened.png']:
-    rgb_to_bgr(name)
+# for name in ['spritesheet.png',
+#              'spritesheet_boss0.png',
+#              'spritesheet_boss1.png',
+#              'spritesheet2.png',
+#              'spritesheet3.png',
+#              'tilesheet.png',
+#              'tilesheet2.png',
+#              'tilesheet3.png',
+#              'tilesheet_top.png',
+#              'tilesheet2_top.png',
+#              'tilesheet3_top.png',
+#              'overlay.png',
+#              'charset_en_spn_fr.png',
+#              'overlay_journal.png',
+#              'old_poster_flattened.png',
+#              'seed_packet_flattened.png']:
+#     rgb_to_bgr(name)
+
+
+if __name__ == "__main__":
+    if not os.path.exists('tmp'):
+        os.makedirs('tmp')
+
+    image_dir = sys.argv[1] + "/images/"
+
+    transparency_key = Image.open(image_dir + 'transparency_reference.png')
+
+    image = sys.argv[2]
+
+    if sys.argv[3] == 'yes':
+        flatten_image(image)
+        rgb_to_bgr(image.split('.')[0] + "_flattened.png")
+    else:
+        rgb_to_bgr(image)
