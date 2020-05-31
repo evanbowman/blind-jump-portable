@@ -51,10 +51,10 @@ void Camera::update(Platform& pfrm,
         }
 
         // Exponents are too expensive, so we aren't doing true damping...
-        const auto damping = ease_out(shake_timer_, 0, shake_magnitude_ / 4, shake_duration);
+        const auto damping = ease_out(shake_timer_, 0, shake_magnitude_ / 2, shake_duration);
 
         auto offset =
-            shake_magnitude_ * (1.f - float(sine(shake_timer_ / 4)) / std::numeric_limits<s16>::max());
+            shake_magnitude_ * (float(cosine(shake_timer_ / 4)) / std::numeric_limits<s16>::max());
 
         if (offset > 0) {
             offset -= damping;

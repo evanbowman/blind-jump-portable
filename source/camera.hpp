@@ -12,7 +12,7 @@ public:
 
     void set_position(Platform& pfrm, const Vec2<Float>& pos);
 
-    void shake(int magnitude = 6);
+    void shake(int magnitude = 10);
 
     // The camera supports a counter-weight to the seek position.
     void push_ballast(const Vec2<Float>& pos)

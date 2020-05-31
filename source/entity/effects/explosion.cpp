@@ -35,7 +35,7 @@ void big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
         });
     });
 
-    game.camera().shake(10);
+    game.camera().shake(14);
 }
 
 
