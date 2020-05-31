@@ -233,7 +233,8 @@ void Platform::Keyboard::poll()
             break;
 
         case sf::Event::KeyPressed:
-            for (int keycode = 0; keycode < static_cast<int>(Key::count); ++keycode) {
+            for (int keycode = 0; keycode < static_cast<int>(Key::count);
+                 ++keycode) {
                 if (keymap[keycode] == event.key.code) {
                     states_[keycode] = true;
                 }
@@ -241,7 +242,8 @@ void Platform::Keyboard::poll()
             break;
 
         case sf::Event::KeyReleased:
-            for (int keycode = 0; keycode < static_cast<int>(Key::count); ++keycode) {
+            for (int keycode = 0; keycode < static_cast<int>(Key::count);
+                 ++keycode) {
                 if (keymap[keycode] == event.key.code) {
                     states_[keycode] = false;
                 }
@@ -648,20 +650,19 @@ static std::unordered_map<std::string, sf::Keyboard::Key> key_lookup{
     {"Esc", sf::Keyboard::Escape},  {"Up", sf::Keyboard::Up},
     {"Down", sf::Keyboard::Down},   {"Left", sf::Keyboard::Left},
     {"Right", sf::Keyboard::Right}, {"Return", sf::Keyboard::Return},
-    {"A", sf::Keyboard::A},
-    {"B", sf::Keyboard::B},         {"C", sf::Keyboard::C},
-    {"D", sf::Keyboard::D},         {"E", sf::Keyboard::E},
-    {"F", sf::Keyboard::F},         {"G", sf::Keyboard::G},
-    {"H", sf::Keyboard::H},         {"I", sf::Keyboard::I},
-    {"J", sf::Keyboard::J},         {"K", sf::Keyboard::K},
-    {"L", sf::Keyboard::L},         {"M", sf::Keyboard::M},
-    {"N", sf::Keyboard::N},         {"O", sf::Keyboard::O},
-    {"P", sf::Keyboard::P},         {"Q", sf::Keyboard::Q},
-    {"R", sf::Keyboard::R},         {"S", sf::Keyboard::S},
-    {"T", sf::Keyboard::T},         {"U", sf::Keyboard::U},
-    {"V", sf::Keyboard::V},         {"W", sf::Keyboard::W},
-    {"X", sf::Keyboard::X},         {"Y", sf::Keyboard::Y},
-    {"Z", sf::Keyboard::Z}};
+    {"A", sf::Keyboard::A},         {"B", sf::Keyboard::B},
+    {"C", sf::Keyboard::C},         {"D", sf::Keyboard::D},
+    {"E", sf::Keyboard::E},         {"F", sf::Keyboard::F},
+    {"G", sf::Keyboard::G},         {"H", sf::Keyboard::H},
+    {"I", sf::Keyboard::I},         {"J", sf::Keyboard::J},
+    {"K", sf::Keyboard::K},         {"L", sf::Keyboard::L},
+    {"M", sf::Keyboard::M},         {"N", sf::Keyboard::N},
+    {"O", sf::Keyboard::O},         {"P", sf::Keyboard::P},
+    {"Q", sf::Keyboard::Q},         {"R", sf::Keyboard::R},
+    {"S", sf::Keyboard::S},         {"T", sf::Keyboard::T},
+    {"U", sf::Keyboard::U},         {"V", sf::Keyboard::V},
+    {"W", sf::Keyboard::W},         {"X", sf::Keyboard::X},
+    {"Y", sf::Keyboard::Y},         {"Z", sf::Keyboard::Z}};
 
 
 Platform::Platform()
@@ -691,8 +692,12 @@ Platform::Platform()
     data_->map_1_rt_.create(16 * 32, 20 * 24);
     data_->background_rt_.create(32 * 8, 32 * 8);
 
-#define CONF_KEY(KEY)                          \
-    keymap[static_cast<int>(Key::KEY)] = ::key_lookup[Conf(*::platform).expect<Conf::String>("desktop-keyboard-bindings", #KEY).c_str()];
+#define CONF_KEY(KEY)                                                          \
+    keymap[static_cast<int>(Key::KEY)] =                                       \
+        ::key_lookup[Conf(*::platform)                                         \
+                         .expect<Conf::String>("desktop-keyboard-bindings",    \
+                                               #KEY)                           \
+                         .c_str()];
 
     CONF_KEY(left);
     CONF_KEY(right);
