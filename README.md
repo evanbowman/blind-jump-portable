@@ -21,7 +21,7 @@ The game uses procedural algorithms to generate the levels, so the game changes 
 
 ## Implementation
 
-This repository contains a substantial re-write of the original BlindJump code. In the current iteration, the core parts of the code have no external dependencies, and target a [theoretically] platform-neutral hardware abstraction layer. The embedded version of BlindJump runs on Gameboy Advance, and the game can easily support desktop OSs, although most of the graphics routines are yet unimplemented for desktop platforms. When porting the game to a new platform, one only needs to re-implement the Platform class in source/platform/.
+This repository contains a substantial re-write of the original BlindJump code. In the current iteration, the core parts of the code have no external dependencies, and target a [theoretically] platform-neutral hardware abstraction layer. The embedded version of BlindJump runs on Gameboy Advance, and has partial support for Desktop OSs via SFML. When porting the game to a new platform, one only needs to re-implement the Platform class in source/platform/.
 
 ## Building
 

@@ -717,8 +717,14 @@ Platform::Platform()
         error(*this, "Failed to allocate context");
         exit(EXIT_FAILURE);
     }
-    if (not data_->color_shader_.loadFromFile("../shaders/colorShader.frag",
-                                              sf::Shader::Fragment)) {
+
+    auto shader_folder =
+        Conf(*::platform).expect<Conf::String>("paths", "shader_folder");
+
+
+    if (not data_->color_shader_.loadFromFile(
+            shader_folder.c_str() + std::string("colorShader.frag"),
+            sf::Shader::Fragment)) {
         error(*this, "Failed to load shader");
     }
     data_->color_shader_.setUniform("texture", sf::Shader::CurrentTexture);
