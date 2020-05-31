@@ -8,7 +8,6 @@ void Camera::update(Platform& pfrm,
 {
     const auto& screen_size = pfrm.screen().size();
     auto view = pfrm.screen().get_view();
-    const auto& view_center = view.get_center();
 
     Vec2<Float> seek;
 
@@ -24,39 +23,53 @@ void Camera::update(Platform& pfrm,
                        (seek.y - screen_size.y / 2)};
 
 
-    static const std::array<std::array<Float, 5>,
-                            static_cast<int>(ShakeMagnitude::zero)>
-        shake_constants = {
-            {{3.f, -5.f, 3.f, -2.f, 1.f}, {6.f, -10.f, 6.f, -4.f, 2.f}}};
+    // static const std::array<std::array<Float, 5>,
+    //                         static_cast<int>(ShakeMagnitude::zero)>
+    //     shake_constants = {
+    //         {{3.f, -5.f, 3.f, -2.f, 1.f}, {6.f, -10.f, 6.f, -4.f, 2.f}}};
 
-    auto center = interpolate(
+    center_ = interpolate(
         target,
-        view_center,
+        center_,
         dt * speed_ * (ballast_.divisor_ ? 0.0000016f : 0.0000071f));
 
     ballast_.divisor_ = 0;
 
-    if (shake_magnitude_ == ShakeMagnitude::zero) {
+    if (shake_magnitude_ == 0) {
 
-        view.set_center(center);
+        view.set_center(center_);
 
     } else {
 
         shake_timer_ += dt;
 
-        if (shake_timer_ > milliseconds(50)) {
-            shake_timer_ = 0;
-            shake_index_ += 1;
+        const auto shake_duration = milliseconds(250);
 
-            if (shake_index_ == shake_constants[0].size()) {
-                shake_index_ = 4;
-                shake_magnitude_ = ShakeMagnitude::zero;
+        if (shake_timer_ > shake_duration) {
+            shake_timer_ = 0;
+            shake_magnitude_ = 0;
+        }
+
+        // Exponents are too expensive, so we aren't doing true damping...
+        const auto damping = ease_out(shake_timer_, 0, shake_magnitude_ / 4, shake_duration);
+
+        auto offset =
+            shake_magnitude_ * (1.f - float(sine(shake_timer_ / 4)) / std::numeric_limits<s16>::max());
+
+        if (offset > 0) {
+            offset -= damping;
+            if (offset < 0) {
+                offset = 0;
+            }
+        } else {
+            offset += damping;
+            if (offset > 0) {
+                offset = 0;
             }
         }
 
-        view.set_center({center.x,
-                         center.y + shake_constants[static_cast<int>(
-                                        shake_magnitude_)][shake_index_]});
+        view.set_center({center_.x,
+                         center_.y + offset});
     }
 
     pfrm.screen().set_view(view);
@@ -65,9 +78,9 @@ void Camera::update(Platform& pfrm,
 }
 
 
-void Camera::shake(ShakeMagnitude magnitude)
+void Camera::shake(int magnitude)
 {
-    if (shake_magnitude_ == ShakeMagnitude::zero) {
+    if (shake_magnitude_ == 0) {
         shake_magnitude_ = magnitude;
         shake_timer_ = 0;
         shake_index_ = 0;
@@ -80,6 +93,8 @@ void Camera::set_position(Platform& pfrm, const Vec2<Float>& pos)
     auto view = pfrm.screen().get_view();
 
     view.set_center(pos);
+
+    center_ = pos;
 
     pfrm.screen().set_view(view);
 }
