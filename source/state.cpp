@@ -760,6 +760,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void ActiveState::enter(Platform& pfrm, Game& game, State&)
 {
+    puts("here");
     if (restore_keystates) {
         pfrm.keyboard().restore_state(*restore_keystates);
         restore_keystates.reset();
@@ -1940,7 +1941,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         const int i = ease_out(timer_, 0, max_i, seconds(1));
 
-        auto repaint = [&pfrm, this, &zone](int max_i) {
+        auto repaint = [&pfrm, this](int max_i) {
             while (true) {
                 int i = 0, j = 0;
 

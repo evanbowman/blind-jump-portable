@@ -31,9 +31,10 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
         // game off and returning to where they left off.
         auto save_copy = *sd;
 
-        pfrm.write_save(save_copy.reset());
+        pfrm.write_save(save_copy.reset(pfrm));
 
     } else {
+        persistent_data_.reset(pfrm);
         info(pfrm, "no save file found");
     }
 

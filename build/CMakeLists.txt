@@ -12,7 +12,7 @@ enable_language(ASM)
 
 
 
-option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
+option(GAMEBOY_ADVANCE "GameboyAdvance" OFF)
 
 
 
@@ -64,6 +64,7 @@ set(SOURCES
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/state.cpp
   ${SOURCE_DIR}/game.cpp
+  ${SOURCE_DIR}/save.cpp
   ${SOURCE_DIR}/conf.cpp)
 
 
@@ -157,6 +158,9 @@ if(GAMEBOY_ADVANCE)
     COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary BlindJump BlindJump.gba
     COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump BlindJump.gba)
 
+  target_compile_options(BlindJump PRIVATE
+    -D__GBA__)
+
 elseif(APPLE)
   target_link_libraries(BlindJump
     "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio")
@@ -175,7 +179,6 @@ target_compile_options(BlindJump PRIVATE
   -flto
   -Werror
   -pedantic
-  -D__GBA__
   -nostdlib
   -ffast-math
   -fno-exceptions

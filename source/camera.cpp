@@ -54,9 +54,11 @@ void Camera::update(Platform& pfrm,
             }
         }
 
-        view.set_center({center.x,
-                         center.y + shake_constants[static_cast<int>(
-                                        shake_magnitude_)][shake_index_]});
+        view.set_center(center);
+
+        // view.set_center({center.x,
+        //                  center.y + shake_constants[static_cast<int>(
+        //                                 shake_magnitude_)][shake_index_]});
     }
 
     pfrm.screen().set_view(view);
