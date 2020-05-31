@@ -10,6 +10,7 @@
 // values.
 enum class ColorConstant {
     null,
+    // clang-format off
     electric_blue     = 0x00FFFF,
     turquoise_blue    = 0x00FFDD,
     cerulean_blue     = 0x66E0FF,
@@ -22,6 +23,7 @@ enum class ColorConstant {
     stil_de_grain     = 0xF9DC5C,
     silver_white      = 0xF4F4F8,
     aged_paper        = 0xDEC397,
+    // clang-format on
 };
 
 
