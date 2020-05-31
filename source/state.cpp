@@ -375,6 +375,11 @@ private:
 class GoodbyeState : public State {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    Microseconds wait_timer_ = 0;
 };
 
 
@@ -2657,4 +2662,18 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     game.save(pfrm);
+
+    pfrm.speaker().stop_music();
+}
+
+
+StatePtr GoodbyeState::update(Platform& pfrm, Game&, Microseconds delta)
+{
+    wait_timer_ += delta;
+    if (wait_timer_ > seconds(6)) {
+        pfrm.soft_exit();
+        pfrm.sleep(10);
+    }
+
+    return null_state();
 }

@@ -35,8 +35,8 @@ public:
           height_(height)
     {
         // resize the vertex array to fit the level size
-        m_vertices.setPrimitiveType(sf::Quads);
-        m_vertices.resize(width * height * 4);
+        vertices_.setPrimitiveType(sf::Quads);
+        vertices_.resize(width * height * 4);
     }
 
     void set_tile(int x, int y, int index)
@@ -50,7 +50,7 @@ public:
         int tv = index / (texture_->getSize().x / tile_size_.x);
 
         // get a pointer to the current tile's quad
-        sf::Vertex* quad = &m_vertices[(x + y * width_) * 4];
+        sf::Vertex* quad = &vertices_[(x + y * width_) * 4];
 
         // define its 4 corners
         quad[0].position = sf::Vector2f(x * tile_size_.x, y * tile_size_.y);
@@ -83,10 +83,10 @@ private:
 
         states.texture = texture_;
 
-        target.draw(m_vertices, states);
+        target.draw(vertices_, states);
     }
 
-    sf::VertexArray m_vertices;
+    sf::VertexArray vertices_;
     sf::Texture* texture_;
     sf::Vector2u tile_size_;
     const int width_;
@@ -97,9 +97,6 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 // Global State Data
 ////////////////////////////////////////////////////////////////////////////////
-
-
-static sf::RenderWindow* window = nullptr;
 
 
 class Platform::Data {
@@ -125,18 +122,78 @@ public:
     sf::RenderTexture map_1_rt_;
     sf::RenderTexture background_rt_;
 
+    int window_scale_ = 2;
+    sf::RenderWindow window_;
 
-    Data()
+
+    Data(Platform& pfrm)
         : overlay_(&overlay_texture_, {8, 8}, 32, 32),
           map_0_(&tile0_texture_, {32, 24}, 16, 20),
           map_1_(&tile1_texture_, {32, 24}, 16, 20),
-          background_(&background_texture_, {8, 8}, 32, 32)
+          background_(&background_texture_, {8, 8}, 32, 32),
+          window_scale_(
+              Conf(pfrm).expect<Conf::Integer>("desktop-window", "scale")),
+          window_(sf::VideoMode(240 * window_scale_, 160 * window_scale_),
+                  "Blind Jump",
+                  sf::Style::Titlebar | sf::Style::Close)
     {
+        window_.setVerticalSyncEnabled(true);
     }
 };
 
 
 static Platform* platform = nullptr;
+
+
+class WatchdogTask : public Platform::Task {
+public:
+    WatchdogTask()
+    {
+        total_ = 0;
+        last_ = std::chrono::high_resolution_clock::now();
+    }
+
+    void run() override
+    {
+        if (not::platform->is_running()) {
+            Task::completed();
+            return;
+        }
+
+        const auto now = std::chrono::high_resolution_clock::now();
+        total_ +=
+            std::chrono::duration_cast<std::chrono::microseconds>(now - last_)
+                .count();
+
+        last_ = now;
+
+        if (total_ > seconds(10)) {
+            if (::platform->data()->window_.isOpen()) {
+                ::platform->data()->window_.close();
+            }
+
+            error(*::platform, "unresponsive process killed by watchdog");
+
+            // Give all of the threads the opportunity to receive the window
+            // shutdown sequence and exit responsibly.
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+
+            exit(EXIT_FAILURE);
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    void feed()
+    {
+        total_ = 0;
+    }
+
+private:
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_;
+    std::atomic<Microseconds> total_;
+
+} watchdog_task;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +286,7 @@ void Platform::Keyboard::poll()
 
         switch (event.type) {
         case sf::Event::Closed:
-            ::window->close();
+            ::platform->data()->window_.close();
             break;
 
         case sf::Event::KeyPressed:
@@ -264,21 +321,14 @@ void Platform::Keyboard::poll()
 
 Platform::Screen::Screen()
 {
-    if (not::window) {
-        ::window =
-            new sf::RenderWindow(sf::VideoMode(240 * 4, 160 * 4), "Blind Jump");
-        if (not::window) {
-            exit(EXIT_FAILURE);
-        }
-        ::window->setVerticalSyncEnabled(true);
-    }
-    view_.set_size(this->size().cast<Float>());
 }
 
 
 Vec2<u32> Platform::Screen::size() const
 {
-    return {::window->getSize().x / 4, ::window->getSize().y / 4};
+    const auto data = ::platform->data();
+    return {data->window_.getSize().x / data->window_scale_,
+            data->window_.getSize().y / data->window_scale_};
 }
 
 
@@ -296,7 +346,8 @@ static std::mutex tile_swap_mutex;
 
 void Platform::Screen::clear()
 {
-    ::window->clear(sf::Color(100, 100, 110));
+    auto& window = ::platform->data()->window_;
+    window.clear();
 
     {
         std::lock_guard<std::mutex> guard(texture_swap_mutex);
@@ -411,7 +462,7 @@ void Platform::Screen::clear()
         std::lock_guard<std::mutex> guard(::event_queue_lock);
 
         sf::Event event;
-        while (::window->pollEvent(event)) {
+        while (window.pollEvent(event)) {
             ::event_queue.push(event);
         }
     }
@@ -442,6 +493,7 @@ void Platform::Screen::display()
     sf::View view;
     view.setSize(view_.get_size().x, view_.get_size().y);
 
+    auto& window = ::platform->data()->window_;
 
     if (::platform->data()->background_changed_) {
         ::platform->data()->background_changed_ = false;
@@ -454,15 +506,56 @@ void Platform::Screen::display()
     {
         view.setCenter(view_.get_center().x * 0.3f + view_.get_size().x / 2,
                        view_.get_center().y * 0.3f + view_.get_size().y / 2);
-        ::window->setView(view);
+        window.setView(view);
 
-        ::window->draw(
-            sf::Sprite(::platform->data()->background_rt_.getTexture()));
+        sf::Sprite bkg_spr(::platform->data()->background_rt_.getTexture());
+
+        window.draw(bkg_spr);
+
+        const auto right_x_wrap_threshold = 51.f;
+        const auto bottom_y_wrap_threshold = 320.f;
+
+        // Manually wrap the background sprite
+        if (view_.get_center().x > right_x_wrap_threshold) {
+            bkg_spr.setPosition(256, 0);
+            window.draw(bkg_spr);
+        }
+
+        if (view_.get_center().x < 0.f) {
+            bkg_spr.setPosition(-256, 0);
+            window.draw(bkg_spr);
+        }
+
+        if (view_.get_center().y < 0.f) {
+            bkg_spr.setPosition(0, -256);
+            window.draw(bkg_spr);
+
+            if (view_.get_center().x < 0.f) {
+                bkg_spr.setPosition(-256, -256);
+                window.draw(bkg_spr);
+            } else if (view_.get_center().x > right_x_wrap_threshold) {
+                bkg_spr.setPosition(256, -256);
+                window.draw(bkg_spr);
+            }
+        }
+
+        if (view_.get_center().y > bottom_y_wrap_threshold) {
+            bkg_spr.setPosition(0, 256);
+            window.draw(bkg_spr);
+
+            if (view_.get_center().x < 0.f) {
+                bkg_spr.setPosition(-256, 256);
+                window.draw(bkg_spr);
+            } else if (view_.get_center().x > right_x_wrap_threshold) {
+                bkg_spr.setPosition(256, 256);
+                window.draw(bkg_spr);
+            }
+        }
     }
 
     view.setCenter(view_.get_center().x + view_.get_size().x / 2,
                    view_.get_center().y + view_.get_size().y / 2);
-    ::window->setView(view);
+    window.setView(view);
 
     if (::platform->data()->map_0_changed_) {
         ::platform->data()->map_0_changed_ = false;
@@ -478,8 +571,8 @@ void Platform::Screen::display()
         ::platform->data()->map_1_rt_.display();
     }
 
-    ::window->draw(sf::Sprite(::platform->data()->map_0_rt_.getTexture()));
-    ::window->draw(sf::Sprite(::platform->data()->map_1_rt_.getTexture()));
+    window.draw(sf::Sprite(::platform->data()->map_0_rt_.getTexture()));
+    window.draw(sf::Sprite(::platform->data()->map_1_rt_.getTexture()));
 
 
     for (auto& spr : reversed(::draw_queue)) {
@@ -517,9 +610,9 @@ void Platform::Screen::display()
             sf::Shader& shader = ::platform->data()->color_shader_;
             shader.setUniform("amount", mix.amount_ / 255.f);
             shader.setUniform("targetColor", real_color(mix.color_));
-            ::window->draw(sf_spr, &shader);
+            window.draw(sf_spr, &shader);
         } else {
-            ::window->draw(sf_spr);
+            window.draw(sf_spr);
         }
     }
 
@@ -527,15 +620,15 @@ void Platform::Screen::display()
     ::platform->data()->fade_overlay_.setPosition(
         {view_.get_center().x, view_.get_center().y});
 
-    ::window->draw(::platform->data()->fade_overlay_);
+    window.draw(::platform->data()->fade_overlay_);
 
     view.setCenter({view_.get_size().x / 2, view_.get_size().y / 2});
 
-    ::window->setView(view);
+    window.setView(view);
 
-    ::window->draw(::platform->data()->overlay_);
+    window.draw(::platform->data()->overlay_);
 
-    ::window->display();
+    window.display();
 
     draw_queue.clear();
 }
@@ -667,11 +760,17 @@ static std::unordered_map<std::string, sf::Keyboard::Key> key_lookup{
 
 Platform::Platform()
 {
-    data_ = new Data;
+    ::platform = this;
+
+    data_ = new Data(*this);
     if (not data_) {
         error(*this, "Failed to allocate context");
         exit(EXIT_FAILURE);
     }
+
+
+    screen_.view_.set_size(screen_.size().cast<Float>());
+
 
     auto shader_folder =
         Conf(*::platform).expect<Conf::String>("paths", "shader_folder");
@@ -710,7 +809,19 @@ Platform::Platform()
     CONF_KEY(start);
     CONF_KEY(select);
 
-    ::platform = this;
+    push_task(&::watchdog_task);
+}
+
+
+void Platform::soft_exit()
+{
+    data()->window_.close();
+}
+
+
+bool Platform::write_save(const PersistentData& data)
+{
+    return true; // TODO
 }
 
 
@@ -736,7 +847,7 @@ void Platform::push_task(Task* task)
 
 bool Platform::is_running() const
 {
-    return ::window->isOpen();
+    return data()->window_.isOpen();
 }
 
 
@@ -778,12 +889,6 @@ void Platform::load_overlay_texture(const char* name)
 {
     std::lock_guard<std::mutex> guard(texture_swap_mutex);
     texture_swap_requests.push({TextureSwap::overlay, name});
-}
-
-
-bool Platform::write_save(const PersistentData& data)
-{
-    return true; // TODO
 }
 
 
@@ -859,7 +964,7 @@ void Platform::fatal()
 
 void Platform::feed_watchdog()
 {
-    // TODO
+    ::watchdog_task.feed();
 }
 
 

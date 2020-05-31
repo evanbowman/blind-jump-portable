@@ -99,6 +99,13 @@ public:
         return stopwatch_;
     }
 
+    // On some platforms, fatal() will trigger a soft reset. But soft-reset is
+    // mostly reserved for bare-metal platforms, where it's usually easy to
+    // perform a soft reset via a simple BIOS call to reset the ROM. When
+    // running as a windowed application within an OS, though, it's not as
+    // simple to reset a process back to its original state at time of creation,
+    // so it's easier in those cases to just exit. In any event, fatal() does
+    // not return.
     [[noreturn]] void fatal();
 
 
@@ -158,6 +165,14 @@ public:
 
     using WatchdogCallback = Function<16, void(Platform& pfrm)>;
     void on_watchdog_timeout(WatchdogCallback callback);
+
+
+    // Not implemented for all platforms. If unimplemented, the funciton will
+    // simply return immediately. For handheld consoles without an operating
+    // system, where the only way that you can shutdown the system is by
+    // flipping the power switch, it doesn't make sense to implement an exit
+    // function.
+    void soft_exit();
 
 
     bool write_save(const PersistentData& data);
@@ -398,6 +413,11 @@ public:
     class Data;
 
     Data* data()
+    {
+        return data_;
+    }
+
+    const Data* data() const
     {
         return data_;
     }

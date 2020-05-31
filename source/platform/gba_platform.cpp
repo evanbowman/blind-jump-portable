@@ -2013,6 +2013,11 @@ static void audio_update()
 }
 
 
+void Platform::soft_exit()
+{
+}
+
+
 static Microseconds watchdog_counter;
 
 
