@@ -20,13 +20,14 @@
 
 
 static sf::RenderWindow* window = nullptr;
-static sf::RenderTexture* rt = nullptr;
 
 
 class Platform::Data {
 public:
     sf::Texture spritesheet_;
-    sf::Texture tileset_;
+    sf::Texture tile0_;
+    sf::Texture tile1_;
+    sf::Texture overlay_;
     sf::Shader color_shader_;
     sf::RectangleShape fade_overlay_;
 };
@@ -133,7 +134,7 @@ void Platform::Keyboard::poll()
                 states_[size_t(Key::action_1)] = true;
                 break;
 
-            case sf::Keyboard::Y:
+            case sf::Keyboard::Z:
                 states_[size_t(Key::action_2)] = true;
                 break;
 
@@ -164,7 +165,7 @@ void Platform::Keyboard::poll()
                 states_[size_t(Key::action_1)] = false;
                 break;
 
-            case sf::Keyboard::Y:
+            case sf::Keyboard::Z:
                 states_[size_t(Key::action_2)] = false;
                 break;
 
@@ -185,7 +186,7 @@ void Platform::Keyboard::poll()
 // Screen
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
+
 Platform::Screen::Screen()
 {
     if (not::window) {
@@ -194,11 +195,8 @@ Platform::Screen::Screen()
             exit(EXIT_FAILURE);
         }
         ::window->setVerticalSyncEnabled(true);
-
-        ::rt = new sf::RenderTexture();
     }
     view_.set_size(this->size().cast<Float>());
-    std::cout << this->size().x << " " << this->size().y << std::endl;
 }
 
 
@@ -208,16 +206,59 @@ Vec2<u32> Platform::Screen::size() const
 }
 
 
+enum class TextureSwap { spritesheet, tile0, tile1, overlay };
+
+// The logic thread requests a texture swap, but the swap itself needs to be
+// performed on the graphics thread.
+static std::queue<std::pair<TextureSwap, std::string>> texture_swap_requests;
+static std::mutex texture_swap_mutex;
+
+
 void Platform::Screen::clear()
 {
     ::window->clear();
 
+    {
+        std::lock_guard<std::mutex> guard(texture_swap_mutex);
+        while (not texture_swap_requests.empty()) {
+            const auto request = texture_swap_requests.front();
+            texture_swap_requests.pop();
 
-    std::lock_guard<std::mutex> guard(::event_queue_lock);
+            sf::Image image;
+            if (not image.loadFromFile("../images/" + request.second + ".png")) {
+                error(*::platform, (std::string("failed to load texture ") + request.second).c_str());
+                exit(EXIT_FAILURE);
+            }
+            image.createMaskFromColor({255, 0, 255, 255});
 
-    sf::Event event;
-    while (::window->pollEvent(event)) {
-        ::event_queue.push(event);
+            if (not [&] {
+                        switch (request.first) {
+                        case TextureSwap::spritesheet:
+                            return &::platform->data()->spritesheet_;
+
+                        case TextureSwap::tile0:
+                            return &::platform->data()->tile0_;
+
+                        case TextureSwap::tile1:
+                            return &::platform->data()->tile1_;
+
+                        case TextureSwap::overlay:
+                            return &::platform->data()->overlay_;
+                        }
+                    }()->loadFromImage(image)) {
+                error(*::platform, "Failed to create texture");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> guard(::event_queue_lock);
+
+        sf::Event event;
+        while (::window->pollEvent(event)) {
+            ::event_queue.push(event);
+        }
     }
 }
 
@@ -225,30 +266,19 @@ void Platform::Screen::clear()
 std::vector<Sprite> draw_queue;
 
 
+static sf::Glsl::Vec3 make_color(int color_hex)
+{
+    const auto r = (color_hex & 0xFF0000) >> 16;
+    const auto g = (color_hex & 0x00FF00) >> 8;
+    const auto b = (color_hex & 0x0000FF);
+
+    return { r / 255.f, g / 255.f, b / 255.f };
+}
+
+
 static sf::Glsl::Vec3 real_color(ColorConstant k)
 {
-    switch (k) {
-    case ColorConstant::spanish_crimson:
-        static const sf::Glsl::Vec3 spn_crimson(
-            29.f / 31.f, 3.f / 31.f, 11.f / 31.f);
-        return spn_crimson;
-
-    case ColorConstant::electric_blue:
-        static const sf::Glsl::Vec3 el_blue(
-            9.f / 31.f, 31.f / 31.f, 31.f / 31.f);
-        return el_blue;
-
-    // case ColorConstant::coquelicot:
-    //     static const sf::Glsl::Vec3 coquelicot(
-    //         30.f / 31.f, 7.f / 31.f, 1.f / 31.f);
-    //     return coquelicot;
-
-    default:
-    case ColorConstant::null:
-    case ColorConstant::rich_black:
-        static const sf::Glsl::Vec3 rich_black(0.f, 0.f, 2.f / 31.f);
-        return rich_black;
-    }
+    return make_color(static_cast<int>(k));
 }
 
 
@@ -314,13 +344,26 @@ void Platform::Screen::display()
 
 void Platform::Screen::fade(Float amount, ColorConstant k, std::optional<ColorConstant> base)
 {
-    const auto& c = real_color(k);
+    const auto c = real_color(k);
 
-    ::platform->data()->fade_overlay_.setFillColor(
-        {static_cast<uint8_t>(c.x * 255),
-         static_cast<uint8_t>(c.y * 255),
-         static_cast<uint8_t>(c.z * 255),
-         static_cast<uint8_t>(amount * 255)});
+    if (not base) {
+        ::platform->data()->fade_overlay_.setFillColor({static_cast<uint8_t>(c.x * 255),
+                                                        static_cast<uint8_t>(c.y * 255),
+                                                        static_cast<uint8_t>(c.z * 255),
+                                                        static_cast<uint8_t>(amount * 255)});
+    } else {
+        const auto c2 = real_color(*base);
+        ::platform->data()->fade_overlay_.setFillColor({interpolate(static_cast<uint8_t>(c.x * 255),
+                                                                    static_cast<uint8_t>(c2.x * 255),
+                                                                    amount),
+                                                        interpolate(static_cast<uint8_t>(c.y * 255),
+                                                                    static_cast<uint8_t>(c2.y * 255),
+                                                                    amount),
+                                                        interpolate(static_cast<uint8_t>(c.z * 255),
+                                                                    static_cast<uint8_t>(c2.z * 255),
+                                                                    amount),
+                                                        static_cast<uint8_t>(255)});
+    }
 }
 
 
@@ -407,15 +450,6 @@ Platform::Platform()
         error(*this, "Failed to allocate context");
         exit(EXIT_FAILURE);
     }
-    sf::Image image;
-    if (not image.loadFromFile("../images/spritesheet.png")) {
-        error(*this, "Failed to load spritesheet");
-    }
-    image.createMaskFromColor({255, 0, 255, 255});
-    if (not data_->spritesheet_.loadFromImage(image)) {
-        error(*this, "Failed to create spritesheet texture");
-        exit(EXIT_FAILURE);
-    }
     if (not data_->color_shader_.loadFromFile("../shaders/colorShader.frag",
                                               sf::Shader::Fragment)) {
         error(*this, "Failed to load shader");
@@ -461,23 +495,34 @@ void Platform::sleep(u32 frames)
 }
 
 
+
+
+
 void Platform::load_sprite_texture(const char* name)
 {
+    std::lock_guard<std::mutex> guard(texture_swap_mutex);
+    texture_swap_requests.push({TextureSwap::spritesheet, name});
 }
 
 
 void Platform::load_tile0_texture(const char* name)
 {
+    std::lock_guard<std::mutex> guard(texture_swap_mutex);
+    texture_swap_requests.push({TextureSwap::tile0, name});
 }
 
 
 void Platform::load_tile1_texture(const char* name)
 {
+    std::lock_guard<std::mutex> guard(texture_swap_mutex);
+    texture_swap_requests.push({TextureSwap::tile1, name});
 }
 
 
 void Platform::load_overlay_texture(const char* name)
 {
+    std::lock_guard<std::mutex> guard(texture_swap_mutex);
+    texture_swap_requests.push({TextureSwap::overlay, name});
 }
 
 

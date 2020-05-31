@@ -40,15 +40,14 @@ Laser::Laser(const Vec2<Float>& position, Cardinal dir, Mode mode)
 void Laser::update(Platform& pf, Game& game, Microseconds dt)
 {
     // wait till we've had one update cycle to check visibility
+    timer_ += dt;
+
     if (timer_ > milliseconds(20)) {
         if (not this->visible()) {
-            puts("here");
             this->kill();
             return;
         }
     }
-
-    timer_ += dt;
 
     if (timer_ > milliseconds(20)) {
         timer_ = 0;

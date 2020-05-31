@@ -27,7 +27,7 @@ void Camera::update(Platform& pfrm,
     static const std::array<std::array<Float, 5>,
                             static_cast<int>(ShakeMagnitude::zero)>
         shake_constants = {
-            {{3.f, -5.f, 3.f, -2.f, 1.f}, {6.f, -10.f, 6.f, -4.f, 2.f}}};
+            {{6.f, -10.f, 6.f, -4.f, 2.f}, {12.f, -20.f, 12.f, -8.f, 4.f}}};
 
     auto center = interpolate(
         target,
@@ -45,6 +45,11 @@ void Camera::update(Platform& pfrm,
         shake_timer_ += dt;
 
         if (shake_timer_ > milliseconds(50)) {
+
+            view.set_center({center.x,
+                             center.y + shake_constants[static_cast<int>(
+                                        shake_magnitude_)][shake_index_]});
+
             shake_timer_ = 0;
             shake_index_ += 1;
 
@@ -54,11 +59,7 @@ void Camera::update(Platform& pfrm,
             }
         }
 
-        view.set_center(center);
-
-        // view.set_center({center.x,
-        //                  center.y + shake_constants[static_cast<int>(
-        //                                 shake_magnitude_)][shake_index_]});
+        // view.set_center(center);
     }
 
     pfrm.screen().set_view(view);

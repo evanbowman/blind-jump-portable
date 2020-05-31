@@ -760,7 +760,6 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void ActiveState::enter(Platform& pfrm, Game& game, State&)
 {
-    puts("here");
     if (restore_keystates) {
         pfrm.keyboard().restore_state(*restore_keystates);
         restore_keystates.reset();

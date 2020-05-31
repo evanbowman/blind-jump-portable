@@ -108,7 +108,6 @@ HOT void Game::render(Platform& pfrm)
 
     auto show_sprite = [&](auto& e) {
         if (within_view_frustum(pfrm.screen(), e.get_sprite().get_position())) {
-
             using T = typename std::remove_reference<decltype(e)>::type;
 
             if constexpr (T::has_shadow) {
@@ -1379,6 +1378,7 @@ bool within_view_frustum(const Platform::Screen& screen, const Vec2<Float>& pos)
     const auto view_half_extent = screen.size().cast<s32>() / s32(2);
     Vec2<s32> view_br = {view_center.x + view_half_extent.x * 2,
                          view_center.y + view_half_extent.y * 2};
+
     return pos.x > view_center.x - 32 and pos.x < view_br.x + 32 and
            pos.y > view_center.y - 32 and pos.y < view_br.y + 32;
 }
