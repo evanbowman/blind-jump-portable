@@ -1,5 +1,7 @@
+#include "conf.hpp"
 #include "number/random.hpp"
 #include "platform.hpp"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -367,7 +369,11 @@ void Platform::Screen::clear()
             texture_swap_requests.pop();
 
             sf::Image image;
-            if (not image.loadFromFile("../images/" + request.second +
+
+            auto image_folder =
+                Conf(*::platform).expect<Conf::String>("paths", "image_folder");
+
+            if (not image.loadFromFile(image_folder.c_str() + request.second +
                                        ".png")) {
                 error(*::platform,
                       (std::string("failed to load texture ") + request.second)
