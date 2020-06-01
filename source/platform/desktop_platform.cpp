@@ -163,7 +163,7 @@ public:
 
     void run() override
     {
-        if (not::platform->is_running()) {
+        if (::platform->data() and not::platform->is_running()) {
             Task::completed();
             return;
         }
@@ -176,8 +176,10 @@ public:
         last_ = now;
 
         if (total_ > seconds(10)) {
-            if (::platform->data()->window_.isOpen()) {
-                ::platform->data()->window_.close();
+            if (::platform->data()) {
+                if (::platform->data()->window_.isOpen()) {
+                    ::platform->data()->window_.close();
+                }
             }
 
             error(*::platform, "unresponsive process killed by watchdog");
@@ -787,6 +789,8 @@ Platform::Platform()
 {
     ::platform = this;
 
+    push_task(&::watchdog_task);
+
     data_ = new Data(*this);
     if (not data_) {
         error(*this, "Failed to allocate context");
@@ -832,8 +836,6 @@ Platform::Platform()
     CONF_KEY(alt_2);
     CONF_KEY(start);
     CONF_KEY(select);
-
-    push_task(&::watchdog_task);
 }
 
 

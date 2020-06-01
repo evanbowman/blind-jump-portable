@@ -237,9 +237,10 @@ Conf::Value Conf::get(const char* section, const char* key)
 
 void Conf::fatal(const char* section, const char* key)
 {
-    StringBuffer<64> err;
-    err += "conf: ";
+    StringBuffer<100> err;
+    err += "config lookup failed: ";
     err += section;
+    err += ", ";
     err += key;
 
     error(pfrm_, err.c_str());
