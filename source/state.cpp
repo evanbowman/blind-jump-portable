@@ -1,5 +1,6 @@
 #include "state.hpp"
 #include "bitvector.hpp"
+#include "conf.hpp"
 #include "game.hpp"
 #include "graphics/overlay.hpp"
 #include "localization.hpp"
@@ -296,9 +297,19 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
+    Microseconds timer_ = 0;
+    enum class AnimState {
+        map_enter,
+        map_decorate,
+        wp_text,
+        legend,
+        wait
+    } anim_state_ = AnimState::map_enter;
     std::optional<Text> level_text_;
+    int last_column_;
     std::array<std::optional<Text>, legend_strings.size()> legend_text_;
     std::optional<Border> legend_border_;
+    Microseconds map_enter_duration_;
 };
 
 
@@ -669,8 +680,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case NotificationStatus::exit: {
         notification_text_timer += delta;
-        if (notification_text_timer > milliseconds(50)) {
-            notification_text_timer -= delta;
+        if (notification_text_timer > milliseconds(34)) {
+            notification_text_timer = 0;
 
             const auto tile = pfrm.get_tile(Layer::overlay, 0, 0);
             if (tile < 120) {
@@ -1734,113 +1745,9 @@ void MapSystemState::enter(Platform& pfrm, Game& game, State&)
 {
     pfrm.screen().fade(1.f);
 
-    auto set_tile = [&](s8 x, s8 y, int icon, bool dodge = true) {
-        const auto tile = pfrm.get_tile(Layer::overlay, x + 1, y);
-        if (dodge and (tile == 133 or tile == 132)) {
-            // ...
-        } else {
-            pfrm.set_tile(Layer::overlay, x + 1, y, icon);
-        }
-    };
-
-    game.tiles().for_each([&](Tile t, s8 x, s8 y) {
-        bool visited_nearby = false;
-        static const int offset = 3;
-        for (int x2 = std::max(0, x - (offset + 1));
-             x2 < std::min((int)TileMap::width, x + offset + 1);
-             ++x2) {
-            for (int y2 = std::max(0, y - offset);
-                 y2 < std::min((int)TileMap::height, y + offset);
-                 ++y2) {
-                if (visited.get(x2, y2)) {
-                    visited_nearby = true;
-                }
-            }
-        }
-        if (not visited_nearby) {
-            set_tile(x, y, is_walkable__fast(t) ? 132 : 133, false);
-        } else if (is_walkable__fast(t)) {
-            set_tile(x, y, 143, false);
-        } else {
-            if (is_walkable__fast(game.tiles().get_tile(x, y - 1))) {
-                set_tile(x, y, 140);
-            } else {
-                set_tile(x, y, 144, false);
-            }
-        }
-    });
-
-    pfrm.sleep(2);
-
-    auto render_map_icon = [&](Entity& entity, s16 icon) {
-        auto t = to_tile_coord(entity.get_position().cast<s32>());
-        if (is_walkable__fast(game.tiles().get_tile(t.x, t.y))) {
-            set_tile(t.x, t.y, icon);
-        }
-    };
-
-    game.enemies().transform([&](auto& buf) {
-        for (auto& entity : buf) {
-            render_map_icon(*entity, 139);
-        }
-    });
-
-    render_map_icon(game.transporter(), 141);
-    for (auto& chest : game.details().get<ItemChest>()) {
-        if (chest->state() not_eq ItemChest::State::opened) {
-            render_map_icon(*chest, 138);
-        }
-    }
-
-    auto player_tile = to_tile_coord(game.player().get_position().cast<s32>());
-    //u32 integer_text_length(int n);
-    if (not is_walkable__fast(
-            game.tiles().get_tile(player_tile.x, player_tile.y))) {
-        // Player movement isn't constrained to tiles exactly, and sometimes the
-        // player's map icon displays as inside of a wall.
-        if (is_walkable__fast(
-                game.tiles().get_tile(player_tile.x + 1, player_tile.y))) {
-            player_tile.x += 1;
-        } else if (is_walkable__fast(game.tiles().get_tile(
-                       player_tile.x, player_tile.y + 1))) {
-            player_tile.y += 1;
-        }
-    }
-    set_tile(player_tile.x, player_tile.y, 142);
-
-    auto screen_tiles = calc_screen_tiles(pfrm);
-
-    const char* level_str = locale_string(LocaleString::waypoint_text);
-
-    pfrm.sleep(2);
-
-    level_text_.emplace(
-        pfrm,
-        OverlayCoord{u8(screen_tiles.x - (1 + utf8::len(level_str) +
-                                          integer_text_length(game.level()))),
-                     1});
-    level_text_->assign(level_str);
-    level_text_->append(game.level());
-
-    pfrm.sleep(2);
-
-    set_tile(TileMap::width + 2, 11, 137, false); // you
-    set_tile(TileMap::width + 2, 13, 135, false); // enemy
-    set_tile(TileMap::width + 2, 15, 136, false); // transporter
-    set_tile(TileMap::width + 2, 17, 134, false); // item
-
-    legend_border_.emplace(pfrm,
-                           OverlayCoord{11, 9},
-                           OverlayCoord{TileMap::width + 2, 10},
-                           false,
-                           8);
-
-    for (size_t i = 0; i < legend_strings.size(); ++i) {
-        const u8 y = 11 + (i * 2);
-        legend_text_[i].emplace(pfrm,
-                                locale_string(legend_strings[i]),
-                                OverlayCoord{TileMap::width + 5, y});
-    }
+    const auto dname = pfrm.device_name();
+    map_enter_duration_ = milliseconds(
+        Conf(pfrm).expect<Conf::Integer>(dname.c_str(), "minimap_enter_time"));
 }
 
 
@@ -1858,8 +1765,159 @@ void MapSystemState::exit(Platform& pfrm, Game& game, State&)
 
 StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::action_2>()) {
-        return state_pool_.create<InventoryState>(false);
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    auto set_tile = [&](s8 x, s8 y, int icon, bool dodge = true) {
+        const auto tile = pfrm.get_tile(Layer::overlay, x + 1, y);
+        if (dodge and (tile == 133 or tile == 132)) {
+            // ...
+        } else {
+            pfrm.set_tile(Layer::overlay, x + 1, y, icon);
+        }
+    };
+
+    auto render_map_icon = [&](Entity& entity, s16 icon) {
+        auto t = to_tile_coord(entity.get_position().cast<s32>());
+        if (is_walkable__fast(game.tiles().get_tile(t.x, t.y))) {
+            set_tile(t.x, t.y, icon);
+        }
+    };
+
+    switch (anim_state_) {
+    case AnimState::map_enter: {
+        timer_ += delta;
+        const auto current_column =
+            std::min(TileMap::width,
+                     interpolate(TileMap::width,
+                                 (decltype(TileMap::width))0,
+                                 Float(timer_) / map_enter_duration_));
+        game.tiles().for_each([&](Tile t, s8 x, s8 y) {
+            if (x > current_column or x <= last_column_) {
+                return;
+            }
+            bool visited_nearby = false;
+            static const int offset = 3;
+            for (int x2 = std::max(0, x - (offset + 1));
+                 x2 < std::min((int)TileMap::width, x + offset + 1);
+                 ++x2) {
+                for (int y2 = std::max(0, y - offset);
+                     y2 < std::min((int)TileMap::height, y + offset);
+                     ++y2) {
+                    if (visited.get(x2, y2)) {
+                        visited_nearby = true;
+                    }
+                }
+            }
+            if (not visited_nearby) {
+                set_tile(x, y, is_walkable__fast(t) ? 132 : 133, false);
+            } else if (is_walkable__fast(t)) {
+                set_tile(x, y, 143, false);
+            } else {
+                if (is_walkable__fast(game.tiles().get_tile(x, y - 1))) {
+                    set_tile(x, y, 140);
+                } else {
+                    set_tile(x, y, 144, false);
+                }
+            }
+        });
+        last_column_ = current_column;
+
+        if (current_column == TileMap::width) {
+            timer_ = 0;
+            anim_state_ = AnimState::map_decorate;
+        }
+        break;
+    }
+
+    case AnimState::map_decorate: {
+        timer_ += delta;
+        if (timer_ > milliseconds(32)) {
+            game.enemies().transform([&](auto& buf) {
+                for (auto& entity : buf) {
+                    render_map_icon(*entity, 139);
+                }
+            });
+
+            render_map_icon(game.transporter(), 141);
+            for (auto& chest : game.details().get<ItemChest>()) {
+                if (chest->state() not_eq ItemChest::State::opened) {
+                    render_map_icon(*chest, 138);
+                }
+            }
+
+            auto player_tile =
+                to_tile_coord(game.player().get_position().cast<s32>());
+            //u32 integer_text_length(int n);
+            if (not is_walkable__fast(
+                    game.tiles().get_tile(player_tile.x, player_tile.y))) {
+                // Player movement isn't constrained to tiles exactly, and sometimes the
+                // player's map icon displays as inside of a wall.
+                if (is_walkable__fast(game.tiles().get_tile(player_tile.x + 1,
+                                                            player_tile.y))) {
+                    player_tile.x += 1;
+                } else if (is_walkable__fast(game.tiles().get_tile(
+                               player_tile.x, player_tile.y + 1))) {
+                    player_tile.y += 1;
+                }
+            }
+            set_tile(player_tile.x, player_tile.y, 142);
+
+            timer_ = 0;
+            anim_state_ = AnimState::wp_text;
+        }
+        break;
+    }
+
+    case AnimState::wp_text:
+        timer_ += delta;
+        if (timer_ > milliseconds(32)) {
+            timer_ = 0;
+            anim_state_ = AnimState::legend;
+
+            const char* level_str = locale_string(LocaleString::waypoint_text);
+
+            level_text_.emplace(
+                pfrm,
+                OverlayCoord{
+                    u8(screen_tiles.x - (1 + utf8::len(level_str) +
+                                         integer_text_length(game.level()))),
+                    1});
+            level_text_->assign(level_str);
+            level_text_->append(game.level());
+        }
+        break;
+
+    case AnimState::legend:
+        timer_ += delta;
+        if (timer_ > milliseconds(32)) {
+            timer_ = 0;
+            anim_state_ = AnimState::wait;
+
+            set_tile(TileMap::width + 2, 11, 137, false); // you
+            set_tile(TileMap::width + 2, 13, 135, false); // enemy
+            set_tile(TileMap::width + 2, 15, 136, false); // transporter
+            set_tile(TileMap::width + 2, 17, 134, false); // item
+
+            legend_border_.emplace(pfrm,
+                                   OverlayCoord{11, 9},
+                                   OverlayCoord{TileMap::width + 2, 10},
+                                   false,
+                                   8);
+
+            for (size_t i = 0; i < legend_strings.size(); ++i) {
+                const u8 y = 11 + (i * 2);
+                legend_text_[i].emplace(pfrm,
+                                        locale_string(legend_strings[i]),
+                                        OverlayCoord{TileMap::width + 5, y});
+            }
+        }
+        break;
+
+    case AnimState::wait:
+        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            return state_pool_.create<InventoryState>(false);
+        }
+        break;
     }
 
     return null_state();

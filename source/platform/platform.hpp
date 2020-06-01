@@ -74,6 +74,9 @@ public:
     class Speaker;
     class Stopwatch;
 
+    using DeviceName = StringBuffer<23>;
+    DeviceName device_name() const;
+
     inline Screen& screen()
     {
         return screen_;

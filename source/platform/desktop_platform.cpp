@@ -21,6 +21,13 @@
 #include <sstream>
 #include <thread>
 #include <unordered_map>
+#include <iostream>
+
+
+Platform::DeviceName Platform::device_name() const
+{
+    return "DesktopPC";
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +139,8 @@ public:
           map_1_(&tile1_texture_, {32, 24}, 16, 20),
           background_(&background_texture_, {8, 8}, 32, 32),
           window_scale_(
-              Conf(pfrm).expect<Conf::Integer>("desktop-window", "scale")),
+              Conf(pfrm).expect<Conf::Integer>(pfrm.device_name().c_str(),
+                                               "window_scale")),
           window_(sf::VideoMode(240 * window_scale_, 160 * window_scale_),
                   "Blind Jump",
                   sf::Style::Titlebar | sf::Style::Close)
@@ -725,7 +733,24 @@ static std::ofstream logfile("logfile.txt");
 
 void Platform::Logger::log(Logger::Severity level, const char* msg)
 {
-    logfile << msg << std::endl;
+    auto write_msg = [&](std::ostream& target) {
+        target << '[' <<
+            [&] {
+                switch (level) {
+                default:
+                case Severity::info:
+                    return "info";
+                case Severity::warning:
+                    return "warning";
+                case Severity::error:
+                    return "error";
+                }
+            }() << "] "
+               << msg << std::endl;
+    };
+
+    write_msg(logfile);
+    write_msg(std::cout);
 }
 
 
@@ -794,8 +819,7 @@ Platform::Platform()
 #define CONF_KEY(KEY)                                                          \
     keymap[static_cast<int>(Key::KEY)] =                                       \
         ::key_lookup[Conf(*::platform)                                         \
-                         .expect<Conf::String>("desktop-keyboard-bindings",    \
-                                               #KEY)                           \
+                         .expect<Conf::String>("keyboard-bindings", #KEY)      \
                          .c_str()];
 
     CONF_KEY(left);
@@ -819,16 +843,32 @@ void Platform::soft_exit()
 }
 
 
+static const char* const save_file_name = "save.dat";
+
+
 bool Platform::write_save(const PersistentData& data)
 {
-    return true; // TODO
+    std::ofstream out(save_file_name,
+                      std::ios_base::out | std::ios_base::binary);
+
+    out.write(reinterpret_cast<const char*>(&data), sizeof data);
+
+    return true;
 }
 
 
 std::optional<PersistentData> Platform::read_save()
 {
-    // TODO...
-    return {};
+    std::ifstream in(save_file_name, std::ios_base::in | std::ios_base::binary);
+
+    if (!in) {
+        return {};
+    }
+
+    PersistentData save;
+    in.read(reinterpret_cast<char*>(&save), sizeof save);
+
+    return save;
 }
 
 

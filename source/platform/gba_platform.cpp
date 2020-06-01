@@ -17,6 +17,12 @@
 #include <algorithm>
 
 
+Platform::DeviceName Platform::device_name() const
+{
+    return "GameboyAdvance";
+}
+
+
 // These word and halfword versions of memcpy are written in assembly. They use
 // special ARM instructions to copy data faster than you could do with thumb
 // code.

@@ -64,6 +64,12 @@ template <u32 Capacity> class StringBuffer {
 public:
     using Buffer = ::Buffer<char, Capacity + 1>;
 
+    StringBuffer(const char* init)
+    {
+        mem_.push_back('\0');
+        (*this) += init;
+    }
+
     StringBuffer()
     {
         mem_.push_back('\0');
