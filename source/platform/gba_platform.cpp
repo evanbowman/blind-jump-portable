@@ -2130,6 +2130,12 @@ Platform::Platform()
 }
 
 
+Platform::~Platform()
+{
+    // ...
+}
+
+
 struct GlyphMapping {
     utf8::Codepoint character_;
 

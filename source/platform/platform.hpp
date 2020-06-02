@@ -447,6 +447,9 @@ public:
         return data_;
     }
 
+    Platform(const Platform&) = delete;
+    ~Platform();
+
 private:
     Platform();
 

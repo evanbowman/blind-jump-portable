@@ -306,7 +306,7 @@ private:
         wait
     } anim_state_ = AnimState::map_enter;
     std::optional<Text> level_text_;
-    int last_column_;
+    int last_column_ = -1;
     std::array<std::optional<Text>, legend_strings.size()> legend_text_;
     std::optional<Border> legend_border_;
     Microseconds map_enter_duration_;

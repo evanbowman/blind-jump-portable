@@ -972,13 +972,28 @@ void Platform::Speaker::play_music(const char* name,
                                    bool loop,
                                    Microseconds offset)
 {
-    // TODO...
+    auto dest =
+        Conf(*::platform).expect<Conf::String>("paths", "sound_folder");
+
+    std::string path = dest.c_str();
+
+    path += "music_";
+    path += name;
+    path += ".wav";
+
+    if (::platform->data()->music_.openFromFile(path.c_str())) {
+        ::platform->data()->music_.play();
+        ::platform->data()->music_.setLoop(true);
+        ::platform->data()->music_.setPlayingOffset(sf::microseconds(offset));
+    } else {
+        error(*::platform, "failed to load music file");
+    }
 }
 
 
 void Platform::Speaker::stop_music()
 {
-    // TODO...
+    ::platform->data()->music_.stop();
 }
 
 
@@ -1085,6 +1100,12 @@ static std::unordered_map<std::string, sf::Keyboard::Key> key_lookup{
     {"U", sf::Keyboard::U},         {"V", sf::Keyboard::V},
     {"W", sf::Keyboard::W},         {"X", sf::Keyboard::X},
     {"Y", sf::Keyboard::Y},         {"Z", sf::Keyboard::Z}};
+
+
+Platform::~Platform()
+{
+    delete data_;
+}
 
 
 Platform::Platform()
