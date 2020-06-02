@@ -230,6 +230,11 @@ Conf::Value Conf::get(const char* section, const char* key)
     if (is_numeric) {
         return conf_atoi(buf.c_str());
     } else {
+        if (buf == "yes") {
+            return true;
+        } else if (buf == "no") {
+            return false;
+        }
         return buf;
     }
 }

@@ -106,6 +106,9 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
+static constexpr Vec2<u32> resolution{240, 160};
+
+
 class Platform::Data {
 public:
     sf::Texture spritesheet_texture_;
@@ -129,6 +132,7 @@ public:
     sf::RenderTexture map_1_rt_;
     sf::RenderTexture background_rt_;
 
+    const bool fullscreen_;
     int window_scale_ = 2;
     sf::RenderWindow window_;
 
@@ -140,24 +144,36 @@ public:
           map_0_(&tile0_texture_, {32, 24}, 16, 20),
           map_1_(&tile1_texture_, {32, 24}, 16, 20),
           background_(&background_texture_, {8, 8}, 32, 32),
-          window_scale_(
-              Conf(pfrm).expect<Conf::Integer>(pfrm.device_name().c_str(),
-                                               "window_scale")),
-          window_(sf::VideoMode(240 * window_scale_, 160 * window_scale_),
+          fullscreen_(Conf(pfrm).expect<Conf::Bool>(pfrm.device_name().c_str(),
+                                                    "fullscreen")),
+          window_scale_([&] {
+              if (fullscreen_) {
+                  auto ssize = sf::VideoMode::getDesktopMode();
+                  auto x_scale = ssize.width / resolution.x;
+                  auto y_scale = ssize.height / resolution.y;
+                  return static_cast<int>(std::max(x_scale, y_scale));
+              } else {
+                  return Conf(pfrm).expect<Conf::Integer>(
+                      pfrm.device_name().c_str(), "window_scale");
+              }
+          }()),
+          window_(sf::VideoMode(resolution.x * window_scale_,
+                                resolution.y * window_scale_),
                   "Blind Jump",
                   [&] {
-                      auto fullscreen = Conf(pfrm).expect<Conf::String>(
-                          pfrm.device_name().c_str(), "fullscreen");
-                      if (fullscreen == "yes") {
+                      if (fullscreen_) {
                           return static_cast<int>(sf::Style::Fullscreen);
                       } else {
-                          return sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize;
+                          return sf::Style::Titlebar | sf::Style::Close |
+                                 sf::Style::Resize;
                       }
                   }())
     {
         window_.setVerticalSyncEnabled(true);
+        window_.setMouseCursorVisible(false);
 
-        window_size_ = {(u32)240 * window_scale_, (u32)160 * window_scale_};
+        window_size_ = {(u32)resolution.x * window_scale_,
+                        (u32)resolution.y * window_scale_};
     }
 };
 
@@ -309,6 +325,7 @@ void Platform::Keyboard::poll()
     for (size_t i = 0; i < size_t(Key::count); ++i) {
         prev_[i] = states_[i];
     }
+
 
     std::lock_guard<std::mutex> guard(::event_queue_lock);
     while (not event_queue.empty()) {
@@ -598,9 +615,35 @@ void Platform::Screen::clear()
     {
         std::lock_guard<std::mutex> guard(::event_queue_lock);
 
+        // This is really hacky and bad. We can't check for keypresses on the
+        // other thread, and the sfml window does not fire keypressed events
+        // consistently while a key is held down, so we're generating our own
+        // events.
+        for (int keycode = 0; keycode < static_cast<int>(Key::count);
+             ++keycode) {
+            sf::Event event;
+            if (sf::Keyboard::isKeyPressed(keymap[keycode])) {
+                event.type = sf::Event::KeyPressed;
+                event.key.code = keymap[keycode];
+            } else {
+                event.type = sf::Event::KeyReleased;
+                event.key.code = keymap[keycode];
+            }
+            ::event_queue.push(event);
+        }
+
+
         sf::Event event;
         while (window.pollEvent(event)) {
-            ::event_queue.push(event);
+            switch (event.type) {
+            case sf::Event::KeyPressed:
+            case sf::Event::KeyReleased:
+                // We're generating our own events, see above.
+                break;
+
+            default:
+                ::event_queue.push(event);
+            }
         }
     }
 }

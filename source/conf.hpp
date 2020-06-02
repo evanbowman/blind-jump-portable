@@ -13,9 +13,10 @@ public:
     {
     }
 
+    using Bool = bool;
     using Integer = int;
     using String = StringBuffer<31>;
-    using Value = std::variant<std::monostate, Integer, String>;
+    using Value = std::variant<std::monostate, Bool, Integer, String>;
 
     Value get(const char* section, const char* key);
 
