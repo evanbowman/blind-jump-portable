@@ -62,6 +62,23 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
 
+
+    const auto controllers_head =
+        Conf(pfrm).expect<Conf::String>("wireless-controllers", "__next");
+
+    Conf(pfrm).scan_list(controllers_head.c_str(), [&](const Conf::String& sn) {
+        auto vid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "vendor_id");
+        auto pid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "product_id");
+        auto a1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_1");
+        auto a2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_2");
+        auto start = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "start");
+        auto alt_1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_1");
+        auto alt_2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_2");
+        pfrm.keyboard().register_controller(
+            {vid, pid, a1, a2, start, alt_1, alt_2});
+    });
+
+
     pfrm.on_watchdog_timeout([this](Platform& pfrm) {
         error(pfrm,
               "update loop stuck for unknown reason, system reset by watchdog");

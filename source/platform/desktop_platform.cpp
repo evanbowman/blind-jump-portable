@@ -17,11 +17,11 @@
 #include <chrono>
 #include <cmath>
 #include <fstream>
+#include <iostream>
 #include <queue>
 #include <sstream>
 #include <thread>
 #include <unordered_map>
-#include <iostream>
 
 
 Platform::DeviceName Platform::device_name() const
@@ -132,6 +132,8 @@ public:
     int window_scale_ = 2;
     sf::RenderWindow window_;
 
+    Vec2<u32> window_size_;
+
 
     Data(Platform& pfrm)
         : overlay_(&overlay_texture_, {8, 8}, 32, 32),
@@ -143,9 +145,19 @@ public:
                                                "window_scale")),
           window_(sf::VideoMode(240 * window_scale_, 160 * window_scale_),
                   "Blind Jump",
-                  sf::Style::Titlebar | sf::Style::Close)
+                  [&] {
+                      auto fullscreen = Conf(pfrm).expect<Conf::String>(
+                          pfrm.device_name().c_str(), "fullscreen");
+                      if (fullscreen == "yes") {
+                          return static_cast<int>(sf::Style::Fullscreen);
+                      } else {
+                          return sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize;
+                      }
+                  }())
     {
         window_.setVerticalSyncEnabled(true);
+
+        window_size_ = {(u32)240 * window_scale_, (u32)160 * window_scale_};
     }
 };
 
@@ -278,6 +290,15 @@ std::queue<sf::Event> event_queue;
 std::array<sf::Keyboard::Key, static_cast<int>(Key::count)> keymap;
 
 
+static std::vector<Platform::Keyboard::ControllerInfo> joystick_info;
+
+
+void Platform::Keyboard::register_controller(const ControllerInfo& info)
+{
+    joystick_info.push_back(info);
+}
+
+
 void Platform::Keyboard::poll()
 {
     // FIXME: Poll is now called from the logic thread, which means that the
@@ -317,6 +338,112 @@ void Platform::Keyboard::poll()
             }
             break;
 
+        case sf::Event::JoystickConnected: {
+            info(*::platform,
+                 ("joystick " +
+                  std::to_string(event.joystickConnect.joystickId) +
+                  " connected")
+                     .c_str());
+            break;
+        }
+
+        case sf::Event::JoystickDisconnected: {
+            info(*::platform,
+                 ("joystick " +
+                  std::to_string(event.joystickConnect.joystickId) +
+                  " disconnected")
+                     .c_str());
+            break;
+        }
+
+        case sf::Event::JoystickButtonPressed: {
+            const auto ident = sf::Joystick::getIdentification(
+                event.joystickButton.joystickId);
+            for (auto& info : joystick_info) {
+                if (info.vendor_id == (int)ident.vendorId and
+                    info.product_id == (int)ident.productId) {
+                    const int button = event.joystickButton.button;
+                    ::info(*::platform,
+                           ("joystick button " +
+                            std::to_string(event.joystickButton.button))
+                               .c_str());
+                    if (button == info.action_1_key) {
+                        states_[static_cast<int>(Key::action_1)] = true;
+                    } else if (button == info.action_2_key) {
+                        states_[static_cast<int>(Key::action_2)] = true;
+                    } else if (button == info.start_key) {
+                        states_[static_cast<int>(Key::start)] = true;
+                    } else if (button == info.alt_1_key) {
+                        states_[static_cast<int>(Key::alt_1)] = true;
+                    } else if (button == info.alt_2_key) {
+                        states_[static_cast<int>(Key::alt_2)] = true;
+                    }
+                }
+            }
+            break;
+        }
+
+        case sf::Event::JoystickButtonReleased: {
+            const auto ident = sf::Joystick::getIdentification(
+                event.joystickButton.joystickId);
+            for (auto& info : joystick_info) {
+                if (info.vendor_id == (int)ident.vendorId and
+                    info.product_id == (int)ident.productId) {
+                    const int button = event.joystickButton.button;
+                    if (button == info.action_1_key) {
+                        states_[static_cast<int>(Key::action_1)] = false;
+                    } else if (button == info.action_2_key) {
+                        states_[static_cast<int>(Key::action_2)] = false;
+                    } else if (button == info.start_key) {
+                        states_[static_cast<int>(Key::start)] = false;
+                    } else if (button == info.alt_1_key) {
+                        states_[static_cast<int>(Key::alt_1)] = false;
+                    } else if (button == info.alt_2_key) {
+                        states_[static_cast<int>(Key::alt_2)] = false;
+                    }
+                }
+            }
+            break;
+        }
+
+        case sf::Event::JoystickMoved: {
+            const auto ident = sf::Joystick::getIdentification(
+                event.joystickButton.joystickId);
+            for (auto& info : joystick_info) {
+                if (info.vendor_id == (int)ident.vendorId and
+                    info.product_id == (int)ident.productId) {
+                    static const int deadZone = 30;
+                    if (event.joystickMove.axis == sf::Joystick::Axis::X) {
+                        float position = event.joystickMove.position;
+                        if (position > deadZone) {
+                            states_[static_cast<int>(Key::right)] = true;
+                            states_[static_cast<int>(Key::left)] = false;
+                        } else if (-position > deadZone) {
+                            states_[static_cast<int>(Key::left)] = true;
+                            states_[static_cast<int>(Key::right)] = false;
+                        } else {
+                            states_[static_cast<int>(Key::left)] = false;
+                            states_[static_cast<int>(Key::right)] = false;
+                        }
+                    } else if (event.joystickMove.axis ==
+                               sf::Joystick::Axis::Y) {
+                        float position = event.joystickMove.position;
+                        if (-position > deadZone) {
+                            states_[static_cast<int>(Key::up)] = true;
+                            states_[static_cast<int>(Key::down)] = false;
+                        } else if (position > deadZone) {
+                            states_[static_cast<int>(Key::down)] = true;
+                            states_[static_cast<int>(Key::up)] = false;
+                        } else {
+                            states_[static_cast<int>(Key::up)] = false;
+                            states_[static_cast<int>(Key::down)] = false;
+                        }
+                    }
+                }
+            }
+            break;
+        }
+
         default:
             break;
         }
@@ -337,8 +464,8 @@ Platform::Screen::Screen()
 Vec2<u32> Platform::Screen::size() const
 {
     const auto data = ::platform->data();
-    return {data->window_.getSize().x / data->window_scale_,
-            data->window_.getSize().y / data->window_scale_};
+    return {data->window_size_.x / data->window_scale_,
+            data->window_size_.y / data->window_scale_};
 }
 
 
@@ -498,10 +625,51 @@ static sf::Glsl::Vec3 real_color(ColorConstant k)
 }
 
 
+sf::View get_letterbox_view(sf::View view, int window_width, int window_height)
+{
+
+    // Compares the aspect ratio of the window to the aspect ratio of the view,
+    // and sets the view's viewport accordingly in order to archieve a letterbox effect.
+    // A new view (with a new viewport set) is returned.
+
+    float window_ratio = window_width / (float)window_height;
+    float view_ratio = view.getSize().x / (float)view.getSize().y;
+    float size_x = 1;
+    float size_y = 1;
+    float pos_x = 0;
+    float pos_y = 0;
+
+    bool horizontal_spacing = true;
+    if (window_ratio < view_ratio)
+        horizontal_spacing = false;
+
+    // If horizontalSpacing is true, the black bars will appear on the left and right side.
+    // Otherwise, the black bars will appear on the top and bottom.
+
+    if (horizontal_spacing) {
+        size_x = view_ratio / window_ratio;
+        pos_x = (1 - size_x) / 2.f;
+    }
+
+    else {
+        size_y = window_ratio / view_ratio;
+        pos_y = (1 - size_y) / 2.f;
+    }
+
+    view.setViewport(sf::FloatRect(pos_x, pos_y, size_x, size_y));
+
+    return view;
+}
+
+
 void Platform::Screen::display()
 {
     sf::View view;
     view.setSize(view_.get_size().x, view_.get_size().y);
+
+    view = get_letterbox_view(view,
+                              ::platform->data()->window_.getSize().x,
+                              ::platform->data()->window_.getSize().y);
 
     auto& window = ::platform->data()->window_;
 
@@ -748,7 +916,11 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
                     return "error";
                 }
             }() << "] "
-               << msg << std::endl;
+               << msg << '\n';
+
+        if (level == Severity::error or level == Severity::warning) {
+            target << std::flush;
+        }
     };
 
     write_msg(logfile);

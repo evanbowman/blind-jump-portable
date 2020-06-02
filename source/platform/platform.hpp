@@ -291,6 +291,19 @@ public:
             }
         }
 
+
+        struct ControllerInfo {
+            int vendor_id;
+            int product_id;
+            int action_1_key;
+            int action_2_key;
+            int start_key;
+            int alt_1_key;
+            int alt_2_key;
+        };
+
+        void register_controller(const ControllerInfo& info);
+
     private:
         template <Key k> bool down_transition_helper() const
         {

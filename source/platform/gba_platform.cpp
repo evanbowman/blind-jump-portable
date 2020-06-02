@@ -213,6 +213,12 @@ DeltaClock::~DeltaClock()
 static volatile u32* keys = (volatile u32*)0x04000130;
 
 
+void Platform::Keyboard::register_controller(const ControllerInfo& info)
+{
+    // ...
+}
+
+
 void Platform::Keyboard::poll()
 {
     std::copy(std::begin(states_), std::end(states_), std::begin(prev_));
