@@ -12,12 +12,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <chrono>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <queue>
 #include <sstream>
 #include <thread>
@@ -138,6 +141,11 @@ public:
 
     Vec2<u32> window_size_;
 
+    std::mutex audio_lock_;
+    sf::Music music_;
+    std::list<sf::Sound> sounds_;
+    std::map<std::string, sf::SoundBuffer> sound_data_;
+
 
     Data(Platform& pfrm)
         : overlay_(&overlay_texture_, {8, 8}, 32, 32),
@@ -174,6 +182,36 @@ public:
 
         window_size_ = {(u32)resolution.x * window_scale_,
                         (u32)resolution.y * window_scale_};
+
+        auto sound_folder =
+            Conf(pfrm).expect<Conf::String>("paths", "sound_folder");
+
+        for (auto& dirent :
+             std::filesystem::directory_iterator(sound_folder.c_str())) {
+            const auto filename = dirent.path().stem().string();
+            static const std::string prefix("sound_");
+            const auto prefix_loc = filename.find(prefix);
+
+            if (prefix_loc not_eq std::string::npos) {
+                std::ifstream file_data(dirent.path(), std::ios::binary);
+                std::vector<s8> buffer(
+                    std::istreambuf_iterator<char>(file_data), {});
+
+                // The gameboy advance sound data was 8 bit signed mono at
+                // 16kHz. Here, we're upsampling to 16bit signed.
+                std::vector<s16> upsampled;
+
+                for (s8 sample : buffer) {
+                    upsampled.push_back(sample << 8);
+                }
+
+                sf::SoundBuffer sound_buffer;
+                sound_buffer.loadFromSamples(
+                    upsampled.data(), upsampled.size(), 1, 16000);
+
+                sound_data_[filename.substr(prefix.size())] = sound_buffer;
+            }
+        }
     }
 };
 
@@ -355,6 +393,8 @@ void Platform::Keyboard::poll()
             }
             break;
 
+        // FIXME: It may be undefined behavior to handle joystick events on the
+        // non-main thread...
         case sf::Event::JoystickConnected: {
             info(*::platform,
                  ("joystick " +
@@ -502,6 +542,18 @@ void Platform::Screen::clear()
 {
     auto& window = ::platform->data()->window_;
     window.clear();
+
+    {
+        std::lock_guard<std::mutex> guard(::platform->data()->audio_lock_);
+        auto& sounds = ::platform->data()->sounds_;
+        for (auto it = sounds.begin(); it not_eq sounds.end();) {
+            if (it->getStatus() == sf::Sound::Status::Stopped) {
+                it = sounds.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
 
     {
         std::lock_guard<std::mutex> guard(texture_swap_mutex);
@@ -904,6 +956,12 @@ void Platform::Screen::draw(const Sprite& spr)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void Platform::Speaker::set_position(const Vec2<Float>& position)
+{
+    sf::Listener::setPosition({position.x, position.y, 0});
+}
+
+
 Platform::Speaker::Speaker()
 {
     // TODO...
@@ -924,9 +982,38 @@ void Platform::Speaker::stop_music()
 }
 
 
-void Platform::Speaker::play_sound(const char* name, int priority)
+void Platform::Speaker::play_sound(const char* name,
+                                   int priority,
+                                   std::optional<Vec2<Float>> position)
 {
-    // TODO...
+    (void)priority; // We are not using the priority variable, because we're a
+                    // powerful desktop pc, we can play lots of sounds at once,
+                    // and do not need to evict sounds! Or do we...? I think
+                    // SFML does have a hard upper limit of 256 concurrent audio
+                    // streams, but we'll probably never hit that limit, given
+                    // that the game was originally calibrated for the gameboy
+                    // advance, where I was supporting four concurrent audio
+                    // streams.
+
+    std::lock_guard<std::mutex> guard(::platform->data()->audio_lock_);
+    auto& data = ::platform->data()->sound_data_;
+    auto found = data.find(name);
+    if (found not_eq data.end()) {
+        ::platform->data()->sounds_.emplace_back(found->second);
+
+        auto& sound = ::platform->data()->sounds_.back();
+
+        sound.play();
+
+        sound.setRelativeToListener(static_cast<bool>(position));
+        sound.setMinDistance(1.f);
+        sound.setAttenuation(0.f);
+        if (position) {
+            sound.setPosition({position->x, position->y, 0});
+        }
+    } else {
+        error(*::platform, (std::string("no sound data for ") + name).c_str());
+    }
 }
 
 

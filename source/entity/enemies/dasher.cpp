@@ -119,7 +119,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(50);
             state_ = State::shot2;
 
-            pf.speaker().play_sound("laser1", 4);
+            pf.speaker().play_sound("laser1", 4, position_);
             game.effects().spawn<OrbShot>(
                 position_, sample<8>(game.player().get_position()), 0.00015f);
         }
@@ -135,7 +135,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
                 state_ = State::pause;
             }
 
-            pf.speaker().play_sound("laser1", 4);
+            pf.speaker().play_sound("laser1", 4, position_);
             game.effects().spawn<OrbShot>(
                 position_, sample<16>(game.player().get_position()), 0.00015f);
         }
@@ -147,7 +147,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(150);
             state_ = State::pause;
 
-            pf.speaker().play_sound("laser1", 4);
+            pf.speaker().play_sound("laser1", 4, position_);
             game.effects().spawn<OrbShot>(
                 position_, sample<32>(game.player().get_position()), 0.00015f);
         }
@@ -242,7 +242,7 @@ void Dasher::injured(Platform& pf, Game& game, Health amount)
     const auto c = current_zone(game).injury_glow_color_;
 
     if (alive()) {
-        pf.speaker().play_sound("click", 1);
+        pf.speaker().play_sound("click", 1, position_);
     }
 
     sprite_.set_mix({c, 255});

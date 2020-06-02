@@ -330,7 +330,7 @@ void Gatekeeper::injured(Platform& pfrm, Game& game, Health amount)
     debit_health(amount);
 
     if (alive()) {
-        pfrm.speaker().play_sound("click", 1);
+        pfrm.speaker().play_sound("click", 1, position_);
     }
 
     if (not was_second_form and second_form()) {

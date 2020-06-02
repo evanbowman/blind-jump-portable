@@ -295,7 +295,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 sprite_.set_position({sprite_pos.x, sprite_pos.y + 1});
             } else {
                 if (visible()) {
-                    pfrm.speaker().play_sound("laser1", 4);
+                    pfrm.speaker().play_sound("laser1", 4, position_);
                     game.effects().spawn<OrbShot>(
                         position_,
                         sample<8>(game.player().get_position()),
@@ -316,7 +316,7 @@ void Scarecrow::injured(Platform& pf, Game& game, Health amount)
     debit_health(amount);
 
     if (alive()) {
-        pf.speaker().play_sound("click", 1);
+        pf.speaker().play_sound("click", 1, position_);
     }
 
     hit_ = true;

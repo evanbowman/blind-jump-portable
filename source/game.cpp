@@ -106,6 +106,8 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
         }
     }
 
+    pfrm.speaker().set_position(player_.get_position());
+
     auto new_state = state_->update(pfrm, *this, delta);
 
     if (new_state) {

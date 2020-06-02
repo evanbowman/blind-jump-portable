@@ -843,7 +843,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.sleep(5);
         pfrm.speaker().stop_music();
         // TODO: add a unique explosion sound effect
-        pfrm.speaker().play_sound("explosion1", 3);
+        pfrm.speaker().play_sound(
+            "explosion1", 3, game.player().get_position());
         big_explosion(pfrm, game, game.player().get_position());
 
         return state_pool_.create<DeathFadeState>();

@@ -94,7 +94,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > 0) {
             timer_ -= dt;
         } else {
-            pfrm.speaker().play_sound("laser1", 4);
+            pfrm.speaker().play_sound("laser1", 4, position_);
 
             game.effects().spawn<OrbShot>(origin(), target(), bullet_speed);
             timer_ = reload;
@@ -113,7 +113,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > 0) {
             timer_ -= dt;
         } else {
-            pfrm.speaker().play_sound("laser1", 4);
+            pfrm.speaker().play_sound("laser1", 4, position_);
 
             const auto angle = 25;
 
@@ -153,7 +153,7 @@ void Turret::injured(Platform& pf, Game& game, Health amount)
     debit_health(amount);
 
     if (alive()) {
-        pf.speaker().play_sound("click", 1);
+        pf.speaker().play_sound("click", 1, position_);
     }
 }
 

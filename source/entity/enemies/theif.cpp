@@ -170,7 +170,7 @@ void Theif::injured(Platform& pfrm, Game& game, Health amount)
     debit_health(amount);
 
     if (alive()) {
-        pfrm.speaker().play_sound("click", 1);
+        pfrm.speaker().play_sound("click", 1, position_);
     }
 }
 

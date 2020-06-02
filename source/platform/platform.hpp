@@ -360,8 +360,17 @@ public:
         // number of overlapping sounds. For such platforms, currently running
         // sounds with a lower priority will be evicted, to make room for
         // higher-priority sounds.
-        void play_sound(const char* name, int priority);
+        //
+        // If you pass in an optional position, platforms that support spatial
+        // audio will attenuate the sound based on distance to the listener (the
+        // camera center);
+        void play_sound(const char* name,
+                        int priority,
+                        std::optional<Vec2<Float>> position = {});
         bool is_sound_playing(const char* name);
+
+        // Updates the listener position for spatialized audio, if supported.
+        void set_position(const Vec2<Float>& position);
 
     private:
         friend class Platform;

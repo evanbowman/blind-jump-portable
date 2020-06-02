@@ -1832,8 +1832,19 @@ bool Platform::Speaker::is_sound_playing(const char* name)
 }
 
 
-void Platform::Speaker::play_sound(const char* name, int priority)
+void Platform::Speaker::set_position(const Vec2<Float>&)
 {
+    // We don't support spatialized audio on the gameboy.
+}
+
+
+void Platform::Speaker::play_sound(const char* name,
+                                   int priority,
+                                   std::optional<Vec2<Float>> position)
+{
+    (void)position; // We're not using position data, because on the gameboy
+                    // advance, we aren't supporting spatial audio.
+
     if (auto info = make_sound(name)) {
         info->priority_ = priority;
 

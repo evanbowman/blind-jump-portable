@@ -163,7 +163,7 @@ void Drone::injured(Platform& pf, Game& game, Health amount)
     debit_health(amount);
 
     if (alive()) {
-        pf.speaker().play_sound("click", 1);
+        pf.speaker().play_sound("click", 1, position_);
     }
 }
 
