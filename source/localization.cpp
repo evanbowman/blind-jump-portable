@@ -291,6 +291,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::punctuation_period: return ".";
         case LocaleString::menu_resume: return "Resume";
         case LocaleString::menu_save_and_quit: return "Save and Quit";
+        case LocaleString::goodbye_text: return "See you later...";
         default: return empty_str;
         }
         break;

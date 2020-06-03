@@ -45,6 +45,7 @@ enum class LocaleString {
     punctuation_period,
     menu_resume,
     menu_save_and_quit,
+    goodbye_text,
     count
 };
 

@@ -391,6 +391,7 @@ public:
 
 private:
     Microseconds wait_timer_ = 0;
+    std::optional<Text> text_;
 };
 
 
@@ -2723,6 +2724,10 @@ void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
     game.save(pfrm);
 
     pfrm.speaker().stop_music();
+
+    const auto s_tiles = calc_screen_tiles(pfrm);
+    text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
+    text_->append(locale_string(LocaleString::goodbye_text));
 }
 
 
