@@ -336,38 +336,39 @@ bool is_boss_level(Level level)
 enum { star_empty = 60, star_1 = 70, star_2 = 71 };
 
 
+struct StarFlickerAnimationInfo {
+    Vec2<int> pos_;
+    int tile_;
+};
+
+static Buffer<StarFlickerAnimationInfo, 3> active_star_anims;
+
+
 void animate_starfield(Platform& pfrm, Microseconds delta)
 {
     static Microseconds timer;
 
     timer += delta;
 
-    struct AnimInfo {
-        Vec2<int> pos_;
-        int tile_;
-    };
-
-    static Buffer<AnimInfo, 3> selected;
-
     if (timer > milliseconds(90)) {
         timer = 0;
 
         // Because a coord may have been selected twice, undo the flicker effect
         // in reverse order.
-        for (auto& info : reversed(selected)) {
+        for (auto& info : reversed(active_star_anims)) {
             pfrm.set_tile(
                 Layer::background, info.pos_.x, info.pos_.y, info.tile_);
         }
 
-        selected.clear();
+        active_star_anims.clear();
 
-        for (u32 i = 0; i < selected.capacity(); ++i) {
+        for (u32 i = 0; i < active_star_anims.capacity(); ++i) {
 
             const int x = random_choice<32>();
             const int y = random_choice<32>();
 
             const auto tile = pfrm.get_tile(Layer::background, x, y);
-            if (selected.push_back({{x, y}, tile})) {
+            if (active_star_anims.push_back({{x, y}, tile})) {
                 if (tile == star_1 or tile == star_2) {
                     pfrm.set_tile(Layer::background, x, y, star_empty);
                 }
@@ -533,6 +534,8 @@ RETRY:
     tiles_.for_each([&](Tile t, s8 x, s8 y) {
         pfrm.set_tile(Layer::map_0, x, y, static_cast<s16>(t));
     });
+
+    active_star_anims.clear();
 
     current_zone(*this).generate_background_(pfrm, *this);
 
