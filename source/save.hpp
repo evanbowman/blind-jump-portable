@@ -32,5 +32,7 @@ struct PersistentData {
 
     Inventory inventory_;
 
+    // Reset level back to zero, initialize various things. Does not overwrite
+    // the seed value, or the highscore table.
     PersistentData& reset(Platform& pfrm);
 };

@@ -127,7 +127,10 @@ public:
         return deferred_callbacks_.push_back({callback, expire_time});
     }
 
-    void save(Platform& pfrm);
+    PersistentData& persistent_data()
+    {
+        return persistent_data_;
+    }
 
 private:
     TileMap tiles_;

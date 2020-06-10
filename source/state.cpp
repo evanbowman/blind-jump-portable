@@ -183,6 +183,7 @@ public:
     DeathFadeState() : OverworldState(false)
     {
     }
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
     Microseconds counter_ = 0;
@@ -1072,6 +1073,26 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    enemy_lethargy_timer = 0;
+
+    for (auto& score : reversed(game.highscores())) {
+        if (score < game.score()) {
+            score = game.score();
+            break;
+        }
+    }
+    std::sort(game.highscores().rbegin(), game.highscores().rend());
+
+    random_value();
+
+    game.persistent_data().seed_ = random_seed();
+
+    pfrm.write_save(game.persistent_data().reset(pfrm));
+}
+
+
 StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     OverworldState::update(pfrm, game, delta);
@@ -1137,8 +1158,6 @@ void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
 {
     game.player().set_visible(false);
 
-    enemy_lethargy_timer = 0;
-    game.inventory().remove_non_persistent();
 }
 
 
@@ -1176,15 +1195,6 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 highscore_.emplace(pfrm, Vec2<u8>{1, 10});
                 level_.emplace(pfrm, Vec2<u8>{1, 12});
 
-                for (auto& score : reversed(game.highscores())) {
-                    if (score < game.score()) {
-                        score = game.score();
-                        break;
-                    }
-                }
-                std::sort(game.highscores().rbegin(), game.highscores().rend());
-
-
                 const auto screen_tiles = calc_screen_tiles(pfrm);
 
                 auto print_metric =
@@ -1217,7 +1227,6 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (pfrm.keyboard().pressed<Key::action_1>() or
                 pfrm.keyboard().pressed<Key::action_2>()) {
 
-                game.score() = 0;
                 game.player().revive(pfrm);
 
                 return state_pool_.create<RespawnWaitState>();
@@ -1984,8 +1993,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto last_zone = zone_info(next_level_ - 1);
 
     auto sound_sync_hack = [&pfrm] {
-        // FIXME!!!!!! Mysteriously, when running on the actual GameBoy Advance
-        // hardware (not an emulator), there's a weird audio glitch, where the
+        // FIXME!!!!!! Mysteriously, there's a weird audio glitch, where the
         // sound effects, but not the music, get all glitched out until two
         // sounds are played consecutively. I've spent hours trying to figure
         // out what's going wrong, and I haven't solved this one yet, so for
@@ -2721,7 +2729,7 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 
 void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
-    game.save(pfrm);
+    pfrm.write_save(game.persistent_data());
 
     pfrm.speaker().stop_music();
 

@@ -14,24 +14,20 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
-void Game::save(Platform& pfrm)
-{
-    pfrm.write_save(persistent_data_);
-}
-
-
 Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
 {
     if (auto sd = pfrm.read_save()) {
         info(pfrm, "loaded existing save file");
         persistent_data_ = *sd;
 
-        // When we've loaded from a save, we want to write back an empty
-        // save. We don't want the player to be able to cheat by switching the
-        // game off and returning to where they left off.
-        auto save_copy = *sd;
+        if (level() > 0) {
+            // When we've loaded from a save, we want to write back an empty
+            // save. We don't want the player to be able to cheat by switching
+            // the game off and returning to where they left off.
+            auto save_copy = *sd;
 
-        pfrm.write_save(save_copy.reset(pfrm));
+            pfrm.write_save(save_copy.reset(pfrm));
+        }
 
     } else {
         persistent_data_.reset(pfrm);
