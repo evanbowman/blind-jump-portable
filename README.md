@@ -18,6 +18,9 @@ The game uses procedural algorithms to generate the levels, so the game changes 
   <img src="s3.png"/>
 </p>
 
+<p align="center">
+  <img src="s4.png"/>
+</p>
 
 ## Implementation
 
