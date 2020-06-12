@@ -48,3 +48,22 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
 
     push_notification(pfrm, game, str);
 }
+
+
+Float items_collected_percentage(const Inventory& inventory)
+{
+    int total_persistent_items = 0;
+    int collected_persistent_items = 0;
+
+    for (Item::Type item = Item::Type::null; item < Item::Type::count;
+         item = (Item::Type)((int)item + 1)) {
+        if (item_is_persistent(item)) {
+            total_persistent_items += 1;
+            if (inventory.has_item(item)) {
+                collected_persistent_items += 1;
+            }
+        }
+    }
+
+    return Float(collected_persistent_items) / total_persistent_items;
+}

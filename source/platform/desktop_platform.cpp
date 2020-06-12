@@ -972,8 +972,7 @@ void Platform::Speaker::play_music(const char* name,
                                    bool loop,
                                    Microseconds offset)
 {
-    auto dest =
-        Conf(*::platform).expect<Conf::String>("paths", "sound_folder");
+    auto dest = Conf(*::platform).expect<Conf::String>("paths", "sound_folder");
 
     std::string path = dest.c_str();
 

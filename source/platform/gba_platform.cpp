@@ -1988,6 +1988,11 @@ s32 fast_mod(s32 numerator, s32 denominator)
 #define REG_SGFIFOA *(volatile u32*)0x40000A0
 
 
+// NOTE: I tried to move this audio update interrupt handler to IWRAM, but the
+// sound output became sort of glitchy, and I noticed some tearing in the
+// display. At the same time, the game was less laggy, so maybe when I work out
+// the kinks, this function will eventually be moved to arm code instead of
+// thumb.
 static void audio_update()
 {
     alignas(4) AudioSample mixing_buffer[4];
@@ -2086,8 +2091,8 @@ const char* Platform::config_data() const
 }
 
 
-__attribute__((section(".iwram"), long_call))
-void cartridge_interrupt_handler();
+__attribute__((section(".iwram"), long_call)) void
+cartridge_interrupt_handler();
 
 
 Platform::Platform()

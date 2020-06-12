@@ -21,7 +21,7 @@ public:
 
     void push_item(Platform& pfrm, Game& game, Item::Type insert);
 
-    inline Item::Type get_item(u16 page, u16 column, u16 row)
+    inline Item::Type get_item(u16 page, u16 column, u16 row) const
     {
         if (UNLIKELY(page == pages or column == cols or row == rows)) {
             return Item::Type::null;
@@ -29,7 +29,7 @@ public:
         return data_[page * 10 + row * 5 + column].type_;
     }
 
-    inline bool has_item(Item::Type item)
+    inline bool has_item(Item::Type item) const
     {
         for (auto& inventory_item : data_) {
             if (inventory_item.type_ == item) {
@@ -76,3 +76,6 @@ private:
 
     ItemInfo data_[pages * rows * cols] = {};
 };
+
+
+Float items_collected_percentage(const Inventory& inventory);

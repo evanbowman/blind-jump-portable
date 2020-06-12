@@ -21,9 +21,10 @@
 IWRAM_CODE
 void cartridge_interrupt_handler()
 {
-    #define REG_DISPCNT *(unsigned*)0x4000000
+#define REG_DISPCNT *(unsigned*)0x4000000
 
     REG_DISPCNT = 0;
 
-    while (true) ;
+    while (true)
+        ;
 }

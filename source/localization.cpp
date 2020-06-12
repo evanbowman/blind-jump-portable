@@ -156,6 +156,8 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
             return 71;
         case ' ':
             return 72;
+        case '%':
+            return 93;
         default:
             if (cp == utf8::getc(u8"ñ")) {
                 return 73;
@@ -286,6 +288,8 @@ const char* locale_string(LocaleString ls)
         case LocaleString::level_clear: return "level clear";
         case LocaleString::you_died: return "you died";
         case LocaleString::score: return "score ";
+        case LocaleString::items_collected_prefix: return "items collected % ";
+        case LocaleString::items_collected_suffix: return "";
         case LocaleString::high_score: return "high score ";
         case LocaleString::waypoints: return "waypoints ";
         case LocaleString::punctuation_period: return ".";

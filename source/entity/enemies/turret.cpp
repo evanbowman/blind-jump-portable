@@ -6,6 +6,32 @@
 #include <algorithm>
 
 
+static Microseconds reload(Level level)
+{
+    static constexpr const Microseconds reload_time{milliseconds(980)};
+
+    if (level < boss_0_level) {
+        return reload_time;
+    } else if (level < boss_1_level) {
+        return reload_time * 0.9;
+    } else {
+        return reload_time * 0.75;
+    }
+}
+
+
+static Microseconds pause_after_open(Level level)
+{
+    if (level < boss_0_level) {
+        return milliseconds(265);
+    } else if (level < boss_1_level) {
+        return milliseconds(235);
+    } else {
+        return milliseconds(200);
+    }
+}
+
+
 Turret::Turret(const Vec2<Float>& pos)
     : Enemy(Entity::Health(3), pos, {{16, 32}, {8, 16}}), state_(State::sleep),
       timer_(seconds(2))
@@ -82,14 +108,13 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         if (animation_.done(sprite_)) {
             state_ = State::open1;
-            timer_ = milliseconds(110);
+            timer_ = pause_after_open(game.level());
         }
         break;
 
     case State::open1:
         try_close();
 
-        static constexpr const Microseconds reload{milliseconds(830)};
 
         if (timer_ > 0) {
             timer_ -= dt;
@@ -97,11 +122,10 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
             pfrm.speaker().play_sound("laser1", 4, position_);
 
             game.effects().spawn<OrbShot>(origin(), target(), bullet_speed);
-            timer_ = reload;
+            timer_ = reload(game.level());
 
             if (game.level() > boss_1_level) {
                 state_ = State::open2;
-                timer_ = reload * 0.75;
             }
         }
 
@@ -127,7 +151,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
                 (*game.effects().get<OrbShot>().begin())->rotate(365 - angle);
             }
 
-            timer_ = reload * 0.75;
+            timer_ = reload(game.level());
 
             state_ = State::open1;
         }

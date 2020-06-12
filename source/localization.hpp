@@ -41,6 +41,8 @@ enum class LocaleString {
     you_died,
     score,
     high_score,
+    items_collected_prefix,
+    items_collected_suffix,
     waypoints,
     punctuation_period,
     menu_resume,

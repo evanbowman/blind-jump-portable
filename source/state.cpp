@@ -203,6 +203,7 @@ private:
     std::optional<Text> score_;
     std::optional<Text> highscore_;
     std::optional<Text> level_;
+    std::optional<Text> items_collected_;
     Microseconds counter_ = 0;
     Microseconds counter2_ = 0;
 };
@@ -1157,7 +1158,6 @@ RespawnWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
 {
     game.player().set_visible(false);
-
 }
 
 
@@ -1166,6 +1166,7 @@ void DeathContinueState::exit(Platform& pfrm, Game& game, State&)
     score_.reset();
     highscore_.reset();
     level_.reset();
+    items_collected_.reset();
 
     pfrm.fill_overlay(0);
 }
@@ -1194,22 +1195,24 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 score_.emplace(pfrm, Vec2<u8>{1, 8});
                 highscore_.emplace(pfrm, Vec2<u8>{1, 10});
                 level_.emplace(pfrm, Vec2<u8>{1, 12});
+                items_collected_.emplace(pfrm, Vec2<u8>{1, 14});
 
                 const auto screen_tiles = calc_screen_tiles(pfrm);
 
                 auto print_metric =
-                    [&](Text& target, const char* str, int num) {
+                    [&](Text& target, const char* str, int num, const char* suffix = "") {
                         target.append(str);
 
                         const auto iters =
                             screen_tiles.x -
-                            (utf8::len(str) + 2 + integer_text_length(num));
+                            (utf8::len(str) + 2 + integer_text_length(num) + str_len(suffix));
                         for (u32 i = 0; i < iters; ++i) {
                             target.append(locale_string(
                                 LocaleString::punctuation_period));
                         }
 
                         target.append(num);
+                        target.append(suffix);
                     };
 
                 print_metric(
@@ -1220,6 +1223,10 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 print_metric(*level_,
                              locale_string(LocaleString::waypoints),
                              game.level());
+                print_metric(*items_collected_,
+                             locale_string(LocaleString::items_collected_prefix),
+                             100 * items_collected_percentage(game.inventory()),
+                             locale_string(LocaleString::items_collected_suffix));
             }
         }
 
