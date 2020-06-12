@@ -1,16 +1,16 @@
 #pragma once
 
 #include <array>
-
+#include <stdint.h>
 
 // A fixed-space version of std::function, does not allocate.
 
 
-template <size_t storage, typename T> class Function {
+template <std::size_t storage, typename T> class Function {
 };
 
 
-template <size_t storage, typename R, typename... Args>
+template <std::size_t storage, typename R, typename... Args>
 class Function<storage, R(Args...)> {
 public:
     Function()
@@ -131,5 +131,5 @@ private:
 
     // FIXME: data_ is leftover member variable that isn't really needed anymore
     void* data_;
-    size_t data_size_;
+    std::size_t data_size_;
 };

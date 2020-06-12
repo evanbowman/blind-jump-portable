@@ -14,7 +14,7 @@ enable_language(ASM)
 
 option(GAMEBOY_ADVANCE "GameboyAdvance" ON)
 option(GBA_AUTOBUILD_IMG "AutobuildImg" OFF)
-
+option(GBA_AUTOBUILD_CONF "AutobuildConf" OFF)
 
 
 if(GAMEBOY_ADVANCE AND NOT DEVKITARM)
@@ -201,7 +201,9 @@ if(GAMEBOY_ADVANCE)
     "-mthumb -mthumb-interwork -Wl,-Map,BlindJump.elf.map -specs=gba.specs"
     CACHE INTERNAL "" FORCE)
 
-  add_dependencies(BlindJump generate_config)
+  if(GBA_AUTOBUILD_CONF)
+    add_dependencies(BlindJump generate_config)
+  endif()
 
   target_link_libraries(BlindJump PRIVATE
     ${DEVKITPRO}/libgba/lib/libgba.a)
