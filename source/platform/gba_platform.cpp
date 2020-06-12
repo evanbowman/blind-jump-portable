@@ -2086,6 +2086,10 @@ const char* Platform::config_data() const
 }
 
 
+__attribute__((section(".iwram"), long_call))
+void cartridge_interrupt_handler();
+
+
 Platform::Platform()
 {
     irqInit();
@@ -2127,6 +2131,9 @@ Platform::Platform()
 
     REG_TM2CNT_H = 0x00C3;
     REG_TM2CNT_L = 0;
+
+    irqEnable(IRQ_GAMEPAK);
+    irqSet(IRQ_GAMEPAK, cartridge_interrupt_handler);
 }
 
 

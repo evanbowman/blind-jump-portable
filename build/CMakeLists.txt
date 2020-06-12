@@ -139,7 +139,6 @@ add_executable(BlindJump
 
 function(compile_image filename mw mh flatten)
   if(${flatten} STREQUAL "YES")
-    message("here")
     add_custom_command(OUTPUT ${SOURCE_DIR}/graphics/${filename}_flattened.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png yes
       COMMAND grit tmp/${filename}_flattened.png -gB4 -gTFF00FF
@@ -175,8 +174,39 @@ function(compile_image filename mw mh flatten)
 endfunction()
 
 
+set(SHARED_COMPILE_OPTIONS
+  -g
+  -Os
+  -Wall
+  -Werror
+  -pedantic
+  -nostdlib
+  -ffast-math
+  -fno-exceptions
+  -fno-math-errno
+  -Wdouble-promotion
+  -fomit-frame-pointer
+  -D__BLINDJUMP_ENABLE_LOGS)
+
 
 if(GAMEBOY_ADVANCE)
+
+  # I am setting CMAKE_AR in the toolchain file, but for some reason, the
+  # variable no longer exists within the cmakelists... which is strange, because
+  # other variables set in the toolchain file seem to be persistent...
+  set(CMAKE_AR $ENV{DEVKITARM}/bin/arm-none-eabi-ar)
+
+  add_library(ARM_ROUTINES ${SOURCE_DIR}/platform/gba_arm_routines.cpp)
+
+  target_compile_options(ARM_ROUTINES PRIVATE
+    ${SHARED_COMPILE_OPTIONS})
+
+  target_compile_options(ARM_ROUTINES PRIVATE
+    -marm
+    -mlong-calls
+    -mthumb-interwork
+    -mcpu=arm7tdmi
+    -mtune=arm7tdmi)
 
   if(GBA_AUTOBUILD_IMG)
     compile_image(spritesheet 2 4 NO)
@@ -206,7 +236,8 @@ if(GAMEBOY_ADVANCE)
   endif()
 
   target_link_libraries(BlindJump PRIVATE
-    ${DEVKITPRO}/libgba/lib/libgba.a)
+    ${DEVKITPRO}/libgba/lib/libgba.a
+    ARM_ROUTINES)
 
   target_compile_options(BlindJump PRIVATE
     -mthumb
@@ -234,19 +265,7 @@ endif()
 
 
 target_compile_options(BlindJump PRIVATE
-  -g
-  -Os
-  -Wall
-  -flto
-  -Werror
-  -pedantic
-  -nostdlib
-  -ffast-math
-  -fno-exceptions
-  -fno-math-errno
-  -Wdouble-promotion
-  -fomit-frame-pointer
-  -D__BLINDJUMP_ENABLE_LOGS)
+  ${SHARED_COMPILE_OPTIONS})
 
 
 
