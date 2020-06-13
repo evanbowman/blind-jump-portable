@@ -51,6 +51,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/bosses/boss.cpp
   ${SOURCE_DIR}/graphics/overlay.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
+  ${SOURCE_DIR}/persistent_data.cpp
   ${SOURCE_DIR}/number/numeric.cpp
   ${SOURCE_DIR}/number/random.cpp
   ${SOURCE_DIR}/graphics/view.cpp
@@ -65,7 +66,6 @@ set(SOURCES
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/state.cpp
   ${SOURCE_DIR}/game.cpp
-  ${SOURCE_DIR}/save.cpp
   ${SOURCE_DIR}/conf.cpp)
 
 

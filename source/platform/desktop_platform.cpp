@@ -1170,29 +1170,28 @@ void Platform::soft_exit()
 static const char* const save_file_name = "save.dat";
 
 
-bool Platform::write_save(const PersistentData& data)
+bool Platform::write_save_data(const void* data, u32 length)
 {
     std::ofstream out(save_file_name,
                       std::ios_base::out | std::ios_base::binary);
 
-    out.write(reinterpret_cast<const char*>(&data), sizeof data);
+    out.write(reinterpret_cast<const char*>(data), length);
 
     return true;
 }
 
 
-std::optional<PersistentData> Platform::read_save()
+bool Platform::read_save_data(void* buffer, u32 data_length)
 {
     std::ifstream in(save_file_name, std::ios_base::in | std::ios_base::binary);
 
     if (!in) {
-        return {};
+        return false;
     }
 
-    PersistentData save;
-    in.read(reinterpret_cast<char*>(&save), sizeof save);
+    in.read(reinterpret_cast<char*>(buffer), data_length);
 
-    return save;
+    return true;
 }
 
 

@@ -1090,7 +1090,8 @@ void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     game.persistent_data().seed_ = random_seed();
 
-    pfrm.write_save(game.persistent_data().reset(pfrm));
+    PersistentData& data = game.persistent_data().reset(pfrm);
+    pfrm.write_save_data(&data, sizeof data);
 }
 
 
@@ -2319,7 +2320,7 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 [[noreturn]] static void factory_reset(Platform& pfrm)
 {
     PersistentData data;
-    pfrm.write_save(data);
+    pfrm.write_save_data(&data, sizeof data);
     pfrm.fatal();
 }
 
@@ -2741,7 +2742,8 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 
 void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
-    pfrm.write_save(game.persistent_data());
+    pfrm.write_save_data(&game.persistent_data(),
+                         sizeof game.persistent_data());
 
     pfrm.speaker().stop_music();
 

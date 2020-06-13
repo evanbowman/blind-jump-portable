@@ -6,7 +6,6 @@
 #include "graphics/view.hpp"
 #include "memory/buffer.hpp"
 #include "number/numeric.hpp"
-#include "save.hpp"
 #include "sound.hpp"
 #include "unicode.hpp"
 #include <array>
@@ -177,9 +176,8 @@ public:
     // function.
     void soft_exit();
 
-
-    bool write_save(const PersistentData& data);
-    std::optional<PersistentData> read_save();
+    bool write_save_data(const void* data, u32 length);
+    bool read_save_data(void* buffer, u32 data_length);
 
 
     const char* config_data() const;

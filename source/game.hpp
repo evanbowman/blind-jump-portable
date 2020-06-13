@@ -24,6 +24,7 @@
 #include "entity/player.hpp"
 #include "function.hpp"
 #include "localization.hpp"
+#include "persistent_data.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"
 
@@ -133,6 +134,8 @@ public:
     }
 
 private:
+    bool load_save_data(Platform& pfrm);
+
     TileMap tiles_;
     Camera camera_;
     Player player_;

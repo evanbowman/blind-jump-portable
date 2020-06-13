@@ -14,22 +14,32 @@ bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
 
+bool Game::load_save_data(Platform& pfrm)
+{
+    alignas(PersistentData) u8 save_buffer[sizeof(PersistentData)] = {0};
+
+    if (pfrm.read_save_data(save_buffer, sizeof(PersistentData))) {
+        PersistentData* loaded = (PersistentData*)save_buffer;
+        if (loaded->magic_ == PersistentData::magic_val) {
+            info(pfrm, "loaded existing save file");
+            persistent_data_ = *loaded;
+
+            if (level() > 0) {
+                loaded->reset(pfrm);
+                pfrm.write_save_data(save_buffer, sizeof(PersistentData));
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
 {
-    if (auto sd = pfrm.read_save()) {
-        info(pfrm, "loaded existing save file");
-        persistent_data_ = *sd;
-
-        if (level() > 0) {
-            // When we've loaded from a save, we want to write back an empty
-            // save. We don't want the player to be able to cheat by switching
-            // the game off and returning to where they left off.
-            auto save_copy = *sd;
-
-            pfrm.write_save(save_copy.reset(pfrm));
-        }
-
-    } else {
+    if (not this->load_save_data(pfrm)) {
         persistent_data_.reset(pfrm);
         info(pfrm, "no save file found");
     }
@@ -82,7 +92,7 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
         // Not sure what else to do... but at least if the code breaks because
         // we got stuck in a loop, we can return the user to where they left
         // off...
-        pfrm.write_save(persistent_data_);
+        pfrm.write_save_data((byte*)&persistent_data_, sizeof persistent_data_);
     });
 }
 

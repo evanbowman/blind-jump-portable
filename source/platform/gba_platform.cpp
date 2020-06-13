@@ -1259,8 +1259,8 @@ static void set_flash_bank(u32 bankID)
 // it's probably not going to wear out, but I like to pretend that I'm
 // developing a real gba game.
 
-template <typename T>
-COLD static bool flash_save(const T& obj, u32 flash_offset)
+
+COLD static bool flash_save(const void* data, u32 flash_offset, u32 length)
 {
     if ((u32)flash_offset >= 0x10000) {
         set_flash_bank(1);
@@ -1268,19 +1268,14 @@ COLD static bool flash_save(const T& obj, u32 flash_offset)
         set_flash_bank(0);
     }
 
-    static_assert(std::is_standard_layout<T>());
+    flash_bytecpy((void*)(cartridge_ram + flash_offset), data, length, true);
 
-    flash_bytecpy((void*)(cartridge_ram + flash_offset), &obj, sizeof(T), true);
-
-    if (flash_byteverify(
-            (void*)(cartridge_ram + flash_offset), &obj, sizeof(T))) {
-        return true;
-    }
-    return false;
+    return flash_byteverify(
+        (void*)(cartridge_ram + flash_offset), data, length);
 }
 
 
-template <typename T> COLD static T flash_load(u32 flash_offset)
+static void flash_load(void* dest, u32 flash_offset, u32 length)
 {
     if (flash_offset >= 0x10000) {
         set_flash_bank(1);
@@ -1288,78 +1283,54 @@ template <typename T> COLD static T flash_load(u32 flash_offset)
         set_flash_bank(0);
     }
 
-    static_assert(std::is_standard_layout<T>());
-
-    T result;
-    for (u32 i = 0; i < sizeof(result); ++i) {
-        ((u8*)&result)[i] = 0;
-    }
-
     flash_bytecpy(
-        &result, (const void*)(cartridge_ram + flash_offset), sizeof(T), false);
-
-    return result;
+        dest, (const void*)(cartridge_ram + flash_offset), length, false);
 }
 
 
 static const bool save_using_flash = false;
 
 
-template <typename T> void sram_save(const T& data, u32 offset)
+void sram_save(const void* data, u32 offset, u32 length)
 {
     u8* save_mem = (u8*)cartridge_ram + offset;
-
-    static_assert(std::is_standard_layout<T>());
 
     // The cartridge has an 8-bit bus, so you have to write one byte at a time,
     // otherwise it won't work!
-    for (size_t i = 0; i < sizeof(data); ++i) {
-        *save_mem++ = ((const u8*)&data)[i];
+    for (size_t i = 0; i < length; ++i) {
+        *save_mem++ = ((const u8*)data)[i];
     }
 }
 
 
-template <typename T> T sram_load(u32 offset)
+void sram_load(void* dest, u32 offset, u32 length)
 {
-    static_assert(std::is_standard_layout<T>());
-
     u8* save_mem = (u8*)cartridge_ram + offset;
-    u8 data[sizeof(T)];
-    for (size_t i = 0; i < sizeof(PersistentData); ++i) {
-        data[i] = *save_mem++;
+    for (size_t i = 0; i < length; ++i) {
+        ((u8*)dest)[i] = *save_mem++;
     }
-    return *(T*)data;
 }
 
 
-bool Platform::write_save(const PersistentData& data)
+bool Platform::write_save_data(const void* data, u32 length)
 {
     if (save_using_flash) {
-        if (not flash_save(data, 0)) {
-            return false;
-        }
-        return true;
+        return flash_save(data, 0, length);
     } else {
-        sram_save(data, 0);
+        sram_save(data, 0, length);
         return true;
     }
 }
 
 
-std::optional<PersistentData> Platform::read_save()
+bool Platform::read_save_data(void* buffer, u32 data_length)
 {
-    auto sd = [&] {
-        if (save_using_flash) {
-            return flash_load<PersistentData>(0);
-        } else {
-            return sram_load<PersistentData>(0);
-        }
-    }();
-
-    if (sd.magic_ == PersistentData::magic_val) {
-        return sd;
+    if (save_using_flash) {
+        flash_load(buffer, 0, data_length);
+    } else {
+        sram_load(buffer, 0, data_length);
     }
-    return {};
+    return true;
 }
 
 
@@ -1431,9 +1402,9 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
     buffer[i + 3] = '\n';
 
     if (save_using_flash) {
-        flash_save(buffer, log_write_loc);
+        flash_save(buffer.data(), log_write_loc, buffer.size());
     } else {
-        sram_save(buffer, log_write_loc);
+        sram_save(buffer.data(), log_write_loc, buffer.size());
     }
 
     log_write_loc += msg_size + prefix_size + 1;
@@ -1715,8 +1686,8 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 
 
 #include "clair_de_lune.hpp"
-#include "scottbuckley_hiraeth.hpp"
 #include "scottbuckley_computations.hpp"
+#include "scottbuckley_hiraeth.hpp"
 #include "scottbuckley_omega.hpp"
 #include "september.hpp"
 
