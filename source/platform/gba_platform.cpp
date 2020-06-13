@@ -1238,7 +1238,7 @@ bool Platform::is_running() const
 }
 
 
-static byte* const sram = (byte*)0x0E000000;
+static byte* const cartridge_ram = (byte*)0x0E000000;
 
 
 static bool
@@ -1302,9 +1302,10 @@ COLD static bool flash_save(const T& obj, u32 flash_offset)
 
     static_assert(std::is_standard_layout<T>());
 
-    flash_bytecpy((void*)(sram + flash_offset), &obj, sizeof(T), true);
+    flash_bytecpy((void*)(cartridge_ram + flash_offset), &obj, sizeof(T), true);
 
-    if (flash_byteverify((void*)(sram + flash_offset), &obj, sizeof(T))) {
+    if (flash_byteverify(
+            (void*)(cartridge_ram + flash_offset), &obj, sizeof(T))) {
         return true;
     }
     return false;
@@ -1327,7 +1328,7 @@ template <typename T> COLD static T flash_load(u32 flash_offset)
     }
 
     flash_bytecpy(
-        &result, (const void*)(sram + flash_offset), sizeof(T), false);
+        &result, (const void*)(cartridge_ram + flash_offset), sizeof(T), false);
 
     return result;
 }
@@ -1336,10 +1337,9 @@ template <typename T> COLD static T flash_load(u32 flash_offset)
 static const bool save_using_flash = false;
 
 
-template <typename T>
-void sram_save(const T& data, u32 offset)
+template <typename T> void sram_save(const T& data, u32 offset)
 {
-    u8* save_mem = (u8*)sram + offset;
+    u8* save_mem = (u8*)cartridge_ram + offset;
 
     static_assert(std::is_standard_layout<T>());
 
@@ -1351,12 +1351,11 @@ void sram_save(const T& data, u32 offset)
 }
 
 
-template <typename T>
-T sram_load(u32 offset)
+template <typename T> T sram_load(u32 offset)
 {
     static_assert(std::is_standard_layout<T>());
 
-    u8* save_mem = (u8*)sram + offset;
+    u8* save_mem = (u8*)cartridge_ram + offset;
     u8 data[sizeof(T)];
     for (size_t i = 0; i < sizeof(PersistentData); ++i) {
         data[i] = *save_mem++;
