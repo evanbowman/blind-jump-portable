@@ -1359,8 +1359,13 @@ SynchronizedBase::~SynchronizedBase()
 ////////////////////////////////////////////////////////////////////////////////
 
 
+#include "persistentData.hpp"
+
+
 // NOTE: PersistentData goes first into flash memory, followed by the game's
-// logs.
+// logs. The platform implementation isn't supposed to need to know about the
+// layout of the game's save data, but, in this particular implementation, we're
+// using the cartridge ram as a logfile.
 static u32 log_write_loc = sizeof(PersistentData);
 
 
