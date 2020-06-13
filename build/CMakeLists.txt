@@ -51,7 +51,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/bosses/boss.cpp
   ${SOURCE_DIR}/graphics/overlay.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
-  ${SOURCE_DIR}/persistent_data.cpp
+  ${SOURCE_DIR}/persistentData.cpp
   ${SOURCE_DIR}/number/numeric.cpp
   ${SOURCE_DIR}/number/random.cpp
   ${SOURCE_DIR}/graphics/view.cpp
