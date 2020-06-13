@@ -1283,6 +1283,13 @@ static void set_flash_bank(u32 bankID)
     }
 }
 
+// FIXME: Lets be nice to the flash an not write to the same memory
+// location every single time! What about a list? Each new save will
+// have a unique id. On startup, scan through memory until you reach
+// the highest unique id. Then start writing new saves at that
+// point. NOTE: My everdrive uses SRAM for Flash writes anyway, so
+// it's probably not going to wear out, but I like to pretend that I'm
+// developing a real gba game.
 
 template <typename T>
 COLD static bool flash_save(const T& obj, u32 flash_offset)
@@ -1326,26 +1333,62 @@ template <typename T> COLD static T flash_load(u32 flash_offset)
 }
 
 
-// FIXME: Lets be nice to the flash an not write to the same memory
-// location every single time! What about a list? Each new save will
-// have a unique id. On startup, scan through memory until you reach
-// the highest unique id. Then start writing new saves at that
-// point. NOTE: My everdrive uses SRAM for Flash writes anyway, so
-// it's probably not going to wear out, but I like to pretend that I'm
-// developing a real gba game.
+static const bool save_using_flash = false;
+
+
+template <typename T>
+void sram_save(const T& data, u32 offset)
+{
+    u8* save_mem = (u8*)sram + offset;
+
+    static_assert(std::is_standard_layout<T>());
+
+    // The cartridge has an 8-bit bus, so you have to write one byte at a time,
+    // otherwise it won't work!
+    for (size_t i = 0; i < sizeof(data); ++i) {
+        *save_mem++ = ((const u8*)&data)[i];
+    }
+}
+
+
+template <typename T>
+T sram_load(u32 offset)
+{
+    static_assert(std::is_standard_layout<T>());
+
+    u8* save_mem = (u8*)sram + offset;
+    u8 data[sizeof(T)];
+    for (size_t i = 0; i < sizeof(PersistentData); ++i) {
+        data[i] = *save_mem++;
+    }
+    return *(T*)data;
+}
+
 
 bool Platform::write_save(const PersistentData& data)
 {
-    if (not flash_save(data, 0)) {
-        return false;
+    if (save_using_flash) {
+        if (not flash_save(data, 0)) {
+            return false;
+        }
+        return true;
+    } else {
+        sram_save(data, 0);
+        return true;
     }
-    return true;
 }
 
 
 std::optional<PersistentData> Platform::read_save()
 {
-    auto sd = flash_load<PersistentData>(0);
+    auto sd = [&] {
+        if (save_using_flash) {
+            return flash_load<PersistentData>(0);
+        } else {
+            return sram_load<PersistentData>(0);
+        }
+    }();
+
     if (sd.magic_ == PersistentData::magic_val) {
         return sd;
     }
@@ -1420,7 +1463,11 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
     }
     buffer[i + 3] = '\n';
 
-    flash_save(buffer, log_write_loc);
+    if (save_using_flash) {
+        flash_save(buffer, log_write_loc);
+    } else {
+        sram_save(buffer, log_write_loc);
+    }
 
     log_write_loc += msg_size + prefix_size + 1;
 }

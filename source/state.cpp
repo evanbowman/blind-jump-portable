@@ -1199,21 +1199,24 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 const auto screen_tiles = calc_screen_tiles(pfrm);
 
-                auto print_metric =
-                    [&](Text& target, const char* str, int num, const char* suffix = "") {
-                        target.append(str);
+                auto print_metric = [&](Text& target,
+                                        const char* str,
+                                        int num,
+                                        const char* suffix = "") {
+                    target.append(str);
 
-                        const auto iters =
-                            screen_tiles.x -
-                            (utf8::len(str) + 2 + integer_text_length(num) + str_len(suffix));
-                        for (u32 i = 0; i < iters; ++i) {
-                            target.append(locale_string(
-                                LocaleString::punctuation_period));
-                        }
+                    const auto iters =
+                        screen_tiles.x -
+                        (utf8::len(str) + 2 + integer_text_length(num) +
+                         str_len(suffix));
+                    for (u32 i = 0; i < iters; ++i) {
+                        target.append(
+                            locale_string(LocaleString::punctuation_period));
+                    }
 
-                        target.append(num);
-                        target.append(suffix);
-                    };
+                    target.append(num);
+                    target.append(suffix);
+                };
 
                 print_metric(
                     *score_, locale_string(LocaleString::score), game.score());
@@ -1223,10 +1226,11 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 print_metric(*level_,
                              locale_string(LocaleString::waypoints),
                              game.level());
-                print_metric(*items_collected_,
-                             locale_string(LocaleString::items_collected_prefix),
-                             100 * items_collected_percentage(game.inventory()),
-                             locale_string(LocaleString::items_collected_suffix));
+                print_metric(
+                    *items_collected_,
+                    locale_string(LocaleString::items_collected_prefix),
+                    100 * items_collected_percentage(game.inventory()),
+                    locale_string(LocaleString::items_collected_suffix));
             }
         }
 
@@ -2471,9 +2475,10 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
 }
 
 
-// FIXME: we could be using smarter formatting here... right now, all this stuff
-// is sort of algined for the gameboy advance screen...
-// FIXME: localize the credits?
+// NOTE: '%' characters in the credits will be filled with N '.' characters,
+// such that the surrounding text is aligned to either edge of the screen.
+//
+// FIXME: localize the credits? Nah...
 static const std::array<const char*, 32> credits_lines = {
     "Artwork and Source Code by",
     "Evan Bowman",
