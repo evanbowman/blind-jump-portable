@@ -8,10 +8,10 @@ using AudioSample = s8;
 
 
 struct ActiveSoundInfo {
-    int position_;
-    const int length_;
+    s32 position_;
+    const s32 length_;
     const AudioSample* data_;
-    int priority_;
+    s32 priority_;
 };
 
 
@@ -20,7 +20,7 @@ struct SoundContext {
     Buffer<ActiveSoundInfo, 3> active_sounds;
 
     const AudioSample* music_track = nullptr;
-    int music_track_length = 0;
-    int music_track_pos = 0;
+    s32 music_track_length = 0;
+    s32 music_track_pos = 0;
     bool music_track_loop = false;
 };

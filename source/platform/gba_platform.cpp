@@ -348,39 +348,7 @@ static volatile u16* reg_blendalpha = (volatile u16*)0x04000052;
 #define BLDA_BUILD(eva, evb) (((eva)&31) | (((evb)&31) << 8))
 
 
-class Color {
-public:
-    Color(u8 r, u8 g, u8 b) : r_(r), g_(g), b_(b)
-    {
-    }
-
-    inline u16 bgr_hex_555() const
-    {
-        return (r_) + ((g_) << 5) + ((b_) << 10);
-    }
-
-    static Color from_bgr_hex_555(u16 val)
-    {
-        return {
-            u8(0x1F & val), u8((0x3E0 & val) >> 5), u8((0x7C00 & val) >> 10)};
-    }
-
-    inline Color invert() const
-    {
-        constexpr u8 max{31};
-        return {u8(max - r_), u8(max - g_), u8(max - b_)};
-    }
-
-    inline Color grayscale() const
-    {
-        const u8 val = 0.3f * r_ + 0.59f * g_ + 0.11f * b_;
-        return {val, val, val};
-    }
-
-    u8 r_;
-    u8 g_;
-    u8 b_;
-};
+#include "gba_color.hpp"
 
 
 Platform::Screen::Screen() : userdata_(nullptr)
@@ -1747,7 +1715,7 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 
 
 #include "clair_de_lune.hpp"
-#include "lenkaland_frostellar.hpp"
+#include "scottbuckley_hiraeth.hpp"
 #include "scottbuckley_computations.hpp"
 #include "scottbuckley_omega.hpp"
 #include "september.hpp"
@@ -1769,7 +1737,7 @@ static const struct AudioTrack {
     const char* name_;
     const AudioSample* data_;
     int length_;
-} music_tracks[] = {DEF_AUDIO(frostellar, lenkaland_frostellar),
+} music_tracks[] = {DEF_AUDIO(hiraeth, scottbuckley_hiraeth),
                     DEF_AUDIO(omega, scottbuckley_omega),
                     DEF_AUDIO(computations, scottbuckley_computations),
                     DEF_AUDIO(clair_de_lune, clair_de_lune),

@@ -2485,7 +2485,7 @@ static const std::array<const char*, 32> credits_lines = {
     "",
     "",
     "Music",
-    "Frostellar%Lenkaland",
+    "Hiraeth%Scott Buckley",
     "Omega%Scott Buckley",
     "Computations%Scott Buckley",
     "September%Kai Engel",

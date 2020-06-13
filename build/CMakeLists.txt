@@ -88,7 +88,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/memcpy.s
     ${SOURCE_DIR}/platform/scottbuckley_omega.s
     ${SOURCE_DIR}/platform/scottbuckley_computations.s
-    ${SOURCE_DIR}/platform/lenkaland_frostellar.s
+    ${SOURCE_DIR}/platform/scottbuckley_hiraeth.s
     ${SOURCE_DIR}/platform/september.s
     ${SOURCE_DIR}/platform/clair_de_lune.s
     ${SOURCE_DIR}/graphics/overlay.s

@@ -402,7 +402,7 @@ static constexpr const ZoneInfo zone_1{
     "spritesheet",
     "tilesheet",
     "tilesheet_top",
-    "frostellar",
+    "hiraeth",
     Microseconds{0},
     ColorConstant::electric_blue,
     ColorConstant::aerospace_orange,
