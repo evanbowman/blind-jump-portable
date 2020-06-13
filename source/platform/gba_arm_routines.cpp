@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // All of the code in this file will be compiled as arm code, and placed in the
-// IWRAM secion of the executable. The system has limited memory for IWRAM
+// IWRAM section of the executable. The system has limited memory for IWRAM
 // calls, so limit this file to performace critical code, or code that must be
 // defined in IWRAM.
 //
