@@ -2313,8 +2313,13 @@ void Platform::fill_overlay(u16 tile)
         return;
     }
 
-    for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u16); ++i) {
-        MEM_SCREENBLOCKS[sbb_overlay_tiles][i] = tile | SE_PALBANK(1);
+    const u16 tile_info = tile | SE_PALBANK(1);
+    const u32 fill_word = tile_info | (tile_info << 16);
+
+    u32* const mem = (u32*)MEM_SCREENBLOCKS[sbb_overlay_tiles];
+
+    for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u32); ++i) {
+        mem[i] = fill_word;
     }
 
     if (glyph_mode) {
