@@ -1086,6 +1086,8 @@ void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
     }
     std::sort(game.highscores().rbegin(), game.highscores().rend());
 
+    game.score() = 0;
+
     random_value();
 
     game.persistent_data().seed_ = random_seed();
