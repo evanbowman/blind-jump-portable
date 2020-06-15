@@ -76,6 +76,11 @@ public:
     MediumIcon(const MediumIcon&) = delete;
     ~MediumIcon();
 
+    inline const auto& coord() const
+    {
+        return coord_;
+    }
+
 private:
     Platform& pfrm_;
     const OverlayCoord coord_;

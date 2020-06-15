@@ -129,6 +129,10 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         timer_ += dt;
 
         if (timer_ > milliseconds(150)) {
+            to_narrow_sprite();
+            sprite_.set_texture_index(12);
+            head_.set_texture_index(13);
+
             timer_ = 0;
             state_ = State::still;
         }
@@ -387,13 +391,11 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         auto transition = [&] {
             state_ = State::after_dash;
 
+            sprite_.set_texture_index(50);
+            head_.set_texture_index(51);
+
             timer_ = 0;
             timer2_ = 0;
-
-            to_narrow_sprite();
-
-            sprite_.set_texture_index(12);
-            head_.set_texture_index(13);
         };
 
         if (timer2_ > dash_duration) {

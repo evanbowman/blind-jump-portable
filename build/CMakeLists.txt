@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-
-set(ROOT_DIR ${PROJECT_BINARY_DIR}/..)
+set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 set(SOURCE_DIR ${ROOT_DIR}/source)
 set(IMAGE_DIR ${ROOT_DIR}/images)
 
@@ -22,6 +21,10 @@ if(GAMEBOY_ADVANCE AND NOT DEVKITARM)
   message(FATAL_ERROR "GAMEBOY_ADVANCE option is set, but missing ARM toolchain.")
 endif()
 
+
+if(GAMEBOY_ADVANCE AND WIN32)
+  message(FATAL_ERROR "Gameboy Advance builds not supported in windows")
+endif()
 
 
 include_directories(${SOURCE_DIR})
@@ -174,19 +177,29 @@ function(compile_image filename mw mh flatten)
 endfunction()
 
 
-set(SHARED_COMPILE_OPTIONS
-  -g
-  -Os
-  -Wall
-  -Werror
-  -pedantic
-  -nostdlib
-  -ffast-math
-  -fno-exceptions
-  -fno-math-errno
-  -Wdouble-promotion
-  -fomit-frame-pointer
-  -D__BLINDJUMP_ENABLE_LOGS)
+if(APPLE OR UNIX OR GAMEBOY_ADVANCE)
+
+  set(SHARED_COMPILE_OPTIONS
+    -g
+    -Os
+    -Wall
+    -Werror
+    -pedantic
+    -nostdlib
+    -ffast-math
+    -fno-exceptions
+    -fno-math-errno
+    -Wdouble-promotion
+    -fomit-frame-pointer
+    -D__BLINDJUMP_ENABLE_LOGS)
+
+elseif(WIN32)
+
+  message("TODO: set up proper compiler flags for windows")
+  set(SHARED_COMPILE_OPTIONS
+    /W4)
+
+endif()
 
 
 if(GAMEBOY_ADVANCE)
