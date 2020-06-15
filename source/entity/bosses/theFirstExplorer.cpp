@@ -140,7 +140,9 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
 
     case State::still: {
-        face_player();
+        if (timer_ > milliseconds(70)) {
+            face_player();
+        }
 
         timer_ += dt;
         if (timer_ > milliseconds(200)) {
