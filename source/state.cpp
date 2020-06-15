@@ -1086,8 +1086,6 @@ void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
     }
     std::sort(game.highscores().rbegin(), game.highscores().rend());
 
-    game.score() = 0;
-
     random_value();
 
     game.persistent_data().seed_ = random_seed();
@@ -1241,6 +1239,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (pfrm.keyboard().pressed<Key::action_1>() or
                 pfrm.keyboard().pressed<Key::action_2>()) {
 
+                game.score() = 0;
                 game.player().revive(pfrm);
 
                 return state_pool_.create<RespawnWaitState>();
