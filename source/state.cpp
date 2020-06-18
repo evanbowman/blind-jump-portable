@@ -429,6 +429,10 @@ public:
 private:
     bool handle_command_code(Platform& pfrm, Game& game);
 
+    void push_char(Platform& pfrm, Game& game, char c);
+
+    void update_selector(Platform& pfrm, Microseconds dt);
+
     StringBuffer<10> input_;
     std::optional<Text> input_text_;
     std::optional<Text> numbers_;
@@ -2223,34 +2227,76 @@ StatePtr State::initial()
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void CommandCodeState::push_char(Platform& pfrm, Game& game, char c)
+{
+    input_.push_back(c);
+
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    input_text_.emplace(pfrm,
+                        OverlayCoord{u8(centered_text_margins(pfrm, 10)),
+                                     u8(screen_tiles.y / 2 - 2)});
+
+    input_text_->assign(input_.c_str());
+
+    if (input_.full()) {
+
+        // Why am I even bothering with the way that the cheat system's UI
+        // will look!? No one will ever even see it... but I'll know how
+        // good/bad it looks, and I guess that's a reason...
+        while (not selector_shaded_) {
+            update_selector(pfrm, milliseconds(20));
+        }
+
+        pfrm.sleep(25);
+
+        input_text_->erase();
+
+        if (handle_command_code(pfrm, game)) {
+            input_text_->append(" ACCEPTED");
+
+        } else {
+            input_text_->append(" REJECTED");
+        }
+
+        pfrm.sleep(25);
+
+        input_text_.reset();
+
+        input_.clear();
+    }
+}
+
+
+void CommandCodeState::update_selector(Platform& pfrm, Microseconds dt)
+{
+    selector_timer_ += dt;
+    if (selector_timer_ > milliseconds(75)) {
+        selector_timer_ = 0;
+
+        auto screen_tiles = calc_screen_tiles(pfrm);
+
+        const auto margin = centered_text_margins(pfrm, 20) - 1;
+
+        const OverlayCoord selector_pos{u8(margin + selector_index_ * 2),
+                                        u8(screen_tiles.y - 4)};
+
+        if (selector_shaded_) {
+            selector_.emplace(pfrm, OverlayCoord{3, 3}, selector_pos, false, 8);
+            selector_shaded_ = false;
+        } else {
+            selector_.emplace(
+                pfrm, OverlayCoord{3, 3}, selector_pos, false, 16);
+            selector_shaded_ = true;
+        }
+    }
+}
+
+
 StatePtr
 CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    auto update_selector = [&] {
-        selector_timer_ += delta;
-        if (selector_timer_ > milliseconds(75)) {
-            selector_timer_ = 0;
-
-            auto screen_tiles = calc_screen_tiles(pfrm);
-
-            const auto margin = centered_text_margins(pfrm, 20) - 1;
-
-            const OverlayCoord selector_pos{u8(margin + selector_index_ * 2),
-                                            u8(screen_tiles.y - 4)};
-
-            if (selector_shaded_) {
-                selector_.emplace(
-                    pfrm, OverlayCoord{3, 3}, selector_pos, false, 8);
-                selector_shaded_ = false;
-            } else {
-                selector_.emplace(
-                    pfrm, OverlayCoord{3, 3}, selector_pos, false, 16);
-                selector_shaded_ = true;
-            }
-        }
-    };
-
-    update_selector();
+    update_selector(pfrm, delta);
 
     if (pfrm.keyboard().down_transition<Key::left>()) {
         if (selector_index_ > 0) {
@@ -2266,43 +2312,16 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
             selector_index_ = 0;
         }
 
-    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
-        input_.push_back("0123456789"[selector_index_]);
-
-        auto screen_tiles = calc_screen_tiles(pfrm);
-
-        input_text_.emplace(pfrm,
-                            OverlayCoord{u8(centered_text_margins(pfrm, 10)),
-                                         u8(screen_tiles.y / 2 - 2)});
-
-        input_text_->append(input_.c_str());
-
-        if (input_.full()) {
-
-            // Why am I even bothering with the way that the cheat system's UI
-            // will look!? No one will ever even see it... but I'll know how
-            // good/bad it looks, and I guess that's a reason...
-            while (not selector_shaded_) {
-                update_selector();
+    } else if (pfrm.keyboard().down_transition<Key::down>()) {
+        if (not input_.empty()) {
+            while (not input_.full()) {
+                input_.push_back(*(input_.end() - 1));
             }
 
-            pfrm.sleep(25);
-
-            input_text_->erase();
-
-            if (handle_command_code(pfrm, game)) {
-                input_text_->append(" ACCEPTED");
-
-            } else {
-                input_text_->append(" REJECTED");
-            }
-
-            pfrm.sleep(25);
-
-            input_text_.reset();
-
-            input_.clear();
+            push_char(pfrm, game, *(input_.end() - 1));
         }
+    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        push_char(pfrm, game, "0123456789"[selector_index_]);
 
     } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
         if (input_.empty()) {
@@ -2321,6 +2340,16 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 [[noreturn]] static void factory_reset(Platform& pfrm)
 {
     PersistentData data;
+    pfrm.write_save_data(&data, sizeof data);
+    pfrm.fatal();
+}
+
+
+[[noreturn]] static void debug_boss_level(Platform& pfrm, Level level)
+{
+    PersistentData data;
+    data.level_ = level;
+    data.player_health_ = 6;
     pfrm.write_save_data(&data, sizeof data);
     pfrm.fatal();
 }
@@ -2366,6 +2395,14 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
             }
         }
         return false;
+
+    // For testing boss levels:
+    case 1:
+        debug_boss_level(pfrm, boss_0_level);
+    case 2:
+        debug_boss_level(pfrm, boss_1_level);
+    case 3:
+        debug_boss_level(pfrm, boss_2_level);
 
     case 100: // Add player health. The main reason that this command doesn't
               // accept a parameter, is that someone could accidentally overflow

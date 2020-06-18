@@ -33,7 +33,7 @@ public:
 
             if (++shot_count_ == [&] { return 3; }()) {
                 shot_count_ = 0;
-                reload_ = milliseconds(800);
+                reload_ = milliseconds(900);
             }
         }
     }
@@ -46,9 +46,16 @@ private:
 
 class SweepAttackPattern : public GatekeeperShield::AttackPattern {
 public:
-    SweepAttackPattern(Microseconds delay, Game& game)
-        : reload_(delay), rot_(-15), target_(game.player().get_position())
+    SweepAttackPattern(GatekeeperShield& shield, Microseconds delay, Game& game)
+        : reload_(delay), rot_(-60), target_(game.player().get_position())
     {
+        const auto& shield_pos = shield.get_position();
+        if (target_.x < shield_pos.x) {
+            spin_ = true;
+            rot_ = 60;
+        } else {
+            spin_ = false;
+        }
     }
 
     void update(GatekeeperShield& shield,
@@ -61,20 +68,25 @@ public:
         }
 
         if (reload_ <= 0) {
-            reload_ = milliseconds(220);
+            reload_ = milliseconds(280);
 
-            rot_ += 5;
+            if (not spin_) {
+                rot_ += 17;
+            } else {
+                rot_ -= 17;
+            }
 
             auto angle = rot_;
             if (angle < 0) {
                 angle = 360 + angle;
             }
 
-            game.effects().spawn<OrbShot>(
-                shield.get_position(),
-                sample<8>(target_),
-                0.00013f,
-                seconds(5));
+            angle %= 360;
+
+            game.effects().spawn<OrbShot>(shield.get_position(),
+                                          sample<8>(target_),
+                                          0.00013f,
+                                          seconds(3) + milliseconds(500));
 
             (*game.effects().get<OrbShot>().begin())->rotate(angle);
         }
@@ -83,6 +95,7 @@ public:
 private:
     Microseconds reload_;
     int rot_;
+    bool spin_;
     Vec2<Float> target_;
 };
 
@@ -395,19 +408,31 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 
                 if (shield_radius_ == max_shield_radius - 30) {
                     game.camera().shake(5);
+                    Buffer<GatekeeperShield*, 2> shields;
                     for (auto& shield :
                          game.enemies().get<GatekeeperShield>()) {
                         shield->open();
+                        shields.push_back(shield.get());
                     }
-                    if (auto sh1 = list_ref(
-                            game.enemies().get<GatekeeperShield>(), 0)) {
-                        (*sh1)->set_attack_pattern<ScattershotAttackPattern>(
-                            milliseconds(700));
-                    }
-                    if (auto sh2 = list_ref(
-                            game.enemies().get<GatekeeperShield>(), 1)) {
-                        (*sh2)->set_attack_pattern<SweepAttackPattern>(
-                            milliseconds(100), game);
+                    std::sort(
+                        shields.begin(),
+                        shields.end(),
+                        [&](GatekeeperShield* lhs, GatekeeperShield* rhs) {
+                            return distance(lhs->get_position(),
+                                            game.player().get_position()) >
+                                   distance(rhs->get_position(),
+                                            game.player().get_position());
+                        });
+                    if (shields.size() == 2) {
+                        shields[0]
+                            ->set_attack_pattern<ScattershotAttackPattern>(
+                                milliseconds(700));
+                        shields[1]->set_attack_pattern<SweepAttackPattern>(
+                            *shields[1], milliseconds(100), game);
+                    } else if (shields.size() == 1) {
+                        shields[0]
+                            ->set_attack_pattern<ScattershotAttackPattern>(
+                                milliseconds(700));
                     }
                 }
 
