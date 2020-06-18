@@ -87,11 +87,26 @@ private:
 
 class GatekeeperShield : public Enemy {
 public:
-    enum class State { orbit, encircle, detached };
+    // enum class State { orbit, encircle, detached };
+
+    class AttackPattern {
+    public:
+        virtual ~AttackPattern()
+        {
+        }
+
+        virtual void update(GatekeeperShield& shield,
+                            Platform& pfrm,
+                            Game& game,
+                            Microseconds dt) = 0;
+    };
 
     GatekeeperShield(const Vec2<Float>& position,
-                     int offset,
-                     State initial_state = State::orbit);
+                     int offset // ,
+                                // State initial_state = State::orbit
+    );
+
+    ~GatekeeperShield();
 
     void update(Platform&, Game&, Microseconds);
 
@@ -107,12 +122,41 @@ public:
 
     void detach(Microseconds keepalive);
 
+    void set_speed(Float speed)
+    {
+        speed_ = speed;
+    }
+
+    void open();
+    void close();
+
+    static constexpr const int AttackPatternBufAlign = 8;
+
+    template <typename Pattern, typename... Args>
+    void set_attack_pattern(Args&&... args)
+    {
+        static_assert(sizeof(Pattern) <= sizeof(attack_pattern_));
+        static_assert(alignof(Pattern) <= AttackPatternBufAlign);
+
+        if (attack_pattern_set_) {
+            ((AttackPattern*)attack_pattern_)->~AttackPattern();
+        }
+
+        attack_pattern_set_ = true;
+        new ((Pattern*)attack_pattern_) Pattern(std::forward<Args>(args)...);
+    }
+
+
+    void shoot(Platform& pfrm, Game& game, Microseconds dt);
+
 private:
     Microseconds timer_;
-    Microseconds reload_;
-    int shot_count_;
-    State state_;
+    Microseconds shadow_update_timer_;
+    bool detached_;
+    bool opened_;
     int offset_;
-    Vec2<Float> target_;
+    Float speed_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
+    alignas(AttackPatternBufAlign) u8 attack_pattern_[32];
+    bool attack_pattern_set_ = false;
 };
