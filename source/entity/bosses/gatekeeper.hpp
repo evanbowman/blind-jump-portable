@@ -118,6 +118,11 @@ public:
     {
     }
 
+    void set_offset(int offset)
+    {
+        offset_ = offset;
+    }
+
     void on_death(Platform&, Game&);
 
     void detach(Microseconds keepalive);

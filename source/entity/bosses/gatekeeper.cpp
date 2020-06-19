@@ -71,9 +71,9 @@ public:
             reload_ = milliseconds(280);
 
             if (not spin_) {
-                rot_ += 17;
+                rot_ += 18;
             } else {
-                rot_ -= 17;
+                rot_ -= 18;
             }
 
             auto angle = rot_;
@@ -84,7 +84,7 @@ public:
             angle %= 360;
 
             game.effects().spawn<OrbShot>(shield.get_position(),
-                                          sample<8>(target_),
+                                          sample<4>(target_),
                                           0.00013f,
                                           seconds(3) + milliseconds(500));
 
@@ -215,8 +215,10 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > milliseconds(25)) {
             if (shield_radius_ < max_shield_radius + 90) {
                 ++shield_radius_;
+                set_shield_speed(0.6f, game);
             } else {
                 state_ = State::encircle_receede;
+                set_shield_speed(1.f, game);
                 timer_ = 0;
             }
         }

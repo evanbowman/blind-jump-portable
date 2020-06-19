@@ -334,6 +334,8 @@ public:
 
         void log(Severity severity, const char* msg);
 
+        void read(void* buffer, u32 start_offset, u32 num_bytes);
+
     private:
         Logger();
 

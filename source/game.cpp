@@ -423,6 +423,9 @@ static constexpr const ZoneInfo zone_1{
         const int y = 16;
 
         draw_image(pfrm, 61, x, y, 3, 3, Layer::background);
+    },
+    [](int x, int y, const TileMap&) {
+        return 0;
     }};
 
 
@@ -443,6 +446,12 @@ static constexpr const ZoneInfo zone_2{
         const int y = 16;
 
         draw_image(pfrm, 120, x, y, 5, 5, Layer::background);
+    },
+    [](int x, int y, const TileMap&) {
+        if (random_choice<16>() == 0) {
+            return 17;
+        }
+        return 0;
     }};
 
 
@@ -463,6 +472,9 @@ static constexpr const ZoneInfo zone_3{
         const int y = 12;
 
         draw_image(pfrm, 120, x, y, 9, 9, Layer::background);
+    },
+    [](int x, int y, const TileMap&) {
+        return 0;
     }};
 
 
@@ -635,6 +647,42 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
 }
 
 
+static bool is_sand(Tile t) {
+    return t == Tile::sand or t == Tile::sand_sprouted;
+}
+
+
+
+static void add_map_decorations(Level level,
+                                Platform& pfrm,
+                                const TileMap& map,
+                                TileMap& grass_overlay)
+{
+    auto adjacent_decor = [&](int x, int y) {
+                              for (int i = x - 1; i < x + 1; ++i) {
+                                  for (int j = y - 1; j < y + 1; ++j) {
+                                      if ((int)grass_overlay.get_tile(i, j) > 16) {
+                                          return true;
+                                      }
+                                  }
+                              }
+                              return false;
+                          };
+
+    grass_overlay.for_each([&](Tile t, s8 x, s8 y) {
+        pfrm.set_tile(Layer::map_1, x, y, static_cast<u16>(t));
+        if (t == Tile::none) {
+            if (is_sand(map.get_tile(x, y))) {
+                if (not adjacent_decor(x, y)) {
+                    pfrm.set_tile(Layer::map_1, x, y,
+                                  zone_info(level).generate_decoration_(x, y, map));
+                }
+            }
+        }
+    });
+}
+
+
 COLD void Game::regenerate_map(Platform& pfrm)
 {
     TileMap temporary;
@@ -789,10 +837,6 @@ COLD void Game::regenerate_map(Platform& pfrm)
         });
     }
 
-    auto is_sand = [&](Tile t) {
-        return t == Tile::sand or t == Tile::sand_sprouted;
-    };
-
     if (zone_info(level()) == zone_1) {
         tiles_.for_each([&](Tile& tile, int x, int y) {
             if (tile == Tile::plate and
@@ -832,10 +876,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         });
     }
 
-    grass_overlay.for_each([&](Tile t, s8 x, s8 y) {
-        pfrm.set_tile(Layer::map_1, x, y, static_cast<u16>(t));
-    });
-
+    add_map_decorations(level(), pfrm, tiles_, grass_overlay);
 
     tiles_.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::plate) {
@@ -1175,10 +1216,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     }
 
     auto is_plate = [&](Tile t) { return t == Tile::plate; };
-    auto is_sand = [&](Tile t) {
-        return t == Tile::sand or t == Tile::sand_sprouted;
-    };
-
 
     auto place_transporter = [&] {
         if (not free_spots.empty()) {

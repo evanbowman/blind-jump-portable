@@ -407,6 +407,7 @@ private:
     void draw_cursor(Platform& pfrm);
 
     Microseconds fade_timer_ = 0;
+    Microseconds log_timer_ = 0;
     int cursor_loc_ = 0;
     int anim_index_ = 0;
     Microseconds anim_timer_ = 0;
@@ -442,6 +443,19 @@ private:
     bool selector_shaded_ = false;
     u8 selector_index_ = 0;
     Level next_level_;
+};
+
+
+class LogfileViewerState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    void repaint(Platform& pfrm, int offset);
+    int offset_ = 0;
 };
 
 
@@ -496,6 +510,7 @@ static StatePool<ActiveState,
                  IntroLegalMessage,
                  DeathContinueState,
                  RespawnWaitState,
+                 LogfileViewerState,
                  EndingCreditsState>
     state_pool_;
 
@@ -2219,6 +2234,70 @@ StatePtr State::initial()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+// LogfileViewerState
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+void LogfileViewerState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    repaint(pfrm, 0);
+}
+
+
+void LogfileViewerState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+    pfrm.screen().fade(0.f);
+    pfrm.fill_overlay(0);
+}
+
+
+StatePtr LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    if (pfrm.keyboard().down_transition<Key::select>()) {
+        return state_pool_.create<ActiveState>();
+    } else if (pfrm.keyboard().down_transition<Key::down>()) {
+        offset_ += screen_tiles.x;
+        repaint(pfrm, offset_);
+    } else if (pfrm.keyboard().down_transition<Key::up>()) {
+        if (offset_ > 0) {
+            offset_ -= screen_tiles.x;
+            repaint(pfrm, offset_);
+        }
+    }
+
+    return null_state();
+}
+
+
+Platform::TextureCpMapper locale_texture_map();
+
+
+void LogfileViewerState::repaint(Platform& pfrm, int offset)
+{
+    constexpr int buffer_size = 600;
+    u8 buffer[buffer_size];
+
+    pfrm.logger().read(buffer, offset, buffer_size);
+
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    for (int j = 0; j < screen_tiles.y; ++j) {
+        for (int i = 0; i < screen_tiles.x; ++i) {
+            const int index = i + j * screen_tiles.x;
+            if (index < buffer_size) {
+                const auto t = pfrm.map_glyph(buffer[index], locale_texture_map());
+                pfrm.set_tile(Layer::overlay, i, j, t);
+            }
+        }
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // CommandCodeState FIXME
 //
 // This code broke after the transition from ascii to unicode. May need some
@@ -2754,6 +2833,15 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
         } else if (pfrm.keyboard().down_transition<Key::start>()) {
             return state_pool_.create<ActiveState>();
         }
+    }
+
+    if (pfrm.keyboard().pressed<Key::select>()) {
+        log_timer_ += delta;
+        if (log_timer_ > seconds(1)) {
+            return state_pool_.create<LogfileViewerState>();
+        }
+    } else {
+        log_timer_ = 0;
     }
 
     return null_state();

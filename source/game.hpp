@@ -163,6 +163,7 @@ bool is_boss_level(Level level);
 
 
 using BackgroundGenerator = void (*)(Platform&, Game&);
+using DecorationGenerator = int (*)(int x, int y, const TileMap&);
 
 
 struct ZoneInfo {
@@ -178,6 +179,7 @@ struct ZoneInfo {
     ColorConstant injury_glow_color_;
 
     BackgroundGenerator generate_background_;
+    DecorationGenerator generate_decoration_;
 };
 
 

@@ -1416,6 +1416,16 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 }
 
 
+void Platform::Logger::read(void* buffer, u32 start_offset, u32 num_bytes)
+{
+    if (save_using_flash) {
+        flash_load(buffer, sizeof(PersistentData) + start_offset, num_bytes);
+    } else {
+        sram_load(buffer, sizeof(PersistentData) + start_offset, num_bytes);
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Speaker
 //
