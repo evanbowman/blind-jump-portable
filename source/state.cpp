@@ -690,7 +690,6 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             notification_text_timer -= delta;
 
         } else {
-            notification_text.reset();
             notification_text_timer = 0;
             notification_status = NotificationStatus::exit;
 
@@ -712,6 +711,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                 }
             } else {
                 notification_status = NotificationStatus::hidden;
+                notification_text.reset();
             }
         }
         break;
@@ -1108,6 +1108,7 @@ void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
     random_value();
 
     game.persistent_data().seed_ = random_seed();
+    game.inventory().remove_non_persistent();
 
     PersistentData& data = game.persistent_data().reset(pfrm);
     pfrm.write_save_data(&data, sizeof data);
@@ -1370,7 +1371,13 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool_.create<ImageViewState>(str,
                                                    ColorConstant::steel_blue);
      },
-     LocaleString::seed_packet_title}};
+     LocaleString::seed_packet_title},
+    {STANDARD_ITEM_HANDLER(engineer_notebook),
+     [](Platform&, Game&) {
+         return state_pool_.create<NotebookState>(
+             locale_string(LocaleString::engineer_notebook_str));
+     },
+     LocaleString::engineer_notebook_title}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)
@@ -2253,7 +2260,8 @@ void LogfileViewerState::exit(Platform& pfrm, Game& game, State& next_state)
 }
 
 
-StatePtr LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
@@ -2289,7 +2297,8 @@ void LogfileViewerState::repaint(Platform& pfrm, int offset)
         for (int i = 0; i < screen_tiles.x; ++i) {
             const int index = i + j * screen_tiles.x;
             if (index < buffer_size) {
-                const auto t = pfrm.map_glyph(buffer[index], locale_texture_map());
+                const auto t =
+                    pfrm.map_glyph(buffer[index], locale_texture_map());
                 pfrm.set_tile(Layer::overlay, i, j, t);
             }
         }

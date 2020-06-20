@@ -424,9 +424,7 @@ static constexpr const ZoneInfo zone_1{
 
         draw_image(pfrm, 61, x, y, 3, 3, Layer::background);
     },
-    [](int x, int y, const TileMap&) {
-        return 0;
-    }};
+    [](int x, int y, const TileMap&) { return 0; }};
 
 
 static constexpr const ZoneInfo zone_2{
@@ -473,9 +471,7 @@ static constexpr const ZoneInfo zone_3{
 
         draw_image(pfrm, 120, x, y, 9, 9, Layer::background);
     },
-    [](int x, int y, const TileMap&) {
-        return 0;
-    }};
+    [](int x, int y, const TileMap&) { return 0; }};
 
 
 const ZoneInfo& zone_info(Level level)
@@ -647,10 +643,16 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
 }
 
 
-static bool is_sand(Tile t) {
-    return t == Tile::sand or t == Tile::sand_sprouted;
+static bool is_plate(Tile t)
+{
+    return t == Tile::plate;
 }
 
+
+static bool is_sand(Tile t)
+{
+    return t == Tile::sand or t == Tile::sand_sprouted;
+}
 
 
 static void add_map_decorations(Level level,
@@ -659,23 +661,26 @@ static void add_map_decorations(Level level,
                                 TileMap& grass_overlay)
 {
     auto adjacent_decor = [&](int x, int y) {
-                              for (int i = x - 1; i < x + 1; ++i) {
-                                  for (int j = y - 1; j < y + 1; ++j) {
-                                      if ((int)grass_overlay.get_tile(i, j) > 16) {
-                                          return true;
-                                      }
-                                  }
-                              }
-                              return false;
-                          };
+        for (int i = x - 1; i < x + 1; ++i) {
+            for (int j = y - 1; j < y + 1; ++j) {
+                if ((int)grass_overlay.get_tile(i, j) > 16) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
 
     grass_overlay.for_each([&](Tile t, s8 x, s8 y) {
         pfrm.set_tile(Layer::map_1, x, y, static_cast<u16>(t));
         if (t == Tile::none) {
             if (is_sand(map.get_tile(x, y))) {
                 if (not adjacent_decor(x, y)) {
-                    pfrm.set_tile(Layer::map_1, x, y,
-                                  zone_info(level).generate_decoration_(x, y, map));
+                    pfrm.set_tile(
+                        Layer::map_1,
+                        x,
+                        y,
+                        zone_info(level).generate_decoration_(x, y, map));
                 }
             }
         }
@@ -1075,6 +1080,9 @@ static LevelRange level_range(Item::Type item)
     case Item::Type::surveyor_logbook:
         return {min, boss_0_level};
 
+    case Item::Type::engineer_notebook:
+        return {boss_0_level, max};
+
     default:
         return {min, max};
     }
@@ -1095,6 +1103,9 @@ ItemRarity rarity(Item::Type item)
         return 0;
 
     case Item::Type::null:
+        return 1;
+
+    case Item::Type::engineer_notebook:
         return 1;
 
     case Item::Type::surveyor_logbook:
@@ -1214,8 +1225,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     } else {
         return false;
     }
-
-    auto is_plate = [&](Tile t) { return t == Tile::plate; };
 
     auto place_transporter = [&] {
         if (not free_spots.empty()) {

@@ -267,9 +267,21 @@ const char* locale_string(LocaleString ls)
                 "station. The director reassured me that everthing will run smoothly from "
                 "now on. The robots have been acting up ever since the last "
                 "communications blackout though, I'm afraid next time they'll go mad...";
+        case LocaleString::engineer_notebook_str: return
+                "Electrical feedback from the hyperspace gates seem to have an "
+                "unusual effect on machinery, especially the robots on the "
+                "stations. I've heard unconfirmed reports that... if true... "
+                "would be extremely distressing... The gate subsystem was never"
+                " really designed to be easily shut down, so concerned were we "
+                "with creating a resiliant system that's always online (losing "
+                "power while someone's in a gate would be deadly, a great "
+                "liability according to management). If you ever needed to shut"
+                " down the gate subsystem, you would need to chart a course to "
+                "the gateway's central hub, on the lunar surface.";
         case LocaleString::empty_inventory_str: return "Empty";
         case LocaleString::old_poster_title: return "Old poster (1)";
         case LocaleString::surveyor_logbook_title: return "Surveyor's logbook";
+        case LocaleString::engineer_notebook_title: return "Engineer's notebook";
         case LocaleString::blaster_title: return "Blaster";
         case LocaleString::accelerator_title: return "Accelerator (60 shots)";
         case LocaleString::lethargy_title: return "Lethargy (18 sec)";

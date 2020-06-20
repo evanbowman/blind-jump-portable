@@ -15,9 +15,9 @@
 // #endif // __GBA__
 
 
+#include "/opt/devkitpro/libgba/include/gba_interrupt.h"
 #include "gba_color.hpp"
 #include "number/numeric.hpp"
-#include "/opt/devkitpro/libgba/include/gba_interrupt.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wregister"
 #include "/opt/devkitpro/libgba/include/gba_systemcalls.h"

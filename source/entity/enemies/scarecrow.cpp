@@ -294,16 +294,24 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             if (sprite_pos.y < position_.y + 3) {
                 sprite_.set_position({sprite_pos.x, sprite_pos.y + 1});
             } else {
-                if (visible()) {
-                    pfrm.speaker().play_sound("laser1", 4, position_);
-                    game.effects().spawn<OrbShot>(
-                        position_,
-                        sample<8>(game.player().get_position()),
-                        0.00010f);
-                }
-
-                state_ = State::idle_wait;
+                state_ = State::attack;
             }
+        }
+        break;
+    }
+
+    case State::attack: {
+        timer_ += dt;
+        if (timer_ > milliseconds(200)) {
+            timer_ = 0;
+            if (visible()) {
+                pfrm.speaker().play_sound("laser1", 4, position_);
+                game.effects().spawn<OrbShot>(
+                    position_,
+                    sample<8>(game.player().get_position()),
+                    0.00010f);
+            }
+            state_ = State::idle_wait;
         }
         break;
     }

@@ -47,6 +47,7 @@ private:
         long_wait,
         long_jump,
         long_airborne,
+        attack,
         landing,
     } state_ = State::idle_wait;
 

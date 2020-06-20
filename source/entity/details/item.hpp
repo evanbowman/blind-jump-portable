@@ -21,6 +21,7 @@ public:
         map_system,
         explosive_rounds_2,
         seed_packet,
+        engineer_notebook,
         count
     };
 
@@ -63,7 +64,8 @@ inline bool item_is_persistent(Item::Type type)
     return type == Item::Type::blaster or
            type == Item::Type::surveyor_logbook or
            type == Item::Type::old_poster_1 or type == Item::Type::map_system or
-           type == Item::Type::seed_packet;
+           type == Item::Type::seed_packet or
+           type == Item::Type::engineer_notebook;
 }
 
 
