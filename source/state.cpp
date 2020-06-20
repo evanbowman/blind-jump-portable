@@ -577,8 +577,6 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         camera_snap_timer_ = seconds(2) + milliseconds(250);
     }
 
-    // When the player is fighting enemies, the camera centers on the player and the let
-
     if (camera_snap_timer_ > 0) {
         if (pfrm.keyboard().down_transition<Key::action_2>()) {
             camera_snap_timer_ = 0;
