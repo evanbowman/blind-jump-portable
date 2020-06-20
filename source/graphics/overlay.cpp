@@ -155,6 +155,52 @@ TextView::~TextView()
     }
 }
 
+
+class BufferedUnicodeStr {
+private:
+    const char* const str_;
+
+    static constexpr const int index_count_ = 300;
+    utf8::Codepoint data_[index_count_];
+    int index_start_;
+    int str_len_;
+
+    void load_chunk(int index)
+    {
+        int i = 0;
+        utf8::scan(
+            [this, &i, &index](const utf8::Codepoint& cp, const char*) {
+                if (i >= index and i < index + index_count_) {
+                    data_[i - index] = cp;
+                }
+                i++;
+            },
+            str_,
+            str_len_);
+
+        index_start_ = index;
+    }
+
+public:
+    BufferedUnicodeStr(const char* str, int len) :
+        str_(str),
+        index_start_(0),
+        str_len_(len)
+    {
+        load_chunk(0);
+    }
+
+    utf8::Codepoint get(int index)
+    {
+        if (not (index >= index_start_ and index < index_start_ + index_count_)) {
+            load_chunk(index);
+        }
+
+        return data_[index - index_start_];
+    }
+};
+
+
 void TextView::assign(const char* str,
                       const OverlayCoord& coord,
                       const OverlayCoord& size,
@@ -164,6 +210,7 @@ void TextView::assign(const char* str,
     size_ = size;
 
     const auto len = str_len(str);
+    BufferedUnicodeStr ustr(str, len);
 
     auto cursor = coord;
 
@@ -176,33 +223,15 @@ void TextView::assign(const char* str,
         ++cursor.y;
     };
 
-    static constexpr const auto buffer_size = 900;
-    utf8::Codepoint ustr[buffer_size];
-    {
-        int i = 0;
-        utf8::scan(
-            [&ustr, &i](const utf8::Codepoint& cp, const char* raw) {
-                if (i < buffer_size) {
-                    ustr[i++] = cp;
-                }
-            },
-            str,
-            str_len(str));
-    }
-
     size_t i;
     for (i = 0; i < len; ++i) {
 
-        if (i > buffer_size) {
-            return;
-        }
-
         if (cursor.x == coord.x + size.x) {
-            if (ustr[i] not_eq ' ') {
+            if (ustr.get(i) not_eq ' ') {
                 // If the next character is not a space, then the current word
                 // does not fit on the current line, and needs to be written
                 // onto the next line instead.
-                while (ustr[i] not_eq ' ') {
+                while (ustr.get(i) not_eq ' ') {
                     --i;
                     --cursor.x;
                 }
@@ -225,11 +254,11 @@ void TextView::assign(const char* str,
             }
         }
 
-        if (cursor.x == coord.x and ustr[i] == ' ') {
+        if (cursor.x == coord.x and ustr.get(i) == ' ') {
             // ...
         } else {
             if (not skiplines) {
-                print_char(pfrm_, ustr[i], cursor);
+                print_char(pfrm_, ustr.get(i), cursor);
             }
 
             ++cursor.x;
