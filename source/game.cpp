@@ -688,6 +688,92 @@ static void add_map_decorations(Level level,
 }
 
 
+static void add_scavenger_ship(Level level, Platform& pfrm, TileMap& map, TileMap& overlay)
+{
+    int tcount = 0;
+    map.for_each([&](const Tile& tile, int x, int y) {
+                     if (tile not_eq Tile::none) {
+                         tcount++;
+                     }
+                 });
+
+    // Place scavenger ships more frequently on small levels. And we do not want
+    // to add a ship to every level, that would be boring.
+    if (tcount < 100) {
+        if (random_choice<2>()) {
+            return;
+        }
+    } else {
+        if (random_choice<4>() == 0) {
+            return;
+        }
+    }
+
+    Buffer<Vec2<int>, 8> right_edge_locations;
+    Buffer<Vec2<int>, 8> left_edge_locations;
+
+    map.for_each([&](const Tile& tile, int x, int y) {
+        if (is_plate(tile)) {
+            bool right_empty = true;
+            bool left_empty = true;
+            for (int i = x + 1; i < x + 3; ++i) {
+                for (int j = y - 1; j < y + 4; ++j) {
+                    if (i == TileMap::width or j == TileMap::height) {
+                        right_empty = false;
+                    }
+                    if (map.get_tile(i, j) not_eq Tile::none) {
+                        right_empty = false;
+                    }
+                }
+            }
+            for (int i = x - 2; i < x; ++i) {
+                for (int j = y - 1; j < y + 4; ++j) {
+                    if (i == -1 or j == -1) {
+                        left_empty = false;
+                    }
+                    if (map.get_tile(i, j) not_eq Tile::none) {
+                        left_empty = false;
+                    }
+                }
+            }
+            if (right_empty) {
+                right_edge_locations.push_back({x, y});
+            }
+            if (left_empty) {
+                left_edge_locations.push_back({x, y});
+            }
+        }
+    });
+
+    auto place_ship = [&map](const Vec2<int>& loc, int sign) {
+        map.set_tile(loc.x + (1 * sign), loc.y, (Tile)32);
+        map.set_tile(loc.x + (2 * sign), loc.y - 1, (Tile)36);
+        map.set_tile(loc.x + (2 * sign), loc.y, (Tile)35);
+        map.set_tile(loc.x + (2 * sign), loc.y + 1, (Tile)34);
+        map.set_tile(loc.x + (2 * sign), loc.y + 2, (Tile)33);
+    };
+
+    if (not right_edge_locations.empty() and not left_edge_locations.empty()) {
+        if (random_choice<2>()) {
+            place_ship(right_edge_locations[random_choice(
+                           right_edge_locations.size())],
+                       1);
+        } else {
+            place_ship(
+                left_edge_locations[random_choice(left_edge_locations.size())],
+                -1);
+        }
+    } else if (not right_edge_locations.empty()) {
+        place_ship(
+            right_edge_locations[random_choice(right_edge_locations.size())],
+            1);
+    } else if (not left_edge_locations.empty()) {
+        place_ship(
+            left_edge_locations[random_choice(left_edge_locations.size())], -1);
+    }
+}
+
+
 COLD void Game::regenerate_map(Platform& pfrm)
 {
     TileMap temporary;
@@ -841,6 +927,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
             }
         });
     }
+
+    add_scavenger_ship(level(), pfrm, tiles_, grass_overlay);
 
     if (zone_info(level()) == zone_1) {
         tiles_.for_each([&](Tile& tile, int x, int y) {

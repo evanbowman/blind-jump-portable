@@ -182,17 +182,16 @@ private:
     }
 
 public:
-    BufferedUnicodeStr(const char* str, int len) :
-        str_(str),
-        index_start_(0),
-        str_len_(len)
+    BufferedUnicodeStr(const char* str, int len)
+        : str_(str), index_start_(0), str_len_(len)
     {
         load_chunk(0);
     }
 
     utf8::Codepoint get(int index)
     {
-        if (not (index >= index_start_ and index < index_start_ + index_count_)) {
+        if (not(index >= index_start_ and
+                index < index_start_ + index_count_)) {
             load_chunk(index);
         }
 

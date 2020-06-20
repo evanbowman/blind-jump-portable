@@ -117,7 +117,8 @@ inline bool is_walkable__precise(Tile t)
     return t not_eq Tile::none and t not_eq Tile::ledge and
            t not_eq Tile::grass_ledge and t not_eq Tile::grass_ledge_vines and
            t not_eq Tile::beam_ul and t not_eq Tile::beam_ur and
-           t not_eq Tile::beam_bl and t not_eq Tile::beam_br;
+           t not_eq Tile::beam_bl and t not_eq Tile::beam_br and
+           t not_eq Tile(33);
 }
 
 inline bool is_walkable__fast(Tile t)
