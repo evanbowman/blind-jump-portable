@@ -8,6 +8,7 @@
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/rubble.hpp"
+#include "entity/details/scavenger.hpp"
 #include "entity/details/transporter.hpp"
 #include "entity/effects/explosion.hpp"
 #include "entity/effects/firstExplorerBigLaser.hpp"
@@ -60,7 +61,7 @@ public:
                                    GatekeeperShield,
                                    Theif>;
 
-    using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble>;
+    using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble, Scavenger>;
     using EffectGroup = EntityGroup<20,
                                     OrbShot,
                                     Laser,

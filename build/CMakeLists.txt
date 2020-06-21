@@ -39,6 +39,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/bosses/theFirstExplorer.cpp
   ${SOURCE_DIR}/entity/bosses/gatekeeper.cpp
   ${SOURCE_DIR}/entity/details/itemChest.cpp
+  ${SOURCE_DIR}/entity/details/scavenger.cpp
   ${SOURCE_DIR}/entity/effects/explosion.cpp
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
   ${SOURCE_DIR}/entity/effects/orbshot.cpp

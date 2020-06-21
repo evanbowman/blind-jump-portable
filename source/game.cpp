@@ -1283,6 +1283,12 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     details_.transform(clear_entities);
     effects_.transform(clear_entities);
 
+    tiles_.for_each([&](const Tile& t, TIdx x, TIdx y) {
+                        if (static_cast<int>(t) == 36) {
+                            details().spawn<Scavenger>(to_world_coord(Vec2<TIdx>{x, y}));
+                        }
+                    });
+
     auto free_spots = get_free_map_slots(tiles_);
 
     const size_t initial_free_spaces = free_spots.size();
