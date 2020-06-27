@@ -4,40 +4,50 @@
 #include "numeric.hpp"
 
 
-int& random_seed();
+namespace rng {
+
+using Value = int;
+using Generator = Value;
 
 
-int random_value();
+extern Generator global_state;
 
 
-template <u32 N> inline int random_choice()
+Value get(Generator& gen = global_state);
+
+
+template <Value N> Value choice(Generator& gen = global_state)
 {
-    return random_value() % N; // * N >> 15;
+    return get(gen) % N;
 }
 
-inline int random_choice(u32 n)
+
+inline Value choice(Value n, Generator& gen = global_state)
 {
-    return fast_mod(random_value(), n); // * n >> 15;
+    return fast_mod(get(gen), n);
 }
 
 
-template <u32 offset> static Float sample(Float n)
+template <u32 offset> Float sample(Float n, Generator& gen = global_state)
 {
-    if (random_choice<2>()) {
-        return n + Float(random_choice<offset>());
+    if (choice<2>(gen)) {
+        return n + Float(choice<offset>(gen));
 
     } else {
-        return n - Float(random_choice<offset>());
+        return n - Float(choice<offset>(gen));
     }
 }
 
 
-template <u32 offset> static Vec2<Float> sample(const Vec2<Float>& position)
+template <u32 offset>
+Vec2<Float> sample(const Vec2<Float>& position, Generator& gen = global_state)
 {
     auto result = position;
 
-    result.x = sample<offset>(result.x);
-    result.y = sample<offset>(result.y);
+    result.x = sample<offset>(result.x, gen);
+    result.y = sample<offset>(result.y, gen);
 
     return result;
 }
+
+} // namespace rng

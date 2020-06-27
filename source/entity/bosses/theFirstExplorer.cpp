@@ -151,7 +151,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             auto t_coord = to_tile_coord(position_.cast<s32>());
             const auto tile = game.tiles().get_tile(t_coord.x, t_coord.y);
 
-            if ((random_choice<2>() and not is_border(tile) and
+            if ((rng::choice<2>() and not is_border(tile) and
                  not chase_player_) or
                 (not is_border(tile) and dashes_remaining_ == 0)) {
                 state_ = State::draw_weapon;
@@ -164,7 +164,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             } else {
                 state_ = State::prep_dash;
                 if (second_form()) {
-                    if (random_choice<3>() == 0) {
+                    if (rng::choice<3>() == 0) {
                         chase_player_ = 3;
                     }
                 }
@@ -190,7 +190,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                 timer_ = 0;
 
                 if (distance(position_, game.player().get_position()) > 80 and
-                    random_choice<2>()) {
+                    rng::choice<2>()) {
                     state_ = State::big_laser_shooting;
                     sprite_.set_mix({ColorConstant::electric_blue, 0});
                     head_.set_mix({ColorConstant::electric_blue, 0});
@@ -206,7 +206,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
     }
 
     case State::small_laser_prep: {
-        bullet_spread_gap_ = random_choice<scattershot_inflection - 10>() + 5;
+        bullet_spread_gap_ = rng::choice<scattershot_inflection - 10>() + 5;
         scattershot_target_ = game.player().get_position();
         state_ = State::small_laser;
         break;
@@ -221,9 +221,9 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                 position_ + shoot_offset(), scattershot_target_, 0.00013f);
 
             Angle angle;
-            const bool avoid_region = random_choice<3>();
+            const bool avoid_region = rng::choice<3>();
             do {
-                angle = random_choice<scattershot_inflection>();
+                angle = rng::choice<scattershot_inflection>();
             } while (abs(angle - bullet_spread_gap_) < 2 and not avoid_region);
 
             if (angle > scattershot_inflection / 2) {
@@ -263,7 +263,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                sample<8>(game.player().get_position()),
+                rng::sample<8>(game.player().get_position()),
                 0.00028f);
             timer_ = 0;
             state_ = State::big_laser2;
@@ -277,7 +277,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(180)) {
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                sample<12>(game.player().get_position()),
+                rng::sample<12>(game.player().get_position()),
                 0.00021f);
             timer_ = 0;
             state_ = State::big_laser3;
@@ -294,7 +294,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(180)) {
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                sample<22>(game.player().get_position()),
+                rng::sample<22>(game.player().get_position()),
                 0.00015f);
             timer_ = 0;
             state_ = State::done_shooting;
@@ -336,7 +336,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             Vec2<Float> dest;
             Vec2<Float> unit;
 
-            bool chase = random_choice<2>();
+            bool chase = rng::choice<2>();
             int tries = 0;
 
             do {
@@ -345,14 +345,14 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                     chase_player_ = 0;
                 }
 
-                dir = ((static_cast<float>(random_choice<359>())) / 360) *
+                dir = ((static_cast<float>(rng::choice<359>())) / 360) *
                       INT16_MAX;
 
                 unit = {(float(cosine(dir)) / INT16_MAX),
                         (float(sine(dir)) / INT16_MAX)};
                 speed_ = 5.f * unit;
 
-                if ((not second_form() and random_choice<3>() == 0) or
+                if ((not second_form() and rng::choice<3>() == 0) or
                     (chase_player_ and chase)) {
                     if (chase_player_) {
                         chase_player_--;

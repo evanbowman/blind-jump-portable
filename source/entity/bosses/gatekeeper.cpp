@@ -27,7 +27,7 @@ public:
 
             game.effects().spawn<OrbShot>(
                 shield.get_position(),
-                sample<22>(game.player().get_position()),
+                rng::sample<22>(game.player().get_position()),
                 0.00019f - 0.00002f * shot_count_,
                 seconds(2) - milliseconds(550));
 
@@ -84,7 +84,7 @@ public:
             angle %= 360;
 
             game.effects().spawn<OrbShot>(shield.get_position(),
-                                          sample<4>(target_),
+                                          rng::sample<4>(target_),
                                           0.00013f,
                                           seconds(3) + milliseconds(500));
 
@@ -328,7 +328,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 
                     if (tries++ > 0) {
                         const s16 dir =
-                            ((static_cast<float>(random_choice<359>())) / 360) *
+                            ((static_cast<float>(rng::choice<359>())) / 360) *
                             INT16_MAX;
 
                         unit = {(float(cosine(dir)) / INT16_MAX),
@@ -618,7 +618,7 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
     fade_color_anim_.advance(sprite_, dt);
 
     if (not detached_ and game.enemies().get<Gatekeeper>().empty()) {
-        this->detach(seconds(2) + milliseconds(random_choice<900>()));
+        this->detach(seconds(2) + milliseconds(rng::choice<900>()));
     }
 
     if (detached_) {

@@ -55,7 +55,7 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
     score_ = persistent_data_.score_;
     inventory_ = persistent_data_.inventory_;
 
-    random_seed() = persistent_data_.seed_;
+    rng::global_state = persistent_data_.seed_;
 
     pfrm.load_overlay_texture("overlay");
 
@@ -370,8 +370,8 @@ void animate_starfield(Platform& pfrm, Microseconds delta)
 
         for (u32 i = 0; i < active_star_anims.capacity(); ++i) {
 
-            const int x = random_choice<32>();
-            const int y = random_choice<32>();
+            const int x = rng::choice<32>();
+            const int y = rng::choice<32>();
 
             const auto tile = pfrm.get_tile(Layer::background, x, y);
             if (active_star_anims.push_back({{x, y}, tile})) {
@@ -391,10 +391,10 @@ static void draw_starfield(Platform& pfrm)
     for (int x = 0; x < 32; ++x) {
         for (int y = 0; y < 32; ++y) {
             pfrm.set_tile(Layer::background, x, y, [] {
-                if (random_choice<9>()) {
+                if (rng::choice<9>()) {
                     return star_empty;
                 } else {
-                    if (random_choice<2>()) {
+                    if (rng::choice<2>()) {
                         return star_1;
                     } else {
                         return star_2;
@@ -446,7 +446,7 @@ static constexpr const ZoneInfo zone_2{
         draw_image(pfrm, 120, x, y, 5, 5, Layer::background);
     },
     [](int x, int y, const TileMap&) {
-        if (random_choice<16>() == 0) {
+        if (rng::choice<16>() == 0) {
             return 17;
         }
         return 0;
@@ -520,7 +520,7 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 
     persistent_data_.score_ = score_;
     persistent_data_.player_health_ = player_.get_health();
-    persistent_data_.seed_ = random_seed();
+    persistent_data_.seed_ = rng::global_state;
     persistent_data_.inventory_ = inventory_;
 
 
@@ -633,7 +633,7 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
         }
     } else {
         tiles_.for_each([&](Tile& t, int, int) {
-            t = Tile(random_choice<int(Tile::sand)>());
+            t = Tile(rng::choice<int(Tile::sand)>());
         });
 
         for (int i = 0; i < 2; ++i) {
@@ -688,23 +688,24 @@ static void add_map_decorations(Level level,
 }
 
 
-static void add_scavenger_ship(Level level, Platform& pfrm, TileMap& map, TileMap& overlay)
+static void
+add_scavenger_ship(Level level, Platform& pfrm, TileMap& map, TileMap& overlay)
 {
     int tcount = 0;
     map.for_each([&](const Tile& tile, int x, int y) {
-                     if (tile not_eq Tile::none) {
-                         tcount++;
-                     }
-                 });
+        if (tile not_eq Tile::none) {
+            tcount++;
+        }
+    });
 
     // Place scavenger ships more frequently on small levels. And we do not want
     // to add a ship to every level, that would be boring.
     if (tcount < 100) {
-        if (random_choice<2>()) {
+        if (rng::choice<2>()) {
             return;
         }
     } else {
-        if (random_choice<4>() == 0) {
+        if (rng::choice<4>() == 0) {
             return;
         }
     }
@@ -754,22 +755,21 @@ static void add_scavenger_ship(Level level, Platform& pfrm, TileMap& map, TileMa
     };
 
     if (not right_edge_locations.empty() and not left_edge_locations.empty()) {
-        if (random_choice<2>()) {
-            place_ship(right_edge_locations[random_choice(
-                           right_edge_locations.size())],
-                       1);
+        if (rng::choice<2>()) {
+            place_ship(
+                right_edge_locations[rng::choice(right_edge_locations.size())],
+                1);
         } else {
             place_ship(
-                left_edge_locations[random_choice(left_edge_locations.size())],
+                left_edge_locations[rng::choice(left_edge_locations.size())],
                 -1);
         }
     } else if (not right_edge_locations.empty()) {
         place_ship(
-            right_edge_locations[random_choice(right_edge_locations.size())],
-            1);
+            right_edge_locations[rng::choice(right_edge_locations.size())], 1);
     } else if (not left_edge_locations.empty()) {
-        place_ship(
-            left_edge_locations[random_choice(left_edge_locations.size())], -1);
+        place_ship(left_edge_locations[rng::choice(left_edge_locations.size())],
+                   -1);
     }
 }
 
@@ -805,8 +805,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
         // Pick a random filled tile, and flood-fill around that tile in
         // the map, to produce a single connected component.
         while (true) {
-            const auto x = random_choice(TileMap::width);
-            const auto y = random_choice(TileMap::height);
+            const auto x = rng::choice(TileMap::width);
+            const auto y = rng::choice(TileMap::height);
             if (temporary.get_tile(x, y) not_eq Tile::none) {
                 flood_fill(temporary, Tile(2), x, y);
                 temporary.for_each([&](const Tile& tile, TIdx x, TIdx y) {
@@ -822,7 +822,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     }
 
     TileMap grass_overlay([&](Tile& t, int, int) {
-        if (random_choice<3>()) {
+        if (rng::choice<3>()) {
             t = Tile::none;
         } else {
             t = Tile::plate;
@@ -887,8 +887,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
             case Tile::ledge:
                 tiles_.set_tile(x,
                                 y,
-                                (random_choice<2>()) ? Tile::grass_ledge
-                                                     : Tile::grass_ledge_vines);
+                                (rng::choice<2>()) ? Tile::grass_ledge
+                                                   : Tile::grass_ledge_vines);
                 grass_overlay.set_tile(x, y, Tile::none);
                 break;
 
@@ -928,7 +928,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         });
     }
 
-    add_scavenger_ship(level(), pfrm, tiles_, grass_overlay);
+    // add_scavenger_ship(level(), pfrm, tiles_, grass_overlay);
 
     if (zone_info(level()) == zone_1) {
         tiles_.for_each([&](Tile& tile, int x, int y) {
@@ -973,11 +973,11 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     tiles_.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::plate) {
-            if (random_choice<4>() == 0) {
+            if (rng::choice<4>() == 0) {
                 tile = Tile::damaged_plate;
             }
         } else if (tile == Tile::sand) {
-            if (random_choice<4>() == 0 and
+            if (rng::choice<4>() == 0 and
                 grass_overlay.get_tile(x, y) == Tile::none) {
                 tile = Tile::sand_sprouted;
             }
@@ -1021,7 +1021,7 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 COLD static std::optional<MapCoord> select_coord(MapCoordBuf& free_spots)
 {
     if (not free_spots.empty()) {
-        auto choice = random_choice(free_spots.size());
+        auto choice = rng::choice(free_spots.size());
         auto it = &free_spots[choice];
         const auto result = *it;
         free_spots.erase(it);
@@ -1129,7 +1129,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     Buffer<EnemyInfo*, 100> distribution;
 
     while (not distribution.full()) {
-        auto selected = &info[random_choice<sizeof info / sizeof(EnemyInfo)>()];
+        auto selected = &info[rng::choice<sizeof info / sizeof(EnemyInfo)>()];
 
         if (selected->min_level_ > std::max(Level(0), game.level()) or
             selected->max_level_ < game.level()) {
@@ -1142,7 +1142,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     int i = 0;
     while (i < spawn_count) {
 
-        auto choice = distribution[random_choice<distribution.capacity()>()];
+        auto choice = distribution[rng::choice<distribution.capacity()>()];
 
         if (choice->max_allowed_ == 0) {
             continue;
@@ -1271,7 +1271,7 @@ spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     spawn_entity<ItemChest>(pfrm,
                             free_spots,
                             game.details(),
-                            distribution[random_choice(distribution.size())]);
+                            distribution[rng::choice(distribution.size())]);
 }
 
 
@@ -1284,10 +1284,10 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     effects_.transform(clear_entities);
 
     tiles_.for_each([&](const Tile& t, TIdx x, TIdx y) {
-                        if (static_cast<int>(t) == 36) {
-                            details().spawn<Scavenger>(to_world_coord(Vec2<TIdx>{x, y}));
-                        }
-                    });
+        if (static_cast<int>(t) == 36) {
+            details().spawn<Scavenger>(to_world_coord(Vec2<TIdx>{x, y}));
+        }
+    });
 
     auto free_spots = get_free_map_slots(tiles_);
 
@@ -1330,7 +1330,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 }
             }
             const auto target = world_coord(*farthest);
-            transporter_.set_position(sample<3>({target.x, target.y + 16}));
+            transporter_.set_position(
+                rng::sample<3>({target.x, target.y + 16}));
             free_spots.erase(farthest);
 
             return true;
@@ -1377,8 +1378,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             Conf(pfrm).expect<Conf::Integer>("level-setup", "max_hearts");
 
         while (true) {
-            const s8 x = random_choice<TileMap::width>();
-            const s8 y = random_choice<TileMap::height>();
+            const s8 x = rng::choice<TileMap::width>();
+            const s8 y = rng::choice<TileMap::height>();
 
             if (is_plate(tiles_.get_tile(x, y))) {
 
@@ -1401,7 +1402,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     }
 
     // Sometimes for small maps, and always for large maps, place an item chest
-    if (random_choice<2>() or
+    if (rng::choice<2>() or
         (int) initial_free_spaces >
             Conf(pfrm).expect<Conf::Integer>("level-setup",
                                              "item_chest_spawn_threshold")) {
@@ -1429,7 +1430,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                     return;
                 }
             }
-            if (random_choice<3>()) {
+            if (rng::choice<3>()) {
                 MapCoord c{x, y};
 
                 // NOTE: We want hearts to become less available at higher
@@ -1440,7 +1441,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                     3 + std::max(level() - 4, Level(0)) * 0.2f;
 
                 if (not details_.spawn<Item>(world_coord(c), pfrm, [&] {
-                        if (random_choice(heart_chance)) {
+                        if (rng::choice(heart_chance)) {
                             return Item::Type::coin;
                         } else {
                             return Item::Type::heart;
@@ -1500,11 +1501,11 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 } else if (adj_sand_tiles < 3) {
                     // If there is a low number of adjacent
                     // non-edge tiles, possibly place an item
-                    if (random_choice<3>() == 0) {
+                    if (rng::choice<3>() == 0) {
                         details_.spawn<Item>(wc, pfrm, Item::Type::heart);
                     }
                 } else {
-                    if (random_choice<5>() == 0) {
+                    if (rng::choice<5>() == 0) {
                         details_.spawn<Item>(wc, pfrm, Item::Type::heart);
                     }
                 }
@@ -1523,7 +1524,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         const auto item_count = length(details_.get<Item>());
 
         while (heart_count > 2) {
-            auto choice = random_choice(item_count);
+            auto choice = rng::choice(item_count);
 
             if (auto item = list_ref(details_.get<Item>(), choice)) {
                 if ((*item)->get_type() == Item::Type::heart) {

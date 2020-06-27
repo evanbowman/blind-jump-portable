@@ -26,7 +26,7 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
             game.on_timeout(milliseconds(100), [pos](Platform& pf, Game& game) {
                 for (int i = 0; i < 3; ++i) {
                     game.details().spawn<Item>(
-                        sample<32>(pos), pf, Item::Type::heart);
+                        rng::sample<32>(pos), pf, Item::Type::heart);
                 }
 
                 game.transporter().set_position(pos);

@@ -6,7 +6,7 @@
 
 
 Item::Item(const Vec2<Float>& pos, Platform&, Type type)
-    : state_(State::idle), timer_(random_value()),
+    : state_(State::idle), timer_(rng::get()),
       type_(type), hitbox_{&position_, {{10, 10}, {2, 2}}}
 {
     position_ = pos - Vec2<Float>{8, 0};
@@ -90,7 +90,7 @@ void Item::scatter()
 {
     timer_ = 0;
     state_ = State::scatter;
-    auto target = sample<64>(position_);
+    auto target = rng::sample<64>(position_);
     step_ = direction(position_, target) * 0.00013f;
 }
 

@@ -68,7 +68,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 
     static const auto bullet_speed = 0.00011f;
 
-    auto target = [&] { return sample<8>(game.player().get_position()); };
+    auto target = [&] { return rng::sample<8>(game.player().get_position()); };
 
     auto origin = [&] { return position_ + Vec2<Float>{0.f, 4.f}; };
 

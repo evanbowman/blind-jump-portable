@@ -87,7 +87,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
             if (manhattan_length(game.player().get_position(), position_) <
                     std::min(screen_size.x, screen_size.y) and
-                random_choice<2>()) {
+                rng::choice<2>()) {
                 state_ = State::shoot_begin;
                 sprite_.set_texture_index(TextureMap::dasher_weapon1);
             } else {
@@ -121,7 +121,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
             pf.speaker().play_sound("laser1", 4, position_);
             game.effects().spawn<OrbShot>(
-                position_, sample<8>(game.player().get_position()), 0.00015f);
+                position_,
+                rng::sample<8>(game.player().get_position()),
+                0.00015f);
         }
         break;
 
@@ -137,7 +139,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
             pf.speaker().play_sound("laser1", 4, position_);
             game.effects().spawn<OrbShot>(
-                position_, sample<16>(game.player().get_position()), 0.00015f);
+                position_,
+                rng::sample<16>(game.player().get_position()),
+                0.00015f);
         }
         break;
     }
@@ -149,7 +153,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
             pf.speaker().play_sound("laser1", 4, position_);
             game.effects().spawn<OrbShot>(
-                position_, sample<32>(game.player().get_position()), 0.00015f);
+                position_,
+                rng::sample<32>(game.player().get_position()),
+                0.00015f);
         }
         break;
 
@@ -158,7 +164,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(352);
 
             s16 dir =
-                ((static_cast<float>(random_choice<359>())) / 360) * INT16_MAX;
+                ((static_cast<float>(rng::choice<359>())) / 360) * INT16_MAX;
 
             speed_.x = 5 * (float(cosine(dir)) / INT16_MAX);
             speed_.y = 5 * (float(sine(dir)) / INT16_MAX);

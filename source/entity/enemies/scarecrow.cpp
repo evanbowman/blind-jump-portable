@@ -111,7 +111,8 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 sprite_.set_position(position_);
 
                 move_vec_ =
-                    direction(position_, sample<32>(to_world_coord(anchor_))) *
+                    direction(position_,
+                              rng::sample<32>(to_world_coord(anchor_))) *
                     0.000005f;
 
                 bounce_timer_ = 0;
@@ -139,7 +140,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 sprite_.set_texture_index(TextureMap::scarecrow_top);
 
                 if (int(abs(offset)) == 0) {
-                    if (random_choice<4>() and not hit_) {
+                    if (rng::choice<4>() and not hit_) {
                         state_ = State::idle_crouch;
                     } else {
                         state_ = State::long_crouch;
@@ -200,7 +201,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
                 for (int i = 0; i < 200; ++i) {
                     auto selected =
-                        to_tile_coord(sample<64>(player_pos).cast<s32>());
+                        to_tile_coord(rng::sample<64>(player_pos).cast<s32>());
 
                     // This is just because the enemy is tall, and we do not
                     // want it to jump to a coordinate, such that its head is
@@ -308,7 +309,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 pfrm.speaker().play_sound("laser1", 4, position_);
                 game.effects().spawn<OrbShot>(
                     position_,
-                    sample<8>(game.player().get_position()),
+                    rng::sample<8>(game.player().get_position()),
                     0.00010f);
             }
             state_ = State::idle_wait;

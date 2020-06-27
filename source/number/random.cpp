@@ -1,17 +1,11 @@
 #include "random.hpp"
 
 
-static int seed;
+rng::Generator rng::global_state;
 
 
-int& random_seed()
+rng::Value rng::get(Generator& gen)
 {
-    return seed;
-}
-
-
-int random_value()
-{
-    seed = 1664525 * seed + 1013904223;
-    return (seed >> 16) & 0x7FFF;
+    gen = 1664525 * gen + 1013904223;
+    return (gen >> 16) & 0x7FFF;
 }

@@ -1103,9 +1103,9 @@ void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
     }
     std::sort(game.highscores().rbegin(), game.highscores().rend());
 
-    random_value();
+    rng::get();
 
-    game.persistent_data().seed_ = random_seed();
+    game.persistent_data().seed_ = rng::global_state;
     game.inventory().remove_non_persistent();
 
     PersistentData& data = game.persistent_data().reset(pfrm);

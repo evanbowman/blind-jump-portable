@@ -6,7 +6,7 @@
 
 Theif::Theif(const Vec2<Float>& pos)
     : Enemy(Entity::Health(2), pos, {{16, 32}, {8, 16}}), timer_(0),
-      shadow_check_timer_(random_choice<milliseconds(300)>()), float_amount_(0),
+      shadow_check_timer_(rng::choice<milliseconds(300)>()), float_amount_(0),
       float_timer_(0), state_(State::sleep)
 {
     set_position(pos);
@@ -80,7 +80,7 @@ void Theif::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::approach;
             sprite_.set_texture_index(44);
-            auto target = sample<16>(game.player().get_position());
+            auto target = rng::sample<16>(game.player().get_position());
             step_vector_ = direction(position_, target) * 0.00013f;
 
             --tries_;
