@@ -688,7 +688,7 @@ static void add_map_decorations(Level level,
 }
 
 
-static void
+void
 add_scavenger_ship(Level level, Platform& pfrm, TileMap& map, TileMap& overlay)
 {
     int tcount = 0;

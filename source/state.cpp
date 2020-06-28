@@ -2053,12 +2053,32 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
         auto repaint = [&pfrm, this](int max_i) {
             while (true) {
                 int i = 0, j = 0;
-
                 auto center = calc_screen_tiles(pfrm).x / 2 - 1;
 
                 while (true) {
-
                     const int y_off = 3;
+
+                    if (max_i > i + 7 + j * 8) {
+                        pfrm.set_tile(
+                            Layer::overlay, center - j, pos_.y - y_off, 107);
+                        pfrm.set_tile(
+                            Layer::overlay, center - j, pos_.y + 2, 107);
+
+                        pfrm.set_tile(Layer::overlay,
+                                      center + 1 + j,
+                                      pos_.y - y_off,
+                                      107);
+                        pfrm.set_tile(
+                            Layer::overlay, center + 1 + j, pos_.y + 2, 107);
+
+                        i = 0;
+                        j += 1;
+                        continue;
+                    }
+
+                    if (j * 8 + i > max_i) {
+                        return;
+                    }
 
                     pfrm.set_tile(
                         Layer::overlay, center - j, pos_.y - y_off, 93 + i);
@@ -2091,7 +2111,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                         j++;
                     }
 
-                    if (j * 8 + i > max_i) {
+                    if (j * 8 + i >= max_i) {
                         return;
                     }
                 }

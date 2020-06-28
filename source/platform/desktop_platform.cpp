@@ -1042,7 +1042,8 @@ bool is_sound_playing(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-static std::ofstream logfile("logfile.txt");
+static const char* const logfile_name = "logfile.txt";
+static std::ofstream logfile_out(logfile_name);
 
 
 void Platform::Logger::log(Logger::Severity level, const char* msg)
@@ -1067,8 +1068,27 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
         }
     };
 
-    write_msg(logfile);
+    write_msg(logfile_out);
     write_msg(std::cout);
+}
+
+
+void Platform::Logger::read(void* buffer, u32 start_offset, u32 num_bytes)
+{
+    const std::string data = [&] {
+            std::ifstream logfile_in(logfile_name);
+            std::stringstream strbuf;
+            strbuf << logfile_in.rdbuf();
+            return strbuf.str();
+        }();
+
+    if (int(data.size() - start_offset) < int(num_bytes)) {
+        return;
+    }
+
+    for (u32 i = start_offset; i < start_offset + num_bytes; ++i) {
+        ((char*)buffer)[i - start_offset] = data[i];
+    }
 }
 
 
@@ -1350,7 +1370,7 @@ void start(Platform&);
 
 int main()
 {
-    random_seed() = time(nullptr);
+    rng::global_state = time(nullptr);
 
     Platform pf;
     start(pf);
