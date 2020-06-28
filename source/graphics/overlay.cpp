@@ -91,7 +91,7 @@ void Text::append(const char* str)
     auto write_pos = static_cast<u8>(coord_.x + len_);
 
     utf8::scan(
-        [&](const utf8::Codepoint& cp, const char* raw) {
+        [&](const utf8::Codepoint& cp, const char* raw, int) {
             print_char(pfrm_, cp, {write_pos, coord_.y});
             ++write_pos;
             ++len_;
@@ -156,50 +156,6 @@ TextView::~TextView()
 }
 
 
-class BufferedUnicodeStr {
-private:
-    const char* const str_;
-
-    static constexpr const int index_count_ = 300;
-    utf8::Codepoint data_[index_count_];
-    int index_start_;
-    int str_len_;
-
-    void load_chunk(int index)
-    {
-        int i = 0;
-        utf8::scan(
-            [this, &i, &index](const utf8::Codepoint& cp, const char*) {
-                if (i >= index and i < index + index_count_) {
-                    data_[i - index] = cp;
-                }
-                i++;
-            },
-            str_,
-            str_len_);
-
-        index_start_ = index;
-    }
-
-public:
-    BufferedUnicodeStr(const char* str, int len)
-        : str_(str), index_start_(0), str_len_(len)
-    {
-        load_chunk(0);
-    }
-
-    utf8::Codepoint get(int index)
-    {
-        if (not(index >= index_start_ and
-                index < index_start_ + index_count_)) {
-            load_chunk(index);
-        }
-
-        return data_[index - index_start_];
-    }
-};
-
-
 void TextView::assign(const char* str,
                       const OverlayCoord& coord,
                       const OverlayCoord& size,
@@ -209,7 +165,7 @@ void TextView::assign(const char* str,
     size_ = size;
 
     const auto len = str_len(str);
-    BufferedUnicodeStr ustr(str, len);
+    utf8::BufferedStr ustr(str, len);
 
     auto cursor = coord;
 

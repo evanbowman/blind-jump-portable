@@ -167,6 +167,55 @@ private:
 };
 
 
+class HorizontalFlashAnimation {
+public:
+    HorizontalFlashAnimation(Platform& pfrm, const OverlayCoord& position)
+        : pfrm_(pfrm), position_(position), width_(0), timer_(0), index_(0)
+    {
+    }
+
+    void init(int width)
+    {
+        width_ = width;
+        timer_ = 0;
+        index_ = 0;
+    }
+
+    enum { anim_len = 3 };
+
+    void update(Microseconds dt)
+    {
+        timer_ += dt;
+        if (timer_ > milliseconds(34)) {
+            timer_ = 0;
+            if (done()) {
+                return;
+            }
+            if (index_ < anim_len) {
+                for (int i = position_.x; i < position_.x + width_; ++i) {
+                    pfrm_.set_tile(
+                        Layer::overlay, i, position_.y, 108 + index_);
+                }
+            }
+            ++index_;
+        }
+    }
+
+    bool done() const
+    {
+        return index_ == anim_len + 1;
+    }
+
+
+private:
+    Platform& pfrm_;
+    OverlayCoord position_;
+    int width_;
+    int timer_;
+    int index_;
+};
+
+
 inline OverlayCoord calc_screen_tiles(Platform& pfrm)
 {
     constexpr u32 overlay_tile_size = 8;

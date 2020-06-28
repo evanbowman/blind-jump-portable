@@ -1076,11 +1076,11 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 void Platform::Logger::read(void* buffer, u32 start_offset, u32 num_bytes)
 {
     const std::string data = [&] {
-            std::ifstream logfile_in(logfile_name);
-            std::stringstream strbuf;
-            strbuf << logfile_in.rdbuf();
-            return strbuf.str();
-        }();
+        std::ifstream logfile_in(logfile_name);
+        std::stringstream strbuf;
+        strbuf << logfile_in.rdbuf();
+        return strbuf.str();
+    }();
 
     if (int(data.size() - start_offset) < int(num_bytes)) {
         return;

@@ -66,10 +66,14 @@ public:
     std::optional<BossHealthBar> boss_health_bar_;
 
 private:
-    std::optional<Text> text_;
+    void repaint_icons(Platform& pfrm);
+
+    std::optional<Text> health_;
     std::optional<Text> score_;
     std::optional<SmallIcon> heart_icon_;
     std::optional<SmallIcon> coin_icon_;
+    std::optional<HorizontalFlashAnimation> health_anim_;
+    std::optional<HorizontalFlashAnimation> score_anim_;
     bool pixelated_ = false;
 };
 
@@ -794,6 +798,15 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void ActiveState::repaint_icons(Platform& pfrm)
+{
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    heart_icon_.emplace(pfrm, 145, OverlayCoord{1, u8(screen_tiles.y - 3)});
+    coin_icon_.emplace(pfrm, 146, OverlayCoord{1, u8(screen_tiles.y - 2)});
+}
+
+
 void ActiveState::enter(Platform& pfrm, Game& game, State&)
 {
     if (restore_keystates) {
@@ -803,13 +816,15 @@ void ActiveState::enter(Platform& pfrm, Game& game, State&)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    text_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 3)});
+    health_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 3)});
     score_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 2)});
-    text_->assign(game.player().get_health());
+    health_->assign(game.player().get_health());
     score_->assign(game.score());
 
-    heart_icon_.emplace(pfrm, 145, OverlayCoord{1, u8(screen_tiles.y - 3)});
-    coin_icon_.emplace(pfrm, 146, OverlayCoord{1, u8(screen_tiles.y - 2)});
+    repaint_icons(pfrm);
+
+    health_anim_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 3)});
+    score_anim_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 2)});
 }
 
 
@@ -817,7 +832,7 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 {
     OverworldState::exit(pfrm, game, next_state);
 
-    text_.reset();
+    health_.reset();
     score_.reset();
     heart_icon_.reset();
     coin_icon_.reset();
@@ -852,11 +867,35 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     OverworldState::update(pfrm, game, delta);
 
     if (last_health not_eq game.player().get_health()) {
-        text_->assign(game.player().get_health());
+        auto screen_tiles = calc_screen_tiles(pfrm);
+        health_anim_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 3)});
+        health_anim_->init(integer_text_length(game.player().get_health()) + 1);
+        // health_->assign(game.player().get_health());
     }
 
     if (last_score not_eq game.score()) {
-        score_->assign(game.score());
+        auto screen_tiles = calc_screen_tiles(pfrm);
+        score_anim_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 2)});
+        score_anim_->init(integer_text_length(game.score()) + 1);
+        // score_->assign(game.score());
+    }
+
+    if (health_anim_) {
+        health_anim_->update(delta);
+        if (health_anim_->done()) {
+            health_anim_.reset();
+            repaint_icons(pfrm);
+            health_->assign(game.player().get_health());
+        }
+    }
+
+    if (score_anim_) {
+        score_anim_->update(delta);
+        if (score_anim_->done()) {
+            score_anim_.reset();
+            repaint_icons(pfrm);
+            score_->assign(game.score());
+        }
     }
 
     if (game.player().get_health() == 0) {
@@ -2698,8 +2737,8 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 bool contains_fill_char = false;
                 utf8::scan(
-                    [&contains_fill_char, &pfrm](const utf8::Codepoint& cp,
-                                                 const char*) {
+                    [&contains_fill_char,
+                     &pfrm](const utf8::Codepoint& cp, const char*, int) {
                         if (cp == '%') {
                             if (contains_fill_char) {
                                 error(pfrm, "two fill chars not allowed");
@@ -2721,7 +2760,8 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                         screen_tiles.x - ((utf8::len(str) - 1) + 2);
                     lines_.emplace_back(pfrm, OverlayCoord{1, y});
                     utf8::scan(
-                        [this, fill](const utf8::Codepoint&, const char* raw) {
+                        [this,
+                         fill](const utf8::Codepoint&, const char* raw, int) {
                             if (str_len(raw) == 1 and raw[0] == '%') {
                                 for (size_t i = 0; i < fill; ++i) {
                                     lines_.back().append(".");

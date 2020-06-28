@@ -688,8 +688,10 @@ static void add_map_decorations(Level level,
 }
 
 
-void
-add_scavenger_ship(Level level, Platform& pfrm, TileMap& map, TileMap& overlay)
+void add_scavenger_ship(Level level,
+                        Platform& pfrm,
+                        TileMap& map,
+                        TileMap& overlay)
 {
     int tcount = 0;
     map.for_each([&](const Tile& tile, int x, int y) {
