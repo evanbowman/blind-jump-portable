@@ -251,36 +251,3 @@ inline void right_text_margin(Text& text, Margin margin)
 
 
 u32 integer_text_length(int n);
-
-
-template <typename F> void instrument(Platform& pfrm, F&& callback)
-{
-    static int index;
-    constexpr int sample_count = 32;
-    static int buffer[32];
-    static std::optional<Text> text;
-
-    pfrm.stopwatch().start();
-
-    callback();
-
-    auto tm = pfrm.stopwatch().stop();
-
-    if (index < sample_count) {
-        buffer[index++] = tm;
-
-    } else {
-        index = 0;
-
-        int accum = 0;
-        for (int i = 0; i < sample_count; ++i) {
-            accum += buffer[i];
-        }
-
-        accum /= 32;
-
-        text.emplace(pfrm, OverlayCoord{1, 1});
-        text->assign(int(accum * 59.59f));
-        text->append(" ns");
-    }
-}

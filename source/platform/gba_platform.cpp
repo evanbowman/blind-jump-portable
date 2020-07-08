@@ -179,24 +179,47 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 {
 }
 
+#define REG_TM3CNT_L	*(vu16*)(REG_BASE + 0x10c)
+#define REG_TM3CNT_H	*(vu16*)(REG_BASE + 0x10e)
 
-//
-// IMPORTANT: Already well into development, I discovered that the Gameboy
-// Advance does not refresh at exactly 60 frames per second. Rather than change
-// all of the code, I am going to keep the timestep as-is. Anyone porting the
-// code to a new platform should make the appropriate adjustments in their
-// implementation of DeltaClock. I believe the actual refresh rate on the GBA is
-// something like 59.59.
-//
-constexpr Microseconds fixed_step = 16667;
-
+static size_t delta_total;
 
 Microseconds DeltaClock::reset()
 {
     // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) =
     // 16,666.6...
 
-    return fixed_step;
+    irqDisable(IRQ_TIMER3);
+    const auto tics = REG_TM3CNT_L + delta_total;
+    REG_TM3CNT_H = 0;
+
+    irqEnable(IRQ_TIMER3);
+
+    delta_total = 0;
+
+    REG_TM3CNT_L = 0;
+    REG_TM3CNT_H = 1 << 7 | 1 << 6;
+
+    //
+    // IMPORTANT: Already well into development, I discovered that the Gameboy
+    // Advance does not refresh at exactly 60 frames per second. Rather than
+    // change all of the code, I am going to keep the timestep as-is. Anyone
+    // porting the code to a new platform should make the appropriate
+    // adjustments in their implementation of DeltaClock. I believe the actual
+    // refresh rate on the GBA is something like 59.59.
+    //
+    const int ret = ((tics * (60.f / 59.59f)) * 60.f) / 1000.f;
+
+    // DEBUG: For a frame counter:
+    // static std::optional<Text> text;
+    // static int counter = 0;
+    // if (++counter == 20) {
+    //     counter = 0;
+    //     text.emplace(*platform, OverlayCoord{1, 1});
+    //     text->assign(ret);
+    // }
+
+    return ret;
 }
 
 
@@ -1192,9 +1215,13 @@ void Platform::load_tile1_texture(const char* name)
 
 void Platform::sleep(u32 frames)
 {
+    irqDisable(IRQ_TIMER3);
+
     while (frames--) {
         VBlankIntrWait();
     }
+
+    irqEnable(IRQ_TIMER3);
 }
 
 
@@ -1924,47 +1951,10 @@ Platform::Speaker::Speaker()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Stopwatch
-////////////////////////////////////////////////////////////////////////////////
-
 
 #define REG_TM2CNT *(vu32*)(0x04000000 + 0x108)
 #define REG_TM2CNT_L *(vu16*)(REG_BASE + 0x108)
 #define REG_TM2CNT_H *(vu16*)(REG_BASE + 0x10a)
-
-
-struct StopwatchData {
-};
-
-
-Platform::Stopwatch::Stopwatch()
-{
-    // ... TODO ...
-}
-
-static size_t stopwatch_total;
-
-void Platform::Stopwatch::start()
-{
-    // auto sd = reinterpret_cast<StopwatchData*>(impl_);
-    stopwatch_total = 0;
-
-    // FIXME: use TM3, TM2 is now in use
-    // REG_TM2CNT_L = 0;
-    // REG_TM2CNT_H = 1 << 7 | 1 << 6;
-}
-
-
-int Platform::Stopwatch::stop()
-{
-    // auto sd = reinterpret_cast<StopwatchData*>(impl_);
-    // FIXME: use TM3, TM2 is now in use
-    // auto ret = REG_TM2CNT_L;
-    // REG_TM2CNT_H = 0;
-
-    return 0; // ret + stopwatch_total;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2100,15 +2090,13 @@ Platform::Platform()
     irqInit();
     irqEnable(IRQ_VBLANK);
 
-    // irqEnable(IRQ_TIMER2);
-    // irqSet(IRQ_TIMER2, [] {
-    //     stopwatch_total += 0xffff;
+    irqSet(IRQ_TIMER3, [] {
+        delta_total += 0xffff;
 
-    // FIXME: use TM3, TM2 is now in use
-    //     REG_TM2CNT_H = 0;
-    //     REG_TM2CNT_L = 0;
-    //     REG_TM2CNT_H = 1 << 7 | 1 << 6;
-    // });
+        REG_TM3CNT_H = 0;
+        REG_TM3CNT_L = 0;
+        REG_TM3CNT_H = 1 << 7 | 1 << 6;
+    });
 
     fill_overlay(0);
 

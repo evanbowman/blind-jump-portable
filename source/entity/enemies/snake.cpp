@@ -5,7 +5,7 @@
 #include "number/random.hpp"
 
 
-static constexpr const Float x_move_rate = 0.000046f;
+static constexpr const Float x_move_rate = 0.000040f;
 
 // Tiles are wider than they are tall. If we move with the same vertical rate as
 // our horizontal rate, the snake segments will end up spaced out when the snake
@@ -90,7 +90,7 @@ SnakeHead::SnakeHead(const Vec2<Float>& pos, Game& game)
     shadow_.set_origin({8, -11});
     shadow_.set_alpha(Sprite::Alpha::translucent);
 
-    game.enemies().spawn<SnakeBody>(pos, this, game, 3);
+    game.enemies().spawn<SnakeBody>(pos, this, game, 4);
 }
 
 

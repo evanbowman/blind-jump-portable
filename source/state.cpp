@@ -2193,6 +2193,13 @@ void NewLevelState::exit(Platform& pfrm, Game& game, State&)
 {
     game.next_level(pfrm, next_level_);
 
+    // Because generating a level takes quite a bit of time (relative to a
+    // normal game update step), and because we aren't really running any game
+    // logic during level generation, makes sense to zero-out the delta clock,
+    // otherwise the game will go into the next update cycle in the new state
+    // with a huge delta time.
+    DeltaClock::instance().reset();
+
     text_[0].reset();
     text_[1].reset();
 

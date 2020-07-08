@@ -1303,7 +1303,9 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     auto player_coord = select_coord(free_spots);
     if (player_coord) {
 
-        player_.move(world_coord(*player_coord));
+        const auto wc = world_coord(*player_coord);
+
+        player_.move({wc.x + 0.1f, wc.y + 0.1f});
 
         // We want to remove adjacent free spaces, so that the player doesn't
         // spawn on top of enemies, and get injured upon entry into a level. The

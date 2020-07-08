@@ -34,6 +34,8 @@ Laser::Laser(const Vec2<Float>& position, Cardinal dir, Mode mode)
     } else if (dir_ == Cardinal::east) {
         sprite_.set_flip({true, false});
     }
+
+    mark_visible(true); // NOTE: This is just a hack to fix obscure bugs...
 }
 
 

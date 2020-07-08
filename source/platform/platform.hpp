@@ -71,7 +71,6 @@ public:
     class Keyboard;
     class Logger;
     class Speaker;
-    class Stopwatch;
 
     using DeviceName = StringBuffer<23>;
     DeviceName device_name() const;
@@ -94,11 +93,6 @@ public:
     inline Speaker& speaker()
     {
         return speaker_;
-    }
-
-    inline Stopwatch& stopwatch()
-    {
-        return stopwatch_;
     }
 
     // On some platforms, fatal() will trigger a soft reset. But soft-reset is
@@ -380,22 +374,6 @@ public:
 
 
     ////////////////////////////////////////////////////////////////////////////
-    // Stopwatch
-    ////////////////////////////////////////////////////////////////////////////
-
-    class Stopwatch {
-    public:
-        Stopwatch();
-
-        void start();
-        int stop();
-
-    private:
-        void* impl_;
-    };
-
-
-    ////////////////////////////////////////////////////////////////////////////
     // Task
     ////////////////////////////////////////////////////////////////////////////
 
@@ -459,7 +437,6 @@ private:
     Keyboard keyboard_;
     Speaker speaker_;
     Logger logger_;
-    Stopwatch stopwatch_;
     Data* data_ = nullptr;
 };
 

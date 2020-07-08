@@ -33,6 +33,7 @@ protected:
     enum class State { sleep, active } state_ = State::sleep;
 
 private:
+    int update_counter_ = 0;
     SnakeNode* parent_;
     Vec2<TIdx> tile_coord_;
     Microseconds destruct_timer_;
