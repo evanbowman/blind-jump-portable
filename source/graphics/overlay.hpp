@@ -251,3 +251,36 @@ inline void right_text_margin(Text& text, Margin margin)
 
 
 u32 integer_text_length(int n);
+
+
+template <typename F> void instrument(Platform& pfrm, F&& callback)
+{
+    static int index;
+    constexpr int sample_count = 32;
+    static int buffer[32];
+    static std::optional<Text> text;
+
+    const auto before = DeltaClock::instance().sample();
+
+    callback();
+
+    const auto after = DeltaClock::instance().sample();
+
+    if (index < sample_count) {
+        buffer[index++] = after - before;
+
+    } else {
+        index = 0;
+
+        int accum = 0;
+        for (int i = 0; i < sample_count; ++i) {
+            accum += buffer[i];
+        }
+
+        accum /= 32;
+
+        text.emplace(pfrm, OverlayCoord{1, 1});
+        text->assign(DeltaClock::duration(before, after));
+        text->append(" micros");
+    }
+}

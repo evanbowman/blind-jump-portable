@@ -205,9 +205,15 @@ static Microseconds delta_convert_tics(int tics)
 }
 
 
-Microseconds DeltaClock::sample() const
+DeltaClock::TimePoint DeltaClock::sample() const
 {
-    return delta_convert_tics(delta_read_tics());
+    return delta_read_tics();
+}
+
+
+Microseconds DeltaClock::duration(TimePoint t1, TimePoint t2)
+{
+    return delta_convert_tics(t2 - t1);
 }
 
 

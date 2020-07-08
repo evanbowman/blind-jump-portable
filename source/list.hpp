@@ -24,6 +24,13 @@ public:
                       "Pool incompatible");
     }
 
+    List(List&& other)
+    {
+        begin_ = other.begin_;
+        other.begin_ = nullptr;
+        pool_ = other.pool_;
+    }
+
     List(const List&) = delete;
 
     ~List()

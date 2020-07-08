@@ -35,7 +35,14 @@ public:
 
     Microseconds reset();
 
-    Microseconds sample() const;
+
+    using TimePoint = int;
+
+    TimePoint sample() const;
+
+
+    static Microseconds duration(TimePoint t1, TimePoint t2);
+
 
 private:
     DeltaClock();
