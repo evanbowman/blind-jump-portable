@@ -11,11 +11,13 @@ public:
 private:
     Synchronized<Game>* game_;
     Platform* pf_;
+    int fps_print_counter_;
+    std::optional<Text> fps_text_;
 };
 
 
 UpdateTask::UpdateTask(Synchronized<Game>* game, Platform* pf)
-    : game_(game), pf_(pf)
+    : game_(game), pf_(pf), fps_print_counter_(20)
 {
 }
 
@@ -26,7 +28,26 @@ void UpdateTask::run()
         game_->acquire([this](Game& game) {
             pf_->keyboard().poll();
 
-            game.update(*pf_, DeltaClock::instance().reset());
+            const auto delta = DeltaClock::instance().reset();
+
+            if (pf_->keyboard().down_transition<Key::select>()) {
+                if (fps_text_) {
+                    fps_text_.reset();
+                } else {
+                    fps_text_.emplace(*pf_, OverlayCoord{1, 1});
+                }
+            }
+
+            if (fps_text_) {
+                if (--fps_print_counter_ == 0) {
+                    fps_print_counter_ = 20;
+                    fps_text_.emplace(*pf_, OverlayCoord{1, 2});
+                    fps_text_->assign(1000000.f / delta);
+                    fps_text_->append(" fps");
+                }
+            }
+
+            game.update(*pf_, delta);
         });
     } else {
         Task::completed();

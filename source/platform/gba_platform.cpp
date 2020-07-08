@@ -184,13 +184,40 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 
 static size_t delta_total;
 
+
+static int delta_read_tics()
+{
+    return REG_TM3CNT_L + delta_total;
+}
+
+
+static Microseconds delta_convert_tics(int tics)
+{
+    //
+    // IMPORTANT: Already well into development, I discovered that the Gameboy
+    // Advance does not refresh at exactly 60 frames per second. Rather than
+    // change all of the code, I am going to keep the timestep as-is. Anyone
+    // porting the code to a new platform should make the appropriate
+    // adjustments in their implementation of DeltaClock. I believe the actual
+    // refresh rate on the GBA is something like 59.59.
+    //
+    return ((tics * (59.59f / 60.f)) * 60.f) / 1000.f;
+}
+
+
+Microseconds DeltaClock::sample() const
+{
+    return delta_convert_tics(delta_read_tics());
+}
+
+
 Microseconds DeltaClock::reset()
 {
     // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) =
     // 16,666.6...
 
     irqDisable(IRQ_TIMER3);
-    const auto tics = REG_TM3CNT_L + delta_total;
+    const auto tics = delta_read_tics();
     REG_TM3CNT_H = 0;
 
     irqEnable(IRQ_TIMER3);
@@ -200,26 +227,7 @@ Microseconds DeltaClock::reset()
     REG_TM3CNT_L = 0;
     REG_TM3CNT_H = 1 << 7 | 1 << 6;
 
-    //
-    // IMPORTANT: Already well into development, I discovered that the Gameboy
-    // Advance does not refresh at exactly 60 frames per second. Rather than
-    // change all of the code, I am going to keep the timestep as-is. Anyone
-    // porting the code to a new platform should make the appropriate
-    // adjustments in their implementation of DeltaClock. I believe the actual
-    // refresh rate on the GBA is something like 59.59.
-    //
-    const int ret = ((tics * (60.f / 59.59f)) * 60.f) / 1000.f;
-
-    // DEBUG: For a frame counter:
-    // static std::optional<Text> text;
-    // static int counter = 0;
-    // if (++counter == 20) {
-    //     counter = 0;
-    //     text.emplace(*platform, OverlayCoord{1, 1});
-    //     text->assign(ret);
-    // }
-
-    return ret;
+    return delta_convert_tics(tics);
 }
 
 

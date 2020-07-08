@@ -35,6 +35,8 @@ public:
 
     Microseconds reset();
 
+    Microseconds sample() const;
+
 private:
     DeltaClock();
 
