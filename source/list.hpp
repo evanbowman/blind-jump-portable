@@ -24,6 +24,13 @@ public:
                       "Pool incompatible");
     }
 
+    List(const List&) = delete;
+
+    ~List()
+    {
+        clear();
+    }
+
     void push(const T& elem)
     {
         if (auto mem = pool_->get()) {
