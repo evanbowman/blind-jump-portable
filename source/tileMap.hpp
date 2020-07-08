@@ -100,11 +100,7 @@ inline Vec2<TIdx> to_tile_coord(const Vec2<s32>& wc)
 
 inline Vec2<TIdx> to_quarter_tile_coord(const Vec2<s32>& wc)
 {
-    return Vec2<s32>{
-        wc.x / 16,
-        fast_divide(wc.y, 12)
-    }
-        .cast<TIdx>();
+    return Vec2<s32>{wc.x / 16, fast_divide(wc.y, 12)}.cast<TIdx>();
 }
 
 

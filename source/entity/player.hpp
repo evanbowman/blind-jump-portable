@@ -5,6 +5,7 @@
 #include "entity/entityGroup.hpp"
 #include "graphics/animation.hpp"
 #include "number/numeric.hpp"
+#include <optional>
 
 
 class Game;
@@ -77,6 +78,8 @@ public:
 
     void set_visible(bool visible);
 
+    void apply_force(const Vec2<Float>& force);
+
 private:
     using ResourceLoc = TextureMap;
 
@@ -118,6 +121,7 @@ private:
     Float d_speed_;
     Sprite shadow_;
     HitBox hitbox_;
+    std::optional<Vec2<Float>> external_force_;
 
     Blaster blaster_;
 };

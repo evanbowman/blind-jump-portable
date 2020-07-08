@@ -930,14 +930,22 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<PauseScreenState>();
     }
 
-    const auto& t_pos = game.transporter().get_position() - Vec2<Float>{0, 22};
-    if (manhattan_length(game.player().get_position(), t_pos) < 16) {
-        game.player().move(t_pos);
-        pfrm.speaker().play_sound("bell", 5);
-        return state_pool_.create<PreFadePauseState>();
-    } else {
-        return null_state();
+    if (game.transporter().visible()) {
+
+        const auto& t_pos =
+            game.transporter().get_position() - Vec2<Float>{0, 22};
+
+        const auto dist =
+            apply_gravity_well(t_pos, game.player(), 64, 34, 1.3f, 34);
+
+        if (dist < 6) {
+            game.player().move(t_pos);
+            pfrm.speaker().play_sound("bell", 5);
+            return state_pool_.create<PreFadePauseState>();
+        }
     }
+
+    return null_state();
 }
 
 

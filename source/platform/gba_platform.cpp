@@ -179,8 +179,8 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 {
 }
 
-#define REG_TM3CNT_L	*(vu16*)(REG_BASE + 0x10c)
-#define REG_TM3CNT_H	*(vu16*)(REG_BASE + 0x10e)
+#define REG_TM3CNT_L *(vu16*)(REG_BASE + 0x10c)
+#define REG_TM3CNT_H *(vu16*)(REG_BASE + 0x10e)
 
 static size_t delta_total;
 
@@ -1963,7 +1963,6 @@ void Platform::Speaker::play_music(const char* name,
 Platform::Speaker::Speaker()
 {
 }
-
 
 
 #define REG_TM2CNT *(vu32*)(0x04000000 + 0x108)

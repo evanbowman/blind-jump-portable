@@ -50,6 +50,16 @@ void Player::revive(Platform& pfrm)
 }
 
 
+void Player::apply_force(const Vec2<Float>& force)
+{
+    if (external_force_) {
+        external_force_ = *external_force_ + force;
+    } else {
+        external_force_ = force;
+    }
+}
+
+
 void Player::injured(Platform& pf, Game& game, Health damage)
 {
     if (not Player::is_invulnerable()) {
@@ -467,6 +477,28 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     static const float MOVEMENT_RATE_CONSTANT = 0.000054f;
+
+    if (external_force_) {
+        if (external_force_->x > 0) {
+            if (not wc.right) {
+                r_speed_ += external_force_->x;
+            }
+        } else {
+            if (not wc.left) {
+                l_speed_ += abs(external_force_->x);
+            }
+        }
+        if (external_force_->y > 0) {
+            if (not wc.down) {
+                d_speed_ += external_force_->y;
+            }
+        } else {
+            if (not wc.up) {
+                u_speed_ += abs(external_force_->y);
+            }
+        }
+        external_force_.reset();
+    }
 
     Vec2<Float> new_pos{
         position_.x - ((l_speed_ + -r_speed_) * dt * MOVEMENT_RATE_CONSTANT),

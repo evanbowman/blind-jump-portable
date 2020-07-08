@@ -201,3 +201,43 @@ enum {
 
 
 void animate_starfield(Platform& pfrm, Microseconds delta);
+
+
+template <typename T>
+Float apply_gravity_well(const Vec2<Float>& center_pos,
+                         T& target,
+                         int fast_radius,
+                         Float radius,
+                         Float strength,
+                         Float falloff,
+                         bool pull = true)
+{
+    const auto& target_pos = target.get_position();
+
+    if (manhattan_length(target_pos, center_pos) < fast_radius) {
+
+        const Float dist = distance(target_pos, center_pos);
+
+        if (dist < radius) {
+
+            const auto dir = [&] {
+                if (pull) {
+                    return direction(target_pos, center_pos);
+                } else {
+                    return direction(center_pos, target_pos);
+                }
+            }();
+
+            if (falloff not_eq 0.f) {
+                target.apply_force(interpolate(0.f, strength, dist / falloff) *
+                                   dir);
+            } else {
+                target.apply_force(strength * dir);
+            }
+
+            return dist;
+        }
+    }
+
+    return 1000.f;
+}
