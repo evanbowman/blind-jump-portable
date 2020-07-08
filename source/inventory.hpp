@@ -26,7 +26,7 @@ public:
         if (UNLIKELY(page == pages or column == cols or row == rows)) {
             return Item::Type::null;
         }
-        return data_[page * 10 + row * 5 + column].type_;
+        return data_[page * (rows * cols) + row * cols + column].type_;
     }
 
     inline bool has_item(Item::Type item) const
@@ -45,7 +45,7 @@ public:
         if (UNLIKELY(page == pages or column == cols or row == rows)) {
             return;
         }
-        remove_item(&data_[page * 10 + row * 5 + column]);
+        remove_item(&data_[page * (rows * cols) + row * cols + column]);
     }
 
     inline void remove_non_persistent()
