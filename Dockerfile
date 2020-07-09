@@ -9,9 +9,14 @@ RUN apt update && \
     apt -y install gpg && \
     apt -y install xz-utils
 
+RUN apt -y install curl && \
+    apt -y install pkg-config
 
-RUN wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb && \
-    dpkg -i devkitpro-pacman.deb && \
+# NOTE: I am pulling the deb from one of my own releases. DevkitPro has deleted
+# releases from their repository in the past, so I don't trust them to provide a
+# stable download link.
+RUN wget https://github.com/evanbowman/blind-jump-portable/releases/download/0.0.1/devkitpro-pacman.amd64.deb && \
+    dpkg -i devkitpro-pacman.amd64.deb && \
     dkp-pacman -S --noconfirm gba-dev
 
 
