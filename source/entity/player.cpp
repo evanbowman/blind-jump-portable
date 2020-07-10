@@ -44,8 +44,6 @@ void Player::revive(Platform& pfrm)
 
         invulnerability_timer_ = seconds(1);
         sprite_.set_mix({});
-
-        weapon().reset();
     }
 }
 
@@ -566,8 +564,6 @@ Blaster::Blaster()
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 8});
     sprite_.set_texture_index(h_blaster);
-
-    this->reset();
 }
 
 
@@ -642,13 +638,28 @@ void Player::footstep(Platform& pf)
 void Blaster::shoot(Platform& pf, Game& game)
 {
     if (reload_ <= 0) {
-        if (length(game.effects().get<Laser>()) < max_lasers_) {
-            reload_ = reload_interval_;
+        int max_lasers = 2;
+        int expl_rounds = 0;
+        Microseconds reload_interval = milliseconds(250);
+
+        if (auto p = get_powerup(game, Powerup::Type::accelerator)) {
+            max_lasers = 3;
+            reload_interval = milliseconds(150);
+            p->parameter_ -= 1;
+            p->dirty_ = true;
+        }
+
+        if (auto p = get_powerup(game, Powerup::Type::explosive_rounds)) {
+            expl_rounds = p->parameter_--;
+            p->dirty_ = true;
+        }
+
+        if (int(length(game.effects().get<Laser>())) < max_lasers) {
+            reload_ = reload_interval;
 
             pf.speaker().play_sound("blaster", 4);
 
-            if (explosive_rounds_ > 0) {
-                --explosive_rounds_;
+            if (expl_rounds > 0) {
                 game.camera().shake();
                 medium_explosion(pf, game, position_);
                 game.effects().spawn<Laser>(
@@ -656,14 +667,6 @@ void Blaster::shoot(Platform& pf, Game& game)
             } else {
                 game.effects().spawn<Laser>(
                     position_, dir_, Laser::Mode::normal);
-            }
-
-            if (powerup_remaining_) {
-                --powerup_remaining_;
-
-                if (powerup_remaining_ == 0) {
-                    this->reset();
-                }
             }
         }
     }
@@ -677,30 +680,4 @@ void Blaster::set_visible(bool visible)
     if (not visible_) {
         sprite_.set_alpha(Sprite::Alpha::transparent);
     }
-}
-
-
-void Blaster::accelerate(u8 max_lasers, Microseconds reload_interval)
-{
-    max_lasers_ = max_lasers;
-    reload_interval_ = reload_interval;
-    powerup_remaining_ = 60;
-}
-
-
-void Blaster::add_explosive_rounds(u8 count)
-{
-    explosive_rounds_ += count;
-    if (powerup_remaining_) {
-        powerup_remaining_ =
-            std::max(powerup_remaining_, (u16)explosive_rounds_);
-    }
-}
-
-
-void Blaster::reset()
-{
-    max_lasers_ = 2;
-    reload_interval_ = milliseconds(250);
-    explosive_rounds_ = 0;
 }

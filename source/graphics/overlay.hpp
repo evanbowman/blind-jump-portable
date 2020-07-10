@@ -206,6 +206,11 @@ public:
         return index_ == anim_len + 1;
     }
 
+    const auto& position() const
+    {
+        return position_;
+    }
+
 
 private:
     Platform& pfrm_;
@@ -251,6 +256,53 @@ inline void right_text_margin(Text& text, Margin margin)
 
 
 u32 integer_text_length(int n);
+
+
+class UIMetric {
+public:
+    inline UIMetric(Platform& pfrm,
+             const OverlayCoord& pos,
+             int icon_tile,
+             int value) :
+        icon_tile_(icon_tile),
+        value_(value),
+        anim_(pfrm, pos)
+    {
+        display(pfrm);
+    }
+
+    inline void set_value(int value)
+    {
+        value_ = value;
+        anim_.init(integer_text_length(value) + 1);
+    }
+
+    inline void update(Platform& pfrm, Microseconds dt)
+    {
+        if (not anim_.done()) {
+            anim_.update(dt);
+            if (anim_.done()) {
+                display(pfrm);
+            }
+        }
+    }
+
+private:
+
+    inline void display(Platform& pfrm)
+    {
+        const auto pos = anim_.position();
+        icon_.emplace(pfrm, icon_tile_, pos);
+        text_.emplace(pfrm, OverlayCoord{u8(pos.x + 1), pos.y});
+        text_->assign(value_);
+    }
+
+    const int icon_tile_;
+    std::optional<SmallIcon> icon_;
+    std::optional<Text> text_;
+    int value_;
+    HorizontalFlashAnimation anim_;
+};
 
 
 template <typename F> void instrument(Platform& pfrm, F&& callback)

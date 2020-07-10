@@ -68,12 +68,13 @@ public:
 private:
     void repaint_icons(Platform& pfrm);
 
-    std::optional<Text> health_;
-    std::optional<Text> score_;
-    std::optional<SmallIcon> heart_icon_;
-    std::optional<SmallIcon> coin_icon_;
-    std::optional<HorizontalFlashAnimation> health_anim_;
-    std::optional<HorizontalFlashAnimation> score_anim_;
+    void repaint_powerups(Platform& pfrm, Game& game, bool clean);
+
+    std::optional<UIMetric> health_;
+    std::optional<UIMetric> score_;
+
+    Buffer<UIMetric, Powerup::max_> powerups_;
+
     bool pixelated_ = false;
 };
 
@@ -533,9 +534,6 @@ static void state_deleter(State* s)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-static Microseconds enemy_lethargy_timer;
-
-
 void OverworldState::exit(Platform& pfrm, Game&, State&)
 {
     notification_text.reset();
@@ -572,9 +570,11 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     game.details().transform(update_policy);
 
     auto enemy_timestep = delta;
-    if (enemy_lethargy_timer > 0) {
-        enemy_lethargy_timer -= delta;
-        enemy_timestep /= 2;
+    if (auto lethargy = get_powerup(game, Powerup::Type::lethargy)) {
+        if (lethargy->parameter_ > 0) {
+            lethargy->parameter_ -= delta;
+            enemy_timestep /= 2;
+        }
     }
 
     if (pfrm.keyboard().up_transition<Key::action_1>()) {
@@ -800,10 +800,38 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void ActiveState::repaint_icons(Platform& pfrm)
 {
+    // auto screen_tiles = calc_screen_tiles(pfrm);
+}
+
+
+void ActiveState::repaint_powerups(Platform& pfrm, Game& game, bool clean)
+{
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    heart_icon_.emplace(pfrm, 145, OverlayCoord{1, u8(screen_tiles.y - 3)});
-    coin_icon_.emplace(pfrm, 146, OverlayCoord{1, u8(screen_tiles.y - 2)});
+    if (clean) {
+        powerups_.clear();
+
+        u8 write_pos = screen_tiles.y - 4;
+
+        for (auto& powerup : game.powerups()) {
+            // const u8 off = integer_text_length(powerup.parameter_) + 1;
+            powerups_.emplace_back(pfrm,
+                                   OverlayCoord{1, write_pos},
+                                   powerup.icon_index(),
+                                   powerup.parameter_);
+
+            powerup.dirty_ = false;
+
+            --write_pos;
+        }
+    } else {
+        for (u32 i = 0; i < game.powerups().size(); ++i) {
+            if (game.powerups()[i].dirty_) {
+                powerups_[i].set_value(game.powerups()[i].parameter_);
+                game.powerups()[i].dirty_ = false;
+            }
+        }
+    }
 }
 
 
@@ -816,15 +844,17 @@ void ActiveState::enter(Platform& pfrm, Game& game, State&)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    health_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 3)});
-    score_.emplace(pfrm, OverlayCoord{2, u8(screen_tiles.y - 2)});
-    health_->assign(game.player().get_health());
-    score_->assign(game.score());
+    health_.emplace(pfrm,
+                    OverlayCoord{1, u8(screen_tiles.y - 3)},
+                    145,
+                    (int)game.player().get_health());
 
-    repaint_icons(pfrm);
+    score_.emplace(pfrm,
+                   OverlayCoord{1, u8(screen_tiles.y - 2)},
+                   146,
+                   game.score());
 
-    health_anim_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 3)});
-    score_anim_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 2)});
+    repaint_powerups(pfrm, game, true);
 }
 
 
@@ -834,8 +864,6 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 
     health_.reset();
     score_.reset();
-    heart_icon_.reset();
-    coin_icon_.reset();
 
     pfrm.screen().pixelate(0);
 }
@@ -866,37 +894,40 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     OverworldState::update(pfrm, game, delta);
 
+    bool update_powerups = false;
+    bool update_all = false;
+    for (auto it = game.powerups().begin(); it not_eq game.powerups().end();) {
+        if (it->parameter_ <= 0) {
+            it = game.powerups().erase(it);
+            update_powerups = true;
+            update_all = true;
+        } else {
+            if (it->dirty_) {
+                update_powerups = true;
+            }
+            ++it;
+        }
+    }
+
+    if (update_powerups) {
+        repaint_powerups(pfrm, game, update_all);
+    }
+
     if (last_health not_eq game.player().get_health()) {
-        auto screen_tiles = calc_screen_tiles(pfrm);
-        health_anim_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 3)});
-        health_anim_->init(integer_text_length(game.player().get_health()) + 1);
-        // health_->assign(game.player().get_health());
+        health_->set_value(game.player().get_health());
     }
 
     if (last_score not_eq game.score()) {
-        auto screen_tiles = calc_screen_tiles(pfrm);
-        score_anim_.emplace(pfrm, OverlayCoord{1, u8(screen_tiles.y - 2)});
-        score_anim_->init(integer_text_length(game.score()) + 1);
-        // score_->assign(game.score());
+        score_->set_value(game.score());
     }
 
-    if (health_anim_) {
-        health_anim_->update(delta);
-        if (health_anim_->done()) {
-            health_anim_.reset();
-            repaint_icons(pfrm);
-            health_->assign(game.player().get_health());
-        }
+    health_->update(pfrm, delta);
+    score_->update(pfrm, delta);
+
+    for (auto& powerup : powerups_) {
+        powerup.update(pfrm, delta);
     }
 
-    if (score_anim_) {
-        score_anim_->update(delta);
-        if (score_anim_->done()) {
-            score_anim_.reset();
-            repaint_icons(pfrm);
-            score_->assign(game.score());
-        }
-    }
 
     if (game.player().get_health() == 0) {
         pfrm.sleep(5);
@@ -1140,7 +1171,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
-    enemy_lethargy_timer = 0;
+    game.powerups().clear();
 
     for (auto& score : reversed(game.highscores())) {
         if (score < game.score()) {
@@ -1388,14 +1419,14 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::blaster_title},
     {STANDARD_ITEM_HANDLER(accelerator),
      [](Platform&, Game& game) {
-         game.player().weapon().accelerate(3, milliseconds(150));
+         add_powerup(game, Powerup::Type::accelerator, 60);
          return null_state();
      },
      LocaleString::accelerator_title,
      true},
     {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform&, Game& game) {
-         enemy_lethargy_timer = seconds(18);
+         add_powerup(game, Powerup::Type::lethargy, seconds(18));
          return null_state();
      },
      LocaleString::lethargy_title,
@@ -1405,7 +1436,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::map_system_title},
     {STANDARD_ITEM_HANDLER(explosive_rounds_2),
      [](Platform&, Game& game) {
-         game.player().weapon().add_explosive_rounds(2);
+         add_powerup(game, Powerup::Type::explosive_rounds, 2);
          return null_state();
      },
      LocaleString::explosive_rounds_title,

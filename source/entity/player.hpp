@@ -38,15 +38,15 @@ public:
     void add_explosive_rounds(u8 count);
 
 private:
-    Microseconds reload_interval_;
+    // Microseconds reload_interval_;
     Microseconds reload_ = 0;
     Cardinal dir_;
     bool visible_;
     u16 powerup_remaining_ = 0;
 
     // Max lasers allowed onscreen
-    u8 max_lasers_ = 2;
-    u8 explosive_rounds_ = 0;
+    // u8 max_lasers_ = 2;
+    // u8 explosive_rounds_ = 0;
 };
 
 

@@ -64,6 +64,7 @@ set(SOURCES
   ${SOURCE_DIR}/localization.cpp
   ${SOURCE_DIR}/inventory.cpp
   ${SOURCE_DIR}/collision.cpp
+  ${SOURCE_DIR}/powerup.cpp
   ${SOURCE_DIR}/tileMap.cpp
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/string.cpp

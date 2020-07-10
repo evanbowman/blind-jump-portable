@@ -28,6 +28,7 @@
 #include "persistentData.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"
+#include "powerup.hpp"
 
 
 class Game {
@@ -37,6 +38,12 @@ public:
     void update(Platform& platform, Microseconds delta);
 
     void render(Platform& platform);
+
+    using Powerups = Buffer<Powerup, Powerup::max_>;
+    inline Powerups& powerups()
+    {
+        return powerups_;
+    }
 
     inline Player& player()
     {
@@ -149,6 +156,7 @@ private:
     Inventory inventory_;
     PersistentData persistent_data_;
     StatePtr state_;
+    Powerups powerups_;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 
