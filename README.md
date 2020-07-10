@@ -35,3 +35,7 @@ sudo docker build -t blind_jump_build .
 sudo docker run -it blind_jump_build
 make
 ```
+
+NOTE: you can also get a containerized build environment from the link below, although you'll have to remember to run `git pull` when entering the container, because I built the container with a frozen version of the repository. If this is inconvenient for you, feel free to build the container yourself using the steps above.
+
+https://hub.docker.com/r/evanbowman/blind_jump_build
