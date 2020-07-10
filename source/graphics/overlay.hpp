@@ -140,18 +140,6 @@ private:
 };
 
 
-class DottedHorizontalLine {
-public:
-    DottedHorizontalLine(Platform& pfrm, u8 y);
-    DottedHorizontalLine(const DottedHorizontalLine& other) = delete;
-    ~DottedHorizontalLine();
-
-private:
-    Platform& pfrm_;
-    u8 y_;
-};
-
-
 class BossHealthBar {
 public:
     BossHealthBar(Platform& pfrm, u8 height, const OverlayCoord& position);
@@ -174,6 +162,13 @@ public:
     {
     }
 
+    HorizontalFlashAnimation(HorizontalFlashAnimation&) = delete;
+
+    ~HorizontalFlashAnimation()
+    {
+        fill(0);
+    }
+
     void init(int width)
     {
         width_ = width;
@@ -192,10 +187,7 @@ public:
                 return;
             }
             if (index_ < anim_len) {
-                for (int i = position_.x; i < position_.x + width_; ++i) {
-                    pfrm_.set_tile(
-                        Layer::overlay, i, position_.y, 108 + index_);
-                }
+                fill(108 + index_);
             }
             ++index_;
         }
@@ -211,8 +203,15 @@ public:
         return position_;
     }
 
-
 private:
+
+    void fill(int tile)
+    {
+        for (int i = position_.x; i < position_.x + width_; ++i) {
+            pfrm_.set_tile(Layer::overlay, i, position_.y, tile);
+        }
+    }
+
     Platform& pfrm_;
     OverlayCoord position_;
     int width_;

@@ -308,23 +308,6 @@ Border::~Border()
 }
 
 
-DottedHorizontalLine::DottedHorizontalLine(Platform& pfrm, u8 y)
-    : pfrm_(pfrm), y_(y)
-{
-    for (int i = 0; i < 30; ++i) {
-        pfrm.set_tile(Layer::overlay, i, y, 109);
-    }
-}
-
-
-DottedHorizontalLine::~DottedHorizontalLine()
-{
-    for (int i = 0; i < 30; ++i) {
-        pfrm_.set_tile(Layer::overlay, i, y_, 0);
-    }
-}
-
-
 BossHealthBar::BossHealthBar(Platform& pfrm,
                              u8 height,
                              const OverlayCoord& position)

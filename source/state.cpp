@@ -66,7 +66,7 @@ public:
     std::optional<BossHealthBar> boss_health_bar_;
 
 private:
-    void repaint_icons(Platform& pfrm);
+    void repaint_stats(Platform& pfrm, Game& game);
 
     void repaint_powerups(Platform& pfrm, Game& game, bool clean);
 
@@ -572,7 +572,13 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto enemy_timestep = delta;
     if (auto lethargy = get_powerup(game, Powerup::Type::lethargy)) {
         if (lethargy->parameter_ > 0) {
+            // FIXME: Improve this code! Division! Yikes!
+            const auto last = lethargy->parameter_ / 1000000;
             lethargy->parameter_ -= delta;
+            const auto current = lethargy->parameter_ / 1000000;
+            if (current not_eq last) {
+                lethargy->dirty_ = true;
+            }
             enemy_timestep /= 2;
         }
     }
@@ -798,9 +804,20 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void ActiveState::repaint_icons(Platform& pfrm)
+void ActiveState::repaint_stats(Platform& pfrm, Game& game)
 {
-    // auto screen_tiles = calc_screen_tiles(pfrm);
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    health_.emplace(pfrm,
+                    OverlayCoord{1, u8(screen_tiles.y - (3 + game.powerups().size()))},
+                    145,
+                    (int)game.player().get_health());
+
+    score_.emplace(pfrm,
+                   OverlayCoord{1, u8(screen_tiles.y - (2 + game.powerups().size()))},
+                   146,
+                   game.score());
+
 }
 
 
@@ -809,9 +826,12 @@ void ActiveState::repaint_powerups(Platform& pfrm, Game& game, bool clean)
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     if (clean) {
+
+        repaint_stats(pfrm, game);
+
         powerups_.clear();
 
-        u8 write_pos = screen_tiles.y - 4;
+        u8 write_pos = screen_tiles.y - 2;
 
         for (auto& powerup : game.powerups()) {
             // const u8 off = integer_text_length(powerup.parameter_) + 1;
@@ -827,7 +847,15 @@ void ActiveState::repaint_powerups(Platform& pfrm, Game& game, bool clean)
     } else {
         for (u32 i = 0; i < game.powerups().size(); ++i) {
             if (game.powerups()[i].dirty_) {
-                powerups_[i].set_value(game.powerups()[i].parameter_);
+                switch (game.powerups()[i].display_mode_) {
+                case Powerup::DisplayMode::integer:
+                    powerups_[i].set_value(game.powerups()[i].parameter_);
+                    break;
+
+                case Powerup::DisplayMode::timestamp:
+                    powerups_[i].set_value(game.powerups()[i].parameter_ / 1000000);
+                    break;
+                }
                 game.powerups()[i].dirty_ = false;
             }
         }
@@ -842,17 +870,7 @@ void ActiveState::enter(Platform& pfrm, Game& game, State&)
         restore_keystates.reset();
     }
 
-    auto screen_tiles = calc_screen_tiles(pfrm);
-
-    health_.emplace(pfrm,
-                    OverlayCoord{1, u8(screen_tiles.y - 3)},
-                    145,
-                    (int)game.player().get_health());
-
-    score_.emplace(pfrm,
-                   OverlayCoord{1, u8(screen_tiles.y - 2)},
-                   146,
-                   game.score());
+    repaint_stats(pfrm, game);
 
     repaint_powerups(pfrm, game, true);
 }
@@ -864,6 +882,8 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 
     health_.reset();
     score_.reset();
+
+    powerups_.clear();
 
     pfrm.screen().pixelate(0);
 }
@@ -1426,7 +1446,8 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      true},
     {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform&, Game& game) {
-         add_powerup(game, Powerup::Type::lethargy, seconds(18));
+         add_powerup(game, Powerup::Type::lethargy, seconds(18),
+                     Powerup::DisplayMode::timestamp);
          return null_state();
      },
      LocaleString::lethargy_title,
