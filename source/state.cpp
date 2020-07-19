@@ -54,6 +54,20 @@ private:
 };
 
 
+class HealthUIMetric : public UIMetric {
+public:
+    using UIMetric::UIMetric;
+
+    void on_display(Text& text, int value) override
+    {
+        // if (value == 1) {
+        //     text.append(" ");
+        //     text.append(locale_string(LocaleString::health_warning));
+        // }
+    }
+};
+
+
 class ActiveState : public OverworldState {
 public:
     ActiveState(bool camera_tracking = true) : OverworldState(camera_tracking)
@@ -70,7 +84,7 @@ private:
 
     void repaint_powerups(Platform& pfrm, Game& game, bool clean);
 
-    std::optional<UIMetric> health_;
+    std::optional<HealthUIMetric> health_;
     std::optional<UIMetric> score_;
 
     Buffer<UIMetric, Powerup::max_> powerups_;

@@ -42,6 +42,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/details/scavenger.cpp
   ${SOURCE_DIR}/entity/effects/explosion.cpp
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
+  ${SOURCE_DIR}/entity/enemies/sinkhole.cpp
   ${SOURCE_DIR}/entity/effects/orbshot.cpp
   ${SOURCE_DIR}/entity/enemies/common.cpp
   ${SOURCE_DIR}/entity/enemies/turret.cpp

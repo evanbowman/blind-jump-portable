@@ -158,6 +158,10 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
             return 72;
         case '%':
             return 93;
+        case '!':
+            return 94;
+        case '?':
+            return 95;
         default:
             if (cp == utf8::getc(u8"ñ")) {
                 return 73;
@@ -199,6 +203,10 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
                 return 91;
             } else if (cp == utf8::getc(u8"ö")) {
                 return 92;
+            } else if (cp == utf8::getc(u8"¡")) {
+                return 96;
+            } else if (cp == utf8::getc(u8"¿")) {
+                return 97;
             }
             return std::nullopt;
         }

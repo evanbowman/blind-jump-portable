@@ -270,6 +270,10 @@ public:
         display(pfrm);
     }
 
+    UIMetric(const UIMetric&) = delete;
+
+    virtual ~UIMetric() {}
+
     inline void set_value(int value)
     {
         value_ = value;
@@ -286,6 +290,8 @@ public:
         }
     }
 
+    virtual void on_display(Text& text, int value) {}
+
 private:
 
     inline void display(Platform& pfrm)
@@ -294,6 +300,7 @@ private:
         icon_.emplace(pfrm, icon_tile_, pos);
         text_.emplace(pfrm, OverlayCoord{u8(pos.x + 1), pos.y});
         text_->assign(value_);
+        on_display(*text_, value_);
     }
 
     const int icon_tile_;

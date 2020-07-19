@@ -103,5 +103,6 @@ public:
 
 private:
     Microseconds sleep_timer_;
+    Microseconds drop_timer_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

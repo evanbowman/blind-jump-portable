@@ -7,7 +7,8 @@ void on_enemy_destroyed(Platform& pfrm,
                         Game& game,
                         const Vec2<Float>& position,
                         int item_drop_chance,
-                        const Item::Type allowed_item_drop[])
+                        const Item::Type allowed_item_drop[],
+                        bool create_debris)
 {
     game.camera().shake();
 
@@ -29,7 +30,7 @@ void on_enemy_destroyed(Platform& pfrm,
     const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);
 
     // We do not want to spawn rubble over an empty map tile
-    if (is_walkable__fast(tile)) {
+    if (create_debris and is_walkable__fast(tile)) {
         game.on_timeout(milliseconds(200),
                         [pos = position](Platform&, Game& game) {
                             game.details().spawn<Rubble>(pos);

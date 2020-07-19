@@ -93,7 +93,7 @@ void Player::on_collision(Platform& pf, Game& game, TheFirstExplorer&)
 
 void Player::on_collision(Platform& pf, Game& game, SnakeHead&)
 {
-    Player::injured(pf, game, Health(3));
+    Player::injured(pf, game, Health(2));
 }
 
 
@@ -556,6 +556,7 @@ void Player::move(const Vec2<Float>& pos)
     sprite_.set_texture_index(frame_base_);
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin(v_origin);
+    external_force_.reset();
 }
 
 

@@ -20,6 +20,7 @@
 #include "entity/enemies/scarecrow.hpp"
 #include "entity/enemies/snake.hpp"
 #include "entity/enemies/theif.hpp"
+#include "entity/enemies/sinkhole.hpp"
 #include "entity/enemies/turret.hpp"
 #include "entity/entityGroup.hpp"
 #include "entity/player.hpp"
@@ -66,7 +67,8 @@ public:
                                    TheFirstExplorer,
                                    Gatekeeper,
                                    GatekeeperShield,
-                                   Theif>;
+                                   Theif,
+                                   Sinkhole>;
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble, Scavenger>;
     using EffectGroup = EntityGroup<20,

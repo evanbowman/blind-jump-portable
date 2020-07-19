@@ -269,8 +269,11 @@ void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+static const Microseconds tail_drop_time = seconds(8);
+
+
 SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game)
-    : SnakeBody(pos, parent, game, 0), sleep_timer_(seconds(2))
+    : SnakeBody(pos, parent, game, 0), sleep_timer_(seconds(2)), drop_timer_(tail_drop_time)
 {
     add_health(10);
 }
@@ -292,6 +295,18 @@ void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
             }
         }
         return;
+    }
+
+    drop_timer_ -= dt;
+    if (drop_timer_ < 0) {
+        if (visible()) {
+            drop_timer_ = tail_drop_time;
+            if (length(game.enemies().get<Sinkhole>()) == 0) {
+                game.enemies().spawn<Sinkhole>(position_);
+            }
+        } else {
+            drop_timer_ = seconds(1);
+        }
     }
 
     SnakeBody::update(pfrm, game, dt);
