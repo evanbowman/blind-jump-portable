@@ -51,6 +51,11 @@ public:
         return is_allied_;
     }
 
+    void make_allied(bool allied)
+    {
+        is_allied_ = allied;
+    }
+
 protected:
     Sprite shadow_;
     HitBox hitbox_;

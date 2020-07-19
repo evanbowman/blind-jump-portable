@@ -218,7 +218,8 @@ public:
         // base color blended with the color parameter.
         void fade(float amount,
                   ColorConstant color = ColorConstant::rich_black,
-                  std::optional<ColorConstant> base = {});
+                  std::optional<ColorConstant> base = {},
+                  bool include_sprites = true);
 
         void pixelate(u8 amount,
                       bool include_overlay = true,

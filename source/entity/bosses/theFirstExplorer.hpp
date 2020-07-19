@@ -28,6 +28,10 @@ public:
         return false;
     }
 
+    void make_allied(bool)
+    {
+    }
+
     void update(Platform& pf, Game& game, Microseconds dt);
 
     std::array<const Sprite*, 2> get_sprites() const

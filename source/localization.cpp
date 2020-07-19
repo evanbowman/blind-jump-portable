@@ -297,6 +297,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::explosive_rounds_title: return "Explosive rounds (2)";
         case LocaleString::seed_packet_title: return "Seed packet";
         case LocaleString::single_use_warning: return "(SINGLE USE)";
+        case LocaleString::item_overheated: return "OVERHEATED!!!";
         case LocaleString::locked: return "locked, ";
         case LocaleString::enemies_remaining_singular: return " enemy left";
         case LocaleString::enemies_remaining_plural: return " enemies left";
@@ -316,6 +317,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::menu_resume: return "Resume";
         case LocaleString::menu_save_and_quit: return "Save and Quit";
         case LocaleString::goodbye_text: return "See you later...";
+        case LocaleString::signal_jammer_title: return "Signal jammer";
         default: return empty_str;
         }
         break;

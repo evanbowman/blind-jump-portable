@@ -1,12 +1,12 @@
 #include "entity.hpp"
 
 
-Entity::Entity() : health_(1)
+Entity::Entity(const char* name) : health_(1), name_(name)
 {
 }
 
 
-Entity::Entity(Health health) : health_(health)
+Entity::Entity(Health health, const char* name) : health_(health), name_(name)
 {
 }
 

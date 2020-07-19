@@ -371,6 +371,7 @@ static volatile short* bg3_y_scroll = (volatile short*)0x400001e;
 
 static u8 last_fade_amt;
 static ColorConstant last_color;
+static bool last_fade_include_sprites;
 
 
 static volatile u16* reg_blendcnt = (volatile u16*)0x04000050;
@@ -1056,7 +1057,8 @@ static auto blend(const Color& c1, const Color& c2, u8 amt)
 
 void Platform::Screen::fade(float amount,
                             ColorConstant k,
-                            std::optional<ColorConstant> base)
+                            std::optional<ColorConstant> base,
+                            bool include_sprites)
 {
     ::inverted = false;
 
@@ -1068,12 +1070,14 @@ void Platform::Screen::fade(float amount,
         color_mix_disabled = true;
     }
 
-    if (amt == last_fade_amt and k == last_color) {
+    if (amt == last_fade_amt and k == last_color and
+        last_fade_include_sprites == include_sprites) {
         return;
     }
 
     last_fade_amt = amt;
     last_color = k;
+    last_fade_include_sprites = include_sprites;
 
     const auto& c = real_color(k);
 
@@ -1081,7 +1085,7 @@ void Platform::Screen::fade(float amount,
         for (int i = 0; i < 16; ++i) {
             auto from =
                 Color::from_bgr_hex_555(current_spritesheet->palette_data_[i]);
-            MEM_PALETTE[i] = blend(from, c, amt);
+            MEM_PALETTE[i] = blend(from, c, include_sprites ? amt : 0);
         }
         for (int i = 0; i < 16; ++i) {
             auto from =
@@ -1103,7 +1107,8 @@ void Platform::Screen::fade(float amount,
         // }
     } else {
         for (int i = 0; i < 16; ++i) {
-            MEM_PALETTE[i] = blend(real_color(*base), c, amt);
+            MEM_PALETTE[i] =
+                blend(real_color(*base), c, include_sprites ? amt : 0);
             MEM_BG_PALETTE[i] = blend(real_color(*base), c, amt);
             MEM_BG_PALETTE[32 + i] = blend(real_color(*base), c, amt);
             // MEM_BG_PALETTE[16 + i] = blend(real_color(*base));

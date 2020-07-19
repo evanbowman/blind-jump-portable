@@ -15,6 +15,7 @@
 #include "entity/effects/firstExplorerSmallLaser.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
+#include "entity/effects/reticule.hpp"
 #include "entity/enemies/dasher.hpp"
 #include "entity/enemies/drone.hpp"
 #include "entity/enemies/scarecrow.hpp"
@@ -72,6 +73,7 @@ public:
 
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble, Scavenger>;
     using EffectGroup = EntityGroup<20,
+                                    Reticule,
                                     OrbShot,
                                     AlliedOrbShot,
                                     Laser,

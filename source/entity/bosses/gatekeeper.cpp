@@ -25,7 +25,9 @@ public:
 
             reload_ = milliseconds(40 + shot_count_ * 10);
 
-            game.effects().spawn<OrbShot>(
+            shield.shoot(
+                pfrm,
+                game,
                 shield.get_position(),
                 rng::sample<22>(shield.get_target(game).get_position()),
                 0.00019f - 0.00002f * shot_count_,
@@ -84,12 +86,14 @@ public:
 
             angle %= 360;
 
-            game.effects().spawn<OrbShot>(shield.get_position(),
-                                          rng::sample<4>(target_),
-                                          0.00013f,
-                                          seconds(3) + milliseconds(500));
-
-            (*game.effects().get<OrbShot>().begin())->rotate(angle);
+            if (auto shot = shield.shoot(pfrm,
+                                         game,
+                                         shield.get_position(),
+                                         rng::sample<4>(target_),
+                                         0.00013f,
+                                         seconds(3) + milliseconds(500))) {
+                shot->rotate(angle);
+            }
         }
     }
 
@@ -531,6 +535,7 @@ void Gatekeeper::injured(Platform& pfrm, Game& game, Health amount)
 
         for (auto& shield : game.enemies().get<GatekeeperShield>()) {
             shield->close();
+            shield->make_allied(false);
         }
 
     } else if (not was_third_form and third_form()) {
@@ -546,6 +551,7 @@ void Gatekeeper::injured(Platform& pfrm, Game& game, Health amount)
 
         for (auto& shield : game.enemies().get<GatekeeperShield>()) {
             shield->close();
+            shield->make_allied(false);
         }
     }
 
@@ -649,7 +655,7 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     if (opened_) {
-        shoot(pfrm, game, dt);
+        attack(pfrm, game, dt);
     }
 
     shadow_update_timer_ += dt;
@@ -782,7 +788,7 @@ GatekeeperShield::~GatekeeperShield()
 }
 
 
-void GatekeeperShield::shoot(Platform& pfrm, Game& game, Microseconds dt)
+void GatekeeperShield::attack(Platform& pfrm, Game& game, Microseconds dt)
 {
     if (not opened_) {
         return;

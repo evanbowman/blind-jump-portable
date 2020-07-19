@@ -478,6 +478,24 @@ private:
 };
 
 
+class SignalJammerSelectorState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    Enemy* find_selector_target(Game& game);
+
+    enum class Mode { fade_in, update_selector, active } mode_ = Mode::fade_in;
+    int selector_index_ = 0;
+    Microseconds timer_;
+    Vec2<Float> selector_start_pos_;
+    Enemy* target_;
+};
+
+
 static void state_deleter(State* s);
 
 StatePtr null_state()
@@ -530,7 +548,8 @@ static StatePool<ActiveState,
                  DeathContinueState,
                  RespawnWaitState,
                  LogfileViewerState,
-                 EndingCreditsState>
+                 EndingCreditsState,
+                 SignalJammerSelectorState>
     state_pool_;
 
 
@@ -1406,12 +1425,17 @@ int InventoryState::page_{0};
 Vec2<u8> InventoryState::selector_coord_{0, 0};
 
 
+// Items used in the current level.
+static Bitvector<static_cast<int>(Item::Type::count)> used_items;
+
+
 struct InventoryItemHandler {
     Item::Type type_;
     int icon_;
     StatePtr (*callback_)(Platform& pfrm, Game& game);
     LocaleString description_;
     bool single_use_ = false;
+    bool needs_recharge_ = false;
 };
 
 
@@ -1500,7 +1524,14 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool_.create<NotebookState>(
              locale_string(LocaleString::engineer_notebook_str));
      },
-     LocaleString::engineer_notebook_title}};
+     LocaleString::engineer_notebook_title},
+    {STANDARD_ITEM_HANDLER(signal_jammer),
+     [](Platform&, Game&) {
+         return state_pool_.create<SignalJammerSelectorState>();
+         return null_state();
+     },
+     LocaleString::signal_jammer_title,
+     false, true}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)
@@ -1511,6 +1542,15 @@ static const InventoryItemHandler* inventory_item_handler(Item::Type type)
         }
     }
     return nullptr;
+}
+
+
+static bool overheated(Item::Type item)
+{
+    if (auto handler = inventory_item_handler(item)) {
+        return handler->needs_recharge_ and used_items.get(static_cast<int>(item));
+    }
+    return false;
 }
 
 
@@ -1601,14 +1641,22 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
             page_, selector_coord_.x, selector_coord_.y);
 
         if (auto handler = inventory_item_handler(item)) {
-            if (handler->single_use_) {
-                consume_selected_item(game);
-            }
-            if (auto new_state = handler->callback_(pfrm, game)) {
-                return new_state;
+            if (overheated(item)) {
+                // Some items are not allowed to be used more than once per level.
             } else {
-                update_item_description(pfrm, game);
-                display_items(pfrm, game);
+                used_items.set(static_cast<int>(item), true);
+
+                if (handler->single_use_) {
+                    consume_selected_item(game);
+                }
+
+                if (auto new_state = handler->callback_(pfrm, game)) {
+                    return new_state;
+                } else {
+                    update_item_description(pfrm, game);
+                    display_items(pfrm, game);
+                }
+
             }
         }
     }
@@ -1712,7 +1760,11 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
             pfrm, locale_string(handler->description_), text_loc);
         item_description_->append(".");
 
-        if (handler->single_use_) {
+        if (overheated(item)) {
+            item_description2_.emplace(pfrm,
+                                       locale_string(LocaleString::item_overheated),
+                                       OverlayCoord{text_loc.x, text_loc.y + 2});
+        } else if (handler->single_use_) {
             item_description2_.emplace(
                 pfrm,
                 locale_string(LocaleString::single_use_warning),
@@ -2290,6 +2342,8 @@ void NewLevelState::exit(Platform& pfrm, Game& game, State&)
     text_[1].reset();
 
     pfrm.fill_overlay(0);
+
+    used_items.clear();
 }
 
 
@@ -3017,6 +3071,164 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 
     if (dynamic_cast<ActiveState*>(&next_state)) {
         pfrm.screen().fade(0.f);
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// SignalJammerSelectorState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void SignalJammerSelectorState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+}
+
+
+void SignalJammerSelectorState::exit(Platform& pfrm, Game& game, State&)
+{
+    game.effects().get<Reticule>().clear();
+}
+
+
+StatePtr
+SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
+{
+    timer_ += dt;
+
+    constexpr auto fade_duration = milliseconds(500);
+    const auto target_fade = 0.75f;
+
+    switch (mode_) {
+    case Mode::fade_in: {
+        const auto amount =
+            1.f - target_fade * smoothstep(0.f, fade_duration, timer_);
+
+        if (amount > (1.f - target_fade)) {
+            pfrm.screen().fade(amount);
+        }
+
+        if (timer_ > fade_duration) {
+            pfrm.screen().fade(
+                1.f - target_fade, ColorConstant::rich_black, {}, false);
+            timer_ = 0;
+
+            if ((target_ = find_selector_target(game))) {
+                mode_ = Mode::update_selector;
+                selector_start_pos_ = game.player().get_position();
+                game.effects().spawn<Reticule>(selector_start_pos_);
+            } else {
+                // Lets be nice to the player and allow the signal jammer to be
+                // used again if it couldn't lock on to any enemies.
+                used_items.set(static_cast<int>(Item::Type::signal_jammer), false);
+
+                mode_ = Mode::active;
+                return state_pool_.create<InventoryState>(true);
+            }
+        }
+        break;
+    }
+
+    case Mode::active: {
+        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            if (target_) {
+                // Only one enemy may be hacked into an ally at a time.
+                game.enemies().transform([](auto& buf) {
+                    for (auto& e : buf) {
+                        e->make_allied(false);
+                    }
+                });
+                target_->make_allied(true);
+                pfrm.sleep(10);
+                return state_pool_.create<InventoryState>(true);
+            }
+        } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
+            used_items.set(static_cast<int>(Item::Type::signal_jammer), false);
+            return state_pool_.create<InventoryState>(true);
+        }
+
+        if (pfrm.keyboard().down_transition<Key::right>() or
+            pfrm.keyboard().down_transition<Key::left>()) {
+            selector_index_ += 1;
+            timer_ = 0;
+            if ((target_ = find_selector_target(game))) {
+                mode_ = Mode::update_selector;
+                selector_start_pos_ = [&] {
+                    for (auto& sel : game.effects().get<Reticule>()) {
+                        return sel->get_position();
+                    }
+                    return game.player().get_position();
+                }();
+            }
+        }
+        break;
+    }
+
+    case Mode::update_selector: {
+
+        constexpr auto anim_duration = milliseconds(150);
+
+        if (timer_ <= anim_duration) {
+            const auto pos = interpolate(target_->get_position(),
+                                         selector_start_pos_,
+                                         Float(timer_) / anim_duration);
+
+            for (auto& sel : game.effects().get<Reticule>()) {
+                sel->move(pos);
+            }
+        } else {
+            for (auto& sel : game.effects().get<Reticule>()) {
+                sel->move(target_->get_position());
+            }
+            mode_ = Mode::active;
+            timer_ = 0;
+        }
+        break;
+    }
+    }
+
+
+    return null_state();
+}
+
+
+Enemy* SignalJammerSelectorState::find_selector_target(Game& game)
+{
+    Buffer<Enemy*, 30> targets;
+    game.enemies().transform([&](auto& buf) {
+        for (auto& element : buf) {
+            using T = typename std::remove_reference<decltype(buf)>::type;
+
+            using VT = typename T::ValueType::element_type;
+
+            if (element->visible() and
+                distance(element->get_position(),
+                         game.player().get_position()) < 96) {
+                if constexpr (std::is_base_of<Enemy, VT>()
+                              // NOTE: Currently, I am not allowing hacking for
+                              // enemies that do physical damage. On the Gameboy
+                              // Advance, it simply isn't realistic to do
+                              // collision checking between each enemy, and
+                              // every other type of enemy.
+                              and not std::is_same<VT, Drone>() and
+                              not std::is_same<VT, SnakeBody>() and
+                              not std::is_same<VT, SnakeTail>() and
+                              not std::is_same<VT, SnakeHead>() and
+                              not std::is_same<VT, Gatekeeper>()) {
+                    targets.push_back(element.get());
+                }
+            }
+        }
+    });
+
+    if (selector_index_ >= static_cast<int>(targets.size())) {
+        selector_index_ %= targets.size();
+    }
+
+    if (not targets.empty()) {
+        return targets[selector_index_];
+    } else {
+        return nullptr;
     }
 }
 

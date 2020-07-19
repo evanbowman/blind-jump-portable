@@ -13,10 +13,10 @@ public:
     using Health = s32;
 
 
-    Entity();
+    Entity(const char* name = nullptr);
 
 
-    Entity(Health health);
+    Entity(Health health, const char* name = nullptr);
 
 
     Entity(Entity&) = delete;
@@ -56,6 +56,13 @@ public:
         return visible_;
     }
 
+
+    const char* name() const
+    {
+        return name_;
+    }
+
+
     // This is VERY BAD CODE. Basically, the rendering loop already determines
     // which objects are visible within the window when drawing sprites. To save
     // CPU cycles, we are marking an object visible during a rendering pass, so
@@ -88,6 +95,7 @@ protected:
 private:
     Health health_;
     bool visible_ = false;
+    const char* const name_;
 };
 
 

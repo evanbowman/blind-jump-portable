@@ -120,7 +120,9 @@ public:
     sf::Texture overlay_texture_;
     sf::Texture background_texture_;
     sf::Shader color_shader_;
+
     sf::RectangleShape fade_overlay_;
+    bool fade_include_sprites_ = true;
 
     TileMap overlay_;
     TileMap map_0_;
@@ -847,6 +849,17 @@ void Platform::Screen::display()
     window.draw(sf::Sprite(::platform->data()->map_0_rt_.getTexture()));
     window.draw(sf::Sprite(::platform->data()->map_1_rt_.getTexture()));
 
+    ::platform->data()->fade_overlay_.setPosition(
+        {view_.get_center().x, view_.get_center().y});
+
+    const bool fade_sprites = ::platform->data()->fade_include_sprites_;
+
+    // If we don't want the sprites to be included in the color fade, we'll want
+    // to draw the fade overlay prior to drawing the sprites... or we could quit
+    // being lazy and use a shader instead of a dumb rectangleshape :)
+    if (not fade_sprites) {
+        window.draw(::platform->data()->fade_overlay_);
+    }
 
     for (auto& spr : reversed(::draw_queue)) {
         if (spr.get_alpha() == Sprite::Alpha::transparent) {
@@ -889,11 +902,9 @@ void Platform::Screen::display()
         }
     }
 
-
-    ::platform->data()->fade_overlay_.setPosition(
-        {view_.get_center().x, view_.get_center().y});
-
-    window.draw(::platform->data()->fade_overlay_);
+    if (fade_sprites) {
+        window.draw(::platform->data()->fade_overlay_);
+    }
 
     view.setCenter({view_.get_size().x / 2, view_.get_size().y / 2});
 
@@ -909,7 +920,8 @@ void Platform::Screen::display()
 
 void Platform::Screen::fade(Float amount,
                             ColorConstant k,
-                            std::optional<ColorConstant> base)
+                            std::optional<ColorConstant> base,
+                            bool include_sprites)
 {
     const auto c = real_color(k);
 
@@ -919,6 +931,7 @@ void Platform::Screen::fade(Float amount,
              static_cast<uint8_t>(c.y * 255),
              static_cast<uint8_t>(c.z * 255),
              static_cast<uint8_t>(amount * 255)});
+        ::platform->data()->fade_include_sprites_ = include_sprites;
     } else {
         const auto c2 = real_color(*base);
         ::platform->data()->fade_overlay_.setFillColor(

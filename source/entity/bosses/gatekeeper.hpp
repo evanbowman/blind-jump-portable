@@ -161,7 +161,7 @@ public:
     }
 
 
-    void shoot(Platform& pfrm, Game& game, Microseconds dt);
+    void attack(Platform& pfrm, Game& game, Microseconds dt);
 
 private:
     Microseconds timer_;
