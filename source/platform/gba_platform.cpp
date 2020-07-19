@@ -473,6 +473,10 @@ const Color& real_color(ColorConstant k)
         static const Color aged_paper(27, 24, 18);
         return aged_paper;
 
+    case ColorConstant::green:
+        static const Color green(5, 24, 21);
+        return green;
+
     case ColorConstant::silver_white:
         static const Color silver_white(29, 29, 30);
         return silver_white;

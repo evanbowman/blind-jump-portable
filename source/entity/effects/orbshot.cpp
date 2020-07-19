@@ -16,6 +16,16 @@ OrbShot::OrbShot(const Vec2<Float>& position,
 }
 
 
+AlliedOrbShot::AlliedOrbShot(const Vec2<Float>& position,
+                             const Vec2<Float>& target,
+                             Float speed,
+                             Microseconds duration)
+    : OrbShot(position, target, speed, duration)
+{
+    sprite_.set_mix({ColorConstant::green, 255});
+}
+
+
 void OrbShot::update(Platform& pf, Game& game, Microseconds dt)
 {
     Projectile::update(pf, game, dt);

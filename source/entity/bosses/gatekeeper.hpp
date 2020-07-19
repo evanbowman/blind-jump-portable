@@ -4,6 +4,7 @@
 
 
 class LaserExplosion;
+class AlliedOrbShot;
 class Player;
 class Laser;
 
@@ -17,6 +18,11 @@ public:
     static constexpr bool multiface_sprite = true;
     static constexpr bool has_shadow = true;
 
+    constexpr bool is_allied()
+    {
+        return false;
+    }
+
     auto get_sprites() const
     {
         std::array<const Sprite*, 2> ret;
@@ -26,6 +32,7 @@ public:
     }
 
     void on_collision(Platform&, Game&, LaserExplosion&);
+    void on_collision(Platform&, Game&, AlliedOrbShot&);
     void on_collision(Platform&, Game&, Laser&);
     void on_collision(Platform&, Game&, Player&)
     {
@@ -117,6 +124,8 @@ public:
     void on_collision(Platform&, Game&, LaserExplosion&)
     {
     }
+
+    void on_collision(Platform&, Game&, AlliedOrbShot&);
 
     void set_offset(int offset)
     {

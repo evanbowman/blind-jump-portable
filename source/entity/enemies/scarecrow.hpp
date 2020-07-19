@@ -9,6 +9,7 @@
 
 class LaserExplosion;
 class Laser;
+class AlliedOrbShot;
 
 
 class Scarecrow : public Enemy {
@@ -27,6 +28,7 @@ public:
 
     void update(Platform&, Game&, Microseconds);
 
+    void on_collision(Platform&, Game&, AlliedOrbShot&);
     void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, Laser&);
 

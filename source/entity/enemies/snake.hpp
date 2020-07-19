@@ -11,6 +11,7 @@
 
 
 class LaserExplosion;
+class AlliedOrbShot;
 class Player;
 class Laser;
 
@@ -53,6 +54,10 @@ public:
     {
     }
 
+    void on_collision(Platform&, Game&, AlliedOrbShot&)
+    {
+    }
+
     void on_collision(Platform&, Game&, Player&)
     {
     }
@@ -76,6 +81,10 @@ public:
     {
     }
 
+    void on_collision(Platform&, Game&, AlliedOrbShot&)
+    {
+    }
+
     void on_collision(Platform&, Game&, Player&)
     {
     }
@@ -94,6 +103,8 @@ public:
     void on_collision(Platform& pf, Game& game, Laser&);
 
     void on_collision(Platform&, Game&, LaserExplosion&);
+
+    void on_collision(Platform&, Game&, AlliedOrbShot&);
 
     void on_collision(Platform&, Game&, Player&)
     {

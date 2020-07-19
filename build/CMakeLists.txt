@@ -49,6 +49,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/enemies/dasher.cpp
   ${SOURCE_DIR}/entity/details/rubble.cpp
   ${SOURCE_DIR}/entity/enemies/drone.cpp
+  ${SOURCE_DIR}/entity/enemies/enemy.cpp
   ${SOURCE_DIR}/entity/enemies/theif.cpp
   ${SOURCE_DIR}/entity/enemies/snake.cpp
   ${SOURCE_DIR}/entity/effects/laser.cpp

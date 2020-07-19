@@ -26,6 +26,8 @@ Theif::Theif(const Vec2<Float>& pos)
 
 void Theif::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    Enemy::update(pfrm, game, dt);
+
     fade_color_anim_.advance(sprite_, dt);
 
     auto face_left = [this] { sprite_.set_flip({0, 0}); };
@@ -152,6 +154,14 @@ void Theif::on_collision(Platform&, Game& game, Player&)
 void Theif::on_collision(Platform& pfrm, Game& game, LaserExplosion&)
 {
     injured(pfrm, game, 8);
+}
+
+
+void Theif::on_collision(Platform& pfrm, Game& game, AlliedOrbShot&)
+{
+    if (not is_allied()) {
+        injured(pfrm, game, 1);
+    }
 }
 
 

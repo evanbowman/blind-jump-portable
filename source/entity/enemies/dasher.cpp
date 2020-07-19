@@ -27,6 +27,20 @@ Dasher::Dasher(const Vec2<Float>& position)
 
 void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 {
+    Enemy::update(pf, game, dt);
+
+    // { // just for debugging
+    //     bool debug_allies = false;
+    //     for (auto& dasher : game.enemies().get<Dasher>()) {
+    //         if (dasher->is_allied_) {
+    //             debug_allies = true;
+    //         }
+    //     }
+    //     if (not debug_allies) {
+    //         is_allied_ = true;
+    //     }
+    // }
+
     sprite_.set_position(position_);
     shadow_.set_position(position_);
     head_.set_position({position_.x, position_.y - 9});
@@ -41,14 +55,15 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         head_.set_flip({1, 0});
     };
 
-    auto face_player =
-        [this, &player = game.player(), &face_left, &face_right] {
-            if (player.get_position().x > position_.x) {
-                face_right();
-            } else {
-                face_left();
-            }
-        };
+    auto& target = get_target(game);
+
+    auto face_target = [this, &target, &face_left, &face_right] {
+        if (target.get_position().x > position_.x) {
+            face_right();
+        } else {
+            face_left();
+        }
+    };
 
     timer_ += dt;
 
@@ -73,7 +88,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     case State::inactive: {
         if (visible()) {
             timer_ = 0;
-            if (manhattan_length(game.player().get_position(), position_) <
+            if (manhattan_length(target.get_position(), position_) <
                 std::min(screen_size.x, screen_size.y)) {
                 state_ = State::idle;
             }
@@ -85,7 +100,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ >= milliseconds(200)) {
             timer_ -= milliseconds(200);
 
-            if (manhattan_length(game.player().get_position(), position_) <
+            if (manhattan_length(target.get_position(), position_) <
                     std::min(screen_size.x, screen_size.y) and
                 rng::choice<2>()) {
                 state_ = State::shoot_begin;
@@ -106,7 +121,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::shoot_begin:
-        face_player();
+        face_target();
         if (timer_ > milliseconds(80)) {
             timer_ -= milliseconds(80);
             state_ = State::shot1;
@@ -120,10 +135,11 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::shot2;
 
             pf.speaker().play_sound("laser1", 4, position_);
-            game.effects().spawn<OrbShot>(
-                position_,
-                rng::sample<8>(game.player().get_position()),
-                0.00015f);
+            this->shoot(pf,
+                        game,
+                        position_,
+                        rng::sample<8>(target.get_position()),
+                        0.00015f);
         }
         break;
 
@@ -138,10 +154,11 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             }
 
             pf.speaker().play_sound("laser1", 4, position_);
-            game.effects().spawn<OrbShot>(
-                position_,
-                rng::sample<16>(game.player().get_position()),
-                0.00015f);
+            this->shoot(pf,
+                        game,
+                        position_,
+                        rng::sample<16>(target.get_position()),
+                        0.00015f);
         }
         break;
     }
@@ -152,10 +169,11 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::pause;
 
             pf.speaker().play_sound("laser1", 4, position_);
-            game.effects().spawn<OrbShot>(
-                position_,
-                rng::sample<32>(game.player().get_position()),
-                0.00015f);
+            this->shoot(pf,
+                        game,
+                        position_,
+                        rng::sample<32>(target.get_position()),
+                        0.00015f);
         }
         break;
 
@@ -272,6 +290,12 @@ void Dasher::on_collision(Platform& pf, Game& game, LaserExplosion&)
     injured(pf, game, Health(8));
 }
 
+void Dasher::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
+{
+    if (not is_allied()) {
+        injured(pf, game, Health(1));
+    }
+}
 
 void Dasher::on_death(Platform& pf, Game& game)
 {

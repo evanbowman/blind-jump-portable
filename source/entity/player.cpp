@@ -97,16 +97,22 @@ void Player::on_collision(Platform& pf, Game& game, SnakeHead&)
 }
 
 
-void Player::on_collision(Platform& pf, Game& game, Enemy&)
+void Player::on_collision(Platform& pf, Game& game, Enemy& e)
 {
-    Player::injured(pf, game, Health(1));
+    if (not e.is_allied()) {
+        Player::injured(pf, game, Health(1));
+    }
 }
 
 
 void Player::on_collision(Platform& pf, Game& game, Drone& drone)
 {
-    Player::injured(
-        pf, game, drone.state() == Drone::State::rush ? Health(2) : Health(1));
+    if (not drone.is_allied()) {
+        Player::injured(pf,
+                        game,
+                        drone.state() == Drone::State::rush ? Health(2)
+                                                            : Health(1));
+    }
 }
 
 

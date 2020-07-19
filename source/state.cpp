@@ -747,6 +747,14 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
 
     if (not is_boss_level(game.level())) {
+
+        if (not game.effects().get<AlliedOrbShot>().empty()) {
+            game.enemies().transform([&](auto& buf) {
+                check_collisions(
+                    pfrm, game, game.effects().get<AlliedOrbShot>(), buf);
+            });
+        }
+
         check_collisions(pfrm, game, player, game.enemies().get<Drone>());
         check_collisions(pfrm, game, player, game.enemies().get<Turret>());
         check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
@@ -822,16 +830,17 @@ void ActiveState::repaint_stats(Platform& pfrm, Game& game)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    health_.emplace(pfrm,
-                    OverlayCoord{1, u8(screen_tiles.y - (3 + game.powerups().size()))},
-                    145,
-                    (int)game.player().get_health());
+    health_.emplace(
+        pfrm,
+        OverlayCoord{1, u8(screen_tiles.y - (3 + game.powerups().size()))},
+        145,
+        (int)game.player().get_health());
 
-    score_.emplace(pfrm,
-                   OverlayCoord{1, u8(screen_tiles.y - (2 + game.powerups().size()))},
-                   146,
-                   game.score());
-
+    score_.emplace(
+        pfrm,
+        OverlayCoord{1, u8(screen_tiles.y - (2 + game.powerups().size()))},
+        146,
+        game.score());
 }
 
 
@@ -867,7 +876,8 @@ void ActiveState::repaint_powerups(Platform& pfrm, Game& game, bool clean)
                     break;
 
                 case Powerup::DisplayMode::timestamp:
-                    powerups_[i].set_value(game.powerups()[i].parameter_ / 1000000);
+                    powerups_[i].set_value(game.powerups()[i].parameter_ /
+                                           1000000);
                     break;
                 }
                 game.powerups()[i].dirty_ = false;
@@ -1460,7 +1470,9 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      true},
     {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform&, Game& game) {
-         add_powerup(game, Powerup::Type::lethargy, seconds(18),
+         add_powerup(game,
+                     Powerup::Type::lethargy,
+                     seconds(18),
                      Powerup::DisplayMode::timestamp);
          return null_state();
      },

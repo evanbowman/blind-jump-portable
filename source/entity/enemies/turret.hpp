@@ -8,6 +8,7 @@
 
 
 class LaserExplosion;
+class AlliedOrbShot;
 class Player;
 class Laser;
 
@@ -19,6 +20,7 @@ public:
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
     void on_collision(Platform&, Game&, LaserExplosion&);
+    void on_collision(Platform&, Game&, AlliedOrbShot&);
     void on_collision(Platform&, Game&, Laser&);
     void on_collision(Platform&, Game&, Player&)
     {

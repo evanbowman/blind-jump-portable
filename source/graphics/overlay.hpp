@@ -204,7 +204,6 @@ public:
     }
 
 private:
-
     void fill(int tile)
     {
         for (int i = position_.x; i < position_.x + width_; ++i) {
@@ -260,19 +259,19 @@ u32 integer_text_length(int n);
 class UIMetric {
 public:
     inline UIMetric(Platform& pfrm,
-             const OverlayCoord& pos,
-             int icon_tile,
-             int value) :
-        icon_tile_(icon_tile),
-        value_(value),
-        anim_(pfrm, pos)
+                    const OverlayCoord& pos,
+                    int icon_tile,
+                    int value)
+        : icon_tile_(icon_tile), value_(value), anim_(pfrm, pos)
     {
         display(pfrm);
     }
 
     UIMetric(const UIMetric&) = delete;
 
-    virtual ~UIMetric() {}
+    virtual ~UIMetric()
+    {
+    }
 
     inline void set_value(int value)
     {
@@ -290,10 +289,11 @@ public:
         }
     }
 
-    virtual void on_display(Text& text, int value) {}
+    virtual void on_display(Text& text, int value)
+    {
+    }
 
 private:
-
     inline void display(Platform& pfrm)
     {
         const auto pos = anim_.position();

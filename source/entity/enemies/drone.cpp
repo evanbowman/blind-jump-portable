@@ -25,9 +25,13 @@ Drone::Drone(const Vec2<Float>& pos)
 
 void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    Enemy::update(pfrm, game, dt);
+
     fade_color_anim_.advance(sprite_, dt);
 
-    if (game.player().get_position().x > position_.x) {
+    auto& target = get_target(game);
+
+    if (target.get_position().x > position_.x) {
         sprite_.set_flip({true, false});
     } else {
         sprite_.set_flip({false, false});
@@ -67,7 +71,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (visible()) {
             timer_ = 0;
             const auto screen_size = pfrm.screen().size();
-            if (manhattan_length(game.player().get_position(), position_) <
+            if (manhattan_length(target.get_position(), position_) <
                 std::min(screen_size.x, screen_size.y)) {
                 state_ = State::idle1;
             }
@@ -78,7 +82,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > milliseconds(700)) {
             timer_ = 0;
             state_ = State::dodge1;
-            const auto player_pos = game.player().get_position();
+            const auto player_pos = target.get_position();
             step_vector_ =
                 direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
         }
@@ -98,7 +102,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > milliseconds(700)) {
             timer_ = 0;
             state_ = State::dodge2;
-            const auto player_pos = game.player().get_position();
+            const auto player_pos = target.get_position();
             step_vector_ =
                 direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
         }
@@ -118,7 +122,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > milliseconds(700)) {
             timer_ = 0;
             state_ = State::dodge3;
-            const auto player_pos = game.player().get_position();
+            const auto player_pos = target.get_position();
             step_vector_ =
                 direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
         }
@@ -138,7 +142,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > milliseconds(700)) {
             timer_ = 0;
             state_ = State::rush;
-            const auto player_pos = game.player().get_position();
+            const auto player_pos = target.get_position();
             step_vector_ = direction(position_, player_pos) * 0.00015f;
         }
         break;
@@ -177,6 +181,14 @@ void Drone::on_collision(Platform& pf, Game& game, Laser&)
 void Drone::on_collision(Platform& pf, Game& game, LaserExplosion&)
 {
     injured(pf, game, Health{8});
+}
+
+
+void Drone::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
+{
+    if (not is_allied()) {
+        injured(pf, game, Health{1});
+    }
 }
 
 

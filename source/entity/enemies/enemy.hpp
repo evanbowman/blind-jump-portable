@@ -5,6 +5,7 @@
 
 
 class Player;
+class OrbShot;
 
 
 class Enemy : public Entity {
@@ -12,9 +13,16 @@ public:
     Enemy(Entity::Health health,
           const Vec2<Float>& position,
           const HitBox::Dimension& dimension)
-        : Entity(health), hitbox_{&position_, dimension}
+        : Entity(health), hitbox_{&position_, dimension}, is_allied_(false)
     {
         position_ = position;
+    }
+
+    void update(Platform& pf, Game& game, Microseconds dt)
+    {
+        if (is_allied_ and sprite_.get_mix().amount_ == 0) {
+            sprite_.set_mix({ColorConstant::green, 230});
+        }
     }
 
     static constexpr bool has_shadow = true;
@@ -29,7 +37,22 @@ public:
         return hitbox_;
     }
 
+    const Entity& get_target(Game& game);
+
+    OrbShot* shoot(Platform&,
+                   Game&,
+                   const Vec2<Float>& position,
+                   const Vec2<Float>& target,
+                   Float speed,
+                   Microseconds duration = seconds(2));
+
+    bool is_allied() const
+    {
+        return is_allied_;
+    }
+
 protected:
     Sprite shadow_;
     HitBox hitbox_;
+    bool is_allied_;
 };

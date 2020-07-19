@@ -37,6 +37,8 @@ Scarecrow::Scarecrow(const Vec2<Float>& position)
 
 void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    Enemy::update(pfrm, game, dt);
+
     auto face_left = [this] {
         sprite_.set_flip({0, 0});
         leg_.set_flip({0, 0});
@@ -47,16 +49,17 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
         leg_.set_flip({1, 0});
     };
 
-    auto face_player =
-        [this, &player = game.player(), &face_left, &face_right] {
-            if (player.get_position().x > position_.x) {
-                face_right();
-            } else {
-                face_left();
-            }
-        };
+    auto& target = get_target(game);
 
-    face_player();
+    auto face_target = [this, &target, &face_left, &face_right] {
+        if (target.get_position().x > position_.x) {
+            face_right();
+        } else {
+            face_left();
+        }
+    };
+
+    face_target();
 
     fade_color_anim_.advance(sprite_, dt);
     leg_.set_mix(sprite_.get_mix());
@@ -190,18 +193,18 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             } else {
                 sprite_.set_position(position_);
 
-                auto player_pos = game.player().get_position();
+                auto target_pos = target.get_position();
 
                 // const auto dist = distance(position_, player_pos);
                 // if (dist > 64) {
                 //     player_pos = interpolate(player_pos, position_, 64 / dist);
                 // }
 
-                const auto player_coord = to_tile_coord(player_pos.cast<s32>());
+                const auto target_coord = to_tile_coord(target_pos.cast<s32>());
 
                 for (int i = 0; i < 200; ++i) {
                     auto selected =
-                        to_tile_coord(rng::sample<64>(player_pos).cast<s32>());
+                        to_tile_coord(rng::sample<64>(target_pos).cast<s32>());
 
                     // This is just because the enemy is tall, and we do not
                     // want it to jump to a coordinate, such that its head is
@@ -211,7 +214,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                     const Tile t =
                         game.tiles().get_tile(selected.x, selected.y);
                     if (is_walkable__fast(t) and
-                        manhattan_length(selected, player_coord) > 3 and
+                        manhattan_length(selected, target_coord) > 3 and
                         selected not_eq anchor_) {
                         anchor_ = selected;
                         break;
@@ -307,10 +310,11 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             if (visible()) {
                 pfrm.speaker().play_sound("laser1", 4, position_);
-                game.effects().spawn<OrbShot>(
-                    position_,
-                    rng::sample<8>(game.player().get_position()),
-                    0.00010f);
+                this->shoot(pfrm,
+                            game,
+                            position_,
+                            rng::sample<8>(target.get_position()),
+                            0.00010f);
             }
             state_ = State::idle_wait;
         }
@@ -346,6 +350,14 @@ void Scarecrow::on_collision(Platform& pf, Game& game, Laser&)
 void Scarecrow::on_collision(Platform& pf, Game& game, LaserExplosion&)
 {
     injured(pf, game, Health{8});
+}
+
+
+void Scarecrow::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
+{
+    if (not is_allied()) {
+        injured(pf, game, Health{1});
+    }
 }
 
 

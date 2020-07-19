@@ -7,6 +7,7 @@
 
 
 class LaserExplosion;
+class AlliedOrbShot;
 class Player;
 class Laser;
 
@@ -15,6 +16,7 @@ class Drone : public Enemy {
 public:
     Drone(const Vec2<Float>& pos);
 
+    void on_collision(Platform&, Game&, AlliedOrbShot&);
     void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, Laser&);
 

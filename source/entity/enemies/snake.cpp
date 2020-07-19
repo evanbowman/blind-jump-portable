@@ -40,6 +40,8 @@ const Vec2<TIdx>& SnakeNode::tile_coord() const
 
 void SnakeNode::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    Enemy::update(pfrm, game, dt);
+
     tile_coord_ = to_quarter_tile_coord(position_.cast<s32>());
 
     if (destruct_timer_) {
@@ -273,7 +275,8 @@ static const Microseconds tail_drop_time = seconds(8);
 
 
 SnakeTail::SnakeTail(const Vec2<Float>& pos, SnakeNode* parent, Game& game)
-    : SnakeBody(pos, parent, game, 0), sleep_timer_(seconds(2)), drop_timer_(tail_drop_time)
+    : SnakeBody(pos, parent, game, 0), sleep_timer_(seconds(2)),
+      drop_timer_(tail_drop_time)
 {
     add_health(10);
 }
@@ -356,4 +359,14 @@ void SnakeTail::on_collision(Platform& pf, Game& game, LaserExplosion&)
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
     debit_health(8);
+}
+
+
+void SnakeTail::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
+{
+    if (not is_allied()) {
+        sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
+
+        debit_health();
+    }
 }

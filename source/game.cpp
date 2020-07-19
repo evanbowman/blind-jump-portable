@@ -1109,7 +1109,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
              }
          },
          10},
-        {5,
+        {0,
          [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); },
          boss_1_level},
         {7,

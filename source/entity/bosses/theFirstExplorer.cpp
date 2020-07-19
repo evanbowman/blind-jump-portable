@@ -472,6 +472,14 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, LaserExplosion&)
 }
 
 
+void TheFirstExplorer::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
+{
+    if (not is_allied()) {
+        injured(pf, game, Health{1});
+    }
+}
+
+
 void TheFirstExplorer::on_death(Platform& pf, Game& game)
 {
     boss_explosion(pf, game, position_);

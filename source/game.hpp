@@ -18,9 +18,9 @@
 #include "entity/enemies/dasher.hpp"
 #include "entity/enemies/drone.hpp"
 #include "entity/enemies/scarecrow.hpp"
+#include "entity/enemies/sinkhole.hpp"
 #include "entity/enemies/snake.hpp"
 #include "entity/enemies/theif.hpp"
-#include "entity/enemies/sinkhole.hpp"
 #include "entity/enemies/turret.hpp"
 #include "entity/entityGroup.hpp"
 #include "entity/player.hpp"
@@ -28,8 +28,8 @@
 #include "localization.hpp"
 #include "persistentData.hpp"
 #include "platform/platform.hpp"
-#include "state.hpp"
 #include "powerup.hpp"
+#include "state.hpp"
 
 
 class Game {
@@ -73,6 +73,7 @@ public:
     using DetailGroup = EntityGroup<30, ItemChest, Item, Rubble, Scavenger>;
     using EffectGroup = EntityGroup<20,
                                     OrbShot,
+                                    AlliedOrbShot,
                                     Laser,
                                     Explosion,
                                     FirstExplorerBigLaser,

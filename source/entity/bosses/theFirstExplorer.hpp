@@ -6,6 +6,7 @@
 
 
 class LaserExplosion;
+class AlliedOrbShot;
 class Player;
 class Laser;
 
@@ -21,6 +22,11 @@ public:
 
     static constexpr bool multiface_sprite = true;
     static constexpr bool has_shadow = true;
+
+    constexpr bool is_allied()
+    {
+        return false;
+    }
 
     void update(Platform& pf, Game& game, Microseconds dt);
 
@@ -42,6 +48,7 @@ public:
     }
 
     void on_collision(Platform&, Game&, LaserExplosion&);
+    void on_collision(Platform&, Game&, AlliedOrbShot&);
     void on_collision(Platform&, Game&, Laser&);
 
     void on_death(Platform&, Game&);

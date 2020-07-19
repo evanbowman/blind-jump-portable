@@ -27,7 +27,7 @@ public:
 
             game.effects().spawn<OrbShot>(
                 shield.get_position(),
-                rng::sample<22>(game.player().get_position()),
+                rng::sample<22>(shield.get_target(game).get_position()),
                 0.00019f - 0.00002f * shot_count_,
                 seconds(2) - milliseconds(550));
 
@@ -47,7 +47,8 @@ private:
 class SweepAttackPattern : public GatekeeperShield::AttackPattern {
 public:
     SweepAttackPattern(GatekeeperShield& shield, Microseconds delay, Game& game)
-        : reload_(delay), rot_(-60), target_(game.player().get_position())
+        : reload_(delay), rot_(-60),
+          target_(shield.get_target(game).get_position())
     {
         const auto& shield_pos = shield.get_position();
         if (target_.x < shield_pos.x) {
@@ -159,6 +160,11 @@ Gatekeeper::Gatekeeper(const Vec2<Float>& position, Game& game)
 
 void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    if (UNLIKELY(is_allied_)) {
+        is_allied_ = false;
+    }
+    Enemy::update(pfrm, game, dt);
+
     static constexpr const Microseconds jump_duration = milliseconds(500);
     static constexpr const Float movement_rate = 0.000033f;
 
@@ -563,6 +569,15 @@ void Gatekeeper::on_collision(Platform& pfrm, Game& game, LaserExplosion&)
     injured(pfrm, game, Health{8});
 }
 
+
+void Gatekeeper::on_collision(Platform& pfrm, Game& game, AlliedOrbShot&)
+{
+    if (not is_allied()) {
+        injured(pfrm, game, Health{1});
+    }
+}
+
+
 void Gatekeeper::on_death(Platform& pfrm, Game& game)
 {
     auto loc = position_ + sprite_.get_origin().cast<Float>();
@@ -615,6 +630,8 @@ void GatekeeperShield::close()
 
 void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    Enemy::update(pfrm, game, dt);
+
     fade_color_anim_.advance(sprite_, dt);
 
     if (not detached_ and game.enemies().get<Gatekeeper>().empty()) {
@@ -725,6 +742,23 @@ void GatekeeperShield::on_collision(Platform& pfrm, Game& game, Laser&)
     } else {
         const auto c = current_zone(game).energy_glow_color_;
         sprite_.set_mix({c, 255});
+    }
+}
+
+
+void GatekeeperShield::on_collision(Platform& pfrm, Game& game, AlliedOrbShot&)
+{
+    if (not is_allied()) {
+        if (sprite_.get_size() == Sprite::Size::w32_h32) {
+            const auto c = current_zone(game).injury_glow_color_;
+            sprite_.set_mix({c, 255});
+            debit_health(1); // So, technically you can destroy the shield, but
+                             // it's probably not worth the trouble of trying.
+
+        } else {
+            const auto c = current_zone(game).energy_glow_color_;
+            sprite_.set_mix({c, 255});
+        }
     }
 }
 
