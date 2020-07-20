@@ -68,10 +68,6 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
 
-    if (not inventory().has_item(Item::Type::signal_jammer)) {
-        inventory().push_item(pfrm, *this, Item::Type::signal_jammer);
-    }
-
     const auto controllers_head =
         Conf(pfrm).expect<Conf::String>("wireless-controllers", "__next");
 
@@ -1176,9 +1172,6 @@ static LevelRange level_range(Item::Type item)
     case Item::Type::engineer_notebook:
         return {boss_0_level, max};
 
-    case Item::Type::signal_jammer:
-        return {boss_0_level, max};
-
     default:
         return {min, max};
     }
@@ -1217,7 +1210,7 @@ ItemRarity rarity(Item::Type item)
         return 1;
 
     case Item::Type::signal_jammer:
-        return 1;
+        return 2;
 
     case Item::Type::accelerator:
         return 3;

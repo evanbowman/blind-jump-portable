@@ -485,8 +485,9 @@ public:
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
-private:
     Enemy* find_selector_target(Game& game);
+
+private:
 
     enum class Mode { fade_in, update_selector, active } mode_ = Mode::fade_in;
     int selector_index_ = 0;
@@ -765,14 +766,14 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     check_collisions(pfrm, game, player, game.details().get<Item>());
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
 
-    if (not is_boss_level(game.level())) {
+    if (not game.effects().get<AlliedOrbShot>().empty()) {
+        game.enemies().transform([&](auto& buf) {
+            check_collisions(
+                pfrm, game, game.effects().get<AlliedOrbShot>(), buf);
+        });
+    }
 
-        if (not game.effects().get<AlliedOrbShot>().empty()) {
-            game.enemies().transform([&](auto& buf) {
-                check_collisions(
-                    pfrm, game, game.effects().get<AlliedOrbShot>(), buf);
-            });
-        }
+    if (not is_boss_level(game.level())) {
 
         check_collisions(pfrm, game, player, game.enemies().get<Drone>());
         check_collisions(pfrm, game, player, game.enemies().get<Turret>());
@@ -1425,17 +1426,12 @@ int InventoryState::page_{0};
 Vec2<u8> InventoryState::selector_coord_{0, 0};
 
 
-// Items used in the current level.
-static Bitvector<static_cast<int>(Item::Type::count)> used_items;
-
-
 struct InventoryItemHandler {
     Item::Type type_;
     int icon_;
     StatePtr (*callback_)(Platform& pfrm, Game& game);
     LocaleString description_;
     bool single_use_ = false;
-    bool needs_recharge_ = false;
 };
 
 
@@ -1530,8 +1526,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool_.create<SignalJammerSelectorState>();
          return null_state();
      },
-     LocaleString::signal_jammer_title,
-     false, true}};
+     LocaleString::signal_jammer_title}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)
@@ -1542,15 +1537,6 @@ static const InventoryItemHandler* inventory_item_handler(Item::Type type)
         }
     }
     return nullptr;
-}
-
-
-static bool overheated(Item::Type item)
-{
-    if (auto handler = inventory_item_handler(item)) {
-        return handler->needs_recharge_ and used_items.get(static_cast<int>(item));
-    }
-    return false;
 }
 
 
@@ -1641,22 +1627,16 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
             page_, selector_coord_.x, selector_coord_.y);
 
         if (auto handler = inventory_item_handler(item)) {
-            if (overheated(item)) {
-                // Some items are not allowed to be used more than once per level.
+
+            if (handler->single_use_) {
+                consume_selected_item(game);
+            }
+
+            if (auto new_state = handler->callback_(pfrm, game)) {
+                return new_state;
             } else {
-                used_items.set(static_cast<int>(item), true);
-
-                if (handler->single_use_) {
-                    consume_selected_item(game);
-                }
-
-                if (auto new_state = handler->callback_(pfrm, game)) {
-                    return new_state;
-                } else {
-                    update_item_description(pfrm, game);
-                    display_items(pfrm, game);
-                }
-
+                update_item_description(pfrm, game);
+                display_items(pfrm, game);
             }
         }
     }
@@ -1760,11 +1740,7 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
             pfrm, locale_string(handler->description_), text_loc);
         item_description_->append(".");
 
-        if (overheated(item)) {
-            item_description2_.emplace(pfrm,
-                                       locale_string(LocaleString::item_overheated),
-                                       OverlayCoord{text_loc.x, text_loc.y + 2});
-        } else if (handler->single_use_) {
+        if (handler->single_use_) {
             item_description2_.emplace(
                 pfrm,
                 locale_string(LocaleString::single_use_warning),
@@ -2342,8 +2318,6 @@ void NewLevelState::exit(Platform& pfrm, Game& game, State&)
     text_[1].reset();
 
     pfrm.fill_overlay(0);
-
-    used_items.clear();
 }
 
 
@@ -3080,7 +3054,9 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void SignalJammerSelectorState::enter(Platform& pfrm, Game& game, State& prev_state)
+void SignalJammerSelectorState::enter(Platform& pfrm,
+                                      Game& game,
+                                      State& prev_state)
 {
 }
 
@@ -3118,10 +3094,6 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
                 selector_start_pos_ = game.player().get_position();
                 game.effects().spawn<Reticule>(selector_start_pos_);
             } else {
-                // Lets be nice to the player and allow the signal jammer to be
-                // used again if it couldn't lock on to any enemies.
-                used_items.set(static_cast<int>(Item::Type::signal_jammer), false);
-
                 mode_ = Mode::active;
                 return state_pool_.create<InventoryState>(true);
             }
@@ -3132,18 +3104,17 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
     case Mode::active: {
         if (pfrm.keyboard().down_transition<Key::action_2>()) {
             if (target_) {
-                // Only one enemy may be hacked into an ally at a time.
-                game.enemies().transform([](auto& buf) {
-                    for (auto& e : buf) {
-                        e->make_allied(false);
-                    }
-                });
                 target_->make_allied(true);
+
+                // Typically, we would have consumed the item already, in the
+                // inventory item handler, but in some cases, we want to exit
+                // out of this state without using the item.
+                consume_selected_item(game);
+
                 pfrm.sleep(10);
                 return state_pool_.create<InventoryState>(true);
             }
         } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
-            used_items.set(static_cast<int>(Item::Type::signal_jammer), false);
             return state_pool_.create<InventoryState>(true);
         }
 

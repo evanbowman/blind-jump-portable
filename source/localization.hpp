@@ -51,11 +51,6 @@ enum class LocaleString {
     menu_resume,
     menu_save_and_quit,
     goodbye_text,
-    item_overheated,
-    player_name,
-    drone_name,
-    dasher_name,
-
     count
 };
 
