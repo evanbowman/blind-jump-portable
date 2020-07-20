@@ -317,6 +317,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::menu_save_and_quit: return "Save and Quit";
         case LocaleString::goodbye_text: return "See you later...";
         case LocaleString::signal_jammer_title: return "Signal jammer";
+        case LocaleString::select_target_text: return "Choose a target:";
         default: return empty_str;
         }
         break;

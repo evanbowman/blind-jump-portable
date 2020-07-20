@@ -18,7 +18,7 @@ public:
         position_ = position;
     }
 
-    void update(Platform& pf, Game& game, Microseconds dt)
+    void update(Platform&, Game&, Microseconds)
     {
         if (is_allied_ and sprite_.get_mix().amount_ == 0) {
             sprite_.set_mix({ColorConstant::green, 230});

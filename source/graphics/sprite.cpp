@@ -1,8 +1,7 @@
 #include "sprite.hpp"
 
 
-Sprite::Sprite(Size size)
-    : rotation_(0), texture_index_(0), alpha_(Alpha::opaque), size_(size)
+Sprite::Sprite(Size size) : size_(size)
 {
 }
 

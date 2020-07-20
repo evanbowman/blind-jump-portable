@@ -23,13 +23,31 @@ public:
     {
     }
 
+    Buffer(const Buffer& other) : begin_((Iterator)mem_.data()), end_(begin_)
+    {
+        for (auto& elem : other) {
+            push_back(elem);
+        }
+    }
+
+    const Buffer& operator=(const Buffer& other)
+    {
+        for (auto& elem : other) {
+            push_back(elem);
+        }
+        return *this;
+    }
+
+    Buffer(Buffer&&) = delete;                  // TODO
+    const Buffer& operator=(Buffer&&) = delete; // TODO
+
     ~Buffer()
     {
         Buffer::clear();
     }
 
 
-    constexpr u32 capacity() const
+    static constexpr u32 capacity()
     {
         return Capacity;
     }
@@ -105,6 +123,11 @@ public:
     }
 
     T& operator[](u32 index)
+    {
+        return begin_[index];
+    }
+
+    const T& operator[](u32 index) const
     {
         return begin_[index];
     }

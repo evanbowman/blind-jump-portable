@@ -485,15 +485,18 @@ public:
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
-    Enemy* find_selector_target(Game& game);
+    Enemy* make_selector_target(Game& game);
+
+    void print(Platform& pfrm, const char* text);
 
 private:
-
     enum class Mode { fade_in, update_selector, active } mode_ = Mode::fade_in;
     int selector_index_ = 0;
     Microseconds timer_;
     Vec2<Float> selector_start_pos_;
     Enemy* target_;
+    Camera cached_camera_;
+    std::optional<Text> text_;
 };
 
 
@@ -3054,16 +3057,43 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void SignalJammerSelectorState::print(Platform& pfrm, const char* str)
+{
+    const auto margin = centered_text_margins(pfrm, str_len(str));
+
+    // const auto s_tiles = calc_screen_tiles(pfrm);
+
+    text_.emplace(pfrm, OverlayCoord{});
+
+    left_text_margin(*text_, margin);
+    text_->append(str);
+    right_text_margin(*text_, margin);
+}
+
+
 void SignalJammerSelectorState::enter(Platform& pfrm,
                                       Game& game,
                                       State& prev_state)
 {
+    cached_camera_ = game.camera();
+
+    const auto player_pos = game.player().get_position();
+    const auto ssize = pfrm.screen().size();
+    game.camera().set_position(
+        pfrm, {player_pos.x - ssize.x / 2, player_pos.y - ssize.y / 2});
+
+    game.camera().set_speed(1.4f);
+
+    print(pfrm, " ");
 }
 
 
 void SignalJammerSelectorState::exit(Platform& pfrm, Game& game, State&)
 {
     game.effects().get<Reticule>().clear();
+    game.effects().get<Proxy>().clear();
+    game.camera() = cached_camera_;
+    text_.reset();
 }
 
 
@@ -3074,6 +3104,19 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
 
     constexpr auto fade_duration = milliseconds(500);
     const auto target_fade = 0.75f;
+
+    if (target_) {
+        game.camera().push_ballast(game.player().get_position());
+        game.camera().update(pfrm, dt, target_->get_position());
+    }
+
+    for (auto& rt : game.effects().get<Reticule>()) {
+        rt->update(pfrm, game, dt);
+    }
+
+    for (auto& p : game.effects().get<Proxy>()) {
+        p->update(pfrm, game, dt);
+    }
 
     switch (mode_) {
     case Mode::fade_in: {
@@ -3088,13 +3131,14 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
             pfrm.screen().fade(
                 1.f - target_fade, ColorConstant::rich_black, {}, false);
             timer_ = 0;
-
-            if ((target_ = find_selector_target(game))) {
+            if ((target_ = make_selector_target(game))) {
                 mode_ = Mode::update_selector;
                 selector_start_pos_ = game.player().get_position();
                 game.effects().spawn<Reticule>(selector_start_pos_);
+
+                print(pfrm, locale_string(LocaleString::select_target_text));
+
             } else {
-                mode_ = Mode::active;
                 return state_pool_.create<InventoryState>(true);
             }
         }
@@ -3122,7 +3166,7 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
             pfrm.keyboard().down_transition<Key::left>()) {
             selector_index_ += 1;
             timer_ = 0;
-            if ((target_ = find_selector_target(game))) {
+            if ((target_ = make_selector_target(game))) {
                 mode_ = Mode::update_selector;
                 selector_start_pos_ = [&] {
                     for (auto& sel : game.effects().get<Reticule>()) {
@@ -3151,6 +3195,9 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
             for (auto& sel : game.effects().get<Reticule>()) {
                 sel->move(target_->get_position());
             }
+            for (auto& p : game.effects().get<Proxy>()) {
+                p->pulse(ColorConstant::green);
+            }
             mode_ = Mode::active;
             timer_ = 0;
         }
@@ -3163,40 +3210,49 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-Enemy* SignalJammerSelectorState::find_selector_target(Game& game)
+Enemy* SignalJammerSelectorState::make_selector_target(Game& game)
 {
-    Buffer<Enemy*, 30> targets;
+    constexpr u32 count = 15;
+
+    // I wish it wasn't necessary to hold a proxy buffer locally, oh well...
+    Buffer<Proxy, count> proxies;
+    Buffer<Enemy*, count> targets;
     game.enemies().transform([&](auto& buf) {
         for (auto& element : buf) {
             using T = typename std::remove_reference<decltype(buf)>::type;
 
             using VT = typename T::ValueType::element_type;
 
-            if (element->visible() and
-                distance(element->get_position(),
-                         game.player().get_position()) < 96) {
+            if (distance(element->get_position(),
+                         game.player().get_position()) < 128) {
                 if constexpr (std::is_base_of<Enemy, VT>()
                               // NOTE: Currently, I am not allowing hacking for
                               // enemies that do physical damage. On the Gameboy
                               // Advance, it simply isn't realistic to do
                               // collision checking between each enemy, and
-                              // every other type of enemy.
+                              // every other type of enemy. You also cannot turn
+                              // bosses into allies.
                               and not std::is_same<VT, Drone>() and
                               not std::is_same<VT, SnakeBody>() and
                               not std::is_same<VT, SnakeTail>() and
                               not std::is_same<VT, SnakeHead>() and
-                              not std::is_same<VT, Gatekeeper>()) {
+                              not std::is_same<VT, Gatekeeper>() and
+                              not std::is_same<VT, TheFirstExplorer>()) {
                     targets.push_back(element.get());
+                    proxies.emplace_back(*element.get());
                 }
             }
         }
     });
 
-    if (selector_index_ >= static_cast<int>(targets.size())) {
-        selector_index_ %= targets.size();
-    }
-
     if (not targets.empty()) {
+        if (selector_index_ >= static_cast<int>(targets.size())) {
+            selector_index_ %= targets.size();
+        }
+        if (targets[selector_index_] not_eq target_) {
+            game.effects().get<Proxy>().clear();
+            game.effects().spawn<Proxy>(proxies[selector_index_]);
+        }
         return targets[selector_index_];
     } else {
         return nullptr;

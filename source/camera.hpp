@@ -26,6 +26,11 @@ public:
         speed_ = speed;
     }
 
+    Vec2<Float> center() const
+    {
+        return center_;
+    }
+
 private:
     struct Ballast {
         u32 divisor_ = 0;

@@ -75,8 +75,7 @@ public:
         mem_.push_back('\0');
     }
 
-    template <u32 OtherCapacity>
-    StringBuffer& operator=(const StringBuffer<OtherCapacity>& other)
+    StringBuffer(const StringBuffer& other)
     {
         clear();
 
@@ -84,6 +83,41 @@ public:
             push_back(*it);
         }
     }
+
+    template <u32 OtherCapacity>
+    StringBuffer(const StringBuffer<OtherCapacity>& other)
+    {
+        static_assert(OtherCapacity <= Capacity);
+
+        clear();
+
+        for (auto it = other.begin(); it not_eq other.end(); ++it) {
+            push_back(*it);
+        }
+    }
+
+    const StringBuffer& operator=(const StringBuffer& other)
+    {
+        clear();
+
+        for (auto it = other.begin(); it not_eq other.end(); ++it) {
+            push_back(*it);
+        }
+        return *this;
+    }
+
+    template <u32 OtherCapacity>
+    const StringBuffer& operator=(const StringBuffer<OtherCapacity>& other)
+    {
+        clear();
+
+        for (auto it = other.begin(); it not_eq other.end(); ++it) {
+            push_back(*it);
+        }
+        return *this;
+    }
+
+    const StringBuffer& operator=(StringBuffer&&) = delete;
 
     void push_back(char c)
     {

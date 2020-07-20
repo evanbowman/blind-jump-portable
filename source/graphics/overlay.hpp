@@ -289,7 +289,7 @@ public:
         }
     }
 
-    virtual void on_display(Text& text, int value)
+    virtual void on_display(Text&, int)
     {
     }
 

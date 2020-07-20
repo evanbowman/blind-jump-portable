@@ -75,10 +75,10 @@ private:
     Vec2<Float> position_;
     Vec2<s32> origin_;
     Vec2<bool> flip_;
-    Rotation rotation_;
-    TextureIndex texture_index_;
-    Alpha alpha_;
-    Size size_;
+    Rotation rotation_ = 0;
+    TextureIndex texture_index_ = 0;
+    Alpha alpha_ = Alpha::opaque;
+    Size size_ = Size::w32_h32;
     ColorMix mix_;
 };
 
