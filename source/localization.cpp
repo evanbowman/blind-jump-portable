@@ -276,16 +276,25 @@ const char* locale_string(LocaleString ls)
                 "now on. The robots have been acting up ever since the last "
                 "communications blackout though, I'm afraid next time they'll go mad...";
         case LocaleString::engineer_notebook_str: return
-                "Electrical feedback from the hyperspace gates seem to have an "
+                "Power surges from the hyperspace gates seem to have an "
                 "unusual effect on machinery, especially the robots on the "
-                "stations. I've heard unconfirmed reports that... if true... "
-                "would be extremely distressing... The gate subsystem was never"
-                " really designed to be easily shut down, so concerned were we "
-                "with creating a resiliant system that's always online (losing "
-                "power while someone's in a gate would be deadly, a great "
-                "liability according to management). If you ever needed to shut"
-                " down the gate subsystem, you would need to chart a course to "
-                "the gateway's central hub, on the lunar surface.";
+                "stations. I've heard unconfirmed reports of violence that... "
+                "if true... would be extremely distressing... The gate "
+                "transit network was never really designed to be easily shut "
+                "down, so concerned were we with creating a resiliant system "
+                "that's always online. If you ever needed to shut down the "
+                "network, you would need to chart a course to the gateway's "
+                "central hub, on the lunar surface.";
+        case LocaleString::navigation_pamphlet: return
+            "No road map? No problem! The hyperspace gate network calculates a "
+            "path to your destination by routing your journey through a "
+            "sequence of waypoints. Tens of thousands of waypoints were "
+            "contructed in orbit around Earth and its moon. Because the "
+            "waypoints are constantly in motion during orbit, the gate network "
+            "continually recalculates the path to your destination. You'll "
+            "never visit the same waypoints twice! Due to the unpredictable "
+            "nature of the hyperspace gates, passing through a gate is "
+            "sometimes referred to as a blind jump.";
         case LocaleString::empty_inventory_str: return "Empty";
         case LocaleString::old_poster_title: return "Old poster (1)";
         case LocaleString::surveyor_logbook_title: return "Surveyor's logbook";
@@ -296,6 +305,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::map_system_title: return "Map system";
         case LocaleString::explosive_rounds_title: return "Explosive rounds (2)";
         case LocaleString::seed_packet_title: return "Seed packet";
+        case LocaleString::navigation_pamphlet_title: return "Navigation pamphlet";
         case LocaleString::single_use_warning: return "(SINGLE USE)";
         case LocaleString::locked: return "locked, ";
         case LocaleString::enemies_remaining_singular: return " enemy left";

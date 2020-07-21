@@ -23,6 +23,7 @@ public:
         seed_packet,
         engineer_notebook,
         signal_jammer,
+        navigation_pamphlet,
         count
     };
 
@@ -66,7 +67,8 @@ inline bool item_is_persistent(Item::Type type)
            type == Item::Type::surveyor_logbook or
            type == Item::Type::old_poster_1 or type == Item::Type::map_system or
            type == Item::Type::seed_packet or
-           type == Item::Type::engineer_notebook;
+           type == Item::Type::engineer_notebook or
+           type == Item::Type::navigation_pamphlet;
 }
 
 

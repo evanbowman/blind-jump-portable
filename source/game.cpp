@@ -1208,6 +1208,9 @@ ItemRarity rarity(Item::Type item)
     case Item::Type::seed_packet:
         return 1;
 
+    case Item::Type::navigation_pamphlet:
+        return 1;
+
     case Item::Type::signal_jammer:
         return 2;
 

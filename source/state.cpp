@@ -1533,7 +1533,13 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return null_state();
      },
      LocaleString::signal_jammer_title,
-     InventoryItemHandler::custom}};
+     InventoryItemHandler::custom},
+    {STANDARD_ITEM_HANDLER(navigation_pamphlet),
+     [](Platform&, Game&) {
+         return state_pool_.create<NotebookState>(
+             locale_string(LocaleString::navigation_pamphlet));
+     },
+     LocaleString::navigation_pamphlet_title}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)

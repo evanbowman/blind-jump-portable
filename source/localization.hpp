@@ -31,6 +31,7 @@ enum class LocaleString {
     explosive_rounds_title,
     signal_jammer_title,
     seed_packet_title,
+    navigation_pamphlet_title,
     single_use_warning,
     locked,
     enemies_remaining_singular,
@@ -52,6 +53,7 @@ enum class LocaleString {
     menu_save_and_quit,
     goodbye_text,
     select_target_text,
+    navigation_pamphlet,
     count
 };
 
