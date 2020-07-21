@@ -68,10 +68,6 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
 
-    if (not inventory().has_item(Item::Type::signal_jammer)) {
-        inventory().push_item(pfrm, *this, Item::Type::signal_jammer);
-    }
-
     const auto controllers_head =
         Conf(pfrm).expect<Conf::String>("wireless-controllers", "__next");
 

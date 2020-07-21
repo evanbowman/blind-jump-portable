@@ -1435,7 +1435,9 @@ struct InventoryItemHandler {
     int icon_;
     StatePtr (*callback_)(Platform& pfrm, Game& game);
     LocaleString description_;
-    bool single_use_ = false;
+    enum {
+          no = 0, yes, custom
+    } single_use_ = no;
 };
 
 
@@ -1491,7 +1493,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return null_state();
      },
      LocaleString::accelerator_title,
-     true},
+     InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform&, Game& game) {
          add_powerup(game,
@@ -1501,7 +1503,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return null_state();
      },
      LocaleString::lethargy_title,
-     true},
+     InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(map_system),
      [](Platform&, Game&) { return state_pool_.create<MapSystemState>(); },
      LocaleString::map_system_title},
@@ -1511,7 +1513,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return null_state();
      },
      LocaleString::explosive_rounds_title,
-     true},
+     InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(seed_packet),
      [](Platform&, Game&) {
          static const auto str = "seed_packet_flattened";
@@ -1530,7 +1532,8 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool_.create<SignalJammerSelectorState>();
          return null_state();
      },
-     LocaleString::signal_jammer_title}};
+     LocaleString::signal_jammer_title,
+     InventoryItemHandler::custom}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)
@@ -1632,7 +1635,7 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         if (auto handler = inventory_item_handler(item)) {
 
-            if (handler->single_use_) {
+            if (handler->single_use_ == InventoryItemHandler::yes) {
                 consume_selected_item(game);
             }
 
