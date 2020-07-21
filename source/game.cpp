@@ -1564,11 +1564,15 @@ bool within_view_frustum(const Platform::Screen& screen, const Vec2<Float>& pos)
 
 Game::DeferredCallback screen_flash_animation(int remaining)
 {
+    // FIXME: I wrote the code this way out of pure laziness. Works fine on
+    // small screens, like the gameboy advance, but may appear choppy on a
+    // desktop version of the game. Would be better to add a new game State,
+    // which smoothly interpolates the fade values.
     return [remain = remaining](Platform& pf, Game& game) {
         if (remain > 0) {
             pf.screen().fade(255 - remain, ColorConstant::silver_white);
 
-            game.on_timeout(milliseconds(20),
+            game.on_timeout(milliseconds(40),
                             screen_flash_animation(remain - 1));
 
         } else {

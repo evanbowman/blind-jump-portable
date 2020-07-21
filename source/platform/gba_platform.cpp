@@ -1238,6 +1238,12 @@ void Platform::load_tile1_texture(const char* name)
 
 void Platform::sleep(u32 frames)
 {
+    // NOTE: A sleep call should just pause the game for some number of frames,
+    // but doing so should not have an impact on delta timing
+    // calculation. Therefore, we need to stop the hardware timer associated
+    // with the delta clock, and zero out the clock's contents when finished
+    // with the sleep cycles.
+
     irqDisable(IRQ_TIMER3);
 
     while (frames--) {

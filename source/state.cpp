@@ -490,13 +490,14 @@ public:
     void print(Platform& pfrm, const char* text);
 
 private:
-    enum class Mode { fade_in, update_selector, active } mode_ = Mode::fade_in;
+    enum class Mode { fade_in, update_selector, active, selected } mode_ = Mode::fade_in;
     int selector_index_ = 0;
     Microseconds timer_;
     Vec2<Float> selector_start_pos_;
     Enemy* target_;
     Camera cached_camera_;
     std::optional<Text> text_;
+    int flicker_anim_index_ = 0;
 };
 
 
@@ -3145,9 +3146,11 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
     }
 
-    case Mode::active: {
-        if (pfrm.keyboard().down_transition<Key::action_2>()) {
-            if (target_) {
+    case Mode::selected: {
+        if (timer_ > milliseconds(100)) {
+            timer_ = 0;
+
+            if (flicker_anim_index_ > 9) {
                 target_->make_allied(true);
 
                 // Typically, we would have consumed the item already, in the
@@ -3155,8 +3158,35 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
                 // out of this state without using the item.
                 consume_selected_item(game);
 
-                pfrm.sleep(10);
+                for (auto& p : game.effects().get<Proxy>()) {
+                    p->colorize({ColorConstant::null, 0});
+                }
+
+                pfrm.sleep(8);
+
                 return state_pool_.create<InventoryState>(true);
+
+            } else {
+                if (flicker_anim_index_++ % 2 == 0) {
+                    for (auto& p : game.effects().get<Proxy>()) {
+                        p->colorize({ColorConstant::green, 180});
+                    }
+                } else {
+                    for (auto& p : game.effects().get<Proxy>()) {
+                        p->colorize({ColorConstant::silver_white, 255});
+                    }
+                }
+            }
+        }
+        break;
+    }
+
+    case Mode::active: {
+        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            if (target_) {
+                mode_ = Mode::selected;
+                timer_ = 0;
+                pfrm.sleep(3);
             }
         } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
             return state_pool_.create<InventoryState>(true);
