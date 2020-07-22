@@ -4,6 +4,7 @@
 #include "entity/entity.hpp"
 #include "inventory.hpp"
 #include "number/numeric.hpp"
+#include "powerup.hpp"
 
 
 using Level = s32;
@@ -31,6 +32,11 @@ struct PersistentData {
     HighScores highscores_ = {0};
 
     Inventory inventory_;
+
+    std::array<Powerup, Powerup::max_> powerups_;
+    u32 powerup_count_ = 0;
+
+    void store_powerups(const Powerups& powerups);
 
     // Reset level back to zero, initialize various things. Does not overwrite
     // the seed value, or the highscore table.

@@ -42,7 +42,6 @@ public:
 
     void render(Platform& platform);
 
-    using Powerups = Buffer<Powerup, Powerup::max_>;
     inline Powerups& powerups()
     {
         return powerups_;

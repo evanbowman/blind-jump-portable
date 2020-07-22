@@ -55,6 +55,10 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
     score_ = persistent_data_.score_;
     inventory_ = persistent_data_.inventory_;
 
+    for (u32 i = 0; i < persistent_data_.powerup_count_; ++i) {
+        powerups_.push_back(persistent_data_.powerups_[i]);
+    }
+
     rng::global_state = persistent_data_.seed_;
 
     pfrm.load_overlay_texture("overlay");
@@ -520,6 +524,7 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     persistent_data_.player_health_ = player_.get_health();
     persistent_data_.seed_ = rng::global_state;
     persistent_data_.inventory_ = inventory_;
+    persistent_data_.store_powerups(powerups_);
 
 
     pfrm.load_tile0_texture(current_zone(*this).tileset0_name_);
