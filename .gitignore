@@ -7,3 +7,10 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 .DS_Store
+*.a
+BlindJump
+logfile.txt
+save.dat
+*.aseprite
+*.ase
+*.aup
