@@ -2,6 +2,7 @@
 
 
 #include "function.hpp"
+#include "graphics/contrast.hpp"
 #include "graphics/sprite.hpp"
 #include "graphics/view.hpp"
 #include "memory/buffer.hpp"
@@ -202,6 +203,10 @@ public:
         void display();
 
         Vec2<u32> size() const;
+
+        void set_contrast(Contrast contrast);
+
+        Contrast get_contrast() const;
 
         void set_view(const View& view)
         {

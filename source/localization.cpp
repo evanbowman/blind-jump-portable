@@ -162,6 +162,16 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
             return 94;
         case '?':
             return 95;
+        case '+':
+            return 98;
+        case '-':
+            return 99;
+        case '/':
+            return 100;
+        case '*':
+            return 101;
+        case '=':
+            return 102;
         default:
             if (cp == utf8::getc(u8"ñ")) {
                 return 73;
@@ -251,9 +261,12 @@ StringBuffer<31> locale_language_name(LocaleLanguage ll)
     switch (language) {
     case LocaleLanguage::english:
         switch (ll) {
-        case LocaleLanguage::english: return "english";
-        case LocaleLanguage::null: return "none";
-        case LocaleLanguage::count: return "error";
+        case LocaleLanguage::english:
+            return "english";
+        case LocaleLanguage::null:
+            return "none";
+        case LocaleLanguage::count:
+            return "error";
         }
         break;
 
@@ -352,6 +365,8 @@ const char* locale_string(LocaleString ls)
         case LocaleString::select_target_text: return "Choose a target:";
         case LocaleString::settings_show_fps: return "Show FPS: ";
         case LocaleString::settings_language: return "Language: ";
+        case LocaleString::settings_contrast: return "Contrast: ";
+        case LocaleString::settings_default: return "default";
         case LocaleString::yes: return "yes";
         case LocaleString::no: return "no";
         default: return empty_str;

@@ -872,6 +872,57 @@ static const TextureData* current_spritesheet = &sprite_textures[0];
 static const TextureData* current_tilesheet0 = &tile_textures[0];
 static const TextureData* current_tilesheet1 = &tile_textures[1];
 
+static u16 sprite_palette[16];
+static u16 tilesheet_0_palette[16];
+static u16 tilesheet_1_palette[16];
+
+
+static Contrast contrast = 0;
+
+
+Contrast Platform::Screen::get_contrast() const
+{
+    return ::contrast;
+}
+
+
+static void init_palette(const TextureData* td, u16* palette)
+{
+    for (int i = 0; i < 16; ++i) {
+
+        if (::contrast not_eq 0) {
+            const Float f =
+                (259.f * (contrast + 255)) / (255 * (259 - contrast));
+            const auto c = Color::from_bgr_hex_555(td->palette_data_[i]);
+
+            const auto r =
+                clamp(f * (Color::upsample(c.r_) - 128) + 128, 0.f, 255.f);
+            const auto g =
+                clamp(f * (Color::upsample(c.g_) - 128) + 128, 0.f, 255.f);
+            const auto b =
+                clamp(f * (Color::upsample(c.b_) - 128) + 128, 0.f, 255.f);
+
+            palette[i] = Color(Color::downsample(r),
+                               Color::downsample(g),
+                               Color::downsample(b))
+                             .bgr_hex_555();
+
+        } else {
+            palette[i] = td->palette_data_[i];
+        }
+    }
+}
+
+
+void Platform::Screen::set_contrast(Contrast c)
+{
+    ::contrast = c;
+
+    init_palette(current_spritesheet, sprite_palette);
+    init_palette(current_tilesheet0, tilesheet_0_palette);
+    init_palette(current_tilesheet1, tilesheet_1_palette);
+}
+
 
 static bool validate_tilemap_texture_size(Platform& pfrm, size_t size)
 {
@@ -1088,18 +1139,15 @@ void Platform::Screen::fade(float amount,
 
     if (not base) {
         for (int i = 0; i < 16; ++i) {
-            auto from =
-                Color::from_bgr_hex_555(current_spritesheet->palette_data_[i]);
+            auto from = Color::from_bgr_hex_555(sprite_palette[i]);
             MEM_PALETTE[i] = blend(from, c, include_sprites ? amt : 0);
         }
         for (int i = 0; i < 16; ++i) {
-            auto from =
-                Color::from_bgr_hex_555(current_tilesheet0->palette_data_[i]);
+            auto from = Color::from_bgr_hex_555(tilesheet_0_palette[i]);
             MEM_BG_PALETTE[i] = blend(from, c, amt);
         }
         for (int i = 0; i < 16; ++i) {
-            auto from =
-                Color::from_bgr_hex_555(current_tilesheet1->palette_data_[i]);
+            auto from = Color::from_bgr_hex_555(tilesheet_1_palette[i]);
             MEM_BG_PALETTE[32 + i] = blend(from, c, amt);
         }
         // Should the overlay really be part of the fade...? Tricky, sometimes
@@ -1162,6 +1210,9 @@ void Platform::load_sprite_texture(const char* name)
 
             current_spritesheet = &info;
 
+            init_palette(current_spritesheet, sprite_palette);
+
+
             // NOTE: There are four tile blocks, so index four points to the
             // end of the tile memory.
             memcpy16((void*)&MEM_TILE[4][1],
@@ -1172,8 +1223,7 @@ void Platform::load_sprite_texture(const char* name)
             // active will be overwritten by the copy.
             const auto& c = real_color(last_color);
             for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(
-                    current_spritesheet->palette_data_[i]);
+                auto from = Color::from_bgr_hex_555(sprite_palette[i]);
                 MEM_PALETTE[i] = blend(from, c, last_fade_amt);
             }
         }
@@ -1189,6 +1239,9 @@ void Platform::load_tile0_texture(const char* name)
 
             current_tilesheet0 = &info;
 
+            init_palette(current_tilesheet0, tilesheet_0_palette);
+
+
             // We don't want to load the whole palette into memory, we might
             // overwrite palettes used by someone else, e.g. the overlay...
             //
@@ -1196,8 +1249,7 @@ void Platform::load_tile0_texture(const char* name)
             // active screen fade while modifying the color palette.
             const auto& c = real_color(last_color);
             for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(
-                    current_tilesheet0->palette_data_[i]);
+                auto from = Color::from_bgr_hex_555(tilesheet_0_palette[i]);
                 MEM_BG_PALETTE[i] = blend(from, c, last_fade_amt);
             }
 
@@ -1219,6 +1271,9 @@ void Platform::load_tile1_texture(const char* name)
 
             current_tilesheet1 = &info;
 
+            init_palette(current_tilesheet1, tilesheet_1_palette);
+
+
             // We don't want to load the whole palette into memory, we might
             // overwrite palettes used by someone else, e.g. the overlay...
             //
@@ -1226,9 +1281,9 @@ void Platform::load_tile1_texture(const char* name)
             // active screen fade while modifying the color palette.
             const auto& c = real_color(last_color);
             for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(
-                    current_tilesheet1->palette_data_[i]);
+                auto from = Color::from_bgr_hex_555(tilesheet_1_palette[i]);
                 MEM_BG_PALETTE[32 + i] = blend(from, c, last_fade_amt);
+                tilesheet_1_palette[i] = info.palette_data_[i];
             }
 
             if (validate_tilemap_texture_size(*this, info.tile_data_length_)) {

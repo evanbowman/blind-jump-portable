@@ -32,6 +32,18 @@ public:
         return {val, val, val};
     }
 
+    // Convert color channel to number out of 255 rather than out of 31.
+    static u8 upsample(u8 channel)
+    {
+        return (255.f / 31.f) * channel;
+    }
+
+    // Convert color channel to number out of 31 rather than out of 255.
+    static u8 downsample(u8 channel)
+    {
+        return (31.f / 255.f) * channel;
+    }
+
     u8 r_;
     u8 g_;
     u8 b_;

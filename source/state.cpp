@@ -529,23 +529,22 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-
     void refresh(Platform& pfrm, Game& game);
 
     void draw_line(Platform& pfrm, int row, const char* value);
-
-    static constexpr const int line_count_ = 2;
 
     class LineUpdater {
     public:
         using Result = StringBuffer<31>;
 
-        virtual ~LineUpdater() {}
-        virtual Result update(Game& game, int dir) = 0;
+        virtual ~LineUpdater()
+        {
+        }
+        virtual Result update(Platform&, Game& game, int dir) = 0;
     };
 
     class ShowFPSLineUpdater : public LineUpdater {
-        Result update(Game& game, int dir) override
+        Result update(Platform&, Game& game, int dir) override
         {
             bool& show = game.persistent_data().settings_.show_fps_;
             if (dir not_eq 0) {
@@ -560,7 +559,7 @@ private:
     } show_fps_line_updater_;
 
     class LanguageLineUpdater : public LineUpdater {
-        Result update(Game& game, int dir) override
+        Result update(Platform&, Game& game, int dir) override
         {
             auto& language = game.persistent_data().settings_.language_;
             int l = static_cast<int>(language);
@@ -587,17 +586,47 @@ private:
         }
     } language_line_updater_;
 
+    class ContrastLineUpdater : public LineUpdater {
+        Result update(Platform& pfrm, Game& game, int dir) override
+        {
+            auto& contrast = game.persistent_data().settings_.contrast_;
+
+            if (dir > 0) {
+                contrast += 1;
+            } else if (dir < 0) {
+                contrast -= 1;
+            }
+
+            contrast = clamp(contrast, Contrast{-25}, Contrast{25});
+
+            pfrm.screen().set_contrast(contrast);
+
+            if (contrast not_eq 0) {
+                char buffer[30];
+                locale_num2str(contrast, buffer, 10);
+                return buffer;
+            } else {
+                return locale_string(LocaleString::settings_default);
+            }
+
+        }
+    } contrast_line_updater_;
+
     struct LineInfo {
         LineUpdater& updater_;
         std::optional<Text> text_ = {};
         int cursor_begin_ = 0;
         int cursor_end_ = 0;
     };
+
+    static constexpr const int line_count_ = 3;
+
     std::array<LineInfo, line_count_> lines_;
 
     static constexpr const LocaleString strings[line_count_] = {
         LocaleString::settings_show_fps,
-        LocaleString::settings_language
+        LocaleString::settings_contrast,
+        LocaleString::settings_language,
     };
 
     int select_row_ = 0;
@@ -2542,10 +2571,11 @@ StatePtr State::initial()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-EditSettingsState::EditSettingsState() : lines_{{{show_fps_line_updater_},
-                                                 {language_line_updater_}}}
+EditSettingsState::EditSettingsState()
+    : lines_{{{show_fps_line_updater_},
+              {contrast_line_updater_},
+              {language_line_updater_}}}
 {
-
 }
 
 
@@ -2554,8 +2584,7 @@ void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
     const int value_len = utf8::len(value);
     const int field_len = utf8::len(locale_string(strings[row]));
 
-    const auto margin =
-        centered_text_margins(pfrm, value_len + field_len + 2);
+    const auto margin = centered_text_margins(pfrm, value_len + field_len + 2);
 
     lines_[row].text_.emplace(pfrm, OverlayCoord{0, u8(4 + row * 2)});
 
@@ -2572,7 +2601,7 @@ void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
 void EditSettingsState::refresh(Platform& pfrm, Game& game)
 {
     for (u32 i = 0; i < lines_.size(); ++i) {
-        draw_line(pfrm, i, lines_[i].updater_.update(game, 0).c_str());
+        draw_line(pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
     }
 }
 
@@ -2602,8 +2631,10 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto erase_selector = [&] {
         for (u32 i = 0; i < lines_.size(); ++i) {
             const auto& line = lines_[i];
-            pfrm.set_tile(Layer::overlay, line.cursor_begin_, line.text_->coord().y, 0);
-            pfrm.set_tile(Layer::overlay, line.cursor_end_, line.text_->coord().y, 0);
+            pfrm.set_tile(
+                Layer::overlay, line.cursor_begin_, line.text_->coord().y, 0);
+            pfrm.set_tile(
+                Layer::overlay, line.cursor_end_, line.text_->coord().y, 0);
         }
     };
 
@@ -2617,14 +2648,18 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     } else if (pfrm.keyboard().down_transition<Key::right>()) {
         erase_selector();
-        draw_line(pfrm, select_row_, lines_[select_row_].updater_.update(game, 1).c_str());
+        draw_line(pfrm,
+                  select_row_,
+                  lines_[select_row_].updater_.update(pfrm, game, 1).c_str());
         refresh(pfrm, game); // Re-drawing everything may seem a little
                              // excessive. But for some of the settings, like
                              // language, it does actually make sense to erase
                              // all of the text and redraw it.
     } else if (pfrm.keyboard().down_transition<Key::left>()) {
         erase_selector();
-        draw_line(pfrm, select_row_, lines_[select_row_].updater_.update(game, -1).c_str());
+        draw_line(pfrm,
+                  select_row_,
+                  lines_[select_row_].updater_.update(pfrm, game, -1).c_str());
         refresh(pfrm, game); // Re-drawing everything may seem a little
                              // excessive. But for some of the settings, like
                              // language, it does actually make sense to erase
@@ -2639,21 +2674,23 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
 
         auto [left, right] = [&]() -> Vec2<int> {
-        switch (anim_index_) {
-        default:
-        case 0:
-            return {147, 148};
-        case 1:
-            return {149, 150};
-        }
+            switch (anim_index_) {
+            default:
+            case 0:
+                return {147, 148};
+            case 1:
+                return {149, 150};
+            }
         }();
 
         erase_selector();
 
         const auto& line = lines_[select_row_];
 
-        pfrm.set_tile(Layer::overlay, line.cursor_begin_, line.text_->coord().y, left);
-        pfrm.set_tile(Layer::overlay, line.cursor_end_, line.text_->coord().y, right);
+        pfrm.set_tile(
+            Layer::overlay, line.cursor_begin_, line.text_->coord().y, left);
+        pfrm.set_tile(
+            Layer::overlay, line.cursor_end_, line.text_->coord().y, right);
     }
 
     return null_state();
@@ -3254,8 +3291,10 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             const u8 y = screen_tiles.y / 2;
 
             resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 3)});
-            settings_text_.emplace(pfrm, OverlayCoord{settings_x_loc, u8(y - 1)});
-            save_and_quit_text_.emplace(pfrm, OverlayCoord{snq_x_loc, u8(y + 1)});
+            settings_text_.emplace(pfrm,
+                                   OverlayCoord{settings_x_loc, u8(y - 1)});
+            save_and_quit_text_.emplace(pfrm,
+                                        OverlayCoord{snq_x_loc, u8(y + 1)});
 
             resume_text_->assign(locale_string(LocaleString::menu_resume));
             settings_text_->assign(locale_string(LocaleString::menu_settings));

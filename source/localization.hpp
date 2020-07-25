@@ -60,6 +60,8 @@ enum class LocaleString {
     navigation_pamphlet,
     settings_show_fps,
     settings_language,
+    settings_contrast,
+    settings_default,
     yes,
     no,
     count
