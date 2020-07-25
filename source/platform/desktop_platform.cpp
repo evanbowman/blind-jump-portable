@@ -528,6 +528,18 @@ Vec2<u32> Platform::Screen::size() const
 }
 
 
+void Platform::Screen::set_contrast(Contrast c)
+{
+    // TODO...
+}
+
+
+Contrast Platform::Screen::get_contrast() const
+{
+    return 0; // TODO...
+}
+
+
 enum class TextureSwap { spritesheet, tile0, tile1, overlay };
 
 // The logic thread requests a texture swap, but the swap itself needs to be
