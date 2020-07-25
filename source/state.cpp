@@ -29,7 +29,8 @@ static Bitmatrix<TileMap::width, TileMap::height> visited;
 
 class OverworldState : public State {
 public:
-    OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking)
+    OverworldState(Game& game, bool camera_tracking) :
+        camera_tracking_(game.persistent_data().settings_.dynamic_camera_ and camera_tracking)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -70,7 +71,7 @@ public:
 
 class ActiveState : public OverworldState {
 public:
-    ActiveState(bool camera_tracking = true) : OverworldState(camera_tracking)
+    ActiveState(Game& game, bool camera_tracking = true) : OverworldState(game, camera_tracking)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -129,7 +130,7 @@ void push_notification(Platform& pfrm,
 
 class FadeInState : public OverworldState {
 public:
-    FadeInState() : OverworldState(false)
+    FadeInState(Game& game) : OverworldState(game, false)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -143,7 +144,7 @@ private:
 
 class WarpInState : public OverworldState {
 public:
-    WarpInState() : OverworldState(true)
+    WarpInState(Game& game) : OverworldState(game, true)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -156,7 +157,7 @@ private:
 
 class PreFadePauseState : public OverworldState {
 public:
-    PreFadePauseState() : OverworldState(false)
+    PreFadePauseState(Game& game) : OverworldState(game, false)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -165,7 +166,7 @@ public:
 
 class GlowFadeState : public OverworldState {
 public:
-    GlowFadeState() : OverworldState(false)
+    GlowFadeState(Game& game) : OverworldState(game, false)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -177,7 +178,7 @@ private:
 
 class FadeOutState : public OverworldState {
 public:
-    FadeOutState() : OverworldState(false)
+    FadeOutState(Game& game) : OverworldState(game, false)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -199,7 +200,7 @@ private:
 
 class DeathFadeState : public OverworldState {
 public:
-    DeathFadeState() : OverworldState(false)
+    DeathFadeState(Game& game) : OverworldState(game, false)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -558,6 +559,21 @@ private:
         }
     } show_fps_line_updater_;
 
+    class DynamicCameraLineUpdater : public LineUpdater {
+        Result update(Platform&, Game& game, int dir) override
+        {
+            bool& enabled = game.persistent_data().settings_.dynamic_camera_;
+            if (dir not_eq 0) {
+                enabled = not enabled;
+            }
+            if (enabled) {
+                return locale_string(LocaleString::yes);
+            } else {
+                return locale_string(LocaleString::no);
+            }
+        }
+    } dynamic_camera_line_updater_;
+
     class LanguageLineUpdater : public LineUpdater {
         Result update(Platform&, Game& game, int dir) override
         {
@@ -604,7 +620,14 @@ private:
             if (contrast not_eq 0) {
                 char buffer[30];
                 locale_num2str(contrast, buffer, 10);
-                return buffer;
+                if (contrast > 0) {
+                    Result result;
+                    result += "+";
+                    result += buffer;
+                    return result;
+                } else {
+                    return buffer;
+                }
             } else {
                 return locale_string(LocaleString::settings_default);
             }
@@ -619,11 +642,12 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 3;
+    static constexpr const int line_count_ = 4;
 
     std::array<LineInfo, line_count_> lines_;
 
     static constexpr const LocaleString strings[line_count_] = {
+        LocaleString::settings_dynamic_camera,
         LocaleString::settings_show_fps,
         LocaleString::settings_contrast,
         LocaleString::settings_language,
@@ -1140,7 +1164,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             "explosion1", 3, game.player().get_position());
         big_explosion(pfrm, game, game.player().get_position());
 
-        return state_pool_.create<DeathFadeState>();
+        return state_pool_.create<DeathFadeState>(game);
     }
 
     if (pfrm.keyboard().down_transition<Key::alt_2>()) {
@@ -1175,7 +1199,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (dist < 6) {
             game.player().move(t_pos);
             pfrm.speaker().play_sound("bell", 5);
-            return state_pool_.create<PreFadePauseState>();
+            return state_pool_.create<PreFadePauseState>(game);
         }
     }
 
@@ -1214,7 +1238,7 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
         pfrm.sleep(2);
         game.player().set_visible(true);
-        return state_pool_.create<WarpInState>();
+        return state_pool_.create<WarpInState>(game);
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount);
@@ -1246,7 +1270,7 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         shook_ = false;
         pfrm.screen().fade(0.f, current_zone(game).energy_glow_color_);
         pfrm.screen().pixelate(0);
-        return state_pool_.create<ActiveState>();
+        return state_pool_.create<ActiveState>(game);
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
@@ -1276,7 +1300,7 @@ PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
                              pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {
         game.camera().set_speed(1.f);
-        return state_pool_.create<GlowFadeState>();
+        return state_pool_.create<GlowFadeState>(game);
     } else {
         return null_state();
     }
@@ -1300,7 +1324,7 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (counter_ > fade_duration) {
         pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
         pfrm.screen().pixelate(0);
-        return state_pool_.create<FadeOutState>();
+        return state_pool_.create<FadeOutState>(game);
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
@@ -1700,7 +1724,7 @@ const char* item_description(Item::Type type)
 StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     if (pfrm.keyboard().down_transition<Key::alt_2>()) {
-        return state_pool_.create<ActiveState>();
+        return state_pool_.create<ActiveState>(game);
     }
 
     selector_timer_ += delta;
@@ -2430,7 +2454,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
 
             startup = false;
-            return state_pool_.create<FadeInState>();
+            return state_pool_.create<FadeInState>(game);
         }
 
     } else {
@@ -2442,7 +2466,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
             sound_sync_hack();
         }
         startup = false;
-        return state_pool_.create<FadeInState>();
+        return state_pool_.create<FadeInState>(game);
     }
 
     return null_state();
@@ -2572,7 +2596,8 @@ StatePtr State::initial()
 
 
 EditSettingsState::EditSettingsState()
-    : lines_{{{show_fps_line_updater_},
+    : lines_{{{dynamic_camera_line_updater_},
+              {show_fps_line_updater_},
               {contrast_line_updater_},
               {language_line_updater_}}}
 {
@@ -2651,19 +2676,17 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         draw_line(pfrm,
                   select_row_,
                   lines_[select_row_].updater_.update(pfrm, game, 1).c_str());
-        refresh(pfrm, game); // Re-drawing everything may seem a little
-                             // excessive. But for some of the settings, like
-                             // language, it does actually make sense to erase
-                             // all of the text and redraw it.
+        if (strings[select_row_] == LocaleString::settings_language) {
+            refresh(pfrm, game);
+        }
     } else if (pfrm.keyboard().down_transition<Key::left>()) {
         erase_selector();
         draw_line(pfrm,
                   select_row_,
                   lines_[select_row_].updater_.update(pfrm, game, -1).c_str());
-        refresh(pfrm, game); // Re-drawing everything may seem a little
-                             // excessive. But for some of the settings, like
-                             // language, it does actually make sense to erase
-                             // all of the text and redraw it.
+        if (strings[select_row_] == LocaleString::settings_language) {
+            refresh(pfrm, game);
+        }
     }
 
     anim_timer_ += delta;
@@ -2723,7 +2746,7 @@ LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     if (pfrm.keyboard().down_transition<Key::select>()) {
-        return state_pool_.create<ActiveState>();
+        return state_pool_.create<ActiveState>(game);
     } else if (pfrm.keyboard().down_transition<Key::down>()) {
         offset_ += screen_tiles.x;
         repaint(pfrm, offset_);
@@ -3325,7 +3348,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
         } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
             switch (cursor_loc_) {
             case 0:
-                return state_pool_.create<ActiveState>();
+                return state_pool_.create<ActiveState>(game);
             case 1:
                 return state_pool_.create<EditSettingsState>();
             case 2:
@@ -3333,7 +3356,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
         } else if (pfrm.keyboard().down_transition<Key::start>()) {
             cursor_loc_ = 0;
-            return state_pool_.create<ActiveState>();
+            return state_pool_.create<ActiveState>(game);
         }
     }
 

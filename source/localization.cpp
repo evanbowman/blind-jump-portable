@@ -366,6 +366,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::settings_show_fps: return "Show FPS: ";
         case LocaleString::settings_language: return "Language: ";
         case LocaleString::settings_contrast: return "Contrast: ";
+        case LocaleString::settings_dynamic_camera: return "Sticky Camera: ";
         case LocaleString::settings_default: return "default";
         case LocaleString::yes: return "yes";
         case LocaleString::no: return "no";

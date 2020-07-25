@@ -61,6 +61,7 @@ enum class LocaleString {
     settings_show_fps,
     settings_language,
     settings_contrast,
+    settings_dynamic_camera,
     settings_default,
     yes,
     no,
