@@ -418,6 +418,15 @@ private:
 
 class PauseScreenState : public State {
 public:
+    static constexpr const auto fade_duration = milliseconds(400);
+
+    PauseScreenState(bool fade_in = true)
+    {
+        if (not fade_in) {
+            fade_timer_ = fade_duration - milliseconds(1);
+        }
+    }
+
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -427,12 +436,16 @@ private:
 
     Microseconds fade_timer_ = 0;
     Microseconds log_timer_ = 0;
-    int cursor_loc_ = 0;
+    static int cursor_loc_;
     int anim_index_ = 0;
     Microseconds anim_timer_ = 0;
     std::optional<Text> resume_text_;
+    std::optional<Text> settings_text_;
     std::optional<Text> save_and_quit_text_;
 };
+
+
+int PauseScreenState::cursor_loc_ = 0;
 
 
 // This is a hidden game state intended for debugging. The user can enter
@@ -506,6 +519,93 @@ private:
 };
 
 
+class EditSettingsState : public State {
+public:
+    EditSettingsState();
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+
+    void refresh(Platform& pfrm, Game& game);
+
+    void draw_line(Platform& pfrm, int row, const char* value);
+
+    static constexpr const int line_count_ = 2;
+
+    class LineUpdater {
+    public:
+        using Result = StringBuffer<31>;
+
+        virtual ~LineUpdater() {}
+        virtual Result update(Game& game, int dir) = 0;
+    };
+
+    class ShowFPSLineUpdater : public LineUpdater {
+        Result update(Game& game, int dir) override
+        {
+            bool& show = game.persistent_data().settings_.show_fps_;
+            if (dir not_eq 0) {
+                show = not show;
+            }
+            if (show) {
+                return locale_string(LocaleString::yes);
+            } else {
+                return locale_string(LocaleString::no);
+            }
+        }
+    } show_fps_line_updater_;
+
+    class LanguageLineUpdater : public LineUpdater {
+        Result update(Game& game, int dir) override
+        {
+            auto& language = game.persistent_data().settings_.language_;
+            int l = static_cast<int>(language);
+
+            if (dir > 0) {
+                l += 1;
+                l %= static_cast<int>(LocaleLanguage::count);
+                if (l == 0) {
+                    l = 1;
+                }
+            } else if (dir < 0) {
+                if (l > 1) {
+                    l -= 1;
+                } else if (l == 1) {
+                    l = static_cast<int>(LocaleLanguage::count) - 1;
+                }
+            }
+
+            language = static_cast<LocaleLanguage>(l);
+
+            locale_set_language(language);
+
+            return locale_language_name(language);
+        }
+    } language_line_updater_;
+
+    struct LineInfo {
+        LineUpdater& updater_;
+        std::optional<Text> text_ = {};
+        int cursor_begin_ = 0;
+        int cursor_end_ = 0;
+    };
+    std::array<LineInfo, line_count_> lines_;
+
+    static constexpr const LocaleString strings[line_count_] = {
+        LocaleString::settings_show_fps,
+        LocaleString::settings_language
+    };
+
+    int select_row_ = 0;
+    int anim_index_ = 0;
+    Microseconds anim_timer_ = 0;
+};
+
+
 static void state_deleter(State* s);
 
 StatePtr null_state()
@@ -553,6 +653,7 @@ static StatePool<ActiveState,
                  CommandCodeState,
                  PauseScreenState,
                  MapSystemState,
+                 EditSettingsState,
                  IntroCreditsState,
                  IntroLegalMessage,
                  DeathContinueState,
@@ -1378,7 +1479,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                     const auto iters =
                         screen_tiles.x -
                         (utf8::len(str) + 2 + integer_text_length(num) +
-                         str_len(suffix));
+                         utf8::len(suffix));
                     for (u32 i = 0; i < iters; ++i) {
                         target.append(
                             locale_string(LocaleString::punctuation_period));
@@ -2436,6 +2537,131 @@ StatePtr State::initial()
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+// EditSettingsState
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+EditSettingsState::EditSettingsState() : lines_{{{show_fps_line_updater_},
+                                                 {language_line_updater_}}}
+{
+
+}
+
+
+void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
+{
+    const int value_len = utf8::len(value);
+    const int field_len = utf8::len(locale_string(strings[row]));
+
+    const auto margin =
+        centered_text_margins(pfrm, value_len + field_len + 2);
+
+    lines_[row].text_.emplace(pfrm, OverlayCoord{0, u8(4 + row * 2)});
+
+    left_text_margin(*lines_[row].text_, margin);
+    lines_[row].text_->append(locale_string(strings[row]));
+    lines_[row].text_->append("  ");
+    lines_[row].text_->append(value);
+
+    lines_[row].cursor_begin_ = margin + field_len;
+    lines_[row].cursor_end_ = margin + field_len + 2 + value_len + 1;
+}
+
+
+void EditSettingsState::refresh(Platform& pfrm, Game& game)
+{
+    for (u32 i = 0; i < lines_.size(); ++i) {
+        draw_line(pfrm, i, lines_[i].updater_.update(game, 0).c_str());
+    }
+}
+
+
+void EditSettingsState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    refresh(pfrm, game);
+}
+
+
+void EditSettingsState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+    for (auto& l : lines_) {
+        l.text_.reset();
+    }
+    pfrm.fill_overlay(0);
+}
+
+
+StatePtr
+EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        return state_pool_.create<PauseScreenState>(false);
+    }
+
+    auto erase_selector = [&] {
+        for (u32 i = 0; i < lines_.size(); ++i) {
+            const auto& line = lines_[i];
+            pfrm.set_tile(Layer::overlay, line.cursor_begin_, line.text_->coord().y, 0);
+            pfrm.set_tile(Layer::overlay, line.cursor_end_, line.text_->coord().y, 0);
+        }
+    };
+
+    if (pfrm.keyboard().down_transition<Key::down>()) {
+        if (select_row_ < static_cast<int>(lines_.size() - 1)) {
+            select_row_ += 1;
+        }
+    } else if (pfrm.keyboard().down_transition<Key::up>()) {
+        if (select_row_ > 0) {
+            select_row_ -= 1;
+        }
+    } else if (pfrm.keyboard().down_transition<Key::right>()) {
+        erase_selector();
+        draw_line(pfrm, select_row_, lines_[select_row_].updater_.update(game, 1).c_str());
+        refresh(pfrm, game); // Re-drawing everything may seem a little
+                             // excessive. But for some of the settings, like
+                             // language, it does actually make sense to erase
+                             // all of the text and redraw it.
+    } else if (pfrm.keyboard().down_transition<Key::left>()) {
+        erase_selector();
+        draw_line(pfrm, select_row_, lines_[select_row_].updater_.update(game, -1).c_str());
+        refresh(pfrm, game); // Re-drawing everything may seem a little
+                             // excessive. But for some of the settings, like
+                             // language, it does actually make sense to erase
+                             // all of the text and redraw it.
+    }
+
+    anim_timer_ += delta;
+    if (anim_timer_ > milliseconds(75)) {
+        anim_timer_ = 0;
+        if (++anim_index_ > 1) {
+            anim_index_ = 0;
+        }
+
+        auto [left, right] = [&]() -> Vec2<int> {
+        switch (anim_index_) {
+        default:
+        case 0:
+            return {147, 148};
+        case 1:
+            return {149, 150};
+        }
+        }();
+
+        erase_selector();
+
+        const auto& line = lines_[select_row_];
+
+        pfrm.set_tile(Layer::overlay, line.cursor_begin_, line.text_->coord().y, left);
+        pfrm.set_tile(Layer::overlay, line.cursor_end_, line.text_->coord().y, right);
+    }
+
+    return null_state();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
 // LogfileViewerState
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -2469,6 +2695,14 @@ LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
             offset_ -= screen_tiles.x;
             repaint(pfrm, offset_);
         }
+    } else if (pfrm.keyboard().down_transition<Key::right>()) {
+        offset_ += screen_tiles.x * screen_tiles.y;
+        repaint(pfrm, offset_);
+    } else if (pfrm.keyboard().down_transition<Key::left>()) {
+        if (offset_ >= screen_tiles.x * screen_tiles.y) {
+            offset_ -= screen_tiles.x * screen_tiles.y;
+            repaint(pfrm, offset_);
+        }
     }
 
     return null_state();
@@ -2487,13 +2721,22 @@ void LogfileViewerState::repaint(Platform& pfrm, int offset)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
+    int index = 0;
     for (int j = 0; j < screen_tiles.y; ++j) {
         for (int i = 0; i < screen_tiles.x; ++i) {
-            const int index = i + j * screen_tiles.x;
+            // const int index = i + j * screen_tiles.x;
             if (index < buffer_size) {
-                const auto t =
-                    pfrm.map_glyph(buffer[index], locale_texture_map());
-                pfrm.set_tile(Layer::overlay, i, j, t);
+                if (buffer[index] == '\n') {
+                    for (; i < screen_tiles.x; ++i) {
+                        // eat the rest of the space in the current line
+                        pfrm.set_tile(Layer::overlay, i, j, 0);
+                    }
+                } else {
+                    const auto t =
+                        pfrm.map_glyph(buffer[index], locale_texture_map());
+                    pfrm.set_tile(Layer::overlay, i, j, t);
+                }
+                index += 1;
             }
         }
     }
@@ -2937,7 +3180,7 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
 {
     // draw_dot_grid(pfrm);
 
-    if (not resume_text_ or not save_and_quit_text_) {
+    if (not resume_text_ or not save_and_quit_text_ or not settings_text_) {
         return;
     }
 
@@ -2961,11 +3204,19 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
     default:
     case 0:
         draw_cursor(&(*resume_text_), left, right);
+        draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), 0, 0);
         break;
 
     case 1:
         draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*settings_text_), left, right);
+        draw_cursor(&(*save_and_quit_text_), 0, 0);
+        break;
+
+    case 2:
+        draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), left, right);
         break;
     }
@@ -2981,7 +3232,6 @@ void PauseScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
 StatePtr
 PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    constexpr auto fade_duration = milliseconds(400);
     if (fade_timer_ < fade_duration) {
         fade_timer_ += delta;
 
@@ -2991,18 +3241,24 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             const auto resume_text_len =
                 utf8::len(locale_string(LocaleString::menu_resume));
 
+            const auto settings_text_len =
+                utf8::len(locale_string(LocaleString::menu_settings));
+
             const auto snq_text_len =
                 utf8::len(locale_string(LocaleString::menu_save_and_quit));
 
             const u8 resume_x_loc = (screen_tiles.x - resume_text_len) / 2;
+            const u8 settings_x_loc = (screen_tiles.x - settings_text_len) / 2;
             const u8 snq_x_loc = (screen_tiles.x - snq_text_len) / 2;
 
             const u8 y = screen_tiles.y / 2;
 
-            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 2)});
-            save_and_quit_text_.emplace(pfrm, OverlayCoord{snq_x_loc, u8(y)});
+            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 3)});
+            settings_text_.emplace(pfrm, OverlayCoord{settings_x_loc, u8(y - 1)});
+            save_and_quit_text_.emplace(pfrm, OverlayCoord{snq_x_loc, u8(y + 1)});
 
             resume_text_->assign(locale_string(LocaleString::menu_resume));
+            settings_text_->assign(locale_string(LocaleString::menu_settings));
             save_and_quit_text_->assign(
                 locale_string(LocaleString::menu_save_and_quit));
 
@@ -3020,7 +3276,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             draw_cursor(pfrm);
         }
 
-        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 1) {
+        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 2) {
             cursor_loc_ += 1;
             draw_cursor(pfrm);
         } else if (pfrm.keyboard().down_transition<Key::up>() and
@@ -3032,9 +3288,12 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 0:
                 return state_pool_.create<ActiveState>();
             case 1:
+                return state_pool_.create<EditSettingsState>();
+            case 2:
                 return state_pool_.create<GoodbyeState>();
             }
         } else if (pfrm.keyboard().down_transition<Key::start>()) {
+            cursor_loc_ = 0;
             return state_pool_.create<ActiveState>();
         }
     }

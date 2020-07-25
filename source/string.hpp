@@ -152,6 +152,13 @@ public:
         return *this;
     }
 
+    template <u32 OtherCapacity>
+    StringBuffer& operator+=(const StringBuffer<OtherCapacity>& other)
+    {
+        (*this) += other.c_str();
+        return *this;
+    }
+
     StringBuffer& operator=(const char* str)
     {
         this->clear();

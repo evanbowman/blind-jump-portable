@@ -1,6 +1,9 @@
 #pragma once
 
 
+#include <string.hpp>
+
+
 enum class LocaleLanguage { null, english, count };
 
 
@@ -50,15 +53,23 @@ enum class LocaleString {
     waypoints,
     punctuation_period,
     menu_resume,
+    menu_settings,
     menu_save_and_quit,
     goodbye_text,
     select_target_text,
     navigation_pamphlet,
+    settings_show_fps,
+    settings_language,
+    yes,
+    no,
     count
 };
 
 
 void locale_set_language(LocaleLanguage ll);
+
+
+StringBuffer<31> locale_language_name(LocaleLanguage ll);
 
 
 const char* locale_string(LocaleString ls);

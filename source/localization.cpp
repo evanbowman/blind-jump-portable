@@ -246,6 +246,27 @@ void locale_set_language(LocaleLanguage ll)
 }
 
 
+StringBuffer<31> locale_language_name(LocaleLanguage ll)
+{
+    switch (language) {
+    case LocaleLanguage::english:
+        switch (ll) {
+        case LocaleLanguage::english: return "english";
+        case LocaleLanguage::null: return "none";
+        case LocaleLanguage::count: return "error";
+        }
+        break;
+
+    case LocaleLanguage::null:
+        return "null";
+
+    case LocaleLanguage::count:
+        return "error";
+    }
+    return "";
+}
+
+
 const char* locale_string(LocaleString ls)
 {
     static const char* empty_str = "NULL";
@@ -324,10 +345,15 @@ const char* locale_string(LocaleString ls)
         case LocaleString::waypoints: return "waypoints ";
         case LocaleString::punctuation_period: return ".";
         case LocaleString::menu_resume: return "Resume";
+        case LocaleString::menu_settings: return "Settings";
         case LocaleString::menu_save_and_quit: return "Save and Quit";
         case LocaleString::goodbye_text: return "See you later...";
         case LocaleString::signal_jammer_title: return "Signal jammer";
         case LocaleString::select_target_text: return "Choose a target:";
+        case LocaleString::settings_show_fps: return "Show FPS: ";
+        case LocaleString::settings_language: return "Language: ";
+        case LocaleString::yes: return "yes";
+        case LocaleString::no: return "no";
         default: return empty_str;
         }
         break;

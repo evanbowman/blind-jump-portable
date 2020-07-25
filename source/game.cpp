@@ -44,9 +44,30 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
         info(pfrm, "no save file found");
     }
 
-    const auto lang = Conf(pfrm).expect<Conf::String>("locale", "language");
-    if (lang == "english") {
-        locale_set_language(LocaleLanguage::english);
+    if (persistent_data_.settings_.language_ not_eq LocaleLanguage::null) {
+        locale_set_language(persistent_data_.settings_.language_);
+    } else {
+        const auto lang =
+            Conf(pfrm).expect<Conf::String>("locale", "default_language");
+
+        const auto lang_enum = [&] {
+            if (lang == "english") {
+                return LocaleLanguage::english;
+            } else {
+                return LocaleLanguage::null;
+            }
+        }();
+
+        if (lang_enum not_eq LocaleLanguage::null) {
+            locale_set_language(lang_enum);
+            persistent_data_.settings_.language_ = lang_enum;
+
+            StringBuffer<64> buf;
+            buf += "saved default language as ";
+            buf += lang;
+
+            info(pfrm, buf.c_str());
+        }
     }
 
     state_ = State::initial();
@@ -1577,7 +1598,7 @@ Game::DeferredCallback screen_flash_animation(int remaining)
             pf.screen().fade(255 - remain, ColorConstant::silver_white);
 
             game.on_timeout(
-                pf, milliseconds(40), screen_flash_animation(remain - 1));
+                pf, milliseconds(35), screen_flash_animation(remain - 1));
 
         } else {
             pf.screen().fade(0);

@@ -30,21 +30,15 @@ void UpdateTask::run()
 
             const auto delta = DeltaClock::instance().reset();
 
-            if (pf_->keyboard().down_transition<Key::select>()) {
-                if (fps_text_) {
-                    fps_text_.reset();
-                } else {
-                    fps_text_.emplace(*pf_, OverlayCoord{1, 1});
-                }
-            }
-
-            if (fps_text_) {
+            if (game.persistent_data().settings_.show_fps_) {
                 if (--fps_print_counter_ == 0) {
                     fps_print_counter_ = 20;
                     fps_text_.emplace(*pf_, OverlayCoord{1, 2});
                     fps_text_->assign(1000000.f / delta);
                     fps_text_->append(" fps");
                 }
+            } else if (fps_text_) {
+                fps_text_.reset();
             }
 
             game.update(*pf_, delta);
