@@ -16,23 +16,24 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
     big_explosion(pf, game, {position.x + off, position.y + off});
 
     game.on_timeout(
-        milliseconds(300), [pos = position](Platform& pf, Game& game) {
+        pf, milliseconds(300), [pos = position](Platform& pf, Game& game) {
             big_explosion(pf, game, pos);
             const auto off = -50.f;
 
             big_explosion(pf, game, {pos.x - off, pos.y + off});
             big_explosion(pf, game, {pos.x + off, pos.y - off});
 
-            game.on_timeout(milliseconds(100), [pos](Platform& pf, Game& game) {
-                for (int i = 0; i < 3; ++i) {
-                    game.details().spawn<Item>(
-                        rng::sample<32>(pos), pf, Item::Type::heart);
-                }
+            game.on_timeout(
+                pf, milliseconds(100), [pos](Platform& pf, Game& game) {
+                    for (int i = 0; i < 3; ++i) {
+                        game.details().spawn<Item>(
+                            rng::sample<32>(pos), pf, Item::Type::heart);
+                    }
 
-                game.transporter().set_position(pos);
+                    game.transporter().set_position(pos);
 
-                screen_flash_animation(255)(pf, game);
-            });
+                    screen_flash_animation(255)(pf, game);
+                });
         });
 
     pf.speaker().stop_music();

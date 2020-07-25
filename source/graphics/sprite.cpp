@@ -6,6 +6,12 @@ Sprite::Sprite(Size size) : size_(size)
 }
 
 
+void Sprite::set_option(Option opt, bool enabled)
+{
+    opts_.set(static_cast<int>(opt), enabled);
+}
+
+
 void Sprite::set_position(const Vec2<Float>& position)
 {
     position_ = position;
@@ -51,6 +57,12 @@ void Sprite::set_size(Size size)
 void Sprite::set_rotation(Rotation rotation)
 {
     rotation_ = rotation;
+}
+
+
+bool Sprite::get_option(Option opt) const
+{
+    return opts_.get(static_cast<int>(opt));
 }
 
 

@@ -678,14 +678,19 @@ void Platform::Screen::draw(const Sprite& spr)
 }
 
 
-Buffer<Platform::Task*, 16> task_queue_;
+static Buffer<Platform::Task*, 8> task_queue_;
 
 
 void Platform::push_task(Task* task)
 {
     task->complete_ = false;
     task->running_ = true;
-    task_queue_.push_back(task);
+
+    if (not task_queue_.push_back(task)) {
+        error(*this, "failed to enqueue task");
+        while (true)
+            ;
+    }
 }
 
 
@@ -1422,7 +1427,8 @@ SynchronizedBase::~SynchronizedBase()
 // logs. The platform implementation isn't supposed to need to know about the
 // layout of the game's save data, but, in this particular implementation, we're
 // using the cartridge ram as a logfile.
-static u32 log_write_loc = sizeof(PersistentData);
+static const u32 initial_log_write_loc = sizeof(PersistentData);
+static u32 log_write_loc = initial_log_write_loc;
 
 
 Platform::Logger::Logger()
@@ -1432,7 +1438,7 @@ Platform::Logger::Logger()
 
 void Platform::Logger::log(Logger::Severity level, const char* msg)
 {
-    std::array<char, 1024> buffer;
+    std::array<char, 512> buffer;
 
     buffer[0] = '[';
     buffer[2] = ']';
@@ -1455,12 +1461,24 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 
     u32 i;
     constexpr size_t prefix_size = 3;
+
+    if (log_write_loc + prefix_size + msg_size + 2 >= 64000) {
+        // We cannot be certain of how much cartridge ram will be available. But
+        // 64k is a reasonable assumption. When we reach the end, wrap around to
+        // the beginning.
+        log_write_loc = initial_log_write_loc;
+    }
+
+
     for (i = 0;
          i < std::min(size_t(msg_size), buffer.size() - (prefix_size + 1));
          ++i) {
         buffer[i + 3] = msg[i];
     }
     buffer[i + 3] = '\n';
+    buffer[i + 4] = '\n'; // This char will be overwritten, meant to identify
+                          // the end of the log, in the case where the log wraps
+                          // around.
 
     if (save_using_flash) {
         flash_save(buffer.data(), log_write_loc, buffer.size());

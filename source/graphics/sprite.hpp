@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bitvector.hpp"
 #include "color.hpp"
 #include "number/numeric.hpp"
 
@@ -9,10 +10,13 @@ using TextureIndex = u32;
 
 class Sprite {
 public:
+    enum class Option { count };
+
     enum class Alpha : u8 {
         opaque,
         translucent,
-        transparent // invisible
+        transparent, // invisible
+        count
     };
 
     enum class Size : u8 { w32_h32, w16_h32 };
@@ -21,6 +25,9 @@ public:
 
 
     Sprite(Size size = Size::w32_h32);
+
+
+    void set_option(Option opt, bool enabled);
 
 
     void set_position(const Vec2<Float>& position);
@@ -45,6 +52,9 @@ public:
 
 
     void set_rotation(Rotation degrees);
+
+
+    bool get_option(Option opt) const;
 
 
     const Vec2<Float>& get_position() const;
@@ -79,6 +89,7 @@ private:
     TextureIndex texture_index_ = 0;
     Alpha alpha_ = Alpha::opaque;
     Size size_ = Size::w32_h32;
+    Bitvector<static_cast<int>(Option::count)> opts_;
     ColorMix mix_;
 };
 

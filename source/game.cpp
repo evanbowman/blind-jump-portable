@@ -1576,8 +1576,8 @@ Game::DeferredCallback screen_flash_animation(int remaining)
         if (remain > 0) {
             pf.screen().fade(255 - remain, ColorConstant::silver_white);
 
-            game.on_timeout(milliseconds(40),
-                            screen_flash_animation(remain - 1));
+            game.on_timeout(
+                pf, milliseconds(40), screen_flash_animation(remain - 1));
 
         } else {
             pf.screen().fade(0);

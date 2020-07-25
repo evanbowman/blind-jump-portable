@@ -490,7 +490,12 @@ public:
     void print(Platform& pfrm, const char* text);
 
 private:
-    enum class Mode { fade_in, update_selector, active, selected } mode_ = Mode::fade_in;
+    enum class Mode {
+        fade_in,
+        update_selector,
+        active,
+        selected
+    } mode_ = Mode::fade_in;
     int selector_index_ = 0;
     Microseconds timer_;
     Vec2<Float> selector_start_pos_;
@@ -1435,9 +1440,7 @@ struct InventoryItemHandler {
     int icon_;
     StatePtr (*callback_)(Platform& pfrm, Game& game);
     LocaleString description_;
-    enum {
-          no = 0, yes, custom
-    } single_use_ = no;
+    enum { no = 0, yes, custom } single_use_ = no;
 };
 
 
@@ -2779,7 +2782,7 @@ void EndingCreditsState::enter(Platform& pfrm, Game& game, State&)
 
     next_y_ = screen_tiles.y + 2;
 
-    game.on_timeout(milliseconds(500), [](Platform& pfrm, Game&) {
+    game.on_timeout(pfrm, milliseconds(500), [](Platform& pfrm, Game&) {
         pfrm.speaker().play_music("clair_de_lune", false, 0);
     });
 }
