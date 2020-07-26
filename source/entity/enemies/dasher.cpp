@@ -25,6 +25,22 @@ Dasher::Dasher(const Vec2<Float>& position)
 }
 
 
+static Float shot_speed(Game& game)
+{
+    switch (game.difficulty()) {
+    case Difficulty::count:
+    case Difficulty::normal:
+        break;
+
+    case Difficulty::survival:
+    case Difficulty::hard:
+        return 0.00015f;
+    }
+
+    return 0.000138f;
+}
+
+
 void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 {
     Enemy::update(pf, game, dt);
@@ -142,7 +158,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
                         game,
                         position_,
                         rng::sample<8>(target.get_position()),
-                        0.00015f);
+                        shot_speed(game));
         }
         break;
 
@@ -161,7 +177,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
                         game,
                         position_,
                         rng::sample<16>(target.get_position()),
-                        0.00015f);
+                        shot_speed(game));
         }
         break;
     }
@@ -176,7 +192,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
                         game,
                         position_,
                         rng::sample<32>(target.get_position()),
-                        0.00015f);
+                        shot_speed(game));
         }
         break;
 

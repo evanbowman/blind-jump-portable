@@ -7,9 +7,19 @@
 
 class ScattershotAttackPattern : public GatekeeperShield::AttackPattern {
 public:
-    ScattershotAttackPattern(Microseconds delay)
+    ScattershotAttackPattern(Microseconds delay, Game& game, Gatekeeper& gk)
         : reload_(delay), shot_count_(0)
     {
+        switch (game.difficulty()) {
+        case Difficulty::count:
+        case Difficulty::normal:
+            reload_ += milliseconds(300);
+            break;
+
+        case Difficulty::hard:
+        case Difficulty::survival:
+            break;
+        }
     }
 
     void update(GatekeeperShield& shield,
@@ -35,7 +45,17 @@ public:
 
             if (++shot_count_ == [&] { return 3; }()) {
                 shot_count_ = 0;
-                reload_ = milliseconds(900);
+                switch (game.difficulty()) {
+                case Difficulty::count:
+                case Difficulty::normal:
+                    reload_ = milliseconds(1300);
+                    break;
+
+                case Difficulty::hard:
+                case Difficulty::survival:
+                    reload_ = milliseconds(900);
+                    break;
+                }
             }
         }
     }
@@ -308,7 +328,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > milliseconds(25)) {
             timer_ = 0;
 
-            if (shield_radius_ > max_shield_radius + 30) {
+            if (shield_radius_ > max_shield_radius + 10) {
                 --shield_radius_;
             } else {
                 state_ = State::idle;
@@ -438,13 +458,13 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                     if (shields.size() == 2) {
                         shields[0]
                             ->set_attack_pattern<ScattershotAttackPattern>(
-                                milliseconds(700));
+                                milliseconds(700), game, *this);
                         shields[1]->set_attack_pattern<SweepAttackPattern>(
                             *shields[1], milliseconds(100), game);
                     } else if (shields.size() == 1) {
                         shields[0]
                             ->set_attack_pattern<ScattershotAttackPattern>(
-                                milliseconds(700));
+                                milliseconds(700), game, *this);
                     }
                 }
 

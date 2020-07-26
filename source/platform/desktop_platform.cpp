@@ -121,8 +121,15 @@ public:
     sf::Texture background_texture_;
     sf::Shader color_shader_;
 
+    std::map<utf8::Codepoint, TileDesc> glyph_table_;
+    TileDesc next_glyph_ = 504;
+
+    Vec2<Float> overlay_origin_;
+
     sf::RectangleShape fade_overlay_;
     bool fade_include_sprites_ = true;
+
+    sf::Color fade_color_ = sf::Color::Transparent;
 
     TileMap overlay_;
     TileMap map_0_;
@@ -552,10 +559,17 @@ static std::queue<std::tuple<Layer, int, int, int>> tile_swap_requests;
 static std::mutex tile_swap_mutex;
 
 
+static std::queue<std::pair<TileDesc, Platform::TextureMapping>> glyph_requests;
+static std::mutex glyph_requests_mutex;
+
+
 void Platform::Screen::clear()
 {
     auto& window = ::platform->data()->window_;
     window.clear();
+
+    ::platform->data()->fade_overlay_.setFillColor(
+        ::platform->data()->fade_color_);
 
     {
         std::lock_guard<std::mutex> guard(::platform->data()->audio_lock_);
@@ -638,6 +652,77 @@ void Platform::Screen::clear()
                 error(*::platform, "Failed to create texture");
                 exit(EXIT_FAILURE);
             }
+        }
+    }
+
+
+    {
+        std::lock_guard<std::mutex> guard(glyph_requests_mutex);
+        while (not glyph_requests.empty()) {
+            const auto rq = glyph_requests.front();
+            glyph_requests.pop();
+
+            auto image_folder =
+                Conf(*::platform).expect<Conf::String>("paths", "image_folder");
+
+            sf::Image character_source_image_;
+            const auto charset_path = std::string(image_folder.c_str()) +
+                                      rq.second.texture_name_ + ".png";
+            if (not character_source_image_.loadFromFile(charset_path)) {
+                error(
+                    *::platform,
+                    (std::string("failed to open charset image " + charset_path)
+                         .c_str()));
+                exit(EXIT_FAILURE);
+            }
+
+            // This code is so wasteful... so many intermediary images... FIXME.
+
+            auto& texture = ::platform->data()->overlay_texture_;
+            auto old_texture_img = texture.copyToImage();
+
+            sf::Image new_texture_image;
+            new_texture_image.create((rq.first + 1) * 8,
+                                     old_texture_img.getSize().y);
+
+            new_texture_image.copy(old_texture_img,
+                                   0,
+                                   0,
+                                   {0,
+                                    0,
+                                    (int)old_texture_img.getSize().x,
+                                    (int)old_texture_img.getSize().y});
+
+            new_texture_image.copy(character_source_image_,
+                                   rq.first * 8,
+                                   0,
+                                   {rq.second.offset_ * 8, 0, 8, 8},
+                                   true);
+
+            const auto glyph_background_color =
+                character_source_image_.getPixel(0, 0);
+
+            const auto font_fg_color = new_texture_image.getPixel(648, 0);
+            const auto font_bg_color = new_texture_image.getPixel(649, 0);
+
+            for (int x = 0; x < 8; ++x) {
+                for (int y = 0; y < 8; ++y) {
+                    const auto px =
+                        new_texture_image.getPixel(rq.first * 8 + x, y);
+                    if (px == glyph_background_color) {
+                        new_texture_image.setPixel(
+                            rq.first * 8 + x, y, font_bg_color);
+                    } else {
+                        new_texture_image.setPixel(
+                            rq.first * 8 + x, y, font_fg_color);
+                    }
+                }
+            }
+
+            // character_source_image_.saveToFile("debug.png");
+            // new_texture_image.saveToFile("test.png");
+
+            texture.loadFromImage(new_texture_image);
         }
     }
 
@@ -918,7 +1003,10 @@ void Platform::Screen::display()
         window.draw(::platform->data()->fade_overlay_);
     }
 
-    view.setCenter({view_.get_size().x / 2, view_.get_size().y / 2});
+    auto& origin = ::platform->data()->overlay_origin_;
+
+    view.setCenter(
+        {view_.get_size().x / 2 + origin.x, view_.get_size().y / 2 + origin.y});
 
     window.setView(view);
 
@@ -938,25 +1026,24 @@ void Platform::Screen::fade(Float amount,
     const auto c = real_color(k);
 
     if (not base) {
-        ::platform->data()->fade_overlay_.setFillColor(
-            {static_cast<uint8_t>(c.x * 255),
-             static_cast<uint8_t>(c.y * 255),
-             static_cast<uint8_t>(c.z * 255),
-             static_cast<uint8_t>(amount * 255)});
+        ::platform->data()->fade_color_ = {static_cast<uint8_t>(c.x * 255),
+                                           static_cast<uint8_t>(c.y * 255),
+                                           static_cast<uint8_t>(c.z * 255),
+                                           static_cast<uint8_t>(amount * 255)};
         ::platform->data()->fade_include_sprites_ = include_sprites;
     } else {
         const auto c2 = real_color(*base);
-        ::platform->data()->fade_overlay_.setFillColor(
-            {interpolate(static_cast<uint8_t>(c.x * 255),
-                         static_cast<uint8_t>(c2.x * 255),
-                         amount),
-             interpolate(static_cast<uint8_t>(c.y * 255),
-                         static_cast<uint8_t>(c2.y * 255),
-                         amount),
-             interpolate(static_cast<uint8_t>(c.z * 255),
-                         static_cast<uint8_t>(c2.z * 255),
-                         amount),
-             static_cast<uint8_t>(255)});
+        ::platform->data()->fade_color_ = {
+            interpolate(static_cast<uint8_t>(c.x * 255),
+                        static_cast<uint8_t>(c2.x * 255),
+                        amount),
+            interpolate(static_cast<uint8_t>(c.y * 255),
+                        static_cast<uint8_t>(c2.y * 255),
+                        amount),
+            interpolate(static_cast<uint8_t>(c.z * 255),
+                        static_cast<uint8_t>(c2.z * 255),
+                        amount),
+            static_cast<uint8_t>(255)};
     }
 }
 
@@ -1295,8 +1382,16 @@ void Platform::load_tile1_texture(const char* name)
 
 void Platform::load_overlay_texture(const char* name)
 {
-    std::lock_guard<std::mutex> guard(texture_swap_mutex);
-    texture_swap_requests.push({TextureSwap::overlay, name});
+    {
+        std::lock_guard<std::mutex> guard(texture_swap_mutex);
+        texture_swap_requests.push({TextureSwap::overlay, name});
+    }
+    {
+        std::lock_guard<std::mutex> guard(glyph_requests_mutex);
+        while (not glyph_requests.empty())
+            glyph_requests.pop();
+    }
+    ::platform->data()->glyph_table_.clear();
 }
 
 
@@ -1340,9 +1435,9 @@ void Platform::fill_overlay(u16 tile_desc)
 }
 
 
-void Platform::set_overlay_origin(s16 x, s16 y)
+void Platform::set_overlay_origin(Float x, Float y)
 {
-    // TODO
+    ::platform->data()->overlay_origin_ = {x, y};
 }
 
 
@@ -1355,9 +1450,22 @@ void Platform::enable_glyph_mode(bool enabled)
 TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                              TextureCpMapper mapper)
 {
+    auto& glyphs = ::platform->data()->glyph_table_;
+
     if (auto mapping = mapper(glyph)) {
-        // TODO...
-        return 111;
+
+        auto found = glyphs.find(glyph);
+        if (found not_eq glyphs.end()) {
+            return found->second;
+        } else {
+            const auto loc = ::platform->data()->next_glyph_++;
+            glyphs[glyph] = loc;
+
+            std::lock_guard<std::mutex> guard(glyph_requests_mutex);
+            glyph_requests.push({loc, *mapping});
+
+            return loc;
+        }
     } else {
         return 111;
     }

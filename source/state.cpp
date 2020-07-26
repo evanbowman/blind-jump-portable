@@ -53,6 +53,10 @@ public:
 private:
     const bool camera_tracking_;
     Microseconds camera_snap_timer_ = 0;
+
+    Microseconds fps_timer_ = 0;
+    int fps_frame_count_ = 0;
+    std::optional<Text> fps_text_;
 };
 
 
@@ -445,8 +449,8 @@ private:
     std::optional<Text> resume_text_;
     std::optional<Text> settings_text_;
     std::optional<Text> save_and_quit_text_;
+    Float y_offset_ = 0;
 };
-
 
 int PauseScreenState::cursor_loc_ = 0;
 
@@ -726,6 +730,7 @@ private:
     int select_row_ = 0;
     int anim_index_ = 0;
     Microseconds anim_timer_ = 0;
+    Float y_offset_ = 0;
 };
 
 
@@ -804,6 +809,7 @@ static void state_deleter(State* s)
 void OverworldState::exit(Platform& pfrm, Game&, State&)
 {
     notification_text.reset();
+    fps_text_.reset();
 
     // In case we're in the middle of an entry/exit animation for the
     // notification bar.
@@ -818,6 +824,27 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
+
+    if (game.persistent_data().settings_.show_fps_) {
+
+        fps_timer_ += delta;
+        fps_frame_count_ += 1;
+
+        if (fps_timer_ >= seconds(1)) {
+            fps_timer_ -= seconds(1);
+
+            fps_text_.emplace(pfrm, OverlayCoord{1, 2});
+            fps_text_->assign(fps_frame_count_);
+            fps_text_->append(" fps");
+            fps_frame_count_ = 0;
+        }
+    } else if (fps_text_) {
+        fps_text_.reset();
+
+        fps_frame_count_ = 0;
+        fps_timer_ = 0;
+    }
+
 
     Player& player = game.player();
 
@@ -2674,6 +2701,8 @@ void EditSettingsState::message(Platform& pfrm, const char* str)
     message_anim_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
 
     message_anim_->init(screen_tiles.x);
+
+    pfrm.set_overlay_origin(0, 0);
 }
 
 
@@ -2729,6 +2758,8 @@ void EditSettingsState::exit(Platform& pfrm, Game& game, State& next_state)
     message_.reset();
 
     pfrm.fill_overlay(0);
+
+    pfrm.set_overlay_origin(0, 0);
 }
 
 
@@ -2795,6 +2826,17 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         draw_line(pfrm, select_row_, updater.update(pfrm, game, -1).c_str());
 
         updater.complete(pfrm, game, *this);
+    }
+
+    if (not message_ and not message_anim_) {
+        const auto& line = lines_[select_row_];
+        const Float y_center = pfrm.screen().size().y / 2;
+        const Float y_line = line.text_->coord().y * 8;
+        const auto y_diff = (y_line - y_center) * 0.4f;
+
+        y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
+
+        pfrm.set_overlay_origin(0, y_offset_);
     }
 
     anim_timer_ += delta;
@@ -3125,7 +3167,7 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
 
             const auto item = static_cast<Item::Type>(i);
 
-            if (not game.inventory().has_item(item)) {
+            if (game.inventory().item_count(item) == 0) {
                 game.inventory().push_item(pfrm, game, item);
             }
         }
@@ -3393,7 +3435,9 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
 
 void PauseScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
-    // ...
+    if (dynamic_cast<ActiveState*>(&prev_state)) {
+        cursor_loc_ = 0;
+    }
 }
 
 
@@ -3437,6 +3481,27 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         pfrm.screen().fade(smoothstep(0.f, fade_duration, fade_timer_));
     } else {
+
+        const auto& line = [&]() -> Text& {
+            switch (cursor_loc_) {
+            default:
+            case 0:
+                return *resume_text_;
+            case 1:
+                return *settings_text_;
+            case 2:
+                return *save_and_quit_text_;
+            }
+        }();
+        const Float y_center = pfrm.screen().size().y / 2;
+        const Float y_line = line.coord().y * 8;
+        const auto y_diff = (y_line - y_center) * 0.4f;
+
+        y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
+
+        pfrm.set_overlay_origin(0, y_offset_);
+
+
         anim_timer_ += delta;
         if (anim_timer_ > milliseconds(75)) {
             anim_timer_ = 0;
@@ -3483,6 +3548,8 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    pfrm.set_overlay_origin(0, 0);
+
     resume_text_.reset();
     save_and_quit_text_.reset();
 

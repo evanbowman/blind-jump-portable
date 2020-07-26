@@ -29,15 +29,16 @@ public:
         return data_[page * (rows * cols) + row * cols + column].type_;
     }
 
-    inline bool has_item(Item::Type item) const
+    inline int item_count(Item::Type item) const
     {
+        int count = 0;
+
         for (auto& inventory_item : data_) {
             if (inventory_item.type_ == item) {
-                return true;
+                count += 1;
             }
         }
-
-        return false;
+        return count;
     }
 
     inline void remove_item(u16 page, u16 column, u16 row)

@@ -1088,10 +1088,10 @@ void Platform::fatal()
 }
 
 
-void Platform::set_overlay_origin(s16 x, s16 y)
+void Platform::set_overlay_origin(Float x, Float y)
 {
-    *bg2_x_scroll = x;
-    *bg2_y_scroll = y;
+    *bg2_x_scroll = static_cast<s16>(x);
+    *bg2_y_scroll = static_cast<s16>(y);
 }
 
 

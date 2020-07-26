@@ -7,7 +7,7 @@
 
 void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
 {
-    if (item_is_persistent(insert) and has_item(insert)) {
+    if (item_is_persistent(insert) and item_count(insert) > 0) {
         error(pfrm, "attempt to add duplicate persistent item to inventory");
         return;
     }
@@ -59,7 +59,7 @@ Float items_collected_percentage(const Inventory& inventory)
          item = (Item::Type)((int)item + 1)) {
         if (item_is_persistent(item)) {
             total_persistent_items += 1;
-            if (inventory.has_item(item)) {
+            if (inventory.item_count(item) > 0) {
                 collected_persistent_items += 1;
             }
         }

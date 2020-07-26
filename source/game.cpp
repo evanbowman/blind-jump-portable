@@ -89,7 +89,7 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
     // own parent.
     state_->enter(pfrm, *this, *state_);
 
-    if (not inventory().has_item(Item::Type::blaster)) {
+    if (inventory().item_count(Item::Type::blaster) == 0) {
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
 
@@ -1267,10 +1267,12 @@ spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         auto item = static_cast<Item::Type>(i);
 
         if (level_in_range(game.level(), level_range(item)) and
-            not(game.inventory().has_item(item) and
+            not(game.inventory().item_count(item) and
                 item_is_persistent(item)) and
             not(item == Item::Type::lethargy and
-                game.inventory().has_item(Item::Type::lethargy))) {
+                game.inventory().item_count(Item::Type::lethargy)) and
+            not(item == Item::Type::signal_jammer and
+                game.inventory().item_count(Item::Type::signal_jammer) > 2)) {
 
             items_in_range.push_back(item);
         }
