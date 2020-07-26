@@ -52,7 +52,19 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
     pf.speaker().stop_music();
     pf.sleep(10);
 
-    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "boss");
+    const auto score = Conf(pf).expect<Conf::Integer>("scoring", "boss");
+
+    switch (game.difficulty()) {
+    case Difficulty::count:
+    case Difficulty::normal:
+        game.score() += score;
+        break;
+
+    case Difficulty::hard:
+    case Difficulty::survival:
+        game.score() += score * 1.15f;
+        break;
+    }
 }
 
 

@@ -372,6 +372,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::settings_difficulty_survival: return "survival";
         case LocaleString::settings_dynamic_camera: return "Sticky Camera: ";
         case LocaleString::settings_default: return "default";
+        case LocaleString::settings_difficulty_err: return "level must be clear!";
         case LocaleString::yes: return "yes";
         case LocaleString::no: return "no";
         default: return empty_str;

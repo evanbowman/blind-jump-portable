@@ -536,6 +536,11 @@ private:
 
     void draw_line(Platform& pfrm, int row, const char* value);
 
+    std::optional<HorizontalFlashAnimation> message_anim_;
+    const char* str_ = nullptr;
+
+    void message(Platform& pfrm, const char* str);
+
     class LineUpdater {
     public:
         using Result = StringBuffer<31>;
@@ -544,6 +549,9 @@ private:
         {
         }
         virtual Result update(Platform&, Game& game, int dir) = 0;
+        virtual void complete(Platform&, Game&, EditSettingsState&)
+        {
+        }
     };
 
     class ShowFPSLineUpdater : public LineUpdater {
@@ -602,6 +610,11 @@ private:
 
             return locale_language_name(language);
         }
+
+        void complete(Platform& pfrm, Game& game, EditSettingsState& s) override
+        {
+            s.refresh(pfrm, game);
+        }
     } language_line_updater_;
 
     class ContrastLineUpdater : public LineUpdater {
@@ -637,18 +650,26 @@ private:
     } contrast_line_updater_;
 
     class DifficultyLineUpdater : public LineUpdater {
+
         Result update(Platform&, Game& game, int dir) override
         {
             auto difficulty =
                 static_cast<int>(game.persistent_data().settings_.difficulty_);
 
-            if (dir > 0) {
-                if (difficulty < static_cast<int>(Difficulty::count) - 1) {
-                    difficulty += 1;
-                }
-            } else if (dir < 0) {
-                if (difficulty > 0) {
-                    difficulty -= 1;
+            // Normally we require all enemies to be defeated to mess with the
+            // difficulty. But we don't want the player to get stuck a situation
+            // where he/she cannot switch back to easy mode because they're
+            // unable to beat the first level on hard mode. So for level zero,
+            // allow modifying difficulty.
+            if (game.level() == 0 or enemies_remaining(game) == 0) {
+                if (dir > 0) {
+                    if (difficulty < static_cast<int>(Difficulty::count) - 1) {
+                        difficulty += 1;
+                    }
+                } else if (dir < 0) {
+                    if (difficulty > 0) {
+                        difficulty -= 1;
+                    }
                 }
             }
 
@@ -671,6 +692,14 @@ private:
             }
             return "";
         }
+
+        void complete(Platform& pfrm, Game& game, EditSettingsState& s) override
+        {
+            if (game.level() not_eq 0 and enemies_remaining(game)) {
+                s.message(pfrm,
+                          locale_string(LocaleString::settings_difficulty_err));
+            }
+        }
     } difficulty_line_updater_;
 
     struct LineInfo {
@@ -691,6 +720,8 @@ private:
         LocaleString::settings_contrast,
         LocaleString::settings_language,
     };
+
+    std::optional<Text> message_;
 
     int select_row_ = 0;
     int anim_index_ = 0;
@@ -1233,7 +1264,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             game.transporter().get_position() - Vec2<Float>{0, 22};
 
         const auto dist =
-            apply_gravity_well(t_pos, game.player(), 64, 34, 1.3f, 34);
+            apply_gravity_well(t_pos, game.player(), 48, 26, 1.3f, 34);
 
         if (dist < 6) {
             game.player().move(t_pos);
@@ -2634,6 +2665,18 @@ StatePtr State::initial()
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void EditSettingsState::message(Platform& pfrm, const char* str)
+{
+    str_ = str;
+
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    message_anim_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
+
+    message_anim_->init(screen_tiles.x);
+}
+
+
 EditSettingsState::EditSettingsState()
     : lines_{{{dynamic_camera_line_updater_},
               {difficulty_line_updater_},
@@ -2682,6 +2725,9 @@ void EditSettingsState::exit(Platform& pfrm, Game& game, State& next_state)
     for (auto& l : lines_) {
         l.text_.reset();
     }
+
+    message_.reset();
+
     pfrm.fill_overlay(0);
 }
 
@@ -2691,6 +2737,21 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<PauseScreenState>(false);
+    }
+
+    if (message_anim_ and not message_anim_->done()) {
+        message_anim_->update(delta);
+
+        if (message_anim_->done()) {
+            message_anim_.reset();
+
+            auto screen_tiles = calc_screen_tiles(pfrm);
+            const auto len = utf8::len(str_);
+            message_.emplace(pfrm,
+                             str_,
+                             OverlayCoord{u8((screen_tiles.x - len) / 2),
+                                          u8(screen_tiles.y - 1)});
+        }
     }
 
     auto erase_selector = [&] {
@@ -2704,29 +2765,36 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     };
 
     if (pfrm.keyboard().down_transition<Key::down>()) {
+        message_.reset();
         if (select_row_ < static_cast<int>(lines_.size() - 1)) {
             select_row_ += 1;
         }
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
+        message_.reset();
         if (select_row_ > 0) {
             select_row_ -= 1;
         }
     } else if (pfrm.keyboard().down_transition<Key::right>()) {
+        message_.reset();
+
         erase_selector();
-        draw_line(pfrm,
-                  select_row_,
-                  lines_[select_row_].updater_.update(pfrm, game, 1).c_str());
-        if (strings[select_row_] == LocaleString::settings_language) {
-            refresh(pfrm, game);
-        }
+
+        auto& updater = lines_[select_row_].updater_;
+
+        draw_line(pfrm, select_row_, updater.update(pfrm, game, 1).c_str());
+
+        updater.complete(pfrm, game, *this);
+
     } else if (pfrm.keyboard().down_transition<Key::left>()) {
+        message_.reset();
+
         erase_selector();
-        draw_line(pfrm,
-                  select_row_,
-                  lines_[select_row_].updater_.update(pfrm, game, -1).c_str());
-        if (strings[select_row_] == LocaleString::settings_language) {
-            refresh(pfrm, game);
-        }
+
+        auto& updater = lines_[select_row_].updater_;
+
+        draw_line(pfrm, select_row_, updater.update(pfrm, game, -1).c_str());
+
+        updater.complete(pfrm, game, *this);
     }
 
     anim_timer_ += delta;

@@ -153,7 +153,7 @@ public:
 
     Difficulty difficulty() const
     {
-        return difficulty_;
+        return persistent_data_.settings_.difficulty_;
     }
 
 private:
@@ -172,7 +172,6 @@ private:
     PersistentData persistent_data_;
     StatePtr state_;
     Powerups powerups_;
-    Difficulty difficulty_ = Difficulty::normal;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 
@@ -264,4 +263,27 @@ Float apply_gravity_well(const Vec2<Float>& center_pos,
     }
 
     return 1000.f;
+}
+
+
+inline int enemies_remaining(Game& game)
+{
+    int remaining = 0;
+
+    game.enemies().transform([&](auto& buf) {
+        using T = typename std::remove_reference<decltype(buf)>::type;
+
+        using VT = typename T::ValueType::element_type;
+
+        // SnakeBody and SnakeTail are technically not
+        // enemies, we only want to count each snake head
+        // segment.
+        if (not std::is_same<VT, SnakeBody>() and
+            not std::is_same<VT, SnakeTail>()) {
+
+            remaining += length(buf);
+        }
+    });
+
+    return remaining;
 }

@@ -67,6 +67,7 @@ enum class LocaleString {
     settings_difficulty_normal,
     settings_difficulty_hard,
     settings_difficulty_survival,
+    settings_difficulty_err,
     yes,
     no,
     count
