@@ -661,7 +661,7 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
     fade_color_anim_.advance(sprite_, dt);
 
     if (not detached_ and game.enemies().get<Gatekeeper>().empty()) {
-        this->detach(seconds(2) + milliseconds(rng::choice<900>()));
+        this->detach(seconds(3) + milliseconds(rng::choice<900>()));
     }
 
     if (detached_) {
