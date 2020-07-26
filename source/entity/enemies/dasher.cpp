@@ -304,8 +304,18 @@ void Dasher::on_death(Platform& pf, Game& game)
 {
     const auto add_score = Conf(pf).expect<Conf::Integer>("scoring", "dasher");
 
-    game.score() +=
-        game.difficulty() == Difficulty::hard ? add_score * 1.5f : add_score;
+    switch (game.difficulty()) {
+    case Difficulty::count:
+    case Difficulty::normal:
+        game.score() += add_score;
+        break;
+
+    case Difficulty::hard:
+    case Difficulty::survival:
+        game.score() += add_score * 1.5f;
+        break;
+    }
+
 
     pf.sleep(5);
 
