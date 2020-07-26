@@ -55,6 +55,11 @@ void Item::update(Platform&, Game& game, Microseconds dt)
     timer_ += dt;
 
     if (visible()) {
+        if (game.difficulty() == Difficulty::survival and
+            type_ == Type::heart) {
+            set_type(Type::coin);
+        }
+
         // Yikes! This is probably expensive...
         const Float offset = 3 *
                              float(sine(4 * 3.14f * 0.001f * timer_ + 180)) /

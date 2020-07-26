@@ -222,6 +222,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                 case Difficulty::normal:
                     break;
 
+                case Difficulty::survival:
                 case Difficulty::hard:
                     return milliseconds(70);
                 }
@@ -277,6 +278,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                 case Difficulty::count:
                 case Difficulty::normal:
                     break;
+                case Difficulty::survival:
                 case Difficulty::hard:
                     return milliseconds(580);
                 }

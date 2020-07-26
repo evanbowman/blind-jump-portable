@@ -32,6 +32,7 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
                                         case Difficulty::normal:
                                             break;
 
+                                        case Difficulty::survival:
                                         case Difficulty::hard:
                                             return 2;
                                         }

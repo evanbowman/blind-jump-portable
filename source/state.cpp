@@ -643,13 +643,12 @@ private:
                 static_cast<int>(game.persistent_data().settings_.difficulty_);
 
             if (dir > 0) {
-                difficulty += 1;
-                difficulty %= static_cast<int>(Difficulty::count);
+                if (difficulty < static_cast<int>(Difficulty::count) - 1) {
+                    difficulty += 1;
+                }
             } else if (dir < 0) {
                 if (difficulty > 0) {
                     difficulty -= 1;
-                } else {
-                    difficulty = static_cast<int>(Difficulty::count) - 1;
                 }
             }
 
@@ -662,6 +661,10 @@ private:
 
             case Difficulty::hard:
                 return locale_string(LocaleString::settings_difficulty_hard);
+
+            case Difficulty::survival:
+                return locale_string(
+                    LocaleString::settings_difficulty_survival);
 
             case Difficulty::count:
                 break;

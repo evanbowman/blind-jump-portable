@@ -28,6 +28,7 @@ static Microseconds pause_after_open(Game& game, Level level)
         case Difficulty::normal:
             return milliseconds(274);
 
+        case Difficulty::survival:
         case Difficulty::hard:
             return milliseconds(210);
         }
@@ -37,6 +38,7 @@ static Microseconds pause_after_open(Game& game, Level level)
         case Difficulty::normal:
             return milliseconds(240);
 
+        case Difficulty::survival:
         case Difficulty::hard:
             return milliseconds(180);
         }
@@ -46,6 +48,7 @@ static Microseconds pause_after_open(Game& game, Level level)
         case Difficulty::normal:
             return milliseconds(210);
 
+        case Difficulty::survival:
         case Difficulty::hard:
             return milliseconds(150);
         }

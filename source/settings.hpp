@@ -2,7 +2,7 @@
 #include "localization.hpp"
 
 
-enum class Difficulty { normal, hard, count };
+enum class Difficulty { normal, hard, survival, count };
 
 
 struct Settings {
