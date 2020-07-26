@@ -216,7 +216,22 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         timer_ += dt;
         timer2_ += dt;
 
-        if (timer_ > milliseconds(80)) {
+        if (timer_ > [&] {
+                switch (game.difficulty()) {
+                case Difficulty::count:
+                case Difficulty::normal:
+                    break;
+
+                case Difficulty::hard:
+                    return milliseconds(70);
+                }
+
+                if (second_form()) {
+                    return milliseconds(82);
+                } else {
+                    return milliseconds(90);
+                }
+            }()) {
             game.effects().spawn<FirstExplorerSmallLaser>(
                 position_ + shoot_offset(), scattershot_target_, 0.00013f);
 
@@ -257,7 +272,16 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         face_player();
 
         timer_ += dt;
-        if (timer_ > milliseconds(620)) {
+        if (timer_ > [&]() {
+                switch (game.difficulty()) {
+                case Difficulty::count:
+                case Difficulty::normal:
+                    break;
+                case Difficulty::hard:
+                    return milliseconds(580);
+                }
+                return milliseconds(640);
+            }()) {
             game.camera().shake();
             medium_explosion(pf, game, position_ + shoot_offset());
 

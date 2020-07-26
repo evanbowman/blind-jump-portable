@@ -82,6 +82,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             if (game.level() > boss_0_level) {
                 add_health(2);
             }
+            if (game.difficulty() == Difficulty::hard) {
+                add_health(1);
+            }
         }
         break;
 
@@ -299,7 +302,10 @@ void Dasher::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 
 void Dasher::on_death(Platform& pf, Game& game)
 {
-    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "dasher");
+    const auto add_score = Conf(pf).expect<Conf::Integer>("scoring", "dasher");
+
+    game.score() +=
+        game.difficulty() == Difficulty::hard ? add_score * 1.5f : add_score;
 
     pf.sleep(5);
 

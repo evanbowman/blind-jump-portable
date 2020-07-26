@@ -29,8 +29,9 @@ static Bitmatrix<TileMap::width, TileMap::height> visited;
 
 class OverworldState : public State {
 public:
-    OverworldState(Game& game, bool camera_tracking) :
-        camera_tracking_(game.persistent_data().settings_.dynamic_camera_ and camera_tracking)
+    OverworldState(Game& game, bool camera_tracking)
+        : camera_tracking_(game.persistent_data().settings_.dynamic_camera_ and
+                           camera_tracking)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -71,7 +72,8 @@ public:
 
 class ActiveState : public OverworldState {
 public:
-    ActiveState(Game& game, bool camera_tracking = true) : OverworldState(game, camera_tracking)
+    ActiveState(Game& game, bool camera_tracking = true)
+        : OverworldState(game, camera_tracking)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -631,9 +633,42 @@ private:
             } else {
                 return locale_string(LocaleString::settings_default);
             }
-
         }
     } contrast_line_updater_;
+
+    class DifficultyLineUpdater : public LineUpdater {
+        Result update(Platform&, Game& game, int dir) override
+        {
+            auto difficulty =
+                static_cast<int>(game.persistent_data().settings_.difficulty_);
+
+            if (dir > 0) {
+                difficulty += 1;
+                difficulty %= static_cast<int>(Difficulty::count);
+            } else if (dir < 0) {
+                if (difficulty > 0) {
+                    difficulty -= 1;
+                } else {
+                    difficulty = static_cast<int>(Difficulty::count) - 1;
+                }
+            }
+
+            game.persistent_data().settings_.difficulty_ =
+                static_cast<Difficulty>(difficulty);
+
+            switch (static_cast<Difficulty>(difficulty)) {
+            case Difficulty::normal:
+                return locale_string(LocaleString::settings_difficulty_normal);
+
+            case Difficulty::hard:
+                return locale_string(LocaleString::settings_difficulty_hard);
+
+            case Difficulty::count:
+                break;
+            }
+            return "";
+        }
+    } difficulty_line_updater_;
 
     struct LineInfo {
         LineUpdater& updater_;
@@ -642,12 +677,13 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 4;
+    static constexpr const int line_count_ = 5;
 
     std::array<LineInfo, line_count_> lines_;
 
     static constexpr const LocaleString strings[line_count_] = {
         LocaleString::settings_dynamic_camera,
+        LocaleString::settings_difficulty,
         LocaleString::settings_show_fps,
         LocaleString::settings_contrast,
         LocaleString::settings_language,
@@ -2597,6 +2633,7 @@ StatePtr State::initial()
 
 EditSettingsState::EditSettingsState()
     : lines_{{{dynamic_camera_line_updater_},
+              {difficulty_line_updater_},
               {show_fps_line_updater_},
               {contrast_line_updater_},
               {language_line_updater_}}}

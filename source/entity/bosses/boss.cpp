@@ -25,7 +25,19 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
 
             game.on_timeout(
                 pf, milliseconds(100), [pos](Platform& pf, Game& game) {
-                    for (int i = 0; i < 3; ++i) {
+                    for (int i = 0; i <
+                                    [&] {
+                                        switch (game.difficulty()) {
+                                        case Difficulty::count:
+                                        case Difficulty::normal:
+                                            break;
+
+                                        case Difficulty::hard:
+                                            return 2;
+                                        }
+                                        return 3;
+                                    }();
+                         ++i) {
                         game.details().spawn<Item>(
                             rng::sample<32>(pos), pf, Item::Type::heart);
                     }

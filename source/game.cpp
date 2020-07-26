@@ -547,6 +547,13 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     persistent_data_.inventory_ = inventory_;
     persistent_data_.store_powerups(powerups_);
 
+    // There's a reason why the game's difficulty is updated upon level
+    // transitions. On the harder difficulty setting, enemies give you more
+    // points. We wouldn't want players to be able to spawn into a level,
+    // collect all the health and other items that spawn on the easier settings,
+    // switch to the harder setting, and then take the extra points.
+    difficulty_ = persistent_data_.settings_.difficulty_;
+
 
     pfrm.load_tile0_texture(current_zone(*this).tileset0_name_);
     pfrm.load_tile1_texture(current_zone(*this).tileset1_name_);
@@ -1411,7 +1418,11 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         int heart_count =
             Conf(pfrm).expect<Conf::Integer>("level-setup", "max_hearts");
 
-        while (true) {
+        if (difficulty_ == Difficulty::hard) {
+            heart_count = 0;
+        }
+
+        while (heart_count > 0) {
             const s8 x = rng::choice<TileMap::width>();
             const s8 y = rng::choice<TileMap::height>();
 
@@ -1471,8 +1482,14 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 // levels, so that the game naturally becomes more
                 // challenging. But for the first few levels, do not make hearts
                 // more scarce.
-                const int heart_chance =
-                    3 + std::max(level() - 4, Level(0)) * 0.2f;
+                const auto heart_chance = [&]() -> int {
+                    if (difficulty_ == Difficulty::hard) {
+                        return 1;
+                    } else {
+                        return 3 + std::max(level() - 4, Level(0)) * 0.2f;
+                    }
+                }();
+
 
                 if (not details_.spawn<Item>(world_coord(c), pfrm, [&] {
                         if (rng::choice(heart_chance)) {
@@ -1553,11 +1570,21 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             ++heart_count;
         }
     }
-    // We don't want to make the levels too easy either
-    if (heart_count > 2) {
+
+    const int max_hearts = [&] {
+        switch (difficulty_) {
+        case Difficulty::hard:
+            return 0;
+        default:
+        case Difficulty::normal:
+            return 2;
+        }
+    }();
+
+    if (heart_count > max_hearts) {
         const auto item_count = length(details_.get<Item>());
 
-        while (heart_count > 2) {
+        while (heart_count > max_hearts) {
             auto choice = rng::choice(item_count);
 
             if (auto item = list_ref(details_.get<Item>(), choice)) {

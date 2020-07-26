@@ -64,6 +64,10 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(2)) {
             timer_ = 0;
             state_ = State::inactive;
+
+            if (game.difficulty() == Difficulty::hard) {
+                add_health(1);
+            }
         }
         break;
 
@@ -202,7 +206,11 @@ void Drone::on_collision(Platform& pf, Game& game, Player& player)
 
 void Drone::on_death(Platform& pf, Game& game)
 {
-    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "drone");
+    const auto add_score = Conf(pf).expect<Conf::Integer>("scoring", "drone");
+
+    game.score() +=
+        game.difficulty() == Difficulty::hard ? add_score * 1.5f : add_score;
+
 
     pf.sleep(5);
 

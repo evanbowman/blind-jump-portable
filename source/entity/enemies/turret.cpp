@@ -20,15 +20,37 @@ static Microseconds reload(Level level)
 }
 
 
-static Microseconds pause_after_open(Level level)
+static Microseconds pause_after_open(Game& game, Level level)
 {
     if (level < boss_0_level) {
-        return milliseconds(265);
+        switch (game.difficulty()) {
+        case Difficulty::count:
+        case Difficulty::normal:
+            return milliseconds(274);
+
+        case Difficulty::hard:
+            return milliseconds(210);
+        }
     } else if (level < boss_1_level) {
-        return milliseconds(235);
+        switch (game.difficulty()) {
+        case Difficulty::count:
+        case Difficulty::normal:
+            return milliseconds(240);
+
+        case Difficulty::hard:
+            return milliseconds(180);
+        }
     } else {
-        return milliseconds(200);
+        switch (game.difficulty()) {
+        case Difficulty::count:
+        case Difficulty::normal:
+            return milliseconds(210);
+
+        case Difficulty::hard:
+            return milliseconds(150);
+        }
     }
+    return milliseconds(200);
 }
 
 
@@ -92,6 +114,9 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
             } else if (game.level() > boss_0_level) {
                 add_health(1);
             }
+            if (game.difficulty() == Difficulty::hard) {
+                add_health(1);
+            }
             state_ = State::closed;
         }
         break;
@@ -111,7 +136,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         if (animation_.done(sprite_)) {
             state_ = State::open1;
-            timer_ = pause_after_open(game.level());
+            timer_ = pause_after_open(game, game.level());
         }
         break;
 
@@ -208,7 +233,10 @@ void Turret::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 
 void Turret::on_death(Platform& pf, Game& game)
 {
-    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "turret");
+    const auto add_score = Conf(pf).expect<Conf::Integer>("scoring", "turret");
+
+    game.score() +=
+        game.difficulty() == Difficulty::hard ? add_score * 1.5f : add_score;
 
     pf.sleep(5);
 

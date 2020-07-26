@@ -151,6 +151,11 @@ public:
         return persistent_data_;
     }
 
+    Difficulty difficulty() const
+    {
+        return difficulty_;
+    }
+
 private:
     bool load_save_data(Platform& pfrm);
 
@@ -167,6 +172,7 @@ private:
     PersistentData persistent_data_;
     StatePtr state_;
     Powerups powerups_;
+    Difficulty difficulty_ = Difficulty::normal;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 

@@ -71,6 +71,10 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(2)) {
             timer_ = 0;
             state_ = State::inactive;
+
+            if (game.difficulty() == Difficulty::hard) {
+                add_health(1);
+            }
         }
         break;
 
@@ -363,7 +367,11 @@ void Scarecrow::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 
 void Scarecrow::on_death(Platform& pf, Game& game)
 {
-    game.score() += Conf(pf).expect<Conf::Integer>("scoring", "scarecrow");
+    const auto add_score =
+        Conf(pf).expect<Conf::Integer>("scoring", "scarecrow");
+
+    game.score() +=
+        game.difficulty() == Difficulty::hard ? add_score * 1.5f : add_score;
 
     pf.sleep(5);
 
