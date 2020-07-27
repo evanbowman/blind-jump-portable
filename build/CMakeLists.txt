@@ -44,6 +44,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
   ${SOURCE_DIR}/entity/enemies/sinkhole.cpp
   ${SOURCE_DIR}/entity/effects/orbshot.cpp
+  ${SOURCE_DIR}/entity/details/lander.cpp
   ${SOURCE_DIR}/entity/enemies/common.cpp
   ${SOURCE_DIR}/entity/enemies/turret.cpp
   ${SOURCE_DIR}/entity/enemies/dasher.cpp
@@ -106,6 +107,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/tilesheet_top.s
     ${SOURCE_DIR}/graphics/tilesheet2_top.s
     ${SOURCE_DIR}/graphics/tilesheet3_top.s
+    ${SOURCE_DIR}/graphics/spritesheet_intro_cutscene.s
     ${SOURCE_DIR}/graphics/spritesheet.s
     ${SOURCE_DIR}/graphics/spritesheet2.s
     ${SOURCE_DIR}/graphics/spritesheet3.s
@@ -226,6 +228,7 @@ if(GAMEBOY_ADVANCE)
     -mtune=arm7tdmi)
 
   if(GBA_AUTOBUILD_IMG)
+    compile_image(spritesheet_intro_cutscene 2 4 NO)
     compile_image(spritesheet 2 4 NO)
     compile_image(spritesheet2 2 4 NO)
     compile_image(spritesheet3 2 4 NO)

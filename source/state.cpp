@@ -1277,12 +1277,16 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<InventoryState>(true);
     }
 
-    if (pfrm.keyboard().down_transition<Key::start>() and
-        not is_boss_level(game.level())) {
+    if (pfrm.keyboard().down_transition<Key::start>()) {
 
-        restore_keystates = pfrm.keyboard().dump_state();
+        if (not is_boss_level(game.level())) {
+            restore_keystates = pfrm.keyboard().dump_state();
 
-        return state_pool_.create<PauseScreenState>();
+            return state_pool_.create<PauseScreenState>();
+        } else {
+            push_notification(
+                pfrm, game, locale_string(LocaleString::menu_disabled));
+        }
     }
 
     if (game.transporter().visible()) {
@@ -1311,7 +1315,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void FadeInState::enter(Platform& pfrm, Game& game, State&)
 {
-    game.player().set_visible(false);
+    game.player().set_visible(game.level() == 0);
     game.camera().set_speed(0.75);
 }
 
@@ -1332,10 +1336,15 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = milliseconds(800);
     if (counter_ > fade_duration) {
-        pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
-        pfrm.sleep(2);
-        game.player().set_visible(true);
-        return state_pool_.create<WarpInState>(game);
+        if (game.level() == 0) {
+             return state_pool_.create<ActiveState>(game);
+        } else {
+            pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
+            pfrm.sleep(2);
+            game.player().set_visible(true);
+
+            return state_pool_.create<WarpInState>(game);
+        }
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount);
@@ -1495,23 +1504,6 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
-    game.powerups().clear();
-
-    for (auto& score : reversed(game.highscores())) {
-        if (score < game.score()) {
-            score = game.score();
-            break;
-        }
-    }
-    std::sort(game.highscores().rbegin(), game.highscores().rend());
-
-    rng::get();
-
-    game.persistent_data().seed_ = rng::global_state;
-    game.inventory().remove_non_persistent();
-
-    PersistentData& data = game.persistent_data().reset(pfrm);
-    pfrm.write_save_data(&data, sizeof data);
 }
 
 
@@ -1554,7 +1546,7 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void RespawnWaitState::enter(Platform& pfrm, Game& game, State&)
 {
-    pfrm.speaker().play_sound("bell", 5);
+    // pfrm.speaker().play_sound("bell", 5);
 }
 
 
@@ -1639,6 +1631,18 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                     target.append(suffix);
                 };
 
+                game.powerups().clear();
+
+                for (auto& score : reversed(game.highscores())) {
+                    if (score < game.score()) {
+                        score = game.score();
+                        break;
+                    }
+                }
+                std::sort(game.highscores().rbegin(), game.highscores().rend());
+
+                rng::get();
+
                 print_metric(
                     *score_, locale_string(LocaleString::score), game.score());
                 print_metric(*highscore_,
@@ -1652,6 +1656,12 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                     locale_string(LocaleString::items_collected_prefix),
                     100 * items_collected_percentage(game.inventory()),
                     locale_string(LocaleString::items_collected_suffix));
+
+                game.persistent_data().seed_ = rng::global_state;
+                game.inventory().remove_non_persistent();
+
+                PersistentData& data = game.persistent_data().reset(pfrm);
+                pfrm.write_save_data(&data, sizeof data);
             }
         }
 
@@ -2681,7 +2691,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 StatePtr State::initial()
 {
-    return state_pool_.create<IntroLegalMessage>();
+    return state_pool_.create<IntroCreditsState>(locale_string(LocaleString::intro_text_2));
 }
 
 
@@ -3075,6 +3085,7 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 [[noreturn]] static void factory_reset(Platform& pfrm)
 {
     PersistentData data;
+    data.magic_ = 0xBAD;
     pfrm.write_save_data(&data, sizeof data);
     pfrm.fatal();
 }

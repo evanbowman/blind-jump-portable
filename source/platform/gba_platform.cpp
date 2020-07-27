@@ -816,6 +816,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/overlay.h"
 #include "graphics/overlay_journal.h"
 #include "graphics/seed_packet_flattened.h"
+#include "graphics/spritesheet_intro_cutscene.h"
 #include "graphics/spritesheet.h"
 #include "graphics/spritesheet2.h"
 #include "graphics/spritesheet3.h"
@@ -845,19 +846,22 @@ struct TextureData {
     }
 
 
-static const TextureData sprite_textures[] = {TEXTURE_INFO(spritesheet),
-                                              TEXTURE_INFO(spritesheet2),
-                                              TEXTURE_INFO(spritesheet3),
-                                              TEXTURE_INFO(spritesheet_boss0),
-                                              TEXTURE_INFO(spritesheet_boss1)};
+static const TextureData sprite_textures[] = {
+    TEXTURE_INFO(spritesheet_intro_cutscene),
+    TEXTURE_INFO(spritesheet),
+    TEXTURE_INFO(spritesheet2),
+    TEXTURE_INFO(spritesheet3),
+    TEXTURE_INFO(spritesheet_boss0),
+    TEXTURE_INFO(spritesheet_boss1)};
 
 
-static const TextureData tile_textures[] = {TEXTURE_INFO(tilesheet),
-                                            TEXTURE_INFO(tilesheet_top),
-                                            TEXTURE_INFO(tilesheet2),
-                                            TEXTURE_INFO(tilesheet2_top),
-                                            TEXTURE_INFO(tilesheet3),
-                                            TEXTURE_INFO(tilesheet3_top)};
+static const TextureData tile_textures[] = {
+    TEXTURE_INFO(tilesheet),
+    TEXTURE_INFO(tilesheet_top),
+    TEXTURE_INFO(tilesheet2),
+    TEXTURE_INFO(tilesheet2_top),
+    TEXTURE_INFO(tilesheet3),
+    TEXTURE_INFO(tilesheet3_top)};
 
 
 static const TextureData overlay_textures[] = {
@@ -1056,6 +1060,49 @@ COLD static void set_map_tile(u8 base, u16 x, u16 y, u16 tile_id, int palette)
 }
 
 
+static u16 get_map_tile(u8 base, u16 x, u16 y, int palette)
+{
+    // I know that this code is confusing, sorry! See comment in set_map_tile().
+
+    auto ref = [](u16 x_, u16 y_) { return x_ * 4 + y_ * 32 * 3; };
+
+    if (y == 10 and x > 7) {
+        return (MEM_SCREENBLOCKS[base][ref(x % 8, y)] &
+                ~(SE_PALBANK(palette))) /
+               12;
+    } else if (y == 10) {
+        return (MEM_SCREENBLOCKS[base][ref(x, y)] & ~(SE_PALBANK(palette))) /
+               12;
+    }
+
+    auto screen_block = [&]() -> u16 {
+        if (x > 7 and y > 9) {
+            x %= 8;
+            y %= 10;
+            return base + 3;
+        } else if (y > 9) {
+            y %= 10;
+            return base + 2;
+        } else if (x > 7) {
+            x %= 8;
+            return base + 1;
+        } else {
+            return base;
+        }
+    }();
+
+    if (screen_block == base + 2 or screen_block == base + 3) {
+        return (MEM_SCREENBLOCKS[screen_block][ref(x, y - 1) + 32] &
+                ~(SE_PALBANK(palette))) /
+               12;
+    } else {
+        return (MEM_SCREENBLOCKS[screen_block][ref(x, y)] &
+                ~(SE_PALBANK(palette))) /
+               12;
+    }
+}
+
+
 u16 Platform::get_tile(Layer layer, u16 x, u16 y)
 {
     switch (layer) {
@@ -1073,10 +1120,10 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
         return MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32];
 
     case Layer::map_0:
+        return get_map_tile(sbb_t0_tiles, x, y, 0);
+
     case Layer::map_1:
-        // TODO: we don't need this functionality yet, and the implementation is
-        // complicated (see set_map_tile), so lets not bother for now...
-        break;
+        return get_map_tile(sbb_t1_tiles, x, y, 2);
     }
     return 0;
 }

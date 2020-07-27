@@ -299,7 +299,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::map_legend_4: return "item";
         case LocaleString::waypoint_text: return "waypoint ";
         case LocaleString::part_1_text: return "part I:";
-        case LocaleString::part_1_title: return "outer station ruins";
+        case LocaleString::part_1_title: return "the arrival";
         case LocaleString::part_2_text: return "part II:";
         case LocaleString::part_2_title: return "the descent";
         case LocaleString::part_3_text: return "part III:";
@@ -375,6 +375,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::settings_difficulty_err: return "level must be clear!";
         case LocaleString::yes: return "yes";
         case LocaleString::no: return "no";
+        case LocaleString::menu_disabled: return "menu disabled";
         default: return empty_str;
         }
         break;
@@ -387,7 +388,7 @@ const char* locale_string(LocaleString ls)
 }
 
 
-void to_string(int num, char* buffer, int base)
+void english__to_string(int num, char* buffer, int base)
 {
     int i = 0;
     bool is_negative = false;
@@ -426,7 +427,7 @@ void locale_num2str(int num, char* buffer, int base)
 {
     switch (language) {
     case LocaleLanguage::english:
-        to_string(num, buffer, base);
+        english__to_string(num, buffer, base);
         break;
 
     default:

@@ -70,6 +70,7 @@ enum class LocaleString {
     settings_difficulty_err,
     yes,
     no,
+    menu_disabled,
     count
 };
 
@@ -81,6 +82,12 @@ StringBuffer<31> locale_language_name(LocaleLanguage ll);
 
 
 const char* locale_string(LocaleString ls);
+
+
+// In most cases, you do not want to call this function directly, better to call
+// the localized version, locale_num2str. Only call english__to_string for
+// logging purposes, where the language is assumed to be english.
+void english__to_string(int num, char* buffer, int base);
 
 
 void locale_num2str(int num, char* buffer, int base);

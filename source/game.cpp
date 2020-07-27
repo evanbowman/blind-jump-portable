@@ -159,7 +159,13 @@ HOT void Game::render(Platform& pfrm)
             using T = typename std::remove_reference<decltype(e)>::type;
 
             if constexpr (T::has_shadow) {
-                shadows_buffer.push_back(&e.get_shadow());
+                if constexpr (T::multiface_shadow) {
+                    for (const auto& spr : e.get_shadow()) {
+                        shadows_buffer.push_back(spr);
+                    }
+                } else {
+                    shadows_buffer.push_back(&e.get_shadow());
+                }
             }
 
             if constexpr (T::multiface_sprite) {
@@ -259,6 +265,27 @@ static void condense(TileMap& map, TileMap& maptemp)
 
 
 using BossLevelMap = Bitmatrix<TileMap::width, TileMap::height>;
+
+
+READ_ONLY_DATA
+static constexpr const BossLevelMap level_0({{
+    {},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+}});
 
 
 READ_ONLY_DATA
@@ -509,7 +536,8 @@ const ZoneInfo& zone_info(Level level)
                                         0,
                                         ColorConstant::null,
                                         ColorConstant::null,
-                                        [](Platform&, Game&) {}};
+                                        [](Platform&, Game&) {},
+                                        [](int, int, const TileMap&) { return 0; }};
         return null_zone;
     } else if (level > boss_1_level) {
         return zone_3;
@@ -541,6 +569,10 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         persistent_data_.level_ += 1;
     }
 
+    if (level() == 0) {
+        rng::global_state = 9;
+    }
+
     persistent_data_.score_ = score_;
     persistent_data_.player_health_ = player_.get_health();
     persistent_data_.seed_ = rng::global_state;
@@ -557,7 +589,11 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
         pfrm.load_sprite_texture(boss_level->spritesheet_);
 
     } else {
-        pfrm.load_sprite_texture(current_zone(*this).spritesheet_name_);
+        if (level() == 0) {
+            pfrm.load_sprite_texture("spritesheet_intro_cutscene");
+        } else {
+            pfrm.load_sprite_texture(current_zone(*this).spritesheet_name_);
+        }
     }
 
 RETRY:
@@ -652,6 +688,12 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
         for (int x = 0; x < TileMap::width; ++x) {
             for (int y = 0; y < TileMap::height; ++y) {
                 tiles_.set_tile(x, y, static_cast<Tile>(l->map_->get(x, y)));
+            }
+        }
+    } else if (level() == 0) {
+        for (int x = 0; x < TileMap::width; ++x) {
+            for (int y = 0; y < TileMap::height; ++y) {
+                tiles_.set_tile(x, y, static_cast<Tile>(level_0.get(x, y)));
             }
         }
     } else {
@@ -826,7 +868,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
-    if (not is_boss_level(level())) {
+    if (level() not_eq 0 and
+        not is_boss_level(level())) {
         // Pick a random filled tile, and flood-fill around that tile in
         // the map, to produce a single connected component.
         while (true) {
@@ -1141,7 +1184,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          },
          boss_0_level,
          1},
-        {0, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
+        {1, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
         {boss_0_level,
          [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
          boss_1_level},
@@ -1316,11 +1359,19 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     details_.transform(clear_entities);
     effects_.transform(clear_entities);
 
-    tiles_.for_each([&](const Tile& t, TIdx x, TIdx y) {
-        if (static_cast<int>(t) == 36) {
-            details().spawn<Scavenger>(to_world_coord(Vec2<TIdx>{x, y}));
+    if (level() == 0) {
+        details().spawn<Lander>(Vec2<Float>{409.f, 108.f});
+        details().spawn<ItemChest>(Vec2<Float>{348, 154},
+                                   Item::Type::explosive_rounds_2);
+        enemies().spawn<Drone>(Vec2<Float>{159, 275});
+        if (static_cast<int>(difficulty()) < static_cast<int>(Difficulty::hard)) {
+            details().spawn<Item>(Vec2<Float>{80, 332}, pfrm, Item::Type::heart);
         }
-    });
+        tiles_.set_tile(12, 4, Tile::none);
+        player_.move({409.1f, 167.2f});
+        transporter_.set_position({110, 306});
+        return true;
+    }
 
     auto free_spots = get_free_map_slots(tiles_);
 
