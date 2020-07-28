@@ -84,7 +84,7 @@ private:
     Float camera_offset_ = 0.f;
     Microseconds timer_ = 0;
 
-    Float speed_ = 0.001000f; // feet per microsecond
+    Float speed_ = 0.010000f; // feet per microsecond
     int altitude_update_ = 1;
     int altitude_ = 6336000; // low earth orbit
 
@@ -2685,7 +2685,12 @@ StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
         return state_pool_.create<EndingCreditsState>();
     }
 
-    return state_pool_.create<NewLevelState>(game.level());
+    if (game.level() == 0) {
+        return state_pool_.create<LaunchCutsceneState>();
+    } else {
+        return state_pool_.create<NewLevelState>(game.level());
+    }
+
 }
 
 
@@ -2715,8 +2720,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 StatePtr State::initial()
 {
-    // return state_pool_.create<IntroCreditsState>(locale_string(LocaleString::intro_text_2));
-    return state_pool_.create<LaunchCutsceneState>();
+    return state_pool_.create<IntroLegalMessage>();
 }
 
 
@@ -2732,7 +2736,7 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
     pfrm.enable_glyph_mode(true); // FIXME: just for debug purposes, a prior
                                   // state should have already enabled glyphs.
 
-    pfrm.screen().fade(1.f, ColorConstant::silver_white);
+    pfrm.screen().fade(1.f);
 
     pfrm.load_sprite_texture("spritesheet");
     pfrm.load_overlay_texture("overlay");
@@ -2755,7 +2759,13 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
         }
     }
 
-    draw_image(pfrm, 1, 0, 3, 30, 14, Layer::background);
+    draw_image(pfrm, 151, 0, 8, 30, 9, Layer::background);
+    int moon_x = 7;
+    int moon_y = 1;
+    pfrm.set_tile(Layer::background, moon_x, moon_y, 2);
+    pfrm.set_tile(Layer::background, moon_x + 1, moon_y, 3);
+    pfrm.set_tile(Layer::background, moon_x, moon_y + 1, 32);
+    pfrm.set_tile(Layer::background, moon_x + 1, moon_y + 1, 33);
 
 
     for (int i = 0; i < screen_tiles.x; ++i) {
@@ -2766,6 +2776,8 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 2, 112);
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
     }
+
+    pfrm.screen().fade(1.f, ColorConstant::silver_white);
 }
 
 
@@ -2802,6 +2814,8 @@ StatePtr LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds de
 
         if (timer_ > seconds(3)) {
             scene_ = Scene::scroll;
+        } else {
+            speed_ = interpolate(0.000900f, 0.010000f, timer_ / Float(seconds(3)));
         }
 
         constexpr auto fade_duration = milliseconds(1000);
@@ -2815,6 +2829,7 @@ StatePtr LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds de
     }
 
     case Scene::scroll: {
+
         camera_offset_ -= delta * 0.0000014f;
 
         game.camera().set_position(pfrm, {0, camera_offset_});
