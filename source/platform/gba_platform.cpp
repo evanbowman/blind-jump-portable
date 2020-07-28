@@ -828,6 +828,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/tilesheet3.h"
 #include "graphics/tilesheet3_top.h"
 #include "graphics/tilesheet_top.h"
+#include "graphics/tilesheet_intro_cutscene_flattened.h"
 
 
 struct TextureData {
@@ -861,7 +862,8 @@ static const TextureData tile_textures[] = {
     TEXTURE_INFO(tilesheet2),
     TEXTURE_INFO(tilesheet2_top),
     TEXTURE_INFO(tilesheet3),
-    TEXTURE_INFO(tilesheet3_top)};
+    TEXTURE_INFO(tilesheet3_top),
+    TEXTURE_INFO(tilesheet_intro_cutscene_flattened)};
 
 
 static const TextureData overlay_textures[] = {
@@ -1161,7 +1163,8 @@ static auto blend(const Color& c1, const Color& c2, u8 amt)
 void Platform::Screen::fade(float amount,
                             ColorConstant k,
                             std::optional<ColorConstant> base,
-                            bool include_sprites)
+                            bool include_sprites,
+                            bool include_overlay)
 {
     ::inverted = false;
 
@@ -1201,17 +1204,18 @@ void Platform::Screen::fade(float amount,
         // one wants do display some text over a faded out screen, so let's
         // leave it disabled for now.
         //
-        // for (int i = 0; i < 16; ++i) {
-        //     auto from = Color::from_bgr_hex_555(bgr_overlayPal[i]);
-        //     MEM_BG_PALETTE[16 + i] = blend(from);
-        // }
+        for (int i = 0; i < 16; ++i) {
+            auto from = Color::from_bgr_hex_555(overlayPal[i]);
+            MEM_BG_PALETTE[16 + i] = blend(from, c, include_overlay ? amt : 0);
+        }
     } else {
         for (int i = 0; i < 16; ++i) {
             MEM_PALETTE[i] =
                 blend(real_color(*base), c, include_sprites ? amt : 0);
             MEM_BG_PALETTE[i] = blend(real_color(*base), c, amt);
             MEM_BG_PALETTE[32 + i] = blend(real_color(*base), c, amt);
-            // MEM_BG_PALETTE[16 + i] = blend(real_color(*base));
+
+            MEM_BG_PALETTE[16 + i] = blend(real_color(*base), c, include_overlay ? amt : 0);
         }
     }
 }

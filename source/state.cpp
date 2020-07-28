@@ -74,6 +74,30 @@ public:
 };
 
 
+class LaunchCutsceneState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    Float camera_offset_ = 0.f;
+    Microseconds timer_ = 0;
+
+    Float speed_ = 0.001000f; // feet per microsecond
+    int altitude_update_ = 1;
+    int altitude_ = 6336000; // low earth orbit
+
+    std::optional<Text> altitude_text_;
+
+    enum class Scene {
+        fade_in,
+        scroll,
+        fade_out
+    } scene_ = Scene::fade_in;
+};
+
+
 class ActiveState : public OverworldState {
 public:
     ActiveState(Game& game, bool camera_tracking = true)
@@ -788,6 +812,7 @@ static StatePool<ActiveState,
                  RespawnWaitState,
                  LogfileViewerState,
                  EndingCreditsState,
+                 LaunchCutsceneState,
                  SignalJammerSelectorState>
     state_pool_;
 
@@ -844,7 +869,6 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         fps_frame_count_ = 0;
         fps_timer_ = 0;
     }
-
 
     Player& player = game.player();
 
@@ -2691,7 +2715,144 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 StatePtr State::initial()
 {
-    return state_pool_.create<IntroCreditsState>(locale_string(LocaleString::intro_text_2));
+    // return state_pool_.create<IntroCreditsState>(locale_string(LocaleString::intro_text_2));
+    return state_pool_.create<LaunchCutsceneState>();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// LaunchCutsceneState
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    pfrm.enable_glyph_mode(true); // FIXME: just for debug purposes, a prior
+                                  // state should have already enabled glyphs.
+
+    pfrm.screen().fade(1.f, ColorConstant::silver_white);
+
+    pfrm.load_sprite_texture("spritesheet");
+    pfrm.load_overlay_texture("overlay");
+    pfrm.load_tile0_texture("tilesheet_intro_cutscene_flattened");
+    pfrm.load_tile1_texture("tilesheet_top");
+
+    // pfrm.screen().fade(0.f, ColorConstant::silver_white);
+
+    const Vec2<Float> arbitrary_offscreen_location{1000, 1000};
+
+    game.transporter().set_position(arbitrary_offscreen_location);
+    game.player().set_visible(false);
+
+    // 151
+    const auto screen_tiles = calc_screen_tiles(pfrm);
+
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            pfrm.set_tile(Layer::background, i, j, 1);
+        }
+    }
+
+    draw_image(pfrm, 1, 0, 3, 30, 14, Layer::background);
+
+
+    for (int i = 0; i < screen_tiles.x; ++i) {
+        pfrm.set_tile(Layer::overlay, i, 0, 112);
+        pfrm.set_tile(Layer::overlay, i, 1, 112);
+
+        pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 1, 112);
+        pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 2, 112);
+        pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
+    }
+}
+
+
+void LaunchCutsceneState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+
+}
+
+
+StatePtr LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    timer_ += delta;
+
+    altitude_ += delta * speed_;
+
+    if (--altitude_update_ == 0) {
+
+        auto screen_tiles = calc_screen_tiles(pfrm);
+
+        altitude_update_ = 10;
+
+        auto len = integer_text_length(altitude_) + 3;
+
+        altitude_text_.emplace(pfrm, OverlayCoord{u8((screen_tiles.x - len) / 2), u8(screen_tiles.y - 2)});
+        altitude_text_->assign(altitude_);
+        altitude_text_->append(" ft");
+    }
+
+    switch (scene_) {
+    case Scene::fade_in: {
+        camera_offset_ = interpolate(-50.f, camera_offset_, delta * 0.0000005f);
+
+        game.camera().set_position(pfrm, {0, camera_offset_});
+
+        if (timer_ > seconds(3)) {
+            scene_ = Scene::scroll;
+        }
+
+        constexpr auto fade_duration = milliseconds(1000);
+        if (timer_ > fade_duration) {
+            pfrm.screen().fade(0.f);
+        } else {
+            const auto amount = 1.f - smoothstep(0.f, fade_duration, timer_);
+            pfrm.screen().fade(amount, ColorConstant::silver_white);
+        }
+        break;
+    }
+
+    case Scene::scroll: {
+        camera_offset_ -= delta * 0.0000014f;
+
+        game.camera().set_position(pfrm, {0, camera_offset_});
+
+        if (timer_ > seconds(8)) {
+            timer_ = 0;
+            scene_ = Scene::fade_out;
+        }
+
+        break;
+    }
+
+    case Scene::fade_out: {
+
+        constexpr auto fade_duration = milliseconds(2000);
+        if (timer_ > fade_duration) {
+            altitude_text_.reset();
+
+            pfrm.screen().fade(1.f);
+
+            pfrm.sleep(5);
+
+            return state_pool_.create<NewLevelState>(game.level());
+
+        } else {
+            camera_offset_ -= delta * 0.0000014f;
+            game.camera().set_position(pfrm, {0, camera_offset_});
+
+            const auto amount = smoothstep(0.f, fade_duration, timer_);
+            pfrm.screen().fade(amount, ColorConstant::rich_black, {}, true, true);
+        }
+        break;
+    }
+
+    }
+
+
+    return null_state();
 }
 
 

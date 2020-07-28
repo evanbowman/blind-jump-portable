@@ -224,7 +224,8 @@ public:
         void fade(float amount,
                   ColorConstant color = ColorConstant::rich_black,
                   std::optional<ColorConstant> base = {},
-                  bool include_sprites = true);
+                  bool include_sprites = true,
+                  bool include_overlay = false);
 
         void pixelate(u8 amount,
                       bool include_overlay = true,

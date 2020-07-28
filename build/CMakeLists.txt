@@ -101,6 +101,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/clair_de_lune.s
     ${SOURCE_DIR}/graphics/overlay.s
     ${SOURCE_DIR}/graphics/charset_en_spn_fr.s
+    ${SOURCE_DIR}/graphics/tilesheet_intro_cutscene_flattened.s
     ${SOURCE_DIR}/graphics/tilesheet.s
     ${SOURCE_DIR}/graphics/tilesheet2.s
     ${SOURCE_DIR}/graphics/tilesheet3.s
@@ -234,6 +235,7 @@ if(GAMEBOY_ADVANCE)
     compile_image(spritesheet3 2 4 NO)
     compile_image(spritesheet_boss0 2 4 NO)
     compile_image(spritesheet_boss1 2 4 NO)
+    compile_image(tilesheet_intro_cutscene 0 0 YES)
     compile_image(tilesheet 4 3 NO)
     compile_image(tilesheet2 4 3 NO)
     compile_image(tilesheet3 4 3 NO)
