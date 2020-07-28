@@ -84,14 +84,23 @@ private:
     Float camera_offset_ = 0.f;
     Microseconds timer_ = 0;
 
-    Float speed_ = 0.010000f; // feet per microsecond
+    Microseconds camera_shake_timer_ = milliseconds(400);
+
+    Float speed_ = 0.f; // feet per microsecond
     int altitude_update_ = 1;
-    int altitude_ = 6336000; // low earth orbit
+    int altitude_ = 7000;
+
+    Microseconds cloud_spawn_timer_ = milliseconds(100);
+    bool cloud_lane_ = 0;
 
     std::optional<Text> altitude_text_;
 
     enum class Scene {
         fade_in,
+        rising,
+        enter_clouds,
+        within_clouds,
+        exit_clouds,
         scroll,
         fade_out
     } scene_ = Scene::fade_in;
@@ -1361,7 +1370,7 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
     constexpr auto fade_duration = milliseconds(800);
     if (counter_ > fade_duration) {
         if (game.level() == 0) {
-             return state_pool_.create<ActiveState>(game);
+            return state_pool_.create<ActiveState>(game);
         } else {
             pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
             pfrm.sleep(2);
@@ -1579,8 +1588,8 @@ RespawnWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     counter_ += delta;
 
-    if (counter_ > milliseconds(1900)) {
-        return state_pool_.create<NewLevelState>(Level{0});
+    if (counter_ > milliseconds(800)) {
+        return state_pool_.create<LaunchCutsceneState>();
     }
 
     return null_state();
@@ -2575,7 +2584,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
         repaint(std::min(max_i, i));
 
         if (timer_ > seconds(1)) {
-            pfrm.sleep(50);
+            pfrm.sleep(80);
 
             pfrm.speaker().play_music(
                 zone.music_name_, true, zone.music_offset_);
@@ -2690,7 +2699,6 @@ StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
     } else {
         return state_pool_.create<NewLevelState>(game.level());
     }
-
 }
 
 
@@ -2733,12 +2741,32 @@ StatePtr State::initial()
 
 void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
-    pfrm.enable_glyph_mode(true); // FIXME: just for debug purposes, a prior
-                                  // state should have already enabled glyphs.
+    for (int x = 0; x < TileMap::width; ++x) {
+        for (int y = 0; y < TileMap::height; ++y) {
+            pfrm.set_tile(Layer::map_0, x, y, 3);
+            pfrm.set_tile(Layer::map_1, x, y, 0);
+        }
+    }
+
+    auto clear_entities = [&](auto& buf) { buf.clear(); };
+
+    game.enemies().transform(clear_entities);
+    game.details().transform(clear_entities);
+    game.effects().transform(clear_entities);
+
+
+    game.camera() = Camera{};
+
+    // pfrm.enable_glyph_mode(true); // FIXME: just for debug purposes, a prior
+    //                               // state should have already enabled glyphs.
+
+    // We never enter this state except when starting a new game, so it's ok to
+    // hard-code the seed value.
+    rng::global_state = 2022;
 
     pfrm.screen().fade(1.f);
 
-    pfrm.load_sprite_texture("spritesheet");
+    pfrm.load_sprite_texture("spritesheet_intro_clouds");
     pfrm.load_overlay_texture("overlay");
     pfrm.load_tile0_texture("tilesheet_intro_cutscene_flattened");
     pfrm.load_tile1_texture("tilesheet_top");
@@ -2750,23 +2778,13 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
     game.transporter().set_position(arbitrary_offscreen_location);
     game.player().set_visible(false);
 
-    // 151
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
-            pfrm.set_tile(Layer::background, i, j, 1);
+            pfrm.set_tile(Layer::background, i, j, 4);
         }
     }
-
-    draw_image(pfrm, 151, 0, 8, 30, 9, Layer::background);
-    int moon_x = 7;
-    int moon_y = 1;
-    pfrm.set_tile(Layer::background, moon_x, moon_y, 2);
-    pfrm.set_tile(Layer::background, moon_x + 1, moon_y, 3);
-    pfrm.set_tile(Layer::background, moon_x, moon_y + 1, 32);
-    pfrm.set_tile(Layer::background, moon_x + 1, moon_y + 1, 33);
-
 
     for (int i = 0; i < screen_tiles.x; ++i) {
         pfrm.set_tile(Layer::overlay, i, 0, 112);
@@ -2777,21 +2795,64 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
     }
 
-    pfrm.screen().fade(1.f, ColorConstant::silver_white);
+    speed_ = 0.080000f;
+
+
+    game.details().spawn<CutsceneCloud>(Vec2<Float>{70, 20});
+
+    game.details().spawn<CutsceneCloud>(Vec2<Float>{150, 60});
 }
 
 
 void LaunchCutsceneState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    altitude_text_.reset();
 
+    pfrm.screen().fade(1.f);
+    pfrm.fill_overlay(0);
+
+    game.details().transform([](auto& buf) { buf.clear(); });
 }
 
 
-StatePtr LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     timer_ += delta;
 
     altitude_ += delta * speed_;
+
+    if (static_cast<int>(scene_) < static_cast<int>(Scene::within_clouds)) {
+        game.camera().update(pfrm,
+                             delta,
+                             {(float)pfrm.screen().size().x / 2,
+                              (float)pfrm.screen().size().y / 2});
+    }
+
+
+    auto update_policy = [&](auto& entity_buf) {
+        for (auto it = entity_buf.begin(); it not_eq entity_buf.end();) {
+            if (not(*it)->alive()) {
+                (*it)->on_death(pfrm, game);
+                it = entity_buf.erase(it);
+            } else {
+                (*it)->update(pfrm, game, delta);
+                ++it;
+            }
+        }
+    };
+
+    auto do_camera_shake = [&](int magnitude) {
+        camera_shake_timer_ -= delta;
+
+        if (camera_shake_timer_ <= 0) {
+            camera_shake_timer_ = milliseconds(80);
+            game.camera().shake(magnitude);
+        }
+    };
+
+
+    game.details().transform(update_policy);
 
     if (--altitude_update_ == 0) {
 
@@ -2799,15 +2860,133 @@ StatePtr LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds de
 
         altitude_update_ = 10;
 
-        auto len = integer_text_length(altitude_) + 3;
+        const auto units = locale_string(LocaleString::distance_units_feet);
 
-        altitude_text_.emplace(pfrm, OverlayCoord{u8((screen_tiles.x - len) / 2), u8(screen_tiles.y - 2)});
+        auto len = integer_text_length(altitude_) + utf8::len(units);
+
+        if (not altitude_text_ or
+            (altitude_text_ and altitude_text_->len() not_eq len)) {
+            altitude_text_.emplace(pfrm,
+                                   OverlayCoord{u8((screen_tiles.x - len) / 2),
+                                                u8(screen_tiles.y - 2)});
+        }
         altitude_text_->assign(altitude_);
-        altitude_text_->append(" ft");
+        altitude_text_->append(units);
     }
+
+    auto spawn_cloud = [&] {
+        const auto swidth = pfrm.screen().size().x;
+
+        // NOTE: just doing this because random numbers are not naturally
+        // well distributed, and we don't want the clouds to bunch up too
+        // much.
+        if (cloud_lane_ == 0) {
+            cloud_lane_ = 1;
+            const auto offset = rng::choice(swidth / 2) + 32;
+            game.details().spawn<CutsceneCloud>(
+                Vec2<Float>{Float(offset), -80});
+        } else {
+            const auto offset = rng::choice(swidth / 2) + swidth / 2 + 32;
+            game.details().spawn<CutsceneCloud>(
+                Vec2<Float>{Float(offset), -80});
+            cloud_lane_ = 0;
+        }
+    };
 
     switch (scene_) {
     case Scene::fade_in: {
+        constexpr auto fade_duration = milliseconds(400);
+        if (timer_ > fade_duration) {
+            pfrm.screen().fade(0.f);
+        } else {
+            const auto amount = 1.f - smoothstep(0.f, fade_duration, timer_);
+            pfrm.screen().fade(amount, ColorConstant::silver_white);
+        }
+
+        if (timer_ > milliseconds(600)) {
+            scene_ = Scene::rising;
+        }
+
+        // do_camera_shake(2);
+
+        cloud_spawn_timer_ -= delta;
+        if (cloud_spawn_timer_ <= 0) {
+            cloud_spawn_timer_ = milliseconds(450);
+
+            spawn_cloud();
+        }
+        break;
+    }
+
+    case Scene::rising: {
+        if (timer_ > seconds(5)) {
+            timer_ = 0;
+            scene_ = Scene::enter_clouds;
+        }
+
+        cloud_spawn_timer_ -= delta;
+        if (cloud_spawn_timer_ <= 0) {
+            cloud_spawn_timer_ = milliseconds(350);
+
+            spawn_cloud();
+        }
+
+        break;
+    }
+
+    case Scene::enter_clouds: {
+
+        if (timer_ > seconds(3)) {
+            do_camera_shake(7);
+        } else {
+            do_camera_shake(3);
+        }
+
+        constexpr auto fade_duration = seconds(4);
+        if (timer_ > fade_duration) {
+            pfrm.screen().fade(1.f, ColorConstant::silver_white);
+
+            timer_ = 0;
+            scene_ = Scene::within_clouds;
+
+            for (int i = 0; i < 32; ++i) {
+                for (int j = 0; j < 32; ++j) {
+                    pfrm.set_tile(Layer::background, i, j, 1);
+                }
+            }
+
+            draw_image(pfrm, 151, 0, 8, 30, 9, Layer::background);
+            int moon_x = 7;
+            int moon_y = 1;
+            pfrm.set_tile(Layer::background, moon_x, moon_y, 2);
+            pfrm.set_tile(Layer::background, moon_x + 1, moon_y, 3);
+            pfrm.set_tile(Layer::background, moon_x, moon_y + 1, 32);
+            pfrm.set_tile(Layer::background, moon_x + 1, moon_y + 1, 33);
+
+            game.details().transform([](auto& buf) { buf.clear(); });
+
+        } else {
+            const auto amount = smoothstep(0.f, fade_duration, timer_);
+            pfrm.screen().fade(amount, ColorConstant::silver_white);
+
+            cloud_spawn_timer_ -= delta;
+            if (cloud_spawn_timer_ <= 0) {
+                cloud_spawn_timer_ = milliseconds(70);
+
+                spawn_cloud();
+            }
+        }
+        break;
+    }
+
+    case Scene::within_clouds:
+        if (timer_ > seconds(2) + milliseconds(300)) {
+            timer_ = 0;
+            scene_ = Scene::exit_clouds;
+        }
+        break;
+
+    case Scene::exit_clouds: {
         camera_offset_ = interpolate(-50.f, camera_offset_, delta * 0.0000005f);
 
         game.camera().set_position(pfrm, {0, camera_offset_});
@@ -2815,7 +2994,8 @@ StatePtr LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds de
         if (timer_ > seconds(3)) {
             scene_ = Scene::scroll;
         } else {
-            speed_ = interpolate(0.000900f, 0.010000f, timer_ / Float(seconds(3)));
+            speed_ =
+                interpolate(0.000900f, 0.095000f, timer_ / Float(seconds(3)));
         }
 
         constexpr auto fade_duration = milliseconds(1000);
@@ -2852,20 +3032,23 @@ StatePtr LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds de
 
             pfrm.sleep(5);
 
-            return state_pool_.create<NewLevelState>(game.level());
+            return state_pool_.create<NewLevelState>(Level{0});
 
         } else {
             camera_offset_ -= delta * 0.0000014f;
             game.camera().set_position(pfrm, {0, camera_offset_});
 
             const auto amount = smoothstep(0.f, fade_duration, timer_);
-            pfrm.screen().fade(amount, ColorConstant::rich_black, {}, true, true);
+            pfrm.screen().fade(
+                amount, ColorConstant::rich_black, {}, true, true);
         }
         break;
     }
-
     }
 
+    if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        return state_pool_.create<NewLevelState>(Level{0});
+    }
 
     return null_state();
 }

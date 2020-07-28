@@ -5,9 +5,10 @@
 #include "camera.hpp"
 #include "entity/bosses/gatekeeper.hpp"
 #include "entity/bosses/theFirstExplorer.hpp"
-#include "entity/details/lander.hpp"
+#include "entity/details/cutsceneCloud.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
+#include "entity/details/lander.hpp"
 #include "entity/details/rubble.hpp"
 #include "entity/details/scavenger.hpp"
 #include "entity/details/transporter.hpp"
@@ -72,8 +73,13 @@ public:
                                    Theif,
                                    Sinkhole>;
 
-    using DetailGroup =
-        EntityGroup<30, ItemChest, Item, Rubble, Scavenger, Lander>;
+    using DetailGroup = EntityGroup<30,
+                                    ItemChest,
+                                    Item,
+                                    Rubble,
+                                    Scavenger,
+                                    Lander,
+                                    CutsceneCloud>;
     using EffectGroup = EntityGroup<20,
                                     Reticule,
                                     Proxy,

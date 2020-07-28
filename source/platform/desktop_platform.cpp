@@ -608,27 +608,39 @@ void Platform::Screen::clear()
             // create a meta-tiled version of the tile0 for use as the
             // background texture...
             if (request.first == TextureSwap::tile0) {
-                sf::Image meta_image;
-                meta_image.create(image.getSize().x * 3, 8);
+                // But... we need to support loading a non-standard map texture,
+                // for the purpose of displaying images, so do not metatile if
+                // the image height is 8 (already metatiled!).
+                //
+                if (image.getSize().y not_eq 8) {
+                    sf::Image meta_image;
+                    meta_image.create(image.getSize().x * 3, 8);
 
-                for (size_t block = 0; block < image.getSize().x / 32;
-                     ++block) {
-                    for (int row = 0; row < 3; ++row) {
-                        const int src_x = block * 32;
-                        const int src_y = row * 8;
+                    for (size_t block = 0; block < image.getSize().x / 32;
+                         ++block) {
+                        for (int row = 0; row < 3; ++row) {
+                            const int src_x = block * 32;
+                            const int src_y = row * 8;
 
-                        const int dest_x = block * (32 * 3) + row * 32;
-                        const int dest_y = 0;
+                            const int dest_x = block * (32 * 3) + row * 32;
+                            const int dest_y = 0;
 
-                        meta_image.copy(
-                            image, dest_x, dest_y, {src_x, src_y, 32, 8});
+                            meta_image.copy(
+                                            image, dest_x, dest_y, {src_x, src_y, 32, 8});
+                        }
                     }
-                }
 
-                if (not::platform->data()->background_texture_.loadFromImage(
-                        meta_image)) {
-                    error(*::platform, "Failed to create background texture");
-                    exit(EXIT_FAILURE);
+                    if (not::platform->data()->background_texture_.loadFromImage(
+                                                                                 meta_image)) {
+                        error(*::platform, "Failed to create background texture");
+                        exit(EXIT_FAILURE);
+                    }
+
+                } else {
+                    if (not::platform->data()->background_texture_.loadFromImage(image)) {
+                        error(*::platform, "Failed to create background texture");
+                        exit(EXIT_FAILURE);
+                    }
                 }
                 // meta_image.saveToFile("/Users/evanbowman/Desktop/BlindJump/build/meta-test.png");
             }
@@ -1021,7 +1033,8 @@ void Platform::Screen::display()
 void Platform::Screen::fade(Float amount,
                             ColorConstant k,
                             std::optional<ColorConstant> base,
-                            bool include_sprites)
+                            bool include_sprites,
+                            bool include_overlay)
 {
     const auto c = real_color(k);
 

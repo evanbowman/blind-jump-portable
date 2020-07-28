@@ -376,6 +376,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::yes: return "yes";
         case LocaleString::no: return "no";
         case LocaleString::menu_disabled: return "menu disabled";
+        case LocaleString::distance_units_feet: return " ft";
         default: return empty_str;
         }
         break;

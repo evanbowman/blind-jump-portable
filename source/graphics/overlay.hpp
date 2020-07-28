@@ -50,6 +50,8 @@ public:
     }
 
 private:
+    void resize(u32 len);
+
     Platform& pfrm_;
     const OverlayCoord coord_;
     Length len_;

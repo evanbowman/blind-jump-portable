@@ -74,9 +74,19 @@ print_char(Platform& pfrm, utf8::Codepoint c, const OverlayCoord& coord)
 }
 
 
+void Text::resize(u32 len)
+{
+    for (int i = len - 1; i < this->len(); ++i) {
+        pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y, 0);
+    }
+    len_ = 0;
+}
+
+
 void Text::assign(const char* str)
 {
-    this->erase();
+    this->resize(utf8::len(str));
+    // this->erase();
 
     this->append(str);
 }

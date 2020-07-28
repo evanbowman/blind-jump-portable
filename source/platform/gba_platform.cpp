@@ -640,7 +640,7 @@ void Platform::Screen::draw(const Sprite& spr)
         oa->attribute_1 |= (abs_position.x + x_off) & 0x01ff;
         oa->attribute_2 = 2 + spr.get_texture_index() * scale + tex_off;
         oa->attribute_2 |= pb;
-        oa->attribute_2 |= ATTR2_PRIORITY(2);
+        oa->attribute_2 |= ATTR2_PRIORITY(1);
         oam_write_index += 1;
     };
 
@@ -816,19 +816,20 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/overlay.h"
 #include "graphics/overlay_journal.h"
 #include "graphics/seed_packet_flattened.h"
-#include "graphics/spritesheet_intro_cutscene.h"
 #include "graphics/spritesheet.h"
 #include "graphics/spritesheet2.h"
 #include "graphics/spritesheet3.h"
 #include "graphics/spritesheet_boss0.h"
 #include "graphics/spritesheet_boss1.h"
+#include "graphics/spritesheet_intro_clouds.h"
+#include "graphics/spritesheet_intro_cutscene.h"
 #include "graphics/tilesheet.h"
 #include "graphics/tilesheet2.h"
 #include "graphics/tilesheet2_top.h"
 #include "graphics/tilesheet3.h"
 #include "graphics/tilesheet3_top.h"
-#include "graphics/tilesheet_top.h"
 #include "graphics/tilesheet_intro_cutscene_flattened.h"
+#include "graphics/tilesheet_top.h"
 
 
 struct TextureData {
@@ -849,6 +850,7 @@ struct TextureData {
 
 static const TextureData sprite_textures[] = {
     TEXTURE_INFO(spritesheet_intro_cutscene),
+    TEXTURE_INFO(spritesheet_intro_clouds),
     TEXTURE_INFO(spritesheet),
     TEXTURE_INFO(spritesheet2),
     TEXTURE_INFO(spritesheet3),
@@ -1215,7 +1217,11 @@ void Platform::Screen::fade(float amount,
             MEM_BG_PALETTE[i] = blend(real_color(*base), c, amt);
             MEM_BG_PALETTE[32 + i] = blend(real_color(*base), c, amt);
 
-            MEM_BG_PALETTE[16 + i] = blend(real_color(*base), c, include_overlay ? amt : 0);
+            // FIXME!
+            for (int i = 0; i < 16; ++i) {
+                auto from = Color::from_bgr_hex_555(overlayPal[i]);
+                MEM_BG_PALETTE[16 + i] = blend(from, c, 0);
+            }
         }
     }
 }

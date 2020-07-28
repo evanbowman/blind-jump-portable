@@ -527,17 +527,18 @@ static constexpr const ZoneInfo zone_3{
 const ZoneInfo& zone_info(Level level)
 {
     if (UNLIKELY(level > boss_2_level)) {
-        static const ZoneInfo null_zone{LocaleString::count,
-                                        LocaleString::count,
-                                        "",
-                                        "",
-                                        "",
-                                        "",
-                                        0,
-                                        ColorConstant::null,
-                                        ColorConstant::null,
-                                        [](Platform&, Game&) {},
-                                        [](int, int, const TileMap&) { return 0; }};
+        static const ZoneInfo null_zone{
+            LocaleString::count,
+            LocaleString::count,
+            "",
+            "",
+            "",
+            "",
+            0,
+            ColorConstant::null,
+            ColorConstant::null,
+            [](Platform&, Game&) {},
+            [](int, int, const TileMap&) { return 0; }};
         return null_zone;
     } else if (level > boss_1_level) {
         return zone_3;
@@ -868,8 +869,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
-    if (level() not_eq 0 and
-        not is_boss_level(level())) {
+    if (level() not_eq 0 and not is_boss_level(level())) {
         // Pick a random filled tile, and flood-fill around that tile in
         // the map, to produce a single connected component.
         while (true) {
@@ -1364,8 +1364,10 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         details().spawn<ItemChest>(Vec2<Float>{348, 154},
                                    Item::Type::explosive_rounds_2);
         enemies().spawn<Drone>(Vec2<Float>{159, 275});
-        if (static_cast<int>(difficulty()) < static_cast<int>(Difficulty::hard)) {
-            details().spawn<Item>(Vec2<Float>{80, 332}, pfrm, Item::Type::heart);
+        if (static_cast<int>(difficulty()) <
+            static_cast<int>(Difficulty::hard)) {
+            details().spawn<Item>(
+                Vec2<Float>{80, 332}, pfrm, Item::Type::heart);
         }
         tiles_.set_tile(12, 4, Tile::none);
         player_.move({409.1f, 167.2f});

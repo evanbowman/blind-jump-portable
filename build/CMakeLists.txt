@@ -37,6 +37,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/effects/firstExplorerSmallLaser.cpp
   ${SOURCE_DIR}/entity/effects/firstExplorerBigLaser.cpp
   ${SOURCE_DIR}/entity/bosses/theFirstExplorer.cpp
+  ${SOURCE_DIR}/entity/details/cutsceneCloud.cpp
   ${SOURCE_DIR}/entity/bosses/gatekeeper.cpp
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/details/scavenger.cpp
@@ -109,6 +110,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/tilesheet2_top.s
     ${SOURCE_DIR}/graphics/tilesheet3_top.s
     ${SOURCE_DIR}/graphics/spritesheet_intro_cutscene.s
+    ${SOURCE_DIR}/graphics/spritesheet_intro_clouds.s
     ${SOURCE_DIR}/graphics/spritesheet.s
     ${SOURCE_DIR}/graphics/spritesheet2.s
     ${SOURCE_DIR}/graphics/spritesheet3.s
@@ -229,6 +231,7 @@ if(GAMEBOY_ADVANCE)
     -mtune=arm7tdmi)
 
   if(GBA_AUTOBUILD_IMG)
+    compile_image(spritesheet_intro_clouds 2 4 NO)
     compile_image(spritesheet_intro_cutscene 2 4 NO)
     compile_image(spritesheet 2 4 NO)
     compile_image(spritesheet2 2 4 NO)
