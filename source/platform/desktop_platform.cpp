@@ -626,19 +626,23 @@ void Platform::Screen::clear()
                             const int dest_y = 0;
 
                             meta_image.copy(
-                                            image, dest_x, dest_y, {src_x, src_y, 32, 8});
+                                image, dest_x, dest_y, {src_x, src_y, 32, 8});
                         }
                     }
 
-                    if (not::platform->data()->background_texture_.loadFromImage(
-                                                                                 meta_image)) {
-                        error(*::platform, "Failed to create background texture");
+                    if (not::platform->data()
+                               ->background_texture_.loadFromImage(
+                                   meta_image)) {
+                        error(*::platform,
+                              "Failed to create background texture");
                         exit(EXIT_FAILURE);
                     }
 
                 } else {
-                    if (not::platform->data()->background_texture_.loadFromImage(image)) {
-                        error(*::platform, "Failed to create background texture");
+                    if (not::platform->data()
+                               ->background_texture_.loadFromImage(image)) {
+                        error(*::platform,
+                              "Failed to create background texture");
                         exit(EXIT_FAILURE);
                     }
                 }

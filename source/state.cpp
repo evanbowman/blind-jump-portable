@@ -2799,8 +2799,13 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 
 
     game.details().spawn<CutsceneCloud>(Vec2<Float>{70, 20});
-
     game.details().spawn<CutsceneCloud>(Vec2<Float>{150, 60});
+
+    game.on_timeout(pfrm, milliseconds(500), [](Platform&, Game& game) {
+        game.details().spawn<CutsceneBird>(Vec2<Float>{210, -15}, 0);
+        game.details().spawn<CutsceneBird>(Vec2<Float>{180, -20}, 3);
+        game.details().spawn<CutsceneBird>(Vec2<Float>{140, -30}, 6);
+    });
 }
 
 
@@ -2895,12 +2900,12 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     switch (scene_) {
     case Scene::fade_in: {
-        constexpr auto fade_duration = milliseconds(400);
+        constexpr auto fade_duration = milliseconds(600);
         if (timer_ > fade_duration) {
             pfrm.screen().fade(0.f);
         } else {
             const auto amount = 1.f - smoothstep(0.f, fade_duration, timer_);
-            pfrm.screen().fade(amount, ColorConstant::silver_white);
+            pfrm.screen().fade(amount);
         }
 
         if (timer_ > milliseconds(600)) {

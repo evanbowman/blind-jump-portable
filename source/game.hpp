@@ -5,6 +5,7 @@
 #include "camera.hpp"
 #include "entity/bosses/gatekeeper.hpp"
 #include "entity/bosses/theFirstExplorer.hpp"
+#include "entity/details/cutsceneBird.hpp"
 #include "entity/details/cutsceneCloud.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
@@ -79,7 +80,9 @@ public:
                                     Rubble,
                                     Scavenger,
                                     Lander,
-                                    CutsceneCloud>;
+                                    CutsceneCloud,
+                                    CutsceneBird>;
+
     using EffectGroup = EntityGroup<20,
                                     Reticule,
                                     Proxy,
