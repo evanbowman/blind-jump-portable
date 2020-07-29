@@ -88,7 +88,7 @@ private:
 
     Float speed_ = 0.f; // feet per microsecond
     int altitude_update_ = 1;
-    int altitude_ = 7000;
+    int altitude_ = 100;
 
     Microseconds cloud_spawn_timer_ = milliseconds(100);
     bool cloud_lane_ = 0;
@@ -320,6 +320,16 @@ public:
 private:
     void repaint_page(Platform& pfrm);
     void repaint_margin(Platform& pfrm);
+
+    Microseconds timer_ = 0;
+
+    enum class DisplayMode {
+        fade_in,
+        show,
+        fade_out,
+        transition,
+        after_transition,
+    } display_mode_ = DisplayMode::transition;
 
     std::optional<TextView> text_;
     std::optional<Text> page_number_;
@@ -2105,7 +2115,7 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 // NotebookState
 ////////////////////////////////////////////////////////////////////////////////
 
-constexpr u16 notebook_margin_tile = 39 + 26 + 6;
+constexpr u16 notebook_margin_tile = 82;
 
 NotebookState::NotebookState(const char* text) : str_(text), page_(0)
 {
@@ -2114,10 +2124,10 @@ NotebookState::NotebookState(const char* text) : str_(text), page_(0)
 
 void NotebookState::enter(Platform& pfrm, Game&, State&)
 {
-    pfrm.speaker().play_sound("open_book", 0);
+    // pfrm.speaker().play_sound("open_book", 0);
 
     pfrm.load_overlay_texture("overlay_journal");
-    pfrm.screen().fade(1.f, ColorConstant::aged_paper);
+    pfrm.screen().fade(1.f, ColorConstant::aged_paper, {}, true, true);
 
     auto screen_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm);
@@ -2126,7 +2136,7 @@ void NotebookState::enter(Platform& pfrm, Game&, State&)
                   OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
     page_number_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
 
-    repaint_page(pfrm);
+    // repaint_page(pfrm);
 }
 
 
@@ -2182,19 +2192,78 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<InventoryState>(false);
     }
 
-    if (pfrm.keyboard().down_transition<Key::down>()) {
-        if (text_->parsed() not_eq utf8::len(str_)) {
-            page_ += 1;
-            repaint_page(pfrm);
-            pfrm.speaker().play_sound("open_book", 0);
-        }
+    switch (display_mode_) {
+    case DisplayMode::after_transition:
+        // NOTE: Loading a notebook page for the first time results in a large
+        // amount of lag on some systems, which effectively skips the screen
+        // fade. The first load of a new page causes the platform to load a
+        // bunch of glyphs into memory for the first time, which means copying
+        // over texture memory, possibly adjusting a glyph mapping table,
+        // etc. So we're just going to sit for one update cycle, and let the
+        // huge delta pass over.
+        display_mode_ = DisplayMode::fade_in;
+        break;
 
-    } else if (pfrm.keyboard().down_transition<Key::up>()) {
-        if (page_ > 0) {
-            page_ -= 1;
-            repaint_page(pfrm);
-            pfrm.speaker().play_sound("open_book", 0);
+    case DisplayMode::fade_in:
+        static const auto fade_duration = milliseconds(200);
+        timer_ += delta;
+        if (timer_ < fade_duration) {
+
+            pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, timer_),
+                               ColorConstant::aged_paper,
+                               {},
+                               true,
+                               true);
+        } else {
+            timer_ = 0;
+            pfrm.screen().fade(0.f);
+            display_mode_ = DisplayMode::show;
         }
+        break;
+
+    case DisplayMode::show:
+        if (pfrm.keyboard().down_transition<Key::down>()) {
+            if (text_->parsed() not_eq utf8::len(str_)) {
+                page_ += 1;
+                // repaint_page(pfrm);
+                // pfrm.speaker().play_sound("open_book", 0);
+                timer_ = 0;
+                display_mode_ = DisplayMode::fade_out;
+            }
+
+        } else if (pfrm.keyboard().down_transition<Key::up>()) {
+            if (page_ > 0) {
+                page_ -= 1;
+                // repaint_page(pfrm);
+                // pfrm.speaker().play_sound("open_book", 0);
+                timer_ = 0;
+                display_mode_ = DisplayMode::fade_out;
+            }
+        }
+        break;
+
+    case DisplayMode::fade_out: {
+        timer_ += delta;
+        static const auto fade_duration = milliseconds(200);
+        if (timer_ < fade_duration) {
+            pfrm.screen().fade(smoothstep(0.f, fade_duration, timer_),
+                               ColorConstant::aged_paper,
+                               {},
+                               true,
+                               true);
+        } else {
+            timer_ = 0;
+            pfrm.screen().fade(1.f, ColorConstant::aged_paper, {}, true, true);
+            display_mode_ = DisplayMode::transition;
+        }
+        break;
+    }
+
+    case DisplayMode::transition:
+        repaint_page(pfrm);
+        pfrm.speaker().play_sound("open_book", 0);
+        display_mode_ = DisplayMode::after_transition;
+        break;
     }
 
     return null_state();
@@ -2767,7 +2836,7 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
     pfrm.screen().fade(1.f);
 
     pfrm.load_sprite_texture("spritesheet_intro_clouds");
-    pfrm.load_overlay_texture("overlay");
+    pfrm.load_overlay_texture("overlay_cutscene");
     pfrm.load_tile0_texture("tilesheet_intro_cutscene_flattened");
     pfrm.load_tile1_texture("tilesheet_top");
 
@@ -2795,7 +2864,7 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
     }
 
-    speed_ = 0.080000f;
+    speed_ = 0.0050000f;
 
 
     game.details().spawn<CutsceneCloud>(Vec2<Float>{70, 20});
@@ -2815,6 +2884,8 @@ void LaunchCutsceneState::exit(Platform& pfrm, Game& game, State& next_state)
 
     pfrm.screen().fade(1.f);
     pfrm.fill_overlay(0);
+
+    pfrm.load_overlay_texture("overlay");
 
     game.details().transform([](auto& buf) { buf.clear(); });
 }
@@ -2927,6 +2998,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (timer_ > seconds(5)) {
             timer_ = 0;
             scene_ = Scene::enter_clouds;
+            speed_ = 0.02f;
         }
 
         cloud_spawn_timer_ -= delta;
@@ -2949,6 +3021,8 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         constexpr auto fade_duration = seconds(4);
         if (timer_ > fade_duration) {
+            speed_ = 0.1f;
+
             pfrm.screen().fade(1.f, ColorConstant::silver_white);
 
             timer_ = 0;
@@ -3000,7 +3074,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
             scene_ = Scene::scroll;
         } else {
             speed_ =
-                interpolate(0.000900f, 0.095000f, timer_ / Float(seconds(3)));
+                interpolate(0.00900f, 0.095000f, timer_ / Float(seconds(3)));
         }
 
         constexpr auto fade_duration = milliseconds(1000);

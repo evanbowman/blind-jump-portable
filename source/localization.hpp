@@ -72,6 +72,7 @@ enum class LocaleString {
     no,
     menu_disabled,
     distance_units_feet,
+    launch,
     count
 };
 

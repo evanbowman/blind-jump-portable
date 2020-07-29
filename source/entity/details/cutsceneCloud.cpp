@@ -42,6 +42,7 @@ CutsceneCloud::CutsceneCloud(const Vec2<Float>& position)
 void CutsceneCloud::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     position_.y += dt * scroll_speed_;
+    // position_.x += dt * (scroll_speed_ * 0.006f);
 
     sprite_.set_position(position_);
     overflow_sprs_[0].set_position(position_);

@@ -814,6 +814,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/charset_en_spn_fr.h"
 #include "graphics/old_poster_flattened.h"
 #include "graphics/overlay.h"
+#include "graphics/overlay_cutscene.h"
 #include "graphics/overlay_journal.h"
 #include "graphics/seed_packet_flattened.h"
 #include "graphics/spritesheet.h"
@@ -871,6 +872,7 @@ static const TextureData tile_textures[] = {
 static const TextureData overlay_textures[] = {
     TEXTURE_INFO(charset_en_spn_fr),
     TEXTURE_INFO(overlay),
+    TEXTURE_INFO(overlay_cutscene),
     TEXTURE_INFO(overlay_journal),
     TEXTURE_INFO(old_poster_flattened),
     TEXTURE_INFO(seed_packet_flattened)};
@@ -879,6 +881,7 @@ static const TextureData overlay_textures[] = {
 static const TextureData* current_spritesheet = &sprite_textures[0];
 static const TextureData* current_tilesheet0 = &tile_textures[0];
 static const TextureData* current_tilesheet1 = &tile_textures[1];
+static const TextureData* current_overlay_texture = &overlay_textures[1];
 
 static u16 sprite_palette[16];
 static u16 tilesheet_0_palette[16];
@@ -953,27 +956,6 @@ static bool validate_overlay_texture_size(Platform& pfrm, size_t size)
         return false;
     }
     return true;
-}
-
-
-void Platform::load_overlay_texture(const char* name)
-{
-    for (auto& info : overlay_textures) {
-
-        if (strcmp(name, info.name_) == 0) {
-
-            for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(info.palette_data_[i]);
-                MEM_BG_PALETTE[16 + i] = from.bgr_hex_555();
-            }
-
-            if (validate_overlay_texture_size(*this, info.tile_data_length_)) {
-                memcpy16((void*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0],
-                         info.tile_data_,
-                         info.tile_data_length_ / 2);
-            }
-        }
-    }
 }
 
 
@@ -1207,7 +1189,8 @@ void Platform::Screen::fade(float amount,
         // leave it disabled for now.
         //
         for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(overlayPal[i]);
+            auto from = Color::from_bgr_hex_555(
+                current_overlay_texture->palette_data_[i]);
             MEM_BG_PALETTE[16 + i] = blend(from, c, include_overlay ? amt : 0);
         }
     } else {
@@ -1219,7 +1202,8 @@ void Platform::Screen::fade(float amount,
 
             // FIXME!
             for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(overlayPal[i]);
+                auto from = Color::from_bgr_hex_555(
+                    current_overlay_texture->palette_data_[i]);
                 MEM_BG_PALETTE[16 + i] = blend(from, c, 0);
             }
         }
@@ -2326,6 +2310,35 @@ void Platform::enable_glyph_mode(bool enabled)
         }
     }
     glyph_mode = enabled;
+}
+
+
+void Platform::load_overlay_texture(const char* name)
+{
+    for (auto& info : overlay_textures) {
+
+        if (strcmp(name, info.name_) == 0) {
+
+            current_overlay_texture = &info;
+
+            for (int i = 0; i < 16; ++i) {
+                auto from = Color::from_bgr_hex_555(info.palette_data_[i]);
+                MEM_BG_PALETTE[16 + i] = from.bgr_hex_555();
+            }
+
+            if (validate_overlay_texture_size(*this, info.tile_data_length_)) {
+                memcpy16((void*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0],
+                         info.tile_data_,
+                         info.tile_data_length_ / 2);
+            }
+
+            if (glyph_mode) {
+                for (auto& gm : glyph_mapping_table) {
+                    gm.reference_count_ = -1;
+                }
+            }
+        }
+    }
 }
 
 

@@ -14,6 +14,22 @@ class Proxy : public Entity {
 public:
     using SpriteBuffer = Buffer<Sprite, 4>;
 
+    Proxy(const SpriteBuffer& buffer)
+    {
+        for (auto& spr : buffer) {
+            buffer_.push_back(spr);
+        }
+    }
+
+    void set_position(const Vec2<Float>& position)
+    {
+        position_ = position;
+
+        for (auto& spr : buffer_) {
+            spr.set_position(position);
+        }
+    }
+
     template <typename Other> Proxy(const Other& other)
     {
         if constexpr (Other::multiface_sprite) {
