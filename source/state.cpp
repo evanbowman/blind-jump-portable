@@ -2126,6 +2126,7 @@ void NotebookState::enter(Platform& pfrm, Game&, State&)
 {
     // pfrm.speaker().play_sound("open_book", 0);
 
+    pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, true, true);
     pfrm.load_overlay_texture("overlay_journal");
     pfrm.screen().fade(1.f, ColorConstant::aged_paper, {}, true, true);
 
@@ -2225,8 +2226,6 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (pfrm.keyboard().down_transition<Key::down>()) {
             if (text_->parsed() not_eq utf8::len(str_)) {
                 page_ += 1;
-                // repaint_page(pfrm);
-                // pfrm.speaker().play_sound("open_book", 0);
                 timer_ = 0;
                 display_mode_ = DisplayMode::fade_out;
             }
@@ -2234,8 +2233,6 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
         } else if (pfrm.keyboard().down_transition<Key::up>()) {
             if (page_ > 0) {
                 page_ -= 1;
-                // repaint_page(pfrm);
-                // pfrm.speaker().play_sound("open_book", 0);
                 timer_ = 0;
                 display_mode_ = DisplayMode::fade_out;
             }

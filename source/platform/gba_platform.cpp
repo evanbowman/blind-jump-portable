@@ -1144,6 +1144,11 @@ static auto blend(const Color& c1, const Color& c2, u8 amt)
 }
 
 
+// Screen fades are cpu intensive. We want to skip any work that we possibly
+// can.
+static bool overlay_was_faded = false;
+
+
 void Platform::Screen::fade(float amount,
                             ColorConstant k,
                             std::optional<ColorConstant> base,
@@ -1184,15 +1189,15 @@ void Platform::Screen::fade(float amount,
             auto from = Color::from_bgr_hex_555(tilesheet_1_palette[i]);
             MEM_BG_PALETTE[32 + i] = blend(from, c, amt);
         }
-        // Should the overlay really be part of the fade...? Tricky, sometimes
-        // one wants do display some text over a faded out screen, so let's
-        // leave it disabled for now.
-        //
-        for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(
-                current_overlay_texture->palette_data_[i]);
-            MEM_BG_PALETTE[16 + i] = blend(from, c, include_overlay ? amt : 0);
+        if (include_overlay or overlay_was_faded) {
+            for (int i = 0; i < 16; ++i) {
+                auto from = Color::from_bgr_hex_555(
+                    current_overlay_texture->palette_data_[i]);
+                MEM_BG_PALETTE[16 + i] =
+                    blend(from, c, include_overlay ? amt : 0);
+            }
         }
+        overlay_was_faded = include_overlay;
     } else {
         for (int i = 0; i < 16; ++i) {
             MEM_PALETTE[i] =
@@ -1200,11 +1205,14 @@ void Platform::Screen::fade(float amount,
             MEM_BG_PALETTE[i] = blend(real_color(*base), c, amt);
             MEM_BG_PALETTE[32 + i] = blend(real_color(*base), c, amt);
 
-            // FIXME!
-            for (int i = 0; i < 16; ++i) {
-                auto from = Color::from_bgr_hex_555(
-                    current_overlay_texture->palette_data_[i]);
-                MEM_BG_PALETTE[16 + i] = blend(from, c, 0);
+            if (overlay_was_faded) {
+                // FIXME!
+                for (int i = 0; i < 16; ++i) {
+                    auto from = Color::from_bgr_hex_555(
+                        current_overlay_texture->palette_data_[i]);
+                    MEM_BG_PALETTE[16 + i] = blend(from, c, 0);
+                }
+                overlay_was_faded = false;
             }
         }
     }
