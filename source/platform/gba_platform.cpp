@@ -743,6 +743,8 @@ void Platform::Screen::display()
 
     for (u32 i = oam_write_index; i < last_oam_write_index; ++i) {
         object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
+
+        // object_attribute_back_buffer[i].attribute_2 = ATTR2_PRIORITY(3);
     }
 
     // I noticed less graphical artifacts when using a back buffer. I thought I
@@ -1149,6 +1151,8 @@ static auto blend(const Color& c1, const Color& c2, u8 amt)
 static bool overlay_was_faded = false;
 
 
+// TODO: May be possible to reduce tearing by deferring the fade until the
+// Screen::display() call...
 void Platform::Screen::fade(float amount,
                             ColorConstant k,
                             std::optional<ColorConstant> base,
@@ -2277,6 +2281,21 @@ Platform::Platform()
 
     irqEnable(IRQ_GAMEPAK);
     irqSet(IRQ_GAMEPAK, cartridge_interrupt_handler);
+
+    for (u32 i = 0; i < Screen::sprite_limit; ++i) {
+        // This was a really insidious bug to track down! When failing to hide
+        // unused attributes in the back buffer, the uninitialized objects punch
+        // a 1 tile (8x8 pixel) hole in the top left corner of the overlay
+        // layer, but not exactly. The tile in the high priority background
+        // layer still shows up, but lower priority sprites show through the top
+        // left tile, I guess I'm observing some weird interaction involving an
+        // overlap between a priority 0 sprite and a priority 1 sprite: when a
+        // priority 0 background is sandwitched in between the two sprites, the
+        // priority 0 background tiles seems to be drawn behind the priority 1
+        // sprite. I have no idea why!
+        object_attribute_back_buffer[i].attribute_2 = ATTR2_PRIORITY(3);
+        object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
+    }
 }
 
 

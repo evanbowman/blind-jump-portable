@@ -1295,7 +1295,6 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         powerup.update(pfrm, delta);
     }
 
-
     if (game.player().get_health() == 0) {
         pfrm.sleep(5);
         pfrm.speaker().stop_music();
@@ -2169,6 +2168,8 @@ void NotebookState::repaint_page(Platform& pfrm)
 
 void NotebookState::exit(Platform& pfrm, Game&, State&)
 {
+    pfrm.screen().fade(1.f);
+
     pfrm.fill_overlay(0); // The TextView destructor cleans up anyway, but we
                           // have ways of clearing the screen faster than the
                           // TextView implementation is able to. The TextView
@@ -2179,8 +2180,6 @@ void NotebookState::exit(Platform& pfrm, Game&, State&)
                           // screen, so it can use faster methods, like a single
                           // memset, or special BIOS calls (depending on the
                           // platform) to clear out the screen.
-
-    pfrm.screen().fade(1.f);
 
     text_.reset();
     pfrm.load_overlay_texture("overlay");
