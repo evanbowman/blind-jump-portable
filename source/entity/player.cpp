@@ -649,31 +649,51 @@ void Blaster::shoot(Platform& pf, Game& game)
         int expl_rounds = 0;
         Microseconds reload_interval = milliseconds(250);
 
+        Buffer<Powerup*, Powerup::max_> applied_powerups;
+
+        auto undo_powerups = [&] {
+            for (auto p : applied_powerups) {
+                p->parameter_ += 1;
+            }
+        };
+
         if (auto p = get_powerup(game, Powerup::Type::accelerator)) {
             max_lasers = 3;
             reload_interval = milliseconds(150);
-            p->parameter_ -= 1;
-            p->dirty_ = true;
+            applied_powerups.push_back(p);
         }
 
         if (auto p = get_powerup(game, Powerup::Type::explosive_rounds)) {
-            expl_rounds = p->parameter_--;
-            p->dirty_ = true;
+            expl_rounds = p->parameter_;
+            applied_powerups.push_back(p);
         }
 
+
         if (int(length(game.effects().get<Laser>())) < max_lasers) {
+
+            for (auto p : applied_powerups) {
+                p->parameter_ -= 1;
+                p->dirty_ = true;
+            }
+
             reload_ = reload_interval;
 
             pf.speaker().play_sound("blaster", 4);
 
-            if (expl_rounds > 0) {
-                game.camera().shake();
-                medium_explosion(pf, game, position_);
-                game.effects().spawn<Laser>(
-                    position_, dir_, Laser::Mode::explosive);
-            } else {
-                game.effects().spawn<Laser>(
-                    position_, dir_, Laser::Mode::normal);
+            if (not[&] {
+                    if (expl_rounds > 0) {
+                        game.camera().shake();
+                        medium_explosion(pf, game, position_);
+
+                        return game.effects().spawn<Laser>(
+                            position_, dir_, Laser::Mode::explosive);
+                    } else {
+                        return game.effects().spawn<Laser>(
+                            position_, dir_, Laser::Mode::normal);
+                    }
+                }()) {
+                undo_powerups();
+                error(pf, "failed to spawn player attack, likely OOM in pool");
             }
         }
     }
