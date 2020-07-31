@@ -1828,9 +1828,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::surveyor_logbook_title},
     {STANDARD_ITEM_HANDLER(blaster),
      [](Platform&, Game&) {
-         static const auto str = "blaster_info_flattened";
-         return state_pool_.create<ImageViewState>(str,
-                                                   ColorConstant::violet_gray);
+         return null_state();
+         // static const auto str = "blaster_info_flattened";
+         // return state_pool_.create<ImageViewState>(str,
+         //                                           ColorConstant::violet_gray);
      },
      LocaleString::blaster_title},
     {STANDARD_ITEM_HANDLER(accelerator),
