@@ -29,11 +29,13 @@ public:
 
     ~Text();
 
-    void assign(const char* str);
-    void assign(int num);
+    using OptColors = std::optional<FontColors>;
 
-    void append(const char* str);
-    void append(int num);
+    void assign(const char* str, const OptColors& colors = {});
+    void assign(int num, const OptColors& colors = {});
+
+    void append(const char* str, const OptColors& colors = {});
+    void append(int num, const OptColors& colors = {});
 
     void erase();
 

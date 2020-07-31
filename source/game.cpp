@@ -84,14 +84,28 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
 
     pfrm.load_overlay_texture("overlay");
 
-    // NOTE: Because we're the initial state, unclear what to pass as a previous
-    // state to the enter function, so, paradoxically, the initial state is it's
-    // own parent.
-    state_->enter(pfrm, *this, *state_);
+    // pfrm.enable_glyph_mode(true);
+    // auto g = pfrm.map_glyph(
+    //     'M',
+    //     [](const utf8::Codepoint& cp)
+    //         -> std::optional<Platform::TextureMapping> {
+    //         return Platform::TextureMapping{"charset_en_spn_fr", 51};
+    //     });
+
+    // pfrm.set_tile(
+    //     8, 8, g, ColorConstant::electric_blue, ColorConstant::spanish_crimson);
+    // pfrm.screen().fade(0.f);
+    // pfrm.sleep(500);
+
 
     if (inventory().item_count(Item::Type::blaster) == 0) {
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
+
+    // NOTE: Because we're the initial state, unclear what to pass as a previous
+    // state to the enter function, so, paradoxically, the initial state is it's
+    // own parent.
+    state_->enter(pfrm, *this, *state_);
 
     const auto controllers_head =
         Conf(pfrm).expect<Conf::String>("wireless-controllers", "__next");

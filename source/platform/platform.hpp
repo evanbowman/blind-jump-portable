@@ -16,6 +16,12 @@
 using TileDesc = u16;
 
 
+struct FontColors {
+    ColorConstant foreground_;
+    ColorConstant background_;
+};
+
+
 // Anything platform specific should be defined here.
 
 
@@ -144,6 +150,14 @@ public:
     // wrap when scrolled. Map tiles, on the other hand, are 32x24 pixels, and
     // the whole map consists of 64x64 8x8 pixel tiles.
     void set_tile(Layer layer, u16 x, u16 y, TileDesc val);
+
+    // A special version of set_tile meant for glyphs. Allows you to set custom
+    // colors. If the platform runs out of room for colors, the oldest ones will
+    // be overwritten.
+    //
+    // NOTE: Custom colored fonts are currently incompatible with screen
+    // fades. Custom colored text will not be faded.
+    void set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors);
 
     // This function is not necessarily implemented efficiently, may in fact be
     // very slow.

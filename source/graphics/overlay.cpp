@@ -49,25 +49,31 @@ Text::~Text()
 }
 
 
-void Text::assign(int val)
+void Text::assign(int val, const OptColors& colors)
 {
     std::array<char, 40> buffer = {0};
 
     locale_num2str(val, buffer.data(), 10);
-    this->assign(buffer.data());
+    this->assign(buffer.data(), colors);
 }
 
 
 Platform::TextureCpMapper locale_texture_map();
 
 
-static void
-print_char(Platform& pfrm, utf8::Codepoint c, const OverlayCoord& coord)
+static void print_char(Platform& pfrm,
+                       utf8::Codepoint c,
+                       const OverlayCoord& coord,
+                       const std::optional<FontColors>& colors = {})
 {
     if (c not_eq 0) {
         const auto t = pfrm.map_glyph(c, locale_texture_map());
 
-        pfrm.set_tile(Layer::overlay, coord.x, coord.y, t);
+        if (not colors) {
+            pfrm.set_tile(Layer::overlay, coord.x, coord.y, t);
+        } else {
+            pfrm.set_tile(coord.x, coord.y, t, *colors);
+        }
     } else {
         pfrm.set_tile(Layer::overlay, coord.x, coord.y, 0);
     }
@@ -83,16 +89,16 @@ void Text::resize(u32 len)
 }
 
 
-void Text::assign(const char* str)
+void Text::assign(const char* str, const OptColors& colors)
 {
-    this->resize(utf8::len(str));
-    // this->erase();
+    // this->resize(utf8::len(str));
+    this->erase();
 
-    this->append(str);
+    this->append(str, colors);
 }
 
 
-void Text::append(const char* str)
+void Text::append(const char* str, const OptColors& colors)
 {
     if (str == nullptr or not validate_str(str)) {
         return;
@@ -102,7 +108,7 @@ void Text::append(const char* str)
 
     utf8::scan(
         [&](const utf8::Codepoint& cp, const char* raw, int) {
-            print_char(pfrm_, cp, {write_pos, coord_.y});
+            print_char(pfrm_, cp, {write_pos, coord_.y}, colors);
             ++write_pos;
             ++len_;
         },
@@ -111,12 +117,12 @@ void Text::append(const char* str)
 }
 
 
-void Text::append(int num)
+void Text::append(int num, const OptColors& colors)
 {
     std::array<char, 40> buffer = {0};
 
     locale_num2str(num, buffer.data(), 10);
-    this->append(buffer.data());
+    this->append(buffer.data(), colors);
 }
 
 

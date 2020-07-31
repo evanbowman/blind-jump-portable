@@ -23,8 +23,8 @@ enum class ColorConstant {
     stil_de_grain     = 0xF9DC5C,
     silver_white      = 0xF4F4F8,
     aged_paper        = 0xDEC397,
-    violet_gray       = 0x8E7D99,
     green             = 0x27C8AF,
+    med_blue_gray     = 0x7674A9
     // clang-format on
 };
 

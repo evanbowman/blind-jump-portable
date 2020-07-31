@@ -890,8 +890,15 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             fps_timer_ -= seconds(1);
 
             fps_text_.emplace(pfrm, OverlayCoord{1, 2});
-            fps_text_->assign(fps_frame_count_);
-            fps_text_->append(" fps");
+
+            const auto colors =
+                fps_frame_count_ < 55
+                    ? Text::OptColors{{ColorConstant::rich_black,
+                                       ColorConstant::aerospace_orange}}
+                    : Text::OptColors{};
+
+            fps_text_->assign(fps_frame_count_, colors);
+            fps_text_->append(" fps", colors);
             fps_frame_count_ = 0;
         }
     } else if (fps_text_) {
@@ -1829,9 +1836,6 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {STANDARD_ITEM_HANDLER(blaster),
      [](Platform&, Game&) {
          return null_state();
-         // static const auto str = "blaster_info_flattened";
-         // return state_pool_.create<ImageViewState>(str,
-         //                                           ColorConstant::violet_gray);
      },
      LocaleString::blaster_title},
     {STANDARD_ITEM_HANDLER(accelerator),
@@ -2103,8 +2107,9 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
         if (handler->single_use_) {
             item_description2_.emplace(
                 pfrm,
-                locale_string(LocaleString::single_use_warning),
                 OverlayCoord{text_loc.x, text_loc.y + 2});
+
+            item_description2_->assign(locale_string(LocaleString::single_use_warning), FontColors{ColorConstant::med_blue_gray, ColorConstant::rich_black});
         } else {
             item_description2_.reset();
         }
@@ -2217,8 +2222,7 @@ void NotebookState::repaint_page(Platform& pfrm)
 
 void NotebookState::exit(Platform& pfrm, Game&, State&)
 {
-    pfrm.screen().fade(1.f);
-
+    pfrm.sleep(1);
     pfrm.fill_overlay(0); // The TextView destructor cleans up anyway, but we
                           // have ways of clearing the screen faster than the
                           // TextView implementation is able to. The TextView
@@ -2229,6 +2233,8 @@ void NotebookState::exit(Platform& pfrm, Game&, State&)
                           // screen, so it can use faster methods, like a single
                           // memset, or special BIOS calls (depending on the
                           // platform) to clear out the screen.
+
+    pfrm.screen().fade(1.f);
 
     text_.reset();
     pfrm.load_overlay_texture("overlay");
@@ -2353,8 +2359,9 @@ void ImageViewState::enter(Platform& pfrm, Game& game, State&)
 
 void ImageViewState::exit(Platform& pfrm, Game& game, State&)
 {
+    pfrm.sleep(1);
     pfrm.fill_overlay(0);
-
+    pfrm.sleep(1);
     pfrm.screen().fade(1.f);
 
     pfrm.enable_glyph_mode(true);
@@ -2826,18 +2833,23 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     const auto skip = pfrm.keyboard().down_transition<Key::action_2>();
 
-    if (timer_ > seconds(2) + milliseconds(500) or skip) {
-        text_.reset();
+    if (text_) {
+        if (timer_ > seconds(2) + milliseconds(500) or skip) {
+            text_.reset();
+            timer_ = 0;
 
-        if (not skip) {
-            pfrm.sleep(70);
+            if (skip) {
+                return next_state(pfrm, game);
+            }
         }
 
-        return next_state(pfrm, game);
-
     } else {
-        return null_state();
+        if (timer_ > milliseconds(167) + seconds(1)) {
+            return next_state(pfrm, game);
+        }
     }
+
+    return null_state();
 }
 
 
@@ -2908,6 +2920,8 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 1, 112);
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 2, 112);
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
+
+        pfrm.set_tile(Layer::background, i, screen_tiles.y - 2, 18);
     }
 
     speed_ = 0.0050000f;
@@ -2927,7 +2941,7 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 void LaunchCutsceneState::exit(Platform& pfrm, Game& game, State& next_state)
 {
     altitude_text_.reset();
-
+    pfrm.sleep(1);
     pfrm.screen().fade(1.f);
     pfrm.fill_overlay(0);
 
@@ -2999,9 +3013,8 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto spawn_cloud = [&] {
         const auto swidth = pfrm.screen().size().x;
 
-        // NOTE: just doing this because random numbers are not naturally
-        // well distributed, and we don't want the clouds to bunch up too
-        // much.
+        // NOTE: just doing this because random numbers are not naturally well
+        // distributed, and we don't want the clouds to bunch up too much.
         if (cloud_lane_ == 0) {
             cloud_lane_ = 1;
             const auto offset = rng::choice(swidth / 2) + 32;

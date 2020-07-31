@@ -478,14 +478,13 @@ const Color& real_color(ColorConstant k)
         static const Color green(5, 24, 21);
         return green;
 
+    case ColorConstant::med_blue_gray:
+        static const Color med_blue_gray(14, 14, 21);
+        return med_blue_gray;
+
     case ColorConstant::silver_white:
         static const Color silver_white(29, 29, 30);
         return silver_white;
-
-
-    case ColorConstant::violet_gray:
-        static const Color violet_gray(17, 15, 19);
-        return violet_gray;
 
     default:
     case ColorConstant::null:
@@ -1106,7 +1105,7 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
             return 0;
         }
         return MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] &
-               ~(SE_PALBANK(1));
+               ~(SE_PALBANK_MASK);
 
     case Layer::background:
         if (x > 31 or y > 31) {
@@ -2379,6 +2378,37 @@ void Platform::load_overlay_texture(const char* name)
 static const TileDesc bad_glyph = 111;
 
 
+static constexpr int vram_tile_size()
+{
+    // 8 x 8 x (4 bitsperpixel / 8 bitsperbyte)
+    return 32;
+}
+
+
+// Rather than doing tons of extra work to keep the palettes
+// coordinated between different image files, use tile index
+// 81 as a registration block, which holds a set of colors
+// to use when mapping glyphs into vram.
+static u8* font_index_tile()
+{
+    return (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
+           ((81) * vram_tile_size());
+}
+
+
+struct FontColorIndices {
+    int fg_;
+    int bg_;
+};
+
+
+static FontColorIndices font_color_indices()
+{
+    const auto index = font_index_tile();
+    return {index[0] & 0x0f, index[1] & 0x0f};
+}
+
+
 // This code uses a lot of naive algorithms for searching the glyph mapping
 // table, potentially could be sped up, but we don't want to use any extra
 // memory, we've only got 256K to work with, and the table is big enough as it
@@ -2412,21 +2442,15 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     gm.reference_count_ = 0;
 
                     // 8 x 8 x (4 bitsperpixel / 8 bitsperbyte)
-                    static const int tile_size = 32;
+                    constexpr int tile_size = vram_tile_size();
 
-                    // Rather than doing tons of extra work to keep the palettes
-                    // coordinated between different image files, use tile index
-                    // 81 as a registration block, which holds a set of colors
-                    // to use when mapping glyphs into vram.
+                    // u8 buffer[tile_size] = {0};
+                    // memcpy16(buffer,
+                    //          (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
+                    //              ((81) * tile_size),
+                    //          tile_size / 2);
 
-                    u8 buffer[tile_size] = {0};
-                    memcpy16(buffer,
-                             (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
-                                 ((81) * tile_size),
-                             tile_size / 2);
-
-                    const auto c1 = buffer[0] & 0x0f;
-                    const auto c2 = buffer[1] & 0x0f;
+                    const auto colors = font_color_indices();
 
                     // We need to know which color to use as the background
                     // color, and which color to use as the foreground
@@ -2436,6 +2460,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     // substitute where!
                     const auto bg_color = ((u8*)info.tile_data_)[0] & 0x0f;
 
+                    u8 buffer[tile_size] = {0};
                     memcpy16(buffer,
                              info.tile_data_ +
                                  (mapping_info->offset_ * tile_size) /
@@ -2445,14 +2470,14 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     for (int i = 0; i < tile_size; ++i) {
                         auto c = buffer[i];
                         if (c & bg_color) {
-                            buffer[i] = c2;
+                            buffer[i] = colors.bg_;
                         } else {
-                            buffer[i] = c1;
+                            buffer[i] = colors.fg_;
                         }
                         if (c & (bg_color << 4)) {
-                            buffer[i] |= c2 << 4;
+                            buffer[i] |= colors.bg_ << 4;
                         } else {
-                            buffer[i] |= c1 << 4;
+                            buffer[i] |= colors.fg_ << 4;
                         }
                     }
 
@@ -2477,7 +2502,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
 }
 
 
-bool is_glyph(u16 t)
+static bool is_glyph(u16 t)
 {
     return t >= glyph_start_offset and
            t - glyph_start_offset < glyph_mapping_count;
@@ -2509,6 +2534,121 @@ void Platform::fill_overlay(u16 tile)
 }
 
 
+static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
+{
+    if (glyph_mode) {
+        // This is where we handle the reference count for mapped glyphs. If
+        // we are overwriting a glyph with different tile, then we can
+        // decrement a glyph's reference count. Then, we want to increment
+        // the incoming glyph's reference count if the incoming tile is
+        // within the range of the glyph table.
+
+        const auto old_tile = pfrm.get_tile(Layer::overlay, x, y);
+        if (old_tile not_eq val) {
+            if (is_glyph(old_tile)) {
+                auto& gm = glyph_mapping_table[old_tile - glyph_start_offset];
+                if (gm.valid()) {
+                    gm.reference_count_ -= 1;
+
+                    if (gm.reference_count_ == 0) {
+                        gm.reference_count_ = -1;
+                        gm.character_ = 0;
+                    }
+                } else {
+                    // while (true) ;
+                }
+            }
+
+            if (is_glyph(val)) {
+                auto& gm = glyph_mapping_table[val - glyph_start_offset];
+                if (not gm.valid()) {
+                    // Not clear exactly what to do here... Somehow we've
+                    // gotten into an erroneous state, but not a permanently
+                    // unrecoverable state (tile isn't valid, so it'll be
+                    // overwritten upon the next call to map_tile).
+                    return;
+                }
+                gm.reference_count_++;
+            }
+        }
+    }
+
+    MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(palette);
+}
+
+
+// Now for custom-colored text... we're using three of the background palettes
+// already, one for the map_0 layer (shared with the background layer), one for
+// the map_1 layer, and one for the overlay. That leaves 13 remaining palettes,
+// which we can use for colored text. But we may not want to use up all of the
+// available extra palettes, so let's just allocate four of them toward custom
+// text colors for now...
+static const PaletteBank custom_text_palette_begin = 3;
+static const PaletteBank custom_text_palette_end = 7;
+static const auto custom_text_palette_count =
+    custom_text_palette_end - custom_text_palette_begin;
+
+static PaletteBank custom_text_palette_write_ptr = custom_text_palette_begin;
+static const TextureData* custom_text_palette_source_texture = nullptr;
+
+
+void Platform::set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors)
+{
+    if (not glyph_mode or not is_glyph(glyph)) {
+        return;
+    }
+
+    // If the current overlay texture changed, then we'll need to clear out any
+    // palettes that we've constructed. The indices of the glyph binding sites
+    // in the palette bank may have changed when we loaded a new texture.
+    if (custom_text_palette_source_texture and
+        custom_text_palette_source_texture not_eq current_overlay_texture) {
+
+        for (auto p = custom_text_palette_begin; p < custom_text_palette_end;
+             ++p) {
+            for (int i = 0; i < 16; ++i) {
+                MEM_BG_PALETTE[p * 16 + i] = 0;
+            }
+        }
+
+        custom_text_palette_source_texture = current_overlay_texture;
+    }
+
+    const auto default_colors = font_color_indices();
+
+    const auto fg_color_hash = real_color(colors.foreground_).bgr_hex_555();
+    const auto bg_color_hash = real_color(colors.background_).bgr_hex_555();
+
+    auto existing_mapping = [&]() -> std::optional<PaletteBank> {
+        for (auto i = custom_text_palette_begin; i < custom_text_palette_end;
+             ++i) {
+            if (MEM_BG_PALETTE[i * 16 + default_colors.fg_] == fg_color_hash and
+                MEM_BG_PALETTE[i * 16 + default_colors.bg_] == bg_color_hash) {
+
+                return i;
+            }
+        }
+        return {};
+    }();
+
+    if (existing_mapping) {
+        set_overlay_tile(*this, x, y, glyph, *existing_mapping);
+    } else {
+        const auto target = custom_text_palette_write_ptr;
+
+        MEM_BG_PALETTE[target * 16 + default_colors.fg_] = fg_color_hash;
+        MEM_BG_PALETTE[target * 16 + default_colors.bg_] = bg_color_hash;
+
+        set_overlay_tile(*this, x, y, glyph, target);
+
+        custom_text_palette_write_ptr =
+            ((target + 1) - custom_text_palette_begin) %
+                custom_text_palette_count +
+            custom_text_palette_begin;
+    }
+}
+
+
 void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
 {
     switch (layer) {
@@ -2516,50 +2656,7 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
         if (x > 31 or y > 31) {
             return;
         }
-        if (glyph_mode) {
-            // This is where we handle the reference count for mapped glyphs. If
-            // we are overwriting a glyph with different tile, then we can
-            // decrement a glyph's reference count. Then, we want to increment
-            // the incoming glyph's reference count if the incoming tile is
-            // within the range of the glyph table.
-
-            auto is_glyph = [](u16 t) {
-                return t >= glyph_start_offset and
-                       t - glyph_start_offset < glyph_mapping_count;
-            };
-
-            const auto old_tile = get_tile(layer, x, y);
-            if (old_tile not_eq val) {
-                if (is_glyph(old_tile)) {
-                    auto& gm =
-                        glyph_mapping_table[old_tile - glyph_start_offset];
-                    if (gm.valid()) {
-                        gm.reference_count_ -= 1;
-
-                        if (gm.reference_count_ == 0) {
-                            gm.reference_count_ = -1;
-                            gm.character_ = 0;
-                        }
-                    } else {
-                        // while (true) ;
-                    }
-                }
-
-                if (is_glyph(val)) {
-                    auto& gm = glyph_mapping_table[val - glyph_start_offset];
-                    if (not gm.valid()) {
-                        // Not clear exactly what to do here... Somehow we've
-                        // gotten into an erroneous state, but not a permanently
-                        // unrecoverable state (tile isn't valid, so it'll be
-                        // overwritten upon the next call to map_tile).
-                        return;
-                    }
-                    gm.reference_count_++;
-                }
-            }
-        }
-
-        MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(1);
+        set_overlay_tile(*this, x, y, val, 1);
         break;
 
     case Layer::map_1:
