@@ -482,6 +482,11 @@ const Color& real_color(ColorConstant k)
         static const Color silver_white(29, 29, 30);
         return silver_white;
 
+
+    case ColorConstant::violet_gray:
+        static const Color violet_gray(17, 15, 19);
+        return violet_gray;
+
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:
@@ -813,6 +818,7 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
+#include "graphics/blaster_info_flattened.h"
 #include "graphics/charset_en_spn_fr.h"
 #include "graphics/old_poster_flattened.h"
 #include "graphics/overlay.h"
@@ -877,6 +883,7 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(overlay_cutscene),
     TEXTURE_INFO(overlay_journal),
     TEXTURE_INFO(old_poster_flattened),
+    TEXTURE_INFO(blaster_info_flattened),
     TEXTURE_INFO(seed_packet_flattened)};
 
 

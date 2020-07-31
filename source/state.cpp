@@ -1252,8 +1252,10 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().update(pfrm, game, delta);
 
+    const auto player_int_pos = game.player().get_position().cast<s32>();
+
     const Vec2<TIdx> tile_coords =
-        to_tile_coord(game.player().get_position().cast<s32>());
+        to_tile_coord({player_int_pos.x, player_int_pos.y + 6});
     visited.set(tile_coords.x, tile_coords.y, true);
 
     const auto& player_spr = game.player().get_sprite();
@@ -1287,6 +1289,28 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             ++it;
         }
     }
+
+    // if (pfrm.keyboard().down_transition<Key::action_2>()) {
+
+    //     auto player_tile = tile_coords;
+
+    //     if (not is_walkable__fast(
+    //             game.tiles().get_tile(player_tile.x, player_tile.y))) {
+    //         // Player movement isn't constrained to tiles exactly, and sometimes the
+    //         // player's map icon displays as inside of a wall.
+    //         if (is_walkable__fast(
+    //                 game.tiles().get_tile(player_tile.x + 1, player_tile.y))) {
+    //             player_tile.x += 1;
+    //         } else if (is_walkable__fast(game.tiles().get_tile(
+    //                        player_tile.x, player_tile.y + 1))) {
+    //             player_tile.y += 1;
+    //         }
+    //     }
+
+    //     Text t(pfrm, {});
+    //     t.assign(pfrm.get_tile(Layer::map_0, player_tile.x, player_tile.y));
+    //     pfrm.sleep(120);
+    // }
 
     if (update_powerups) {
         repaint_powerups(pfrm, game, update_all);
@@ -1803,7 +1827,11 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      },
      LocaleString::surveyor_logbook_title},
     {STANDARD_ITEM_HANDLER(blaster),
-     [](Platform&, Game&) { return null_state(); },
+     [](Platform&, Game&) {
+         static const auto str = "blaster_info_flattened";
+         return state_pool_.create<ImageViewState>(str,
+                                                   ColorConstant::violet_gray);
+     },
      LocaleString::blaster_title},
     {STANDARD_ITEM_HANDLER(accelerator),
      [](Platform&, Game& game) {
@@ -2137,6 +2165,14 @@ void NotebookState::enter(Platform& pfrm, Game&, State&)
 {
     // pfrm.speaker().play_sound("open_book", 0);
 
+    pfrm.sleep(1); // Well, this is embarassing... basically, the fade function
+                   // creates tearing on the gameboy, and we can mitigate the
+                   // tearing with a sleep call, which is implemented to wait on
+                   // a vblank interrupt. I could defer the fade on those
+                   // platforms to run after the vblank, but fade is cpu
+                   // intensive, and sometimes ends up exceeding the blank
+                   // period, causing tearing anyway.
+
     pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, true, true);
     pfrm.load_overlay_texture("overlay_journal");
     pfrm.screen().fade(1.f, ColorConstant::aged_paper, {}, true, true);
@@ -2303,6 +2339,7 @@ void ImageViewState::enter(Platform& pfrm, Game& game, State&)
 {
     pfrm.enable_glyph_mode(false);
 
+    pfrm.sleep(1);
     pfrm.screen().fade(1.f, background_color_);
     pfrm.load_overlay_texture(image_name_);
 

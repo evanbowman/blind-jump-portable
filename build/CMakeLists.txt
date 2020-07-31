@@ -136,6 +136,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/spritesheet_boss0.s
     ${SOURCE_DIR}/graphics/spritesheet_boss1.s
     ${SOURCE_DIR}/graphics/old_poster_flattened.s
+    ${SOURCE_DIR}/graphics/blaster_info_flattened.s
     ${SOURCE_DIR}/graphics/seed_packet_flattened.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()
@@ -252,6 +253,7 @@ if(GAMEBOY_ADVANCE)
     compile_image(charset_en_spn_fr 0 0 NO)
     compile_image(overlay_journal 0 0 NO)
     compile_image(old_poster 0 0 YES)
+    compile_image(blaster_info 0 0 YES)
     compile_image(seed_packet 0 0 YES)
   endif()
 

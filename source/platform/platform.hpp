@@ -81,6 +81,7 @@ public:
     class Keyboard;
     class Logger;
     class Speaker;
+    class NetworkPeer;
 
     using DeviceName = StringBuffer<23>;
     DeviceName device_name() const;
@@ -103,6 +104,11 @@ public:
     inline Speaker& speaker()
     {
         return speaker_;
+    }
+
+    inline NetworkPeer& network()
+    {
+        return network_;
     }
 
     // On some platforms, fatal() will trigger a soft reset. But soft-reset is
@@ -390,6 +396,19 @@ public:
 
 
     ////////////////////////////////////////////////////////////////////////////
+    // NetworkPeer (incomplete...)
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    class NetworkPeer {
+    public:
+        void connect(const char* peer);
+
+        void update();
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
     // Task
     ////////////////////////////////////////////////////////////////////////////
 
@@ -449,6 +468,7 @@ private:
 
     friend int main();
 
+    NetworkPeer network_;
     Screen screen_;
     Keyboard keyboard_;
     Speaker speaker_;
