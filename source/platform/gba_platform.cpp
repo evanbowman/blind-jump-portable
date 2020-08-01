@@ -1552,7 +1552,7 @@ Platform::Logger::Logger()
 
 void Platform::Logger::log(Logger::Severity level, const char* msg)
 {
-    std::array<char, 512> buffer;
+    std::array<char, 256> buffer;
 
     buffer[0] = '[';
     buffer[2] = ']';
@@ -2555,7 +2555,9 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
                         gm.character_ = 0;
                     }
                 } else {
-                    // while (true) ;
+                    error(pfrm,
+                          "existing tile is a glyph, but has no"
+                          " mapping table entry?!");
                 }
             }
 
@@ -2566,6 +2568,7 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
                     // gotten into an erroneous state, but not a permanently
                     // unrecoverable state (tile isn't valid, so it'll be
                     // overwritten upon the next call to map_tile).
+                    warning(pfrm, "invalid assignment to glyph table");
                     return;
                 }
                 gm.reference_count_++;
@@ -2645,6 +2648,10 @@ void Platform::set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors)
             ((target + 1) - custom_text_palette_begin) %
                 custom_text_palette_count +
             custom_text_palette_begin;
+
+        if (custom_text_palette_write_ptr == custom_text_palette_begin) {
+            warning(*this, "wraparound in custom text palette alloc");
+        }
     }
 }
 

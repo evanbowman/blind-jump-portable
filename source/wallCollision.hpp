@@ -23,7 +23,8 @@ WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
     using Wall = Vec2<s32>;
     Buffer<Wall, 16> adjacency_vector;
 
-    const Vec2<s32> pos = entity.get_position().template cast<s32>();
+    Vec2<s32> pos = entity.get_position().template cast<s32>();
+    pos.y += 2;
     const Vec2<TIdx> tile_coords = to_tile_coord(pos);
 
     auto check_wall = [&](TIdx x, TIdx y) {
