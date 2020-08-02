@@ -199,8 +199,8 @@ HOT void Game::render(Platform& pfrm)
     display_buffer.push_back(&player_.get_sprite());
     display_buffer.push_back(&player_.weapon().get_sprite());
 
-    if (pfrm.network().is_connected()) {
-        display_buffer.push_back(&peer_player_.get_sprite());
+    if (peer_player_) {
+        display_buffer.push_back(&peer_player_->get_sprite());
     }
 
     enemies_.transform(show_sprites);
@@ -215,6 +215,10 @@ HOT void Game::render(Platform& pfrm)
     show_sprite(transporter_);
 
     display_buffer.push_back(&player_.get_shadow());
+
+    if (peer_player_) {
+        display_buffer.push_back(&peer_player_->get_shadow());
+    }
 
     for (auto spr : display_buffer) {
         pfrm.screen().draw(*spr);

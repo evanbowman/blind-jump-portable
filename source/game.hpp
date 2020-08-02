@@ -56,7 +56,7 @@ public:
         return player_;
     }
 
-    inline PeerPlayer& peer()
+    inline std::optional<PeerPlayer>& peer()
     {
         return peer_player_;
     }
@@ -190,7 +190,7 @@ private:
     StatePtr state_;
     Powerups powerups_;
 
-    PeerPlayer peer_player_;
+    std::optional<PeerPlayer> peer_player_;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 

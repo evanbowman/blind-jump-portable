@@ -37,6 +37,12 @@ Player::Player(Platform& pfrm)
 }
 
 
+Vec2<Float> Player::get_speed() const
+{
+    return {l_speed_ + -r_speed_, u_speed_ + -d_speed_};
+}
+
+
 void Player::revive(Platform& pfrm)
 {
     if (not alive()) {

@@ -919,6 +919,10 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
 
     static auto update_counter = player_refresh_rate;
 
+    if (not game.peer()) {
+        game.peer().emplace();
+    }
+
     update_counter -= delta;
     if (update_counter <= 0) {
         update_counter = player_refresh_rate;
@@ -927,12 +931,13 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
         info.position_ = game.player().get_position();
         info.texture_index_ = game.player().get_sprite().get_texture_index();
         info.size_ = game.player().get_sprite().get_size();
+        info.speed_ = game.player().get_speed();
 
-        pfrm.network().send_message({(byte*)&info, sizeof info});
+        pfrm.network_peer().send_message({(byte*)&info, sizeof info});
     }
 
     u32 read_position = 0;
-    while (auto message = pfrm.network().poll_messages(read_position)) {
+    while (auto message = pfrm.network_peer().poll_messages(read_position)) {
         net_event::Header header;
         memcpy(&header, message->data_, sizeof header);
 
@@ -941,7 +946,7 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
             read_position += sizeof(net_event::PlayerInfo);
             net_event::PlayerInfo info;
             memcpy(&info, message->data_, sizeof info);
-            game.peer().sync(info);
+            game.peer()->sync(info);
             break;
         }
 
@@ -956,6 +961,17 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
         }
         }
     }
+
+
+    game.peer()->update(pfrm, game, delta);
+}
+
+
+static void player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
+{
+    pfrm.speaker().play_sound("explosion1", 3, position);
+    big_explosion(pfrm, game, position);
+
 }
 
 
@@ -963,8 +979,11 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
 
-    if (pfrm.network().is_connected()) {
+    if (pfrm.network_peer().is_connected()) {
         multiplayer_sync(pfrm, game, delta);
+    } else if (game.peer()) {
+        player_death(pfrm, game, game.peer()->get_position());
+        game.peer().reset();
     }
 
     if (game.persistent_data().settings_.show_fps_) {
@@ -1428,9 +1447,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.sleep(5);
         pfrm.speaker().stop_music();
         // TODO: add a unique explosion sound effect
-        pfrm.speaker().play_sound(
-            "explosion1", 3, game.player().get_position());
-        big_explosion(pfrm, game, game.player().get_position());
+        player_death(pfrm, game, game.player().get_position());
 
         return state_pool_.create<DeathFadeState>(game);
     }
@@ -4247,7 +4264,7 @@ StatePtr
 NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     const bool ready = [&] {
-        if (pfrm.network().is_connected()) {
+        if (pfrm.network_peer().is_connected()) {
             // // If we're playing a multiplayer game, we want to wait until all
             // // the other players finish their own level. Then, we will
             // // synchronize the level seed across all of the games.
@@ -4320,10 +4337,10 @@ StatePtr
 NetworkConnectState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     if (pfrm.keyboard().down_transition<Key::action_1>()) {
-        pfrm.network().connect("127.0.0.1");
+        pfrm.network_peer().connect("127.0.0.1");
         return state_pool_.create<PauseScreenState>(false);
     } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
-        pfrm.network().listen();
+        pfrm.network_peer().listen();
         return state_pool_.create<PauseScreenState>(false);
     }
 

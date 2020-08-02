@@ -58,6 +58,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/effects/laser.cpp
   ${SOURCE_DIR}/entity/details/item.cpp
   ${SOURCE_DIR}/entity/bosses/boss.cpp
+  ${SOURCE_DIR}/entity/peerPlayer.cpp
   ${SOURCE_DIR}/graphics/overlay.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
   ${SOURCE_DIR}/persistentData.cpp

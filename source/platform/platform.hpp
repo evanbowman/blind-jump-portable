@@ -112,9 +112,9 @@ public:
         return speaker_;
     }
 
-    inline NetworkPeer& network()
+    inline NetworkPeer& network_peer()
     {
-        return network_;
+        return network_peer_;
     }
 
     // On some platforms, fatal() will trigger a soft reset. But soft-reset is
@@ -502,7 +502,7 @@ private:
 
     friend int main();
 
-    NetworkPeer network_;
+    NetworkPeer network_peer_;
     Screen screen_;
     Keyboard keyboard_;
     Speaker speaker_;
