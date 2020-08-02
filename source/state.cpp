@@ -2998,7 +2998,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             auto screen_tiles = calc_screen_tiles(pfrm);
 
-            altitude_update_ = 10;
+            altitude_update_ = 30;
 
             const auto units = locale_string(LocaleString::distance_units_feet);
 
@@ -3040,7 +3040,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (anim_timer_ >= frame_time) {
             anim_timer_ -= frame_time;
 
-            if (anim_index_ < 27) {
+            if (anim_index_ < 28) {
                 anim_index_ += 1;
                 for (auto& p : game.effects().get<Proxy>()) {
                     for (int i = 0; i < 3; ++i) {
@@ -3066,7 +3066,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     case Scene::wait:
-        if (timer_ > seconds(4) + milliseconds(360)) {
+        if (timer_ > seconds(4) + milliseconds(510)) {
             timer_ = 0;
             scene_ = Scene::fade_transition0;
         }
@@ -3166,6 +3166,9 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         if (timer_ > seconds(3)) {
             do_camera_shake(7);
+
+            pfrm.screen().pixelate(interpolate(0, 30, Float(timer_ - seconds(3)) / seconds(1)), false);
+
         } else {
             do_camera_shake(3);
         }
@@ -3175,6 +3178,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
             speed_ = 0.1f;
 
             pfrm.screen().fade(1.f, ColorConstant::silver_white);
+            pfrm.screen().pixelate(0);
 
             timer_ = 0;
             scene_ = Scene::within_clouds;
@@ -3535,16 +3539,9 @@ void LogfileViewerState::repaint(Platform& pfrm, int offset)
         for (int i = 0; i < screen_tiles.x; ++i) {
             // const int index = i + j * screen_tiles.x;
             if (index < buffer_size) {
-                if (buffer[index] == '\n') {
-                    for (; i < screen_tiles.x; ++i) {
-                        // eat the rest of the space in the current line
-                        pfrm.set_tile(Layer::overlay, i, j, 0);
-                    }
-                } else {
-                    const auto t =
-                        pfrm.map_glyph(buffer[index], locale_texture_map());
-                    pfrm.set_tile(Layer::overlay, i, j, t);
-                }
+                const auto t =
+                    pfrm.map_glyph(buffer[index], locale_texture_map());
+                pfrm.set_tile(Layer::overlay, i, j, t);
                 index += 1;
             }
         }

@@ -1477,7 +1477,7 @@ static void flash_load(void* dest, u32 flash_offset, u32 length)
 }
 
 
-static const bool save_using_flash = false;
+static bool save_using_flash = false;
 
 
 void sram_save(const void* data, u32 offset, u32 length)
@@ -2271,6 +2271,21 @@ Platform::Platform()
         REG_TM3CNT_L = 0;
         REG_TM3CNT_H = 1 << 7 | 1 << 6;
     });
+
+
+    // Not sure how else to determine whether the cartridge has sram, flash, or
+    // something else. An sram write will fail if the cartridge ram is flash, so
+    // attempt to save, and if the save fails, assume flash.
+    static const int sram_test_const = 0xAAAAAAAA;
+    sram_save(&sram_test_const, log_write_loc, sizeof sram_test_const);
+
+    int sram_test_result = 0;
+    sram_load(&sram_test_result, log_write_loc, sizeof sram_test_result);
+
+    if (sram_test_result not_eq sram_test_const) {
+        save_using_flash = true;
+    }
+
 
     fill_overlay(0);
 

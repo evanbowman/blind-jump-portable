@@ -374,17 +374,30 @@ void Platform::Keyboard::poll()
     }
 
 
+    static bool focused_ = true;
+
     std::lock_guard<std::mutex> guard(::event_queue_lock);
     while (not event_queue.empty()) {
         auto event = event_queue.front();
         event_queue.pop();
 
         switch (event.type) {
+        case sf::Event::LostFocus:
+            focused_ = false;
+            break;
+
+        case sf::Event::GainedFocus:
+            focused_ = true;
+            break;
+
         case sf::Event::Closed:
             ::platform->data()->window_.close();
             break;
 
         case sf::Event::KeyPressed:
+            if (not focused_) {
+                break;
+            }
             for (int keycode = 0; keycode < static_cast<int>(Key::count);
                  ++keycode) {
                 if (keymap[keycode] == event.key.code) {
@@ -394,6 +407,9 @@ void Platform::Keyboard::poll()
             break;
 
         case sf::Event::KeyReleased:
+            if (not focused_) {
+                break;
+            }
             for (int keycode = 0; keycode < static_cast<int>(Key::count);
                  ++keycode) {
                 if (keymap[keycode] == event.key.code) {
@@ -1087,7 +1103,7 @@ void Platform::Screen::draw(const Sprite& spr)
 
 void Platform::Speaker::set_position(const Vec2<Float>& position)
 {
-    sf::Listener::setPosition({position.x, position.y, 0});
+    sf::Listener::setPosition({position.x, 0, position.y});
 }
 
 
@@ -1149,10 +1165,19 @@ void Platform::Speaker::play_sound(const char* name,
         sound.play();
 
         sound.setRelativeToListener(static_cast<bool>(position));
-        sound.setMinDistance(1.f);
-        sound.setAttenuation(0.f);
+
         if (position) {
-            sound.setPosition({position->x, position->y, 0});
+            std::cout << position->x << ", " << position->y << std::endl;
+            auto listener_pos = sf::Listener::getPosition();
+            std::cout << "listener: " << listener_pos.x << ", " << listener_pos.z << std::endl;
+            sound.setAttenuation(0.2f);
+        } else {
+            sound.setAttenuation(0.f);
+        }
+
+        sound.setMinDistance(80.f);
+        if (position) {
+            sound.setPosition({position->x, 0, position->y});
         }
     } else {
         error(*::platform, (std::string("no sound data for ") + name).c_str());
@@ -1427,6 +1452,14 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, TileDesc val)
 
     std::lock_guard<std::mutex> guard(::tile_swap_mutex);
     ::tile_swap_requests.push({layer, x, y, val});
+}
+
+
+void Platform::set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors)
+{
+    // FIXME: implement custom text colors!
+
+    set_tile(Layer::overlay, x, y, glyph);
 }
 
 
