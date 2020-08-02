@@ -96,6 +96,9 @@ private:
     Float camera_offset_ = 0.f;
     Microseconds timer_ = 0;
 
+    int anim_index_ = 0;
+    Microseconds anim_timer_ = 0;
+
     Microseconds camera_shake_timer_ = milliseconds(400);
 
     Float speed_ = 0.f; // feet per microsecond
@@ -108,6 +111,9 @@ private:
     std::optional<Text> altitude_text_;
 
     enum class Scene {
+        fade_in0,
+        wait,
+        fade_transition0,
         fade_in,
         rising,
         enter_clouds,
@@ -115,7 +121,7 @@ private:
         exit_clouds,
         scroll,
         fade_out
-    } scene_ = Scene::fade_in;
+    } scene_ = Scene::fade_in0;
 };
 
 
@@ -1834,9 +1840,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      },
      LocaleString::surveyor_logbook_title},
     {STANDARD_ITEM_HANDLER(blaster),
-     [](Platform&, Game&) {
-         return null_state();
-     },
+     [](Platform&, Game&) { return null_state(); },
      LocaleString::blaster_title},
     {STANDARD_ITEM_HANDLER(accelerator),
      [](Platform&, Game& game) {
@@ -2106,10 +2110,12 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
 
         if (handler->single_use_) {
             item_description2_.emplace(
-                pfrm,
-                OverlayCoord{text_loc.x, text_loc.y + 2});
+                pfrm, OverlayCoord{text_loc.x, text_loc.y + 2});
 
-            item_description2_->assign(locale_string(LocaleString::single_use_warning), FontColors{ColorConstant::med_blue_gray, ColorConstant::rich_black});
+            item_description2_->assign(
+                locale_string(LocaleString::single_use_warning),
+                FontColors{ColorConstant::med_blue_gray,
+                           ColorConstant::rich_black});
         } else {
             item_description2_.reset();
         }
@@ -2884,18 +2890,11 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     game.camera() = Camera{};
 
-    // pfrm.enable_glyph_mode(true); // FIXME: just for debug purposes, a prior
-    //                               // state should have already enabled glyphs.
-
-    // We never enter this state except when starting a new game, so it's ok to
-    // hard-code the seed value.
-    rng::global_state = 2022;
-
     pfrm.screen().fade(1.f);
 
-    pfrm.load_sprite_texture("spritesheet_intro_clouds");
+    pfrm.load_sprite_texture("spritesheet_launch_anim");
     pfrm.load_overlay_texture("overlay_cutscene");
-    pfrm.load_tile0_texture("tilesheet_intro_cutscene_flattened");
+    pfrm.load_tile0_texture("launch_flattened");
     pfrm.load_tile1_texture("tilesheet_top");
 
     // pfrm.screen().fade(0.f, ColorConstant::silver_white);
@@ -2907,12 +2906,6 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    for (int i = 0; i < 32; ++i) {
-        for (int j = 0; j < 32; ++j) {
-            pfrm.set_tile(Layer::background, i, j, 4);
-        }
-    }
-
     for (int i = 0; i < screen_tiles.x; ++i) {
         pfrm.set_tile(Layer::overlay, i, 0, 112);
         pfrm.set_tile(Layer::overlay, i, 1, 112);
@@ -2920,34 +2913,44 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 1, 112);
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 2, 112);
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
-
-        pfrm.set_tile(Layer::background, i, screen_tiles.y - 2, 18);
     }
 
-    speed_ = 0.0050000f;
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            pfrm.set_tile(Layer::background, i, j, 2);
+        }
+    }
 
 
-    game.details().spawn<CutsceneCloud>(Vec2<Float>{70, 20});
-    game.details().spawn<CutsceneCloud>(Vec2<Float>{150, 60});
+    draw_image(pfrm, 61, 0, 5, 30, 12, Layer::background);
 
-    game.on_timeout(pfrm, milliseconds(500), [](Platform&, Game& game) {
-        game.details().spawn<CutsceneBird>(Vec2<Float>{210, -15}, 0);
-        game.details().spawn<CutsceneBird>(Vec2<Float>{180, -20}, 3);
-        game.details().spawn<CutsceneBird>(Vec2<Float>{140, -30}, 6);
-    });
+    Proxy::SpriteBuffer buf;
+
+    for (int i = 0; i < 3; ++i) {
+        buf.emplace_back();
+        buf.back().set_position({136 - 24, 40 + 8});
+        buf.back().set_size(Sprite::Size::w16_h32);
+        buf.back().set_texture_index(i);
+    }
+
+    buf[1].set_origin({-16, 0});
+    buf[2].set_origin({-32, 0});
+
+    game.effects().spawn<Proxy>(buf);
 }
 
 
 void LaunchCutsceneState::exit(Platform& pfrm, Game& game, State& next_state)
 {
-    altitude_text_.reset();
     pfrm.sleep(1);
     pfrm.screen().fade(1.f);
     pfrm.fill_overlay(0);
+    altitude_text_.reset();
 
     pfrm.load_overlay_texture("overlay");
 
     game.details().transform([](auto& buf) { buf.clear(); });
+    game.effects().transform([](auto& buf) { buf.clear(); });
 }
 
 
@@ -2955,8 +2958,6 @@ StatePtr
 LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     timer_ += delta;
-
-    altitude_ += delta * speed_;
 
     if (static_cast<int>(scene_) < static_cast<int>(Scene::within_clouds)) {
         game.camera().update(pfrm,
@@ -2990,24 +2991,29 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     game.details().transform(update_policy);
 
-    if (--altitude_update_ == 0) {
+    if (static_cast<int>(scene_) > static_cast<int>(Scene::fade_transition0)) {
+        altitude_ += delta * speed_;
 
-        auto screen_tiles = calc_screen_tiles(pfrm);
+        if (--altitude_update_ == 0) {
 
-        altitude_update_ = 10;
+            auto screen_tiles = calc_screen_tiles(pfrm);
 
-        const auto units = locale_string(LocaleString::distance_units_feet);
+            altitude_update_ = 10;
 
-        auto len = integer_text_length(altitude_) + utf8::len(units);
+            const auto units = locale_string(LocaleString::distance_units_feet);
 
-        if (not altitude_text_ or
-            (altitude_text_ and altitude_text_->len() not_eq len)) {
-            altitude_text_.emplace(pfrm,
-                                   OverlayCoord{u8((screen_tiles.x - len) / 2),
-                                                u8(screen_tiles.y - 2)});
+            auto len = integer_text_length(altitude_) + utf8::len(units);
+
+            if (not altitude_text_ or
+                (altitude_text_ and altitude_text_->len() not_eq len)) {
+                altitude_text_.emplace(
+                    pfrm,
+                    OverlayCoord{u8((screen_tiles.x - len) / 2),
+                                 u8(screen_tiles.y - 2)});
+            }
+            altitude_text_->assign(altitude_);
+            altitude_text_->append(units);
         }
-        altitude_text_->assign(altitude_);
-        altitude_text_->append(units);
     }
 
     auto spawn_cloud = [&] {
@@ -3028,14 +3034,100 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     };
 
+    auto animate_ship = [&] {
+                            anim_timer_ += delta;
+                            static const auto frame_time = milliseconds(170);
+                            if (anim_timer_ >= frame_time) {
+                                anim_timer_ -= frame_time;
+
+                                if (anim_index_ < 27) {
+                                    anim_index_ += 1;
+                                    for (auto& p : game.effects().get<Proxy>()) {
+                                        for (int i = 0; i < 3; ++i) {
+                                            p->buffer()[i].set_texture_index(anim_index_ * 3 + i);
+                                        }
+                                    }
+                                }
+                            }
+                        };
+
     switch (scene_) {
+    case Scene::fade_in0: {
+        constexpr auto fade_duration = milliseconds(400);
+        if (timer_ > fade_duration) {
+            pfrm.screen().fade(0.f);
+            scene_ = Scene::wait;
+        } else {
+            const auto amount = 1.f - smoothstep(0.f, fade_duration, timer_);
+            pfrm.screen().fade(amount);
+        }
+        animate_ship();
+        break;
+    }
+
+    case Scene::wait:
+        if (timer_ > seconds(4) + milliseconds(360)) {
+            timer_ = 0;
+            scene_ = Scene::fade_transition0;
+        }
+        animate_ship();
+        break;
+
+    case Scene::fade_transition0: {
+        animate_ship();
+        constexpr auto fade_duration = milliseconds(680);
+        if (timer_ <= fade_duration) {
+            const auto amount = smoothstep(0.f, fade_duration, timer_);
+            pfrm.screen().fade(amount);
+        }
+
+        if (timer_ > fade_duration) {
+            timer_ = 0;
+            scene_ = Scene::fade_in;
+
+            rng::global_state = 2022;
+
+            pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, true, true);
+
+            game.effects().transform([](auto& buf) { buf.clear(); });
+
+            pfrm.load_tile0_texture("tilesheet_intro_cutscene_flattened");
+            pfrm.load_sprite_texture("spritesheet_intro_clouds");
+
+            for (int i = 0; i < 32; ++i) {
+                for (int j = 0; j < 32; ++j) {
+                    pfrm.set_tile(Layer::background, i, j, 4);
+                }
+            }
+
+            const auto screen_tiles = calc_screen_tiles(pfrm);
+
+            for (int i = 0; i < screen_tiles.x; ++i) {
+                pfrm.set_tile(Layer::background, i, screen_tiles.y - 2, 18);
+            }
+
+            speed_ = 0.0050000f;
+
+            game.details().spawn<CutsceneCloud>(Vec2<Float>{70, 20});
+            game.details().spawn<CutsceneCloud>(Vec2<Float>{150, 60});
+
+            game.on_timeout(pfrm, milliseconds(500), [](Platform&, Game& game) {
+                game.details().spawn<CutsceneBird>(Vec2<Float>{210, -15}, 0);
+                game.details().spawn<CutsceneBird>(Vec2<Float>{180, -20}, 3);
+                game.details().spawn<CutsceneBird>(Vec2<Float>{140, -30}, 6);
+            });
+        }
+        break;
+    }
+
     case Scene::fade_in: {
         constexpr auto fade_duration = milliseconds(600);
         if (timer_ > fade_duration) {
             pfrm.screen().fade(0.f);
         } else {
             const auto amount = 1.f - smoothstep(0.f, fade_duration, timer_);
-            pfrm.screen().fade(amount);
+            pfrm.screen().fade(
+                amount, ColorConstant::rich_black, {}, true, true);
         }
 
         if (timer_ > milliseconds(600)) {

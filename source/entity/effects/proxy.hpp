@@ -57,6 +57,11 @@ public:
         return buffer_[0];
     }
 
+    SpriteBuffer& buffer()
+    {
+        return buffer_;
+    }
+
     void pulse(ColorConstant c)
     {
         for (auto& spr : buffer_) {

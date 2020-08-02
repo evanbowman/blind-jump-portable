@@ -821,6 +821,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/charset_en_spn_fr.h"
 #include "graphics/old_poster_flattened.h"
 #include "graphics/overlay.h"
+#include "graphics/launch_flattened.h"
 #include "graphics/overlay_cutscene.h"
 #include "graphics/overlay_journal.h"
 #include "graphics/seed_packet_flattened.h"
@@ -831,6 +832,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/spritesheet_boss1.h"
 #include "graphics/spritesheet_intro_clouds.h"
 #include "graphics/spritesheet_intro_cutscene.h"
+#include "graphics/spritesheet_launch_anim.h"
 #include "graphics/tilesheet.h"
 #include "graphics/tilesheet2.h"
 #include "graphics/tilesheet2_top.h"
@@ -863,7 +865,8 @@ static const TextureData sprite_textures[] = {
     TEXTURE_INFO(spritesheet2),
     TEXTURE_INFO(spritesheet3),
     TEXTURE_INFO(spritesheet_boss0),
-    TEXTURE_INFO(spritesheet_boss1)};
+    TEXTURE_INFO(spritesheet_boss1),
+    TEXTURE_INFO(spritesheet_launch_anim)};
 
 
 static const TextureData tile_textures[] = {
@@ -873,7 +876,8 @@ static const TextureData tile_textures[] = {
     TEXTURE_INFO(tilesheet2_top),
     TEXTURE_INFO(tilesheet3),
     TEXTURE_INFO(tilesheet3_top),
-    TEXTURE_INFO(tilesheet_intro_cutscene_flattened)};
+    TEXTURE_INFO(tilesheet_intro_cutscene_flattened),
+    TEXTURE_INFO(launch_flattened)};
 
 
 static const TextureData overlay_textures[] = {
@@ -1316,6 +1320,11 @@ void Platform::load_tile0_texture(const char* name)
                 memcpy16((void*)&MEM_SCREENBLOCKS[sbb_t0_texture][0],
                          info.tile_data_,
                          info.tile_data_length_ / 2);
+            } else {
+                StringBuffer<45> buf = "unable to load: ";
+                buf += name;
+
+                error(*this, buf.c_str());
             }
         }
     }
@@ -1349,6 +1358,11 @@ void Platform::load_tile1_texture(const char* name)
                 memcpy16((void*)&MEM_SCREENBLOCKS[sbb_t1_texture][0],
                          info.tile_data_,
                          info.tile_data_length_ / 2);
+            } else {
+                StringBuffer<45> buf = "unable to load: ";
+                buf += name;
+
+                error(*this, buf.c_str());
             }
         }
     }
@@ -2557,7 +2571,7 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
                 } else {
                     error(pfrm,
                           "existing tile is a glyph, but has no"
-                          " mapping table entry?!");
+                          " mapping table entry!");
                 }
             }
 

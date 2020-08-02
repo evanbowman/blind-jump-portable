@@ -116,6 +116,8 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/spritesheet.s
     ${SOURCE_DIR}/graphics/spritesheet2.s
     ${SOURCE_DIR}/graphics/spritesheet3.s
+    ${SOURCE_DIR}/graphics/spritesheet_launch_anim.s
+    ${SOURCE_DIR}/graphics/launch_flattened.s
     ${SOURCE_DIR}/platform/sound_pop.s
     ${SOURCE_DIR}/platform/sound_coin.s
     ${SOURCE_DIR}/platform/sound_bell.s
@@ -241,6 +243,8 @@ if(GAMEBOY_ADVANCE)
     compile_image(spritesheet3 2 4 NO)
     compile_image(spritesheet_boss0 2 4 NO)
     compile_image(spritesheet_boss1 2 4 NO)
+    compile_image(spritesheet_launch_anim 2 4 NO)
+    compile_image(launch 0 0 YES)
     compile_image(tilesheet_intro_cutscene 0 0 YES)
     compile_image(tilesheet 4 3 NO)
     compile_image(tilesheet2 4 3 NO)
