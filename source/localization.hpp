@@ -53,6 +53,7 @@ enum class LocaleString {
     waypoints,
     punctuation_period,
     menu_resume,
+    menu_connect_peer,
     menu_settings,
     menu_save_and_quit,
     goodbye_text,

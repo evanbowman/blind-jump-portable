@@ -4,6 +4,7 @@
 #include "game.hpp"
 #include "graphics/overlay.hpp"
 #include "localization.hpp"
+#include "network_event.hpp"
 #include "number/random.hpp"
 #include "string.hpp"
 
@@ -63,6 +64,8 @@ public:
     } notification_status = NotificationStatus::hidden;
 
 private:
+    void multiplayer_sync(Platform& pfrm, Game& game, Microseconds delta);
+
     const bool camera_tracking_;
     Microseconds camera_snap_timer_ = 0;
 
@@ -508,6 +511,7 @@ private:
     int anim_index_ = 0;
     Microseconds anim_timer_ = 0;
     std::optional<Text> resume_text_;
+    std::optional<Text> connect_peer_text_;
     std::optional<Text> settings_text_;
     std::optional<Text> save_and_quit_text_;
     Float y_offset_ = 0;
@@ -795,6 +799,24 @@ private:
 };
 
 
+class NewLevelIdleState : public State {
+public:
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    // Microseconds timer_ = 0;
+};
+
+
+class NetworkConnectState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+};
+
+
 static void state_deleter(State* s);
 
 StatePtr null_state()
@@ -842,6 +864,7 @@ static StatePool<ActiveState,
                  CommandCodeState,
                  PauseScreenState,
                  MapSystemState,
+                 NewLevelIdleState,
                  EditSettingsState,
                  IntroCreditsState,
                  IntroLegalMessage,
@@ -849,6 +872,7 @@ static StatePool<ActiveState,
                  RespawnWaitState,
                  LogfileViewerState,
                  EndingCreditsState,
+                 NetworkConnectState,
                  LaunchCutsceneState,
                  SignalJammerSelectorState>
     state_pool_;
@@ -883,9 +907,65 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
+void OverworldState::multiplayer_sync(Platform& pfrm,
+                                      Game& game,
+                                      Microseconds delta)
+{
+    // On the gameboy advance, we're dealing with a 1kB/s connection, so,
+    // realistically, we can only transmit player data a few times per
+    // second. TODO: add methods for querying the uplink performance limits from
+    // the Platform class, rather than having various game-specific hacks here.
+    static const auto player_refresh_rate = seconds(1) / 4;
+
+    static auto update_counter = player_refresh_rate;
+
+    update_counter -= delta;
+    if (update_counter <= 0) {
+        update_counter = player_refresh_rate;
+        net_event::PlayerInfo info;
+        info.header_.message_type_ = net_event::Header::player_info;
+        info.position_ = game.player().get_position();
+        info.texture_index_ = game.player().get_sprite().get_texture_index();
+        info.size_ = game.player().get_sprite().get_size();
+
+        pfrm.network().send_message({(byte*)&info, sizeof info});
+    }
+
+    u32 read_position = 0;
+    while (auto message = pfrm.network().poll_messages(read_position)) {
+        net_event::Header header;
+        memcpy(&header, message->data_, sizeof header);
+
+        switch (header.message_type_) {
+        case net_event::Header::player_info: {
+            read_position += sizeof(net_event::PlayerInfo);
+            net_event::PlayerInfo info;
+            memcpy(&info, message->data_, sizeof info);
+            game.peer().sync(info);
+            break;
+        }
+
+        case net_event::Header::new_level_idle: {
+            read_position += sizeof(net_event::NewLevelIdle);
+            break;
+        }
+
+        case net_event::Header::new_level_seed: {
+            read_position += sizeof(net_event::NewLevelSeed);
+            break;
+        }
+        }
+    }
+}
+
+
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
+
+    if (pfrm.network().is_connected()) {
+        multiplayer_sync(pfrm, game, delta);
+    }
 
     if (game.persistent_data().settings_.show_fps_) {
 
@@ -1550,33 +1630,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (counter_ > fade_duration) {
         pfrm.screen().fade(1.f);
 
-        Level next_level = game.level() + 1;
-
-        // backdoor for debugging purposes.
-        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
-            return state_pool_.create<CommandCodeState>();
-        }
-
-        // For now, to determine whether the game's complete, scan through a
-        // bunch of levels. If there are no more bosses remaining, the game is
-        // complete.
-        bool bosses_remaining = false;
-        for (Level l = next_level; l < next_level + 1000; ++l) {
-            if (is_boss_level(l)) {
-                bosses_remaining = true;
-                break;
-            }
-        }
-
-        auto zone = zone_info(next_level);
-        auto last_zone = zone_info(game.level());
-
-        if (not bosses_remaining and not(zone == last_zone)) {
-            pfrm.sleep(120);
-            return state_pool_.create<EndingCreditsState>();
-        }
-
-        return state_pool_.create<NewLevelState>(next_level);
+        return state_pool_.create<NewLevelIdleState>();
 
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
@@ -3167,7 +3221,9 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (timer_ > seconds(3)) {
             do_camera_shake(7);
 
-            pfrm.screen().pixelate(interpolate(0, 30, Float(timer_ - seconds(3)) / seconds(1)), false);
+            pfrm.screen().pixelate(
+                interpolate(0, 30, Float(timer_ - seconds(3)) / seconds(1)),
+                false);
 
         } else {
             do_camera_shake(3);
@@ -3987,7 +4043,8 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
 {
     // draw_dot_grid(pfrm);
 
-    if (not resume_text_ or not save_and_quit_text_ or not settings_text_) {
+    if (not resume_text_ or not save_and_quit_text_ or not settings_text_ or
+        not connect_peer_text_) {
         return;
     }
 
@@ -4011,18 +4068,28 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
     default:
     case 0:
         draw_cursor(&(*resume_text_), left, right);
+        draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), 0, 0);
         break;
 
     case 1:
         draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), left, right);
         draw_cursor(&(*save_and_quit_text_), 0, 0);
         break;
 
     case 2:
         draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*connect_peer_text_), left, right);
+        draw_cursor(&(*settings_text_), 0, 0);
+        draw_cursor(&(*save_and_quit_text_), 0, 0);
+        break;
+
+    case 3:
+        draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), left, right);
         break;
@@ -4050,6 +4117,9 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             const auto resume_text_len =
                 utf8::len(locale_string(LocaleString::menu_resume));
 
+            const auto connect_peer_text_len =
+                utf8::len(locale_string(LocaleString::menu_connect_peer));
+
             const auto settings_text_len =
                 utf8::len(locale_string(LocaleString::menu_settings));
 
@@ -4057,18 +4127,22 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 utf8::len(locale_string(LocaleString::menu_save_and_quit));
 
             const u8 resume_x_loc = (screen_tiles.x - resume_text_len) / 2;
+            const u8 cp_x_loc = (screen_tiles.x - connect_peer_text_len) / 2;
             const u8 settings_x_loc = (screen_tiles.x - settings_text_len) / 2;
             const u8 snq_x_loc = (screen_tiles.x - snq_text_len) / 2;
 
             const u8 y = screen_tiles.y / 2;
 
-            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 3)});
+            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 4)});
+            connect_peer_text_.emplace(pfrm, OverlayCoord{cp_x_loc, u8(y - 0)});
             settings_text_.emplace(pfrm,
-                                   OverlayCoord{settings_x_loc, u8(y - 1)});
+                                   OverlayCoord{settings_x_loc, u8(y - 2)});
             save_and_quit_text_.emplace(pfrm,
-                                        OverlayCoord{snq_x_loc, u8(y + 1)});
+                                        OverlayCoord{snq_x_loc, u8(y + 2)});
 
             resume_text_->assign(locale_string(LocaleString::menu_resume));
+            connect_peer_text_->assign(
+                locale_string(LocaleString::menu_connect_peer));
             settings_text_->assign(locale_string(LocaleString::menu_settings));
             save_and_quit_text_->assign(
                 locale_string(LocaleString::menu_save_and_quit));
@@ -4087,6 +4161,8 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 1:
                 return *settings_text_;
             case 2:
+                return *connect_peer_text_;
+            case 3:
                 return *save_and_quit_text_;
             }
         }();
@@ -4108,7 +4184,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             draw_cursor(pfrm);
         }
 
-        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 2) {
+        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 3) {
             cursor_loc_ += 1;
             draw_cursor(pfrm);
         } else if (pfrm.keyboard().down_transition<Key::up>() and
@@ -4122,6 +4198,8 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 1:
                 return state_pool_.create<EditSettingsState>();
             case 2:
+                return state_pool_.create<NetworkConnectState>();
+            case 3:
                 return state_pool_.create<GoodbyeState>();
             }
         } else if (pfrm.keyboard().down_transition<Key::start>()) {
@@ -4148,6 +4226,8 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
     pfrm.set_overlay_origin(0, 0);
 
     resume_text_.reset();
+    connect_peer_text_.reset();
+    settings_text_.reset();
     save_and_quit_text_.reset();
 
     pfrm.fill_overlay(0);
@@ -4155,6 +4235,99 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
     if (dynamic_cast<ActiveState*>(&next_state)) {
         pfrm.screen().fade(0.f);
     }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// NewLevelIdleState
+////////////////////////////////////////////////////////////////////////////////
+
+
+StatePtr
+NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    const bool ready = [&] {
+        if (pfrm.network().is_connected()) {
+            // // If we're playing a multiplayer game, we want to wait until all
+            // // the other players finish their own level. Then, we will
+            // // synchronize the level seed across all of the games.
+            // timer_ += delta;
+            // if (timer_ > seconds(1)) {
+            //     net_event::NewLevelIdle idle_msg;
+            //     idle_msg.header_.message_type_ = net_event::Header::new_level_idle;
+            //     pfrm.network().send_message({(byte*)&idle_msg, sizeof idle_msg});
+            // }
+
+
+            // return false;
+            return true;
+        } else {
+            return true;
+        }
+    }();
+
+    if (ready) {
+        Level next_level = game.level() + 1;
+
+        // backdoor for debugging purposes.
+        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
+            return state_pool_.create<CommandCodeState>();
+        }
+
+        // For now, to determine whether the game's complete, scan through a
+        // bunch of levels. If there are no more bosses remaining, the game is
+        // complete.
+        bool bosses_remaining = false;
+        for (Level l = next_level; l < next_level + 1000; ++l) {
+            if (is_boss_level(l)) {
+                bosses_remaining = true;
+                break;
+            }
+        }
+
+        auto zone = zone_info(next_level);
+        auto last_zone = zone_info(game.level());
+
+        if (not bosses_remaining and not(zone == last_zone)) {
+            pfrm.sleep(120);
+            return state_pool_.create<EndingCreditsState>();
+        }
+
+        return state_pool_.create<NewLevelState>(next_level);
+    }
+
+    return null_state();
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// NetworkConnectState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void NetworkConnectState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+}
+
+
+void NetworkConnectState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+    // ...
+}
+
+
+StatePtr
+NetworkConnectState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    if (pfrm.keyboard().down_transition<Key::action_1>()) {
+        pfrm.network().connect("127.0.0.1");
+        return state_pool_.create<PauseScreenState>(false);
+    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        pfrm.network().listen();
+        return state_pool_.create<PauseScreenState>(false);
+    }
+
+    return null_state();
 }
 
 

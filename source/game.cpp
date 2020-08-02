@@ -84,20 +84,6 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
 
     pfrm.load_overlay_texture("overlay");
 
-    // pfrm.enable_glyph_mode(true);
-    // auto g = pfrm.map_glyph(
-    //     'M',
-    //     [](const utf8::Codepoint& cp)
-    //         -> std::optional<Platform::TextureMapping> {
-    //         return Platform::TextureMapping{"charset_en_spn_fr", 51};
-    //     });
-
-    // pfrm.set_tile(
-    //     8, 8, g, ColorConstant::electric_blue, ColorConstant::spanish_crimson);
-    // pfrm.screen().fade(0.f);
-    // pfrm.sleep(500);
-
-
     if (inventory().item_count(Item::Type::blaster) == 0) {
         inventory().push_item(pfrm, *this, Item::Type::blaster);
     }
@@ -212,6 +198,10 @@ HOT void Game::render(Platform& pfrm)
 
     display_buffer.push_back(&player_.get_sprite());
     display_buffer.push_back(&player_.weapon().get_sprite());
+
+    if (pfrm.network().is_connected()) {
+        display_buffer.push_back(&peer_player_.get_sprite());
+    }
 
     enemies_.transform(show_sprites);
     details_.transform(show_sprites);

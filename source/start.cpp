@@ -47,6 +47,8 @@ void start(Platform& pf)
 
         pf.feed_watchdog();
 
+        pf.network().update();
+
         pf.screen().clear();
         game.acquire([&](Game& gm) { gm.render(pf); });
         pf.screen().display();

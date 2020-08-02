@@ -14,6 +14,7 @@
 
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
 #include <SFML/System.hpp>
 #include <chrono>
 #include <cmath>
@@ -1169,7 +1170,8 @@ void Platform::Speaker::play_sound(const char* name,
         if (position) {
             std::cout << position->x << ", " << position->y << std::endl;
             auto listener_pos = sf::Listener::getPosition();
-            std::cout << "listener: " << listener_pos.x << ", " << listener_pos.z << std::endl;
+            std::cout << "listener: " << listener_pos.x << ", "
+                      << listener_pos.z << std::endl;
             sound.setAttenuation(0.2f);
         } else {
             sound.setAttenuation(0.f);
@@ -1285,7 +1287,7 @@ Platform::Platform()
 {
     ::platform = this;
 
-    push_task(&::watchdog_task);
+    // push_task(&::watchdog_task);
 
     data_ = new Data(*this);
     if (not data_) {
@@ -1595,6 +1597,132 @@ void SynchronizedBase::unlock()
 SynchronizedBase::~SynchronizedBase()
 {
     delete reinterpret_cast<std::mutex*>(impl_);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// NetworkPeer
+////////////////////////////////////////////////////////////////////////////////
+
+
+struct NetworkPeerImpl {
+    sf::TcpSocket socket_;
+    sf::TcpListener listener_;
+};
+
+
+Platform::NetworkPeer::NetworkPeer() : impl_(nullptr)
+{
+    auto impl = new NetworkPeerImpl;
+
+    impl->socket_.setBlocking(true);
+
+    impl_ = impl;
+}
+
+
+void Platform::NetworkPeer::listen()
+{
+    auto impl = (NetworkPeerImpl*)impl_;
+
+    auto port = Conf{*::platform}.expect<Conf::Integer>(
+        ::platform->device_name().c_str(), "network_port");
+
+    info(*::platform, ("listening on port " + std::to_string(port)).c_str());
+
+    impl->listener_.listen(55001);
+    impl->listener_.accept(impl->socket_);
+
+    info(*::platform, "Peer connected!");
+
+    impl->socket_.setBlocking(false);
+}
+
+
+void Platform::NetworkPeer::connect(const char* peer)
+{
+    auto impl = (NetworkPeerImpl*)impl_;
+
+    auto port = Conf{*::platform}.expect<Conf::Integer>(
+        ::platform->device_name().c_str(), "network_port");
+
+    info(*::platform,
+         ("connecting to " + std::string(peer) + ":" + std::to_string(port))
+             .c_str());
+
+    if (impl->socket_.connect(peer, port) == sf::Socket::Status::Done) {
+        info(*::platform, "Peer connected!");
+    } else {
+        error(*::platform, "connection failed :(");
+    }
+
+    impl->socket_.setBlocking(false);
+}
+
+
+bool Platform::NetworkPeer::is_connected() const
+{
+    auto impl = (NetworkPeerImpl*)impl_;
+    return impl->socket_.getRemoteAddress() not_eq sf::IpAddress::None;
+}
+
+
+void Platform::NetworkPeer::send_message(const Message& message)
+{
+    auto impl = (NetworkPeerImpl*)impl_;
+
+    std::size_t sent = 0;
+    impl->socket_.send(message.data_, message.length_, sent);
+
+    if (sent not_eq message.length_) {
+        warning(*::platform, "part of message not sent!");
+    }
+}
+
+
+static std::vector<u8> receive_buffer;
+
+
+void Platform::NetworkPeer::update()
+{
+    auto impl = (NetworkPeerImpl*)impl_;
+
+    receive_buffer.clear();
+
+    std::array<char, 1024> buffer = {0};
+    std::size_t received = 0;
+
+    while (true) {
+        impl->socket_.receive(buffer.data(), sizeof buffer, received);
+
+        if (received > 0) {
+            std::copy(buffer.begin(),
+                      buffer.begin() + received,
+                      std::back_inserter(receive_buffer));
+        }
+
+        if (received < sizeof buffer) {
+            break;
+        }
+    }
+}
+
+
+std::optional<Platform::NetworkPeer::Message>
+Platform::NetworkPeer::poll_messages(u32 position)
+{
+    if (position < receive_buffer.size()) {
+        return Message{(byte*)&receive_buffer[position],
+                       (u32)receive_buffer.size() - position};
+    }
+
+    return {};
+}
+
+
+Platform::NetworkPeer::~NetworkPeer()
+{
+    delete (NetworkPeerImpl*)impl_;
 }
 
 

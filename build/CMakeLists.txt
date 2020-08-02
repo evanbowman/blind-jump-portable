@@ -289,7 +289,7 @@ if(GAMEBOY_ADVANCE)
 
 elseif(APPLE)
   target_link_libraries(BlindJump
-    "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio")
+    "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio -framework sfml-network")
   set_target_properties(BlindJump
     PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
 

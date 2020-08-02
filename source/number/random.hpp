@@ -6,7 +6,7 @@
 
 namespace rng {
 
-using Value = int;
+using Value = s32;
 using Generator = Value;
 
 

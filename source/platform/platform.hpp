@@ -416,9 +416,29 @@ public:
 
     class NetworkPeer {
     public:
+        NetworkPeer();
+        NetworkPeer(const NetworkPeer&) = delete;
+        ~NetworkPeer();
+
         void connect(const char* peer);
+        void listen();
+
+        bool is_connected() const;
+        bool is_host() const;
+
+        struct Message {
+            const byte* data_;
+            u32 length_;
+        };
+
+        void send_message(const Message& message);
 
         void update();
+
+        std::optional<Message> poll_messages(u32 position);
+
+    private:
+        void* impl_;
     };
 
 

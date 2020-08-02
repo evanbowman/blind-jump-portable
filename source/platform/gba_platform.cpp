@@ -2720,4 +2720,32 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// NetworkPeer
+////////////////////////////////////////////////////////////////////////////////
+
+
+Platform::NetworkPeer::NetworkPeer()
+{
+}
+
+
+void Platform::NetworkPeer::connect(const char* peer)
+{
+    // ...
+}
+
+
+void Platform::NetworkPeer::update()
+{
+    // ...
+}
+
+
+Platform::NetworkPeer::~NetworkPeer()
+{
+    // ...
+}
+
+
 #endif // __GBA__
