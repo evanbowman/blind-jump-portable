@@ -819,9 +819,9 @@ Vec2<u32> Platform::Screen::size() const
 
 #include "graphics/blaster_info_flattened.h"
 #include "graphics/charset_en_spn_fr.h"
+#include "graphics/launch_flattened.h"
 #include "graphics/old_poster_flattened.h"
 #include "graphics/overlay.h"
-#include "graphics/launch_flattened.h"
 #include "graphics/overlay_cutscene.h"
 #include "graphics/overlay_journal.h"
 #include "graphics/seed_packet_flattened.h"
