@@ -2284,6 +2284,7 @@ Platform::Platform()
 
     if (sram_test_result not_eq sram_test_const) {
         save_using_flash = true;
+        info(*this, "SRAM write failed, falling back to FLASH");
     }
 
 
