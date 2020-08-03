@@ -74,6 +74,8 @@ enum class LocaleString {
     menu_disabled,
     distance_units_feet,
     launch,
+    peer_connected,
+    peer_lost,
     count
 };
 

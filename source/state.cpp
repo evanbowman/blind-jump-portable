@@ -513,6 +513,8 @@ public:
 private:
     void draw_cursor(Platform& pfrm);
 
+    bool connect_peer_option_available(Game& game) const;
+
     Microseconds fade_timer_ = 0;
     Microseconds log_timer_ = 0;
     static int cursor_loc_;
@@ -921,9 +923,7 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
-void OverworldState::receive(const net_event::SyncSeed& s,
-                             Platform&,
-                             Game&)
+void OverworldState::receive(const net_event::SyncSeed& s, Platform&, Game&)
 {
     rng::critical_state = s.random_state_;
 }
@@ -933,15 +933,21 @@ void OverworldState::receive(const net_event::EnemyStateSync& s,
                              Platform&,
                              Game& game)
 {
-    for (auto& e : game.enemies().get<Drone>()) {
+    for (auto& e : game.enemies().get<Turret>()) {
+        if (e->id() == s.id_) {
+            e->sync(s, game);
+            return;
+        }
+    }
+    for (auto& e : game.enemies().get<Dasher>()) {
         if (e->id() == s.id_) {
             e->sync(s);
             return;
         }
     }
-    for (auto& e : game.enemies().get<Turret>()) {
+    for (auto& e : game.enemies().get<Drone>()) {
         if (e->id() == s.id_) {
-            e->sync(s, game);
+            e->sync(s);
             return;
         }
     }
@@ -986,6 +992,8 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
 
     if (not game.peer()) {
         game.peer().emplace();
+        push_notification(
+            pfrm, game, locale_string(LocaleString::peer_connected));
     }
 
     update_counter -= delta;
@@ -993,10 +1001,12 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
         update_counter = player_refresh_rate;
         net_event::PlayerInfo info;
         info.header_.message_type_ = net_event::Header::player_info;
-        info.position_ = game.player().get_position().cast<s16>();
+        info.x_ = game.player().get_position().cast<s16>().x;
+        info.y_ = game.player().get_position().cast<s16>().y;
         info.texture_index_ = game.player().get_sprite().get_texture_index();
         info.size_ = game.player().get_sprite().get_size();
-        info.speed_ = game.player().get_speed();
+        info.x_speed_ = game.player().get_speed().x;
+        info.y_speed_ = game.player().get_speed().y;
         info.visible_ = game.player().get_sprite().get_alpha() not_eq
                         Sprite::Alpha::transparent;
         info.weapon_drawn_ =
@@ -1006,8 +1016,9 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
         pfrm.network_peer().send_message({(byte*)&info, sizeof info});
 
 
-        net_event::transmit<net_event::SyncSeed,
-                            net_event::Header::sync_seed>(pfrm, rng::critical_state);
+        if (pfrm.network_peer().is_host()) {
+            net_event::transmit<net_event::SyncSeed>(pfrm, rng::critical_state);
+        }
     }
 
 
@@ -1026,7 +1037,6 @@ player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
 }
 
 
-
 void OverworldState::receive(const net_event::PlayerDied&,
                              Platform& pfrm,
                              Game& game)
@@ -1038,7 +1048,6 @@ void OverworldState::receive(const net_event::PlayerDied&,
 }
 
 
-
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
@@ -1048,6 +1057,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else if (game.peer()) {
         player_death(pfrm, game, game.peer()->get_position());
         game.peer().reset();
+        push_notification(pfrm, game, locale_string(LocaleString::peer_lost));
     } else {
         // In multiplayer mode, we need to synchronize the random number
         // engine. In single-player mode, let's advance the rng for each step,
@@ -1517,6 +1527,10 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.speaker().stop_music();
         // TODO: add a unique explosion sound effect
         player_death(pfrm, game, game.player().get_position());
+
+        if (pfrm.network_peer().is_connected()) {
+            pfrm.network_peer().disconnect();
+        }
 
         return state_pool_.create<DeathFadeState>(game);
     }
@@ -3164,11 +3178,13 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         // distributed, and we don't want the clouds to bunch up too much.
         if (cloud_lane_ == 0) {
             cloud_lane_ = 1;
-            const auto offset = rng::choice(swidth / 2, rng::critical_state) + 32;
+            const auto offset =
+                rng::choice(swidth / 2, rng::critical_state) + 32;
             game.details().spawn<CutsceneCloud>(
                 Vec2<Float>{Float(offset), -80});
         } else {
-            const auto offset = rng::choice(swidth / 2, rng::critical_state) + swidth / 2 + 32;
+            const auto offset =
+                rng::choice(swidth / 2, rng::critical_state) + swidth / 2 + 32;
             game.details().spawn<CutsceneCloud>(
                 Vec2<Float>{Float(offset), -80});
             cloud_lane_ = 0;
@@ -4192,6 +4208,15 @@ void PauseScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
 }
 
 
+bool PauseScreenState::connect_peer_option_available(Game& game) const
+{
+    // For now, don't allow syncing when someone's progressed through any of the
+    // levels.
+    return game.level() == Level{0} and
+           Platform::NetworkPeer::supported_by_device();
+}
+
+
 StatePtr
 PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
@@ -4228,8 +4253,18 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                                         OverlayCoord{snq_x_loc, u8(y + 2)});
 
             resume_text_->assign(locale_string(LocaleString::menu_resume));
+
             connect_peer_text_->assign(
-                locale_string(LocaleString::menu_connect_peer));
+                locale_string(LocaleString::menu_connect_peer),
+                [&]() -> Text::OptColors {
+                    if (connect_peer_option_available(game)) {
+                        return {};
+                    } else {
+                        return FontColors{ColorConstant::med_blue_gray,
+                                          ColorConstant::rich_black};
+                    }
+                }());
+
             settings_text_->assign(locale_string(LocaleString::menu_settings));
             save_and_quit_text_->assign(
                 locale_string(LocaleString::menu_save_and_quit));
@@ -4285,9 +4320,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 1:
                 return state_pool_.create<EditSettingsState>();
             case 2:
-                // For now, don't allow syncing when someone's progressed
-                // through any of the levels.
-                if (game.level() == Level{0}) {
+                if (connect_peer_option_available(game)) {
                     return state_pool_.create<NetworkConnectState>();
                 }
                 break;
@@ -4379,7 +4412,8 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
         if (peer_ready_ and pfrm.network_peer().is_host()) {
             net_event::NewLevelSyncSeed sync_seed;
-            sync_seed.header_.message_type_ = net_event::Header::new_level_sync_seed;
+            sync_seed.header_.message_type_ =
+                net_event::Header::new_level_sync_seed;
             sync_seed.random_state_ = rng::critical_state;
             pfrm.network_peer().send_message(
                 {(byte*)&sync_seed, sizeof sync_seed});
@@ -4452,8 +4486,7 @@ NetworkConnectState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
         pfrm.network_peer().listen();
 
-        net_event::transmit<net_event::SyncSeed,
-                            net_event::Header::sync_seed>(pfrm, rng::critical_state);
+        net_event::transmit<net_event::SyncSeed>(pfrm, rng::critical_state);
 
         return state_pool_.create<PauseScreenState>(false);
     }

@@ -2205,6 +2205,9 @@ static void audio_update()
 }
 
 
+static void serial_update();
+
+
 void Platform::soft_exit()
 {
 }
@@ -2294,8 +2297,9 @@ Platform::Platform()
         0x0B0F; //DirectSound A + fifo reset + max volume to L and R
     REG_SOUNDCNT_X = 0x0080; //turn sound chip on
 
-    irqEnable(IRQ_TIMER1);
-    irqSet(IRQ_TIMER1, audio_update);
+    // irqEnable(IRQ_TIMER1);
+    // irqSet(IRQ_TIMER1, audio_update);
+    (void)audio_update;
 
     REG_TM0CNT_L = 0xffff;
     REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
@@ -2332,6 +2336,9 @@ Platform::Platform()
         object_attribute_back_buffer[i].attribute_2 = ATTR2_PRIORITY(3);
         object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
     }
+
+    irqEnable(IRQ_SERIAL);
+    irqSet(IRQ_SERIAL, serial_update);
 }
 
 
@@ -2725,20 +2732,159 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+#include "/opt/devkitpro/libgba/include/gba_sio.h"
+
+
+static bool peer_is_host = false;
+
+
+int rx_buffer[48] = {0};
+int rx_count = 0;
+
+bool ready = true;
+
+int serial_irq_count = 0;
+static void serial_update()
+{
+    serial_irq_count++;
+    rx_buffer[rx_count++ % 48] = REG_SIODATA32;
+
+    ready = true;
+    // REG_SIODATA8 = 'B';
+    // REG_SIOCNT |= SIO_START;
+    REG_SIOCNT |= SIO_SO_HIGH;
+}
+
+
 Platform::NetworkPeer::NetworkPeer()
 {
+    REG_RCNT = R_NORMAL;
+    REG_SIOCNT |= SIO_32BIT;
+    // REG_SIOCNT |= SIO_IRQ;
 }
+
+
+bool linked = false;
 
 
 void Platform::NetworkPeer::connect(const char* peer)
 {
-    // ...
+    linked = true;
+    peer_is_host = false;
 }
 
 
+void Platform::NetworkPeer::listen()
+{
+    linked = true;
+    peer_is_host = true;
+}
+
+
+bool Platform::NetworkPeer::supported_by_device()
+{
+    // FIXME: I intend to implement multiplayer over the game link cable, but I
+    // have not received my second everdrive in the mail yet!
+    return true;
+}
+
+
+bool Platform::NetworkPeer::is_connected() const
+{
+    // TODO...
+    return false;
+}
+
+
+bool Platform::NetworkPeer::is_host() const
+{
+    return ::peer_is_host;
+}
+
+
+void Platform::NetworkPeer::send_message(const Message& message)
+{
+    // TODO...
+}
+
+#include "graphics/overlay.hpp"
+
 void Platform::NetworkPeer::update()
 {
-    // ...
+    if (::rx_count) {
+        Text t(*::platform, OverlayCoord{});
+        t.assign("RX: ");
+        t.append(rx_count);
+        t.append(", RD: ");
+
+        for (size_t i = 0; i < rx_count % (sizeof rx_buffer / sizeof(int)); ++i) {
+            t.append(rx_buffer[i]);
+        }
+
+        rx_count = 0;
+
+        ::platform->sleep(120);
+    }
+
+    if (linked) {
+        if (peer_is_host) {
+
+            REG_SIODATA32 = 42;
+
+            REG_SIOCNT |= SIO_SO_HIGH;
+            REG_SIOCNT |= SIO_CLK_INT;
+
+            while (true) {
+                if (REG_SIOCNT & SIO_RDY) {
+                    break;
+                }
+                ::platform->feed_watchdog();
+            }
+
+            REG_SIOCNT |= SIO_START;
+
+            while (REG_SIOCNT & SIO_START) {
+                ::platform->feed_watchdog();
+            }
+
+            rx_buffer[rx_count++ % 48] = REG_SIODATA32;
+
+        } else {
+
+            REG_SIODATA32 = 16;
+
+            REG_SIOCNT |= SIO_SO_HIGH;
+
+            ::platform->sleep(2);
+
+            REG_SIOCNT &= ~SIO_CLK_INT;
+            REG_SIOCNT &= ~SIO_SO_HIGH;
+            REG_SIOCNT |= SIO_START;
+
+            ::platform->sleep(2);
+
+            while (REG_SIOCNT & SIO_START) {
+                ::platform->feed_watchdog();
+            }
+
+            rx_buffer[rx_count++ % 48] = REG_SIODATA32;
+
+        }
+    }
+}
+
+
+std::optional<Platform::NetworkPeer::Message>
+Platform::NetworkPeer::poll_messages(u32 position)
+{
+    // TODO...
+    return {};
+}
+
+
+void Platform::NetworkPeer::disconnect()
+{
+    // TODO...
 }
 
 

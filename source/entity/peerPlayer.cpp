@@ -18,11 +18,14 @@ PeerPlayer::PeerPlayer()
 
 void PeerPlayer::sync(const net_event::PlayerInfo& info)
 {
-    if (distance(position_, info.position_.cast<Float>()) > 6) {
-        interp_offset_ = position_ - info.position_.cast<Float>();
-        position_ = info.position_.cast<Float>();
+    Vec2<Float> new_pos{static_cast<Float>(info.x_),
+                        static_cast<Float>(info.y_)};
+
+    if (distance(position_, new_pos) > 6) {
+        interp_offset_ = position_ - new_pos;
+        position_ = new_pos;
     } else {
-        position_ = info.position_.cast<Float>();
+        position_ = new_pos;
     }
 
     if (info.visible_) {
@@ -45,7 +48,8 @@ void PeerPlayer::sync(const net_event::PlayerInfo& info)
 
     sprite_.set_texture_index(info.texture_index_);
     sprite_.set_size(info.size_);
-    speed_ = info.speed_;
+    speed_.x = info.x_speed_;
+    speed_.y = info.y_speed_;
 
     switch (info.size_) {
     case Sprite::Size::w16_h32:
@@ -104,25 +108,25 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
     update_sprite_position();
 
     auto set_blaster_left = [&] {
-                                auto pos = position_ + interp_offset_;
-                                blaster_.set_texture_index(h_blaster);
-                                blaster_.set_flip({true, false});
-                                blaster_.set_position({pos.x - 12, pos.y + 1});
-                            };
+        auto pos = position_ + interp_offset_;
+        blaster_.set_texture_index(h_blaster);
+        blaster_.set_flip({true, false});
+        blaster_.set_position({pos.x - 12, pos.y + 1});
+    };
 
     auto set_blaster_right = [&] {
-                                 auto pos = position_ + interp_offset_;
-                                 blaster_.set_texture_index(h_blaster);
-                                 blaster_.set_flip({false, false});
-                                 blaster_.set_position({pos.x + 12, pos.y + 1});
-                             };
+        auto pos = position_ + interp_offset_;
+        blaster_.set_texture_index(h_blaster);
+        blaster_.set_flip({false, false});
+        blaster_.set_position({pos.x + 12, pos.y + 1});
+    };
 
     auto set_blaster_down = [&] {
-                                auto pos = position_ + interp_offset_;
-                                blaster_.set_texture_index(v_blaster);
-                                blaster_.set_flip({false, false});
-                                blaster_.set_position({pos.x - 3, pos.y + 1});
-                            };
+        auto pos = position_ + interp_offset_;
+        blaster_.set_texture_index(v_blaster);
+        blaster_.set_flip({false, false});
+        blaster_.set_position({pos.x - 3, pos.y + 1});
+    };
 
 
     switch (sprite_.get_size()) {

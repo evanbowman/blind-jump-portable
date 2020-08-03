@@ -40,7 +40,9 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
                                     }();
                          ++i) {
                         game.details().spawn<Item>(
-                                                   rng::sample<32>(pos, rng::utility_state), pf, Item::Type::heart);
+                            rng::sample<32>(pos, rng::utility_state),
+                            pf,
+                            Item::Type::heart);
                     }
 
                     game.transporter().set_position(pos);

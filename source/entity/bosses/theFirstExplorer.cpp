@@ -206,7 +206,8 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
     }
 
     case State::small_laser_prep: {
-        bullet_spread_gap_ = rng::choice<scattershot_inflection - 10>(rng::critical_state) + 5;
+        bullet_spread_gap_ =
+            rng::choice<scattershot_inflection - 10>(rng::critical_state) + 5;
         scattershot_target_ = game.player().get_position();
         state_ = State::small_laser;
         break;
@@ -239,7 +240,8 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             Angle angle;
             const bool avoid_region = rng::choice<3>(rng::critical_state);
             do {
-                angle = rng::choice<scattershot_inflection>(rng::critical_state);
+                angle =
+                    rng::choice<scattershot_inflection>(rng::critical_state);
             } while (abs(angle - bullet_spread_gap_) < 2 and not avoid_region);
 
             if (angle > scattershot_inflection / 2) {
@@ -289,7 +291,8 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<8>(game.player().get_position(), rng::critical_state),
+                rng::sample<8>(game.player().get_position(),
+                               rng::critical_state),
                 0.00028f);
             timer_ = 0;
             state_ = State::big_laser2;
@@ -303,7 +306,8 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(180)) {
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<12>(game.player().get_position(), rng::critical_state),
+                rng::sample<12>(game.player().get_position(),
+                                rng::critical_state),
                 0.00021f);
             timer_ = 0;
             state_ = State::big_laser3;
@@ -320,7 +324,8 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(180)) {
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<22>(game.player().get_position(), rng::critical_state),
+                rng::sample<22>(game.player().get_position(),
+                                rng::critical_state),
                 0.00015f);
             timer_ = 0;
             state_ = State::done_shooting;
@@ -371,14 +376,17 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                     chase_player_ = 0;
                 }
 
-                dir = ((static_cast<float>(rng::choice<359>(rng::critical_state))) / 360) *
+                dir = ((static_cast<float>(
+                           rng::choice<359>(rng::critical_state))) /
+                       360) *
                       INT16_MAX;
 
                 unit = {(float(cosine(dir)) / INT16_MAX),
                         (float(sine(dir)) / INT16_MAX)};
                 speed_ = 5.f * unit;
 
-                if ((not second_form() and rng::choice<3>(rng::critical_state) == 0) or
+                if ((not second_form() and
+                     rng::choice<3>(rng::critical_state) == 0) or
                     (chase_player_ and chase)) {
                     if (chase_player_) {
                         chase_player_--;

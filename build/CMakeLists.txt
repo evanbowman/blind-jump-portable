@@ -197,7 +197,7 @@ if(APPLE OR UNIX OR GAMEBOY_ADVANCE)
 
   set(SHARED_COMPILE_OPTIONS
     -g
-    -Os
+
     -Wall
     -Werror
     -pedantic

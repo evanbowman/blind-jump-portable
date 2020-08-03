@@ -12,20 +12,22 @@ void on_enemy_destroyed(Platform& pfrm,
 {
     game.camera().shake();
 
-    game.effects().spawn<Explosion>(rng::sample<18>(position,
-                                                    rng::utility_state));
+    game.effects().spawn<Explosion>(
+        rng::sample<18>(position, rng::utility_state));
 
     pfrm.speaker().play_sound("explosion1", 3, position);
 
 
     game.on_timeout(
         pfrm, milliseconds(60), [pos = position](Platform& pf, Game& game) {
-                                    game.effects().spawn<Explosion>(rng::sample<18>(pos, rng::utility_state));
+            game.effects().spawn<Explosion>(
+                rng::sample<18>(pos, rng::utility_state));
 
             // Chaining these functions may uses less of the game's resources
             game.on_timeout(
                 pf, milliseconds(120), [pos = pos](Platform&, Game& game) {
-                                           game.effects().spawn<Explosion>(rng::sample<18>(pos, rng::utility_state));
+                    game.effects().spawn<Explosion>(
+                        rng::sample<18>(pos, rng::utility_state));
                 });
         });
 
@@ -51,7 +53,10 @@ void on_enemy_destroyed(Platform& pfrm,
                 ++count;
             }
 
-            game.details().spawn<Item>(position, pfrm, allowed_item_drop[rng::choice(count, rng::critical_state)]);
+            game.details().spawn<Item>(
+                position,
+                pfrm,
+                allowed_item_drop[rng::choice(count, rng::critical_state)]);
         }
     }
 }

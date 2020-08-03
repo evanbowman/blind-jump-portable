@@ -35,13 +35,13 @@ public:
 
             reload_ = milliseconds(40 + shot_count_ * 10);
 
-            shield.shoot(
-                pfrm,
-                game,
-                shield.get_position(),
-                rng::sample<22>(shield.get_target(game).get_position(), rng::critical_state),
-                0.00019f - 0.00002f * shot_count_,
-                seconds(2) - milliseconds(550));
+            shield.shoot(pfrm,
+                         game,
+                         shield.get_position(),
+                         rng::sample<22>(shield.get_target(game).get_position(),
+                                         rng::critical_state),
+                         0.00019f - 0.00002f * shot_count_,
+                         seconds(2) - milliseconds(550));
 
             if (++shot_count_ == [&] { return 3; }()) {
                 shot_count_ = 0;
@@ -106,12 +106,13 @@ public:
 
             angle %= 360;
 
-            if (auto shot = shield.shoot(pfrm,
-                                         game,
-                                         shield.get_position(),
-                                         rng::sample<4>(target_, rng::critical_state),
-                                         0.00013f,
-                                         seconds(3) + milliseconds(500))) {
+            if (auto shot =
+                    shield.shoot(pfrm,
+                                 game,
+                                 shield.get_position(),
+                                 rng::sample<4>(target_, rng::critical_state),
+                                 0.00013f,
+                                 seconds(3) + milliseconds(500))) {
                 shot->rotate(angle);
             }
         }
@@ -357,9 +358,10 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 do {
 
                     if (tries++ > 0) {
-                        const s16 dir =
-                            ((static_cast<float>(rng::choice<359>(rng::critical_state))) / 360) *
-                            INT16_MAX;
+                        const s16 dir = ((static_cast<float>(rng::choice<359>(
+                                             rng::critical_state))) /
+                                         360) *
+                                        INT16_MAX;
 
                         unit = {(float(cosine(dir)) / INT16_MAX),
                                 (float(sine(dir)) / INT16_MAX)};
@@ -661,7 +663,8 @@ void GatekeeperShield::update(Platform& pfrm, Game& game, Microseconds dt)
     fade_color_anim_.advance(sprite_, dt);
 
     if (not detached_ and game.enemies().get<Gatekeeper>().empty()) {
-        this->detach(seconds(3) + milliseconds(rng::choice<900>(rng::utility_state)));
+        this->detach(seconds(3) +
+                     milliseconds(rng::choice<900>(rng::utility_state)));
     }
 
     if (detached_) {

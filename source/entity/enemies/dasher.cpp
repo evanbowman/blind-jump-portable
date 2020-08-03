@@ -154,12 +154,12 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::shot2;
 
             pf.speaker().play_sound("laser1", 4, position_);
-            this->shoot(pf,
-                        game,
-                        position_,
-                        rng::sample<8>(target.get_position(),
-                                       rng::critical_state),
-                        shot_speed(game));
+            this->shoot(
+                pf,
+                game,
+                position_,
+                rng::sample<8>(target.get_position(), rng::critical_state),
+                shot_speed(game));
         }
         break;
 
@@ -174,12 +174,12 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             }
 
             pf.speaker().play_sound("laser1", 4, position_);
-            this->shoot(pf,
-                        game,
-                        position_,
-                        rng::sample<16>(target.get_position(),
-                                        rng::critical_state),
-                        shot_speed(game));
+            this->shoot(
+                pf,
+                game,
+                position_,
+                rng::sample<16>(target.get_position(), rng::critical_state),
+                shot_speed(game));
         }
         break;
     }
@@ -190,12 +190,12 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::pause;
 
             pf.speaker().play_sound("laser1", 4, position_);
-            this->shoot(pf,
-                        game,
-                        position_,
-                        rng::sample<32>(target.get_position(),
-                                        rng::critical_state),
-                        shot_speed(game));
+            this->shoot(
+                pf,
+                game,
+                position_,
+                rng::sample<32>(target.get_position(), rng::critical_state),
+                shot_speed(game));
         }
         break;
 
@@ -204,7 +204,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(352);
 
             s16 dir =
-                ((static_cast<float>(rng::choice<359>(rng::critical_state))) / 360) * INT16_MAX;
+                ((static_cast<float>(rng::choice<359>(rng::critical_state))) /
+                 360) *
+                INT16_MAX;
 
             speed_.x = 5 * (float(cosine(dir)) / INT16_MAX);
             speed_.y = 5 * (float(sine(dir)) / INT16_MAX);
@@ -251,6 +253,11 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(150);
             state_ = State::idle;
             sprite_.set_texture_index(TextureMap::dasher_idle);
+
+            const auto int_pos = position_.cast<s16>();
+
+            net_event::transmit<net_event::EnemyStateSync>(
+                pf, (u8)state_, id(), int_pos.x, int_pos.y);
         }
         break;
     }
@@ -344,4 +351,13 @@ void Dasher::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(pf, game, position_, 2, item_drop_vec);
+}
+
+void Dasher::sync(const net_event::EnemyStateSync& s)
+{
+    timer_ = 0;
+    position_.x = s.x_;
+    position_.y = s.y_;
+    sprite_.set_position(position_);
+    state_ = State::idle;
 }

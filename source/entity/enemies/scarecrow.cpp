@@ -117,10 +117,10 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             } else {
                 sprite_.set_position(position_);
 
-                move_vec_ =
-                    direction(position_,
-                              rng::sample<32>(to_world_coord(anchor_), rng::critical_state)) *
-                    0.000005f;
+                move_vec_ = direction(position_,
+                                      rng::sample<32>(to_world_coord(anchor_),
+                                                      rng::critical_state)) *
+                            0.000005f;
 
                 bounce_timer_ = 0;
                 state_ = State::idle_airborne;
@@ -207,8 +207,9 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 const auto target_coord = to_tile_coord(target_pos.cast<s32>());
 
                 for (int i = 0; i < 200; ++i) {
-                    auto selected =
-                        to_tile_coord(rng::sample<64>(target_pos, rng::critical_state).cast<s32>());
+                    auto selected = to_tile_coord(
+                        rng::sample<64>(target_pos, rng::critical_state)
+                            .cast<s32>());
 
                     // This is just because the enemy is tall, and we do not
                     // want it to jump to a coordinate, such that its head is
@@ -314,12 +315,12 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             if (visible()) {
                 pfrm.speaker().play_sound("laser1", 4, position_);
-                this->shoot(pfrm,
-                            game,
-                            position_,
-                            rng::sample<8>(target.get_position(),
-                                           rng::critical_state),
-                            0.00010f);
+                this->shoot(
+                    pfrm,
+                    game,
+                    position_,
+                    rng::sample<8>(target.get_position(), rng::critical_state),
+                    0.00010f);
             }
             state_ = State::idle_wait;
         }

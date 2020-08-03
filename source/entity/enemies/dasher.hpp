@@ -4,6 +4,7 @@
 #include "enemy.hpp"
 #include "entity/entity.hpp"
 #include "graphics/sprite.hpp"
+#include "network_event.hpp"
 
 
 class LaserExplosion;
@@ -36,6 +37,8 @@ public:
     }
 
     void on_death(Platform&, Game&);
+
+    void sync(const net_event::EnemyStateSync&);
 
 private:
     enum class State {

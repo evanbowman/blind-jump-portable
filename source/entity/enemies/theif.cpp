@@ -6,8 +6,8 @@
 
 Theif::Theif(const Vec2<Float>& pos)
     : Enemy(Entity::Health(2), pos, {{16, 32}, {8, 16}}), timer_(0),
-      shadow_check_timer_(rng::choice<milliseconds(300)>(rng::utility_state)), float_amount_(0),
-      float_timer_(0), state_(State::sleep)
+      shadow_check_timer_(rng::choice<milliseconds(300)>(rng::utility_state)),
+      float_amount_(0), float_timer_(0), state_(State::sleep)
 {
     set_position(pos);
 

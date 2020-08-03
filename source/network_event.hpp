@@ -21,6 +21,7 @@ struct Header {
         sync_seed,
         new_level_sync_seed,
         new_level_idle,
+        item_taken,
     } message_type_;
 };
 
@@ -29,15 +30,33 @@ struct PlayerInfo {
     Header header_;
     Sprite::Size size_;
     u8 texture_index_;
-    Vec2<s16> position_;
-    Vec2<Float> speed_;
+    s16 x_;
+    s16 y_;
+    Float x_speed_;
+    Float y_speed_;
     u8 visible_ : 1;
     u8 weapon_drawn_ : 1;
+
+    static const auto mt = Header::MessageType::player_info;
 };
 
 
 struct PlayerDied {
     Header header_;
+
+    static const auto mt = Header::MessageType::player_died;
+};
+
+
+// Currently unused. In order to use ItemTaken, we'll need to keep entity ids
+// properly synchronized. If even one extra enemy bullet is spawned by one of
+// the peers, the ids will be out of sequence, rendering the ItemTaken message
+// ineffective, or worse.
+struct ItemTaken {
+    Header header_;
+    Entity::Id id_;
+
+    static const auto mt = Header::MessageType::item_taken;
 };
 
 
@@ -45,6 +64,8 @@ struct EnemyHealthChanged {
     Header header_;
     Entity::Id id_;
     Entity::Health new_health_;
+
+    static const auto mt = Header::MessageType::enemy_health_changed;
 };
 
 
@@ -52,13 +73,18 @@ struct EnemyStateSync {
     Header header_;
     u8 state_;
     Entity::Id id_;
-    Vec2<s16> position_;
+    s16 x_;
+    s16 y_;
+
+    static const auto mt = Header::MessageType::enemy_state_sync;
 };
 
 
 struct SyncSeed {
     Header header_;
     rng::Generator random_state_;
+
+    static const auto mt = Header::MessageType::sync_seed;
 };
 
 
@@ -68,18 +94,22 @@ struct SyncSeed {
 struct NewLevelSyncSeed {
     Header header_;
     rng::Generator random_state_;
+
+    static const auto mt = Header::MessageType::new_level_sync_seed;
 };
 
 
 struct NewLevelIdle {
     Header header_;
+
+    static const auto mt = Header::MessageType::new_level_idle;
 };
 
 
-template <typename T, Header::MessageType m, typename... Params>
+template <typename T, typename... Params>
 void transmit(Platform& pfrm, Params&&... params)
 {
-    T message{{m}, std::forward<Params>(params)...};
+    T message{{T::mt}, std::forward<Params>(params)...};
     pfrm.network_peer().send_message({(byte*)&message, sizeof message});
 }
 
@@ -109,6 +139,9 @@ public:
     {
     }
     virtual void receive(const PlayerDied&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const ItemTaken&, Platform&, Game&)
     {
     }
 };

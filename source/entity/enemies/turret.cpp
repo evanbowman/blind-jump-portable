@@ -150,13 +150,12 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > 0) {
             timer_ -= dt;
         } else {
-            if (pfrm.network_peer().is_host()) {
-                net_event::transmit<net_event::EnemyStateSync,
-                                    net_event::Header::enemy_state_sync>(pfrm,
-                                                                         (u8)state_,
-                                                                         id(),
-                                                                         position_.cast<s16>());
-            }
+            // FIXME: Turrets should be sync'd, but doing this here seems to
+            // break stuff.
+            // if (pfrm.network_peer().is_host()) {
+            //     net_event::transmit<net_event::EnemyStateSync>(
+            //         pfrm, (u8)state_, id(), position_.cast<s16>());
+            // }
 
             pfrm.speaker().play_sound("laser1", 4, position_);
 
@@ -272,5 +271,5 @@ void Turret::on_death(Platform& pf, Game& game)
 void Turret::sync(const net_event::EnemyStateSync& state, Game& game)
 {
     state_ = static_cast<State>(state.state_);
-    timer_ = reload(game.level());
+    timer_ = reload(game.level()) - milliseconds(80);
 }

@@ -23,6 +23,7 @@ void Item::on_collision(Platform& pf, Game&, Player&)
         return;
     }
     Entity::kill();
+
     pf.sleep(5);
 }
 

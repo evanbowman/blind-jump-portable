@@ -188,7 +188,7 @@ public:
                   }())
     {
         window_.setVerticalSyncEnabled(true);
-        window_.setMouseCursorVisible(false);
+        // window_.setMouseCursorVisible(false);
 
         window_size_ = {(u32)resolution.x * window_scale_,
                         (u32)resolution.y * window_scale_};
@@ -1168,10 +1168,6 @@ void Platform::Speaker::play_sound(const char* name,
         sound.setRelativeToListener(static_cast<bool>(position));
 
         if (position) {
-            std::cout << position->x << ", " << position->y << std::endl;
-            auto listener_pos = sf::Listener::getPosition();
-            std::cout << "listener: " << listener_pos.x << ", "
-                      << listener_pos.z << std::endl;
             sound.setAttenuation(0.2f);
         } else {
             sound.setAttenuation(0.f);
@@ -1622,9 +1618,26 @@ Platform::NetworkPeer::NetworkPeer() : impl_(nullptr)
 }
 
 
+void Platform::NetworkPeer::disconnect()
+{
+    auto impl = (NetworkPeerImpl*)impl_;
+    impl->socket_.disconnect();
+
+    if (is_connected()) {
+        error(*::platform, "disconnect failed?!");
+    }
+}
+
+
 bool Platform::NetworkPeer::is_host() const
 {
     return ((NetworkPeerImpl*)impl_)->is_host_;
+}
+
+
+bool Platform::NetworkPeer::supported_by_device()
+{
+    return true;
 }
 
 

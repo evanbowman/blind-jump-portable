@@ -423,6 +423,8 @@ public:
         void connect(const char* peer);
         void listen();
 
+        void disconnect();
+
         bool is_connected() const;
         bool is_host() const;
 
@@ -436,6 +438,10 @@ public:
         void update();
 
         std::optional<Message> poll_messages(u32 position);
+
+        // Will return false if the platform does not support networked
+        // multiplayer.
+        static bool supported_by_device();
 
     private:
         void* impl_;

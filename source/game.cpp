@@ -450,10 +450,10 @@ static void draw_starfield(Platform& pfrm)
     for (int x = 0; x < 32; ++x) {
         for (int y = 0; y < 32; ++y) {
             pfrm.set_tile(Layer::background, x, y, [] {
-                                                       if (rng::choice<9>(rng::critical_state)) {
+                if (rng::choice<9>(rng::critical_state)) {
                     return star_empty;
                 } else {
-                                                           if (rng::choice<2>(rng::critical_state)) {
+                    if (rng::choice<2>(rng::critical_state)) {
                         return star_1;
                     } else {
                         return star_2;
@@ -710,7 +710,7 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
         }
     } else {
         tiles_.for_each([&](Tile& t, int, int) {
-                            t = Tile(rng::choice<int(Tile::sand)>(rng::critical_state));
+            t = Tile(rng::choice<int(Tile::sand)>(rng::critical_state));
         });
 
         for (int i = 0; i < 2; ++i) {
@@ -835,20 +835,18 @@ void add_scavenger_ship(Level level,
 
     if (not right_edge_locations.empty() and not left_edge_locations.empty()) {
         if (rng::choice<2>(rng::critical_state)) {
-            place_ship(
-                       right_edge_locations[rng::choice(right_edge_locations.size(),
-                                                        rng::critical_state)],
-                1);
+            place_ship(right_edge_locations[rng::choice(
+                           right_edge_locations.size(), rng::critical_state)],
+                       1);
         } else {
-            place_ship(
-                       left_edge_locations[rng::choice(left_edge_locations.size(),
-                                                       rng::critical_state)],
-                -1);
+            place_ship(left_edge_locations[rng::choice(
+                           left_edge_locations.size(), rng::critical_state)],
+                       -1);
         }
     } else if (not right_edge_locations.empty()) {
-        place_ship(
-                   right_edge_locations[rng::choice(right_edge_locations.size(),
-                                                    rng::critical_state)], 1);
+        place_ship(right_edge_locations[rng::choice(right_edge_locations.size(),
+                                                    rng::critical_state)],
+                   1);
     } else if (not left_edge_locations.empty()) {
         place_ship(left_edge_locations[rng::choice(left_edge_locations.size(),
                                                    rng::critical_state)],
@@ -970,8 +968,9 @@ COLD void Game::regenerate_map(Platform& pfrm)
             case Tile::ledge:
                 tiles_.set_tile(x,
                                 y,
-                                (rng::choice<2>(rng::critical_state)) ? Tile::grass_ledge
-                                                   : Tile::grass_ledge_vines);
+                                (rng::choice<2>(rng::critical_state))
+                                    ? Tile::grass_ledge
+                                    : Tile::grass_ledge_vines);
                 grass_overlay.set_tile(x, y, Tile::none);
                 break;
 
@@ -1212,7 +1211,8 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     Buffer<EnemyInfo*, 100> distribution;
 
     while (not distribution.full()) {
-        auto selected = &info[rng::choice<sizeof info / sizeof(EnemyInfo)>(rng::critical_state)];
+        auto selected = &info[rng::choice<sizeof info / sizeof(EnemyInfo)>(
+            rng::critical_state)];
 
         if (selected->min_level_ > std::max(Level(0), game.level()) or
             selected->max_level_ < game.level()) {
@@ -1225,7 +1225,8 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     int i = 0;
     while (i < spawn_count) {
 
-        auto choice = distribution[rng::choice<distribution.capacity()>(rng::critical_state)];
+        auto choice = distribution[rng::choice<distribution.capacity()>(
+            rng::critical_state)];
 
         if (choice->max_allowed_ == 0) {
             continue;
@@ -1359,10 +1360,11 @@ spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         }
     }
 
-    spawn_entity<ItemChest>(pfrm,
-                            free_spots,
-                            game.details(),
-                            distribution[rng::choice(distribution.size(), rng::critical_state)]);
+    spawn_entity<ItemChest>(
+        pfrm,
+        free_spots,
+        game.details(),
+        distribution[rng::choice(distribution.size(), rng::critical_state)]);
 }
 
 
@@ -1434,7 +1436,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
             const auto target = world_coord(*farthest);
             transporter_.set_position(
-                                      rng::sample<3>({target.x, target.y + 16}, rng::critical_state));
+                rng::sample<3>({target.x, target.y + 16}, rng::critical_state));
             free_spots.erase(farthest);
 
             return true;
@@ -1537,8 +1539,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                     return;
                 }
             }
-            if (
-                rng::choice<3>(rng::critical_state)) {
+            if (rng::choice<3>(rng::critical_state)) {
                 MapCoord c{x, y};
 
                 // NOTE: We want hearts to become less available at higher
@@ -1555,7 +1556,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
 
                 if (not details_.spawn<Item>(world_coord(c), pfrm, [&] {
-                                                                       if (rng::choice(heart_chance, rng::critical_state)) {
+                        if (rng::choice(heart_chance, rng::critical_state)) {
                             return Item::Type::coin;
                         } else {
                             return Item::Type::heart;

@@ -20,7 +20,7 @@ public:
     Entity(Health health);
 
 
-    Entity(Entity&) = delete;
+    // Entity(Entity&) = delete;
 
 
     void update(Platform&, Game&, Microseconds);

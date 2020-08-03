@@ -2,6 +2,11 @@
 #include "platform/platform.hpp"
 
 
+extern "C" {
+void* memcpy(void* destination, const void* source, size_t num);
+}
+
+
 namespace net_event {
 
 
@@ -18,6 +23,14 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             EnemyStateSync s;
             memcpy(&s, message->data_, sizeof s);
             listener.receive(s, pfrm, game);
+            break;
+        }
+
+        case Header::item_taken: {
+            read_position += sizeof(ItemTaken);
+            ItemTaken t;
+            memcpy(&t, message->data_, sizeof t);
+            listener.receive(t, pfrm, game);
             break;
         }
 
@@ -38,8 +51,8 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
         }
 
         case net_event::Header::enemy_health_changed: {
-            read_position += sizeof(net_event::EnemyHealthChanged);
-            net_event::EnemyHealthChanged ehc;
+            read_position += sizeof(EnemyHealthChanged);
+            EnemyHealthChanged ehc;
             memcpy(&ehc, message->data_, sizeof ehc);
             listener.receive(ehc, pfrm, game);
             break;

@@ -9,7 +9,10 @@ namespace rng {
 using Value = s32;
 using Generator = Value;
 
-
+// NOTE: This state should be used for level generation, and for the internal
+// state machines for enemies. This state needs to be tightly synchronized
+// between multiplayer peers, so do not use this generator for visual effects,
+// game state changes only!
 extern Generator critical_state;
 
 // NOTE: use the utility state whenever you need a random value, and you don't
