@@ -26,7 +26,7 @@ void FirstExplorerBigLaser::update(Platform& pf, Game& game, Microseconds dt)
     if (flicker_timer_ > milliseconds(20)) {
         flicker_timer_ = 0;
 
-        switch (rng::choice<3>()) {
+        switch (rng::choice<3>(rng::utility_state)) {
         case 0:
             sprite_.set_mix({});
             break;

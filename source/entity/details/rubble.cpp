@@ -12,7 +12,7 @@ Rubble::Rubble(const Vec2<Float>& pos)
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 0});
 
-    if (rng::choice<2>()) {
+    if (rng::choice<2>(rng::utility_state)) {
         sprite_.set_flip({true, false});
     }
 }

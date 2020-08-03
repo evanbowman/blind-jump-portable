@@ -628,7 +628,7 @@ void Blaster::update(Platform& pf, Game& game, Microseconds dt, Cardinal dir)
 
 void Player::footstep(Platform& pf)
 {
-    switch (rng::choice<4>()) {
+    switch (rng::choice<4>(rng::utility_state)) {
     case 0:
         pf.speaker().play_sound("footstep1", 0);
         break;

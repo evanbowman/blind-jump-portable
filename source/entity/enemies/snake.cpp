@@ -137,8 +137,8 @@ void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
                 dir_ = Dir::left;
             }
         } else {
-            if (rng::choice<5>() == 0) {
-                dir_ = static_cast<Dir>(rng::choice<4>());
+            if (rng::choice<5>(rng::critical_state) == 0) {
+                dir_ = static_cast<Dir>(rng::choice<4>(rng::critical_state));
             }
         }
 

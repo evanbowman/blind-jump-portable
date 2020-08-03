@@ -121,7 +121,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
             if (manhattan_length(target.get_position(), position_) <
                     std::min(screen_size.x, screen_size.y) and
-                rng::choice<2>()) {
+                rng::choice<2>(rng::critical_state)) {
                 state_ = State::shoot_begin;
                 sprite_.set_texture_index(TextureMap::dasher_weapon1);
             } else {
@@ -157,7 +157,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             this->shoot(pf,
                         game,
                         position_,
-                        rng::sample<8>(target.get_position()),
+                        rng::sample<8>(target.get_position(),
+                                       rng::critical_state),
                         shot_speed(game));
         }
         break;
@@ -176,7 +177,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             this->shoot(pf,
                         game,
                         position_,
-                        rng::sample<16>(target.get_position()),
+                        rng::sample<16>(target.get_position(),
+                                        rng::critical_state),
                         shot_speed(game));
         }
         break;
@@ -191,7 +193,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             this->shoot(pf,
                         game,
                         position_,
-                        rng::sample<32>(target.get_position()),
+                        rng::sample<32>(target.get_position(),
+                                        rng::critical_state),
                         shot_speed(game));
         }
         break;
@@ -201,7 +204,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(352);
 
             s16 dir =
-                ((static_cast<float>(rng::choice<359>())) / 360) * INT16_MAX;
+                ((static_cast<float>(rng::choice<359>(rng::critical_state))) / 360) * INT16_MAX;
 
             speed_.x = 5 * (float(cosine(dir)) / INT16_MAX);
             speed_.y = 5 * (float(sine(dir)) / INT16_MAX);

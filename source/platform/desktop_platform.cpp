@@ -1555,7 +1555,7 @@ void start(Platform&);
 
 int main()
 {
-    rng::global_state = time(nullptr);
+    rng::critical_state = time(nullptr);
 
     Platform pf;
     start(pf);

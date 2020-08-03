@@ -1005,7 +1005,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         // In multiplayer mode, we need to synchronize the random number
         // engine. In single-player mode, let's advance the rng for each step,
         // to add unpredictability
-        rng::get();
+        rng::get(rng::critical_state);
     }
 
     if (game.persistent_data().settings_.show_fps_) {
@@ -1826,7 +1826,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 }
                 std::sort(game.highscores().rbegin(), game.highscores().rend());
 
-                rng::get();
+                rng::get(rng::critical_state);
 
                 print_metric(
                     *score_, locale_string(LocaleString::score), game.score());
@@ -1842,7 +1842,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                     100 * items_collected_percentage(game.inventory()),
                     locale_string(LocaleString::items_collected_suffix));
 
-                game.persistent_data().seed_ = rng::global_state;
+                game.persistent_data().seed_ = rng::critical_state;
                 game.inventory().remove_non_persistent();
 
                 PersistentData& data = game.persistent_data().reset(pfrm);
@@ -3117,11 +3117,11 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         // distributed, and we don't want the clouds to bunch up too much.
         if (cloud_lane_ == 0) {
             cloud_lane_ = 1;
-            const auto offset = rng::choice(swidth / 2) + 32;
+            const auto offset = rng::choice(swidth / 2, rng::critical_state) + 32;
             game.details().spawn<CutsceneCloud>(
                 Vec2<Float>{Float(offset), -80});
         } else {
-            const auto offset = rng::choice(swidth / 2) + swidth / 2 + 32;
+            const auto offset = rng::choice(swidth / 2, rng::critical_state) + swidth / 2 + 32;
             game.details().spawn<CutsceneCloud>(
                 Vec2<Float>{Float(offset), -80});
             cloud_lane_ = 0;
@@ -3179,7 +3179,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             scene_ = Scene::fade_in;
 
-            rng::global_state = 2022;
+            rng::critical_state = 2022;
 
             pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, true, true);
 
@@ -4303,7 +4303,7 @@ void NewLevelIdleState::receive(const net_event::SyncSeed& sync_seed,
 {
     info(pfrm, "received seed value");
     if (not pfrm.network_peer().is_host()) {
-        rng::global_state = sync_seed.random_state_;
+        rng::critical_state = sync_seed.random_state_;
         ready_ = true;
     }
 }
@@ -4333,7 +4333,7 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (peer_ready_ and pfrm.network_peer().is_host()) {
             net_event::SyncSeed sync_seed;
             sync_seed.header_.message_type_ = net_event::Header::sync_seed;
-            sync_seed.random_state_ = rng::global_state;
+            sync_seed.random_state_ = rng::critical_state;
             pfrm.network_peer().send_message(
                 {(byte*)&sync_seed, sizeof sync_seed});
             info(pfrm, "sent seed to peer");

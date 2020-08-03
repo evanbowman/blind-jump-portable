@@ -8,7 +8,7 @@
 Drone::Drone(const Vec2<Float>& pos)
     : Enemy(Entity::Health(4), pos, {{16, 16}, {8, 13}}), state_{State::sleep},
       timer_(0),
-      shadow_check_timer_(milliseconds(500) + rng::choice<milliseconds(300)>())
+      shadow_check_timer_(milliseconds(500) + rng::choice<milliseconds(300)>(rng::utility_state))
 {
     sprite_.set_position(pos);
     sprite_.set_size(Sprite::Size::w16_h32);
@@ -87,7 +87,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             state_ = State::dodge1;
             const auto player_pos = target.get_position();
             step_vector_ =
-                direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
+                direction(position_, rng::sample<64>(player_pos,
+                                                     rng::critical_state)) * 0.000055f;
         }
         break;
 
@@ -107,7 +108,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             state_ = State::dodge2;
             const auto player_pos = target.get_position();
             step_vector_ =
-                direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
+                direction(position_, rng::sample<64>(player_pos,
+                                                     rng::critical_state)) * 0.000055f;
         }
         break;
 
@@ -127,7 +129,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             state_ = State::dodge3;
             const auto player_pos = target.get_position();
             step_vector_ =
-                direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
+                direction(position_, rng::sample<64>(player_pos,
+                                                     rng::critical_state)) * 0.000055f;
         }
         break;
 
