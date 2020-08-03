@@ -302,7 +302,7 @@ void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
 
     drop_timer_ -= dt;
     if (drop_timer_ < 0) {
-        if (visible()) {
+        if (visible() or pfrm.network_peer().is_connected()) {
             drop_timer_ = tail_drop_time;
             if (length(game.enemies().get<Sinkhole>()) == 0) {
                 game.enemies().spawn<Sinkhole>(position_);

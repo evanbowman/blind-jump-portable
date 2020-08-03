@@ -201,6 +201,7 @@ HOT void Game::render(Platform& pfrm)
 
     if (peer_player_) {
         display_buffer.push_back(&peer_player_->get_sprite());
+        display_buffer.push_back(&peer_player_->get_blaster_sprite());
     }
 
     enemies_.transform(show_sprites);

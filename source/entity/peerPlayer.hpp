@@ -29,6 +29,11 @@ public:
         return shadow_;
     }
 
+    const Sprite& get_blaster_sprite()
+    {
+        return blaster_;
+    }
+
 private:
     void update_sprite_position();
 
@@ -36,4 +41,5 @@ private:
     Sprite shadow_;
     Vec2<Float> interp_offset_;
     Microseconds anim_timer_;
+    Sprite blaster_;
 };

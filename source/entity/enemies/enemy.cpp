@@ -5,7 +5,18 @@
 const Entity& Enemy::get_target(Game& game)
 {
     if (not is_allied_) {
-        return game.player();
+        if (game.peer()) {
+            if (manhattan_length(position_, game.player().get_position()) >
+                manhattan_length(position_, game.peer()->get_position())) {
+
+                return *game.peer();
+            } else {
+                return game.player();
+            }
+        } else {
+            return game.player();
+        }
+
     } else {
         int dist = 1000000;
         Entity* result = nullptr;

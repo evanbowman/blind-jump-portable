@@ -10,15 +10,17 @@ PeerPlayer::PeerPlayer()
     shadow_.set_size(Sprite::Size::w16_h32);
     shadow_.set_alpha(Sprite::Alpha::translucent);
     interp_offset_ = {0.f, 0.f};
+    blaster_.set_origin({8, 8});
+    blaster_.set_size(Sprite::Size::w16_h32);
+    blaster_.set_texture_index(h_blaster);
 }
 
-#include <iostream>
+
 void PeerPlayer::sync(const net_event::PlayerInfo& info)
 {
     if (distance(position_, info.position_.cast<Float>()) > 6) {
         interp_offset_ = position_ - info.position_.cast<Float>();
         position_ = info.position_.cast<Float>();
-        std::cout << interp_offset_.x << interp_offset_.y << std::endl;
     } else {
         position_ = info.position_.cast<Float>();
     }
@@ -29,6 +31,12 @@ void PeerPlayer::sync(const net_event::PlayerInfo& info)
     } else {
         sprite_.set_alpha(Sprite::Alpha::transparent);
         shadow_.set_alpha(Sprite::Alpha::transparent);
+    }
+
+    if (info.weapon_drawn_) {
+        blaster_.set_alpha(Sprite::Alpha::opaque);
+    } else {
+        blaster_.set_alpha(Sprite::Alpha::transparent);
     }
 
     update_sprite_position();
@@ -84,13 +92,62 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
 
     auto texture_index = sprite_.get_texture_index();
 
+    Vec2<Float> new_pos{
+        position_.x - ((speed_.x) * dt * MOVEMENT_RATE_CONSTANT),
+        position_.y - ((speed_.y) * dt * MOVEMENT_RATE_CONSTANT)};
+
+    interp_offset_ =
+        interpolate(Vec2<Float>{0.f, 0.f}, interp_offset_, dt * 0.00004f);
+
+    set_position(new_pos);
+
+    update_sprite_position();
+
+    auto set_blaster_left = [&] {
+                                auto pos = position_ + interp_offset_;
+                                blaster_.set_texture_index(h_blaster);
+                                blaster_.set_flip({true, false});
+                                blaster_.set_position({pos.x - 12, pos.y + 1});
+                            };
+
+    auto set_blaster_right = [&] {
+                                 auto pos = position_ + interp_offset_;
+                                 blaster_.set_texture_index(h_blaster);
+                                 blaster_.set_flip({false, false});
+                                 blaster_.set_position({pos.x + 12, pos.y + 1});
+                             };
+
+    auto set_blaster_down = [&] {
+                                auto pos = position_ + interp_offset_;
+                                blaster_.set_texture_index(v_blaster);
+                                blaster_.set_flip({false, false});
+                                blaster_.set_position({pos.x - 3, pos.y + 1});
+                            };
+
+
     switch (sprite_.get_size()) {
     case Sprite::Size::w16_h32:
+        if (texture_index >= player_walk_up and
+            texture_index < player_walk_up + 5) {
+        }
+        if (texture_index == player_still_down) {
+            set_blaster_down();
+        }
+        if (texture_index >= player_walk_down and
+            texture_index < player_walk_down + 5) {
+
+            set_blaster_down();
+        }
         break;
 
     case Sprite::Size::w32_h32:
+        if (texture_index == player_still_right) {
+            set_blaster_right();
+        }
         if (texture_index >= player_walk_right and
-            texture_index < player_walk_right + 5) {
+            texture_index < player_walk_right + 6) {
+
+            set_blaster_right();
 
             anim_timer_ -= dt;
             if (anim_timer_ <= 0) {
@@ -103,8 +160,13 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
                 sprite_.set_texture_index(texture_index);
             }
         }
+        if (texture_index == player_still_left) {
+            set_blaster_left();
+        }
         if (texture_index >= player_walk_left and
-            texture_index < player_walk_left + 5) {
+            texture_index < player_walk_left + 6) {
+
+            set_blaster_left();
 
             anim_timer_ -= dt;
             if (anim_timer_ <= 0) {
@@ -119,16 +181,4 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         break;
     }
-
-
-    Vec2<Float> new_pos{
-        position_.x - ((speed_.x) * dt * MOVEMENT_RATE_CONSTANT),
-        position_.y - ((speed_.y) * dt * MOVEMENT_RATE_CONSTANT)};
-
-    interp_offset_ =
-        interpolate(Vec2<Float>{0.f, 0.f}, interp_offset_, dt * 0.00004f);
-
-    set_position(new_pos);
-
-    update_sprite_position();
 }

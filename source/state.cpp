@@ -950,7 +950,7 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
     // realistically, we can only transmit player data a few times per
     // second. TODO: add methods for querying the uplink performance limits from
     // the Platform class, rather than having various game-specific hacks here.
-    static const auto player_refresh_rate = seconds(1) / 8;
+    static const auto player_refresh_rate = seconds(1) / 6;
 
     static auto update_counter = player_refresh_rate;
 

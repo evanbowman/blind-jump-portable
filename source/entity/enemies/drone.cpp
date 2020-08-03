@@ -71,16 +71,15 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         break;
 
-    case State::inactive:
-        if (visible()) {
-            timer_ = 0;
-            const auto screen_size = pfrm.screen().size();
-            if (manhattan_length(target.get_position(), position_) <
-                std::min(screen_size.x, screen_size.y)) {
-                state_ = State::idle1;
-            }
+    case State::inactive: {
+        timer_ = 0;
+        const auto screen_size = pfrm.screen().size();
+        if (manhattan_length(target.get_position(), position_) <
+            std::min(screen_size.x, screen_size.y)) {
+            state_ = State::idle1;
         }
         break;
+    }
 
     case State::idle1:
         if (timer_ > milliseconds(700)) {

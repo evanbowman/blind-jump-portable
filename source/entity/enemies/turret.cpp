@@ -125,7 +125,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case State::closed:
-        if (visible()) {
+        if (visible() or pfrm.network_peer().is_connected()) {
             if (manhattan_length(target_pos, position_) <
                 std::min(screen_size.x, screen_size.y) / 2 + 15) {
                 state_ = State::opening;

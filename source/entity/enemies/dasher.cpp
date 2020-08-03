@@ -105,7 +105,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::inactive: {
-        if (visible()) {
+        if (visible() or pf.network_peer().is_connected()) {
             timer_ = 0;
             if (manhattan_length(target.get_position(), position_) <
                 std::min(screen_size.x, screen_size.y)) {
