@@ -63,22 +63,22 @@ public:
     {
     }
 
-    virtual void receive(const PlayerInfo&)
+    virtual void receive(const PlayerInfo&, Platform&, Game&)
     {
     }
-    virtual void receive(const SyncSeed&)
+    virtual void receive(const SyncSeed&, Platform&, Game&)
     {
     }
-    virtual void receive(const NewLevelIdle&)
+    virtual void receive(const NewLevelIdle&, Platform&, Game&)
     {
     }
-    virtual void receive(const EnemyHealthChanged&)
+    virtual void receive(const EnemyHealthChanged&, Platform&, Game&)
     {
     }
 };
 
 
-inline void poll_messages(Platform& pfrm, Listener& l);
+void poll_messages(Platform& pfrm, Game& game, Listener& l);
 
 
 } // namespace net_event

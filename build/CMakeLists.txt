@@ -66,6 +66,7 @@ set(SOURCES
   ${SOURCE_DIR}/number/random.cpp
   ${SOURCE_DIR}/graphics/view.cpp
   ${SOURCE_DIR}/entity/entity.cpp
+  ${SOURCE_DIR}/network_event.cpp
   ${SOURCE_DIR}/entity/player.cpp
   ${SOURCE_DIR}/localization.cpp
   ${SOURCE_DIR}/inventory.cpp

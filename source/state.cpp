@@ -40,7 +40,7 @@ bool within_view_frustum(const Platform::Screen& screen,
 static Bitmatrix<TileMap::width, TileMap::height> visited;
 
 
-class OverworldState : public State {
+class OverworldState : public State, public net_event::Listener {
 public:
     OverworldState(Game& game, bool camera_tracking)
         : camera_tracking_(game.persistent_data().settings_.dynamic_camera_ and
@@ -62,6 +62,10 @@ public:
         exit,
         hidden
     } notification_status = NotificationStatus::hidden;
+
+    void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
+    void receive(const net_event::EnemyHealthChanged&, Platform&, Game&) override;
+
 
 private:
     void multiplayer_sync(Platform& pfrm, Game& game, Microseconds delta);
@@ -799,13 +803,18 @@ private:
 };
 
 
-class NewLevelIdleState : public State {
+class NewLevelIdleState : public State, public net_event::Listener {
 public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    void receive(const net_event::NewLevelIdle&, Platform&, Game&) override;
+    void receive(const net_event::SyncSeed&, Platform&, Game&) override;
+
 
 private:
     Microseconds timer_ = 0;
     bool peer_ready_ = false;
+    bool ready_ = false;
 };
 
 
@@ -908,6 +917,28 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
+void OverworldState::receive(const net_event::PlayerInfo& p, Platform&, Game& game)
+{
+    if (game.peer()) {
+        game.peer()->sync(p);
+    }
+}
+
+
+void OverworldState::receive(const net_event::EnemyHealthChanged& hc,
+                             Platform&,
+                             Game& game)
+{
+    game.enemies().transform([&](auto& buf) {
+        for (auto& e : buf) {
+            if (e->id() == hc.id_) {
+                e->set_health(std::min(e->get_health(), hc.new_health_));
+            }
+        }
+    });
+}
+
+
 void OverworldState::multiplayer_sync(Platform& pfrm,
                                       Game& game,
                                       Microseconds delta)
@@ -937,46 +968,8 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
         pfrm.network_peer().send_message({(byte*)&info, sizeof info});
     }
 
-    u32 read_position = 0;
-    while (auto message = pfrm.network_peer().poll_messages(read_position)) {
-        net_event::Header header;
-        memcpy(&header, message->data_, sizeof header);
 
-        switch (header.message_type_) {
-        case net_event::Header::enemy_health_changed: {
-            read_position += sizeof(net_event::EnemyHealthChanged);
-            net_event::EnemyHealthChanged ehc;
-            memcpy(&ehc, message->data_, sizeof ehc);
-            game.enemies().transform([&](auto& buf) {
-                for (auto& e : buf) {
-                    if (e->id() == ehc.id_) {
-                        e->set_health(
-                            std::min(e->get_health(), ehc.new_health_));
-                    }
-                }
-            });
-            break;
-        }
-
-        case net_event::Header::player_info: {
-            read_position += sizeof(net_event::PlayerInfo);
-            net_event::PlayerInfo info;
-            memcpy(&info, message->data_, sizeof info);
-            game.peer()->sync(info);
-            break;
-        }
-
-        case net_event::Header::new_level_idle: {
-            read_position += sizeof(net_event::NewLevelIdle);
-            break;
-        }
-
-        case net_event::Header::sync_seed: {
-            read_position += sizeof(net_event::SyncSeed);
-            break;
-        }
-        }
-    }
+    net_event::poll_messages(pfrm, game, *this);
 
 
     game.peer()->update(pfrm, game, delta);
@@ -4285,6 +4278,25 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void NewLevelIdleState::receive(const net_event::NewLevelIdle&,
+                                Platform& pfrm, Game&)
+{
+    info(pfrm, "got new level idle msg");
+    peer_ready_ = true;
+}
+
+
+void NewLevelIdleState::receive(const net_event::SyncSeed& sync_seed,
+                                Platform& pfrm, Game&)
+{
+    info(pfrm, "received seed value");
+    if (not pfrm.network_peer().is_host()) {
+        rng::global_state = sync_seed.random_state_;
+        ready_ = true;
+    }
+}
+
+
 StatePtr
 NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
@@ -4295,73 +4307,37 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
     // the other peer. Once the other peer receives the seed, it can continue to
     // the next level.
 
-    const bool ready = [&] {
-        if (pfrm.network_peer().is_connected()) {
-            if (not peer_ready_) {
-                timer_ += delta;
-                if (timer_ > seconds(1)) {
-                    info(pfrm, "transmit new level idle msg");
-                    timer_ -= seconds(1);
+    if (pfrm.network_peer().is_connected()) {
+        if (not peer_ready_) {
+            timer_ += delta;
+            if (timer_ > seconds(1)) {
+                info(pfrm, "transmit new level idle msg");
+                timer_ -= seconds(1);
 
-                    net_event::NewLevelIdle idle_msg;
-                    idle_msg.header_.message_type_ =
-                        net_event::Header::new_level_idle;
-                    pfrm.network_peer().send_message(
-                        {(byte*)&idle_msg, sizeof idle_msg});
-                }
-            }
-            if (peer_ready_ and pfrm.network_peer().is_host()) {
-                net_event::SyncSeed sync_seed;
-                sync_seed.header_.message_type_ = net_event::Header::sync_seed;
-                sync_seed.random_state_ = rng::global_state;
+                net_event::NewLevelIdle idle_msg;
+                idle_msg.header_.message_type_ =
+                    net_event::Header::new_level_idle;
                 pfrm.network_peer().send_message(
-                    {(byte*)&sync_seed, sizeof sync_seed});
-                info(pfrm, "sent seed to peer");
-                return true;
+                                                 {(byte*)&idle_msg, sizeof idle_msg});
             }
-
-            u32 read_position = 0;
-            while (auto message =
-                       pfrm.network_peer().poll_messages(read_position)) {
-                net_event::Header header;
-                memcpy(&header, message->data_, sizeof header);
-
-                switch (header.message_type_) {
-                case net_event::Header::enemy_health_changed:
-                    read_position += sizeof(net_event::EnemyHealthChanged);
-                    break;
-
-                case net_event::Header::player_info:
-                    read_position += sizeof(net_event::PlayerInfo);
-                    break;
-
-                case net_event::Header::new_level_idle:
-                    info(pfrm, "got new level idle msg");
-                    read_position += sizeof(net_event::NewLevelIdle);
-                    peer_ready_ = true;
-                    break;
-
-                case net_event::Header::sync_seed: {
-                    info(pfrm, "received seed value");
-                    read_position += sizeof(net_event::SyncSeed);
-                    if (not pfrm.network_peer().is_host()) {
-                        net_event::SyncSeed sync_seed;
-                        memcpy(&sync_seed, message->data_, sizeof sync_seed);
-                        rng::global_state = sync_seed.random_state_;
-                        return true;
-                    }
-                    break;
-                }
-                }
-            }
-
-            return false;
-        } else {
-            return true;
         }
-    }();
+        if (peer_ready_ and pfrm.network_peer().is_host()) {
+            net_event::SyncSeed sync_seed;
+            sync_seed.header_.message_type_ = net_event::Header::sync_seed;
+            sync_seed.random_state_ = rng::global_state;
+            pfrm.network_peer().send_message(
+                                             {(byte*)&sync_seed, sizeof sync_seed});
+            info(pfrm, "sent seed to peer");
+            ready_ = true;
+        }
 
-    if (ready) {
+        net_event::poll_messages(pfrm, game, *this);
+
+    } else {
+        ready_ = true;
+    }
+
+    if (ready_) {
         Level next_level = game.level() + 1;
 
         // backdoor for debugging purposes.
