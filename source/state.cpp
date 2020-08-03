@@ -4308,18 +4308,16 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
     // the next level.
 
     if (pfrm.network_peer().is_connected()) {
-        if (not peer_ready_) {
-            timer_ += delta;
-            if (timer_ > seconds(1)) {
-                info(pfrm, "transmit new level idle msg");
-                timer_ -= seconds(1);
+        timer_ += delta;
+        if (timer_ > seconds(1)) {
+            info(pfrm, "transmit new level idle msg");
+            timer_ -= seconds(1);
 
-                net_event::NewLevelIdle idle_msg;
-                idle_msg.header_.message_type_ =
-                    net_event::Header::new_level_idle;
-                pfrm.network_peer().send_message(
-                                                 {(byte*)&idle_msg, sizeof idle_msg});
-            }
+            net_event::NewLevelIdle idle_msg;
+            idle_msg.header_.message_type_ =
+                net_event::Header::new_level_idle;
+            pfrm.network_peer().send_message(
+                                             {(byte*)&idle_msg, sizeof idle_msg});
         }
         if (peer_ready_ and pfrm.network_peer().is_host()) {
             net_event::SyncSeed sync_seed;
