@@ -280,7 +280,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
 void Dasher::injured(Platform& pf, Game& game, Health amount)
 {
-    debit_health(amount);
+    debit_health(pf, amount);
 
     const auto c = current_zone(game).injury_glow_color_;
 

@@ -536,7 +536,7 @@ void Gatekeeper::injured(Platform& pfrm, Game& game, Health amount)
 {
     const bool was_second_form = second_form();
     const bool was_third_form = third_form();
-    debit_health(amount);
+    debit_health(pfrm, amount);
 
     if (alive()) {
         pfrm.speaker().play_sound("click", 1, position_);
@@ -762,8 +762,9 @@ void GatekeeperShield::on_collision(Platform& pfrm, Game& game, Laser&)
     if (sprite_.get_size() == Sprite::Size::w32_h32) {
         const auto c = current_zone(game).injury_glow_color_;
         sprite_.set_mix({c, 255});
-        debit_health(1); // So, technically you can destroy the shield, but it's
-                         // probably not worth the trouble of trying.
+        debit_health(pfrm, 1); // So, technically you can destroy the shield,
+                               // but it's probably not worth the trouble of
+                               // trying.
 
     } else {
         const auto c = current_zone(game).energy_glow_color_;
@@ -778,8 +779,9 @@ void GatekeeperShield::on_collision(Platform& pfrm, Game& game, AlliedOrbShot&)
         if (sprite_.get_size() == Sprite::Size::w32_h32) {
             const auto c = current_zone(game).injury_glow_color_;
             sprite_.set_mix({c, 255});
-            debit_health(1); // So, technically you can destroy the shield, but
-                             // it's probably not worth the trouble of trying.
+            debit_health(pfrm, 1); // So, technically you can destroy the
+                                   // shield, but it's probably not worth the
+                                   // trouble of trying.
 
         } else {
             const auto c = current_zone(game).energy_glow_color_;

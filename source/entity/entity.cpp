@@ -1,12 +1,25 @@
 #include "entity.hpp"
 
 
-Entity::Entity(const char* name) : health_(1), name_(name)
+static Entity::Id id_counter_ = 0;
+
+
+void Entity::reset_ids()
+{
+    // I'm not actually worried about running out of ids. The real concern, is
+    // that one of the players during a multiplayer game ends up with more
+    // enemies spawned during a level for one reason or another, and stuff
+    // getting glitched up.
+    id_counter_ = 0;
+}
+
+
+Entity::Entity() : health_(1), id_(id_counter_++)
 {
 }
 
 
-Entity::Entity(Health health, const char* name) : health_(health), name_(name)
+Entity::Entity(Health health) : health_(health), id_(id_counter_++)
 {
 }
 

@@ -350,7 +350,7 @@ void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-    debit_health();
+    debit_health(pf);
 }
 
 
@@ -358,7 +358,7 @@ void SnakeTail::on_collision(Platform& pf, Game& game, LaserExplosion&)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-    debit_health(8);
+    debit_health(pf, 8);
 }
 
 
@@ -367,6 +367,6 @@ void SnakeTail::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
     if (not is_allied()) {
         sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-        debit_health();
+        debit_health(pf);
     }
 }

@@ -30,7 +30,6 @@ public:
     }
 
 private:
-
     void update_sprite_position();
 
     Vec2<Float> speed_;

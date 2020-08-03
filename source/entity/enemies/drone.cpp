@@ -168,7 +168,7 @@ void Drone::injured(Platform& pf, Game& game, Health amount)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-    debit_health(amount);
+    debit_health(pf, amount);
 
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);

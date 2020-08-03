@@ -57,6 +57,8 @@ public:
     }
 
 protected:
+    void debit_health(Platform& pfrm, Health amount = 1);
+
     Sprite shadow_;
     HitBox hitbox_;
     bool is_allied_;

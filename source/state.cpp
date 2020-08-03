@@ -804,7 +804,8 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    // Microseconds timer_ = 0;
+    Microseconds timer_ = 0;
+    bool peer_ready_ = false;
 };
 
 
@@ -915,7 +916,7 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
     // realistically, we can only transmit player data a few times per
     // second. TODO: add methods for querying the uplink performance limits from
     // the Platform class, rather than having various game-specific hacks here.
-    static const auto player_refresh_rate = seconds(1) / 4;
+    static const auto player_refresh_rate = seconds(1) / 8;
 
     static auto update_counter = player_refresh_rate;
 
@@ -928,7 +929,7 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
         update_counter = player_refresh_rate;
         net_event::PlayerInfo info;
         info.header_.message_type_ = net_event::Header::player_info;
-        info.position_ = game.player().get_position();
+        info.position_ = game.player().get_position().cast<s16>();
         info.texture_index_ = game.player().get_sprite().get_texture_index();
         info.size_ = game.player().get_sprite().get_size();
         info.speed_ = game.player().get_speed();
@@ -942,6 +943,21 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
         memcpy(&header, message->data_, sizeof header);
 
         switch (header.message_type_) {
+        case net_event::Header::enemy_health_changed: {
+            read_position += sizeof(net_event::EnemyHealthChanged);
+            net_event::EnemyHealthChanged ehc;
+            memcpy(&ehc, message->data_, sizeof ehc);
+            game.enemies().transform([&](auto& buf) {
+                for (auto& e : buf) {
+                    if (e->id() == ehc.id_) {
+                        e->set_health(
+                            std::min(e->get_health(), ehc.new_health_));
+                    }
+                }
+            });
+            break;
+        }
+
         case net_event::Header::player_info: {
             read_position += sizeof(net_event::PlayerInfo);
             net_event::PlayerInfo info;
@@ -955,8 +971,8 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
             break;
         }
 
-        case net_event::Header::new_level_seed: {
-            read_position += sizeof(net_event::NewLevelSeed);
+        case net_event::Header::sync_seed: {
+            read_position += sizeof(net_event::SyncSeed);
             break;
         }
         }
@@ -967,11 +983,11 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
 }
 
 
-static void player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
+static void
+player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
 {
     pfrm.speaker().play_sound("explosion1", 3, position);
     big_explosion(pfrm, game, position);
-
 }
 
 
@@ -984,6 +1000,11 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else if (game.peer()) {
         player_death(pfrm, game, game.peer()->get_position());
         game.peer().reset();
+    } else {
+        // In multiplayer mode, we need to synchronize the random number
+        // engine. In single-player mode, let's advance the rng for each step,
+        // to add unpredictability
+        rng::get();
     }
 
     if (game.persistent_data().settings_.show_fps_) {
@@ -4215,7 +4236,11 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 1:
                 return state_pool_.create<EditSettingsState>();
             case 2:
-                return state_pool_.create<NetworkConnectState>();
+                // For now, don't allow syncing when someone's progressed
+                // through any of the levels.
+                if (game.level() == Level{0}) {
+                    return state_pool_.create<NetworkConnectState>();
+                }
             case 3:
                 return state_pool_.create<GoodbyeState>();
             }
@@ -4263,21 +4288,74 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 StatePtr
 NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    // Synchronization procedure for seed values at level transition:
+    //
+    // Players transmit NewLevelIdle messages until both players are ready. Once
+    // the host receives a NewLevelIdle message, it should transmit its seed to
+    // the other peer. Once the other peer receives the seed, it can continue to
+    // the next level.
+
     const bool ready = [&] {
         if (pfrm.network_peer().is_connected()) {
-            // // If we're playing a multiplayer game, we want to wait until all
-            // // the other players finish their own level. Then, we will
-            // // synchronize the level seed across all of the games.
-            // timer_ += delta;
-            // if (timer_ > seconds(1)) {
-            //     net_event::NewLevelIdle idle_msg;
-            //     idle_msg.header_.message_type_ = net_event::Header::new_level_idle;
-            //     pfrm.network().send_message({(byte*)&idle_msg, sizeof idle_msg});
-            // }
+            if (not peer_ready_) {
+                timer_ += delta;
+                if (timer_ > seconds(1)) {
+                    info(pfrm, "transmit new level idle msg");
+                    timer_ -= seconds(1);
 
+                    net_event::NewLevelIdle idle_msg;
+                    idle_msg.header_.message_type_ =
+                        net_event::Header::new_level_idle;
+                    pfrm.network_peer().send_message(
+                        {(byte*)&idle_msg, sizeof idle_msg});
+                }
+            }
+            if (peer_ready_ and pfrm.network_peer().is_host()) {
+                net_event::SyncSeed sync_seed;
+                sync_seed.header_.message_type_ = net_event::Header::sync_seed;
+                sync_seed.random_state_ = rng::global_state;
+                pfrm.network_peer().send_message(
+                    {(byte*)&sync_seed, sizeof sync_seed});
+                info(pfrm, "sent seed to peer");
+                return true;
+            }
 
-            // return false;
-            return true;
+            u32 read_position = 0;
+            while (auto message =
+                       pfrm.network_peer().poll_messages(read_position)) {
+                net_event::Header header;
+                memcpy(&header, message->data_, sizeof header);
+
+                switch (header.message_type_) {
+                case net_event::Header::enemy_health_changed:
+                    read_position += sizeof(net_event::EnemyHealthChanged);
+                    break;
+
+                case net_event::Header::player_info:
+                    read_position += sizeof(net_event::PlayerInfo);
+                    break;
+
+                case net_event::Header::new_level_idle:
+                    info(pfrm, "got new level idle msg");
+                    read_position += sizeof(net_event::NewLevelIdle);
+                    peer_ready_ = true;
+                    break;
+
+                case net_event::Header::sync_seed: {
+                    info(pfrm, "received seed value");
+                    read_position += sizeof(net_event::SyncSeed);
+                    if (not pfrm.network_peer().is_host()) {
+                        net_event::SyncSeed sync_seed;
+                        memcpy(&sync_seed, message->data_, sizeof sync_seed);
+                        rng::global_state = sync_seed.random_state_;
+                        return true;
+                    }
+                    break;
+                }
+                }
+            }
+
+            return false;
         } else {
             return true;
         }

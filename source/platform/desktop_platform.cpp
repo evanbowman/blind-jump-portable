@@ -1608,6 +1608,7 @@ SynchronizedBase::~SynchronizedBase()
 struct NetworkPeerImpl {
     sf::TcpSocket socket_;
     sf::TcpListener listener_;
+    bool is_host_ = false;
 };
 
 
@@ -1618,6 +1619,12 @@ Platform::NetworkPeer::NetworkPeer() : impl_(nullptr)
     impl->socket_.setBlocking(true);
 
     impl_ = impl;
+}
+
+
+bool Platform::NetworkPeer::is_host() const
+{
+    return ((NetworkPeerImpl*)impl_)->is_host_;
 }
 
 
@@ -1635,6 +1642,7 @@ void Platform::NetworkPeer::listen()
 
     info(*::platform, "Peer connected!");
 
+    impl->is_host_ = true;
     impl->socket_.setBlocking(false);
 }
 
@@ -1642,6 +1650,8 @@ void Platform::NetworkPeer::listen()
 void Platform::NetworkPeer::connect(const char* peer)
 {
     auto impl = (NetworkPeerImpl*)impl_;
+
+    impl->is_host_ = false;
 
     auto port = Conf{*::platform}.expect<Conf::Integer>(
         ::platform->device_name().c_str(), "network_port");

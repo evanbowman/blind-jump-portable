@@ -414,6 +414,8 @@ void animate_starfield(Platform& pfrm, Microseconds delta)
 
     timer += delta;
 
+    static rng::Generator gen = rng::global_state;
+
     if (timer > milliseconds(90)) {
         timer = 0;
 
@@ -428,8 +430,8 @@ void animate_starfield(Platform& pfrm, Microseconds delta)
 
         for (u32 i = 0; i < active_star_anims.capacity(); ++i) {
 
-            const int x = rng::choice<32>();
-            const int y = rng::choice<32>();
+            const int x = rng::choice<32>(gen);
+            const int y = rng::choice<32>(gen);
 
             const auto tile = pfrm.get_tile(Layer::background, x, y);
             if (active_star_anims.push_back({{x, y}, tile})) {
@@ -581,6 +583,8 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     if (level() == 0) {
         rng::global_state = 9;
     }
+
+    Entity::reset_ids();
 
     persistent_data_.score_ = score_;
     persistent_data_.player_health_ = player_.get_health();

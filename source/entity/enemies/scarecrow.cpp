@@ -330,7 +330,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
 void Scarecrow::injured(Platform& pf, Game& game, Health amount)
 {
-    debit_health(amount);
+    debit_health(pf, amount);
 
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);
