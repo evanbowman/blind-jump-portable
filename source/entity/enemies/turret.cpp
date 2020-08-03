@@ -150,6 +150,14 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > 0) {
             timer_ -= dt;
         } else {
+            if (pfrm.network_peer().is_host()) {
+                net_event::transmit<net_event::EnemyStateSync,
+                                    net_event::Header::enemy_state_sync>(pfrm,
+                                                                         (u8)state_,
+                                                                         id(),
+                                                                         position_.cast<s16>());
+            }
+
             pfrm.speaker().play_sound("laser1", 4, position_);
 
             this->shoot(pfrm, game, origin(), aim(), bullet_speed);
@@ -258,4 +266,11 @@ void Turret::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(pf, game, position_, 4, item_drop_vec);
+}
+
+
+void Turret::sync(const net_event::EnemyStateSync& state, Game& game)
+{
+    state_ = static_cast<State>(state.state_);
+    timer_ = reload(game.level());
 }

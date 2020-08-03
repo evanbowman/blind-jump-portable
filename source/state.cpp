@@ -63,6 +63,8 @@ public:
         hidden
     } notification_status = NotificationStatus::hidden;
 
+    void receive(const net_event::EnemyStateSync&, Platform&, Game&) override;
+    void receive(const net_event::SyncSeed&, Platform&, Game&) override;
     void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
     void
     receive(const net_event::EnemyHealthChanged&, Platform&, Game&) override;
@@ -809,7 +811,7 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
     void receive(const net_event::NewLevelIdle&, Platform&, Game&) override;
-    void receive(const net_event::SyncSeed&, Platform&, Game&) override;
+    void receive(const net_event::NewLevelSyncSeed&, Platform&, Game&) override;
 
 
 private:
@@ -918,6 +920,33 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
+void OverworldState::receive(const net_event::SyncSeed& s,
+                             Platform&,
+                             Game&)
+{
+    rng::critical_state = s.random_state_;
+}
+
+
+void OverworldState::receive(const net_event::EnemyStateSync& s,
+                             Platform&,
+                             Game& game)
+{
+    for (auto& e : game.enemies().get<Drone>()) {
+        if (e->id() == s.id_) {
+            e->sync(s);
+            return;
+        }
+    }
+    for (auto& e : game.enemies().get<Turret>()) {
+        if (e->id() == s.id_) {
+            e->sync(s, game);
+            return;
+        }
+    }
+}
+
+
 void OverworldState::receive(const net_event::PlayerInfo& p,
                              Platform&,
                              Game& game)
@@ -974,6 +1003,10 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
             Sprite::Alpha::transparent;
 
         pfrm.network_peer().send_message({(byte*)&info, sizeof info});
+
+
+        net_event::transmit<net_event::SyncSeed,
+                            net_event::Header::sync_seed>(pfrm, rng::critical_state);
     }
 
 
@@ -4297,7 +4330,7 @@ void NewLevelIdleState::receive(const net_event::NewLevelIdle&,
 }
 
 
-void NewLevelIdleState::receive(const net_event::SyncSeed& sync_seed,
+void NewLevelIdleState::receive(const net_event::NewLevelSyncSeed& sync_seed,
                                 Platform& pfrm,
                                 Game&)
 {
@@ -4331,8 +4364,8 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
                 {(byte*)&idle_msg, sizeof idle_msg});
         }
         if (peer_ready_ and pfrm.network_peer().is_host()) {
-            net_event::SyncSeed sync_seed;
-            sync_seed.header_.message_type_ = net_event::Header::sync_seed;
+            net_event::NewLevelSyncSeed sync_seed;
+            sync_seed.header_.message_type_ = net_event::Header::new_level_sync_seed;
             sync_seed.random_state_ = rng::critical_state;
             pfrm.network_peer().send_message(
                 {(byte*)&sync_seed, sizeof sync_seed});
@@ -4404,6 +4437,10 @@ NetworkConnectState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<PauseScreenState>(false);
     } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
         pfrm.network_peer().listen();
+
+        net_event::transmit<net_event::SyncSeed,
+                            net_event::Header::sync_seed>(pfrm, rng::critical_state);
+
         return state_pool_.create<PauseScreenState>(false);
     }
 

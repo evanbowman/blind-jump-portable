@@ -13,6 +13,14 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
         memcpy(&header, message->data_, sizeof header);
 
         switch (header.message_type_) {
+        case Header::enemy_state_sync: {
+            read_position += sizeof(EnemyStateSync);
+            EnemyStateSync s;
+            memcpy(&s, message->data_, sizeof s);
+            listener.receive(s, pfrm, game);
+            break;
+        }
+
         case Header::player_info: {
             read_position += sizeof(PlayerInfo);
             PlayerInfo p;
@@ -40,6 +48,14 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
         case Header::sync_seed: {
             read_position += sizeof(SyncSeed);
             SyncSeed s;
+            memcpy(&s, message->data_, sizeof s);
+            listener.receive(s, pfrm, game);
+            break;
+        }
+
+        case Header::new_level_sync_seed: {
+            read_position += sizeof(SyncSeed);
+            NewLevelSyncSeed s;
             memcpy(&s, message->data_, sizeof s);
             listener.receive(s, pfrm, game);
             break;

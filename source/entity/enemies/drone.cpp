@@ -3,6 +3,7 @@
 #include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
+#include "network_event.hpp"
 
 
 Drone::Drone(const Vec2<Float>& pos)
@@ -99,6 +100,14 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle2;
+
+            if (pfrm.network_peer().is_host()) {
+                net_event::transmit<net_event::EnemyStateSync,
+                                    net_event::Header::enemy_state_sync>(pfrm,
+                                                                         (u8)state_,
+                                                                         id(),
+                                                                         position_.cast<s16>());
+            }
         }
         break;
 
@@ -120,6 +129,14 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle3;
+
+            if (pfrm.network_peer().is_host()) {
+                net_event::transmit<net_event::EnemyStateSync,
+                                    net_event::Header::enemy_state_sync>(pfrm,
+                                                                         (u8)state_,
+                                                                         id(),
+                                                                         position_.cast<s16>());
+            }
         }
         break;
 
@@ -141,6 +158,14 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle4;
+
+            if (pfrm.network_peer().is_host()) {
+                net_event::transmit<net_event::EnemyStateSync,
+                                    net_event::Header::enemy_state_sync>(pfrm,
+                                                                         (u8)state_,
+                                                                         id(),
+                                                                         position_.cast<s16>());
+            }
         }
         break;
 
@@ -160,6 +185,14 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle1;
+
+            if (pfrm.network_peer().is_host()) {
+                net_event::transmit<net_event::EnemyStateSync,
+                                    net_event::Header::enemy_state_sync>(pfrm,
+                                                                         (u8)state_,
+                                                                         id(),
+                                                                         position_.cast<s16>());
+            }
         }
         break;
     }
@@ -201,7 +234,7 @@ void Drone::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 void Drone::on_collision(Platform& pf, Game& game, Player& player)
 {
     if (state_ == State::rush) {
-        this->kill();
+        debit_health(pf, get_health());
     }
 }
 
@@ -228,4 +261,14 @@ void Drone::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(pf, game, position_, 7, item_drop_vec);
+}
+
+
+void Drone::sync(const net_event::EnemyStateSync& state)
+{
+    state_ = static_cast<State>(state.state_);
+    position_ = state.position_.cast<Float>();
+    timer_ = 0;
+    sprite_.set_position(position_);
+    shadow_.set_position(position_);
 }

@@ -16,7 +16,9 @@ struct Header {
     enum MessageType {
         player_info,
         enemy_health_changed,
+        enemy_state_sync,
         sync_seed,
+        new_level_sync_seed,
         new_level_idle,
     } message_type_;
 };
@@ -40,7 +42,24 @@ struct EnemyHealthChanged {
 };
 
 
+struct EnemyStateSync {
+    Header header_;
+    u8 state_;
+    Entity::Id id_;
+    Vec2<s16> position_;
+};
+
+
 struct SyncSeed {
+    Header header_;
+    rng::Generator random_state_;
+};
+
+
+// We make a special distinction for new level seeds, due to a special handshake
+// during level transition, which would be complicated by the existing SyncSeed
+// message, which are broadcast by the host during other game states.
+struct NewLevelSyncSeed {
     Header header_;
     rng::Generator random_state_;
 };
@@ -71,10 +90,16 @@ public:
     virtual void receive(const SyncSeed&, Platform&, Game&)
     {
     }
+    virtual void receive(const NewLevelSyncSeed&, Platform&, Game&)
+    {
+    }
     virtual void receive(const NewLevelIdle&, Platform&, Game&)
     {
     }
     virtual void receive(const EnemyHealthChanged&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const EnemyStateSync&, Platform&, Game&)
     {
     }
 };
