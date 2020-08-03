@@ -23,6 +23,14 @@ void PeerPlayer::sync(const net_event::PlayerInfo& info)
         position_ = info.position_.cast<Float>();
     }
 
+    if (info.visible_) {
+        sprite_.set_alpha(Sprite::Alpha::opaque);
+        shadow_.set_alpha(Sprite::Alpha::translucent);
+    } else {
+        sprite_.set_alpha(Sprite::Alpha::transparent);
+        shadow_.set_alpha(Sprite::Alpha::transparent);
+    }
+
     update_sprite_position();
 
     anim_timer_ = milliseconds(100);

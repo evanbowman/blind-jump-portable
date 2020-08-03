@@ -28,6 +28,8 @@ struct PlayerInfo {
     u8 texture_index_;
     Vec2<s16> position_;
     Vec2<Float> speed_;
+    u8 visible_ : 1;
+    u8 weapon_drawn_ : 1;
 };
 
 
