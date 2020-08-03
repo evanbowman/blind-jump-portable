@@ -15,6 +15,7 @@ namespace net_event {
 struct Header {
     enum MessageType {
         player_info,
+        player_died,
         enemy_health_changed,
         enemy_state_sync,
         sync_seed,
@@ -32,6 +33,11 @@ struct PlayerInfo {
     Vec2<Float> speed_;
     u8 visible_ : 1;
     u8 weapon_drawn_ : 1;
+};
+
+
+struct PlayerDied {
+    Header header_;
 };
 
 
@@ -100,6 +106,9 @@ public:
     {
     }
     virtual void receive(const EnemyStateSync&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const PlayerDied&, Platform&, Game&)
     {
     }
 };

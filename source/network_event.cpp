@@ -21,6 +21,14 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             break;
         }
 
+        case Header::player_died: {
+            read_position += sizeof(PlayerDied);
+            PlayerDied d;
+            memcpy(&d, message->data_, sizeof d);
+            listener.receive(d, pfrm, game);
+            break;
+        }
+
         case Header::player_info: {
             read_position += sizeof(PlayerInfo);
             PlayerInfo p;

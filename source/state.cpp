@@ -63,6 +63,7 @@ public:
         hidden
     } notification_status = NotificationStatus::hidden;
 
+    void receive(const net_event::PlayerDied&, Platform&, Game&) override;
     void receive(const net_event::EnemyStateSync&, Platform&, Game&) override;
     void receive(const net_event::SyncSeed&, Platform&, Game&) override;
     void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
@@ -1023,6 +1024,19 @@ player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
     pfrm.speaker().play_sound("explosion1", 3, position);
     big_explosion(pfrm, game, position);
 }
+
+
+
+void OverworldState::receive(const net_event::PlayerDied&,
+                             Platform& pfrm,
+                             Game& game)
+{
+    if (game.peer()) {
+        player_death(pfrm, game, game.peer()->get_position());
+        game.peer().reset();
+    }
+}
+
 
 
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
