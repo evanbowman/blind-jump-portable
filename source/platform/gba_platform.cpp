@@ -2205,9 +2205,6 @@ static void audio_update()
 }
 
 
-static void serial_update();
-
-
 void Platform::soft_exit()
 {
 }
@@ -2296,9 +2293,8 @@ Platform::Platform()
         0x0B0F; //DirectSound A + fifo reset + max volume to L and R
     REG_SOUNDCNT_X = 0x0080; //turn sound chip on
 
-    // irqEnable(IRQ_TIMER1);
-    // irqSet(IRQ_TIMER1, audio_update);
-    (void)audio_update;
+    irqEnable(IRQ_TIMER1);
+    irqSet(IRQ_TIMER1, audio_update);
 
     REG_TM0CNT_L = 0xffff;
     REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
@@ -2731,19 +2727,6 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
 #include "/opt/devkitpro/libgba/include/gba_sio.h"
 
 
-int rx_buffer[48] = {0};
-int rx_count = 0;
-
-bool ready = true;
-
-
-int serial_irq_count = 0;
-static void serial_update()
-{
-    serial_irq_count += 1;
-}
-
-
 Platform::NetworkPeer::NetworkPeer()
 {
 }
@@ -2771,6 +2754,177 @@ static bool multinode_validate()
 }
 
 
+// The gameboy Multi link protocol always sends data, no matter what, even if we
+// do not have any new data to put in the send buffer. Because there is no
+// distinction between real data and empty transmits, we will transmit in
+// fixed-size chunks. The receiver knows when it's received a whole message,
+// after a specific number of iterations. Now, there are other ways, potentially
+// better ways, to handle this situation. But this way seems easiest, although
+// probably uses a lot of unnecessary bandwidth. Another drawback: the poller
+// needs ignore messages that are all zeroes. Accomplished easily enough by
+// prefixing the sent message with an enum, where the zeroth enumeration is
+// unused.
+static const int tx_message_iters = 10;
+
+struct TxInfo {
+    u16 data_[tx_message_iters] = {};
+};
+
+static const int tx_ring_size = 32;
+
+static ObjectPool<TxInfo, tx_ring_size> tx_message_pool;
+
+static int tx_ring_write_pos = 0;
+static int tx_ring_read_pos = 0;
+static TxInfo* tx_ring[tx_ring_size] = {nullptr};
+
+
+static TxInfo* tx_ring_pop()
+{
+    TxInfo* msg = nullptr;
+
+    for (int i = tx_ring_read_pos; i < tx_ring_read_pos + tx_ring_size; ++i) {
+        auto index = i % tx_ring_size;
+        if (tx_ring[index]) {
+            msg = tx_ring[index];
+            tx_ring[index] = nullptr;
+            tx_ring_read_pos = index;
+            return msg;
+        }
+    }
+
+    tx_ring_read_pos += 1;
+    tx_ring_read_pos %= tx_ring_size;
+
+    // The transmit ring is completely empty!
+    return nullptr;
+}
+
+
+static int tx_loss = 0;
+
+
+void Platform::NetworkPeer::send_message(const Message& message)
+{
+    if (message.length_ > sizeof(TxInfo::data_)) {
+        while (true) ; // error!
+    }
+
+    if (tx_ring[tx_ring_write_pos]) {
+        // The writer does not seem to be keeping up! Guess we'll have to drop the message :(
+        tx_loss += 1;
+        auto lost_message = tx_ring[tx_ring_write_pos];
+        tx_ring[tx_ring_write_pos] = nullptr;
+        tx_message_pool.post(lost_message);
+    }
+
+    auto msg = tx_message_pool.get();
+    if (not msg) {
+        // error! Could not transmit messages fast enough, i.e. we've exhausted
+        // the message pool! How to handle this condition!?
+        tx_loss += 1;
+        return;
+    }
+
+    __builtin_memcpy(msg->data_, message.data_, message.length_);
+
+    tx_ring[tx_ring_write_pos] = msg;
+    tx_ring_write_pos += 1;
+    tx_ring_write_pos %= tx_ring_size;
+}
+
+
+static int transmit_busy_count = 0;
+
+
+static bool multinode_busy()
+{
+    return REG_SIOCNT & SIO_START;
+}
+
+
+static int tx_iter_state = 0;
+static TxInfo* tx_current_message = nullptr;
+
+
+static int null_bytes_written = 0;
+
+
+static void multinode_tx_send()
+{
+    if (tx_iter_state == tx_message_iters) {
+        if (tx_current_message) {
+            tx_message_pool.post(tx_current_message);
+        }
+        tx_current_message = tx_ring_pop();
+        tx_iter_state = 0;
+    }
+
+    if (tx_current_message) {
+        REG_SIOMLT_SEND = tx_current_message->data_[tx_iter_state++];
+    } else {
+        null_bytes_written += 2;
+        tx_iter_state++;
+        REG_SIOMLT_SEND = 0;
+    }
+}
+
+
+// We want to wait long enough for the minions to prepare TX data for the
+// master.
+static void multinode_start_master_tx_countdown()
+{
+    REG_TM2CNT_H = 0x00C1;
+    REG_TM2CNT_L = 65339;
+
+    irqEnable(IRQ_TIMER2);
+    irqSet(IRQ_TIMER2, [] {
+        if (multinode_busy()) {
+            ++transmit_busy_count;
+            return; // still busy, try again. The only thing that should kick
+                    // off this timer, though, is the serial irq, and the
+                    // initial connection, so not sure how we could get into
+                    // this state.
+        } else {
+            irqDisable(IRQ_TIMER2);
+            multinode_tx_send();
+            REG_SIOCNT |= SIO_START;
+        }
+    });
+}
+
+
+int serial_irq_count = 0;
+static void multinode_serial_tx_complete()
+{
+    serial_irq_count += 1;
+
+    if (multinode_is_master()) {
+        // rx_buffer_push(REG_SIOMULTI1);
+        multinode_start_master_tx_countdown();
+    } else {
+        // rx_buffer_push(REG_SIOMULTI0);
+        // If we're the minion, simply enter data into the send queue. The
+        // master will wait before initiating another transmit.
+        multinode_tx_send();
+    }
+}
+
+
+std::optional<Platform::NetworkPeer::Message>
+Platform::NetworkPeer::poll_message()
+{
+    // TODO...
+    return {};
+}
+
+
+void Platform::NetworkPeer::poll_consume(u32 size)
+{
+    // TODO...
+}
+
+
 static void multinode_init()
 {
     REG_RCNT = R_MULTI;
@@ -2778,10 +2932,17 @@ static void multinode_init()
     REG_SIOCNT |= SIO_IRQ | SIO_115200;
 
     irqEnable(IRQ_SERIAL);
-    irqSet(IRQ_SERIAL, serial_update);
+    irqSet(IRQ_SERIAL, multinode_serial_tx_complete);
+
+    // Put this here for now, not sure whether it's really necessary...
+    REG_SIOMLT_SEND = 0x5555;
 
     while (not multinode_validate()) {
         ::platform->feed_watchdog();
+    }
+
+    if (multinode_is_master()) {
+        multinode_start_master_tx_countdown();
     }
 }
 
@@ -2801,88 +2962,35 @@ void Platform::NetworkPeer::listen()
 int transmit_attempts = 0;
 
 
+std::optional<Text> debug_irq_text;
+
+
 // bool was_connected = false;
 void Platform::NetworkPeer::update()
 {
-    // if (not multinode_validate()) {
-    //     if (multinode_error()) {
-    //         Text t(*::platform, "error", {});
-    //         while (true)
-    //             ;
-    //     }
-    //     // if (was_connected) {
-    //     //     while (true);
-    //     // }
-    //     return;
-    // }
-
-    while (not ::platform->keyboard().pressed<Key::action_1>())
-        platform->keyboard().poll();
-
-    multinode_init();
-
-    Text t(*::platform, {});
-    Text result(*::platform, {0, 1});
-
-    int count = 0;
-    irqDisable(IRQ_TIMER2);
-    irqDisable(IRQ_TIMER0);
-    irqDisable(IRQ_TIMER3);
-    irqDisable(IRQ_TIMER1);
-
-    while (true) {
-        if (not multinode_validate()) {
-            ::platform->feed_watchdog();
-            t.assign("Error");
-            platform->sleep(20);
-            continue;
+    if (not multinode_validate()) {
+        if (multinode_error()) {
+            Text t(*::platform, "error", {});
+            while (true)
+                ;
         }
-        ::platform->feed_watchdog();
-
-        if (multinode_is_master()) {
-            t.assign("sending message...");
-
-            REG_SIOMLT_SEND = 0xAAAA;
-
-            REG_SIOCNT |= SIO_START;
-            result.assign(REG_SIOMULTI0);
-
-            while (REG_SIOCNT & SIO_START) {
-                // TRANSFER IN PROGRESS!
-            }
-
-            if (multinode_error()) {
-                t.assign("error!!!");
-            } else {
-                t.assign("message sent! ");
-                t.append(++count);
-            }
-
-            result.assign(REG_SIOMULTI0);
-            result.append(" ");
-            result.append(REG_SIOMULTI1);
-            result.append(" ");
-            result.append(serial_irq_count);
-
-        } else {
-            t.assign("waiting...");
-            REG_SIOMLT_SEND = 0x5555;
-
-            if (REG_SIOCNT & SIO_START) {
-                t.assign("busy...");
-                while (REG_SIOCNT & SIO_START) {
-                    // Busy
-                }
-                t.assign("transfer complete! ");
-
-                result.assign(REG_SIOMULTI0);
-                result.append(" ");
-                result.append(serial_irq_count);
-
-                REG_SIOMLT_SEND = 0x5555;
-            }
-        }
+        // if (was_connected) {
+        //     while (true);
+        // }
+        return;
     }
+
+    static int counter = 0;
+    if (++counter == 100) {
+        counter = 0;
+        debug_irq_text.emplace(*::platform, OverlayCoord{0, 1});
+        debug_irq_text->append(serial_irq_count);
+        debug_irq_text->append(" ");
+        debug_irq_text->append(tx_loss);
+        debug_irq_text->append(" ");
+        debug_irq_text->append(null_bytes_written);
+    }
+
 }
 
 
@@ -2896,27 +3004,13 @@ bool Platform::NetworkPeer::supported_by_device()
 
 bool Platform::NetworkPeer::is_connected() const
 {
-    return false; // return multinode_is_valid() ... eventually ...
+    return multinode_validate(); // FIXME: insufficient to detect disconnects.
 }
 
 
 bool Platform::NetworkPeer::is_host() const
 {
     return multinode_is_master();
-}
-
-
-void Platform::NetworkPeer::send_message(const Message& message)
-{
-    // TODO...
-}
-
-
-std::optional<Platform::NetworkPeer::Message>
-Platform::NetworkPeer::poll_messages(u32 position)
-{
-    // TODO...
-    return {};
 }
 
 

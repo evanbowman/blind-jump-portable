@@ -437,7 +437,12 @@ public:
 
         void update();
 
-        std::optional<Message> poll_messages(u32 position);
+        // The result of poll-message will include the length of the available
+        // data in the network-peer's buffer. If the space in the buffer is
+        // insufficient to frame a message, exit polling, and do not call
+        // poll_consume() until there's enough space to fill an entire message.
+        std::optional<Message> poll_message();
+        void poll_consume(u32 length);
 
         // Will return false if the platform does not support networked
         // multiplayer.

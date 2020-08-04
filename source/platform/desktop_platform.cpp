@@ -1605,6 +1605,7 @@ struct NetworkPeerImpl {
     sf::TcpSocket socket_;
     sf::TcpListener listener_;
     bool is_host_ = false;
+    int poll_consume_position_ = 0;
 };
 
 
@@ -1710,7 +1711,13 @@ void Platform::NetworkPeer::update()
 {
     auto impl = (NetworkPeerImpl*)impl_;
 
-    receive_buffer.clear();
+    if (impl->poll_consume_position_) {
+        receive_buffer.erase(receive_buffer.begin(),
+                             receive_buffer.begin() +
+                                 impl->poll_consume_position_);
+    }
+
+    impl->poll_consume_position_ = 0;
 
     std::array<char, 1024> buffer = {0};
     std::size_t received = 0;
@@ -1732,14 +1739,27 @@ void Platform::NetworkPeer::update()
 
 
 std::optional<Platform::NetworkPeer::Message>
-Platform::NetworkPeer::poll_messages(u32 position)
+Platform::NetworkPeer::poll_message()
 {
-    if (position < receive_buffer.size()) {
-        return Message{(byte*)&receive_buffer[position],
-                       (u32)receive_buffer.size() - position};
+    auto impl = (NetworkPeerImpl*)impl_;
+
+    if (receive_buffer.empty()) {
+        return {};
     }
 
-    return {};
+    if (impl->poll_consume_position_ >= (int)receive_buffer.size()) {
+        return {};
+    }
+
+    return Message{(byte*)&receive_buffer[impl->poll_consume_position_],
+                   (u32)receive_buffer.size() - impl->poll_consume_position_};
+}
+
+
+void Platform::NetworkPeer::poll_consume(u32 length)
+{
+    auto impl = (NetworkPeerImpl*)impl_;
+    impl->poll_consume_position_ += length;
 }
 
 

@@ -14,6 +14,7 @@ namespace net_event {
 
 struct Header {
     enum MessageType {
+        null,
         player_info,
         player_died,
         enemy_health_changed,
