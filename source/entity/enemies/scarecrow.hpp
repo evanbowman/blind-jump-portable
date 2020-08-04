@@ -5,6 +5,7 @@
 #include "enemy.hpp"
 #include "entity/entity.hpp"
 #include "tileMap.hpp"
+#include "network_event.hpp"
 
 
 class LaserExplosion;
@@ -34,6 +35,7 @@ public:
 
     void on_death(Platform&, Game&);
 
+    void sync(const net_event::EnemyStateSync& state);
 
 private:
     void injured(Platform&, Game&, Health amount);

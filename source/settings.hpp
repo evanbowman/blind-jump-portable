@@ -7,7 +7,7 @@ enum class Difficulty { normal, hard, survival, count };
 
 struct Settings {
     LocaleLanguage language_ = LocaleLanguage::null;
-    bool show_fps_ = false;
+    bool show_stats_ = false;
     bool dynamic_camera_ = true;
     Contrast contrast_ = 0;
     Difficulty difficulty_ = Difficulty::normal;

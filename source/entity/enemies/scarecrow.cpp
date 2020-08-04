@@ -323,10 +323,28 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                     0.00010f);
             }
             state_ = State::idle_wait;
+
+            if (pfrm.network_peer().is_host()) {
+                const auto int_pos = position_.cast<s16>();
+
+                net_event::transmit<net_event::EnemyStateSync>(
+                    pfrm, (u8)state_, id(), int_pos.x, int_pos.y);
+            }
         }
         break;
     }
     }
+}
+
+
+void Scarecrow::sync(const net_event::EnemyStateSync& state)
+{
+    state_ = static_cast<State>(state.state_);
+    position_.x = state.x_;
+    position_.y = state.y_;
+    timer_ = 0;
+    sprite_.set_position(position_);
+    shadow_.set_position(position_);
 }
 
 

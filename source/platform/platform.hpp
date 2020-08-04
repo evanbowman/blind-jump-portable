@@ -433,6 +433,9 @@ public:
             u32 length_;
         };
 
+        // IMPORTANT!!! Messages containing all zeroes are not guaranteed to be
+        // received on some platforms, so you should have at least some high
+        // bits in your message.
         void send_message(const Message& message);
 
         void update();
@@ -447,6 +450,14 @@ public:
         // Will return false if the platform does not support networked
         // multiplayer.
         static bool supported_by_device();
+
+        struct Stats {
+            int transmit_count_;
+            int transmit_loss_;
+            int receive_loss_;
+        };
+
+        Stats stats() const;
 
     private:
         void* impl_;

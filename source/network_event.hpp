@@ -14,7 +14,9 @@ namespace net_event {
 
 struct Header {
     enum MessageType {
-        null,
+        null, // Important! The platform does not guarantee transmission of
+              // messages full of zero bytes, so the 0th enumeration must not be
+              // used (may not be received).
         player_info,
         player_died,
         enemy_health_changed,
@@ -23,6 +25,7 @@ struct Header {
         new_level_sync_seed,
         new_level_idle,
         item_taken,
+        connection_healthy,
     } message_type_;
 };
 
@@ -58,6 +61,13 @@ struct ItemTaken {
     Entity::Id id_;
 
     static const auto mt = Header::MessageType::item_taken;
+};
+
+
+struct ConnectionHealthy {
+    Header header_;
+
+    static const auto mt = Header::MessageType::connection_healthy;
 };
 
 

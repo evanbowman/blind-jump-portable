@@ -364,7 +364,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::goodbye_text: return "See you later...";
         case LocaleString::signal_jammer_title: return "Signal jammer";
         case LocaleString::select_target_text: return "Choose a target:";
-        case LocaleString::settings_show_fps: return "Show FPS: ";
+        case LocaleString::settings_show_stats: return "Show Stats: ";
         case LocaleString::settings_language: return "Language: ";
         case LocaleString::settings_contrast: return "Contrast: ";
         case LocaleString::settings_difficulty: return "Difficulty: ";

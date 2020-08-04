@@ -80,6 +80,9 @@ private:
     Microseconds fps_timer_ = 0;
     int fps_frame_count_ = 0;
     std::optional<Text> fps_text_;
+    std::optional<Text> network_tx_msg_text_;
+    std::optional<Text> network_tx_loss_text_;
+    std::optional<Text> network_rx_loss_text_;
 };
 
 
@@ -633,10 +636,10 @@ private:
         }
     };
 
-    class ShowFPSLineUpdater : public LineUpdater {
+    class ShowStatsLineUpdater : public LineUpdater {
         Result update(Platform&, Game& game, int dir) override
         {
-            bool& show = game.persistent_data().settings_.show_fps_;
+            bool& show = game.persistent_data().settings_.show_stats_;
             if (dir not_eq 0) {
                 show = not show;
             }
@@ -646,7 +649,7 @@ private:
                 return locale_string(LocaleString::no);
             }
         }
-    } show_fps_line_updater_;
+    } show_stats_line_updater_;
 
     class DynamicCameraLineUpdater : public LineUpdater {
         Result update(Platform&, Game& game, int dir) override
@@ -795,7 +798,7 @@ private:
     static constexpr const LocaleString strings[line_count_] = {
         LocaleString::settings_dynamic_camera,
         LocaleString::settings_difficulty,
-        LocaleString::settings_show_fps,
+        LocaleString::settings_show_stats,
         LocaleString::settings_contrast,
         LocaleString::settings_language,
     };
@@ -912,6 +915,9 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 {
     notification_text.reset();
     fps_text_.reset();
+    network_tx_msg_text_.reset();
+    network_tx_loss_text_.reset();
+    network_rx_loss_text_.reset();
 
     // In case we're in the middle of an entry/exit animation for the
     // notification bar.
@@ -943,6 +949,11 @@ void OverworldState::receive(const net_event::EnemyStateSync& s,
         if (e->id() == s.id_) {
             e->sync(s);
             return;
+        }
+    }
+    for (auto& e : game.enemies().get<Scarecrow>()) {
+        if (e->id() == s.id_) {
+            e->sync(s);
         }
     }
     for (auto& e : game.enemies().get<Drone>()) {
@@ -1065,7 +1076,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         rng::get(rng::critical_state);
     }
 
-    if (game.persistent_data().settings_.show_fps_) {
+    if (game.persistent_data().settings_.show_stats_) {
 
         fps_timer_ += delta;
         fps_frame_count_ += 1;
@@ -1074,6 +1085,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             fps_timer_ -= seconds(1);
 
             fps_text_.emplace(pfrm, OverlayCoord{1, 2});
+            network_tx_msg_text_.emplace(pfrm, OverlayCoord{1, 3});
+            network_tx_loss_text_.emplace(pfrm, OverlayCoord{1, 4});
+            network_rx_loss_text_.emplace(pfrm, OverlayCoord{1, 5});
 
             const auto colors =
                 fps_frame_count_ < 55
@@ -1084,9 +1098,20 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             fps_text_->assign(fps_frame_count_, colors);
             fps_text_->append(" fps", colors);
             fps_frame_count_ = 0;
+
+            const auto net_stats = pfrm.network_peer().stats();
+            network_tx_msg_text_->append(net_stats.transmit_count_);
+            network_tx_msg_text_->append(" m");
+            network_tx_loss_text_->append(net_stats.transmit_loss_);
+            network_tx_loss_text_->append(" tl");
+            network_rx_loss_text_->append(net_stats.receive_loss_);
+            network_rx_loss_text_->append(" rl");
         }
     } else if (fps_text_) {
         fps_text_.reset();
+        network_tx_msg_text_.reset();
+        network_tx_loss_text_.reset();
+        network_rx_loss_text_.reset();
 
         fps_frame_count_ = 0;
         fps_timer_ = 0;
@@ -3471,7 +3496,7 @@ void EditSettingsState::message(Platform& pfrm, const char* str)
 EditSettingsState::EditSettingsState()
     : lines_{{{dynamic_camera_line_updater_},
               {difficulty_line_updater_},
-              {show_fps_line_updater_},
+              {show_stats_line_updater_},
               {contrast_line_updater_},
               {language_line_updater_}}}
 {

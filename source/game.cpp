@@ -200,8 +200,11 @@ HOT void Game::render(Platform& pfrm)
     display_buffer.push_back(&player_.weapon().get_sprite());
 
     if (peer_player_) {
-        display_buffer.push_back(&peer_player_->get_sprite());
-        display_buffer.push_back(&peer_player_->get_blaster_sprite());
+        if (within_view_frustum(pfrm.screen(), peer_player_->get_position())) {
+            display_buffer.push_back(&peer_player_->get_sprite());
+            display_buffer.push_back(&peer_player_->get_blaster_sprite());
+            shadows_buffer.push_back(&peer_player_->get_shadow());
+        }
     }
 
     enemies_.transform(show_sprites);
@@ -217,9 +220,6 @@ HOT void Game::render(Platform& pfrm)
 
     display_buffer.push_back(&player_.get_shadow());
 
-    if (peer_player_) {
-        display_buffer.push_back(&peer_player_->get_shadow());
-    }
 
     for (auto spr : display_buffer) {
         pfrm.screen().draw(*spr);

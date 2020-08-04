@@ -59,7 +59,7 @@ enum class LocaleString {
     goodbye_text,
     select_target_text,
     navigation_pamphlet,
-    settings_show_fps,
+    settings_show_stats,
     settings_language,
     settings_contrast,
     settings_dynamic_camera,
