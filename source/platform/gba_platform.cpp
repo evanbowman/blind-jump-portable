@@ -2874,7 +2874,10 @@ void Platform::NetworkPeer::update()
                     // Busy
                 }
                 t.assign("transfer complete! ");
-                t.append(++count);
+
+                result.assign(REG_SIOMULTI0);
+                result.append(" ");
+                result.append(serial_irq_count);
 
                 REG_SIOMLT_SEND = 0x5555;
             }
