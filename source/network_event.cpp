@@ -111,6 +111,12 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             pfrm.network_peer().poll_consume(sizeof(NewLevelSyncSeed));
             break;
         }
+
+        default:
+            while (true) {
+                // somehow, we've ended up in an erroneous state...
+            }
+            break;
         }
     }
 }

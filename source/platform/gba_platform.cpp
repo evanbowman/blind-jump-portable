@@ -2754,6 +2754,7 @@ static bool multinode_validate()
 }
 
 
+
 // The gameboy Multi link protocol always sends data, no matter what, even if we
 // do not have any new data to put in the send buffer. Because there is no
 // distinction between real data and empty transmits, we will transmit in
@@ -2764,11 +2765,13 @@ static bool multinode_validate()
 // needs ignore messages that are all zeroes. Accomplished easily enough by
 // prefixing the sent message with an enum, where the zeroth enumeration is
 // unused.
-static const int tx_message_iters = 10;
+static const int message_iters = 10;
 
-struct TxInfo {
-    u16 data_[tx_message_iters] = {};
+struct WireMessage {
+    u16 data_[message_iters] = {};
 };
+
+using TxInfo = WireMessage;
 
 static const int tx_ring_size = 32;
 
@@ -2834,6 +2837,90 @@ void Platform::NetworkPeer::send_message(const Message& message)
 }
 
 
+using RxInfo = WireMessage;
+
+static const int rx_ring_size = 64;
+
+static ObjectPool<RxInfo, rx_ring_size> rx_message_pool;
+
+static int rx_ring_write_pos = 0;
+static int rx_ring_read_pos = 0;
+static RxInfo* rx_ring[rx_ring_size] = {nullptr};
+
+
+static int rx_loss = 0;
+
+
+static void rx_ring_push(RxInfo* message)
+{
+    if (rx_ring[rx_ring_write_pos]) {
+        // The reader does not seem to be keeping up!
+        rx_loss += 1;
+        auto lost_message = rx_ring[rx_ring_write_pos];
+        rx_ring[rx_ring_write_pos] = nullptr;
+        rx_message_pool.post(lost_message);
+    }
+
+    rx_ring[rx_ring_write_pos] = message;
+    rx_ring_write_pos += 1;
+    rx_ring_write_pos %= rx_ring_size;
+}
+
+
+static RxInfo* rx_ring_pop()
+{
+    RxInfo* msg = nullptr;
+
+    for (int i = rx_ring_read_pos; i < rx_ring_read_pos + rx_ring_size; ++i) {
+        auto index = i % rx_ring_size;
+        if (rx_ring[index]) {
+            msg = rx_ring[index];
+            rx_ring[index] = nullptr;
+            rx_ring_read_pos = index;
+            return msg;
+        }
+    }
+
+    rx_ring_read_pos += 1;
+    rx_ring_read_pos %= rx_ring_size;
+
+    return nullptr;
+}
+
+
+int rx_iter_state = 0;
+RxInfo* rx_current_message = nullptr; // Note: we will drop the first message, oh well.
+
+
+static void multinode_rx_receive()
+{
+    if (rx_iter_state == message_iters) {
+        if (rx_current_message) {
+            rx_ring_push(rx_current_message);
+        }
+
+        rx_current_message = rx_message_pool.get();
+        if (not rx_current_message) {
+            rx_loss += 1;
+        }
+        rx_iter_state = 0;
+    }
+
+    if (rx_current_message) {
+        if (multinode_is_master()) {
+            // FIXME! This assumes only one other player...
+            rx_current_message->data_[rx_iter_state++] = REG_SIOMULTI1;
+        } else {
+            // FIXME! This assumes only one other player...
+            rx_current_message->data_[rx_iter_state++] = REG_SIOMULTI0;
+        }
+    } else {
+        rx_iter_state++;
+    }
+}
+
+
+
 static int transmit_busy_count = 0;
 
 
@@ -2852,7 +2939,7 @@ static int null_bytes_written = 0;
 
 static void multinode_tx_send()
 {
-    if (tx_iter_state == tx_message_iters) {
+    if (tx_iter_state == message_iters) {
         if (tx_current_message) {
             tx_message_pool.post(tx_current_message);
         }
@@ -2872,10 +2959,10 @@ static void multinode_tx_send()
 
 // We want to wait long enough for the minions to prepare TX data for the
 // master.
-static void multinode_start_master_tx_countdown()
+static void multinode_schedule_master_tx()
 {
     REG_TM2CNT_H = 0x00C1;
-    REG_TM2CNT_L = 65339;
+    REG_TM2CNT_L = 63339;
 
     irqEnable(IRQ_TIMER2);
     irqSet(IRQ_TIMER2, [] {
@@ -2894,34 +2981,56 @@ static void multinode_start_master_tx_countdown()
 }
 
 
-int serial_irq_count = 0;
-static void multinode_serial_tx_complete()
+static void multinode_schedule_tx()
 {
-    serial_irq_count += 1;
-
+    // If we're the minion, simply enter data into the send queue. The
+    // master will wait before initiating another transmit.
     if (multinode_is_master()) {
-        // rx_buffer_push(REG_SIOMULTI1);
-        multinode_start_master_tx_countdown();
+        multinode_schedule_master_tx();
     } else {
-        // rx_buffer_push(REG_SIOMULTI0);
-        // If we're the minion, simply enter data into the send queue. The
-        // master will wait before initiating another transmit.
         multinode_tx_send();
     }
 }
 
 
+int serial_irq_count = 0;
+static void multinode_serial_tx_complete()
+{
+    serial_irq_count += 1;
+
+    multinode_rx_receive();
+    multinode_schedule_tx();
+}
+
+
+RxInfo* poller_current_message = nullptr;
+
+
 std::optional<Platform::NetworkPeer::Message>
 Platform::NetworkPeer::poll_message()
 {
-    // TODO...
+    if (auto msg = rx_ring_pop()) {
+        if (poller_current_message) {
+            while (true) ; // failure to deallocate/consume message!
+        }
+        poller_current_message = msg;
+        return Platform::NetworkPeer::Message{reinterpret_cast<byte*>(msg->data_),
+                        static_cast<int>(sizeof(WireMessage::data_))};
+    }
     return {};
 }
 
 
 void Platform::NetworkPeer::poll_consume(u32 size)
 {
-    // TODO...
+    if (poller_current_message) {
+        rx_message_pool.post(poller_current_message);
+    } else {
+        while (true) ; // How do we even end up in this scenario?! We only write
+                       // to poller_current_message if rx_ring_pop returns a
+                       // valid pointer...
+    }
+    poller_current_message = nullptr;
 }
 
 
@@ -2941,9 +3050,7 @@ static void multinode_init()
         ::platform->feed_watchdog();
     }
 
-    if (multinode_is_master()) {
-        multinode_start_master_tx_countdown();
-    }
+    multinode_schedule_tx();
 }
 
 
@@ -2988,7 +3095,7 @@ void Platform::NetworkPeer::update()
         debug_irq_text->append(" ");
         debug_irq_text->append(tx_loss);
         debug_irq_text->append(" ");
-        debug_irq_text->append(null_bytes_written);
+        debug_irq_text->append(rx_loss);
     }
 
 }
