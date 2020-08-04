@@ -197,7 +197,7 @@ if(APPLE OR UNIX OR GAMEBOY_ADVANCE)
 
   set(SHARED_COMPILE_OPTIONS
     -g
-
+    -Os
     -Wall
     -Werror
     -pedantic
@@ -236,6 +236,25 @@ if(GAMEBOY_ADVANCE)
     -mthumb-interwork
     -mcpu=arm7tdmi
     -mtune=arm7tdmi)
+
+
+  add_executable(MultiTest ${SOURCE_DIR}/platform/multi_test.cpp)
+
+  # target_compile_options(MultiTest PRIVATE
+  #   ${SHARED_COMPILE_OPTIONS})
+
+  target_compile_options(MultiTest PRIVATE
+    -marm
+    -mlong-calls
+    -mthumb-interwork
+    -mcpu=arm7tdmi
+    -mtune=arm7tdmi)
+
+  target_link_libraries(MultiTest PRIVATE
+    ${DEVKITPRO}/libgba/lib/libgba.a)
+
+
+
 
   if(GBA_AUTOBUILD_IMG)
     compile_image(spritesheet_intro_clouds 2 4 NO)
@@ -285,6 +304,13 @@ if(GAMEBOY_ADVANCE)
     COMMENT "building cartridge"
     COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary BlindJump BlindJump.gba
     COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump BlindJump.gba)
+
+  add_custom_command(TARGET MultiTest POST_BUILD
+    COMMENT "building cartridge"
+    COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary MultiTest MultiTest.gba
+    COMMAND ${DEVKITPRO}/tools/bin/gbafix -tMultiTest MultiTest.gba)
+
+
 
   target_compile_options(BlindJump PRIVATE
     -D__GBA__)

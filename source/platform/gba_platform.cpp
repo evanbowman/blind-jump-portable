@@ -2275,7 +2275,6 @@ Platform::Platform()
         REG_TM3CNT_H = 1 << 7 | 1 << 6;
     });
 
-
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
     // attempt to save, and if the save fails, assume flash.
@@ -2336,9 +2335,6 @@ Platform::Platform()
         object_attribute_back_buffer[i].attribute_2 = ATTR2_PRIORITY(3);
         object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
     }
-
-    irqEnable(IRQ_SERIAL);
-    irqSet(IRQ_SERIAL, serial_update);
 }
 
 
@@ -2735,49 +2731,155 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
 #include "/opt/devkitpro/libgba/include/gba_sio.h"
 
 
-static bool peer_is_host = false;
-
-
 int rx_buffer[48] = {0};
 int rx_count = 0;
 
 bool ready = true;
 
+
 int serial_irq_count = 0;
 static void serial_update()
 {
-    serial_irq_count++;
-    rx_buffer[rx_count++ % 48] = REG_SIODATA32;
-
-    ready = true;
-    // REG_SIODATA8 = 'B';
-    // REG_SIOCNT |= SIO_START;
-    REG_SIOCNT |= SIO_SO_HIGH;
+    serial_irq_count += 1;
 }
 
 
 Platform::NetworkPeer::NetworkPeer()
 {
-    REG_RCNT = R_NORMAL;
-    REG_SIOCNT |= SIO_32BIT;
-    // REG_SIOCNT |= SIO_IRQ;
 }
 
 
-bool linked = false;
+static int multinode_is_master()
+{
+    return (REG_SIOCNT & (1 << 2)) == 0 and (REG_SIOCNT & (1 << 3));
+}
+
+
+static int multinode_error()
+{
+    return REG_SIOCNT & (1 << 6);
+}
+
+
+static bool multinode_validate()
+{
+    if ((REG_SIOCNT & (1 << 3)) == 0 or multinode_error()) {
+        return false;
+    } else {
+    }
+    return true;
+}
+
+
+static void multinode_init()
+{
+    REG_RCNT = R_MULTI;
+    REG_SIOCNT = SIO_MULTI;
+    REG_SIOCNT |= SIO_IRQ | SIO_115200;
+
+    irqEnable(IRQ_SERIAL);
+    irqSet(IRQ_SERIAL, serial_update);
+
+    while (not multinode_validate()) {
+        ::platform->feed_watchdog();
+    }
+}
 
 
 void Platform::NetworkPeer::connect(const char* peer)
 {
-    linked = true;
-    peer_is_host = false;
+    multinode_init();
 }
 
 
 void Platform::NetworkPeer::listen()
 {
-    linked = true;
-    peer_is_host = true;
+    multinode_init();
+}
+
+
+int transmit_attempts = 0;
+
+
+// bool was_connected = false;
+void Platform::NetworkPeer::update()
+{
+    // if (not multinode_validate()) {
+    //     if (multinode_error()) {
+    //         Text t(*::platform, "error", {});
+    //         while (true)
+    //             ;
+    //     }
+    //     // if (was_connected) {
+    //     //     while (true);
+    //     // }
+    //     return;
+    // }
+
+    while (not ::platform->keyboard().pressed<Key::action_1>())
+        platform->keyboard().poll();
+
+    multinode_init();
+
+    Text t(*::platform, {});
+    Text result(*::platform, {0, 1});
+
+    int count = 0;
+    irqDisable(IRQ_TIMER2);
+    irqDisable(IRQ_TIMER0);
+    irqDisable(IRQ_TIMER3);
+    irqDisable(IRQ_TIMER1);
+
+    while (true) {
+        if (not multinode_validate()) {
+            ::platform->feed_watchdog();
+            t.assign("Error");
+            platform->sleep(20);
+            continue;
+        }
+        ::platform->feed_watchdog();
+
+        if (multinode_is_master()) {
+            t.assign("sending message...");
+
+            REG_SIOMLT_SEND = 0xAAAA;
+
+            REG_SIOCNT |= SIO_START;
+            result.assign(REG_SIOMULTI0);
+
+            while (REG_SIOCNT & SIO_START) {
+                // TRANSFER IN PROGRESS!
+            }
+
+            if (multinode_error()) {
+                t.assign("error!!!");
+            } else {
+                t.assign("message sent! ");
+                t.append(++count);
+            }
+
+            result.assign(REG_SIOMULTI0);
+            result.append(" ");
+            result.append(REG_SIOMULTI1);
+            result.append(" ");
+            result.append(serial_irq_count);
+
+        } else {
+            t.assign("waiting...");
+            REG_SIOMLT_SEND = 0x5555;
+
+            if (REG_SIOCNT & SIO_START) {
+                t.assign("busy...");
+                while (REG_SIOCNT & SIO_START) {
+                    // Busy
+                }
+                t.assign("transfer complete! ");
+                t.append(++count);
+
+                REG_SIOMLT_SEND = 0x5555;
+            }
+        }
+    }
 }
 
 
@@ -2791,86 +2893,19 @@ bool Platform::NetworkPeer::supported_by_device()
 
 bool Platform::NetworkPeer::is_connected() const
 {
-    // TODO...
-    return false;
+    return false; // return multinode_is_valid() ... eventually ...
 }
 
 
 bool Platform::NetworkPeer::is_host() const
 {
-    return ::peer_is_host;
+    return multinode_is_master();
 }
 
 
 void Platform::NetworkPeer::send_message(const Message& message)
 {
     // TODO...
-}
-
-#include "graphics/overlay.hpp"
-
-void Platform::NetworkPeer::update()
-{
-    if (::rx_count) {
-        Text t(*::platform, OverlayCoord{});
-        t.assign("RX: ");
-        t.append(rx_count);
-        t.append(", RD: ");
-
-        for (size_t i = 0; i < rx_count % (sizeof rx_buffer / sizeof(int)); ++i) {
-            t.append(rx_buffer[i]);
-        }
-
-        rx_count = 0;
-
-        ::platform->sleep(120);
-    }
-
-    if (linked) {
-        if (peer_is_host) {
-
-            REG_SIODATA32 = 42;
-
-            REG_SIOCNT |= SIO_SO_HIGH;
-            REG_SIOCNT |= SIO_CLK_INT;
-
-            while (true) {
-                if (REG_SIOCNT & SIO_RDY) {
-                    break;
-                }
-                ::platform->feed_watchdog();
-            }
-
-            REG_SIOCNT |= SIO_START;
-
-            while (REG_SIOCNT & SIO_START) {
-                ::platform->feed_watchdog();
-            }
-
-            rx_buffer[rx_count++ % 48] = REG_SIODATA32;
-
-        } else {
-
-            REG_SIODATA32 = 16;
-
-            REG_SIOCNT |= SIO_SO_HIGH;
-
-            ::platform->sleep(2);
-
-            REG_SIOCNT &= ~SIO_CLK_INT;
-            REG_SIOCNT &= ~SIO_SO_HIGH;
-            REG_SIOCNT |= SIO_START;
-
-            ::platform->sleep(2);
-
-            while (REG_SIOCNT & SIO_START) {
-                ::platform->feed_watchdog();
-            }
-
-            rx_buffer[rx_count++ % 48] = REG_SIODATA32;
-
-        }
-    }
 }
 
 
