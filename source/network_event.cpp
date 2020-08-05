@@ -24,93 +24,26 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             pfrm.network_peer().poll_consume(sizeof(Header));
             break;
 
-        case Header::enemy_state_sync: {
-            if (message->length_ < sizeof(EnemyStateSync)) {
-                return;
-            }
-            EnemyStateSync s;
-            memcpy(&s, message->data_, sizeof s);
-            listener.receive(s, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(EnemyStateSync));
-            break;
-        }
+#define HANDLE_MESSAGE(MESSAGE_TYPE)                                           \
+    case MESSAGE_TYPE::mt: {                                                   \
+        if (message->length_ < sizeof(MESSAGE_TYPE)) {                         \
+            return;                                                            \
+        }                                                                      \
+        MESSAGE_TYPE m;                                                        \
+        memcpy(&m, message->data_, sizeof m);                                  \
+        listener.receive(m, pfrm, game);                                       \
+        pfrm.network_peer().poll_consume(sizeof(MESSAGE_TYPE));                \
+        break;                                                                 \
+    }
 
-        case Header::player_entered_gate: {
-            if (message->length_ < sizeof(PlayerEnteredGate)) {
-                return;
-            }
-            PlayerEnteredGate g;
-            memcpy(&g, message->data_, sizeof g);
-            listener.receive(g, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(PlayerEnteredGate));
-            break;
-        }
-
-        case Header::item_taken: {
-            if (message->length_ < sizeof(ItemTaken)) {
-                return;
-            }
-            ItemTaken t;
-            memcpy(&t, message->data_, sizeof t);
-            listener.receive(t, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(ItemTaken));
-            break;
-        }
-
-        case Header::player_info: {
-            if (message->length_ < sizeof(PlayerInfo)) {
-                return;
-            }
-            PlayerInfo p;
-            memcpy(&p, message->data_, sizeof p);
-            listener.receive(p, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(PlayerInfo));
-            break;
-        }
-
-        case net_event::Header::enemy_health_changed: {
-            if (message->length_ < sizeof(EnemyHealthChanged)) {
-                return;
-            }
-            EnemyHealthChanged ehc;
-            memcpy(&ehc, message->data_, sizeof ehc);
-            listener.receive(ehc, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(EnemyHealthChanged));
-            break;
-        }
-
-        case Header::new_level_idle: {
-            if (message->length_ < sizeof(NewLevelIdle)) {
-                return;
-            }
-            NewLevelIdle l;
-            memcpy(&l, message->data_, sizeof l);
-            listener.receive(l, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(NewLevelIdle));
-            break;
-        }
-
-        case Header::sync_seed: {
-            if (message->length_ < sizeof(SyncSeed)) {
-                return;
-            }
-            SyncSeed s;
-            memcpy(&s, message->data_, sizeof s);
-            listener.receive(s, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(SyncSeed));
-            break;
-        }
-
-        case Header::new_level_sync_seed: {
-            if (message->length_ < sizeof(NewLevelSyncSeed)) {
-                return;
-            }
-            NewLevelSyncSeed s;
-            memcpy(&s, message->data_, sizeof s);
-            listener.receive(s, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(NewLevelSyncSeed));
-            break;
-        }
+            HANDLE_MESSAGE(EnemyStateSync)
+            HANDLE_MESSAGE(PlayerEnteredGate)
+            HANDLE_MESSAGE(ItemTaken)
+            HANDLE_MESSAGE(PlayerInfo)
+            HANDLE_MESSAGE(EnemyHealthChanged)
+            HANDLE_MESSAGE(NewLevelIdle)
+            HANDLE_MESSAGE(SyncSeed)
+            HANDLE_MESSAGE(NewLevelSyncSeed)
 
         default:
             while (true) {
