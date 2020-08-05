@@ -3841,7 +3841,7 @@ NetworkConnectState::update(Platform& pfrm, Game& game, Microseconds delta)
     switch (pfrm.network_peer().interface()) {
     case Platform::NetworkPeer::serial_cable: {
         Text t(pfrm, {1, 1});
-        t.assign("Waiting for Peer connection...");
+        t.assign("Waiting for Peer...");
         pfrm.network_peer().listen();
         return state_pool_.create<ActiveState>(game);
     }
