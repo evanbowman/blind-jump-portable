@@ -3053,12 +3053,21 @@ Platform::NetworkPeer::poll_message()
         // declaring stuff volatile and disabling interrupts, but we cannot
         // easily do those things, for various practical reasons, so we're just
         // hoping that a problematic interrupt during a transmit or a poll is
-        // just exceedingly unlikely in practice. Only one in ten (at most)
-        // serial interrupts can possibly manipulate shared data anyway. This
-        // program isn't an embedded application running on some kind of
-        // life-saving medical device or fighter jet or something, it's just a
-        // video game. In fact, users are more likely to get annoyed if the game
-        // is laggy than if the game has a few rare bugs.
+        // just exceedingly unlikely in practice. The serial interrupt handler
+        // runs approximately twice per frame, and the game only transmits a few
+        // messages per second. Furthermore, the interrupt handlers only access
+        // shared state when rx_iter_state == message_iters, so only one in six
+        // interrupts manipulates shared state, i.e. only one occurrence every
+        // three or so frames. And for writes to shared data to even be a
+        // problem, the interrupt would have to occur between two instructions
+        // when writing to the message ring or to the message pool. And on top
+        // of all that, we are leaving packets in the rx buffer while
+        // rx_iter_state == message iters, so we really shouldn't be writing at
+        // the same time anyway. So in practice, the possibility of manipulating
+        // shared data is just vanishingly small, although I acknowledge that
+        // it's a potential problem. There _IS_ a bug, but I've masked it pretty
+        // well (I hope). No issues detectable in an emulator, but we'll see
+        // about the real hardware... once my link cable arrives in the mail.
         return {};
     }
     if (auto msg = rx_ring_pop()) {
