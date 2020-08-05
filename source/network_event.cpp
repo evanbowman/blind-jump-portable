@@ -35,6 +35,17 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             break;
         }
 
+        case Header::player_entered_gate: {
+            if (message->length_ < sizeof(PlayerEnteredGate)) {
+                return;
+            }
+            PlayerEnteredGate g;
+            memcpy(&g, message->data_, sizeof g);
+            listener.receive(g, pfrm, game);
+            pfrm.network_peer().poll_consume(sizeof(PlayerEnteredGate));
+            break;
+        }
+
         case Header::item_taken: {
             if (message->length_ < sizeof(ItemTaken)) {
                 return;
@@ -43,17 +54,6 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             memcpy(&t, message->data_, sizeof t);
             listener.receive(t, pfrm, game);
             pfrm.network_peer().poll_consume(sizeof(ItemTaken));
-            break;
-        }
-
-        case Header::player_died: {
-            if (message->length_ < sizeof(PlayerDied)) {
-                return;
-            }
-            PlayerDied d;
-            memcpy(&d, message->data_, sizeof d);
-            listener.receive(d, pfrm, game);
-            pfrm.network_peer().poll_consume(sizeof(PlayerDied));
             break;
         }
 

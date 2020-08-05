@@ -34,6 +34,11 @@ public:
         return blaster_;
     }
 
+    bool& warping()
+    {
+        return warping_;
+    }
+
 private:
     void update_sprite_position();
 
@@ -42,4 +47,5 @@ private:
     Vec2<Float> interp_offset_;
     Microseconds anim_timer_;
     Sprite blaster_;
+    bool warping_ = false;
 };

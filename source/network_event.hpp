@@ -18,7 +18,7 @@ struct Header {
               // messages full of zero bytes, so the 0th enumeration must not be
               // used (may not be received).
         player_info,
-        player_died,
+        player_entered_gate,
         enemy_health_changed,
         enemy_state_sync,
         sync_seed,
@@ -45,10 +45,10 @@ struct PlayerInfo {
 };
 
 
-struct PlayerDied {
+struct PlayerEnteredGate {
     Header header_;
 
-    static const auto mt = Header::MessageType::player_died;
+    static const auto mt = Header::MessageType::player_entered_gate;
 };
 
 
@@ -121,7 +121,10 @@ template <typename T, typename... Params>
 void transmit(Platform& pfrm, Params&&... params)
 {
     T message{{T::mt}, std::forward<Params>(params)...};
-    pfrm.network_peer().send_message({(byte*)&message, sizeof message});
+
+    // Most of the time, should only be one iteration...
+    while (pfrm.network_peer().is_connected() and
+           not pfrm.network_peer().send_message({(byte*)&message, sizeof message})) ;
 }
 
 
@@ -132,6 +135,9 @@ public:
     }
 
     virtual void receive(const PlayerInfo&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const PlayerEnteredGate&, Platform&, Game&)
     {
     }
     virtual void receive(const SyncSeed&, Platform&, Game&)
@@ -149,9 +155,6 @@ public:
     virtual void receive(const EnemyStateSync&, Platform&, Game&)
     {
     }
-    virtual void receive(const PlayerDied&, Platform&, Game&)
-    {
-    }
     virtual void receive(const ItemTaken&, Platform&, Game&)
     {
     }
@@ -159,6 +162,14 @@ public:
 
 
 void poll_messages(Platform& pfrm, Game& game, Listener& l);
+
+
+// don't care, but don't want the message queue to overflow either
+inline void ignore_all(Platform& pfrm, Game& game)
+{
+    Listener l;
+    poll_messages(pfrm, game, l);
+}
 
 
 } // namespace net_event

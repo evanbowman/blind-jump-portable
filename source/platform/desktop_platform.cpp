@@ -1691,7 +1691,7 @@ bool Platform::NetworkPeer::is_connected() const
 }
 
 
-void Platform::NetworkPeer::send_message(const Message& message)
+bool Platform::NetworkPeer::send_message(const Message& message)
 {
     auto impl = (NetworkPeerImpl*)impl_;
 
@@ -1700,7 +1700,10 @@ void Platform::NetworkPeer::send_message(const Message& message)
 
     if (sent not_eq message.length_) {
         warning(*::platform, "part of message not sent!");
+        return false;
     }
+
+    return true;
 }
 
 

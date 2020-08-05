@@ -18,6 +18,10 @@ PeerPlayer::PeerPlayer()
 
 void PeerPlayer::sync(const net_event::PlayerInfo& info)
 {
+    if (warping_) {
+        return;
+    }
+
     Vec2<Float> new_pos{static_cast<Float>(info.x_),
                         static_cast<Float>(info.y_)};
 
@@ -73,6 +77,11 @@ void PeerPlayer::update_sprite_position()
 
 void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    if (warping_) {
+        sprite_.set_alpha(Sprite::Alpha::transparent);
+        shadow_.set_alpha(Sprite::Alpha::transparent);
+    }
+
     // Intentionally moves a bit slower than our player character. This actually reduces choppiness.
     static const float MOVEMENT_RATE_CONSTANT = 0.000044f;
 

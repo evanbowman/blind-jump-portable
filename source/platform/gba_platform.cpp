@@ -2812,37 +2812,6 @@ static TxInfo* tx_ring_pop()
 static int tx_loss = 0;
 
 
-void Platform::NetworkPeer::send_message(const Message& message)
-{
-    if (message.length_ > sizeof(TxInfo::data_)) {
-        while (true)
-            ; // error!
-    }
-
-    if (tx_ring[tx_ring_write_pos]) {
-        // The writer does not seem to be keeping up! Guess we'll have to drop the message :(
-        tx_loss += 1;
-        auto lost_message = tx_ring[tx_ring_write_pos];
-        tx_ring[tx_ring_write_pos] = nullptr;
-        tx_message_pool.post(lost_message);
-    }
-
-    auto msg = tx_message_pool.get();
-    if (not msg) {
-        // error! Could not transmit messages fast enough, i.e. we've exhausted
-        // the message pool! How to handle this condition!?
-        tx_loss += 1;
-        return;
-    }
-
-    __builtin_memcpy(msg->data_, message.data_, message.length_);
-
-    tx_ring[tx_ring_write_pos] = msg;
-    tx_ring_write_pos += 1;
-    tx_ring_write_pos %= tx_ring_size;
-}
-
-
 using RxInfo = WireMessage;
 
 static const int rx_ring_size = 64;
@@ -2960,6 +2929,51 @@ static TxInfo* tx_current_message = nullptr;
 static int null_bytes_written = 0;
 
 
+bool Platform::NetworkPeer::send_message(const Message& message)
+{
+    if (message.length_ > sizeof(TxInfo::data_)) {
+        while (true)
+            ; // error!
+    }
+
+    if (not is_connected()) {
+        return false;
+    }
+
+    // TODO: uncomment this block if we actually see issues on the real hardware...
+    // if (tx_iter_state == message_iters) {
+    //     // Decreases the likelihood of manipulating data shared by the interrupt
+    //     // handlers. See related comment in the poll_message() function.
+    //     return false;
+    // }
+
+    if (tx_ring[tx_ring_write_pos]) {
+        // The writer does not seem to be keeping up! Guess we'll have to drop a
+        // message :(
+        tx_loss += 1;
+        auto lost_message = tx_ring[tx_ring_write_pos];
+        tx_ring[tx_ring_write_pos] = nullptr;
+        tx_message_pool.post(lost_message);
+    }
+
+    auto msg = tx_message_pool.get();
+    if (not msg) {
+        // error! Could not transmit messages fast enough, i.e. we've exhausted
+        // the message pool! How to handle this condition!?
+        tx_loss += 1;
+        return false;
+    }
+
+    __builtin_memcpy(msg->data_, message.data_, message.length_);
+
+    tx_ring[tx_ring_write_pos] = msg;
+    tx_ring_write_pos += 1;
+    tx_ring_write_pos %= tx_ring_size;
+
+    return true;
+}
+
+
 static void multiplayer_tx_send()
 {
     if (tx_iter_state == message_iters) {
@@ -3032,6 +3046,21 @@ RxInfo* poller_current_message = nullptr;
 std::optional<Platform::NetworkPeer::Message>
 Platform::NetworkPeer::poll_message()
 {
+    if (rx_iter_state == message_iters) {
+        // This further decreases the likelihood of messing up the receive
+        // interrupt handler by manipulating shared data. We really should be
+        // declaring stuff volatile and disabling interrupts, but we cannot
+        // easily do those things, for various practical reasons, so we're just
+        // hoping that a problematic interrupt during a transmit or a poll is
+        // just exceedingly unlikely in practice. Only one in ten (at most)
+        // serial interrupts can possibly manipulate shared data anyway. This
+        // program isn't an embedded application running on some kind of
+        // life-saving medical device or fighter jet or something, it's just a
+        // video game. In fact, users are more likely to get annoyed if the game
+        // is laggy than if we drop a message with a one-in-a-million
+        // probability...
+        return {};
+    }
     if (auto msg = rx_ring_pop()) {
         if (poller_current_message) {
             while (true)

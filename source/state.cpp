@@ -63,7 +63,7 @@ public:
         hidden
     } notification_status = NotificationStatus::hidden;
 
-    void receive(const net_event::PlayerDied&, Platform&, Game&) override;
+    void receive(const net_event::PlayerEnteredGate&, Platform&, Game&) override;
     void receive(const net_event::EnemyStateSync&, Platform&, Game&) override;
     void receive(const net_event::SyncSeed&, Platform&, Game&) override;
     void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
@@ -929,6 +929,16 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
+void OverworldState::receive(const net_event::PlayerEnteredGate&,
+                             Platform&,
+                             Game& game)
+{
+    if (game.peer()) {
+        game.peer()->warping() = true;
+    }
+}
+
+
 void OverworldState::receive(const net_event::SyncSeed& s, Platform&, Game&)
 {
     rng::critical_state = s.random_state_;
@@ -1045,17 +1055,6 @@ player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
 {
     pfrm.speaker().play_sound("explosion1", 3, position);
     big_explosion(pfrm, game, position);
-}
-
-
-void OverworldState::receive(const net_event::PlayerDied&,
-                             Platform& pfrm,
-                             Game& game)
-{
-    if (game.peer()) {
-        player_death(pfrm, game, game.peer()->get_position());
-        game.peer().reset();
-    }
 }
 
 
@@ -1594,6 +1593,10 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             apply_gravity_well(t_pos, game.player(), 48, 26, 1.3f, 34);
 
         if (dist < 6) {
+            if (pfrm.network_peer().is_connected()) {
+                net_event::transmit<net_event::PlayerEnteredGate>(pfrm);
+            }
+
             game.player().move(t_pos);
             pfrm.speaker().play_sound("bell", 5);
             return state_pool_.create<PreFadePauseState>(game);
@@ -1638,6 +1641,10 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
             pfrm.sleep(2);
             game.player().set_visible(true);
+
+            if (game.peer()) {
+                game.peer()->warping() = false;
+            }
 
             return state_pool_.create<WarpInState>(game);
         }
@@ -4440,10 +4447,8 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
             sync_seed.header_.message_type_ =
                 net_event::Header::new_level_sync_seed;
             sync_seed.random_state_ = rng::critical_state;
-            pfrm.network_peer().send_message(
-                {(byte*)&sync_seed, sizeof sync_seed});
             info(pfrm, "sent seed to peer");
-            ready_ = true;
+            ready_ = pfrm.network_peer().send_message({(byte*)&sync_seed, sizeof sync_seed});
         }
 
         net_event::poll_messages(pfrm, game, *this);

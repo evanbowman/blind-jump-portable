@@ -436,7 +436,7 @@ public:
         // IMPORTANT!!! Messages containing all zeroes are not guaranteed to be
         // received on some platforms, so you should have at least some high
         // bits in your message.
-        void send_message(const Message& message);
+        bool send_message(const Message& message);
 
         void update();
 
