@@ -63,7 +63,8 @@ public:
         hidden
     } notification_status = NotificationStatus::hidden;
 
-    void receive(const net_event::PlayerEnteredGate&, Platform&, Game&) override;
+    void
+    receive(const net_event::PlayerEnteredGate&, Platform&, Game&) override;
     void receive(const net_event::EnemyStateSync&, Platform&, Game&) override;
     void receive(const net_event::SyncSeed&, Platform&, Game&) override;
     void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
@@ -1026,8 +1027,8 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
         info.y_ = game.player().get_position().cast<s16>().y;
         info.texture_index_ = game.player().get_sprite().get_texture_index();
         info.size_ = game.player().get_sprite().get_size();
-        info.x_speed_ = game.player().get_speed().x;
-        info.y_speed_ = game.player().get_speed().y;
+        info.x_speed_ = game.player().get_speed().x * 10;
+        info.y_speed_ = game.player().get_speed().y * 10;
         info.visible_ = game.player().get_sprite().get_alpha() not_eq
                         Sprite::Alpha::transparent;
         info.weapon_drawn_ =
@@ -4453,7 +4454,8 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
                 net_event::Header::new_level_sync_seed;
             sync_seed.random_state_ = rng::critical_state;
             info(pfrm, "sent seed to peer");
-            ready_ = pfrm.network_peer().send_message({(byte*)&sync_seed, sizeof sync_seed});
+            ready_ = pfrm.network_peer().send_message(
+                {(byte*)&sync_seed, sizeof sync_seed});
         }
 
         net_event::poll_messages(pfrm, game, *this);

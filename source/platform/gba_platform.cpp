@@ -2770,7 +2770,8 @@ static bool multiplayer_validate()
 // needs ignore messages that are all zeroes. Accomplished easily enough by
 // prefixing the sent message with an enum, where the zeroth enumeration is
 // unused.
-static const int message_iters = 10;
+static const int message_iters =
+    Platform::NetworkPeer::MaxMessageSize / sizeof(u16);
 
 struct WireMessage {
     u16 data_[message_iters] = {};
@@ -3057,8 +3058,7 @@ Platform::NetworkPeer::poll_message()
         // program isn't an embedded application running on some kind of
         // life-saving medical device or fighter jet or something, it's just a
         // video game. In fact, users are more likely to get annoyed if the game
-        // is laggy than if we drop a message with a one-in-a-million
-        // probability...
+        // is laggy than if the game has a few rare bugs.
         return {};
     }
     if (auto msg = rx_ring_pop()) {
@@ -3142,9 +3142,7 @@ void Platform::NetworkPeer::update()
 
 Platform::NetworkPeer::Stats Platform::NetworkPeer::stats() const
 {
-    return { serial_irq_count / message_iters,
-             tx_loss,
-             rx_loss };
+    return {serial_irq_count / message_iters, tx_loss, rx_loss};
 }
 
 

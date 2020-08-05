@@ -1774,9 +1774,7 @@ Platform::NetworkPeer::~NetworkPeer()
 
 Platform::NetworkPeer::Stats Platform::NetworkPeer::stats() const
 {
-    return { 0,
-             0,
-             0 };
+    return {0, 0, 0};
 }
 
 

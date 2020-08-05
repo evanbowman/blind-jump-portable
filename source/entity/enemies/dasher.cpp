@@ -257,7 +257,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             const auto int_pos = position_.cast<s16>();
 
             if (pf.network_peer().is_host()) {
-                net_event::transmit<net_event::EnemyStateSync>(pf, (u8)state_, id(), int_pos.x, int_pos.y);
+                net_event::transmit<net_event::EnemyStateSync>(
+                    pf, (u8)state_, id(), int_pos.x, int_pos.y);
             }
         }
         break;

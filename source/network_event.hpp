@@ -8,7 +8,7 @@
 
 
 // FIXME: Account for endianness!
-
+// NOTE: Message size should not exceed 14 bytes.
 
 namespace net_event {
 
@@ -33,13 +33,18 @@ struct Header {
 struct PlayerInfo {
     Header header_;
     Sprite::Size size_;
-    u8 texture_index_;
-    s16 x_;
-    s16 y_;
-    Float x_speed_;
-    Float y_speed_;
+    // TODO: replace bitfields with single var, provide bitmasks
     u8 visible_ : 1;
     u8 weapon_drawn_ : 1;
+    u8 texture_index_ : 6;
+    s16 x_;
+    s16 y_;
+
+    // For speed values, the player's speed ranges from float -1.5 to
+    // 1.5. Therefore, we can save a lot of space in the message by using single
+    // signed bytes, and representing the values as fixed point.
+    s8 x_speed_; // Fixed point with implicit 10^1 decimal
+    s8 y_speed_; // Fixed point with implicit 10^1 decimal
 
     static const auto mt = Header::MessageType::player_info;
 };
@@ -123,8 +128,10 @@ void transmit(Platform& pfrm, Params&&... params)
     T message{{T::mt}, std::forward<Params>(params)...};
 
     // Most of the time, should only be one iteration...
-    while (pfrm.network_peer().is_connected() and
-           not pfrm.network_peer().send_message({(byte*)&message, sizeof message})) ;
+    while (
+        pfrm.network_peer().is_connected() and
+        not pfrm.network_peer().send_message({(byte*)&message, sizeof message}))
+        ;
 }
 
 

@@ -4,8 +4,8 @@
 #include "collision.hpp"
 #include "enemy.hpp"
 #include "entity/entity.hpp"
-#include "tileMap.hpp"
 #include "network_event.hpp"
+#include "tileMap.hpp"
 
 
 class LaserExplosion;

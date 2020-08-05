@@ -52,8 +52,8 @@ void PeerPlayer::sync(const net_event::PlayerInfo& info)
 
     sprite_.set_texture_index(info.texture_index_);
     sprite_.set_size(info.size_);
-    speed_.x = info.x_speed_;
-    speed_.y = info.y_speed_;
+    speed_.x = Float(info.x_speed_) / 10;
+    speed_.y = Float(info.y_speed_) / 10;
 
     switch (info.size_) {
     case Sprite::Size::w16_h32:
