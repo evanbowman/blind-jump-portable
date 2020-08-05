@@ -1616,6 +1616,10 @@ void FadeInState::enter(Platform& pfrm, Game& game, State&)
 {
     game.player().set_visible(game.level() == 0);
     game.camera().set_speed(0.75);
+
+    if (game.peer()) {
+        game.peer()->warping() = true;
+    }
 }
 
 
@@ -1641,10 +1645,6 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
             pfrm.sleep(2);
             game.player().set_visible(true);
-
-            if (game.peer()) {
-                game.peer()->warping() = false;
-            }
 
             return state_pool_.create<WarpInState>(game);
         }
@@ -1679,6 +1679,11 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         shook_ = false;
         pfrm.screen().fade(0.f, current_zone(game).energy_glow_color_);
         pfrm.screen().pixelate(0);
+
+        if (game.peer()) {
+            game.peer()->warping() = false;
+        }
+
         return state_pool_.create<ActiveState>(game);
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
