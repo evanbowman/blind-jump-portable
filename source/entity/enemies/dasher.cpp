@@ -254,7 +254,10 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::idle;
             sprite_.set_texture_index(TextureMap::dasher_idle);
 
-            if (pf.network_peer().is_host()) {
+            // Seems sensible to have the peer whos player is nearest to the
+            // enemy send out the sync state message. Seeing as the enemy moves
+            // with respect to the nearest player
+            if (&target == &game.player()) {
                 const auto int_pos = position_.cast<s16>();
 
                 net_event::EnemyStateSync s;

@@ -39,7 +39,7 @@ StatePtr null_state();
 
 using NotificationStr = StringBuffer<40>;
 void push_notification(Platform& pfrm,
-                       Game& game,
+                       State* state,
                        const NotificationStr& string);
 
 

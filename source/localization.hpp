@@ -75,7 +75,9 @@ enum class LocaleString {
     distance_units_feet,
     launch,
     peer_connected,
+    peer_connection_failed,
     peer_lost,
+    level_transition_awaiting_peers,
     count
 };
 

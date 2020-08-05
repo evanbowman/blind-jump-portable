@@ -26,10 +26,11 @@ struct Header {
         new_level_idle,
         item_taken,
     } message_type_;
-}; static_assert(sizeof(Header) == 1);
+};
+static_assert(sizeof(Header) == 1);
 
 
-#define NET_EVENT_SIZE_CHECK(TYPE) \
+#define NET_EVENT_SIZE_CHECK(TYPE)                                             \
     static_assert(sizeof(TYPE) <= Platform::NetworkPeer::max_message_size);
 
 
@@ -59,7 +60,8 @@ struct PlayerInfo {
     s16 y_;
 
     static const auto mt = Header::MessageType::player_info;
-}; NET_EVENT_SIZE_CHECK(PlayerInfo)
+};
+NET_EVENT_SIZE_CHECK(PlayerInfo)
 
 
 struct PlayerEnteredGate {
@@ -67,7 +69,8 @@ struct PlayerEnteredGate {
     u8 unused_[11];
 
     static const auto mt = Header::MessageType::player_entered_gate;
-}; NET_EVENT_SIZE_CHECK(PlayerEnteredGate)
+};
+NET_EVENT_SIZE_CHECK(PlayerEnteredGate)
 
 
 // Currently unused. In order to use ItemTaken, we'll need to keep entity ids
@@ -80,7 +83,8 @@ struct ItemTaken {
     Entity::Id id_;
 
     static const auto mt = Header::MessageType::item_taken;
-}; NET_EVENT_SIZE_CHECK(ItemTaken)
+};
+NET_EVENT_SIZE_CHECK(ItemTaken)
 
 
 struct EnemyHealthChanged {
@@ -90,7 +94,8 @@ struct EnemyHealthChanged {
     Entity::Health new_health_;
 
     static const auto mt = Header::MessageType::enemy_health_changed;
-}; NET_EVENT_SIZE_CHECK(EnemyHealthChanged)
+};
+NET_EVENT_SIZE_CHECK(EnemyHealthChanged)
 
 
 struct EnemyStateSync {
@@ -102,7 +107,8 @@ struct EnemyStateSync {
     Entity::Id id_;
 
     static const auto mt = Header::MessageType::enemy_state_sync;
-}; NET_EVENT_SIZE_CHECK(EnemyStateSync)
+};
+NET_EVENT_SIZE_CHECK(EnemyStateSync)
 
 
 struct SyncSeed {
@@ -111,7 +117,8 @@ struct SyncSeed {
     rng::Generator random_state_;
 
     static const auto mt = Header::MessageType::sync_seed;
-}; NET_EVENT_SIZE_CHECK(SyncSeed)
+};
+NET_EVENT_SIZE_CHECK(SyncSeed)
 
 
 // We make a special distinction for new level seeds, due to a special handshake
@@ -123,7 +130,8 @@ struct NewLevelSyncSeed {
     rng::Generator random_state_;
 
     static const auto mt = Header::MessageType::new_level_sync_seed;
-}; NET_EVENT_SIZE_CHECK(NewLevelSyncSeed)
+};
+NET_EVENT_SIZE_CHECK(NewLevelSyncSeed)
 
 
 struct NewLevelIdle {
@@ -131,11 +139,11 @@ struct NewLevelIdle {
     u8 unused_[11];
 
     static const auto mt = Header::MessageType::new_level_idle;
-}; NET_EVENT_SIZE_CHECK(NewLevelIdle)
+};
+NET_EVENT_SIZE_CHECK(NewLevelIdle)
 
 
-template <typename T>
-void transmit(Platform& pfrm, T& message)
+template <typename T> void transmit(Platform& pfrm, T& message)
 {
     static_assert(sizeof(T) <= Platform::NetworkPeer::max_message_size);
 

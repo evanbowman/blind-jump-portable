@@ -1333,6 +1333,17 @@ spawn_item_chest(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
             not(item == Item::Type::signal_jammer and
                 game.inventory().item_count(Item::Type::signal_jammer) > 2)) {
 
+            if (pfrm.network_peer().is_connected() and
+                (item == Item::Type::lethargy or
+                 item == Item::Type::signal_jammer)) {
+                // Lethargy changes the timestep, and the signal jammer changes
+                // the enemy's target to something other than one of the
+                // players. Due to how these items complicate keeping
+                // multiplayer state synchronized, do not spawn them when remote
+                // players have connected.
+                continue;
+            }
+
             items_in_range.push_back(item);
         }
     }

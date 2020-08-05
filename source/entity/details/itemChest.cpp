@@ -59,7 +59,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                             }
                         }());
 
-                        push_notification(pfrm, game, str);
+                        push_notification(pfrm, game.state(), str);
 
                     } else {
                         pfrm.sleep(10);

@@ -380,7 +380,9 @@ const char* locale_string(LocaleString ls)
         case LocaleString::distance_units_feet: return " ft";
         case LocaleString::launch: return "launch: ";
         case LocaleString::peer_connected: return "Peer connected!";
+        case LocaleString::peer_connection_failed: return "Peer connection failed!";
         case LocaleString::peer_lost: return "Peer died!";
+        case LocaleString::level_transition_awaiting_peers: return "Waiting for Peers...";
         default: return empty_str;
         }
         break;

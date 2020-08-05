@@ -420,7 +420,7 @@ public:
         NetworkPeer(const NetworkPeer&) = delete;
         ~NetworkPeer();
 
-        void connect(const char* peer);
+        void connect(const char* peer_address);
         void listen();
 
         void disconnect();
@@ -432,6 +432,13 @@ public:
             const byte* data_;
             u32 length_;
         };
+
+        enum Interface {
+            serial_cable,
+            internet,
+        };
+
+        Interface interface() const;
 
         // NOTE: You cannot transmit messages larger than 12 bytes. On the
         // gameboy advance, 12 byte messages require at least six serial io

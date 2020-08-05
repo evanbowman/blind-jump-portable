@@ -3000,7 +3000,7 @@ static void multiplayer_tx_send()
 static void multiplayer_schedule_master_tx()
 {
     REG_TM2CNT_H = 0x00C1;
-    REG_TM2CNT_L = 63339; // TODO: Try using a shorter delay
+    REG_TM2CNT_L = 64437; // TODO: Try using a shorter delay
                           // (63339 == approx 6.5 milliseconds)
 
     irqEnable(IRQ_TIMER2);
@@ -3101,6 +3101,10 @@ void Platform::NetworkPeer::poll_consume(u32 size)
 
 static void multiplayer_init()
 {
+    ::platform->network_peer().disconnect();
+
+    ::platform->sleep(3);
+
     REG_RCNT = R_MULTI;
     REG_SIOCNT = SIO_MULTI;
     REG_SIOCNT |= SIO_IRQ | SIO_115200;
@@ -3111,11 +3115,54 @@ static void multiplayer_init()
     // Put this here for now, not sure whether it's really necessary...
     REG_SIOMLT_SEND = 0x5555;
 
+    auto& clk = DeltaClock::instance();
+
+    Microseconds delta = 0;
     while (not multiplayer_validate()) {
+        delta += clk.reset();
+        if (delta > seconds(20)) {
+            ::platform->network_peer().disconnect(); // just for good measure
+            REG_SIOCNT = 0;
+            irqDisable(IRQ_SERIAL);
+            return;
+        }
         ::platform->feed_watchdog();
     }
+    // When the multi link cable is actually plugged into both gameboys, the
+    // connection should already be established at this point. But when no cable
+    // is connected to the link port, all of the SIOCNT bits will represent a
+    // valid state anyway. So let's push out a message, regardless, and wait to
+    // receive a response.
+
+    static const u8 handshake[12] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+
+    ::platform->network_peer().send_message(
+        {(byte*)&handshake, sizeof handshake});
 
     multiplayer_schedule_tx();
+
+    while (true) {
+        ::platform->feed_watchdog();
+        delta += clk.reset();
+        if (auto msg = ::platform->network_peer().poll_message()) {
+            for (u32 i = 0; i < sizeof handshake; ++i) {
+                if (((u8*)msg->data_)[i] not_eq handshake[i]) {
+                    ::platform->network_peer().disconnect();
+                    return;
+                }
+            }
+            info(*::platform, "validated handshake");
+            ::platform->network_peer().poll_consume(sizeof handshake);
+            return;
+        } else if (delta > seconds(20)) {
+            error(*::platform, "no handshake received within a reasonable window");
+            ::platform->network_peer().disconnect();
+            return;
+        }
+    }
+
+    // OK, we've extablished a connection!
 }
 
 
@@ -3129,9 +3176,6 @@ void Platform::NetworkPeer::listen()
 {
     multiplayer_init();
 }
-
-
-int transmit_attempts = 0;
 
 
 // bool was_connected = false;
@@ -3184,6 +3228,12 @@ void Platform::NetworkPeer::disconnect()
         }
         REG_SIOCNT = 0;
 
+        if (poller_current_message) {
+            // Not sure whether this is the correct thing to do here...
+            rx_message_pool.post(poller_current_message);
+            poller_current_message = nullptr;
+        }
+
         rx_iter_state = 0;
         if (rx_current_message) {
             rx_message_pool.post(rx_current_message);
@@ -3209,6 +3259,12 @@ void Platform::NetworkPeer::disconnect()
         tx_ring_write_pos = 0;
         tx_ring_read_pos = 0;
     }
+}
+
+
+Platform::NetworkPeer::Interface Platform::NetworkPeer::interface() const
+{
+    return Interface::serial_cable;
 }
 
 

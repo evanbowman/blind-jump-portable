@@ -1,4 +1,5 @@
 #include "inventory.hpp"
+#include "game.hpp"
 #include "graphics/overlay.hpp"
 #include "localization.hpp"
 #include "state.hpp"
@@ -36,7 +37,7 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
                 str += description;
                 str += locale_string(LocaleString::got_item_after);
 
-                push_notification(pfrm, game, str);
+                push_notification(pfrm, game.state(), str);
             }
 
             return;
@@ -46,7 +47,7 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
     NotificationStr str;
     str += locale_string(LocaleString::inventory_full);
 
-    push_notification(pfrm, game, str);
+    push_notification(pfrm, game.state(), str);
 }
 
 

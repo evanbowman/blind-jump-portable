@@ -324,7 +324,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             }
             state_ = State::idle_wait;
 
-            if (pfrm.network_peer().is_host()) {
+            if (&target == &game.player()) {
                 const auto int_pos = position_.cast<s16>();
 
                 net_event::EnemyStateSync s;

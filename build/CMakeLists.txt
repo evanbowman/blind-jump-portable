@@ -69,6 +69,7 @@ set(SOURCES
   ${SOURCE_DIR}/network_event.cpp
   ${SOURCE_DIR}/entity/player.cpp
   ${SOURCE_DIR}/localization.cpp
+  ${SOURCE_DIR}/state_impl.cpp
   ${SOURCE_DIR}/inventory.cpp
   ${SOURCE_DIR}/collision.cpp
   ${SOURCE_DIR}/powerup.cpp
@@ -76,7 +77,6 @@ set(SOURCES
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/string.cpp
   ${SOURCE_DIR}/start.cpp
-  ${SOURCE_DIR}/state.cpp
   ${SOURCE_DIR}/game.cpp
   ${SOURCE_DIR}/conf.cpp)
 
