@@ -41,6 +41,20 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
 
     timer_ += dt;
 
+    auto send_state = [&] {
+                          if (pfrm.network_peer().is_host()) {
+                              const auto int_pos = position_.cast<s16>();
+
+                              net_event::EnemyStateSync s;
+                              s.state_ = static_cast<u8>(state_);
+                              s.x_ = int_pos.x;
+                              s.y_ = int_pos.y;
+                              s.id_ = id();
+
+                              net_event::transmit(pfrm, s);
+                          }
+                      };
+
     if (visible()) {
         // Calculating our current tile coordinate is costly, but we do want to hide
         // our shadow from view when floating over empty space. So run the check
@@ -103,12 +117,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::idle2;
 
-            if (pfrm.network_peer().is_host()) {
-                const auto int_pos = position_.cast<s16>();
-
-                net_event::transmit<net_event::EnemyStateSync>(
-                    pfrm, (u8)state_, id(), int_pos.x, int_pos.y);
-            }
+            send_state();
         }
         break;
 
@@ -132,12 +141,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::idle3;
 
-            if (pfrm.network_peer().is_host()) {
-                const auto int_pos = position_.cast<s16>();
-
-                net_event::transmit<net_event::EnemyStateSync>(
-                    pfrm, (u8)state_, id(), int_pos.x, int_pos.y);
-            }
+            send_state();
         }
         break;
 
@@ -161,12 +165,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::idle4;
 
-            if (pfrm.network_peer().is_host()) {
-                const auto int_pos = position_.cast<s16>();
-
-                net_event::transmit<net_event::EnemyStateSync>(
-                    pfrm, (u8)state_, id(), int_pos.x, int_pos.y);
-            }
+            send_state();
         }
         break;
 
@@ -187,12 +186,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::idle1;
 
-            if (pfrm.network_peer().is_host()) {
-                const auto int_pos = position_.cast<s16>();
-
-                net_event::transmit<net_event::EnemyStateSync>(
-                    pfrm, (u8)state_, id(), int_pos.x, int_pos.y);
-            }
+            send_state();
         }
         break;
     }

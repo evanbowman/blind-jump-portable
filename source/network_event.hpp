@@ -7,13 +7,13 @@
 #include "platform/platform.hpp"
 
 
-// FIXME: Account for endianness!
-// NOTE: Message size should not exceed 14 bytes.
+// FIXME: Account for endianness! All of my devices are little endian.
+
 
 namespace net_event {
 
 struct Header {
-    enum MessageType {
+    enum MessageType : u8 {
         null, // Important! The platform does not guarantee transmission of
               // messages full of zero bytes, so the 0th enumeration must not be
               // used (may not be received).
@@ -25,20 +25,29 @@ struct Header {
         new_level_sync_seed,
         new_level_idle,
         item_taken,
-        connection_healthy,
     } message_type_;
-};
+}; static_assert(sizeof(Header) == 1);
+
+
+#define NET_EVENT_SIZE_CHECK(TYPE) \
+    static_assert(sizeof(TYPE) <= Platform::NetworkPeer::max_message_size);
 
 
 struct PlayerInfo {
     Header header_;
-    Sprite::Size size_;
     // TODO: replace bitfields with single var, provide bitmasks
+    Sprite::Size size_ : 1;
+
+    enum DisplayColor { none, injured, got_coin, got_heart };
+
+    DisplayColor disp_color_ : 3;
+    u8 color_amount_ : 4; // Right-shifted by four
+
+
+    u8 unused2_[3];
     u8 visible_ : 1;
     u8 weapon_drawn_ : 1;
     u8 texture_index_ : 6;
-    s16 x_;
-    s16 y_;
 
     // For speed values, the player's speed ranges from float -1.5 to
     // 1.5. Therefore, we can save a lot of space in the message by using single
@@ -46,15 +55,19 @@ struct PlayerInfo {
     s8 x_speed_; // Fixed point with implicit 10^1 decimal
     s8 y_speed_; // Fixed point with implicit 10^1 decimal
 
+    s16 x_;
+    s16 y_;
+
     static const auto mt = Header::MessageType::player_info;
-};
+}; NET_EVENT_SIZE_CHECK(PlayerInfo)
 
 
 struct PlayerEnteredGate {
     Header header_;
+    u8 unused_[11];
 
     static const auto mt = Header::MessageType::player_entered_gate;
-};
+}; NET_EVENT_SIZE_CHECK(PlayerEnteredGate)
 
 
 // Currently unused. In order to use ItemTaken, we'll need to keep entity ids
@@ -63,45 +76,42 @@ struct PlayerEnteredGate {
 // ineffective, or worse.
 struct ItemTaken {
     Header header_;
+    u8 unused_[7];
     Entity::Id id_;
 
     static const auto mt = Header::MessageType::item_taken;
-};
-
-
-struct ConnectionHealthy {
-    Header header_;
-
-    static const auto mt = Header::MessageType::connection_healthy;
-};
+}; NET_EVENT_SIZE_CHECK(ItemTaken)
 
 
 struct EnemyHealthChanged {
     Header header_;
+    u8 unused_[3];
     Entity::Id id_;
     Entity::Health new_health_;
 
     static const auto mt = Header::MessageType::enemy_health_changed;
-};
+}; NET_EVENT_SIZE_CHECK(EnemyHealthChanged)
 
 
 struct EnemyStateSync {
     Header header_;
+    u8 unused_[2];
     u8 state_;
-    Entity::Id id_;
     s16 x_;
     s16 y_;
+    Entity::Id id_;
 
     static const auto mt = Header::MessageType::enemy_state_sync;
-};
+}; NET_EVENT_SIZE_CHECK(EnemyStateSync)
 
 
 struct SyncSeed {
     Header header_;
+    u8 unused_[7];
     rng::Generator random_state_;
 
     static const auto mt = Header::MessageType::sync_seed;
-};
+}; NET_EVENT_SIZE_CHECK(SyncSeed)
 
 
 // We make a special distinction for new level seeds, due to a special handshake
@@ -109,23 +119,27 @@ struct SyncSeed {
 // message, which are broadcast by the host during other game states.
 struct NewLevelSyncSeed {
     Header header_;
+    u8 unused_[7];
     rng::Generator random_state_;
 
     static const auto mt = Header::MessageType::new_level_sync_seed;
-};
+}; NET_EVENT_SIZE_CHECK(NewLevelSyncSeed)
 
 
 struct NewLevelIdle {
     Header header_;
+    u8 unused_[11];
 
     static const auto mt = Header::MessageType::new_level_idle;
-};
+}; NET_EVENT_SIZE_CHECK(NewLevelIdle)
 
 
-template <typename T, typename... Params>
-void transmit(Platform& pfrm, Params&&... params)
+template <typename T>
+void transmit(Platform& pfrm, T& message)
 {
-    T message{{T::mt}, std::forward<Params>(params)...};
+    static_assert(sizeof(T) <= Platform::NetworkPeer::max_message_size);
+
+    message.header_.message_type_ = T::mt;
 
     // Most of the time, should only be one iteration...
     while (

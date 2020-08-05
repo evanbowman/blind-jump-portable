@@ -20,7 +20,7 @@ class PeerPlayer : public Entity {
 public:
     PeerPlayer();
 
-    void sync(const net_event::PlayerInfo& info);
+    void sync(Game& game, const net_event::PlayerInfo& info);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 

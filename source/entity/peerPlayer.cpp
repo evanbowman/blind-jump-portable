@@ -16,7 +16,7 @@ PeerPlayer::PeerPlayer()
 }
 
 
-void PeerPlayer::sync(const net_event::PlayerInfo& info)
+void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
 {
     if (warping_) {
         return;
@@ -45,6 +45,29 @@ void PeerPlayer::sync(const net_event::PlayerInfo& info)
     } else {
         blaster_.set_alpha(Sprite::Alpha::transparent);
     }
+
+    switch (info.disp_color_) {
+    case net_event::PlayerInfo::DisplayColor::none:
+        sprite_.set_mix({});
+        break;
+
+    case net_event::PlayerInfo::DisplayColor::injured:
+        sprite_.set_mix({current_zone(game).injury_glow_color_,
+                         static_cast<u8>(info.color_amount_ << 4)});
+        break;
+
+    case net_event::PlayerInfo::DisplayColor::got_coin:
+        sprite_.set_mix({current_zone(game).energy_glow_color_,
+                         static_cast<u8>(info.color_amount_ << 4)});
+        break;
+
+    case net_event::PlayerInfo::DisplayColor::got_heart:
+        sprite_.set_mix({ColorConstant::spanish_crimson,
+                         static_cast<u8>(info.color_amount_ << 4)});
+        break;
+    }
+
+    blaster_.set_mix(sprite_.get_mix());
 
     update_sprite_position();
 

@@ -2771,7 +2771,7 @@ static bool multiplayer_validate()
 // prefixing the sent message with an enum, where the zeroth enumeration is
 // unused.
 static const int message_iters =
-    Platform::NetworkPeer::MaxMessageSize / sizeof(u16);
+    Platform::NetworkPeer::max_message_size / sizeof(u16);
 
 struct WireMessage {
     u16 data_[message_iters] = {};
@@ -3000,7 +3000,8 @@ static void multiplayer_tx_send()
 static void multiplayer_schedule_master_tx()
 {
     REG_TM2CNT_H = 0x00C1;
-    REG_TM2CNT_L = 63339;
+    REG_TM2CNT_L = 63339; // TODO: Try using a shorter delay
+                          // (63339 == approx 6.5 milliseconds)
 
     irqEnable(IRQ_TIMER2);
     irqSet(IRQ_TIMER2, [] {

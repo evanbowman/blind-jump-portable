@@ -80,7 +80,10 @@ void Enemy::debit_health(Platform& pfrm, Health amount)
     Entity::debit_health(amount);
 
     if (pfrm.network_peer().is_connected()) {
-        net_event::transmit<net_event::EnemyHealthChanged>(
-            pfrm, id(), get_health());
+        net_event::EnemyHealthChanged e;
+        e.id_ = id();
+        e.new_health_ = get_health();
+
+        net_event::transmit(pfrm, e);
     }
 }

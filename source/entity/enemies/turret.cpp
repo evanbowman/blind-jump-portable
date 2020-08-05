@@ -150,13 +150,6 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > 0) {
             timer_ -= dt;
         } else {
-            // FIXME: Turrets should be sync'd, but doing this here seems to
-            // break stuff.
-            // if (pfrm.network_peer().is_host()) {
-            //     net_event::transmit<net_event::EnemyStateSync>(
-            //         pfrm, (u8)state_, id(), position_.cast<s16>());
-            // }
-
             pfrm.speaker().play_sound("laser1", 4, position_);
 
             this->shoot(pfrm, game, origin(), aim(), bullet_speed);

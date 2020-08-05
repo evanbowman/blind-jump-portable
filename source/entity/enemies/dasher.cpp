@@ -254,11 +254,16 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::idle;
             sprite_.set_texture_index(TextureMap::dasher_idle);
 
-            const auto int_pos = position_.cast<s16>();
-
             if (pf.network_peer().is_host()) {
-                net_event::transmit<net_event::EnemyStateSync>(
-                    pf, (u8)state_, id(), int_pos.x, int_pos.y);
+                const auto int_pos = position_.cast<s16>();
+
+                net_event::EnemyStateSync s;
+                s.state_ = static_cast<u8>(state_);
+                s.x_ = int_pos.x;
+                s.y_ = int_pos.y;
+                s.id_ = id();
+
+                net_event::transmit(pf, s);
             }
         }
         break;

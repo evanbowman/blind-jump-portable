@@ -327,8 +327,13 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             if (pfrm.network_peer().is_host()) {
                 const auto int_pos = position_.cast<s16>();
 
-                net_event::transmit<net_event::EnemyStateSync>(
-                    pfrm, (u8)state_, id(), int_pos.x, int_pos.y);
+                net_event::EnemyStateSync s;
+                s.state_ = static_cast<u8>(state_);
+                s.x_ = int_pos.x;
+                s.y_ = int_pos.y;
+                s.id_ = id();
+
+                net_event::transmit(pfrm, s);
             }
         }
         break;

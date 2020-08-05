@@ -438,7 +438,7 @@ public:
         // interrupts, along with a bunch of timer interrupts. It's just not
         // realistic to make the messages too much larger, if you want to
         // receive the data within a reasonable amount of time on all platforms.
-        static const u32 MaxMessageSize = 12;
+        static const u32 max_message_size = 12;
 
         // IMPORTANT!!! Messages containing all zeroes are not guaranteed to be
         // received on some platforms, so you should have at least some high

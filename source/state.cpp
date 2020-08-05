@@ -40,7 +40,23 @@ bool within_view_frustum(const Platform::Screen& screen,
 static Bitmatrix<TileMap::width, TileMap::height> visited;
 
 
-class OverworldState : public State, public net_event::Listener {
+class CommonNetworkListener : public net_event::Listener {
+public:
+    void receive(const net_event::PlayerEnteredGate&, Platform&, Game& game) override
+    {
+        if (game.peer()) {
+            game.peer()->warping() = true;
+        }
+    }
+
+    void receive(const net_event::EnemyStateSync&, Platform&, Game&) override {}
+    void receive(const net_event::SyncSeed&, Platform&, Game&) override {}
+    void receive(const net_event::PlayerInfo&, Platform&, Game&) override {}
+    void receive(const net_event::EnemyHealthChanged&, Platform&, Game&) override {}
+};
+
+
+class OverworldState : public State, public CommonNetworkListener {
 public:
     OverworldState(Game& game, bool camera_tracking)
         : camera_tracking_(game.persistent_data().settings_.dynamic_camera_ and
@@ -63,8 +79,6 @@ public:
         hidden
     } notification_status = NotificationStatus::hidden;
 
-    void
-    receive(const net_event::PlayerEnteredGate&, Platform&, Game&) override;
     void receive(const net_event::EnemyStateSync&, Platform&, Game&) override;
     void receive(const net_event::SyncSeed&, Platform&, Game&) override;
     void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
@@ -87,16 +101,17 @@ private:
 };
 
 
-class HealthUIMetric : public UIMetric {
+// We want to make sure that we process network events while we have pause menus
+// open...
+class MenuState : public State, public CommonNetworkListener {
 public:
-    using UIMetric::UIMetric;
-
-    void on_display(Text& text, int value) override
+    StatePtr update(Platform& pfrm, Game& game, Microseconds) override
     {
-        // if (value == 1) {
-        //     text.append(" ");
-        //     text.append(locale_string(LocaleString::health_warning));
-        // }
+        if (pfrm.network_peer().is_connected()) {
+            net_event::poll_messages(pfrm, game, *this);
+        }
+
+        return null_state();
     }
 };
 
@@ -157,7 +172,7 @@ private:
 
     void repaint_powerups(Platform& pfrm, Game& game, bool clean);
 
-    std::optional<HealthUIMetric> health_;
+    std::optional<UIMetric> health_;
     std::optional<UIMetric> score_;
 
     Buffer<UIMetric, Powerup::max_> powerups_;
@@ -301,7 +316,7 @@ private:
 };
 
 
-class InventoryState : public State {
+class InventoryState : public MenuState {
 public:
     InventoryState(bool fade_in);
 
@@ -339,7 +354,7 @@ private:
 static std::optional<Platform::Keyboard::RestoreState> restore_keystates;
 
 
-class NotebookState : public State {
+class NotebookState : public MenuState {
 public:
     // NOTE: The NotebookState class does not store a local copy of the text
     // string! Do not pass in pointers to a local buffer, only static strings!
@@ -371,7 +386,7 @@ private:
 };
 
 
-class ImageViewState : public State {
+class ImageViewState : public MenuState {
 public:
     ImageViewState(const char* image_name, ColorConstant background_color);
 
@@ -393,7 +408,7 @@ static const std::array<LocaleString, 4> legend_strings = {
     LocaleString::map_legend_4};
 
 
-class MapSystemState : public State {
+class MapSystemState : public MenuState {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
@@ -499,7 +514,7 @@ private:
 };
 
 
-class PauseScreenState : public State {
+class PauseScreenState : public MenuState {
 public:
     static constexpr const auto fade_duration = milliseconds(400);
 
@@ -564,7 +579,7 @@ private:
 };
 
 
-class LogfileViewerState : public State {
+class LogfileViewerState : public MenuState {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
@@ -577,7 +592,7 @@ private:
 };
 
 
-class SignalJammerSelectorState : public State {
+class SignalJammerSelectorState : public MenuState {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
@@ -605,7 +620,7 @@ private:
 };
 
 
-class EditSettingsState : public State {
+class EditSettingsState : public MenuState {
 public:
     EditSettingsState();
 
@@ -930,16 +945,6 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
-void OverworldState::receive(const net_event::PlayerEnteredGate&,
-                             Platform&,
-                             Game& game)
-{
-    if (game.peer()) {
-        game.peer()->warping() = true;
-    }
-}
-
-
 void OverworldState::receive(const net_event::SyncSeed& s, Platform&, Game&)
 {
     rng::critical_state = s.random_state_;
@@ -981,7 +986,7 @@ void OverworldState::receive(const net_event::PlayerInfo& p,
                              Game& game)
 {
     if (game.peer()) {
-        game.peer()->sync(p);
+        game.peer()->sync(game, p);
     }
 }
 
@@ -1000,14 +1005,51 @@ void OverworldState::receive(const net_event::EnemyHealthChanged& hc,
 }
 
 
+static void transmit_player_info(Platform& pfrm, Game& game)
+{
+    net_event::PlayerInfo info;
+    info.header_.message_type_ = net_event::Header::player_info;
+    info.x_ = game.player().get_position().cast<s16>().x;
+    info.y_ = game.player().get_position().cast<s16>().y;
+    info.texture_index_ = game.player().get_sprite().get_texture_index();
+    info.size_ = game.player().get_sprite().get_size();
+    info.x_speed_ = game.player().get_speed().x * 10;
+    info.y_speed_ = game.player().get_speed().y * 10;
+    info.visible_ = game.player().get_sprite().get_alpha() not_eq
+        Sprite::Alpha::transparent;
+    info.weapon_drawn_ =
+        game.player().weapon().get_sprite().get_alpha() not_eq
+        Sprite::Alpha::transparent;
+
+    auto mix = game.player().get_sprite().get_mix();
+    if (mix.amount_) {
+        auto& zone_info = current_zone(game);
+        if (mix.color_ == zone_info.injury_glow_color_) {
+            info.disp_color_ = net_event::PlayerInfo::DisplayColor::injured;
+        } else if (mix.color_ == zone_info.energy_glow_color_) {
+            info.disp_color_ = net_event::PlayerInfo::DisplayColor::got_coin;
+        } else if (mix.color_ == ColorConstant::spanish_crimson) {
+            info.disp_color_ = net_event::PlayerInfo::DisplayColor::got_heart;
+        }
+        info.color_amount_ = mix.amount_ >> 4;
+    } else {
+        info.disp_color_ = net_event::PlayerInfo::DisplayColor::none;
+        info.color_amount_ = 0;
+    }
+
+    pfrm.network_peer().send_message({(byte*)&info, sizeof info});
+}
+
+
 void OverworldState::multiplayer_sync(Platform& pfrm,
                                       Game& game,
                                       Microseconds delta)
 {
-    // On the gameboy advance, we're dealing with a 1kB/s connection, so,
-    // realistically, we can only transmit player data a few times per
-    // second. TODO: add methods for querying the uplink performance limits from
-    // the Platform class, rather than having various game-specific hacks here.
+    // On the gameboy advance, we're dealing with a slow connection and
+    // twenty-year-old technology, so, realistically, we can only transmit
+    // player data a few times per second. TODO: add methods for querying the
+    // uplink performance limits from the Platform class, rather than having
+    // various game-specific hacks here.
     static const auto player_refresh_rate = seconds(1) / 6;
 
     static auto update_counter = player_refresh_rate;
@@ -1021,25 +1063,13 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
     update_counter -= delta;
     if (update_counter <= 0) {
         update_counter = player_refresh_rate;
-        net_event::PlayerInfo info;
-        info.header_.message_type_ = net_event::Header::player_info;
-        info.x_ = game.player().get_position().cast<s16>().x;
-        info.y_ = game.player().get_position().cast<s16>().y;
-        info.texture_index_ = game.player().get_sprite().get_texture_index();
-        info.size_ = game.player().get_sprite().get_size();
-        info.x_speed_ = game.player().get_speed().x * 10;
-        info.y_speed_ = game.player().get_speed().y * 10;
-        info.visible_ = game.player().get_sprite().get_alpha() not_eq
-                        Sprite::Alpha::transparent;
-        info.weapon_drawn_ =
-            game.player().weapon().get_sprite().get_alpha() not_eq
-            Sprite::Alpha::transparent;
 
-        pfrm.network_peer().send_message({(byte*)&info, sizeof info});
-
+        transmit_player_info(pfrm, game);
 
         if (pfrm.network_peer().is_host()) {
-            net_event::transmit<net_event::SyncSeed>(pfrm, rng::critical_state);
+            net_event::SyncSeed s;
+            s.random_state_ = rng::critical_state;
+            net_event::transmit(pfrm, s);
         }
     }
 
@@ -1595,7 +1625,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         if (dist < 6) {
             if (pfrm.network_peer().is_connected()) {
-                net_event::transmit<net_event::PlayerEnteredGate>(pfrm);
+                net_event::PlayerEnteredGate e;
+                net_event::transmit(pfrm, e);
             }
 
             game.player().move(t_pos);
@@ -2114,6 +2145,8 @@ const char* item_description(Item::Type type)
 
 StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (pfrm.keyboard().down_transition<Key::alt_2>()) {
         return state_pool_.create<ActiveState>(game);
     }
@@ -2442,6 +2475,8 @@ void NotebookState::exit(Platform& pfrm, Game&, State&)
 
 StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<InventoryState>(false);
     }
@@ -2533,6 +2568,8 @@ ImageViewState::ImageViewState(const char* image_name,
 
 StatePtr ImageViewState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<InventoryState>(false);
     }
@@ -2597,6 +2634,8 @@ void MapSystemState::exit(Platform& pfrm, Game& game, State&)
 
 StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     auto set_tile = [&](s8 x, s8 y, int icon, bool dodge = true) {
@@ -3566,6 +3605,8 @@ void EditSettingsState::exit(Platform& pfrm, Game& game, State& next_state)
 StatePtr
 EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<PauseScreenState>(false);
     }
@@ -3693,6 +3734,8 @@ void LogfileViewerState::exit(Platform& pfrm, Game& game, State& next_state)
 StatePtr
 LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     if (pfrm.keyboard().down_transition<Key::select>()) {
@@ -4258,6 +4301,8 @@ bool PauseScreenState::connect_peer_option_available(Game& game) const
 StatePtr
 PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (fade_timer_ < fade_duration) {
         fade_timer_ += delta;
 
@@ -4523,7 +4568,9 @@ NetworkConnectState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
         pfrm.network_peer().listen();
 
-        net_event::transmit<net_event::SyncSeed>(pfrm, rng::critical_state);
+        net_event::SyncSeed s;
+        s.random_state_ = rng::critical_state;
+        net_event::transmit(pfrm, s);
 
         return state_pool_.create<PauseScreenState>(false);
     }
@@ -4580,6 +4627,8 @@ void SignalJammerSelectorState::exit(Platform& pfrm, Game& game, State&)
 StatePtr
 SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    MenuState::update(pfrm, game, dt);
+
     timer_ += dt;
 
     constexpr auto fade_duration = milliseconds(500);
