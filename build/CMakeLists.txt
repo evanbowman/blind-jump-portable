@@ -142,6 +142,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/old_poster_flattened.s
     ${SOURCE_DIR}/graphics/blaster_info_flattened.s
     ${SOURCE_DIR}/graphics/seed_packet_flattened.s
+    ${SOURCE_DIR}/graphics/overlay_network_flattened.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()
   set(SOURCES
@@ -280,6 +281,7 @@ if(GAMEBOY_ADVANCE)
     compile_image(old_poster 0 0 YES)
     compile_image(blaster_info 0 0 YES)
     compile_image(seed_packet 0 0 YES)
+    compile_image(overlay_network 0 0 YES)
   endif()
 
   set(CMAKE_EXE_LINKER_FLAGS

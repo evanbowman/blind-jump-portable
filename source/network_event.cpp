@@ -22,7 +22,7 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
         switch (header.message_type_) {
         case Header::null:
             pfrm.network_peer().poll_consume(sizeof(Header));
-            break;
+            continue;
 
 #define HANDLE_MESSAGE(MESSAGE_TYPE)                                           \
     case MESSAGE_TYPE::mt: {                                                   \
@@ -33,7 +33,7 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
         memcpy(&m, message->data_, sizeof m);                                  \
         listener.receive(m, pfrm, game);                                       \
         pfrm.network_peer().poll_consume(sizeof(MESSAGE_TYPE));                \
-        break;                                                                 \
+        continue;                                                              \
     }
 
             HANDLE_MESSAGE(EnemyStateSync)
@@ -44,12 +44,12 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             HANDLE_MESSAGE(NewLevelIdle)
             HANDLE_MESSAGE(SyncSeed)
             HANDLE_MESSAGE(NewLevelSyncSeed)
+            HANDLE_MESSAGE(ItemChestOpened)
+            HANDLE_MESSAGE(QuickChat)
+        }
 
-        default:
-            while (true) {
-                // somehow, we've ended up in an erroneous state...
-            }
-            break;
+        while (true) {
+            // somehow, we've ended up in an erroneous state...
         }
     }
 }

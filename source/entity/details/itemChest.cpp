@@ -65,6 +65,10 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                         pfrm.sleep(10);
                         state_ = State::opening;
 
+                        net_event::ItemChestOpened o;
+                        o.id_ = id();
+                        net_event::transmit(pfrm, o);
+
                         pfrm.speaker().play_sound("creak", 1, position_);
                     }
                 }
@@ -93,7 +97,30 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         break;
 
+    case State::sync_opening:
+        animation_.advance(sprite_, dt);
+        if (animation_.done(sprite_)) {
+            state_ = State::sync_settle;
+        }
+        break;
+
+    case State::sync_settle:
+        if (animation_.reverse(sprite_, dt)) {
+            state_ = State::opened;
+        }
+        break;
+
     case State::opened:
         break;
+    }
+}
+
+
+void ItemChest::sync(Platform& pfrm, const net_event::ItemChestOpened&)
+{
+    if (state_ == State::closed) {
+        animation_.bind(sprite_);
+        pfrm.speaker().play_sound("creak", 1, position_);
+        state_ = State::sync_opening;
     }
 }

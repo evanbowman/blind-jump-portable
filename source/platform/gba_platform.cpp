@@ -486,6 +486,10 @@ const Color& real_color(ColorConstant k)
         static const Color silver_white(29, 29, 30);
         return silver_white;
 
+    case ColorConstant::indigo_tint:
+        static const Color indigo_tint(4, 12, 16);
+        return indigo_tint;
+
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:
@@ -825,6 +829,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/overlay_cutscene.h"
 #include "graphics/overlay_journal.h"
 #include "graphics/seed_packet_flattened.h"
+#include "graphics/overlay_network_flattened.h"
 #include "graphics/spritesheet.h"
 #include "graphics/spritesheet2.h"
 #include "graphics/spritesheet3.h"
@@ -887,7 +892,8 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(overlay_journal),
     TEXTURE_INFO(old_poster_flattened),
     TEXTURE_INFO(blaster_info_flattened),
-    TEXTURE_INFO(seed_packet_flattened)};
+    TEXTURE_INFO(seed_packet_flattened),
+    TEXTURE_INFO(overlay_network_flattened)};
 
 
 static const TextureData* current_spritesheet = &sprite_textures[0];

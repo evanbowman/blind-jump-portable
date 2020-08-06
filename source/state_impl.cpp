@@ -131,7 +131,8 @@ static StatePool<ActiveState,
                  RespawnWaitState,
                  LogfileViewerState,
                  EndingCreditsState,
-                 NetworkConnectState,
+                 NetworkConnectSetupState,
+                 NetworkConnectWaitState,
                  LaunchCutsceneState,
                  SignalJammerSelectorState>
     state_pool_;
@@ -274,7 +275,11 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
     // player data a few times per second. TODO: add methods for querying the
     // uplink performance limits from the Platform class, rather than having
     // various game-specific hacks here.
-    static const auto player_refresh_rate = seconds(1) / 6;
+
+    // FIXME: I strongly suspect that this number can be increased without
+    // issues, but I'm waiting until I test on an actual device with a link
+    // cable.
+    static const auto player_refresh_rate = seconds(1) / 12;
 
     static auto update_counter = player_refresh_rate;
 
@@ -3654,7 +3659,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 return state_pool_.create<EditSettingsState>();
             case 2:
                 if (connect_peer_option_available(game)) {
-                    return state_pool_.create<NetworkConnectState>();
+                    return state_pool_.create<NetworkConnectSetupState>();
                 }
                 break;
             case 3:
@@ -3819,17 +3824,64 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// NetworkConnectState
+// NetworkConnectSetupState
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void NetworkConnectState::enter(Platform& pfrm, Game& game, State& prev_state)
+StatePtr
+NetworkConnectSetupState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
+    timer_ += delta;
+
+    constexpr auto fade_duration = milliseconds(950);
+    if (timer_ > fade_duration) {
+        pfrm.screen().fade(1.f, ColorConstant::indigo_tint);
+
+        switch (pfrm.network_peer().interface()) {
+        case Platform::NetworkPeer::serial_cable:
+            return state_pool_.create<NetworkConnectWaitState>();
+            break;
+
+        case Platform::NetworkPeer::internet: {
+            // TODO: display some more interesting graphics, allow user to enter
+            // ip address
+            return state_pool_.create<NetworkConnectWaitState>();
+            break;
+        }
+        }
+
+    } else {
+        const auto amount = smoothstep(0.f, fade_duration, timer_);
+        pfrm.screen().fade(amount,
+                           ColorConstant::indigo_tint,
+                           ColorConstant::rich_black);
+        return null_state();
+    }
+
+    return null_state();
 }
 
 
-void NetworkConnectState::exit(Platform& pfrm, Game& game, State& next_state)
+/////////////////////////////////////////////////////////////////////////////////
+// NetworkConnectWaitState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void NetworkConnectWaitState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    pfrm.load_overlay_texture("overlay_network_flattened");
+    pfrm.fill_overlay(85);
+    draw_image(pfrm, 85, 1, 4, 28, 13, Layer::overlay);
+}
+
+
+void NetworkConnectWaitState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+    pfrm.fill_overlay(0);
+    pfrm.load_overlay_texture("overlay");
+
     if (not dynamic_cast<MenuState*>(&next_state)) {
         pfrm.screen().fade(0.f);
 
@@ -3848,13 +3900,19 @@ void NetworkConnectState::exit(Platform& pfrm, Game& game, State& next_state)
 }
 
 
-StatePtr
-NetworkConnectState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr NetworkConnectWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     switch (pfrm.network_peer().interface()) {
     case Platform::NetworkPeer::serial_cable: {
-        Text t(pfrm, {1, 1});
-        t.assign("Waiting for Peer...");
+
+        const char* str = " Waiting for Peer...";
+
+        const auto margin =
+            centered_text_margins(pfrm, utf8::len(str));
+
+        Text t(pfrm, {static_cast<u8>(margin), 2});
+
+        t.assign(str);
         pfrm.network_peer().listen();
         return state_pool_.create<ActiveState>(game);
     }

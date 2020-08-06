@@ -60,6 +60,7 @@ public:
 
 
     static void reset_ids();
+    static Id max_id();
 
 
     Id id() const

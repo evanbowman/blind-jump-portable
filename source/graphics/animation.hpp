@@ -26,9 +26,10 @@ public:
         return InitialTexture;
     }
 
-    void bind(Sprite& sprite) const
+    void bind(Sprite& sprite)
     {
         sprite.set_texture_index(InitialTexture);
+        timer_ = 0;
     }
 
     bool advance(Sprite& sprite, Microseconds dt)

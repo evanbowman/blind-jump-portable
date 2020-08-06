@@ -25,6 +25,8 @@ struct Header {
         new_level_sync_seed,
         new_level_idle,
         item_taken,
+        item_chest_opened,
+        quick_chat,
     } message_type_;
 };
 static_assert(sizeof(Header) == 1);
@@ -71,6 +73,16 @@ struct PlayerEnteredGate {
     static const auto mt = Header::MessageType::player_entered_gate;
 };
 NET_EVENT_SIZE_CHECK(PlayerEnteredGate)
+
+
+struct ItemChestOpened {
+    Header header_;
+    u8 unused_[7];
+    Entity::Id id_;
+
+    static const auto mt = Header::MessageType::item_chest_opened;
+};
+NET_EVENT_SIZE_CHECK(ItemChestOpened)
 
 
 // Currently unused. In order to use ItemTaken, we'll need to keep entity ids
@@ -143,6 +155,15 @@ struct NewLevelIdle {
 NET_EVENT_SIZE_CHECK(NewLevelIdle)
 
 
+struct QuickChat {
+    Header header_;
+    char message_[11];
+
+    static const auto mt = Header::MessageType::quick_chat;
+};
+NET_EVENT_SIZE_CHECK(QuickChat)
+
+
 template <typename T> void transmit(Platform& pfrm, T& message)
 {
     static_assert(sizeof(T) <= Platform::NetworkPeer::max_message_size);
@@ -185,6 +206,12 @@ public:
     {
     }
     virtual void receive(const ItemTaken&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const ItemChestOpened&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const QuickChat&, Platform&, Game&)
     {
     }
 };

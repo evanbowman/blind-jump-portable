@@ -29,6 +29,15 @@ public:
     receive(const net_event::EnemyHealthChanged&, Platform&, Game&) override
     {
     }
+    void receive(const net_event::ItemChestOpened& o, Platform& pfrm, Game& game) override
+    {
+        for (auto& chest : game.details().get<ItemChest>()) {
+            if (chest->id() == o.id_) {
+                chest->sync(pfrm, o);
+                return;
+            }
+        }
+    }
 };
 
 
@@ -784,7 +793,16 @@ private:
 };
 
 
-class NetworkConnectState : public State {
+class NetworkConnectSetupState : public MenuState {
+public:
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    Microseconds timer_;
+};
+
+
+class NetworkConnectWaitState : public State {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
