@@ -383,6 +383,12 @@ const char* locale_string(LocaleString ls)
         case LocaleString::peer_connection_failed: return "Peer connection failed!";
         case LocaleString::peer_lost: return "Peer died!";
         case LocaleString::level_transition_awaiting_peers: return "Waiting for Peers...";
+        case LocaleString::fps_stats_suffix: return " fps";
+        case LocaleString::network_tx_stats_suffix: return " tx";
+        case LocaleString::network_rx_stats_suffix: return " rx";
+        case LocaleString::network_tx_loss_stats_suffix: return " tl";
+        case LocaleString::network_rx_loss_stats_suffix: return " rl";
+
         default: return empty_str;
         }
         break;

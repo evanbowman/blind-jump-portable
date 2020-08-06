@@ -63,6 +63,8 @@ public:
 
 
 private:
+    void show_stats(Platform& pfrm, Game& game, Microseconds delta);
+
     void multiplayer_sync(Platform& pfrm, Game& game, Microseconds delta);
 
     const bool camera_tracking_;
@@ -72,6 +74,7 @@ private:
     int fps_frame_count_ = 0;
     std::optional<Text> fps_text_;
     std::optional<Text> network_tx_msg_text_;
+    std::optional<Text> network_rx_msg_text_;
     std::optional<Text> network_tx_loss_text_;
     std::optional<Text> network_rx_loss_text_;
 };

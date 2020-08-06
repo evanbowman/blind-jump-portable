@@ -78,6 +78,11 @@ enum class LocaleString {
     peer_connection_failed,
     peer_lost,
     level_transition_awaiting_peers,
+    fps_stats_suffix,
+    network_tx_stats_suffix,
+    network_rx_stats_suffix,
+    network_tx_loss_stats_suffix,
+    network_rx_loss_stats_suffix,
     count
 };
 

@@ -2760,6 +2760,12 @@ static bool multiplayer_validate()
 }
 
 
+static int rx_message_count = 0;
+static int tx_message_count = 0;
+static int rx_loss = 0;
+static int tx_loss = 0;
+
+
 // The gameboy Multi link protocol always sends data, no matter what, even if we
 // do not have any new data to put in the send buffer. Because there is no
 // distinction between real data and empty transmits, we will transmit in
@@ -2810,9 +2816,6 @@ static TxInfo* tx_ring_pop()
 }
 
 
-static int tx_loss = 0;
-
-
 using RxInfo = WireMessage;
 
 static const int rx_ring_size = 64;
@@ -2824,11 +2827,10 @@ static int rx_ring_read_pos = 0;
 static RxInfo* rx_ring[rx_ring_size] = {nullptr};
 
 
-static int rx_loss = 0;
-
-
 static void rx_ring_push(RxInfo* message)
 {
+    rx_message_count += 1;
+
     if (rx_ring[rx_ring_write_pos]) {
         // The reader does not seem to be keeping up!
         rx_loss += 1;
@@ -2980,6 +2982,7 @@ static void multiplayer_tx_send()
     if (tx_iter_state == message_iters) {
         if (tx_current_message) {
             tx_message_pool.post(tx_current_message);
+            tx_message_count += 1;
         }
         tx_current_message = tx_ring_pop();
         tx_iter_state = 0;
@@ -3032,11 +3035,8 @@ static void multiplayer_schedule_tx()
 }
 
 
-int serial_irq_count = 0;
-static void multiplayer_serial_tx_complete()
+static void multiplayer_serial_isr()
 {
-    serial_irq_count += 1;
-
     multiplayer_rx_receive();
     multiplayer_schedule_tx();
 }
@@ -3110,7 +3110,7 @@ static void multiplayer_init()
     REG_SIOCNT |= SIO_IRQ | SIO_115200;
 
     irqEnable(IRQ_SERIAL);
-    irqSet(IRQ_SERIAL, multiplayer_serial_tx_complete);
+    irqSet(IRQ_SERIAL, multiplayer_serial_isr);
 
     // Put this here for now, not sure whether it's really necessary...
     REG_SIOMLT_SEND = 0x5555;
@@ -3196,7 +3196,7 @@ void Platform::NetworkPeer::update()
 
 Platform::NetworkPeer::Stats Platform::NetworkPeer::stats() const
 {
-    return {serial_irq_count / message_iters, tx_loss, rx_loss};
+    return {tx_message_count, rx_message_count, tx_loss, rx_loss};
 }
 
 

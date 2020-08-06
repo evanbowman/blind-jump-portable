@@ -156,6 +156,7 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
     notification_text.reset();
     fps_text_.reset();
     network_tx_msg_text_.reset();
+    network_rx_msg_text_.reset();
     network_tx_loss_text_.reset();
     network_rx_loss_text_.reset();
 
@@ -310,6 +311,62 @@ player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
 }
 
 
+void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
+{
+    fps_timer_ += delta;
+    fps_frame_count_ += 1;
+
+    if (fps_timer_ >= seconds(1)) {
+        fps_timer_ -= seconds(1);
+
+        fps_text_.emplace(pfrm, OverlayCoord{1, 2});
+        network_tx_msg_text_.emplace(pfrm, OverlayCoord{1, 3});
+        network_rx_msg_text_.emplace(pfrm, OverlayCoord{1, 4});
+        network_tx_loss_text_.emplace(pfrm, OverlayCoord{1, 5});
+        network_rx_loss_text_.emplace(pfrm, OverlayCoord{1, 6});
+
+        const auto colors =
+            fps_frame_count_ < 55
+                ? Text::OptColors{{ColorConstant::rich_black,
+                                   ColorConstant::aerospace_orange}}
+                : Text::OptColors{};
+
+        fps_text_->assign(fps_frame_count_, colors);
+        fps_text_->append(" fps", colors);
+        fps_frame_count_ = 0;
+
+        const auto net_stats = pfrm.network_peer().stats();
+
+        const auto tx_loss_colors =
+            net_stats.transmit_loss_ > 0
+                ? Text::OptColors{{ColorConstant::rich_black,
+                                   ColorConstant::aerospace_orange}}
+                : Text::OptColors{};
+
+        const auto rx_loss_colors =
+            net_stats.receive_loss_ > 0
+                ? Text::OptColors{{ColorConstant::rich_black,
+                                   ColorConstant::aerospace_orange}}
+                : Text::OptColors{};
+
+        network_tx_msg_text_->append(net_stats.transmit_count_);
+        network_tx_msg_text_->append(
+            locale_string(LocaleString::network_tx_stats_suffix));
+        network_rx_msg_text_->append(net_stats.receive_count_);
+        network_rx_msg_text_->append(
+            locale_string(LocaleString::network_rx_stats_suffix));
+        network_tx_loss_text_->append(net_stats.transmit_loss_, tx_loss_colors);
+        network_tx_loss_text_->append(
+            locale_string(LocaleString::network_tx_loss_stats_suffix),
+            tx_loss_colors);
+        network_rx_loss_text_->append(net_stats.receive_loss_, rx_loss_colors);
+        network_rx_loss_text_->append(
+            locale_string(LocaleString::network_rx_loss_stats_suffix),
+            rx_loss_colors);
+    }
+}
+
+
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
@@ -329,51 +386,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (game.persistent_data().settings_.show_stats_) {
-
-        fps_timer_ += delta;
-        fps_frame_count_ += 1;
-
-        if (fps_timer_ >= seconds(1)) {
-            fps_timer_ -= seconds(1);
-
-            fps_text_.emplace(pfrm, OverlayCoord{1, 2});
-            network_tx_msg_text_.emplace(pfrm, OverlayCoord{1, 3});
-            network_tx_loss_text_.emplace(pfrm, OverlayCoord{1, 4});
-            network_rx_loss_text_.emplace(pfrm, OverlayCoord{1, 5});
-
-            const auto colors =
-                fps_frame_count_ < 55
-                    ? Text::OptColors{{ColorConstant::rich_black,
-                                       ColorConstant::aerospace_orange}}
-                    : Text::OptColors{};
-
-            fps_text_->assign(fps_frame_count_, colors);
-            fps_text_->append(" fps", colors);
-            fps_frame_count_ = 0;
-
-            const auto net_stats = pfrm.network_peer().stats();
-
-            const auto tx_loss_colors =
-                net_stats.transmit_loss_ > 0
-                    ? Text::OptColors{{ColorConstant::rich_black,
-                                       ColorConstant::aerospace_orange}}
-                    : Text::OptColors{};
-
-            const auto rx_loss_colors =
-                net_stats.receive_loss_ > 0
-                    ? Text::OptColors{{ColorConstant::rich_black,
-                                       ColorConstant::aerospace_orange}}
-                    : Text::OptColors{};
-
-            network_tx_msg_text_->append(net_stats.transmit_count_);
-            network_tx_msg_text_->append(" m");
-            network_tx_loss_text_->append(net_stats.transmit_loss_,
-                                          tx_loss_colors);
-            network_tx_loss_text_->append(" tl", tx_loss_colors);
-            network_rx_loss_text_->append(net_stats.receive_loss_,
-                                          rx_loss_colors);
-            network_rx_loss_text_->append(" rl", rx_loss_colors);
-        }
+        show_stats(pfrm, game, delta);
     } else if (fps_text_) {
         fps_text_.reset();
         network_tx_msg_text_.reset();

@@ -467,6 +467,7 @@ public:
 
         struct Stats {
             int transmit_count_;
+            int receive_count_;
             int transmit_loss_;
             int receive_loss_;
         };
