@@ -29,6 +29,8 @@ public:
 
     void update(Platform&, Game&, Microseconds);
 
+    using Enemy::on_collision;
+
     void on_collision(Platform&, Game&, AlliedOrbShot&);
     void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, Laser&);

@@ -2,9 +2,11 @@
 
 #include "collision.hpp"
 #include "entity/entity.hpp"
+#include "network_event.hpp"
 
 
 class Player;
+class PeerLaser;
 class OrbShot;
 
 
@@ -54,6 +56,18 @@ public:
     void make_allied(bool allied)
     {
         is_allied_ = allied;
+    }
+
+    void health_changed(const net_event::EnemyHealthChanged& hc,
+                        Platform&,
+                        Game& game);
+
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
+
+    void on_collision(Platform&, Game&, PeerLaser&)
+    {
     }
 
 protected:

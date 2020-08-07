@@ -700,6 +700,13 @@ void Blaster::shoot(Platform& pf, Game& game)
                 }()) {
                 undo_powerups();
                 error(pf, "failed to spawn player attack, likely OOM in pool");
+            } else {
+                net_event::PlayerSpawnLaser e;
+                e.dir_ = dir_;
+                e.x_.set(position_.cast<s16>().x);
+                e.y_.set(position_.cast<s16>().y);
+
+                net_event::transmit(pf, e);
             }
         }
     }

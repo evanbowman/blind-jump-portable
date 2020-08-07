@@ -95,6 +95,7 @@ public:
                                     OrbShot,
                                     AlliedOrbShot,
                                     Laser,
+                                    PeerLaser,
                                     Explosion,
                                     FirstExplorerBigLaser,
                                     FirstExplorerSmallLaser>;

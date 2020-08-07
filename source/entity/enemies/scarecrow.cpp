@@ -329,9 +329,9 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
                 net_event::EnemyStateSync s;
                 s.state_ = static_cast<u8>(state_);
-                s.x_ = int_pos.x;
-                s.y_ = int_pos.y;
-                s.id_ = id();
+                s.x_.set(int_pos.x);
+                s.y_.set(int_pos.y);
+                s.id_.set(id());
 
                 net_event::transmit(pfrm, s);
             }
@@ -345,8 +345,8 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 void Scarecrow::sync(const net_event::EnemyStateSync& state)
 {
     state_ = static_cast<State>(state.state_);
-    position_.x = state.x_;
-    position_.y = state.y_;
+    position_.x = state.x_.get();
+    position_.y = state.y_.get();
     timer_ = 0;
     sprite_.set_position(position_);
     shadow_.set_position(position_);

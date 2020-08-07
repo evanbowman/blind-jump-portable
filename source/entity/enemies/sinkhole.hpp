@@ -13,6 +13,8 @@ public:
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
+    using Enemy::on_collision;
+
     void on_collision(Platform&, Game&, LaserExplosion&)
     {
     }

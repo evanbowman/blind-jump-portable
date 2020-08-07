@@ -81,9 +81,25 @@ void Enemy::debit_health(Platform& pfrm, Health amount)
 
     if (pfrm.network_peer().is_connected()) {
         net_event::EnemyHealthChanged e;
-        e.id_ = id();
-        e.new_health_ = get_health();
+        e.id_.set(id());
+        e.new_health_.set(get_health());
 
         net_event::transmit(pfrm, e);
     }
+}
+
+
+void Enemy::health_changed(const net_event::EnemyHealthChanged& hc,
+                           Platform& pfrm,
+                           Game& game)
+{
+    if (hc.new_health_.get() < get_health()) {
+        sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
+
+        if (alive()) {
+            pfrm.speaker().play_sound("click", 1, position_);
+        }
+    }
+
+    Entity::set_health(std::min(hc.new_health_.get(), get_health()));
 }

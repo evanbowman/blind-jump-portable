@@ -262,9 +262,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
                 net_event::EnemyStateSync s;
                 s.state_ = static_cast<u8>(state_);
-                s.x_ = int_pos.x;
-                s.y_ = int_pos.y;
-                s.id_ = id();
+                s.x_.set(int_pos.x);
+                s.y_.set(int_pos.y);
+                s.id_.set(id());
 
                 net_event::transmit(pf, s);
             }
@@ -366,8 +366,8 @@ void Dasher::on_death(Platform& pf, Game& game)
 void Dasher::sync(const net_event::EnemyStateSync& s)
 {
     timer_ = 0;
-    position_.x = s.x_;
-    position_.y = s.y_;
+    position_.x = s.x_.get();
+    position_.y = s.y_.get();
     sprite_.set_position(position_);
     state_ = State::idle;
 }

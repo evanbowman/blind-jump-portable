@@ -1,7 +1,8 @@
 #pragma once
 
 #include "collision.hpp"
-#include "entity/entity.hpp"
+#include "entity/enemies/enemy.hpp"
+#include "network_event.hpp"
 #include <optional>
 
 
@@ -11,25 +12,15 @@ class Player;
 class Laser;
 
 
-class TheFirstExplorer : public Entity {
+class TheFirstExplorer : public Enemy {
 public:
     TheFirstExplorer(const Vec2<Float>& position);
 
-    const Sprite& get_shadow() const
-    {
-        return shadow_;
-    }
-
     static constexpr bool multiface_sprite = true;
-    static constexpr bool has_shadow = true;
 
     constexpr bool is_allied()
     {
         return false;
-    }
-
-    void make_allied(bool)
-    {
     }
 
     void update(Platform& pf, Game& game, Microseconds dt);
@@ -42,14 +33,7 @@ public:
         return ret;
     }
 
-    const HitBox& hitbox() const
-    {
-        return hitbox_;
-    }
-
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
+    using Enemy::on_collision;
 
     void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, AlliedOrbShot&);
@@ -85,8 +69,6 @@ private:
     bool third_form() const;
 
     Sprite head_;
-    Sprite shadow_;
-    HitBox hitbox_;
     Microseconds timer_;
     Microseconds timer2_;
     Vec2<Float> speed_;

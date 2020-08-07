@@ -40,6 +40,8 @@ public:
         return state_;
     }
 
+    using Enemy::on_collision;
+
     void on_collision(Platform&, Game&, Player&);
 
     void on_death(Platform&, Game&);

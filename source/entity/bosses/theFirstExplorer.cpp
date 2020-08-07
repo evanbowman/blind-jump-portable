@@ -13,11 +13,9 @@ static const Entity::Health initial_health = 100;
 
 
 TheFirstExplorer::TheFirstExplorer(const Vec2<Float>& position)
-    : Entity(initial_health), hitbox_{&position_, {{16, 38}, {8, 24}}},
-      timer_(0), timer2_(0), chase_player_(0), dashes_remaining_(0)
+    : Enemy(initial_health, position, {{16, 38}, {8, 24}}), timer_(0),
+      timer2_(0), chase_player_(0), dashes_remaining_(0)
 {
-    set_position(position);
-
     sprite_.set_texture_index(12);
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 16});
@@ -469,7 +467,7 @@ void TheFirstExplorer::injured(Platform& pf, Game& game, Health amount)
 {
     const bool was_second_form = second_form();
 
-    debit_health(amount);
+    debit_health(pf, amount);
 
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);

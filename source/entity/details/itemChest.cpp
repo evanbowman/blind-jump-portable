@@ -66,7 +66,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                         state_ = State::opening;
 
                         net_event::ItemChestOpened o;
-                        o.id_ = id();
+                        o.id_.set(id());
                         net_event::transmit(pfrm, o);
 
                         pfrm.speaker().play_sound("creak", 1, position_);

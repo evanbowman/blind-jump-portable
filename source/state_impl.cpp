@@ -171,9 +171,21 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
+void OverworldState::receive(const net_event::PlayerSpawnLaser& p,
+                             Platform&,
+                             Game& game)
+{
+    Vec2<Float> position;
+    position.x = p.x_.get();
+    position.y = p.y_.get();
+
+    game.effects().spawn<PeerLaser>(position, p.dir_, Laser::Mode::normal);
+}
+
+
 void OverworldState::receive(const net_event::SyncSeed& s, Platform&, Game&)
 {
-    rng::critical_state = s.random_state_;
+    rng::critical_state = s.random_state_.get();
 }
 
 
@@ -182,24 +194,24 @@ void OverworldState::receive(const net_event::EnemyStateSync& s,
                              Game& game)
 {
     for (auto& e : game.enemies().get<Turret>()) {
-        if (e->id() == s.id_) {
+        if (e->id() == s.id_.get()) {
             e->sync(s, game);
             return;
         }
     }
     for (auto& e : game.enemies().get<Dasher>()) {
-        if (e->id() == s.id_) {
+        if (e->id() == s.id_.get()) {
             e->sync(s);
             return;
         }
     }
     for (auto& e : game.enemies().get<Scarecrow>()) {
-        if (e->id() == s.id_) {
+        if (e->id() == s.id_.get()) {
             e->sync(s);
         }
     }
     for (auto& e : game.enemies().get<Drone>()) {
-        if (e->id() == s.id_) {
+        if (e->id() == s.id_.get()) {
             e->sync(s);
             return;
         }
@@ -218,13 +230,13 @@ void OverworldState::receive(const net_event::PlayerInfo& p,
 
 
 void OverworldState::receive(const net_event::EnemyHealthChanged& hc,
-                             Platform&,
+                             Platform& pfrm,
                              Game& game)
 {
     game.enemies().transform([&](auto& buf) {
         for (auto& e : buf) {
-            if (e->id() == hc.id_) {
-                e->set_health(std::min(e->get_health(), hc.new_health_));
+            if (e->id() == hc.id_.get()) {
+                e->health_changed(hc, pfrm, game);
             }
         }
     });
@@ -235,31 +247,34 @@ static void transmit_player_info(Platform& pfrm, Game& game)
 {
     net_event::PlayerInfo info;
     info.header_.message_type_ = net_event::Header::player_info;
-    info.x_ = game.player().get_position().cast<s16>().x;
-    info.y_ = game.player().get_position().cast<s16>().y;
-    info.texture_index_ = game.player().get_sprite().get_texture_index();
-    info.size_ = game.player().get_sprite().get_size();
+    info.x_.set(game.player().get_position().cast<s16>().x);
+    info.y_.set(game.player().get_position().cast<s16>().y);
+    info.set_texture_index(game.player().get_sprite().get_texture_index());
+    info.set_sprite_size(game.player().get_sprite().get_size());
     info.x_speed_ = game.player().get_speed().x * 10;
     info.y_speed_ = game.player().get_speed().y * 10;
-    info.visible_ = game.player().get_sprite().get_alpha() not_eq
-                    Sprite::Alpha::transparent;
-    info.weapon_drawn_ = game.player().weapon().get_sprite().get_alpha() not_eq
-                         Sprite::Alpha::transparent;
+    info.set_visible(game.player().get_sprite().get_alpha() not_eq
+                     Sprite::Alpha::transparent);
+    info.set_weapon_drawn(game.player().weapon().get_sprite().get_alpha() not_eq
+                          Sprite::Alpha::transparent);
 
     auto mix = game.player().get_sprite().get_mix();
     if (mix.amount_) {
         auto& zone_info = current_zone(game);
         if (mix.color_ == zone_info.injury_glow_color_) {
-            info.disp_color_ = net_event::PlayerInfo::DisplayColor::injured;
+            info.set_display_color(
+                net_event::PlayerInfo::DisplayColor::injured);
         } else if (mix.color_ == zone_info.energy_glow_color_) {
-            info.disp_color_ = net_event::PlayerInfo::DisplayColor::got_coin;
+            info.set_display_color(
+                net_event::PlayerInfo::DisplayColor::got_coin);
         } else if (mix.color_ == ColorConstant::spanish_crimson) {
-            info.disp_color_ = net_event::PlayerInfo::DisplayColor::got_heart;
+            info.set_display_color(
+                net_event::PlayerInfo::DisplayColor::got_heart);
         }
-        info.color_amount_ = mix.amount_ >> 4;
+        info.set_color_amount(mix.amount_);
     } else {
-        info.disp_color_ = net_event::PlayerInfo::DisplayColor::none;
-        info.color_amount_ = 0;
+        info.set_display_color(net_event::PlayerInfo::DisplayColor::none);
+        info.set_color_amount(0);
     }
 
     pfrm.network_peer().send_message({(byte*)&info, sizeof info});
@@ -279,7 +294,7 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
     // FIXME: I strongly suspect that this number can be increased without
     // issues, but I'm waiting until I test on an actual device with a link
     // cable.
-    static const auto player_refresh_rate = seconds(1) / 12;
+    static const auto player_refresh_rate = seconds(1) / 20;
 
     static auto update_counter = player_refresh_rate;
 
@@ -295,7 +310,7 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
 
         if (pfrm.network_peer().is_host()) {
             net_event::SyncSeed s;
-            s.random_state_ = rng::critical_state;
+            s.random_state_.set(rng::critical_state);
             net_event::transmit(pfrm, s);
         }
     }
@@ -582,76 +597,33 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     check_collisions(pfrm, game, player, game.details().get<Item>());
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
 
-    if (not game.effects().get<AlliedOrbShot>().empty()) {
-        game.enemies().transform([&](auto& buf) {
-            check_collisions(
-                pfrm, game, game.effects().get<AlliedOrbShot>(), buf);
-        });
-    }
-
-    if (not is_boss_level(game.level())) {
-
-        check_collisions(pfrm, game, player, game.enemies().get<Drone>());
-        check_collisions(pfrm, game, player, game.enemies().get<Turret>());
-        check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
-        check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
-        check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
-        check_collisions(pfrm, game, player, game.enemies().get<Theif>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Drone>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Theif>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Dasher>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Turret>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<SnakeBody>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<SnakeHead>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<SnakeTail>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Scarecrow>());
-    } else {
-        check_collisions(
-            pfrm, game, player, game.enemies().get<TheFirstExplorer>());
+    if (UNLIKELY(is_boss_level(game.level()))) {
         check_collisions(
             pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
         check_collisions(
             pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
-        check_collisions(pfrm, game, player, game.enemies().get<Gatekeeper>());
-        check_collisions(
-            pfrm, game, player, game.enemies().get<GatekeeperShield>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<TheFirstExplorer>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Gatekeeper>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<GatekeeperShield>());
     }
+
+    game.enemies().transform([&](auto& buf) {
+        using T = typename std::remove_reference<decltype(buf)>::type;
+        using VT = typename T::ValueType::element_type;
+
+        if (pfrm.network_peer().is_connected()) {
+            check_collisions(pfrm, game, game.effects().get<PeerLaser>(), buf);
+        }
+
+        check_collisions(pfrm, game, game.effects().get<AlliedOrbShot>(), buf);
+
+        if constexpr (not std::is_same<Scarecrow, VT>() and
+                      not std::is_same<SnakeTail, VT>() and
+                      not std::is_same<Sinkhole, VT>()) {
+            check_collisions(pfrm, game, player, buf);
+        }
+
+        if constexpr (not std::is_same<Sinkhole, VT>()) {
+            check_collisions(pfrm, game, game.effects().get<Laser>(), buf);
+        }
+    });
 
     return null_state();
 }
@@ -3721,7 +3693,7 @@ void NewLevelIdleState::receive(const net_event::NewLevelSyncSeed& sync_seed,
 {
     info(pfrm, "received seed value");
     if (not pfrm.network_peer().is_host()) {
-        rng::critical_state = sync_seed.random_state_;
+        rng::critical_state = sync_seed.random_state_.get();
         ready_ = true;
     }
 }
@@ -3777,7 +3749,7 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
             net_event::NewLevelSyncSeed sync_seed;
             sync_seed.header_.message_type_ =
                 net_event::Header::new_level_sync_seed;
-            sync_seed.random_state_ = rng::critical_state;
+            sync_seed.random_state_.set(rng::critical_state);
             info(pfrm, "sent seed to peer");
             ready_ = pfrm.network_peer().send_message(
                 {(byte*)&sync_seed, sizeof sync_seed});
@@ -3854,9 +3826,8 @@ NetworkConnectSetupState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     } else {
         const auto amount = smoothstep(0.f, fade_duration, timer_);
-        pfrm.screen().fade(amount,
-                           ColorConstant::indigo_tint,
-                           ColorConstant::rich_black);
+        pfrm.screen().fade(
+            amount, ColorConstant::indigo_tint, ColorConstant::rich_black);
         return null_state();
     }
 
@@ -3869,7 +3840,9 @@ NetworkConnectSetupState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void NetworkConnectWaitState::enter(Platform& pfrm, Game& game, State& prev_state)
+void NetworkConnectWaitState::enter(Platform& pfrm,
+                                    Game& game,
+                                    State& prev_state)
 {
     pfrm.load_overlay_texture("overlay_network_flattened");
     pfrm.fill_overlay(85);
@@ -3877,7 +3850,9 @@ void NetworkConnectWaitState::enter(Platform& pfrm, Game& game, State& prev_stat
 }
 
 
-void NetworkConnectWaitState::exit(Platform& pfrm, Game& game, State& next_state)
+void NetworkConnectWaitState::exit(Platform& pfrm,
+                                   Game& game,
+                                   State& next_state)
 {
     pfrm.fill_overlay(0);
     pfrm.load_overlay_texture("overlay");
@@ -3900,15 +3875,15 @@ void NetworkConnectWaitState::exit(Platform& pfrm, Game& game, State& next_state
 }
 
 
-StatePtr NetworkConnectWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+NetworkConnectWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     switch (pfrm.network_peer().interface()) {
     case Platform::NetworkPeer::serial_cable: {
 
         const char* str = " Waiting for Peer...";
 
-        const auto margin =
-            centered_text_margins(pfrm, utf8::len(str));
+        const auto margin = centered_text_margins(pfrm, utf8::len(str));
 
         Text t(pfrm, {static_cast<u8>(margin), 2});
 
@@ -3927,7 +3902,7 @@ StatePtr NetworkConnectWaitState::update(Platform& pfrm, Game& game, Microsecond
             pfrm.network_peer().listen();
 
             net_event::SyncSeed s;
-            s.random_state_ = rng::critical_state;
+            s.random_state_.set(rng::critical_state);
             net_event::transmit(pfrm, s);
 
             return state_pool_.create<PauseScreenState>(false);

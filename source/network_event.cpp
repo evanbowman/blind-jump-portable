@@ -2,11 +2,6 @@
 #include "platform/platform.hpp"
 
 
-extern "C" {
-void* memcpy(void* destination, const void* source, size_t num);
-}
-
-
 namespace net_event {
 
 
@@ -46,6 +41,7 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             HANDLE_MESSAGE(NewLevelSyncSeed)
             HANDLE_MESSAGE(ItemChestOpened)
             HANDLE_MESSAGE(QuickChat)
+            HANDLE_MESSAGE(PlayerSpawnLaser)
         }
 
         while (true) {

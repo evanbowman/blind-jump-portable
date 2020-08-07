@@ -22,8 +22,8 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
         return;
     }
 
-    Vec2<Float> new_pos{static_cast<Float>(info.x_),
-                        static_cast<Float>(info.y_)};
+    Vec2<Float> new_pos{static_cast<Float>(info.x_.get()),
+                        static_cast<Float>(info.y_.get())};
 
     if (distance(position_, new_pos) > 6) {
         interp_offset_ = position_ - new_pos;
@@ -32,7 +32,7 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
         position_ = new_pos;
     }
 
-    if (info.visible_) {
+    if (info.get_visible()) {
         sprite_.set_alpha(Sprite::Alpha::opaque);
         shadow_.set_alpha(Sprite::Alpha::translucent);
     } else {
@@ -40,30 +40,30 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
         shadow_.set_alpha(Sprite::Alpha::transparent);
     }
 
-    if (info.weapon_drawn_) {
+    if (info.get_weapon_drawn()) {
         blaster_.set_alpha(Sprite::Alpha::opaque);
     } else {
         blaster_.set_alpha(Sprite::Alpha::transparent);
     }
 
-    switch (info.disp_color_) {
+    switch (info.get_display_color()) {
     case net_event::PlayerInfo::DisplayColor::none:
         sprite_.set_mix({});
         break;
 
     case net_event::PlayerInfo::DisplayColor::injured:
         sprite_.set_mix({current_zone(game).injury_glow_color_,
-                         static_cast<u8>(info.color_amount_ << 4)});
+                         static_cast<u8>(info.get_color_amount())});
         break;
 
     case net_event::PlayerInfo::DisplayColor::got_coin:
         sprite_.set_mix({current_zone(game).energy_glow_color_,
-                         static_cast<u8>(info.color_amount_ << 4)});
+                         static_cast<u8>(info.get_color_amount() << 4)});
         break;
 
     case net_event::PlayerInfo::DisplayColor::got_heart:
         sprite_.set_mix({ColorConstant::spanish_crimson,
-                         static_cast<u8>(info.color_amount_ << 4)});
+                         static_cast<u8>(info.get_color_amount())});
         break;
     }
 
@@ -73,12 +73,12 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
 
     anim_timer_ = milliseconds(100);
 
-    sprite_.set_texture_index(info.texture_index_);
-    sprite_.set_size(info.size_);
+    sprite_.set_texture_index(info.get_texture_index());
+    sprite_.set_size(info.get_sprite_size());
     speed_.x = Float(info.x_speed_) / 10;
     speed_.y = Float(info.y_speed_) / 10;
 
-    switch (info.size_) {
+    switch (info.get_sprite_size()) {
     case Sprite::Size::w16_h32:
         sprite_.set_origin({8, 16});
         break;
@@ -184,17 +184,6 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
             texture_index < player_walk_right + 6) {
 
             set_blaster_right();
-
-            anim_timer_ -= dt;
-            if (anim_timer_ <= 0) {
-                anim_timer_ = milliseconds(100);
-
-                texture_index += 1;
-                if (texture_index == player_walk_right + 5) {
-                    texture_index = player_walk_right;
-                }
-                sprite_.set_texture_index(texture_index);
-            }
         }
         if (texture_index == player_still_left) {
             set_blaster_left();
@@ -203,17 +192,6 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
             texture_index < player_walk_left + 6) {
 
             set_blaster_left();
-
-            anim_timer_ -= dt;
-            if (anim_timer_ <= 0) {
-                anim_timer_ = milliseconds(100);
-
-                texture_index += 1;
-                if (texture_index == player_walk_left + 5) {
-                    texture_index = player_walk_left;
-                }
-                sprite_.set_texture_index(texture_index);
-            }
         }
         break;
     }

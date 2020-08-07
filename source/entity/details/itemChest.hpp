@@ -20,7 +20,14 @@ public:
         return shadow_;
     }
 
-    enum class State { closed, opening, settle, opened, sync_opening, sync_settle };
+    enum class State {
+        closed,
+        opening,
+        settle,
+        opened,
+        sync_opening,
+        sync_settle
+    };
 
     State state() const
     {

@@ -34,9 +34,8 @@ public:
     void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, AlliedOrbShot&);
     void on_collision(Platform&, Game&, Laser&);
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
+
+    using Enemy::on_collision;
 
     void on_death(Platform&, Game&);
 
@@ -118,9 +117,9 @@ public:
     void update(Platform&, Game&, Microseconds);
 
     void on_collision(Platform&, Game&, Laser&);
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
+
+    using Enemy::on_collision;
+
     void on_collision(Platform&, Game&, LaserExplosion&)
     {
     }

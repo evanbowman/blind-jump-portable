@@ -29,12 +29,11 @@ public:
         return ret;
     }
 
+    using Enemy::on_collision;
+
     void on_collision(Platform&, Game&, Laser&);
     void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, AlliedOrbShot&);
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
 
     void on_death(Platform&, Game&);
 

@@ -16,23 +16,12 @@ public:
         }
     }
 
-    void receive(const net_event::EnemyStateSync&, Platform&, Game&) override
-    {
-    }
-    void receive(const net_event::SyncSeed&, Platform&, Game&) override
-    {
-    }
-    void receive(const net_event::PlayerInfo&, Platform&, Game&) override
-    {
-    }
-    void
-    receive(const net_event::EnemyHealthChanged&, Platform&, Game&) override
-    {
-    }
-    void receive(const net_event::ItemChestOpened& o, Platform& pfrm, Game& game) override
+    void receive(const net_event::ItemChestOpened& o,
+                 Platform& pfrm,
+                 Game& game) override
     {
         for (auto& chest : game.details().get<ItemChest>()) {
-            if (chest->id() == o.id_) {
+            if (chest->id() == o.id_.get()) {
                 chest->sync(pfrm, o);
                 return;
             }
@@ -64,6 +53,9 @@ public:
         hidden
     } notification_status = NotificationStatus::hidden;
 
+    using net_event::Listener::receive;
+
+    void receive(const net_event::PlayerSpawnLaser&, Platform&, Game&) override;
     void receive(const net_event::EnemyStateSync&, Platform&, Game&) override;
     void receive(const net_event::SyncSeed&, Platform&, Game&) override;
     void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
