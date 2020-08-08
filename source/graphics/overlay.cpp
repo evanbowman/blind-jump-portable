@@ -248,8 +248,10 @@ Border::Border(Platform& pfrm,
                const OverlayCoord& size,
                const OverlayCoord& position,
                bool fill,
-               int tile_offset)
-    : pfrm_(pfrm), size_(size), position_(position), filled_(fill)
+               int tile_offset,
+               TileDesc default_tile)
+    : pfrm_(pfrm), size_(size), position_(position), filled_(fill),
+      default_tile_(default_tile)
 {
     const auto stopx = position_.x + size_.x;
     const auto stopy = position_.y + size_.y;
@@ -302,22 +304,22 @@ Border::~Border()
                 (x == position_.x and y == stopy - 1) or
                 (x == stopx - 1 and y == position_.y) or
                 (x == stopx - 1 and y == stopy - 1)) {
-                pfrm_.set_tile(Layer::overlay, x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, default_tile_);
 
             } else if (x == position_.x) {
-                pfrm_.set_tile(Layer::overlay, x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, default_tile_);
 
             } else if (y == position_.y) {
-                pfrm_.set_tile(Layer::overlay, x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, default_tile_);
 
             } else if (x == stopx - 1) {
-                pfrm_.set_tile(Layer::overlay, x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, default_tile_);
 
             } else if (y == stopy - 1) {
-                pfrm_.set_tile(Layer::overlay, x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, default_tile_);
 
             } else if (filled_) {
-                pfrm_.set_tile(Layer::overlay, x, y, 0);
+                pfrm_.set_tile(Layer::overlay, x, y, default_tile_);
             }
         }
     }
@@ -372,4 +374,53 @@ BossHealthBar::~BossHealthBar()
          ++y) {
         pfrm_.set_tile(Layer::overlay, position_.x, position_.y + y, 0);
     }
+}
+
+
+Sidebar::Sidebar(Platform& pfrm, u8 width) : pfrm_(pfrm), width_(width)
+{
+}
+
+
+void Sidebar::set_display_percentage(Float percentage)
+{
+    constexpr int pixels_per_tile = 8;
+    const auto total_pixels = width_ * pixels_per_tile;
+
+    const int fractional_pixels = percentage * total_pixels;
+
+    const auto screen_tiles = calc_screen_tiles(pfrm_);
+
+    for (int y = 0; y < screen_tiles.y; ++y) {
+        int pixels = fractional_pixels;
+
+        int current_tile = 0;
+
+        while (pixels >= 8) {
+            pfrm_.set_tile(
+                           Layer::overlay, screen_tiles.x - (1 + current_tile), y, 121);
+            pixels -= 8;
+            ++current_tile;
+        }
+
+        if (current_tile < width_ and pixels % 8 not_eq 0) {
+            pfrm_.set_tile(Layer::overlay,
+                           screen_tiles.x - (1 + current_tile),
+                           y,
+                           128 - pixels % 8);
+            ++current_tile;
+        }
+
+        while (current_tile < width_) {
+            pfrm_.set_tile(
+                           Layer::overlay, screen_tiles.x - (1 + current_tile), y, 0);
+            ++current_tile;
+        }
+    }
+}
+
+
+Sidebar::~Sidebar()
+{
+    set_display_percentage(0.f);
 }

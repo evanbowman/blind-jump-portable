@@ -134,6 +134,7 @@ static StatePool<ActiveState,
                  NetworkConnectSetupState,
                  NetworkConnectWaitState,
                  LaunchCutsceneState,
+                 QuickSelectInventoryState,
                  SignalJammerSelectorState>
     state_pool_;
 
@@ -643,17 +644,20 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void ActiveState::repaint_stats(Platform& pfrm, Game& game)
+static void repaint_health_score(Platform& pfrm,
+                                 Game& game,
+                                 std::optional<UIMetric>* health,
+                                 std::optional<UIMetric>* score)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    health_.emplace(
+    health->emplace(
         pfrm,
         OverlayCoord{1, u8(screen_tiles.y - (3 + game.powerups().size()))},
         145,
         (int)game.player().get_health());
 
-    score_.emplace(
+    score->emplace(
         pfrm,
         OverlayCoord{1, u8(screen_tiles.y - (2 + game.powerups().size()))},
         146,
@@ -661,21 +665,26 @@ void ActiveState::repaint_stats(Platform& pfrm, Game& game)
 }
 
 
-void ActiveState::repaint_powerups(Platform& pfrm, Game& game, bool clean)
+static void repaint_powerups(Platform& pfrm,
+                             Game& game,
+                             bool clean,
+                             std::optional<UIMetric>* health,
+                             std::optional<UIMetric>* score,
+                             Buffer<UIMetric, Powerup::max_>* powerups)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     if (clean) {
 
-        repaint_stats(pfrm, game);
+        repaint_health_score(pfrm, game, health, score);
 
-        powerups_.clear();
+        powerups->clear();
 
         u8 write_pos = screen_tiles.y - 2;
 
         for (auto& powerup : game.powerups()) {
             // const u8 off = integer_text_length(powerup.parameter_) + 1;
-            powerups_.emplace_back(pfrm,
+            powerups->emplace_back(pfrm,
                                    OverlayCoord{1, write_pos},
                                    powerup.icon_index(),
                                    powerup.parameter_);
@@ -689,17 +698,70 @@ void ActiveState::repaint_powerups(Platform& pfrm, Game& game, bool clean)
             if (game.powerups()[i].dirty_) {
                 switch (game.powerups()[i].display_mode_) {
                 case Powerup::DisplayMode::integer:
-                    powerups_[i].set_value(game.powerups()[i].parameter_);
+                    (*powerups)[i].set_value(game.powerups()[i].parameter_);
                     break;
 
                 case Powerup::DisplayMode::timestamp:
-                    powerups_[i].set_value(game.powerups()[i].parameter_ /
+                    (*powerups)[i].set_value(game.powerups()[i].parameter_ /
                                            1000000);
                     break;
                 }
                 game.powerups()[i].dirty_ = false;
             }
         }
+    }
+}
+
+
+static void update_powerups(Platform& pfrm, Game& game,
+                            std::optional<UIMetric>* health,
+                            std::optional<UIMetric>* score,
+                            Buffer<UIMetric, Powerup::max_>* powerups)
+{
+    bool update_powerups = false;
+    bool update_all = false;
+    for (auto it = game.powerups().begin(); it not_eq game.powerups().end();) {
+        if (it->parameter_ <= 0) {
+            it = game.powerups().erase(it);
+            update_powerups = true;
+            update_all = true;
+        } else {
+            if (it->dirty_) {
+                update_powerups = true;
+            }
+            ++it;
+        }
+    }
+
+    if (update_powerups) {
+        repaint_powerups(pfrm, game, update_all, health, score, powerups);
+    }
+}
+
+
+static void update_ui_metrics(Platform& pfrm, Game& game,
+                              Microseconds delta,
+                              std::optional<UIMetric>* health,
+                              std::optional<UIMetric>* score,
+                              Buffer<UIMetric, Powerup::max_>* powerups,
+                              Entity::Health last_health,
+                              Score last_score)
+{
+    update_powerups(pfrm, game, health, score, powerups);
+
+    if (last_health not_eq game.player().get_health()) {
+        (*health)->set_value(game.player().get_health());
+    }
+
+    if (last_score not_eq game.score()) {
+        (*score)->set_value(game.score());
+    }
+
+    (*health)->update(pfrm, delta);
+    (*score)->update(pfrm, delta);
+
+    for (auto& powerup : *powerups) {
+        powerup.update(pfrm, delta);
     }
 }
 
@@ -711,9 +773,9 @@ void ActiveState::enter(Platform& pfrm, Game& game, State&)
         restore_keystates.reset();
     }
 
-    repaint_stats(pfrm, game);
+    repaint_health_score(pfrm, game, &health_, &score_);
 
-    repaint_powerups(pfrm, game, true);
+    repaint_powerups(pfrm, game, true, &health_, &score_, &powerups_);
 }
 
 
@@ -757,61 +819,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     OverworldState::update(pfrm, game, delta);
 
-    bool update_powerups = false;
-    bool update_all = false;
-    for (auto it = game.powerups().begin(); it not_eq game.powerups().end();) {
-        if (it->parameter_ <= 0) {
-            it = game.powerups().erase(it);
-            update_powerups = true;
-            update_all = true;
-        } else {
-            if (it->dirty_) {
-                update_powerups = true;
-            }
-            ++it;
-        }
-    }
-
-    // if (pfrm.keyboard().down_transition<Key::action_2>()) {
-
-    //     auto player_tile = tile_coords;
-
-    //     if (not is_walkable__fast(
-    //             game.tiles().get_tile(player_tile.x, player_tile.y))) {
-    //         // Player movement isn't constrained to tiles exactly, and sometimes the
-    //         // player's map icon displays as inside of a wall.
-    //         if (is_walkable__fast(
-    //                 game.tiles().get_tile(player_tile.x + 1, player_tile.y))) {
-    //             player_tile.x += 1;
-    //         } else if (is_walkable__fast(game.tiles().get_tile(
-    //                        player_tile.x, player_tile.y + 1))) {
-    //             player_tile.y += 1;
-    //         }
-    //     }
-
-    //     Text t(pfrm, {});
-    //     t.assign(pfrm.get_tile(Layer::map_0, player_tile.x, player_tile.y));
-    //     pfrm.sleep(120);
-    // }
-
-    if (update_powerups) {
-        repaint_powerups(pfrm, game, update_all);
-    }
-
-    if (last_health not_eq game.player().get_health()) {
-        health_->set_value(game.player().get_health());
-    }
-
-    if (last_score not_eq game.score()) {
-        score_->set_value(game.score());
-    }
-
-    health_->update(pfrm, delta);
-    score_->update(pfrm, delta);
-
-    for (auto& powerup : powerups_) {
-        powerup.update(pfrm, delta);
-    }
+    update_ui_metrics(pfrm, game, delta, &health_, &score_, &powerups_,
+                      last_health, last_score);
 
     if (game.player().get_health() == 0) {
         pfrm.sleep(5);
@@ -826,7 +835,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<DeathFadeState>(game);
     }
 
-    if (pfrm.keyboard().down_transition<Key::alt_2>()) {
+    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
 
         // We don't update entities, e.g. the player entity, while in the
         // inventory state, so the player will not receive the up_transition
@@ -837,6 +846,15 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.speaker().play_sound("openbag", 2);
 
         return state_pool_.create<InventoryState>(true);
+    }
+
+    if (pfrm.keyboard().down_transition<Key::alt_2>()) {
+
+        restore_keystates = pfrm.keyboard().dump_state();
+
+        pfrm.speaker().play_sound("openbag", 2);
+
+        return state_pool_.create<QuickSelectInventoryState>(game);
     }
 
     if (pfrm.keyboard().down_transition<Key::start>()) {
@@ -1384,7 +1402,7 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     MenuState::update(pfrm, game, delta);
 
-    if (pfrm.keyboard().down_transition<Key::alt_2>()) {
+    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
         return state_pool_.create<ActiveState>(game);
     }
 
@@ -1622,6 +1640,216 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
             }
         }
     }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// QuickSelectInventoryState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void QuickSelectInventoryState::enter(Platform& pfrm,
+                                      Game& game,
+                                      State& prev_state)
+{
+    OverworldState::enter(pfrm, game, prev_state);
+
+    sidebar_.emplace(pfrm, 6);
+    sidebar_->set_display_percentage(0.f);
+
+    repaint_health_score(pfrm, game, &health_, &score_);
+}
+
+
+void QuickSelectInventoryState::exit(Platform& pfrm,
+                                     Game& game,
+                                     State& next_state)
+{
+    OverworldState::exit(pfrm, game, next_state);
+
+    health_.reset();
+    score_.reset();
+    powerups_.clear();
+    item_icons_.clear();
+
+    sidebar_.reset();
+    selector_.reset();
+    sidebar_->set_display_percentage(0.f);
+}
+
+
+void QuickSelectInventoryState::draw_items(Platform& pfrm,
+                                           Game& game)
+{
+    items_.clear();
+    item_icons_.clear();
+
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    for (int page = 0; page < Inventory::pages; ++page) {
+        for (int col = 0; col < Inventory::cols; ++col) {
+            for (int row = 0; row < Inventory::rows; ++row) {
+                if (item_icons_.full()) {
+                    return;
+                }
+                const auto item = game.inventory().get_item(page, col, row);
+                if (auto handler = inventory_item_handler(item)) {
+                    if (handler->single_use_) {
+                        items_.push_back(item);
+
+                        const OverlayCoord coord{static_cast<u8>(screen_tiles.x - 4),
+                                                 static_cast<u8>(4 + item_icons_.size() * 5)};
+
+                        item_icons_.emplace_back(pfrm, handler->icon_, coord);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void QuickSelectInventoryState::show_sidebar(Platform& pfrm)
+{
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    sidebar_->set_display_percentage(1.f);
+
+    for (int y = 0; y < screen_tiles.y; y += 5) {
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 1, y + 2, 129);
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 6, y + 2, 129);
+    }
+
+    pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, 1, 151);
+    pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 152);
+}
+
+
+StatePtr QuickSelectInventoryState::update(Platform& pfrm,
+                                           Game& game,
+                                           Microseconds delta)
+{
+    const auto last_health = game.player().get_health();
+    const auto last_score = game.score();
+
+    OverworldState::update(pfrm, game, delta);
+
+    update_ui_metrics(pfrm, game, delta, &health_, &score_, &powerups_,
+                      last_health, last_score);
+
+
+    game.player().soft_update(pfrm, game, delta);
+
+    static const auto transition_duration = milliseconds(160);
+
+    switch (display_mode_) {
+    case DisplayMode::enter: {
+        timer_ += delta;
+        if (timer_ >= transition_duration) {
+            timer_ = 0;
+            display_mode_ = DisplayMode::show;
+
+            show_sidebar(pfrm);
+
+            draw_items(pfrm, game);
+
+        } else {
+            if (not pfrm.keyboard().pressed<Key::alt_2>()) {
+                timer_ = transition_duration - timer_;
+                display_mode_ = DisplayMode::exit;
+            } else {
+                sidebar_->set_display_percentage(smoothstep(0.f, transition_duration, timer_));
+            }
+        }
+        break;
+    }
+
+    case DisplayMode::show: {
+
+        timer_ += delta;
+
+        auto redraw_selector = [&](TileDesc erase_color)
+                       {
+            auto screen_tiles = calc_screen_tiles(pfrm);
+
+            const OverlayCoord pos{static_cast<u8>(screen_tiles.x - 5 // selector_coord_.x * 5
+                                                   ),
+                                   static_cast<u8>(3 + selector_pos_ * 5
+                                                   )};
+            if (selector_shaded_) {
+                selector_.emplace(pfrm, OverlayCoord{4, 4}, pos, false, 8 + 278, erase_color);
+                selector_shaded_ = false;
+            } else {
+                selector_.emplace(pfrm, OverlayCoord{4, 4}, pos, false, 16 + 278, erase_color);
+                selector_shaded_ = true;
+            }
+                       };
+
+        if (pfrm.keyboard().down_transition<Key::up>()) {
+            if (selector_pos_ > 0) {
+                selector_pos_ -= 1;
+            }
+            redraw_selector(112);
+        } else if (pfrm.keyboard().down_transition<Key::down>()) {
+            if (selector_pos_ < items_.capacity() - 1) {
+                selector_pos_ += 1;
+            }
+            redraw_selector(112);
+        } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            if (selector_pos_ < items_.size()) {
+                for (int page = 0; page < Inventory::pages; ++page) {
+                    for (int col = 0; col < Inventory::cols; ++col) {
+                        for (int row = 0; row < Inventory::rows; ++row) {
+                            if (game.inventory().get_item(page, col, row) == items_[selector_pos_]) {
+                                game.inventory().remove_item(page, col, row);
+                                goto DONE;
+                            }
+                        }
+                    }
+                }
+            DONE:
+                if (auto handler = inventory_item_handler(items_[selector_pos_])) {
+                    handler->callback_(pfrm, game);
+                }
+                draw_items(pfrm, game);
+                show_sidebar(pfrm); // Because MediumIcon resets tiles back to
+                                    // zero, thus punching a hole in the
+                                    // sidebar.
+                draw_items(pfrm, game);
+
+
+                repaint_powerups(pfrm, game, true, &health_, &score_, &powerups_);
+                redraw_selector(112);
+            }
+        }
+
+        if (timer_ > milliseconds(75)) {
+            timer_ = 0;
+            redraw_selector(112);
+        }
+
+        if (not pfrm.keyboard().pressed<Key::alt_2>()) {
+            display_mode_ = DisplayMode::exit;
+            timer_ = 0;
+            redraw_selector(0);
+        }
+        break;
+    }
+
+    case DisplayMode::exit: {
+        timer_ += delta;
+        if (timer_ >= transition_duration) {
+            timer_ = 0;
+            return state_pool_.create<ActiveState>(game);
+        } else {
+            sidebar_->set_display_percentage(1.f - smoothstep(0.f, transition_duration, timer_));
+        }
+        break;
+    }
+    }
+
+
+    return null_state();
 }
 
 

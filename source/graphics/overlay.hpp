@@ -132,7 +132,8 @@ public:
            const OverlayCoord& size,
            const OverlayCoord& position,
            bool fill = false,
-           int tile_offset = 0);
+           int tile_offset = 0,
+           TileDesc default_tile = 0);
     Border(const Border&) = delete;
     ~Border();
 
@@ -141,6 +142,7 @@ private:
     OverlayCoord size_;
     OverlayCoord position_;
     bool filled_;
+    TileDesc default_tile_;
 };
 
 
@@ -156,6 +158,21 @@ private:
     Platform& pfrm_;
     OverlayCoord position_;
     u8 height_;
+};
+
+
+// Swoops in/out from the right side of the screen, based on display percentage.
+class Sidebar {
+public:
+    Sidebar(Platform& pfrm, u8 width);
+    Sidebar(const Sidebar&) = delete;
+    ~Sidebar();
+
+    void set_display_percentage(Float percentage);
+
+private:
+    Platform& pfrm_;
+    const u8 width_;
 };
 
 

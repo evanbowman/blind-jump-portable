@@ -2764,7 +2764,7 @@ static void multiplayer_init()
     // valid state anyway. So let's push out a message, regardless, and wait to
     // receive a response.
 
-    static const u8 handshake[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    const char* handshake = {"link v0.0"};
 
     ::platform->network_peer().send_message(
         {(byte*)&handshake, sizeof handshake});

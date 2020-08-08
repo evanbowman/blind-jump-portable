@@ -330,6 +330,25 @@ void Player::soft_update(Platform& pfrm, Game& game, Microseconds dt)
 {
     fade_color_anim_.advance(sprite_, dt);
     blaster_.get_sprite().set_mix(sprite_.get_mix());
+
+    // Because we're comparing ranges below, make sure the someone hasn't
+    // re-ordered the tiles.
+    static_assert(player_still_left == 22 and player_still_right == 29 and
+                  player_still_up == 11 and player_still_down == 0);
+
+    const auto t_idx = sprite_.get_texture_index();
+    if (t_idx >= player_walk_down and t_idx < player_walk_up) {
+        sprite_.set_texture_index(player_still_down);
+    }
+    if (t_idx >= player_walk_up and t_idx <= player_still_up) {
+        sprite_.set_texture_index(player_still_up);
+    }
+    if (t_idx >= player_walk_left and t_idx < player_still_left) {
+        sprite_.set_texture_index(player_still_left);
+    }
+    if (t_idx >= player_walk_right and t_idx < player_still_right) {
+        sprite_.set_texture_index(player_still_right);
+    }
 }
 
 

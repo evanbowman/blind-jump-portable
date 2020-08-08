@@ -148,10 +148,6 @@ public:
     std::optional<BossHealthBar> boss_health_bar_;
 
 private:
-    void repaint_stats(Platform& pfrm, Game& game);
-
-    void repaint_powerups(Platform& pfrm, Game& game, bool clean);
-
     std::optional<UIMetric> health_;
     std::optional<UIMetric> score_;
 
@@ -292,6 +288,46 @@ private:
 
     Microseconds selector_timer_ = 0;
     Microseconds fade_timer_ = 0;
+    bool selector_shaded_ = false;
+};
+
+
+// Because pause menus are disabled in multiplayer, at least give players an
+// option to select powerups, through a quick-select item sidebar.
+class QuickSelectInventoryState : public OverworldState {
+public:
+    QuickSelectInventoryState(Game& game) : OverworldState(game, true)
+    {
+    }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    void draw_items(Platform& pfrm, Game& game);
+
+    std::optional<Sidebar> sidebar_;
+    std::optional<Border> selector_;
+
+    std::optional<UIMetric> health_;
+    std::optional<UIMetric> score_;
+    Buffer<UIMetric, Powerup::max_> powerups_;
+
+    static constexpr const int item_display_count_ = 3;
+    Buffer<MediumIcon, item_display_count_> item_icons_;
+    Buffer<Item::Type, item_display_count_> items_;
+
+    enum class DisplayMode {
+        enter, show, exit
+    } display_mode_ = DisplayMode::enter;
+
+    void show_sidebar(Platform& pfrm);
+
+    Microseconds timer_ = 0;
+
+    u32 selector_pos_ = 0;
+
     bool selector_shaded_ = false;
 };
 
