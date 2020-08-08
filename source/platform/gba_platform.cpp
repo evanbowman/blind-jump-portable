@@ -236,7 +236,6 @@ static ObjectAttributes
     object_attribute_back_buffer[Platform::Screen::sprite_limit];
 
 
-
 static volatile u16* bg0_control = (volatile u16*)0x4000008;
 static volatile u16* bg1_control = (volatile u16*)0x400000a;
 static volatile u16* bg2_control = (volatile u16*)0x400000c;

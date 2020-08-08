@@ -61,14 +61,13 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
     auto& target = get_target(game);
 
-    auto face_player =
-        [this, &target, &face_left, &face_right] {
-            if (target.get_position().x > position_.x) {
-                face_right();
-            } else {
-                face_left();
-            }
-        };
+    auto face_player = [this, &target, &face_left, &face_right] {
+        if (target.get_position().x > position_.x) {
+            face_right();
+        } else {
+            face_left();
+        }
+    };
 
     auto shoot_offset = [&]() -> Vec2<Float> {
         if (sprite_.get_flip().x) {
@@ -291,8 +290,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<8>(target.get_position(),
-                               rng::critical_state),
+                rng::sample<8>(target.get_position(), rng::critical_state),
                 0.00028f);
             timer_ = 0;
             state_ = State::big_laser2;
@@ -306,8 +304,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(180)) {
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<12>(target.get_position(),
-                                rng::critical_state),
+                rng::sample<12>(target.get_position(), rng::critical_state),
                 0.00021f);
             timer_ = 0;
             state_ = State::big_laser3;
@@ -324,8 +321,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(180)) {
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<22>(target.get_position(),
-                                rng::critical_state),
+                rng::sample<22>(target.get_position(), rng::critical_state),
                 0.00015f);
             timer_ = 0;
             state_ = State::done_shooting;
@@ -535,7 +531,8 @@ void TheFirstExplorer::on_death(Platform& pf, Game& game)
 
 void TheFirstExplorer::sync(const net_event::EnemyStateSync& s, Game& game)
 {
-    state_ = State::after_dash; // Currently, this is the only state where we send a sync message...
+    state_ = State::
+        after_dash; // Currently, this is the only state where we send a sync message...
     position_.x = s.x_.get();
     position_.y = s.y_.get();
 

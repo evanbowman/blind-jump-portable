@@ -1,12 +1,11 @@
 #pragma once
 
-#include "number/endian.hpp"
 #include "entity/entity.hpp"
 #include "graphics/sprite.hpp"
+#include "number/endian.hpp"
 #include "number/numeric.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
-
 
 
 namespace net_event {

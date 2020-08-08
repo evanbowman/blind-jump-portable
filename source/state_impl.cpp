@@ -703,7 +703,7 @@ static void repaint_powerups(Platform& pfrm,
 
                 case Powerup::DisplayMode::timestamp:
                     (*powerups)[i].set_value(game.powerups()[i].parameter_ /
-                                           1000000);
+                                             1000000);
                     break;
                 }
                 game.powerups()[i].dirty_ = false;
@@ -713,7 +713,8 @@ static void repaint_powerups(Platform& pfrm,
 }
 
 
-static void update_powerups(Platform& pfrm, Game& game,
+static void update_powerups(Platform& pfrm,
+                            Game& game,
                             std::optional<UIMetric>* health,
                             std::optional<UIMetric>* score,
                             Buffer<UIMetric, Powerup::max_>* powerups)
@@ -739,7 +740,8 @@ static void update_powerups(Platform& pfrm, Game& game,
 }
 
 
-static void update_ui_metrics(Platform& pfrm, Game& game,
+static void update_ui_metrics(Platform& pfrm,
+                              Game& game,
                               Microseconds delta,
                               std::optional<UIMetric>* health,
                               std::optional<UIMetric>* score,
@@ -819,8 +821,14 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     OverworldState::update(pfrm, game, delta);
 
-    update_ui_metrics(pfrm, game, delta, &health_, &score_, &powerups_,
-                      last_health, last_score);
+    update_ui_metrics(pfrm,
+                      game,
+                      delta,
+                      &health_,
+                      &score_,
+                      &powerups_,
+                      last_health,
+                      last_score);
 
     if (game.player().get_health() == 0) {
         pfrm.sleep(5);
@@ -837,15 +845,24 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (pfrm.keyboard().down_transition<Key::alt_1>()) {
 
-        // We don't update entities, e.g. the player entity, while in the
-        // inventory state, so the player will not receive the up_transition
-        // keystate unless we push the keystates, and restore after exiting the
-        // inventory screen.
-        restore_keystates = pfrm.keyboard().dump_state();
+        // Menu states disabled in multiplayer mode. You can still use the
+        // quickselect inventory though.
+        if (not pfrm.network_peer().is_connected()) {
 
-        pfrm.speaker().play_sound("openbag", 2);
+            // We don't update entities, e.g. the player entity, while in the
+            // inventory state, so the player will not receive the up_transition
+            // keystate unless we push the keystates, and restore after exiting
+            // the inventory screen.
+            restore_keystates = pfrm.keyboard().dump_state();
 
-        return state_pool_.create<InventoryState>(true);
+            pfrm.speaker().play_sound("openbag", 2);
+
+            return state_pool_.create<InventoryState>(true);
+
+        } else {
+            push_notification(
+                              pfrm, game.state(), locale_string(LocaleString::menu_disabled));
+        }
     }
 
     if (pfrm.keyboard().down_transition<Key::alt_2>()) {
@@ -1678,8 +1695,7 @@ void QuickSelectInventoryState::exit(Platform& pfrm,
 }
 
 
-void QuickSelectInventoryState::draw_items(Platform& pfrm,
-                                           Game& game)
+void QuickSelectInventoryState::draw_items(Platform& pfrm, Game& game)
 {
     items_.clear();
     item_icons_.clear();
@@ -1697,8 +1713,9 @@ void QuickSelectInventoryState::draw_items(Platform& pfrm,
                     if (handler->single_use_) {
                         items_.push_back(item);
 
-                        const OverlayCoord coord{static_cast<u8>(screen_tiles.x - 4),
-                                                 static_cast<u8>(4 + item_icons_.size() * 5)};
+                        const OverlayCoord coord{
+                            static_cast<u8>(screen_tiles.x - 4),
+                            static_cast<u8>(4 + item_icons_.size() * 5)};
 
                         item_icons_.emplace_back(pfrm, handler->icon_, coord);
                     }
@@ -1734,8 +1751,14 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
 
     OverworldState::update(pfrm, game, delta);
 
-    update_ui_metrics(pfrm, game, delta, &health_, &score_, &powerups_,
-                      last_health, last_score);
+    update_ui_metrics(pfrm,
+                      game,
+                      delta,
+                      &health_,
+                      &score_,
+                      &powerups_,
+                      last_health,
+                      last_score);
 
 
     game.player().soft_update(pfrm, game, delta);
@@ -1758,7 +1781,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 timer_ = transition_duration - timer_;
                 display_mode_ = DisplayMode::exit;
             } else {
-                sidebar_->set_display_percentage(smoothstep(0.f, transition_duration, timer_));
+                sidebar_->set_display_percentage(
+                    smoothstep(0.f, transition_duration, timer_));
             }
         }
         break;
@@ -1768,22 +1792,25 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
 
         timer_ += delta;
 
-        auto redraw_selector = [&](TileDesc erase_color)
-                       {
+        auto redraw_selector = [&](TileDesc erase_color) {
             auto screen_tiles = calc_screen_tiles(pfrm);
 
-            const OverlayCoord pos{static_cast<u8>(screen_tiles.x - 5 // selector_coord_.x * 5
-                                                   ),
-                                   static_cast<u8>(3 + selector_pos_ * 5
-                                                   )};
+            const OverlayCoord pos{static_cast<u8>(screen_tiles.x - 5),
+                                   static_cast<u8>(3 + selector_pos_ * 5)};
             if (selector_shaded_) {
-                selector_.emplace(pfrm, OverlayCoord{4, 4}, pos, false, 8 + 278, erase_color);
+                selector_.emplace(
+                    pfrm, OverlayCoord{4, 4}, pos, false, 8 + 278, erase_color);
                 selector_shaded_ = false;
             } else {
-                selector_.emplace(pfrm, OverlayCoord{4, 4}, pos, false, 16 + 278, erase_color);
+                selector_.emplace(pfrm,
+                                  OverlayCoord{4, 4},
+                                  pos,
+                                  false,
+                                  16 + 278,
+                                  erase_color);
                 selector_shaded_ = true;
             }
-                       };
+        };
 
         if (pfrm.keyboard().down_transition<Key::up>()) {
             if (selector_pos_ > 0) {
@@ -1800,7 +1827,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 for (int page = 0; page < Inventory::pages; ++page) {
                     for (int col = 0; col < Inventory::cols; ++col) {
                         for (int row = 0; row < Inventory::rows; ++row) {
-                            if (game.inventory().get_item(page, col, row) == items_[selector_pos_]) {
+                            if (game.inventory().get_item(page, col, row) ==
+                                items_[selector_pos_]) {
                                 game.inventory().remove_item(page, col, row);
                                 goto DONE;
                             }
@@ -1808,7 +1836,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                     }
                 }
             DONE:
-                if (auto handler = inventory_item_handler(items_[selector_pos_])) {
+                if (auto handler =
+                        inventory_item_handler(items_[selector_pos_])) {
                     handler->callback_(pfrm, game);
                 }
                 draw_items(pfrm, game);
@@ -1818,7 +1847,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 draw_items(pfrm, game);
 
 
-                repaint_powerups(pfrm, game, true, &health_, &score_, &powerups_);
+                repaint_powerups(
+                    pfrm, game, true, &health_, &score_, &powerups_);
                 redraw_selector(112);
             }
         }
@@ -1842,7 +1872,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             timer_ = 0;
             return state_pool_.create<ActiveState>(game);
         } else {
-            sidebar_->set_display_percentage(1.f - smoothstep(0.f, transition_duration, timer_));
+            sidebar_->set_display_percentage(
+                1.f - smoothstep(0.f, transition_duration, timer_));
         }
         break;
     }

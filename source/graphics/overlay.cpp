@@ -398,7 +398,7 @@ void Sidebar::set_display_percentage(Float percentage)
 
         while (pixels >= 8) {
             pfrm_.set_tile(
-                           Layer::overlay, screen_tiles.x - (1 + current_tile), y, 121);
+                Layer::overlay, screen_tiles.x - (1 + current_tile), y, 121);
             pixels -= 8;
             ++current_tile;
         }
@@ -413,7 +413,7 @@ void Sidebar::set_display_percentage(Float percentage)
 
         while (current_tile < width_) {
             pfrm_.set_tile(
-                           Layer::overlay, screen_tiles.x - (1 + current_tile), y, 0);
+                Layer::overlay, screen_tiles.x - (1 + current_tile), y, 0);
             ++current_tile;
         }
     }

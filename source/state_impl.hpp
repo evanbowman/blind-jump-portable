@@ -319,7 +319,9 @@ private:
     Buffer<Item::Type, item_display_count_> items_;
 
     enum class DisplayMode {
-        enter, show, exit
+        enter,
+        show,
+        exit
     } display_mode_ = DisplayMode::enter;
 
     void show_sidebar(Platform& pfrm);
