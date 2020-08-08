@@ -331,6 +331,9 @@ private:
     u32 selector_pos_ = 0;
 
     bool selector_shaded_ = false;
+
+    int page_ = 0;
+    bool more_pages_ = false;
 };
 
 

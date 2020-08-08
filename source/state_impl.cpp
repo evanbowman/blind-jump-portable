@@ -1674,7 +1674,9 @@ void QuickSelectInventoryState::enter(Platform& pfrm,
     sidebar_.emplace(pfrm, 6);
     sidebar_->set_display_percentage(0.f);
 
-    repaint_health_score(pfrm, game, &health_, &score_);
+    repaint_powerups(pfrm, game, true, &health_, &score_, &powerups_);
+
+    game.camera().set_speed(2.8f);
 }
 
 
@@ -1692,6 +1694,34 @@ void QuickSelectInventoryState::exit(Platform& pfrm,
     sidebar_.reset();
     selector_.reset();
     sidebar_->set_display_percentage(0.f);
+
+    game.camera().set_speed(1.f);
+}
+
+
+static bool item_is_quickselect(Item::Type item)
+{
+    if (auto handler = inventory_item_handler(item)) {
+        return handler->single_use_ and item not_eq Item::Type::signal_jammer;
+    } else {
+        return false;
+    }
+}
+
+
+template <typename F>
+void foreach_quickselect_item(Game& game, F&& callback)
+{
+    for (int page = 0; page < Inventory::pages; ++page) {
+        for (int row = 0; row < Inventory::rows; ++row) {
+            for (int col = 0; col < Inventory::cols; ++col) {
+                const auto item = game.inventory().get_item(page, col, row);
+                if (item_is_quickselect(item)) {
+                    callback(item, page, row, col);
+                }
+            }
+        }
+    }
 }
 
 
@@ -1700,29 +1730,31 @@ void QuickSelectInventoryState::draw_items(Platform& pfrm, Game& game)
     items_.clear();
     item_icons_.clear();
 
+    more_pages_ = false;
+
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    for (int page = 0; page < Inventory::pages; ++page) {
-        for (int col = 0; col < Inventory::cols; ++col) {
-            for (int row = 0; row < Inventory::rows; ++row) {
-                if (item_icons_.full()) {
-                    return;
-                }
-                const auto item = game.inventory().get_item(page, col, row);
-                if (auto handler = inventory_item_handler(item)) {
-                    if (handler->single_use_) {
-                        items_.push_back(item);
+    int skip = page_ * items_.capacity();
 
-                        const OverlayCoord coord{
-                            static_cast<u8>(screen_tiles.x - 4),
-                            static_cast<u8>(4 + item_icons_.size() * 5)};
-
-                        item_icons_.emplace_back(pfrm, handler->icon_, coord);
-                    }
-                }
-            }
+    foreach_quickselect_item(game, [&](Item::Type item, int, int, int) {
+        if (item_icons_.full()) {
+            more_pages_ = true;
+            return;
         }
-    }
+        if (skip > 0) {
+            --skip;
+            return;
+        }
+        items_.push_back(item);
+
+        const OverlayCoord coord{
+                                 static_cast<u8>(screen_tiles.x - 4),
+                                 static_cast<u8>(4 + item_icons_.size() * 5)};
+
+        if (auto handler = inventory_item_handler(item)) {
+            item_icons_.emplace_back(pfrm, handler->icon_, coord);
+        }
+    });
 }
 
 
@@ -1737,8 +1769,17 @@ void QuickSelectInventoryState::show_sidebar(Platform& pfrm)
         pfrm.set_tile(Layer::overlay, screen_tiles.x - 6, y + 2, 129);
     }
 
-    pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, 1, 151);
-    pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 152);
+    if (page_ > 0) {
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, 1, 153);
+    } else {
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, 1, 151);
+    }
+
+    if (more_pages_) {
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 154);
+    } else {
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 152);
+    }
 }
 
 
@@ -1748,6 +1789,10 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
 {
     const auto last_health = game.player().get_health();
     const auto last_score = game.score();
+
+    const auto player_pos = game.player().get_position();
+
+    game.camera().push_ballast({player_pos.x + 20, player_pos.y});
 
     OverworldState::update(pfrm, game, delta);
 
@@ -1772,8 +1817,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             timer_ = 0;
             display_mode_ = DisplayMode::show;
 
+            draw_items(pfrm, game);
             show_sidebar(pfrm);
-
             draw_items(pfrm, game);
 
         } else {
@@ -1785,7 +1830,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                     smoothstep(0.f, transition_duration, timer_);
 
                 sidebar_->set_display_percentage(amount);
-                pfrm.screen().fade(0.25f * amount);
+                // pfrm.screen().fade(0.25f * amount);
             }
         }
         break;
@@ -1818,31 +1863,52 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
         if (pfrm.keyboard().down_transition<Key::up>()) {
             if (selector_pos_ > 0) {
                 selector_pos_ -= 1;
+            } else if (page_ > 0) {
+                page_ -= 1;
+                selector_pos_ = items_.capacity() - 1;
+                draw_items(pfrm, game);
+                show_sidebar(pfrm);
+                draw_items(pfrm, game);
             }
             redraw_selector(112);
         } else if (pfrm.keyboard().down_transition<Key::down>()) {
             if (selector_pos_ < items_.capacity() - 1) {
                 selector_pos_ += 1;
+            } else {
+                if (more_pages_) {
+                    selector_pos_ = 0;
+                    page_ += 1;
+                    draw_items(pfrm, game);
+                    show_sidebar(pfrm);
+                    draw_items(pfrm, game);
+                }
             }
             redraw_selector(112);
         } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
             if (selector_pos_ < items_.size()) {
-                for (int page = 0; page < Inventory::pages; ++page) {
-                    for (int col = 0; col < Inventory::cols; ++col) {
-                        for (int row = 0; row < Inventory::rows; ++row) {
-                            if (game.inventory().get_item(page, col, row) ==
-                                items_[selector_pos_]) {
-                                game.inventory().remove_item(page, col, row);
-                                goto DONE;
-                            }
+                int skip = page_ * items_.capacity() + selector_pos_;
+                bool done = false;
+                foreach_quickselect_item(game,  [&](Item::Type item,
+                                                    int page,
+                                                    int row,
+                                                    int col) {
+                    if (skip > 0) {
+                        --skip;
+                        return;
+                    }
+                    if (done) {
+                        return;
+                    }
+                    if (auto handler = inventory_item_handler(item)) {
+                        handler->callback_(pfrm, game);
+                        game.inventory().remove_item(page, col, row);
+                        done = true;
+
+                        if (item not_eq items_[selector_pos_]) {
+                            while (true) ;
                         }
                     }
-                }
-            DONE:
-                if (auto handler =
-                        inventory_item_handler(items_[selector_pos_])) {
-                    handler->callback_(pfrm, game);
-                }
+                });
                 draw_items(pfrm, game);
                 show_sidebar(pfrm); // Because MediumIcon resets tiles back to
                                     // zero, thus punching a hole in the
@@ -1883,7 +1949,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                     1.f - smoothstep(0.f, transition_duration, timer_);
 
                 sidebar_->set_display_percentage(amount);
-                pfrm.screen().fade(0.25f * amount);
+                // pfrm.screen().fade(0.25f * amount);
             }
         }
         break;
