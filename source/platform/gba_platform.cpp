@@ -2763,10 +2763,16 @@ static void multiplayer_init()
     // valid state anyway. So let's push out a message, regardless, and wait to
     // receive a response.
 
-    const char* handshake = {"link v0.0"};
+    const char* handshake = "link__v0.0.0";
+
+    if (str_len(handshake) not_eq Platform::NetworkPeer::max_message_size) {
+        ::platform->network_peer().disconnect();
+        error(*::platform, "handshake string does not equal message size");
+        return;
+    }
 
     ::platform->network_peer().send_message(
-        {(byte*)&handshake, sizeof handshake});
+        {(byte*)handshake, sizeof handshake});
 
     multiplayer_schedule_tx();
 
