@@ -608,10 +608,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
 
     if (UNLIKELY(is_boss_level(game.level()))) {
-        // check_collisions(
-        //     pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
-        // check_collisions(
-        //     pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
+        check_collisions(
+            pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
+        check_collisions(
+            pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
     }
 
     game.enemies().transform([&](auto& buf) {
@@ -861,7 +861,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         } else {
             push_notification(
-                              pfrm, game.state(), locale_string(LocaleString::menu_disabled));
+                pfrm, game.state(), locale_string(LocaleString::menu_disabled));
         }
     }
 
