@@ -1,5 +1,7 @@
 # Blind Jump Portable
 
+You should find this readme mosty up-to-date, but as the game is under active development, everything is subject to change, and sometimes edits to the readme lag significantly behind changes to the game itself.
+
 ## Contents
 <!--ts-->
    * [Contents](#contents)
@@ -7,6 +9,7 @@
    * [Gameplay](#gameplay)
       * [Controls](#controls)
       * [Multiplayer](#multiplayer)
+      * [Settings](#settings)
    * [Implementation](#implementation)
    * [Building](#building)
 <!--te-->
@@ -40,6 +43,13 @@ The game uses procedural algorithms to generate the levels, so the level designs
 On the gameboy advance, use the d-pad to move, the A button to shoot, and the B button to interact with things and to select items and options in the game's menus. If you hold the B button while walking, you will shoot repeatedly, and also the player will strafe. Use the right bumper to open or close your inventory, and the start button to open the pause menu. For the desktop version of the game, you can pick the button mappings yourself by editing the config.ini file in this repositiory.
 
 ### Multiplayer
+
+<img src="multiplayer1.png"/><img src="multiplayer2.png"/>
+
+The game supports multiplayer over the gameboy advance's serial port. While certainly incomplete, you should find the multiplayer mode to be more-or-less playable.
+To enable, press the start button on both devices, and then select the "Connect Peer" option within twenty seconds. You need to be on the very first level to connect a peer, otherwise the option will be grayed-out.
+
+### Settings
 
 
 
