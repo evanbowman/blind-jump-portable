@@ -1,5 +1,13 @@
 # Blind Jump Portable
 
+## Contents
+<!--ts-->
+   * [Contents](#contents)
+   * [Introduction](#introduction)
+   * [Implementation](#implementation)
+   * [Building](#building)
+<!--te-->
+
 ## Introduction
 
 Blind Jump is a simple action/adventure game. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a long hiatus, during which he was teaching himself traditional oil painting. The game is designed to run on a wide variety of platforms, from macOS to the Nintendo Gameboy Advance.
