@@ -1781,8 +1781,11 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 timer_ = transition_duration - timer_;
                 display_mode_ = DisplayMode::exit;
             } else {
-                sidebar_->set_display_percentage(
-                    smoothstep(0.f, transition_duration, timer_));
+                const auto amount =
+                    smoothstep(0.f, transition_duration, timer_);
+
+                sidebar_->set_display_percentage(amount);
+                pfrm.screen().fade(0.25f * amount);
             }
         }
         break;
@@ -1876,8 +1879,11 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 timer_ = transition_duration - timer_;
                 display_mode_ = DisplayMode::enter;
             } else {
-                sidebar_->set_display_percentage(
-                    1.f - smoothstep(0.f, transition_duration, timer_));
+                const auto amount =
+                    1.f - smoothstep(0.f, transition_duration, timer_);
+
+                sidebar_->set_display_percentage(amount);
+                pfrm.screen().fade(0.25f * amount);
             }
         }
         break;
