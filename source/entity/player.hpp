@@ -80,6 +80,8 @@ public:
 
     void apply_force(const Vec2<Float>& force);
 
+    Vec2<Float> get_speed() const;
+
 private:
     using ResourceLoc = TextureMap;
 

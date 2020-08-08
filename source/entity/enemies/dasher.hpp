@@ -4,6 +4,7 @@
 #include "enemy.hpp"
 #include "entity/entity.hpp"
 #include "graphics/sprite.hpp"
+#include "network_event.hpp"
 
 
 class LaserExplosion;
@@ -28,14 +29,15 @@ public:
         return ret;
     }
 
+    using Enemy::on_collision;
+
     void on_collision(Platform&, Game&, Laser&);
     void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, AlliedOrbShot&);
-    void on_collision(Platform&, Game&, Player&)
-    {
-    }
 
     void on_death(Platform&, Game&);
+
+    void sync(const net_event::EnemyStateSync&);
 
 private:
     enum class State {

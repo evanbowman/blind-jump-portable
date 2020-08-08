@@ -112,9 +112,9 @@ public:
         return speaker_;
     }
 
-    inline NetworkPeer& network()
+    inline NetworkPeer& network_peer()
     {
-        return network_;
+        return network_peer_;
     }
 
     // On some platforms, fatal() will trigger a soft reset. But soft-reset is
@@ -416,9 +416,66 @@ public:
 
     class NetworkPeer {
     public:
-        void connect(const char* peer);
+        NetworkPeer();
+        NetworkPeer(const NetworkPeer&) = delete;
+        ~NetworkPeer();
+
+        void connect(const char* peer_address);
+        void listen();
+
+        void disconnect();
+
+        bool is_connected() const;
+        bool is_host() const;
+
+        struct Message {
+            const byte* data_;
+            u32 length_;
+        };
+
+        enum Interface {
+            serial_cable,
+            internet,
+        };
+
+        Interface interface() const;
+
+        // NOTE: You cannot transmit messages larger than 12 bytes. On the
+        // gameboy advance, 12 byte messages require at least six serial io
+        // interrupts, along with a bunch of timer interrupts. It's just not
+        // realistic to make the messages too much larger, if you want to
+        // receive the data within a reasonable amount of time on all platforms.
+        static const u32 max_message_size = 12;
+
+        // IMPORTANT!!! Messages containing all zeroes are not guaranteed to be
+        // received on some platforms, so you should have at least some high
+        // bits in your message.
+        bool send_message(const Message& message);
 
         void update();
+
+        // The result of poll-message will include the length of the available
+        // data in the network-peer's buffer. If the space in the buffer is
+        // insufficient to frame a message, exit polling, and do not call
+        // poll_consume() until there's enough space to fill an entire message.
+        std::optional<Message> poll_message();
+        void poll_consume(u32 length);
+
+        // Will return false if the platform does not support networked
+        // multiplayer.
+        static bool supported_by_device();
+
+        struct Stats {
+            int transmit_count_;
+            int receive_count_;
+            int transmit_loss_;
+            int receive_loss_;
+        };
+
+        Stats stats() const;
+
+    private:
+        void* impl_;
     };
 
 
@@ -482,7 +539,7 @@ private:
 
     friend int main();
 
-    NetworkPeer network_;
+    NetworkPeer network_peer_;
     Screen screen_;
     Keyboard keyboard_;
     Speaker speaker_;

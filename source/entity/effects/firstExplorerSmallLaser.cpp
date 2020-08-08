@@ -16,7 +16,7 @@ void FirstExplorerSmallLaser::update(Platform& pf, Game& game, Microseconds dt)
 
     flicker_timer_ += dt;
     if (flicker_timer_ > milliseconds(40)) {
-        switch (rng::choice<2>()) {
+        switch (rng::choice<2>(rng::utility_state)) {
         case 0:
             sprite_.set_mix({ColorConstant::electric_blue, 255});
             break;

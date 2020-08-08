@@ -96,7 +96,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 
     static const auto bullet_speed = 0.00011f;
 
-    auto aim = [&] { return rng::sample<8>(target_pos); };
+    auto aim = [&] { return rng::sample<8>(target_pos, rng::critical_state); };
 
     auto origin = [&] { return position_ + Vec2<Float>{0.f, 4.f}; };
 
@@ -125,7 +125,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case State::closed:
-        if (visible()) {
+        if (visible() or pfrm.network_peer().is_connected()) {
             if (manhattan_length(target_pos, position_) <
                 std::min(screen_size.x, screen_size.y) / 2 + 15) {
                 state_ = State::opening;
@@ -205,7 +205,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 void Turret::injured(Platform& pf, Game& game, Health amount)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
-    debit_health(amount);
+    debit_health(pf, amount);
 
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);
@@ -258,4 +258,11 @@ void Turret::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(pf, game, position_, 4, item_drop_vec);
+}
+
+
+void Turret::sync(const net_event::EnemyStateSync& state, Game& game)
+{
+    state_ = static_cast<State>(state.state_);
+    timer_ = reload(game.level()) - milliseconds(80);
 }

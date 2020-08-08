@@ -1,7 +1,8 @@
 #include "random.hpp"
 
 
-rng::Generator rng::global_state;
+rng::Generator rng::critical_state;
+rng::Generator rng::utility_state;
 
 
 rng::Value rng::get(Generator& gen)

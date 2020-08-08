@@ -5,7 +5,18 @@
 const Entity& Enemy::get_target(Game& game)
 {
     if (not is_allied_) {
-        return game.player();
+        if (game.peer()) {
+            if (manhattan_length(position_, game.player().get_position()) >
+                manhattan_length(position_, game.peer()->get_position())) {
+
+                return *game.peer();
+            } else {
+                return game.player();
+            }
+        } else {
+            return game.player();
+        }
+
     } else {
         int dist = 1000000;
         Entity* result = nullptr;
@@ -61,4 +72,34 @@ OrbShot* Enemy::shoot(Platform& pfrm,
         }
     }
     return nullptr;
+}
+
+
+void Enemy::debit_health(Platform& pfrm, Health amount)
+{
+    Entity::debit_health(amount);
+
+    if (pfrm.network_peer().is_connected()) {
+        net_event::EnemyHealthChanged e;
+        e.id_.set(id());
+        e.new_health_.set(get_health());
+
+        net_event::transmit(pfrm, e);
+    }
+}
+
+
+void Enemy::health_changed(const net_event::EnemyHealthChanged& hc,
+                           Platform& pfrm,
+                           Game& game)
+{
+    if (hc.new_health_.get() < get_health()) {
+        sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
+
+        if (alive()) {
+            pfrm.speaker().play_sound("click", 1, position_);
+        }
+    }
+
+    Entity::set_health(std::min(hc.new_health_.get(), get_health()));
 }

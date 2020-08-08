@@ -105,7 +105,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::inactive: {
-        if (visible()) {
+        if (visible() or pf.network_peer().is_connected()) {
             timer_ = 0;
             if (manhattan_length(target.get_position(), position_) <
                 std::min(screen_size.x, screen_size.y)) {
@@ -121,7 +121,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
             if (manhattan_length(target.get_position(), position_) <
                     std::min(screen_size.x, screen_size.y) and
-                rng::choice<2>()) {
+                rng::choice<2>(rng::critical_state)) {
                 state_ = State::shoot_begin;
                 sprite_.set_texture_index(TextureMap::dasher_weapon1);
             } else {
@@ -154,11 +154,12 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::shot2;
 
             pf.speaker().play_sound("laser1", 4, position_);
-            this->shoot(pf,
-                        game,
-                        position_,
-                        rng::sample<8>(target.get_position()),
-                        shot_speed(game));
+            this->shoot(
+                pf,
+                game,
+                position_,
+                rng::sample<8>(target.get_position(), rng::critical_state),
+                shot_speed(game));
         }
         break;
 
@@ -173,11 +174,12 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             }
 
             pf.speaker().play_sound("laser1", 4, position_);
-            this->shoot(pf,
-                        game,
-                        position_,
-                        rng::sample<16>(target.get_position()),
-                        shot_speed(game));
+            this->shoot(
+                pf,
+                game,
+                position_,
+                rng::sample<16>(target.get_position(), rng::critical_state),
+                shot_speed(game));
         }
         break;
     }
@@ -188,11 +190,12 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::pause;
 
             pf.speaker().play_sound("laser1", 4, position_);
-            this->shoot(pf,
-                        game,
-                        position_,
-                        rng::sample<32>(target.get_position()),
-                        shot_speed(game));
+            this->shoot(
+                pf,
+                game,
+                position_,
+                rng::sample<32>(target.get_position(), rng::critical_state),
+                shot_speed(game));
         }
         break;
 
@@ -201,7 +204,9 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(352);
 
             s16 dir =
-                ((static_cast<float>(rng::choice<359>())) / 360) * INT16_MAX;
+                ((static_cast<float>(rng::choice<359>(rng::critical_state))) /
+                 360) *
+                INT16_MAX;
 
             speed_.x = 5 * (float(cosine(dir)) / INT16_MAX);
             speed_.y = 5 * (float(sine(dir)) / INT16_MAX);
@@ -248,6 +253,21 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(150);
             state_ = State::idle;
             sprite_.set_texture_index(TextureMap::dasher_idle);
+
+            // Seems sensible to have the peer whos player is nearest to the
+            // enemy send out the sync state message. Seeing as the enemy moves
+            // with respect to the nearest player
+            if (&target == &game.player()) {
+                const auto int_pos = position_.cast<s16>();
+
+                net_event::EnemyStateSync s;
+                s.state_ = static_cast<u8>(state_);
+                s.x_.set(int_pos.x);
+                s.y_.set(int_pos.y);
+                s.id_.set(id());
+
+                net_event::transmit(pf, s);
+            }
         }
         break;
     }
@@ -280,7 +300,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
 
 void Dasher::injured(Platform& pf, Game& game, Health amount)
 {
-    debit_health(amount);
+    debit_health(pf, amount);
 
     const auto c = current_zone(game).injury_glow_color_;
 
@@ -341,4 +361,13 @@ void Dasher::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(pf, game, position_, 2, item_drop_vec);
+}
+
+void Dasher::sync(const net_event::EnemyStateSync& s)
+{
+    timer_ = 0;
+    position_.x = s.x_.get();
+    position_.y = s.y_.get();
+    sprite_.set_position(position_);
+    state_ = State::idle;
 }

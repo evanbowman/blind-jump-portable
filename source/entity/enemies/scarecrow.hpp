@@ -4,6 +4,7 @@
 #include "collision.hpp"
 #include "enemy.hpp"
 #include "entity/entity.hpp"
+#include "network_event.hpp"
 #include "tileMap.hpp"
 
 
@@ -28,12 +29,15 @@ public:
 
     void update(Platform&, Game&, Microseconds);
 
+    using Enemy::on_collision;
+
     void on_collision(Platform&, Game&, AlliedOrbShot&);
     void on_collision(Platform&, Game&, LaserExplosion&);
     void on_collision(Platform&, Game&, Laser&);
 
     void on_death(Platform&, Game&);
 
+    void sync(const net_event::EnemyStateSync& state);
 
 private:
     void injured(Platform&, Game&, Health amount);

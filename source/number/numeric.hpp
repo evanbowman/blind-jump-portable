@@ -254,4 +254,4 @@ inline Float distance(const Vec2<Float>& from, const Vec2<Float>& to)
 }
 
 
-enum class Cardinal { north, south, east, west };
+enum class Cardinal : u8 { north, south, west, east };

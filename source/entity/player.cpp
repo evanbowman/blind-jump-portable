@@ -37,6 +37,12 @@ Player::Player(Platform& pfrm)
 }
 
 
+Vec2<Float> Player::get_speed() const
+{
+    return {l_speed_ + -r_speed_, u_speed_ + -d_speed_};
+}
+
+
 void Player::revive(Platform& pfrm)
 {
     if (not alive()) {
@@ -622,7 +628,7 @@ void Blaster::update(Platform& pf, Game& game, Microseconds dt, Cardinal dir)
 
 void Player::footstep(Platform& pf)
 {
-    switch (rng::choice<4>()) {
+    switch (rng::choice<4>(rng::utility_state)) {
     case 0:
         pf.speaker().play_sound("footstep1", 0);
         break;
@@ -694,6 +700,13 @@ void Blaster::shoot(Platform& pf, Game& game)
                 }()) {
                 undo_powerups();
                 error(pf, "failed to spawn player attack, likely OOM in pool");
+            } else {
+                net_event::PlayerSpawnLaser e;
+                e.dir_ = dir_;
+                e.x_.set(position_.cast<s16>().x);
+                e.y_.set(position_.cast<s16>().y);
+
+                net_event::transmit(pf, e);
             }
         }
     }

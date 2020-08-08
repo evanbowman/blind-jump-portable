@@ -486,6 +486,10 @@ const Color& real_color(ColorConstant k)
         static const Color silver_white(29, 29, 30);
         return silver_white;
 
+    case ColorConstant::indigo_tint:
+        static const Color indigo_tint(4, 12, 16);
+        return indigo_tint;
+
     default:
     case ColorConstant::null:
     case ColorConstant::rich_black:
@@ -824,6 +828,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "graphics/overlay.h"
 #include "graphics/overlay_cutscene.h"
 #include "graphics/overlay_journal.h"
+#include "graphics/overlay_network_flattened.h"
 #include "graphics/seed_packet_flattened.h"
 #include "graphics/spritesheet.h"
 #include "graphics/spritesheet2.h"
@@ -887,7 +892,8 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(overlay_journal),
     TEXTURE_INFO(old_poster_flattened),
     TEXTURE_INFO(blaster_info_flattened),
-    TEXTURE_INFO(seed_packet_flattened)};
+    TEXTURE_INFO(seed_packet_flattened),
+    TEXTURE_INFO(overlay_network_flattened)};
 
 
 static const TextureData* current_spritesheet = &sprite_textures[0];
@@ -2259,6 +2265,16 @@ __attribute__((section(".iwram"), long_call)) void
 cartridge_interrupt_handler();
 
 
+static void enable_watchdog()
+{
+    irqEnable(IRQ_TIMER2);
+    irqSet(IRQ_TIMER2, watchdog_update);
+
+    REG_TM2CNT_H = 0x00C3;
+    REG_TM2CNT_L = 0;
+}
+
+
 Platform::Platform()
 {
     irqInit();
@@ -2271,7 +2287,6 @@ Platform::Platform()
         REG_TM3CNT_L = 0;
         REG_TM3CNT_H = 1 << 7 | 1 << 6;
     });
-
 
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
@@ -2309,11 +2324,7 @@ Platform::Platform()
     REG_TM0CNT_H = 0x0083;
     REG_TM1CNT_H = 0x00C3;
 
-    irqEnable(IRQ_TIMER2);
-    irqSet(IRQ_TIMER2, watchdog_update);
-
-    REG_TM2CNT_H = 0x00C3;
-    REG_TM2CNT_L = 0;
+    enable_watchdog();
 
     irqEnable(IRQ_GAMEPAK);
     irqSet(IRQ_GAMEPAK, cartridge_interrupt_handler);
@@ -2717,6 +2728,559 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
         MEM_SCREENBLOCKS[sbb_bg_tiles][x + y * 32] = val;
         break;
     }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// NetworkPeer
+////////////////////////////////////////////////////////////////////////////////
+
+
+#include "/opt/devkitpro/libgba/include/gba_sio.h"
+
+
+Platform::NetworkPeer::NetworkPeer()
+{
+}
+
+
+static int multiplayer_is_master()
+{
+    return (REG_SIOCNT & (1 << 2)) == 0 and (REG_SIOCNT & (1 << 3));
+}
+
+
+static int multiplayer_error()
+{
+    return REG_SIOCNT & (1 << 6);
+}
+
+
+static bool multiplayer_validate()
+{
+    if ((REG_SIOCNT & (1 << 3)) == 0 or multiplayer_error()) {
+        return false;
+    } else {
+    }
+    return true;
+}
+
+
+static int rx_message_count = 0;
+static int tx_message_count = 0;
+static int rx_loss = 0;
+static int tx_loss = 0;
+
+
+// The gameboy Multi link protocol always sends data, no matter what, even if we
+// do not have any new data to put in the send buffer. Because there is no
+// distinction between real data and empty transmits, we will transmit in
+// fixed-size chunks. The receiver knows when it's received a whole message,
+// after a specific number of iterations. Now, there are other ways, potentially
+// better ways, to handle this situation. But this way seems easiest, although
+// probably uses a lot of unnecessary bandwidth. Another drawback: the poller
+// needs ignore messages that are all zeroes. Accomplished easily enough by
+// prefixing the sent message with an enum, where the zeroth enumeration is
+// unused.
+static const int message_iters =
+    Platform::NetworkPeer::max_message_size / sizeof(u16);
+
+struct WireMessage {
+    u16 data_[message_iters] = {};
+};
+
+using TxInfo = WireMessage;
+
+static const int tx_ring_size = 32;
+
+static ObjectPool<TxInfo, tx_ring_size> tx_message_pool;
+
+static int tx_ring_write_pos = 0;
+static int tx_ring_read_pos = 0;
+static TxInfo* tx_ring[tx_ring_size] = {nullptr};
+
+
+static TxInfo* tx_ring_pop()
+{
+    TxInfo* msg = nullptr;
+
+    for (int i = tx_ring_read_pos; i < tx_ring_read_pos + tx_ring_size; ++i) {
+        auto index = i % tx_ring_size;
+        if (tx_ring[index]) {
+            msg = tx_ring[index];
+            tx_ring[index] = nullptr;
+            tx_ring_read_pos = index;
+            return msg;
+        }
+    }
+
+    tx_ring_read_pos += 1;
+    tx_ring_read_pos %= tx_ring_size;
+
+    // The transmit ring is completely empty!
+    return nullptr;
+}
+
+
+using RxInfo = WireMessage;
+
+static const int rx_ring_size = 64;
+
+static ObjectPool<RxInfo, rx_ring_size> rx_message_pool;
+
+static int rx_ring_write_pos = 0;
+static int rx_ring_read_pos = 0;
+static RxInfo* rx_ring[rx_ring_size] = {nullptr};
+
+
+static void rx_ring_push(RxInfo* message)
+{
+    rx_message_count += 1;
+
+    if (rx_ring[rx_ring_write_pos]) {
+        // The reader does not seem to be keeping up!
+        rx_loss += 1;
+        auto lost_message = rx_ring[rx_ring_write_pos];
+        rx_ring[rx_ring_write_pos] = nullptr;
+        rx_message_pool.post(lost_message);
+    }
+
+    rx_ring[rx_ring_write_pos] = message;
+    rx_ring_write_pos += 1;
+    rx_ring_write_pos %= rx_ring_size;
+}
+
+
+static RxInfo* rx_ring_pop()
+{
+    RxInfo* msg = nullptr;
+
+    for (int i = rx_ring_read_pos; i < rx_ring_read_pos + rx_ring_size; ++i) {
+        auto index = i % rx_ring_size;
+        if (rx_ring[index]) {
+            msg = rx_ring[index];
+            rx_ring[index] = nullptr;
+            rx_ring_read_pos = index;
+            return msg;
+        }
+    }
+
+    rx_ring_read_pos += 1;
+    rx_ring_read_pos %= rx_ring_size;
+
+    return nullptr;
+}
+
+
+static int rx_iter_state = 0;
+static RxInfo* rx_current_message =
+    nullptr; // Note: we will drop the first message, oh well.
+
+static bool rx_current_all_zeroes = true; // The multi serial io mode always
+                                          // transmits, even when there's
+                                          // nothing to send. At first, I was
+                                          // allowing zeroed out messages
+                                          // generated by the platform to pass
+                                          // through to the user. But doing so
+                                          // takes up a lot of space in the rx
+                                          // buffer, so despite the
+                                          // inconvenience, for performance
+                                          // reasons, I am going to have to
+                                          // require that messages containing
+                                          // all zeroes never be sent by the
+                                          // user.
+
+
+static void multiplayer_rx_receive()
+{
+    if (rx_iter_state == message_iters) {
+        if (rx_current_message) {
+            if (rx_current_all_zeroes) {
+                rx_message_pool.post(rx_current_message);
+            } else {
+                rx_ring_push(rx_current_message);
+            }
+        }
+
+        rx_current_all_zeroes = true;
+
+        rx_current_message = rx_message_pool.get();
+        if (not rx_current_message) {
+            rx_loss += 1;
+        }
+        rx_iter_state = 0;
+    }
+
+    if (rx_current_message) {
+        const auto val =
+            multiplayer_is_master() ? REG_SIOMULTI1 : REG_SIOMULTI0;
+        if (rx_current_all_zeroes and val) {
+            rx_current_all_zeroes = false;
+        }
+        rx_current_message->data_[rx_iter_state++] = val;
+
+    } else {
+        rx_iter_state++;
+    }
+}
+
+
+static int transmit_busy_count = 0;
+
+
+static bool multiplayer_busy()
+{
+    return REG_SIOCNT & SIO_START;
+}
+
+
+static int tx_iter_state = 0;
+static TxInfo* tx_current_message = nullptr;
+
+
+static int null_bytes_written = 0;
+
+
+bool Platform::NetworkPeer::send_message(const Message& message)
+{
+    if (message.length_ > sizeof(TxInfo::data_)) {
+        while (true)
+            ; // error!
+    }
+
+    if (not is_connected()) {
+        return false;
+    }
+
+    // TODO: uncomment this block if we actually see issues on the real hardware...
+    // if (tx_iter_state == message_iters) {
+    //     // Decreases the likelihood of manipulating data shared by the interrupt
+    //     // handlers. See related comment in the poll_message() function.
+    //     return false;
+    // }
+
+    if (tx_ring[tx_ring_write_pos]) {
+        // The writer does not seem to be keeping up! Guess we'll have to drop a
+        // message :(
+        tx_loss += 1;
+        auto lost_message = tx_ring[tx_ring_write_pos];
+        tx_ring[tx_ring_write_pos] = nullptr;
+        tx_message_pool.post(lost_message);
+    }
+
+    auto msg = tx_message_pool.get();
+    if (not msg) {
+        // error! Could not transmit messages fast enough, i.e. we've exhausted
+        // the message pool! How to handle this condition!?
+        tx_loss += 1;
+        return false;
+    }
+
+    __builtin_memcpy(msg->data_, message.data_, message.length_);
+
+    tx_ring[tx_ring_write_pos] = msg;
+    tx_ring_write_pos += 1;
+    tx_ring_write_pos %= tx_ring_size;
+
+    return true;
+}
+
+
+static void multiplayer_tx_send()
+{
+    if (tx_iter_state == message_iters) {
+        if (tx_current_message) {
+            tx_message_pool.post(tx_current_message);
+            tx_message_count += 1;
+        }
+        tx_current_message = tx_ring_pop();
+        tx_iter_state = 0;
+    }
+
+    if (tx_current_message) {
+        REG_SIOMLT_SEND = tx_current_message->data_[tx_iter_state++];
+    } else {
+        null_bytes_written += 2;
+        tx_iter_state++;
+        REG_SIOMLT_SEND = 0;
+    }
+}
+
+
+// We want to wait long enough for the minions to prepare TX data for the
+// master.
+static void multiplayer_schedule_master_tx()
+{
+    REG_TM2CNT_H = 0x00C1;
+    REG_TM2CNT_L = 65000; // TODO: Try using a shorter delay
+                          // (63339 == approx 6.5 milliseconds)
+
+    irqEnable(IRQ_TIMER2);
+    irqSet(IRQ_TIMER2, [] {
+        if (multiplayer_busy()) {
+            ++transmit_busy_count;
+            return; // still busy, try again. The only thing that should kick
+                    // off this timer, though, is the serial irq, and the
+                    // initial connection, so not sure how we could get into
+                    // this state.
+        } else {
+            irqDisable(IRQ_TIMER2);
+            multiplayer_tx_send();
+            REG_SIOCNT |= SIO_START;
+        }
+    });
+}
+
+
+static void multiplayer_schedule_tx()
+{
+    // If we're the minion, simply enter data into the send queue. The
+    // master will wait before initiating another transmit.
+    if (multiplayer_is_master()) {
+        multiplayer_schedule_master_tx();
+    } else {
+        multiplayer_tx_send();
+    }
+}
+
+
+static void multiplayer_serial_isr()
+{
+    multiplayer_rx_receive();
+    multiplayer_schedule_tx();
+}
+
+
+static RxInfo* poller_current_message = nullptr;
+
+
+std::optional<Platform::NetworkPeer::Message>
+Platform::NetworkPeer::poll_message()
+{
+    if (rx_iter_state == message_iters) {
+        // This further decreases the likelihood of messing up the receive
+        // interrupt handler by manipulating shared data. We really should be
+        // declaring stuff volatile and disabling interrupts, but we cannot
+        // easily do those things, for various practical reasons, so we're just
+        // hoping that a problematic interrupt during a transmit or a poll is
+        // just exceedingly unlikely in practice. The serial interrupt handler
+        // runs approximately twice per frame, and the game only transmits a few
+        // messages per second. Furthermore, the interrupt handlers only access
+        // shared state when rx_iter_state == message_iters, so only one in six
+        // interrupts manipulates shared state, i.e. only one occurrence every
+        // three or so frames. And for writes to shared data to even be a
+        // problem, the interrupt would have to occur between two instructions
+        // when writing to the message ring or to the message pool. And on top
+        // of all that, we are leaving packets in the rx buffer while
+        // rx_iter_state == message iters, so we really shouldn't be writing at
+        // the same time anyway. So in practice, the possibility of manipulating
+        // shared data is just vanishingly small, although I acknowledge that
+        // it's a potential problem. There _IS_ a bug, but I've masked it pretty
+        // well (I hope). No issues detectable in an emulator, but we'll see
+        // about the real hardware... once my link cable arrives in the mail.
+        return {};
+    }
+    if (auto msg = rx_ring_pop()) {
+        if (poller_current_message) {
+            while (true)
+                ; // failure to deallocate/consume message!
+        }
+        poller_current_message = msg;
+        return Platform::NetworkPeer::Message{
+            reinterpret_cast<byte*>(msg->data_),
+            static_cast<int>(sizeof(WireMessage::data_))};
+    }
+    return {};
+}
+
+
+void Platform::NetworkPeer::poll_consume(u32 size)
+{
+    if (poller_current_message) {
+        rx_message_pool.post(poller_current_message);
+    } else {
+        while (true)
+            ;   // How do we even end up in this scenario?! We only write
+                // to poller_current_message if rx_ring_pop returns a
+                // valid pointer...
+    }
+    poller_current_message = nullptr;
+}
+
+
+static void multiplayer_init()
+{
+    ::platform->network_peer().disconnect();
+
+    ::platform->sleep(3);
+
+    REG_RCNT = R_MULTI;
+    REG_SIOCNT = SIO_MULTI;
+    REG_SIOCNT |= SIO_IRQ | SIO_115200;
+
+    irqEnable(IRQ_SERIAL);
+    irqSet(IRQ_SERIAL, multiplayer_serial_isr);
+
+    // Put this here for now, not sure whether it's really necessary...
+    REG_SIOMLT_SEND = 0x5555;
+
+    auto& clk = DeltaClock::instance();
+
+    Microseconds delta = 0;
+    while (not multiplayer_validate()) {
+        delta += clk.reset();
+        if (delta > seconds(20)) {
+            ::platform->network_peer().disconnect(); // just for good measure
+            REG_SIOCNT = 0;
+            irqDisable(IRQ_SERIAL);
+            return;
+        }
+        ::platform->feed_watchdog();
+    }
+    // When the multi link cable is actually plugged into both gameboys, the
+    // connection should already be established at this point. But when no cable
+    // is connected to the link port, all of the SIOCNT bits will represent a
+    // valid state anyway. So let's push out a message, regardless, and wait to
+    // receive a response.
+
+    static const u8 handshake[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+
+    ::platform->network_peer().send_message(
+        {(byte*)&handshake, sizeof handshake});
+
+    multiplayer_schedule_tx();
+
+    while (true) {
+        ::platform->feed_watchdog();
+        delta += clk.reset();
+        if (auto msg = ::platform->network_peer().poll_message()) {
+            for (u32 i = 0; i < sizeof handshake; ++i) {
+                if (((u8*)msg->data_)[i] not_eq handshake[i]) {
+                    ::platform->network_peer().disconnect();
+                    return;
+                }
+            }
+            info(*::platform, "validated handshake");
+            ::platform->network_peer().poll_consume(sizeof handshake);
+            return;
+        } else if (delta > seconds(20)) {
+            error(*::platform,
+                  "no handshake received within a reasonable window");
+            ::platform->network_peer().disconnect();
+            return;
+        }
+    }
+
+    // OK, we've extablished a connection!
+}
+
+
+void Platform::NetworkPeer::connect(const char* peer)
+{
+    multiplayer_init();
+}
+
+
+void Platform::NetworkPeer::listen()
+{
+    multiplayer_init();
+}
+
+
+// bool was_connected = false;
+void Platform::NetworkPeer::update()
+{
+    static bool was_connected = false;
+
+    if (was_connected) {
+        if (not multiplayer_validate()) {
+            disconnect();
+            return;
+        }
+    }
+
+    was_connected = is_connected();
+}
+
+
+Platform::NetworkPeer::Stats Platform::NetworkPeer::stats() const
+{
+    return {tx_message_count, rx_message_count, tx_loss, rx_loss};
+}
+
+
+bool Platform::NetworkPeer::supported_by_device()
+{
+    // FIXME: I intend to implement multiplayer over the game link cable, but I
+    // have not received my second everdrive in the mail yet!
+    return true;
+}
+
+
+bool Platform::NetworkPeer::is_connected() const
+{
+    return multiplayer_validate(); // FIXME: insufficient to detect disconnects.
+}
+
+
+bool Platform::NetworkPeer::is_host() const
+{
+    return multiplayer_is_master();
+}
+
+
+void Platform::NetworkPeer::disconnect()
+{
+    if (is_connected()) {
+        irqDisable(IRQ_SERIAL);
+        if (multiplayer_is_master()) {
+            enable_watchdog();
+        }
+        REG_SIOCNT = 0;
+
+        if (poller_current_message) {
+            // Not sure whether this is the correct thing to do here...
+            rx_message_pool.post(poller_current_message);
+            poller_current_message = nullptr;
+        }
+
+        rx_iter_state = 0;
+        if (rx_current_message) {
+            rx_message_pool.post(rx_current_message);
+        }
+        rx_current_all_zeroes = true;
+        for (auto msg : rx_ring) {
+            if (msg) {
+                rx_message_pool.post(msg);
+            }
+        }
+        rx_ring_write_pos = 0;
+        rx_ring_read_pos = 0;
+
+        tx_iter_state = 0;
+        if (tx_current_message) {
+            tx_message_pool.post(tx_current_message);
+        }
+        for (auto msg : tx_ring) {
+            if (msg) {
+                tx_message_pool.post(msg);
+            }
+        }
+        tx_ring_write_pos = 0;
+        tx_ring_read_pos = 0;
+    }
+}
+
+
+Platform::NetworkPeer::Interface Platform::NetworkPeer::interface() const
+{
+    return Interface::serial_cable;
+}
+
+
+Platform::NetworkPeer::~NetworkPeer()
+{
+    // ...
 }
 
 

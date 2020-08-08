@@ -19,7 +19,7 @@ public:
         count
     };
 
-    enum class Size : u8 { w32_h32, w16_h32 };
+    enum Size { w32_h32, w16_h32 };
 
     using Rotation = u16;
 

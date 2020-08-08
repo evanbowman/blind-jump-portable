@@ -358,12 +358,13 @@ const char* locale_string(LocaleString ls)
         case LocaleString::waypoints: return "waypoints ";
         case LocaleString::punctuation_period: return ".";
         case LocaleString::menu_resume: return "Resume";
+        case LocaleString::menu_connect_peer: return "Connect Peer";
         case LocaleString::menu_settings: return "Settings";
         case LocaleString::menu_save_and_quit: return "Save and Quit";
         case LocaleString::goodbye_text: return "See you later...";
         case LocaleString::signal_jammer_title: return "Signal jammer";
         case LocaleString::select_target_text: return "Choose a target:";
-        case LocaleString::settings_show_fps: return "Show FPS: ";
+        case LocaleString::settings_show_stats: return "Show Stats: ";
         case LocaleString::settings_language: return "Language: ";
         case LocaleString::settings_contrast: return "Contrast: ";
         case LocaleString::settings_difficulty: return "Difficulty: ";
@@ -378,6 +379,16 @@ const char* locale_string(LocaleString ls)
         case LocaleString::menu_disabled: return "menu disabled";
         case LocaleString::distance_units_feet: return " ft";
         case LocaleString::launch: return "launch: ";
+        case LocaleString::peer_connected: return "Peer connected!";
+        case LocaleString::peer_connection_failed: return "Peer connection failed!";
+        case LocaleString::peer_lost: return "Peer died!";
+        case LocaleString::level_transition_awaiting_peers: return "Waiting for Peers...";
+        case LocaleString::fps_stats_suffix: return " fps";
+        case LocaleString::network_tx_stats_suffix: return " tx";
+        case LocaleString::network_rx_stats_suffix: return " rx";
+        case LocaleString::network_tx_loss_stats_suffix: return " tl";
+        case LocaleString::network_rx_loss_stats_suffix: return " rl";
+
         default: return empty_str;
         }
         break;

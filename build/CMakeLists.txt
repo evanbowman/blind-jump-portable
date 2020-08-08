@@ -58,6 +58,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/effects/laser.cpp
   ${SOURCE_DIR}/entity/details/item.cpp
   ${SOURCE_DIR}/entity/bosses/boss.cpp
+  ${SOURCE_DIR}/entity/peerPlayer.cpp
   ${SOURCE_DIR}/graphics/overlay.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
   ${SOURCE_DIR}/persistentData.cpp
@@ -65,8 +66,10 @@ set(SOURCES
   ${SOURCE_DIR}/number/random.cpp
   ${SOURCE_DIR}/graphics/view.cpp
   ${SOURCE_DIR}/entity/entity.cpp
+  ${SOURCE_DIR}/network_event.cpp
   ${SOURCE_DIR}/entity/player.cpp
   ${SOURCE_DIR}/localization.cpp
+  ${SOURCE_DIR}/state_impl.cpp
   ${SOURCE_DIR}/inventory.cpp
   ${SOURCE_DIR}/collision.cpp
   ${SOURCE_DIR}/powerup.cpp
@@ -74,7 +77,6 @@ set(SOURCES
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/string.cpp
   ${SOURCE_DIR}/start.cpp
-  ${SOURCE_DIR}/state.cpp
   ${SOURCE_DIR}/game.cpp
   ${SOURCE_DIR}/conf.cpp)
 
@@ -140,6 +142,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/graphics/old_poster_flattened.s
     ${SOURCE_DIR}/graphics/blaster_info_flattened.s
     ${SOURCE_DIR}/graphics/seed_packet_flattened.s
+    ${SOURCE_DIR}/graphics/overlay_network_flattened.s
     ${SOURCE_DIR}/platform/gba_platform.cpp)
 else()
   set(SOURCES
@@ -235,6 +238,7 @@ if(GAMEBOY_ADVANCE)
     -mcpu=arm7tdmi
     -mtune=arm7tdmi)
 
+
   if(GBA_AUTOBUILD_IMG)
     compile_image(spritesheet_intro_clouds 2 4 NO)
     compile_image(spritesheet_intro_cutscene 2 4 NO)
@@ -259,6 +263,7 @@ if(GAMEBOY_ADVANCE)
     compile_image(old_poster 0 0 YES)
     compile_image(blaster_info 0 0 YES)
     compile_image(seed_packet 0 0 YES)
+    compile_image(overlay_network 0 0 YES)
   endif()
 
   set(CMAKE_EXE_LINKER_FLAGS
@@ -289,7 +294,7 @@ if(GAMEBOY_ADVANCE)
 
 elseif(APPLE)
   target_link_libraries(BlindJump
-    "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio")
+    "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio -framework sfml-network")
   set_target_properties(BlindJump
     PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
 

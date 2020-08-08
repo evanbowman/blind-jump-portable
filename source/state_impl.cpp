@@ -1,11 +1,7 @@
-#include "state.hpp"
+#include "state_impl.hpp"
 #include "bitvector.hpp"
 #include "conf.hpp"
-#include "game.hpp"
-#include "graphics/overlay.hpp"
-#include "localization.hpp"
 #include "number/random.hpp"
-#include "string.hpp"
 
 
 // I know that this is a huge file. But this is basically a giant
@@ -39,118 +35,6 @@ bool within_view_frustum(const Platform::Screen& screen,
 static Bitmatrix<TileMap::width, TileMap::height> visited;
 
 
-class OverworldState : public State {
-public:
-    OverworldState(Game& game, bool camera_tracking)
-        : camera_tracking_(game.persistent_data().settings_.dynamic_camera_ and
-                           camera_tracking)
-    {
-    }
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-
-    std::optional<Text> notification_text;
-    NotificationStr notification_str;
-    Microseconds notification_text_timer = 0;
-    enum class NotificationStatus {
-        flash,
-        flash_animate,
-        wait,
-        display,
-        exit,
-        hidden
-    } notification_status = NotificationStatus::hidden;
-
-private:
-    const bool camera_tracking_;
-    Microseconds camera_snap_timer_ = 0;
-
-    Microseconds fps_timer_ = 0;
-    int fps_frame_count_ = 0;
-    std::optional<Text> fps_text_;
-};
-
-
-class HealthUIMetric : public UIMetric {
-public:
-    using UIMetric::UIMetric;
-
-    void on_display(Text& text, int value) override
-    {
-        // if (value == 1) {
-        //     text.append(" ");
-        //     text.append(locale_string(LocaleString::health_warning));
-        // }
-    }
-};
-
-
-class LaunchCutsceneState : public State {
-public:
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Float camera_offset_ = 0.f;
-    Microseconds timer_ = 0;
-
-    int anim_index_ = 0;
-    Microseconds anim_timer_ = 0;
-
-    Microseconds camera_shake_timer_ = milliseconds(400);
-
-    Float speed_ = 0.f; // feet per microsecond
-    int altitude_update_ = 1;
-    int altitude_ = 100;
-
-    Microseconds cloud_spawn_timer_ = milliseconds(100);
-    bool cloud_lane_ = 0;
-
-    std::optional<Text> altitude_text_;
-
-    enum class Scene {
-        fade_in0,
-        wait,
-        fade_transition0,
-        fade_in,
-        rising,
-        enter_clouds,
-        within_clouds,
-        exit_clouds,
-        scroll,
-        fade_out
-    } scene_ = Scene::fade_in0;
-};
-
-
-class ActiveState : public OverworldState {
-public:
-    ActiveState(Game& game, bool camera_tracking = true)
-        : OverworldState(game, camera_tracking)
-    {
-    }
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-    std::optional<BossHealthBar> boss_health_bar_;
-
-private:
-    void repaint_stats(Platform& pfrm, Game& game);
-
-    void repaint_powerups(Platform& pfrm, Game& game, bool clean);
-
-    std::optional<HealthUIMetric> health_;
-    std::optional<UIMetric> score_;
-
-    Buffer<UIMetric, Powerup::max_> powerups_;
-
-    bool pixelated_ = false;
-};
-
-
 void show_boss_health(Platform& pfrm, Game& game, Float percentage)
 {
     if (auto state = dynamic_cast<ActiveState*>(game.state())) {
@@ -173,626 +57,23 @@ void hide_boss_health(Game& game)
 
 
 void push_notification(Platform& pfrm,
-                       Game& game,
+                       State* state,
                        const NotificationStr& string)
 {
     pfrm.sleep(3);
 
-    if (auto state = dynamic_cast<OverworldState*>(game.state())) {
-        state->notification_status = OverworldState::NotificationStatus::flash;
-        state->notification_str = string;
+    if (auto os = dynamic_cast<OverworldState*>(state)) {
+        os->notification_status = OverworldState::NotificationStatus::flash;
+        os->notification_str = string;
     }
 }
-
-
-class FadeInState : public OverworldState {
-public:
-    FadeInState(Game& game) : OverworldState(game, false)
-    {
-    }
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds counter_ = 0;
-};
-
-
-class WarpInState : public OverworldState {
-public:
-    WarpInState(Game& game) : OverworldState(game, true)
-    {
-    }
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds counter_ = 0;
-    bool shook_ = false;
-};
-
-
-class PreFadePauseState : public OverworldState {
-public:
-    PreFadePauseState(Game& game) : OverworldState(game, false)
-    {
-    }
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-};
-
-
-class GlowFadeState : public OverworldState {
-public:
-    GlowFadeState(Game& game) : OverworldState(game, false)
-    {
-    }
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds counter_ = 0;
-};
-
-
-class FadeOutState : public OverworldState {
-public:
-    FadeOutState(Game& game) : OverworldState(game, false)
-    {
-    }
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds counter_ = 0;
-};
-
-
-class RespawnWaitState : public State {
-public:
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds counter_ = 0;
-};
-
-
-class DeathFadeState : public OverworldState {
-public:
-    DeathFadeState(Game& game) : OverworldState(game, false)
-    {
-    }
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-    Microseconds counter_ = 0;
-};
-
-
-class DeathContinueState : public State {
-public:
-    DeathContinueState()
-    {
-    }
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    std::optional<Text> score_;
-    std::optional<Text> highscore_;
-    std::optional<Text> level_;
-    std::optional<Text> items_collected_;
-    Microseconds counter_ = 0;
-    Microseconds counter2_ = 0;
-};
-
-
-class InventoryState : public State {
-public:
-    InventoryState(bool fade_in);
-
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-    static int page_;
-    static Vec2<u8> selector_coord_;
-
-private:
-    static constexpr const Microseconds fade_duration_ = milliseconds(400);
-
-    void update_arrow_icons(Platform& pfrm);
-    void update_item_description(Platform& pfrm, Game& game);
-    void clear_items();
-    void display_items(Platform& pfrm, Game& game);
-
-    std::optional<Border> selector_;
-    std::optional<SmallIcon> left_icon_;
-    std::optional<SmallIcon> right_icon_;
-    std::optional<Text> page_text_;
-    std::optional<Text> item_description_;
-    std::optional<Text> item_description2_;
-    std::optional<Text> label_;
-    std::optional<MediumIcon> item_icons_[Inventory::cols][Inventory::rows];
-
-    Microseconds selector_timer_ = 0;
-    Microseconds fade_timer_ = 0;
-    bool selector_shaded_ = false;
-};
 
 
 // FIXME: this shouldn't be global...
 static std::optional<Platform::Keyboard::RestoreState> restore_keystates;
 
 
-class NotebookState : public State {
-public:
-    // NOTE: The NotebookState class does not store a local copy of the text
-    // string! Do not pass in pointers to a local buffer, only static strings!
-    NotebookState(const char* text);
-
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    void repaint_page(Platform& pfrm);
-    void repaint_margin(Platform& pfrm);
-
-    Microseconds timer_ = 0;
-
-    enum class DisplayMode {
-        fade_in,
-        show,
-        fade_out,
-        transition,
-        after_transition,
-    } display_mode_ = DisplayMode::transition;
-
-    std::optional<TextView> text_;
-    std::optional<Text> page_number_;
-    const char* str_;
-    int page_;
-};
-
-
-class ImageViewState : public State {
-public:
-    ImageViewState(const char* image_name, ColorConstant background_color);
-
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    const char* image_name_;
-    ColorConstant background_color_;
-};
-
-
-static const std::array<LocaleString, 4> legend_strings = {
-    LocaleString::map_legend_1,
-    LocaleString::map_legend_2,
-    LocaleString::map_legend_3,
-    LocaleString::map_legend_4};
-
-
-class MapSystemState : public State {
-public:
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds timer_ = 0;
-    enum class AnimState {
-        map_enter,
-        map_decorate,
-        wp_text,
-        legend,
-        wait
-    } anim_state_ = AnimState::map_enter;
-    std::optional<Text> level_text_;
-    int last_column_ = -1;
-    std::array<std::optional<Text>, legend_strings.size()> legend_text_;
-    std::optional<Border> legend_border_;
-    Microseconds map_enter_duration_;
-};
-
-
-class IntroCreditsState : public State {
-public:
-    IntroCreditsState(const char* str) : str_(str)
-    {
-    }
-
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-    virtual StatePtr next_state(Platform& pfrm, Game& game);
-
-private:
-    void center(Platform& pfrm);
-
-    const char* str_;
-    std::optional<Text> text_;
-    Microseconds timer_ = 0;
-};
-
-
-class IntroLegalMessage : public IntroCreditsState {
-public:
-    IntroLegalMessage()
-        : IntroCreditsState(locale_string(LocaleString::intro_text_1))
-    {
-    }
-
-    StatePtr next_state(Platform& pfrm, Game& game) override;
-};
-
-
-class EndingCreditsState : public State {
-public:
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds timer_ = 0;
-    Buffer<Text, 12> lines_; // IMPORTANT: If you're porting this code to a
-                             // platform with a taller screen size, you may need
-                             // to increase the line capacity here.
-    int scroll_ = 0;
-    int next_ = 0;
-    int next_y_ = 0;
-};
-
-
-class NewLevelState : public State {
-public:
-    NewLevelState(Level next_level) : timer_(0), next_level_(next_level)
-    {
-    }
-
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    std::optional<Text> text_[2];
-    Microseconds timer_;
-    OverlayCoord pos_;
-    Level next_level_;
-};
-
-
-class GoodbyeState : public State {
-public:
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    Microseconds wait_timer_ = 0;
-    std::optional<Text> text_;
-};
-
-
-class PauseScreenState : public State {
-public:
-    static constexpr const auto fade_duration = milliseconds(400);
-
-    PauseScreenState(bool fade_in = true)
-    {
-        if (not fade_in) {
-            fade_timer_ = fade_duration - milliseconds(1);
-        }
-    }
-
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    void draw_cursor(Platform& pfrm);
-
-    Microseconds fade_timer_ = 0;
-    Microseconds log_timer_ = 0;
-    static int cursor_loc_;
-    int anim_index_ = 0;
-    Microseconds anim_timer_ = 0;
-    std::optional<Text> resume_text_;
-    std::optional<Text> settings_text_;
-    std::optional<Text> save_and_quit_text_;
-    Float y_offset_ = 0;
-};
-
 int PauseScreenState::cursor_loc_ = 0;
-
-
-// This is a hidden game state intended for debugging. The user can enter
-// various numeric codes, which trigger state changes within the game
-// (e.g. jumping to a boss fight/level, spawing specific enemies, setting the
-// random seed, etc.)
-class CommandCodeState : public State {
-public:
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    bool handle_command_code(Platform& pfrm, Game& game);
-
-    void push_char(Platform& pfrm, Game& game, char c);
-
-    void update_selector(Platform& pfrm, Microseconds dt);
-
-    StringBuffer<10> input_;
-    std::optional<Text> input_text_;
-    std::optional<Text> numbers_;
-    std::optional<Border> entry_box_;
-    std::optional<Border> selector_;
-    Microseconds selector_timer_ = 0;
-    bool selector_shaded_ = false;
-    u8 selector_index_ = 0;
-    Level next_level_;
-};
-
-
-class LogfileViewerState : public State {
-public:
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    void repaint(Platform& pfrm, int offset);
-    int offset_ = 0;
-};
-
-
-class SignalJammerSelectorState : public State {
-public:
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-    Enemy* make_selector_target(Game& game);
-
-    void print(Platform& pfrm, const char* text);
-
-private:
-    enum class Mode {
-        fade_in,
-        update_selector,
-        active,
-        selected
-    } mode_ = Mode::fade_in;
-    int selector_index_ = 0;
-    Microseconds timer_;
-    Vec2<Float> selector_start_pos_;
-    Enemy* target_;
-    Camera cached_camera_;
-    std::optional<Text> text_;
-    int flicker_anim_index_ = 0;
-};
-
-
-class EditSettingsState : public State {
-public:
-    EditSettingsState();
-
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-private:
-    void refresh(Platform& pfrm, Game& game);
-
-    void draw_line(Platform& pfrm, int row, const char* value);
-
-    std::optional<HorizontalFlashAnimation> message_anim_;
-    const char* str_ = nullptr;
-
-    void message(Platform& pfrm, const char* str);
-
-    class LineUpdater {
-    public:
-        using Result = StringBuffer<31>;
-
-        virtual ~LineUpdater()
-        {
-        }
-        virtual Result update(Platform&, Game& game, int dir) = 0;
-        virtual void complete(Platform&, Game&, EditSettingsState&)
-        {
-        }
-    };
-
-    class ShowFPSLineUpdater : public LineUpdater {
-        Result update(Platform&, Game& game, int dir) override
-        {
-            bool& show = game.persistent_data().settings_.show_fps_;
-            if (dir not_eq 0) {
-                show = not show;
-            }
-            if (show) {
-                return locale_string(LocaleString::yes);
-            } else {
-                return locale_string(LocaleString::no);
-            }
-        }
-    } show_fps_line_updater_;
-
-    class DynamicCameraLineUpdater : public LineUpdater {
-        Result update(Platform&, Game& game, int dir) override
-        {
-            bool& enabled = game.persistent_data().settings_.dynamic_camera_;
-            if (dir not_eq 0) {
-                enabled = not enabled;
-            }
-            if (enabled) {
-                return locale_string(LocaleString::yes);
-            } else {
-                return locale_string(LocaleString::no);
-            }
-        }
-    } dynamic_camera_line_updater_;
-
-    class LanguageLineUpdater : public LineUpdater {
-        Result update(Platform&, Game& game, int dir) override
-        {
-            auto& language = game.persistent_data().settings_.language_;
-            int l = static_cast<int>(language);
-
-            if (dir > 0) {
-                l += 1;
-                l %= static_cast<int>(LocaleLanguage::count);
-                if (l == 0) {
-                    l = 1;
-                }
-            } else if (dir < 0) {
-                if (l > 1) {
-                    l -= 1;
-                } else if (l == 1) {
-                    l = static_cast<int>(LocaleLanguage::count) - 1;
-                }
-            }
-
-            language = static_cast<LocaleLanguage>(l);
-
-            locale_set_language(language);
-
-            return locale_language_name(language);
-        }
-
-        void complete(Platform& pfrm, Game& game, EditSettingsState& s) override
-        {
-            s.refresh(pfrm, game);
-        }
-    } language_line_updater_;
-
-    class ContrastLineUpdater : public LineUpdater {
-        Result update(Platform& pfrm, Game& game, int dir) override
-        {
-            auto& contrast = game.persistent_data().settings_.contrast_;
-
-            if (dir > 0) {
-                contrast += 1;
-            } else if (dir < 0) {
-                contrast -= 1;
-            }
-
-            contrast = clamp(contrast, Contrast{-25}, Contrast{25});
-
-            pfrm.screen().set_contrast(contrast);
-
-            if (contrast not_eq 0) {
-                char buffer[30];
-                locale_num2str(contrast, buffer, 10);
-                if (contrast > 0) {
-                    Result result;
-                    result += "+";
-                    result += buffer;
-                    return result;
-                } else {
-                    return buffer;
-                }
-            } else {
-                return locale_string(LocaleString::settings_default);
-            }
-        }
-    } contrast_line_updater_;
-
-    class DifficultyLineUpdater : public LineUpdater {
-
-        Result update(Platform&, Game& game, int dir) override
-        {
-            auto difficulty =
-                static_cast<int>(game.persistent_data().settings_.difficulty_);
-
-            // Normally we require all enemies to be defeated to mess with the
-            // difficulty. But we don't want the player to get stuck a situation
-            // where he/she cannot switch back to easy mode because they're
-            // unable to beat the first level on hard mode. So for level zero,
-            // allow modifying difficulty.
-            if (game.level() == 0 or enemies_remaining(game) == 0) {
-                if (dir > 0) {
-                    if (difficulty < static_cast<int>(Difficulty::count) - 1) {
-                        difficulty += 1;
-                    }
-                } else if (dir < 0) {
-                    if (difficulty > 0) {
-                        difficulty -= 1;
-                    }
-                }
-            }
-
-            game.persistent_data().settings_.difficulty_ =
-                static_cast<Difficulty>(difficulty);
-
-            switch (static_cast<Difficulty>(difficulty)) {
-            case Difficulty::normal:
-                return locale_string(LocaleString::settings_difficulty_normal);
-
-            case Difficulty::hard:
-                return locale_string(LocaleString::settings_difficulty_hard);
-
-            case Difficulty::survival:
-                return locale_string(
-                    LocaleString::settings_difficulty_survival);
-
-            case Difficulty::count:
-                break;
-            }
-            return "";
-        }
-
-        void complete(Platform& pfrm, Game& game, EditSettingsState& s) override
-        {
-            if (game.level() not_eq 0 and enemies_remaining(game)) {
-                s.message(pfrm,
-                          locale_string(LocaleString::settings_difficulty_err));
-            }
-        }
-    } difficulty_line_updater_;
-
-    struct LineInfo {
-        LineUpdater& updater_;
-        std::optional<Text> text_ = {};
-        int cursor_begin_ = 0;
-        int cursor_end_ = 0;
-    };
-
-    static constexpr const int line_count_ = 5;
-
-    std::array<LineInfo, line_count_> lines_;
-
-    static constexpr const LocaleString strings[line_count_] = {
-        LocaleString::settings_dynamic_camera,
-        LocaleString::settings_difficulty,
-        LocaleString::settings_show_fps,
-        LocaleString::settings_contrast,
-        LocaleString::settings_language,
-    };
-
-    std::optional<Text> message_;
-
-    int select_row_ = 0;
-    int anim_index_ = 0;
-    Microseconds anim_timer_ = 0;
-    Float y_offset_ = 0;
-};
 
 
 static void state_deleter(State* s);
@@ -842,6 +123,7 @@ static StatePool<ActiveState,
                  CommandCodeState,
                  PauseScreenState,
                  MapSystemState,
+                 NewLevelIdleState,
                  EditSettingsState,
                  IntroCreditsState,
                  IntroLegalMessage,
@@ -849,6 +131,8 @@ static StatePool<ActiveState,
                  RespawnWaitState,
                  LogfileViewerState,
                  EndingCreditsState,
+                 NetworkConnectSetupState,
+                 NetworkConnectWaitState,
                  LaunchCutsceneState,
                  SignalJammerSelectorState>
     state_pool_;
@@ -872,6 +156,10 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 {
     notification_text.reset();
     fps_text_.reset();
+    network_tx_msg_text_.reset();
+    network_rx_msg_text_.reset();
+    network_tx_loss_text_.reset();
+    network_rx_loss_text_.reset();
 
     // In case we're in the middle of an entry/exit animation for the
     // notification bar.
@@ -883,32 +171,256 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
+void OverworldState::receive(const net_event::PlayerSpawnLaser& p,
+                             Platform&,
+                             Game& game)
+{
+    Vec2<Float> position;
+    position.x = p.x_.get();
+    position.y = p.y_.get();
+
+    game.effects().spawn<PeerLaser>(position, p.dir_, Laser::Mode::normal);
+}
+
+
+void OverworldState::receive(const net_event::SyncSeed& s, Platform&, Game&)
+{
+    rng::critical_state = s.random_state_.get();
+}
+
+
+void OverworldState::receive(const net_event::EnemyStateSync& s,
+                             Platform&,
+                             Game& game)
+{
+    if (is_boss_level(game.level())) {
+        for (auto& e : game.enemies().get<TheFirstExplorer>()) {
+            if (e->id() == s.id_.get()) {
+                e->sync(s, game);
+                return;
+            }
+        }
+    }
+
+    for (auto& e : game.enemies().get<Turret>()) {
+        if (e->id() == s.id_.get()) {
+            e->sync(s, game);
+            return;
+        }
+    }
+    for (auto& e : game.enemies().get<Dasher>()) {
+        if (e->id() == s.id_.get()) {
+            e->sync(s);
+            return;
+        }
+    }
+    for (auto& e : game.enemies().get<Scarecrow>()) {
+        if (e->id() == s.id_.get()) {
+            e->sync(s);
+        }
+    }
+    for (auto& e : game.enemies().get<Drone>()) {
+        if (e->id() == s.id_.get()) {
+            e->sync(s);
+            return;
+        }
+    }
+}
+
+
+void OverworldState::receive(const net_event::PlayerInfo& p,
+                             Platform&,
+                             Game& game)
+{
+    if (game.peer()) {
+        game.peer()->sync(game, p);
+    }
+}
+
+
+void OverworldState::receive(const net_event::EnemyHealthChanged& hc,
+                             Platform& pfrm,
+                             Game& game)
+{
+    game.enemies().transform([&](auto& buf) {
+        for (auto& e : buf) {
+            if (e->id() == hc.id_.get()) {
+                e->health_changed(hc, pfrm, game);
+            }
+        }
+    });
+}
+
+
+static void transmit_player_info(Platform& pfrm, Game& game)
+{
+    net_event::PlayerInfo info;
+    info.header_.message_type_ = net_event::Header::player_info;
+    info.x_.set(game.player().get_position().cast<s16>().x);
+    info.y_.set(game.player().get_position().cast<s16>().y);
+    info.set_texture_index(game.player().get_sprite().get_texture_index());
+    info.set_sprite_size(game.player().get_sprite().get_size());
+    info.x_speed_ = game.player().get_speed().x * 10;
+    info.y_speed_ = game.player().get_speed().y * 10;
+    info.set_visible(game.player().get_sprite().get_alpha() not_eq
+                     Sprite::Alpha::transparent);
+    info.set_weapon_drawn(game.player().weapon().get_sprite().get_alpha() not_eq
+                          Sprite::Alpha::transparent);
+
+    auto mix = game.player().get_sprite().get_mix();
+    if (mix.amount_) {
+        auto& zone_info = current_zone(game);
+        if (mix.color_ == zone_info.injury_glow_color_) {
+            info.set_display_color(
+                net_event::PlayerInfo::DisplayColor::injured);
+        } else if (mix.color_ == zone_info.energy_glow_color_) {
+            info.set_display_color(
+                net_event::PlayerInfo::DisplayColor::got_coin);
+        } else if (mix.color_ == ColorConstant::spanish_crimson) {
+            info.set_display_color(
+                net_event::PlayerInfo::DisplayColor::got_heart);
+        }
+        info.set_color_amount(mix.amount_);
+    } else {
+        info.set_display_color(net_event::PlayerInfo::DisplayColor::none);
+        info.set_color_amount(0);
+    }
+
+    pfrm.network_peer().send_message({(byte*)&info, sizeof info});
+}
+
+
+void OverworldState::multiplayer_sync(Platform& pfrm,
+                                      Game& game,
+                                      Microseconds delta)
+{
+    // On the gameboy advance, we're dealing with a slow connection and
+    // twenty-year-old technology, so, realistically, we can only transmit
+    // player data a few times per second. TODO: add methods for querying the
+    // uplink performance limits from the Platform class, rather than having
+    // various game-specific hacks here.
+
+    // FIXME: I strongly suspect that this number can be increased without
+    // issues, but I'm waiting until I test on an actual device with a link
+    // cable.
+    static const auto player_refresh_rate = seconds(1) / 20;
+
+    static auto update_counter = player_refresh_rate;
+
+    if (not game.peer()) {
+        game.peer().emplace();
+    }
+
+    update_counter -= delta;
+    if (update_counter <= 0) {
+        update_counter = player_refresh_rate;
+
+        transmit_player_info(pfrm, game);
+
+        if (pfrm.network_peer().is_host()) {
+            net_event::SyncSeed s;
+            s.random_state_.set(rng::critical_state);
+            net_event::transmit(pfrm, s);
+        }
+    }
+
+
+    net_event::poll_messages(pfrm, game, *this);
+
+
+    game.peer()->update(pfrm, game, delta);
+}
+
+
+static void
+player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
+{
+    pfrm.speaker().play_sound("explosion1", 3, position);
+    big_explosion(pfrm, game, position);
+}
+
+
+void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
+{
+    fps_timer_ += delta;
+    fps_frame_count_ += 1;
+
+    if (fps_timer_ >= seconds(1)) {
+        fps_timer_ -= seconds(1);
+
+        fps_text_.emplace(pfrm, OverlayCoord{1, 2});
+        network_tx_msg_text_.emplace(pfrm, OverlayCoord{1, 3});
+        network_rx_msg_text_.emplace(pfrm, OverlayCoord{1, 4});
+        network_tx_loss_text_.emplace(pfrm, OverlayCoord{1, 5});
+        network_rx_loss_text_.emplace(pfrm, OverlayCoord{1, 6});
+
+        const auto colors =
+            fps_frame_count_ < 55
+                ? Text::OptColors{{ColorConstant::rich_black,
+                                   ColorConstant::aerospace_orange}}
+                : Text::OptColors{};
+
+        fps_text_->assign(fps_frame_count_, colors);
+        fps_text_->append(" fps", colors);
+        fps_frame_count_ = 0;
+
+        const auto net_stats = pfrm.network_peer().stats();
+
+        const auto tx_loss_colors =
+            net_stats.transmit_loss_ > 0
+                ? Text::OptColors{{ColorConstant::rich_black,
+                                   ColorConstant::aerospace_orange}}
+                : Text::OptColors{};
+
+        const auto rx_loss_colors =
+            net_stats.receive_loss_ > 0
+                ? Text::OptColors{{ColorConstant::rich_black,
+                                   ColorConstant::aerospace_orange}}
+                : Text::OptColors{};
+
+        network_tx_msg_text_->append(net_stats.transmit_count_);
+        network_tx_msg_text_->append(
+            locale_string(LocaleString::network_tx_stats_suffix));
+        network_rx_msg_text_->append(net_stats.receive_count_);
+        network_rx_msg_text_->append(
+            locale_string(LocaleString::network_rx_stats_suffix));
+        network_tx_loss_text_->append(net_stats.transmit_loss_, tx_loss_colors);
+        network_tx_loss_text_->append(
+            locale_string(LocaleString::network_tx_loss_stats_suffix),
+            tx_loss_colors);
+        network_rx_loss_text_->append(net_stats.receive_loss_, rx_loss_colors);
+        network_rx_loss_text_->append(
+            locale_string(LocaleString::network_rx_loss_stats_suffix),
+            rx_loss_colors);
+    }
+}
+
+
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
 
-    if (game.persistent_data().settings_.show_fps_) {
+    if (pfrm.network_peer().is_connected()) {
+        multiplayer_sync(pfrm, game, delta);
+    } else if (game.peer()) {
+        player_death(pfrm, game, game.peer()->get_position());
+        game.peer().reset();
+        push_notification(
+            pfrm, game.state(), locale_string(LocaleString::peer_lost));
+    } else {
+        // In multiplayer mode, we need to synchronize the random number
+        // engine. In single-player mode, let's advance the rng for each step,
+        // to add unpredictability
+        rng::get(rng::critical_state);
+    }
 
-        fps_timer_ += delta;
-        fps_frame_count_ += 1;
-
-        if (fps_timer_ >= seconds(1)) {
-            fps_timer_ -= seconds(1);
-
-            fps_text_.emplace(pfrm, OverlayCoord{1, 2});
-
-            const auto colors =
-                fps_frame_count_ < 55
-                    ? Text::OptColors{{ColorConstant::rich_black,
-                                       ColorConstant::aerospace_orange}}
-                    : Text::OptColors{};
-
-            fps_text_->assign(fps_frame_count_, colors);
-            fps_text_->append(" fps", colors);
-            fps_frame_count_ = 0;
-        }
+    if (game.persistent_data().settings_.show_stats_) {
+        show_stats(pfrm, game, delta);
     } else if (fps_text_) {
         fps_text_.reset();
+        network_tx_msg_text_.reset();
+        network_tx_loss_text_.reset();
+        network_rx_loss_text_.reset();
 
         fps_frame_count_ = 0;
         fps_timer_ = 0;
@@ -1004,7 +516,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         NotificationStr str;
         str += locale_string(LocaleString::level_clear);
 
-        push_notification(pfrm, game, str);
+        push_notification(pfrm, game.state(), str);
     }
 
 
@@ -1094,76 +606,33 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     check_collisions(pfrm, game, player, game.details().get<Item>());
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
 
-    if (not game.effects().get<AlliedOrbShot>().empty()) {
-        game.enemies().transform([&](auto& buf) {
-            check_collisions(
-                pfrm, game, game.effects().get<AlliedOrbShot>(), buf);
-        });
+    if (UNLIKELY(is_boss_level(game.level()))) {
+        // check_collisions(
+        //     pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
+        // check_collisions(
+        //     pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
     }
 
-    if (not is_boss_level(game.level())) {
+    game.enemies().transform([&](auto& buf) {
+        using T = typename std::remove_reference<decltype(buf)>::type;
+        using VT = typename T::ValueType::element_type;
 
-        check_collisions(pfrm, game, player, game.enemies().get<Drone>());
-        check_collisions(pfrm, game, player, game.enemies().get<Turret>());
-        check_collisions(pfrm, game, player, game.enemies().get<Dasher>());
-        check_collisions(pfrm, game, player, game.enemies().get<SnakeHead>());
-        check_collisions(pfrm, game, player, game.enemies().get<SnakeBody>());
-        check_collisions(pfrm, game, player, game.enemies().get<Theif>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Drone>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Theif>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Dasher>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Turret>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<SnakeBody>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<SnakeHead>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<SnakeTail>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Scarecrow>());
-    } else {
-        check_collisions(
-            pfrm, game, player, game.enemies().get<TheFirstExplorer>());
-        check_collisions(
-            pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
-        check_collisions(
-            pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
-        check_collisions(pfrm, game, player, game.enemies().get<Gatekeeper>());
-        check_collisions(
-            pfrm, game, player, game.enemies().get<GatekeeperShield>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<TheFirstExplorer>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<Gatekeeper>());
-        check_collisions(pfrm,
-                         game,
-                         game.effects().get<Laser>(),
-                         game.enemies().get<GatekeeperShield>());
-    }
+        if (pfrm.network_peer().is_connected()) {
+            check_collisions(pfrm, game, game.effects().get<PeerLaser>(), buf);
+        }
+
+        check_collisions(pfrm, game, game.effects().get<AlliedOrbShot>(), buf);
+
+        if constexpr (not std::is_same<Scarecrow, VT>() and
+                      not std::is_same<SnakeTail, VT>() and
+                      not std::is_same<Sinkhole, VT>()) {
+            check_collisions(pfrm, game, player, buf);
+        }
+
+        if constexpr (not std::is_same<Sinkhole, VT>()) {
+            check_collisions(pfrm, game, game.effects().get<Laser>(), buf);
+        }
+    });
 
     return null_state();
 }
@@ -1348,9 +817,11 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.sleep(5);
         pfrm.speaker().stop_music();
         // TODO: add a unique explosion sound effect
-        pfrm.speaker().play_sound(
-            "explosion1", 3, game.player().get_position());
-        big_explosion(pfrm, game, game.player().get_position());
+        player_death(pfrm, game, game.player().get_position());
+
+        if (pfrm.network_peer().is_connected()) {
+            pfrm.network_peer().disconnect();
+        }
 
         return state_pool_.create<DeathFadeState>(game);
     }
@@ -1370,13 +841,14 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (pfrm.keyboard().down_transition<Key::start>()) {
 
-        if (not is_boss_level(game.level())) {
+        if (not pfrm.network_peer().is_connected() and
+            not is_boss_level(game.level())) {
             restore_keystates = pfrm.keyboard().dump_state();
 
             return state_pool_.create<PauseScreenState>();
         } else {
             push_notification(
-                pfrm, game, locale_string(LocaleString::menu_disabled));
+                pfrm, game.state(), locale_string(LocaleString::menu_disabled));
         }
     }
 
@@ -1389,6 +861,11 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             apply_gravity_well(t_pos, game.player(), 48, 26, 1.3f, 34);
 
         if (dist < 6) {
+            if (pfrm.network_peer().is_connected()) {
+                net_event::PlayerEnteredGate e;
+                net_event::transmit(pfrm, e);
+            }
+
             game.player().move(t_pos);
             pfrm.speaker().play_sound("bell", 5);
             return state_pool_.create<PreFadePauseState>(game);
@@ -1408,6 +885,10 @@ void FadeInState::enter(Platform& pfrm, Game& game, State&)
 {
     game.player().set_visible(game.level() == 0);
     game.camera().set_speed(0.75);
+
+    if (game.peer()) {
+        game.peer()->warping() = true;
+    }
 }
 
 
@@ -1467,6 +948,11 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         shook_ = false;
         pfrm.screen().fade(0.f, current_zone(game).energy_glow_color_);
         pfrm.screen().pixelate(0);
+
+        if (game.peer()) {
+            game.peer()->warping() = false;
+        }
+
         return state_pool_.create<ActiveState>(game);
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
@@ -1521,6 +1007,7 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (counter_ > fade_duration) {
         pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
         pfrm.screen().pixelate(0);
+        game.player().set_visible(false);
         return state_pool_.create<FadeOutState>(game);
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);
@@ -1550,33 +1037,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (counter_ > fade_duration) {
         pfrm.screen().fade(1.f);
 
-        Level next_level = game.level() + 1;
-
-        // backdoor for debugging purposes.
-        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
-            return state_pool_.create<CommandCodeState>();
-        }
-
-        // For now, to determine whether the game's complete, scan through a
-        // bunch of levels. If there are no more bosses remaining, the game is
-        // complete.
-        bool bosses_remaining = false;
-        for (Level l = next_level; l < next_level + 1000; ++l) {
-            if (is_boss_level(l)) {
-                bosses_remaining = true;
-                break;
-            }
-        }
-
-        auto zone = zone_info(next_level);
-        auto last_zone = zone_info(game.level());
-
-        if (not bosses_remaining and not(zone == last_zone)) {
-            pfrm.sleep(120);
-            return state_pool_.create<EndingCreditsState>();
-        }
-
-        return state_pool_.create<NewLevelState>(next_level);
+        return state_pool_.create<NewLevelIdleState>();
 
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
@@ -1732,7 +1193,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 }
                 std::sort(game.highscores().rbegin(), game.highscores().rend());
 
-                rng::get();
+                rng::get(rng::critical_state);
 
                 print_metric(
                     *score_, locale_string(LocaleString::score), game.score());
@@ -1748,7 +1209,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                     100 * items_collected_percentage(game.inventory()),
                     locale_string(LocaleString::items_collected_suffix));
 
-                game.persistent_data().seed_ = rng::global_state;
+                game.persistent_data().seed_ = rng::critical_state;
                 game.inventory().remove_non_persistent();
 
                 PersistentData& data = game.persistent_data().reset(pfrm);
@@ -1921,6 +1382,8 @@ const char* item_description(Item::Type type)
 
 StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (pfrm.keyboard().down_transition<Key::alt_2>()) {
         return state_pool_.create<ActiveState>(game);
     }
@@ -2249,6 +1712,8 @@ void NotebookState::exit(Platform& pfrm, Game&, State&)
 
 StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<InventoryState>(false);
     }
@@ -2340,6 +1805,8 @@ ImageViewState::ImageViewState(const char* image_name,
 
 StatePtr ImageViewState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<InventoryState>(false);
     }
@@ -2404,6 +1871,8 @@ void MapSystemState::exit(Platform& pfrm, Game& game, State&)
 
 StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     auto set_tile = [&](s8 x, s8 y, int icon, bool dodge = true) {
@@ -3023,11 +2492,13 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         // distributed, and we don't want the clouds to bunch up too much.
         if (cloud_lane_ == 0) {
             cloud_lane_ = 1;
-            const auto offset = rng::choice(swidth / 2) + 32;
+            const auto offset =
+                rng::choice(swidth / 2, rng::critical_state) + 32;
             game.details().spawn<CutsceneCloud>(
                 Vec2<Float>{Float(offset), -80});
         } else {
-            const auto offset = rng::choice(swidth / 2) + swidth / 2 + 32;
+            const auto offset =
+                rng::choice(swidth / 2, rng::critical_state) + swidth / 2 + 32;
             game.details().spawn<CutsceneCloud>(
                 Vec2<Float>{Float(offset), -80});
             cloud_lane_ = 0;
@@ -3085,7 +2556,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             scene_ = Scene::fade_in;
 
-            rng::global_state = 2022;
+            rng::critical_state = 2022;
 
             pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, true, true);
 
@@ -3167,7 +2638,9 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (timer_ > seconds(3)) {
             do_camera_shake(7);
 
-            pfrm.screen().pixelate(interpolate(0, 30, Float(timer_ - seconds(3)) / seconds(1)), false);
+            pfrm.screen().pixelate(
+                interpolate(0, 30, Float(timer_ - seconds(3)) / seconds(1)),
+                false);
 
         } else {
             do_camera_shake(3);
@@ -3312,7 +2785,7 @@ void EditSettingsState::message(Platform& pfrm, const char* str)
 EditSettingsState::EditSettingsState()
     : lines_{{{dynamic_camera_line_updater_},
               {difficulty_line_updater_},
-              {show_fps_line_updater_},
+              {show_stats_line_updater_},
               {contrast_line_updater_},
               {language_line_updater_}}}
 {
@@ -3369,6 +2842,8 @@ void EditSettingsState::exit(Platform& pfrm, Game& game, State& next_state)
 StatePtr
 EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
         return state_pool_.create<PauseScreenState>(false);
     }
@@ -3496,6 +2971,8 @@ void LogfileViewerState::exit(Platform& pfrm, Game& game, State& next_state)
 StatePtr
 LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     if (pfrm.keyboard().down_transition<Key::select>()) {
@@ -3987,7 +3464,8 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
 {
     // draw_dot_grid(pfrm);
 
-    if (not resume_text_ or not save_and_quit_text_ or not settings_text_) {
+    if (not resume_text_ or not save_and_quit_text_ or not settings_text_ or
+        not connect_peer_text_) {
         return;
     }
 
@@ -4011,18 +3489,28 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
     default:
     case 0:
         draw_cursor(&(*resume_text_), left, right);
+        draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), 0, 0);
         break;
 
     case 1:
         draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), left, right);
         draw_cursor(&(*save_and_quit_text_), 0, 0);
         break;
 
     case 2:
         draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*connect_peer_text_), left, right);
+        draw_cursor(&(*settings_text_), 0, 0);
+        draw_cursor(&(*save_and_quit_text_), 0, 0);
+        break;
+
+    case 3:
+        draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), left, right);
         break;
@@ -4038,9 +3526,20 @@ void PauseScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
 }
 
 
+bool PauseScreenState::connect_peer_option_available(Game& game) const
+{
+    // For now, don't allow syncing when someone's progressed through any of the
+    // levels.
+    return game.level() == Level{0} and
+           Platform::NetworkPeer::supported_by_device();
+}
+
+
 StatePtr
 PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    MenuState::update(pfrm, game, delta);
+
     if (fade_timer_ < fade_duration) {
         fade_timer_ += delta;
 
@@ -4050,6 +3549,9 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             const auto resume_text_len =
                 utf8::len(locale_string(LocaleString::menu_resume));
 
+            const auto connect_peer_text_len =
+                utf8::len(locale_string(LocaleString::menu_connect_peer));
+
             const auto settings_text_len =
                 utf8::len(locale_string(LocaleString::menu_settings));
 
@@ -4057,18 +3559,32 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 utf8::len(locale_string(LocaleString::menu_save_and_quit));
 
             const u8 resume_x_loc = (screen_tiles.x - resume_text_len) / 2;
+            const u8 cp_x_loc = (screen_tiles.x - connect_peer_text_len) / 2;
             const u8 settings_x_loc = (screen_tiles.x - settings_text_len) / 2;
             const u8 snq_x_loc = (screen_tiles.x - snq_text_len) / 2;
 
             const u8 y = screen_tiles.y / 2;
 
-            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 3)});
+            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 4)});
+            connect_peer_text_.emplace(pfrm, OverlayCoord{cp_x_loc, u8(y - 0)});
             settings_text_.emplace(pfrm,
-                                   OverlayCoord{settings_x_loc, u8(y - 1)});
+                                   OverlayCoord{settings_x_loc, u8(y - 2)});
             save_and_quit_text_.emplace(pfrm,
-                                        OverlayCoord{snq_x_loc, u8(y + 1)});
+                                        OverlayCoord{snq_x_loc, u8(y + 2)});
 
             resume_text_->assign(locale_string(LocaleString::menu_resume));
+
+            connect_peer_text_->assign(
+                locale_string(LocaleString::menu_connect_peer),
+                [&]() -> Text::OptColors {
+                    if (connect_peer_option_available(game)) {
+                        return {};
+                    } else {
+                        return FontColors{ColorConstant::med_blue_gray,
+                                          ColorConstant::rich_black};
+                    }
+                }());
+
             settings_text_->assign(locale_string(LocaleString::menu_settings));
             save_and_quit_text_->assign(
                 locale_string(LocaleString::menu_save_and_quit));
@@ -4087,6 +3603,8 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 1:
                 return *settings_text_;
             case 2:
+                return *connect_peer_text_;
+            case 3:
                 return *save_and_quit_text_;
             }
         }();
@@ -4108,7 +3626,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             draw_cursor(pfrm);
         }
 
-        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 2) {
+        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 3) {
             cursor_loc_ += 1;
             draw_cursor(pfrm);
         } else if (pfrm.keyboard().down_transition<Key::up>() and
@@ -4122,6 +3640,11 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 1:
                 return state_pool_.create<EditSettingsState>();
             case 2:
+                if (connect_peer_option_available(game)) {
+                    return state_pool_.create<NetworkConnectSetupState>();
+                }
+                break;
+            case 3:
                 return state_pool_.create<GoodbyeState>();
             }
         } else if (pfrm.keyboard().down_transition<Key::start>()) {
@@ -4148,6 +3671,8 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
     pfrm.set_overlay_origin(0, 0);
 
     resume_text_.reset();
+    connect_peer_text_.reset();
+    settings_text_.reset();
     save_and_quit_text_.reset();
 
     pfrm.fill_overlay(0);
@@ -4155,6 +3680,259 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
     if (dynamic_cast<ActiveState*>(&next_state)) {
         pfrm.screen().fade(0.f);
     }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// NewLevelIdleState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void NewLevelIdleState::receive(const net_event::NewLevelIdle&,
+                                Platform& pfrm,
+                                Game&)
+{
+    info(pfrm, "got new level idle msg");
+    peer_ready_ = true;
+}
+
+
+void NewLevelIdleState::receive(const net_event::NewLevelSyncSeed& sync_seed,
+                                Platform& pfrm,
+                                Game&)
+{
+    info(pfrm, "received seed value");
+    if (not pfrm.network_peer().is_host()) {
+        rng::critical_state = sync_seed.random_state_.get();
+        ready_ = true;
+    }
+}
+
+
+void NewLevelIdleState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    if (pfrm.network_peer().is_connected()) {
+
+        const auto str =
+            locale_string(LocaleString::level_transition_awaiting_peers);
+
+        const auto margin = centered_text_margins(pfrm, str_len(str));
+
+        auto screen_tiles = calc_screen_tiles(pfrm);
+
+        text_.emplace(pfrm,
+                      OverlayCoord{(u8)margin, (u8)(screen_tiles.y / 2 - 1)});
+
+        text_->assign(str);
+    }
+}
+
+
+void NewLevelIdleState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+    text_.reset();
+}
+
+
+StatePtr
+NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    // Synchronization procedure for seed values at level transition:
+    //
+    // Players transmit NewLevelIdle messages until both players are ready. Once
+    // the host receives a NewLevelIdle message, it should transmit its seed to
+    // the other peer. Once the other peer receives the seed, it can continue to
+    // the next level.
+
+    if (pfrm.network_peer().is_connected()) {
+        timer_ += delta;
+        if (timer_ > seconds(1)) {
+            info(pfrm, "transmit new level idle msg");
+            timer_ -= seconds(1);
+
+            net_event::NewLevelIdle idle_msg;
+            idle_msg.header_.message_type_ = net_event::Header::new_level_idle;
+            pfrm.network_peer().send_message(
+                {(byte*)&idle_msg, sizeof idle_msg});
+        }
+        if (peer_ready_ and pfrm.network_peer().is_host()) {
+            net_event::NewLevelSyncSeed sync_seed;
+            sync_seed.header_.message_type_ =
+                net_event::Header::new_level_sync_seed;
+            sync_seed.random_state_.set(rng::critical_state);
+            info(pfrm, "sent seed to peer");
+            ready_ = pfrm.network_peer().send_message(
+                {(byte*)&sync_seed, sizeof sync_seed});
+        }
+
+        net_event::poll_messages(pfrm, game, *this);
+
+    } else {
+        ready_ = true;
+    }
+
+    if (ready_) {
+        Level next_level = game.level() + 1;
+
+        // backdoor for debugging purposes.
+        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
+            return state_pool_.create<CommandCodeState>();
+        }
+
+
+        // Boss levels still need a lot of work before enabling them for
+        // multiplayer, in order to properly synchronize the bosses across
+        // connected games. For simpler enemies and larger levels, we don't need
+        // to be as strict about keeping the enemies perferctly
+        // synchronized. But for boss fights, the bar is higher, and I'm not
+        // satisfied with any of the progress so far.
+        if (is_boss_level(next_level) and pfrm.network_peer().is_connected()) {
+            next_level += 1;
+        }
+
+        // For now, to determine whether the game's complete, scan through a
+        // bunch of levels. If there are no more bosses remaining, the game is
+        // complete.
+        bool bosses_remaining = false;
+        for (Level l = next_level; l < next_level + 1000; ++l) {
+            if (is_boss_level(l)) {
+                bosses_remaining = true;
+                break;
+            }
+        }
+
+        auto zone = zone_info(next_level);
+        auto last_zone = zone_info(game.level());
+
+        if (not bosses_remaining and not(zone == last_zone)) {
+            pfrm.sleep(120);
+            return state_pool_.create<EndingCreditsState>();
+        }
+
+        return state_pool_.create<NewLevelState>(next_level);
+    }
+
+    return null_state();
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// NetworkConnectSetupState
+////////////////////////////////////////////////////////////////////////////////
+
+
+StatePtr
+NetworkConnectSetupState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    MenuState::update(pfrm, game, delta);
+
+    timer_ += delta;
+
+    constexpr auto fade_duration = milliseconds(950);
+    if (timer_ > fade_duration) {
+        pfrm.screen().fade(1.f, ColorConstant::indigo_tint);
+
+        switch (pfrm.network_peer().interface()) {
+        case Platform::NetworkPeer::serial_cable:
+            return state_pool_.create<NetworkConnectWaitState>();
+            break;
+
+        case Platform::NetworkPeer::internet: {
+            // TODO: display some more interesting graphics, allow user to enter
+            // ip address
+            return state_pool_.create<NetworkConnectWaitState>();
+            break;
+        }
+        }
+
+    } else {
+        const auto amount = smoothstep(0.f, fade_duration, timer_);
+        pfrm.screen().fade(
+            amount, ColorConstant::indigo_tint, ColorConstant::rich_black);
+        return null_state();
+    }
+
+    return null_state();
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// NetworkConnectWaitState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void NetworkConnectWaitState::enter(Platform& pfrm,
+                                    Game& game,
+                                    State& prev_state)
+{
+    pfrm.load_overlay_texture("overlay_network_flattened");
+    pfrm.fill_overlay(85);
+    draw_image(pfrm, 85, 1, 4, 28, 13, Layer::overlay);
+}
+
+
+void NetworkConnectWaitState::exit(Platform& pfrm,
+                                   Game& game,
+                                   State& next_state)
+{
+    pfrm.fill_overlay(0);
+    pfrm.load_overlay_texture("overlay");
+
+    if (not dynamic_cast<MenuState*>(&next_state)) {
+        pfrm.screen().fade(0.f);
+
+        if (auto os = dynamic_cast<OverworldState*>(&next_state)) {
+            if (pfrm.network_peer().is_connected()) {
+                push_notification(
+                    pfrm, os, locale_string(LocaleString::peer_connected));
+            } else {
+                push_notification(
+                    pfrm,
+                    os,
+                    locale_string(LocaleString::peer_connection_failed));
+            }
+        }
+    }
+}
+
+
+StatePtr
+NetworkConnectWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    switch (pfrm.network_peer().interface()) {
+    case Platform::NetworkPeer::serial_cable: {
+
+        const char* str = " Waiting for Peer...";
+
+        const auto margin = centered_text_margins(pfrm, utf8::len(str));
+
+        Text t(pfrm, {static_cast<u8>(margin), 2});
+
+        t.assign(str);
+        pfrm.network_peer().listen();
+        return state_pool_.create<ActiveState>(game);
+    }
+
+    case Platform::NetworkPeer::internet: {
+        // TODO: display some more interesting graphics, allow user to enter ip
+        // address, display our ip address if we're the host.
+        if (pfrm.keyboard().down_transition<Key::action_1>()) {
+            pfrm.network_peer().connect("127.0.0.1");
+            return state_pool_.create<PauseScreenState>(false);
+        } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            pfrm.network_peer().listen();
+
+            net_event::SyncSeed s;
+            s.random_state_.set(rng::critical_state);
+            net_event::transmit(pfrm, s);
+
+            return state_pool_.create<PauseScreenState>(false);
+        }
+        break;
+    }
+    }
+
+    return null_state();
 }
 
 
@@ -4206,6 +3984,8 @@ void SignalJammerSelectorState::exit(Platform& pfrm, Game& game, State&)
 StatePtr
 SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
 {
+    MenuState::update(pfrm, game, dt);
+
     timer_ += dt;
 
     constexpr auto fade_duration = milliseconds(500);

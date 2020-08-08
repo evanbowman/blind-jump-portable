@@ -38,3 +38,9 @@ private:
     HitBox hitbox_;
     Mode mode_;
 };
+
+
+class PeerLaser : public Laser {
+public:
+    using Laser::Laser;
+};

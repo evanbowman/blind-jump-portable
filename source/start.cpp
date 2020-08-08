@@ -29,6 +29,8 @@ void UpdateTask::run()
             const auto delta = DeltaClock::instance().reset();
 
             game.update(*pf_, delta);
+
+            pf_->network_peer().update();
         });
     } else {
         Task::completed();

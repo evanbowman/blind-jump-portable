@@ -56,11 +56,15 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
         const auto flip = sprite_.get_flip();
         const auto spr = sprite_.get_texture_index();
         if (dir_ == Cardinal::north or dir_ == Cardinal::south) {
-            sprite_.set_flip({static_cast<bool>(rng::choice<2>()), flip.y});
+            sprite_.set_flip(
+                {static_cast<bool>(rng::choice<2>(rng::utility_state)),
+                 flip.y});
         } else {
-            sprite_.set_flip({flip.x, static_cast<bool>(rng::choice<2>())});
+            sprite_.set_flip(
+                {flip.x,
+                 static_cast<bool>(rng::choice<2>(rng::utility_state))});
         }
-        if (rng::choice<3>() == 0) {
+        if (rng::choice<3>(rng::utility_state) == 0) {
             if (spr == TextureMap::v_laser) {
                 sprite_.set_texture_index(TextureMap::v_laser2);
             } else if (spr == TextureMap::v_laser2) {

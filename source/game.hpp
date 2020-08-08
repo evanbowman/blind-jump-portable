@@ -28,6 +28,7 @@
 #include "entity/enemies/theif.hpp"
 #include "entity/enemies/turret.hpp"
 #include "entity/entityGroup.hpp"
+#include "entity/peerPlayer.hpp"
 #include "entity/player.hpp"
 #include "function.hpp"
 #include "localization.hpp"
@@ -53,6 +54,11 @@ public:
     inline Player& player()
     {
         return player_;
+    }
+
+    inline std::optional<PeerPlayer>& peer()
+    {
+        return peer_player_;
     }
 
     inline TileMap& tiles()
@@ -89,6 +95,7 @@ public:
                                     OrbShot,
                                     AlliedOrbShot,
                                     Laser,
+                                    PeerLaser,
                                     Explosion,
                                     FirstExplorerBigLaser,
                                     FirstExplorerSmallLaser>;
@@ -183,6 +190,8 @@ private:
     PersistentData persistent_data_;
     StatePtr state_;
     Powerups powerups_;
+
+    std::optional<PeerPlayer> peer_player_;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 

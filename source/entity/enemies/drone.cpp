@@ -2,13 +2,15 @@
 #include "common.hpp"
 #include "conf.hpp"
 #include "game.hpp"
+#include "network_event.hpp"
 #include "number/random.hpp"
 
 
 Drone::Drone(const Vec2<Float>& pos)
     : Enemy(Entity::Health(4), pos, {{16, 16}, {8, 13}}), state_{State::sleep},
       timer_(0),
-      shadow_check_timer_(milliseconds(500) + rng::choice<milliseconds(300)>())
+      shadow_check_timer_(milliseconds(500) +
+                          rng::choice<milliseconds(300)>(rng::utility_state))
 {
     sprite_.set_position(pos);
     sprite_.set_size(Sprite::Size::w16_h32);
@@ -38,6 +40,20 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     timer_ += dt;
+
+    auto send_state = [&] {
+        if (&target == &game.player()) {
+            const auto int_pos = position_.cast<s16>();
+
+            net_event::EnemyStateSync s;
+            s.state_ = static_cast<u8>(state_);
+            s.x_.set(int_pos.x);
+            s.y_.set(int_pos.y);
+            s.id_.set(id());
+
+            net_event::transmit(pfrm, s);
+        }
+    };
 
     if (visible()) {
         // Calculating our current tile coordinate is costly, but we do want to hide
@@ -71,16 +87,15 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         break;
 
-    case State::inactive:
-        if (visible()) {
-            timer_ = 0;
-            const auto screen_size = pfrm.screen().size();
-            if (manhattan_length(target.get_position(), position_) <
-                std::min(screen_size.x, screen_size.y)) {
-                state_ = State::idle1;
-            }
+    case State::inactive: {
+        timer_ = 0;
+        const auto screen_size = pfrm.screen().size();
+        if (manhattan_length(target.get_position(), position_) <
+            std::min(screen_size.x, screen_size.y)) {
+            state_ = State::idle1;
         }
         break;
+    }
 
     case State::idle1:
         if (timer_ > milliseconds(700)) {
@@ -88,7 +103,9 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             state_ = State::dodge1;
             const auto player_pos = target.get_position();
             step_vector_ =
-                direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
+                direction(position_,
+                          rng::sample<64>(player_pos, rng::critical_state)) *
+                0.000055f;
         }
         break;
 
@@ -99,6 +116,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle2;
+
+            send_state();
         }
         break;
 
@@ -108,7 +127,9 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             state_ = State::dodge2;
             const auto player_pos = target.get_position();
             step_vector_ =
-                direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
+                direction(position_,
+                          rng::sample<64>(player_pos, rng::critical_state)) *
+                0.000055f;
         }
         break;
 
@@ -119,6 +140,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle3;
+
+            send_state();
         }
         break;
 
@@ -128,7 +151,9 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             state_ = State::dodge3;
             const auto player_pos = target.get_position();
             step_vector_ =
-                direction(position_, rng::sample<64>(player_pos)) * 0.000055f;
+                direction(position_,
+                          rng::sample<64>(player_pos, rng::critical_state)) *
+                0.000055f;
         }
         break;
 
@@ -139,6 +164,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle4;
+
+            send_state();
         }
         break;
 
@@ -158,6 +185,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle1;
+
+            send_state();
         }
         break;
     }
@@ -168,7 +197,7 @@ void Drone::injured(Platform& pf, Game& game, Health amount)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-    debit_health(amount);
+    debit_health(pf, amount);
 
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);
@@ -199,7 +228,7 @@ void Drone::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 void Drone::on_collision(Platform& pf, Game& game, Player& player)
 {
     if (state_ == State::rush) {
-        this->kill();
+        debit_health(pf, get_health());
     }
 }
 
@@ -226,4 +255,15 @@ void Drone::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(pf, game, position_, 7, item_drop_vec);
+}
+
+
+void Drone::sync(const net_event::EnemyStateSync& state)
+{
+    state_ = static_cast<State>(state.state_);
+    position_.x = state.x_.get();
+    position_.y = state.y_.get();
+    timer_ = 0;
+    sprite_.set_position(position_);
+    shadow_.set_position(position_);
 }

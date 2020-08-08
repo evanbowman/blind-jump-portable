@@ -11,15 +11,16 @@ class Game;
 class Entity {
 public:
     using Health = s32;
+    using Id = u32;
 
 
-    Entity(const char* name = nullptr);
+    Entity();
 
 
-    Entity(Health health, const char* name = nullptr);
+    Entity(Health health);
 
 
-    Entity(Entity&) = delete;
+    // Entity(Entity&) = delete;
 
 
     void update(Platform&, Game&, Microseconds);
@@ -58,9 +59,13 @@ public:
     }
 
 
-    const char* name() const
+    static void reset_ids();
+    static Id max_id();
+
+
+    Id id() const
     {
-        return name_;
+        return id_;
     }
 
 
@@ -95,8 +100,8 @@ protected:
 
 private:
     Health health_;
+    Id id_;
     bool visible_ = false;
-    const char* const name_;
 };
 
 

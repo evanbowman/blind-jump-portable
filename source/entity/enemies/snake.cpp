@@ -137,8 +137,8 @@ void SnakeHead::update(Platform& pfrm, Game& game, Microseconds dt)
                 dir_ = Dir::left;
             }
         } else {
-            if (rng::choice<5>() == 0) {
-                dir_ = static_cast<Dir>(rng::choice<4>());
+            if (rng::choice<5>(rng::critical_state) == 0) {
+                dir_ = static_cast<Dir>(rng::choice<4>(rng::critical_state));
             }
         }
 
@@ -302,7 +302,7 @@ void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
 
     drop_timer_ -= dt;
     if (drop_timer_ < 0) {
-        if (visible()) {
+        if (visible() or pfrm.network_peer().is_connected()) {
             drop_timer_ = tail_drop_time;
             if (length(game.enemies().get<Sinkhole>()) == 0) {
                 game.enemies().spawn<Sinkhole>(position_);
@@ -350,7 +350,7 @@ void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-    debit_health();
+    debit_health(pf);
 }
 
 
@@ -358,7 +358,7 @@ void SnakeTail::on_collision(Platform& pf, Game& game, LaserExplosion&)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-    debit_health(8);
+    debit_health(pf, 8);
 }
 
 
@@ -367,6 +367,6 @@ void SnakeTail::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
     if (not is_allied()) {
         sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
-        debit_health();
+        debit_health(pf);
     }
 }

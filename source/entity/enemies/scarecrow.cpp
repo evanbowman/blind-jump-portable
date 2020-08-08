@@ -117,10 +117,10 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             } else {
                 sprite_.set_position(position_);
 
-                move_vec_ =
-                    direction(position_,
-                              rng::sample<32>(to_world_coord(anchor_))) *
-                    0.000005f;
+                move_vec_ = direction(position_,
+                                      rng::sample<32>(to_world_coord(anchor_),
+                                                      rng::critical_state)) *
+                            0.000005f;
 
                 bounce_timer_ = 0;
                 state_ = State::idle_airborne;
@@ -147,7 +147,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 sprite_.set_texture_index(TextureMap::scarecrow_top);
 
                 if (int(abs(offset)) == 0) {
-                    if (rng::choice<4>() and not hit_) {
+                    if (rng::choice<4>(rng::critical_state) and not hit_) {
                         state_ = State::idle_crouch;
                     } else {
                         state_ = State::long_crouch;
@@ -207,8 +207,9 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                 const auto target_coord = to_tile_coord(target_pos.cast<s32>());
 
                 for (int i = 0; i < 200; ++i) {
-                    auto selected =
-                        to_tile_coord(rng::sample<64>(target_pos).cast<s32>());
+                    auto selected = to_tile_coord(
+                        rng::sample<64>(target_pos, rng::critical_state)
+                            .cast<s32>());
 
                     // This is just because the enemy is tall, and we do not
                     // want it to jump to a coordinate, such that its head is
@@ -314,13 +315,26 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             if (visible()) {
                 pfrm.speaker().play_sound("laser1", 4, position_);
-                this->shoot(pfrm,
-                            game,
-                            position_,
-                            rng::sample<8>(target.get_position()),
-                            0.00010f);
+                this->shoot(
+                    pfrm,
+                    game,
+                    position_,
+                    rng::sample<8>(target.get_position(), rng::critical_state),
+                    0.00010f);
             }
             state_ = State::idle_wait;
+
+            if (&target == &game.player()) {
+                const auto int_pos = position_.cast<s16>();
+
+                net_event::EnemyStateSync s;
+                s.state_ = static_cast<u8>(state_);
+                s.x_.set(int_pos.x);
+                s.y_.set(int_pos.y);
+                s.id_.set(id());
+
+                net_event::transmit(pfrm, s);
+            }
         }
         break;
     }
@@ -328,9 +342,20 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
+void Scarecrow::sync(const net_event::EnemyStateSync& state)
+{
+    state_ = static_cast<State>(state.state_);
+    position_.x = state.x_.get();
+    position_.y = state.y_.get();
+    timer_ = 0;
+    sprite_.set_position(position_);
+    shadow_.set_position(position_);
+}
+
+
 void Scarecrow::injured(Platform& pf, Game& game, Health amount)
 {
-    debit_health(amount);
+    debit_health(pf, amount);
 
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);

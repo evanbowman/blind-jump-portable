@@ -4,13 +4,13 @@
 #include "collision.hpp"
 #include "enemy.hpp"
 #include "entity/entity.hpp"
+#include "network_event.hpp"
 
 
 class LaserExplosion;
 class AlliedOrbShot;
 class Player;
 class Laser;
-
 
 class Drone : public Enemy {
 public:
@@ -40,9 +40,13 @@ public:
         return state_;
     }
 
+    using Enemy::on_collision;
+
     void on_collision(Platform&, Game&, Player&);
 
     void on_death(Platform&, Game&);
+
+    void sync(const net_event::EnemyStateSync& state);
 
 private:
     void injured(Platform&, Game&, Health amount);
