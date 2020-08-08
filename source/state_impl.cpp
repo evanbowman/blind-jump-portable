@@ -867,8 +867,6 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (pfrm.keyboard().down_transition<Key::alt_2>()) {
 
-        restore_keystates = pfrm.keyboard().dump_state();
-
         pfrm.speaker().play_sound("openbag", 2);
 
         return state_pool_.create<QuickSelectInventoryState>(game);
@@ -1806,16 +1804,19 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                       last_score);
 
 
-    game.player().soft_update(pfrm, game, delta);
-
     static const auto transition_duration = milliseconds(160);
 
     switch (display_mode_) {
     case DisplayMode::enter: {
         timer_ += delta;
+
+        game.player().update(pfrm, game, delta);
+
         if (timer_ >= transition_duration) {
             timer_ = 0;
             display_mode_ = DisplayMode::show;
+
+            restore_keystates = pfrm.keyboard().dump_state();
 
             draw_items(pfrm, game);
             show_sidebar(pfrm);
@@ -1839,6 +1840,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
     case DisplayMode::show: {
 
         timer_ += delta;
+
+        game.player().soft_update(pfrm, game, delta);
 
         auto redraw_selector = [&](TileDesc erase_color) {
             auto screen_tiles = calc_screen_tiles(pfrm);
@@ -1931,11 +1934,18 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             display_mode_ = DisplayMode::exit;
             timer_ = 0;
             redraw_selector(0);
+
+            if (restore_keystates) {
+                pfrm.keyboard().restore_state(*restore_keystates);
+                restore_keystates.reset();
+            }
         }
         break;
     }
 
     case DisplayMode::exit: {
+        game.player().update(pfrm, game, delta);
+
         timer_ += delta;
         if (timer_ >= transition_duration) {
             timer_ = 0;
