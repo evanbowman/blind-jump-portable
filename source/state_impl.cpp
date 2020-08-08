@@ -193,6 +193,15 @@ void OverworldState::receive(const net_event::EnemyStateSync& s,
                              Platform&,
                              Game& game)
 {
+    if (is_boss_level(game.level())) {
+        for (auto& e : game.enemies().get<TheFirstExplorer>()) {
+            if (e->id() == s.id_.get()) {
+                e->sync(s, game);
+                return;
+            }
+        }
+    }
+
     for (auto& e : game.enemies().get<Turret>()) {
         if (e->id() == s.id_.get()) {
             e->sync(s, game);
@@ -598,10 +607,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
 
     if (UNLIKELY(is_boss_level(game.level()))) {
-        check_collisions(
-            pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
-        check_collisions(
-            pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
+        // check_collisions(
+        //     pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
+        // check_collisions(
+        //     pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
     }
 
     game.enemies().transform([&](auto& buf) {
@@ -832,7 +841,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (pfrm.keyboard().down_transition<Key::start>()) {
 
-        if (not is_boss_level(game.level())) {
+        if (not pfrm.network_peer().is_connected() and
+            not is_boss_level(game.level())) {
             restore_keystates = pfrm.keyboard().dump_state();
 
             return state_pool_.create<PauseScreenState>();
@@ -3767,6 +3777,17 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
         // backdoor for debugging purposes.
         if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
             return state_pool_.create<CommandCodeState>();
+        }
+
+
+        // Boss levels still need a lot of work before enabling them for
+        // multiplayer, in order to properly synchronize the bosses across
+        // connected games. For simpler enemies and larger levels, we don't need
+        // to be as strict about keeping the enemies perferctly
+        // synchronized. But for boss fights, the bar is higher, and I'm not
+        // satisfied with any of the progress so far.
+        if (is_boss_level(next_level) and pfrm.network_peer().is_connected()) {
+            next_level += 1;
         }
 
         // For now, to determine whether the game's complete, scan through a

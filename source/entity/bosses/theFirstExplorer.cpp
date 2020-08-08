@@ -59,9 +59,11 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         head_.set_flip({0, 0});
     };
 
+    auto& target = get_target(game);
+
     auto face_player =
-        [this, &player = game.player(), &face_left, &face_right] {
-            if (player.get_position().x > position_.x) {
+        [this, &target, &face_left, &face_right] {
+            if (target.get_position().x > position_.x) {
                 face_right();
             } else {
                 face_left();
@@ -104,7 +106,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
     case State::sleep:
         if (visible()) {
             // Start facing away from the player
-            if (game.player().get_position().x > position_.x) {
+            if (target.get_position().x > position_.x) {
                 face_left();
             } else {
                 face_right();
@@ -187,7 +189,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             } else {
                 timer_ = 0;
 
-                if (distance(position_, game.player().get_position()) > 80 and
+                if (distance(position_, target.get_position()) > 80 and
                     rng::choice<2>(rng::critical_state)) {
                     state_ = State::big_laser_shooting;
                     sprite_.set_mix({ColorConstant::electric_blue, 0});
@@ -206,7 +208,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
     case State::small_laser_prep: {
         bullet_spread_gap_ =
             rng::choice<scattershot_inflection - 10>(rng::critical_state) + 5;
-        scattershot_target_ = game.player().get_position();
+        scattershot_target_ = target.get_position();
         state_ = State::small_laser;
         break;
     }
@@ -289,7 +291,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<8>(game.player().get_position(),
+                rng::sample<8>(target.get_position(),
                                rng::critical_state),
                 0.00028f);
             timer_ = 0;
@@ -304,7 +306,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(180)) {
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<12>(game.player().get_position(),
+                rng::sample<12>(target.get_position(),
                                 rng::critical_state),
                 0.00021f);
             timer_ = 0;
@@ -322,7 +324,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > milliseconds(180)) {
             game.effects().spawn<FirstExplorerBigLaser>(
                 position_ + shoot_offset(),
-                rng::sample<22>(game.player().get_position(),
+                rng::sample<22>(target.get_position(),
                                 rng::critical_state),
                 0.00015f);
             timer_ = 0;
@@ -389,7 +391,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                     if (chase_player_) {
                         chase_player_--;
                     }
-                    unit = direction(position_, game.player().get_position());
+                    unit = direction(position_, target.get_position());
                     speed_ = 5.f * unit;
                 }
 
@@ -427,6 +429,19 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
             sprite_.set_texture_index(50);
             head_.set_texture_index(51);
+
+            // if (&target == &game.player()) {
+            //     const auto int_pos = position_.cast<s16>();
+
+            //     // net_event::EnemyStateSync s;
+            //     // s.state_ = static_cast<u8>(state_);
+            //     // s.x_.set(int_pos.x);
+            //     // s.y_.set(int_pos.y);
+            //     // s.id_.set(id());
+
+            //     // net_event::transmit(pf, s);
+            // }
+
 
             timer_ = 0;
             timer2_ = 0;
@@ -515,4 +530,19 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 void TheFirstExplorer::on_death(Platform& pf, Game& game)
 {
     boss_explosion(pf, game, position_);
+}
+
+
+void TheFirstExplorer::sync(const net_event::EnemyStateSync& s, Game& game)
+{
+    state_ = State::after_dash; // Currently, this is the only state where we send a sync message...
+    position_.x = s.x_.get();
+    position_.y = s.y_.get();
+
+    sprite_.set_texture_index(50);
+    head_.set_texture_index(51);
+
+    sprite_.set_position(position_);
+    head_.set_position({position_.x, position_.y - 16});
+    shadow_.set_position(position_);
 }
