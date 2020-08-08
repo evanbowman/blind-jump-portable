@@ -1,6 +1,6 @@
 #pragma once
 
-#include "endian.hpp"
+#include "number/endian.hpp"
 #include "entity/entity.hpp"
 #include "graphics/sprite.hpp"
 #include "number/numeric.hpp"

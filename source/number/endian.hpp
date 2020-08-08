@@ -1,6 +1,6 @@
 #pragma once
 
-#include "number/numeric.hpp"
+#include "numeric.hpp"
 
 // Because most processors are little endian, I am using little endian byte
 // order for binary encoded data.
