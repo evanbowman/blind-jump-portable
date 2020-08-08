@@ -51,7 +51,15 @@ To enable, press the start button on both devices, and then select the "Connect 
 
 ### Settings
 
+<img src="settings1.png"/><img src="settings2.png"/>
 
+By opening the start menu, and selecting "Settings," you may configure a number of options while the game is running. The difficulty setting can only be changed when no enemies remain on the current level. 
+
+When enabling "Show Stats," the game will print a number of metrics to the screen, such as framerate, link cable transmitted messages, link cable received messages, link transmit loss, and link receive loss. 
+
+The contrast option allows you to increase/decrease the game's contrast. Early gameboy advance games, prior to frontlit/backlit screens, were especially high contrast (perhaps due to the poor quality of the screen), and if you are playing on a device without a backlight or a frontlight (such as the original AGB model), you may want to increase the contrast a bit. If you are running the game on an emulator, and your monitor has poor grayscale reproducution, and the game's colors display with excessive contrast, you may want to decrease the contrast. Or if your computer monitor is washed out, maybe you would bump up the contrast. Anyway, many days of work went into the design of the game's color palette, so if you can see the game fine, without distraction, with the default setting, you should just leave the contrast as-is.
+
+The settings screen also allows you to change the language, although the only language currently available is English. As the game is not yet complete, translations would be premature. But the game does support utf8 strings, so all you would need to do to add a new language, would be to define strings and a charset mapping in source/localization.cpp, and then add the character image file for your language. Most of the characters for Spanish and French should already be available in existing charset_en_spn_fr.png (note: if you are creating a charset, make sure that the first 8x8 tile includes one pixel in the top left corner, which matches the background color of the glyph image; this is how the game determines which color of the glyph is foreground, and which color is background).
 
 ## Implementation
 
