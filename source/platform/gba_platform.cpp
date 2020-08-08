@@ -17,6 +17,12 @@
 #include <algorithm>
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wregister"
+#include "gba.h"
+#pragma GCC diagnostic pop
+
+
 Platform::DeviceName Platform::device_name() const
 {
     return "GameboyAdvance";
@@ -79,14 +85,6 @@ static constexpr const int cbb_t0_texture = sbb_t0_texture / sbb_per_cbb;
 static constexpr const int cbb_t1_texture = sbb_t1_texture / sbb_per_cbb;
 static constexpr const int cbb_bg_texture = sbb_bg_texture / sbb_per_cbb;
 
-using HardwareTile = u32[16];
-using TileBlock = HardwareTile[256];
-using ScreenBlock = u16[1024];
-
-#define MEM_TILE ((TileBlock*)0x6000000)
-#define MEM_PALETTE ((u16*)(0x05000200))
-#define MEM_BG_PALETTE ((u16*)(0x05000000))
-#define MEM_SCREENBLOCKS ((ScreenBlock*)0x6000000)
 
 //
 //
@@ -109,67 +107,6 @@ int main()
 }
 
 
-// FIXME: I'm relying on devkit ARM right now for handling
-// interrupts. But it would be more educational to set this stuff up
-// on my own!
-#include "/opt/devkitpro/libgba/include/gba_interrupt.h"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wregister"
-#include "/opt/devkitpro/libgba/include/gba_systemcalls.h"
-#pragma GCC diagnostic pop
-
-#define REG_DISPCNT *(u32*)0x4000000
-#define MODE_0 0x0
-#define OBJ_MAP_1D 0x40
-#define OBJ_ENABLE 0x1000
-
-#define KEY_A 0x0001
-#define KEY_B 0x0002
-#define KEY_SELECT 0x0004
-#define KEY_START 0x0008
-#define KEY_RIGHT 0x0010
-#define KEY_LEFT 0x0020
-#define KEY_UP 0x0040
-#define KEY_DOWN 0x0080
-#define KEY_R 0x0100
-#define KEY_L 0x0200
-
-#define SE_PALBANK_MASK 0xF000
-#define SE_PALBANK_SHIFT 12
-#define SE_PALBANK(n) ((n) << SE_PALBANK_SHIFT)
-
-#define ATTR2_PALBANK_MASK 0xF000
-#define ATTR2_PALBANK_SHIFT 12
-#define ATTR2_PALBANK(n) ((n) << ATTR2_PALBANK_SHIFT)
-
-#define ATTR2_PRIO_SHIFT 10
-#define ATTR2_PRIO(n) ((n) << ATTR2_PRIO_SHIFT)
-#define ATTR2_PRIORITY(n) ATTR2_PRIO(n)
-
-#define REG_MOSAIC *(vu16*)(0x04000000 + 0x4c)
-
-#define BG_MOSAIC (1 << 6)
-
-#define MOS_BH_MASK 0x000F
-#define MOS_BH_SHIFT 0
-#define MOS_BH(n) ((n) << MOS_BH_SHIFT)
-
-#define MOS_BV_MASK 0x00F0
-#define MOS_BV_SHIFT 4
-#define MOS_BV(n) ((n) << MOS_BV_SHIFT)
-
-#define MOS_OH_MASK 0x0F00
-#define MOS_OH_SHIFT 8
-#define MOS_OH(n) ((n) << MOS_OH_SHIFT)
-
-#define MOS_OV_MASK 0xF000
-#define MOS_OV_SHIFT 12
-#define MOS_OV(n) ((n) << MOS_OV_SHIFT)
-
-#define MOS_BUILD(bh, bv, oh, ov)                                              \
-    ((((ov)&15) << 12) | (((oh)&15) << 8) | (((bv)&15) << 4) | ((bh)&15))
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // DeltaClock
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,8 +116,6 @@ DeltaClock::DeltaClock() : impl_(nullptr)
 {
 }
 
-#define REG_TM3CNT_L *(vu16*)(REG_BASE + 0x10c)
-#define REG_TM3CNT_H *(vu16*)(REG_BASE + 0x10e)
 
 static size_t delta_total;
 
@@ -300,57 +235,6 @@ static ObjectAttributes* const object_attribute_memory = {
 static ObjectAttributes
     object_attribute_back_buffer[Platform::Screen::sprite_limit];
 
-
-#define OBJ_SHAPE(m) ((m) << 14)
-#define ATTR0_COLOR_16 (0 << 13)
-#define ATTR0_COLOR_256 (1 << 13)
-#define ATTR0_MOSAIC (1 << 12)
-#define ATTR0_SQUARE OBJ_SHAPE(0)
-#define ATTR0_TALL OBJ_SHAPE(2)
-#define ATTR0_WIDE OBJ_SHAPE(1)
-#define ATTR0_BLEND 0x0400
-#define ATTR1_SIZE_16 (1 << 14)
-#define ATTR1_SIZE_32 (2 << 14)
-#define ATTR1_SIZE_64 (3 << 14)
-#define ATTR2_PALETTE(n) ((n) << 12)
-#define OBJ_CHAR(m) ((m)&0x03ff)
-#define BG0_ENABLE 0x100
-#define BG1_ENABLE 0x200
-#define BG2_ENABLE 0x400
-#define BG3_ENABLE 0x800
-#define WIN0_ENABLE (1 << 13)
-#define WIN_BG0 0x0001 //!< Windowed bg 0
-#define WIN_BG1 0x0002 //!< Windowed bg 1
-#define WIN_BG2 0x0004 //!< Windowed bg 2
-#define WIN_BG3 0x0008 //!< Windowed bg 3
-#define WIN_OBJ 0x0010 //!< Windowed objects
-#define WIN_ALL 0x001F //!< All layers in window.
-#define WIN_BLD 0x0020 //!< Windowed blending
-#define REG_WIN0H *((volatile u16*)(0x04000000 + 0x40))
-#define REG_WIN1H *((volatile u16*)(0x04000000 + 0x42))
-#define REG_WIN0V *((volatile u16*)(0x04000000 + 0x44))
-#define REG_WIN1V *((volatile u16*)(0x04000000 + 0x46))
-#define REG_WININ *((volatile u16*)(0x04000000 + 0x48))
-#define REG_WINOUT *((volatile u16*)(0x04000000 + 0x4A))
-
-#define BG_CBB_MASK 0x000C
-#define BG_CBB_SHIFT 2
-#define BG_CBB(n) ((n) << BG_CBB_SHIFT)
-
-#define BG_SBB_MASK 0x1F00
-#define BG_SBB_SHIFT 8
-#define BG_SBB(n) ((n) << BG_SBB_SHIFT)
-
-#define BG_SIZE_MASK 0xC000
-#define BG_SIZE_SHIFT 14
-#define BG_SIZE(n) ((n) << BG_SIZE_SHIFT)
-
-#define BG_PRIORITY(m) ((m))
-
-#define BG_REG_32x32 0      //!< reg bg, 32x32 (256x256 px)
-#define BG_REG_64x32 0x4000 //!< reg bg, 64x32 (512x256 px)
-#define BG_REG_32x64 0x8000 //!< reg bg, 32x64 (256x512 px)
-#define BG_REG_64x64 0xC000 //!< reg bg, 64x64 (512x512 px)
 
 
 static volatile u16* bg0_control = (volatile u16*)0x4000008;
@@ -821,30 +705,30 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "graphics/blaster_info_flattened.h"
-#include "graphics/charset_en_spn_fr.h"
-#include "graphics/launch_flattened.h"
-#include "graphics/old_poster_flattened.h"
-#include "graphics/overlay.h"
-#include "graphics/overlay_cutscene.h"
-#include "graphics/overlay_journal.h"
-#include "graphics/overlay_network_flattened.h"
-#include "graphics/seed_packet_flattened.h"
-#include "graphics/spritesheet.h"
-#include "graphics/spritesheet2.h"
-#include "graphics/spritesheet3.h"
-#include "graphics/spritesheet_boss0.h"
-#include "graphics/spritesheet_boss1.h"
-#include "graphics/spritesheet_intro_clouds.h"
-#include "graphics/spritesheet_intro_cutscene.h"
-#include "graphics/spritesheet_launch_anim.h"
-#include "graphics/tilesheet.h"
-#include "graphics/tilesheet2.h"
-#include "graphics/tilesheet2_top.h"
-#include "graphics/tilesheet3.h"
-#include "graphics/tilesheet3_top.h"
-#include "graphics/tilesheet_intro_cutscene_flattened.h"
-#include "graphics/tilesheet_top.h"
+#include "data/blaster_info_flattened.h"
+#include "data/charset_en_spn_fr.h"
+#include "data/launch_flattened.h"
+#include "data/old_poster_flattened.h"
+#include "data/overlay.h"
+#include "data/overlay_cutscene.h"
+#include "data/overlay_journal.h"
+#include "data/overlay_network_flattened.h"
+#include "data/seed_packet_flattened.h"
+#include "data/spritesheet.h"
+#include "data/spritesheet2.h"
+#include "data/spritesheet3.h"
+#include "data/spritesheet_boss0.h"
+#include "data/spritesheet_boss1.h"
+#include "data/spritesheet_intro_clouds.h"
+#include "data/spritesheet_intro_cutscene.h"
+#include "data/spritesheet_launch_anim.h"
+#include "data/tilesheet.h"
+#include "data/tilesheet2.h"
+#include "data/tilesheet2_top.h"
+#include "data/tilesheet3.h"
+#include "data/tilesheet3_top.h"
+#include "data/tilesheet_intro_cutscene_flattened.h"
+#include "data/tilesheet_top.h"
 
 
 struct TextureData {
@@ -1427,9 +1311,9 @@ flash_bytecpy(void* in_dst, const void* in_src, unsigned int length, bool write)
 
     for (; length > 0; length--) {
         if (write) {
-            *(vu8*)0x0E005555 = 0xAA;
-            *(vu8*)0x0E002AAA = 0x55;
-            *(vu8*)0x0E005555 = 0xA0;
+            *(volatile u8*)0x0E005555 = 0xAA;
+            *(volatile u8*)0x0E002AAA = 0x55;
+            *(volatile u8*)0x0E005555 = 0xA0;
         }
         *dst++ = *src++;
     }
@@ -1439,10 +1323,10 @@ flash_bytecpy(void* in_dst, const void* in_src, unsigned int length, bool write)
 static void set_flash_bank(u32 bankID)
 {
     if (bankID < 2) {
-        *(vu8*)0x0E005555 = 0xAA;
-        *(vu8*)0x0E002AAA = 0x55;
-        *(vu8*)0x0E005555 = 0xB0;
-        *(vu8*)0x0E000000 = bankID;
+        *(volatile u8*)0x0E005555 = 0xAA;
+        *(volatile u8*)0x0E002AAA = 0x55;
+        *(volatile u8*)0x0E005555 = 0xB0;
+        *(volatile u8*)0x0E000000 = bankID;
     }
 }
 
@@ -1554,6 +1438,8 @@ SynchronizedBase::~SynchronizedBase()
 ////////////////////////////////////////////////////////////////////////////////
 
 
+// This is unfortunate. Maybe we should define a max save data size as part of
+// the platform header, so that we do not need to pull in game specific code.
 #include "persistentData.hpp"
 
 
@@ -1638,281 +1524,21 @@ void Platform::Logger::read(void* buffer, u32 start_offset, u32 num_bytes)
 // Speaker
 //
 // For music, the Speaker class uses the GameBoy's direct sound chip to play
-// 8-bit signed raw audio, at 16kHz. For everything else, the game uses the
-// waveform generators.
+// 8-bit signed raw audio, at 16kHz.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-//! \name Channel 1: Square wave with sweep
-//\{
-#define REG_SND1SWEEP *(vu16*)(0x04000000 + 0x0060) //!< Channel 1 Sweep
-#define REG_SND1CNT *(vu16*)(0x04000000 + 0x0062)   //!< Channel 1 Control
-#define REG_SND1FREQ *(vu16*)(0x04000000 + 0x0064)  //!< Channel 1 frequency
-//\}
-
-//! \name Channel 2: Simple square wave
-//\{
-#define REG_SND2CNT *(vu16*)(0x04000000 + 0x0068)  //!< Channel 2 control
-#define REG_SND2FREQ *(vu16*)(0x04000000 + 0x006C) //!< Channel 2 frequency
-//\}
-
-//! \name Channel 3: Wave player
-//\{
-#define REG_SND3SEL *(vu16*)(0x04000000 + 0x0070)  //!< Channel 3 wave select
-#define REG_SND3CNT *(vu16*)(0x04000000 + 0x0072)  //!< Channel 3 control
-#define REG_SND3FREQ *(vu16*)(0x04000000 + 0x0074) //!< Channel 3 frequency
-//\}
-
-//! \name Channel 4: Noise generator
-//\{
-#define REG_SND4CNT *(vu16*)(0x04000000 + 0x0078)  //!< Channel 4 control
-#define REG_SND4FREQ *(vu16*)(0x04000000 + 0x007C) //!< Channel 4 frequency
-//\}
-
-#define REG_SNDCNT *(volatile u32*)(0x04000000 + 0x0080) //!< Main sound control
-#define REG_SNDDMGCNT                                                          \
-    *(volatile u16*)(0x04000000 + 0x0080) //!< DMG channel control
-#define REG_SNDDSCNT                                                           \
-    *(volatile u16*)(0x04000000 + 0x0082) //!< Direct Sound control
-#define REG_SNDSTAT *(volatile u16*)(0x04000000 + 0x0084) //!< Sound status
-#define REG_SNDBIAS *(volatile u16*)(0x04000000 + 0x0088) //!< Sound bias
-
-
-// --- REG_SND1SWEEP ---------------------------------------------------
-
-/*!	\defgroup grpAudioSSW	Tone Generator, Sweep Flags
-	\ingroup grpMemBits
-	\brief	Bits for REG_SND1SWEEP (aka REG_SOUND1CNT_L)
-*/
-/*!	\{	*/
-
-#define SSW_INC 0      //!< Increasing sweep rate
-#define SSW_DEC 0x0008 //!< Decreasing sweep rate
-#define SSW_OFF 0x0008 //!< Disable sweep altogether
-
-#define SSW_SHIFT_MASK 0x0007
-#define SSW_SHIFT_SHIFT 0
-#define SSW_SHIFT(n) ((n) << SSW_SHIFT_SHIFT)
-
-#define SSW_TIME_MASK 0x0070
-#define SSW_TIME_SHIFT 4
-#define SSW_TIME(n) ((n) << SSW_TIME_SHIFT)
-
-
-#define SSW_BUILD(shift, dir, time)                                            \
-    ((((time)&7) << 4) | ((dir) << 3) | ((shift)&7))
-
-/*!	\}	/defgroup	*/
-
-// --- REG_SND1CNT, REG_SND2CNT, REG_SND4CNT ---------------------------
-
-/*!	\defgroup grpAudioSSQR	Tone Generator, Square Flags
-	\ingroup grpMemBits
-	\brief	Bits for REG_SND{1,2,4}CNT
-	(aka REG_SOUND1CNT_H, REG_SOUND2CNT_L, REG_SOUND4CNT_L, respectively)
-*/
-/*!	\{	*/
-
-#define SSQR_DUTY1_8 0      //!< 12.5% duty cycle (#-------)
-#define SSQR_DUTY1_4 0x0040 //!< 25% duty cycle (##------)
-#define SSQR_DUTY1_2 0x0080 //!< 50% duty cycle (####----)
-#define SSQR_DUTY3_4 0x00C0 //!< 75% duty cycle (######--) Equivalent to 25%
-#define SSQR_INC 0          //!< Increasing volume
-#define SSQR_DEC 0x0800     //!< Decreasing volume
-
-#define SSQR_LEN_MASK 0x003F
-#define SSQR_LEN_SHIFT 0
-#define SSQR_LEN(n) ((n) << SSQR_LEN_SHIFT)
-
-#define SSQR_DUTY_MASK 0x00C0
-#define SSQR_DUTY_SHIFT 6
-#define SSQR_DUTY(n) ((n) << SSQR_DUTY_SHIFT)
-
-#define SSQR_TIME_MASK 0x0700
-#define SSQR_TIME_SHIFT 8
-#define SSQR_TIME(n) ((n) << SSQR_TIME_SHIFT)
-
-#define SSQR_IVOL_MASK 0xF000
-#define SSQR_IVOL_SHIFT 12
-#define SSQR_IVOL(n) ((n) << SSQR_IVOL_SHIFT)
-
-
-#define SSQR_ENV_BUILD(ivol, dir, time)                                        \
-    (((ivol) << 12) | ((dir) << 11) | (((time)&7) << 8))
-
-#define SSQR_BUILD(_ivol, dir, step, duty, len)                                \
-    (SSQR_ENV_BUILD(ivol, dir, step) | (((duty)&3) << 6) | ((len)&63))
-
-
-/*!	\}	/defgroup	*/
-
-// --- REG_SND1FREQ, REG_SND2FREQ, REG_SND3FREQ ------------------------
-
-/*!	\defgroup grpAudioSFREQ	Tone Generator, Frequency Flags
-	\ingroup grpMemBits
-	\brief	Bits for REG_SND{1-3}FREQ
-	(aka REG_SOUND1CNT_X, REG_SOUND2CNT_H, REG_SOUND3CNT_X)
-*/
-/*!	\{	*/
-
-#define SFREQ_HOLD 0       //!< Continuous play
-#define SFREQ_TIMED 0x4000 //!< Timed play
-#define SFREQ_RESET 0x8000 //!< Reset sound
-
-#define SFREQ_RATE_MASK 0x07FF
-#define SFREQ_RATE_SHIFT 0
-#define SFREQ_RATE(n) ((n) << SFREQ_RATE_SHIFT)
-
-#define SFREQ_BUILD(rate, timed, reset)                                        \
-    (((rate)&0x7FF) | ((timed) << 14) | ((reset) << 15))
-
-/*!	\}	/defgroup	*/
-
-// --- REG_SNDDMGCNT ---------------------------------------------------
-
-/*!	\defgroup grpAudioSDMG	Tone Generator, Control Flags
-	\ingroup grpMemBits
-	\brief	Bits for REG_SNDDMGCNT (aka REG_SOUNDCNT_L)
-*/
-/*!	\{	*/
-
-
-#define SDMG_LSQR1 0x0100  //!< Enable channel 1 on left
-#define SDMG_LSQR2 0x0200  //!< Enable channel 2 on left
-#define SDMG_LWAVE 0x0400  //!< Enable channel 3 on left
-#define SDMG_LNOISE 0x0800 //!< Enable channel 4 on left
-#define SDMG_RSQR1 0x1000  //!< Enable channel 1 on right
-#define SDMG_RSQR2 0x2000  //!< Enable channel 2 on right
-#define SDMG_RWAVE 0x4000  //!< Enable channel 3 on right
-#define SDMG_RNOISE 0x8000 //!< Enable channel 4 on right
-
-#define SDMG_LVOL_MASK 0x0007
-#define SDMG_LVOL_SHIFT 0
-#define SDMG_LVOL(n) ((n) << SDMG_LVOL_SHIFT)
-
-#define SDMG_RVOL_MASK 0x0070
-#define SDMG_RVOL_SHIFT 4
-#define SDMG_RVOL(n) ((n) << SDMG_RVOL_SHIFT)
-
-
-// Unshifted values
-#define SDMG_SQR1 0x01
-#define SDMG_SQR2 0x02
-#define SDMG_WAVE 0x04
-#define SDMG_NOISE 0x08
-
-
-#define SDMG_BUILD(_lmode, _rmode, _lvol, _rvol)                               \
-    (((_rmode) << 12) | ((_lmode) << 8) | (((_rvol)&7) << 4) | ((_lvol)&7))
-
-#define SDMG_BUILD_LR(_mode, _vol) SDMG_BUILD(_mode, _mode, _vol, _vol)
-
-/*!	\}	/defgroup	*/
-
-// --- REG_SNDDSCNT ----------------------------------------------------
-
-/*!	\defgroup grpAudioSDS	Direct Sound Flags
-	\ingroup grpMemBits
-	\brief	Bits for REG_SNDDSCNT (aka REG_SOUNDCNT_H)
-*/
-/*!	\{	*/
-
-#define SDS_DMG25 0       //!< Tone generators at 25% volume
-#define SDS_DMG50 0x0001  //!< Tone generators at 50% volume
-#define SDS_DMG100 0x0002 //!< Tone generators at 100% volume
-#define SDS_A50 0         //!< Direct Sound A at 50% volume
-#define SDS_A100 0x0004   //!< Direct Sound A at 100% volume
-#define SDS_B50 0         //!< Direct Sound B at 50% volume
-#define SDS_B100 0x0008   //!< Direct Sound B at 100% volume
-#define SDS_AR 0x0100     //!< Enable Direct Sound A on right
-#define SDS_AL 0x0200     //!< Enable Direct Sound A on left
-#define SDS_ATMR0 0       //!< Direct Sound A to use timer 0
-#define SDS_ATMR1 0x0400  //!< Direct Sound A to use timer 1
-#define SDS_ARESET 0x0800 //!< Reset FIFO of Direct Sound A
-#define SDS_BR 0x1000     //!< Enable Direct Sound B on right
-#define SDS_BL 0x2000     //!< Enable Direct Sound B on left
-#define SDS_BTMR0 0       //!< Direct Sound B to use timer 0
-#define SDS_BTMR1 0x4000  //!< Direct Sound B to use timer 1
-#define SDS_BRESET 0x8000 //!< Reset FIFO of Direct Sound B
-
-/*!	\}	/defgroup	*/
-
-// --- REG_SNDSTAT -----------------------------------------------------
-
-/*!	\defgroup grpAudioSSTAT	Sound Status Flags
-	\ingroup grpMemBits
-	\brief	Bits for REG_SNDSTAT (and REG_SOUNDCNT_X)
-*/
-/*!	\{	*/
-
-#define SSTAT_SQR1 0x0001  //!< (R) Channel 1 status
-#define SSTAT_SQR2 0x0002  //!< (R) Channel 2 status
-#define SSTAT_WAVE 0x0004  //!< (R) Channel 3 status
-#define SSTAT_NOISE 0x0008 //!< (R) Channel 4 status
-#define SSTAT_DISABLE 0    //!< Disable sound
-#define SSTAT_ENABLE                                                           \
-    0x0080 //!< Enable sound. NOTE: enable before using any other sound regs
-
-
-// Rates for traditional notes in octave +5
-const u32 __snd_rates[12] = {
-    8013,
-    7566,
-    7144,
-    6742, // C , C#, D , D#
-    6362,
-    6005,
-    5666,
-    5346, // E , F , F#, G
-    5048,
-    4766,
-    4499,
-    4246 // G#, A , A#, B
-};
-
-
-#define SND_RATE(note, oct) (2048 - (__snd_rates[note] >> ((oct))))
 
 
 void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 {
-    switch (c) {
-    case 0:
-        REG_SND1FREQ = SFREQ_RESET | SND_RATE(int(n), o);
-        break;
-
-    case 1:
-        REG_SND2FREQ = SFREQ_RESET | SND_RATE(int(n), o);
-        break;
-
-    case 2:
-        REG_SND3FREQ = SFREQ_RESET | SND_RATE(int(n), o);
-        break;
-
-    case 3:
-        REG_SND4FREQ = SFREQ_RESET | SND_RATE(int(n), o);
-        break;
-    }
 }
 
-#define REG_SOUNDCNT_L                                                         \
-    *(volatile u16*)0x4000080 //DMG sound control// #include "gba.h"
-#define REG_SOUNDCNT_H *(volatile u16*)0x4000082 //Direct sound control
-#define REG_SOUNDCNT_X *(volatile u16*)0x4000084 //Extended sound control
-#define REG_DMA1SAD *(u32*)0x40000BC             //DMA1 Source Address
-#define REG_DMA1DAD *(u32*)0x40000C0             //DMA1 Desination Address
-#define REG_DMA1CNT_H *(u16*)0x40000C6           //DMA1 Control High Value
-#define REG_TM1CNT_L *(u16*)0x4000104            //Timer 2 count value
-#define REG_TM1CNT_H *(u16*)0x4000106            //Timer 2 control
-#define REG_TM0CNT_L *(u16*)0x4000100            //Timer 0 count value
-#define REG_TM0CNT_H *(u16*)0x4000102            //Timer 0 Control
 
-
-#include "clair_de_lune.hpp"
-#include "scottbuckley_computations.hpp"
-#include "scottbuckley_hiraeth.hpp"
-#include "scottbuckley_omega.hpp"
-#include "september.hpp"
+#include "data/clair_de_lune.hpp"
+#include "data/scottbuckley_computations.hpp"
+#include "data/scottbuckley_hiraeth.hpp"
+#include "data/scottbuckley_omega.hpp"
+#include "data/september.hpp"
 
 
 #define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \
@@ -1954,22 +1580,22 @@ static const AudioTrack* find_track(const char* name)
 // NOTE: Between remixing the audio track down to 8-bit 16kHz signed, generating
 // assembly output, adding the file to CMake, adding the include, and adding the
 // sound to the sounds array, it's just too tedious to keep working this way...
-#include "sound_bell.hpp"
-#include "sound_blaster.hpp"
-#include "sound_click.hpp"
-#include "sound_coin.hpp"
-#include "sound_creak.hpp"
-#include "sound_explosion1.hpp"
-#include "sound_explosion2.hpp"
-#include "sound_footstep1.hpp"
-#include "sound_footstep2.hpp"
-#include "sound_footstep3.hpp"
-#include "sound_footstep4.hpp"
-#include "sound_heart.hpp"
-#include "sound_laser1.hpp"
-#include "sound_open_book.hpp"
-#include "sound_openbag.hpp"
-#include "sound_pop.hpp"
+#include "data/sound_bell.hpp"
+#include "data/sound_blaster.hpp"
+#include "data/sound_click.hpp"
+#include "data/sound_coin.hpp"
+#include "data/sound_creak.hpp"
+#include "data/sound_explosion1.hpp"
+#include "data/sound_explosion2.hpp"
+#include "data/sound_footstep1.hpp"
+#include "data/sound_footstep2.hpp"
+#include "data/sound_footstep3.hpp"
+#include "data/sound_footstep4.hpp"
+#include "data/sound_heart.hpp"
+#include "data/sound_laser1.hpp"
+#include "data/sound_open_book.hpp"
+#include "data/sound_openbag.hpp"
+#include "data/sound_pop.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
@@ -2130,11 +1756,6 @@ void Platform::Speaker::play_music(const char* name,
 Platform::Speaker::Speaker()
 {
 }
-
-
-#define REG_TM2CNT *(vu32*)(0x04000000 + 0x108)
-#define REG_TM2CNT_L *(vu16*)(REG_BASE + 0x108)
-#define REG_TM2CNT_H *(vu16*)(REG_BASE + 0x10a)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2736,7 +2357,7 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "/opt/devkitpro/libgba/include/gba_sio.h"
+// #include "/opt/devkitpro/libgba/include/gba_sio.h"
 
 
 Platform::NetworkPeer::NetworkPeer()

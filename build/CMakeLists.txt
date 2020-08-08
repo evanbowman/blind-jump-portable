@@ -96,54 +96,61 @@ if(GAMEBOY_ADVANCE)
 
   set(SOURCES
     ${SOURCES}
-    ${CONF_SRC}
+    ${SOURCE_DIR}/platform/gba_platform.cpp
     ${SOURCE_DIR}/platform/memcpy.s
-    ${SOURCE_DIR}/platform/scottbuckley_omega.s
-    ${SOURCE_DIR}/platform/scottbuckley_computations.s
-    ${SOURCE_DIR}/platform/scottbuckley_hiraeth.s
-    ${SOURCE_DIR}/platform/september.s
-    ${SOURCE_DIR}/platform/clair_de_lune.s
-    ${SOURCE_DIR}/graphics/overlay.s
-    ${SOURCE_DIR}/graphics/overlay_cutscene.s
-    ${SOURCE_DIR}/graphics/charset_en_spn_fr.s
-    ${SOURCE_DIR}/graphics/tilesheet_intro_cutscene_flattened.s
-    ${SOURCE_DIR}/graphics/tilesheet.s
-    ${SOURCE_DIR}/graphics/tilesheet2.s
-    ${SOURCE_DIR}/graphics/tilesheet3.s
-    ${SOURCE_DIR}/graphics/tilesheet_top.s
-    ${SOURCE_DIR}/graphics/tilesheet2_top.s
-    ${SOURCE_DIR}/graphics/tilesheet3_top.s
-    ${SOURCE_DIR}/graphics/spritesheet_intro_cutscene.s
-    ${SOURCE_DIR}/graphics/spritesheet_intro_clouds.s
-    ${SOURCE_DIR}/graphics/spritesheet.s
-    ${SOURCE_DIR}/graphics/spritesheet2.s
-    ${SOURCE_DIR}/graphics/spritesheet3.s
-    ${SOURCE_DIR}/graphics/spritesheet_launch_anim.s
-    ${SOURCE_DIR}/graphics/launch_flattened.s
-    ${SOURCE_DIR}/platform/sound_pop.s
-    ${SOURCE_DIR}/platform/sound_coin.s
-    ${SOURCE_DIR}/platform/sound_bell.s
-    ${SOURCE_DIR}/platform/sound_click.s
-    ${SOURCE_DIR}/platform/sound_heart.s
-    ${SOURCE_DIR}/platform/sound_creak.s
-    ${SOURCE_DIR}/platform/sound_laser1.s
-    ${SOURCE_DIR}/platform/sound_openbag.s
-    ${SOURCE_DIR}/platform/sound_blaster.s
-    ${SOURCE_DIR}/platform/sound_footstep1.s
-    ${SOURCE_DIR}/platform/sound_footstep2.s
-    ${SOURCE_DIR}/platform/sound_footstep3.s
-    ${SOURCE_DIR}/platform/sound_footstep4.s
-    ${SOURCE_DIR}/platform/sound_open_book.s
-    ${SOURCE_DIR}/platform/sound_explosion1.s
-    ${SOURCE_DIR}/platform/sound_explosion2.s
-    ${SOURCE_DIR}/graphics/overlay_journal.s
-    ${SOURCE_DIR}/graphics/spritesheet_boss0.s
-    ${SOURCE_DIR}/graphics/spritesheet_boss1.s
-    ${SOURCE_DIR}/graphics/old_poster_flattened.s
-    ${SOURCE_DIR}/graphics/blaster_info_flattened.s
-    ${SOURCE_DIR}/graphics/seed_packet_flattened.s
-    ${SOURCE_DIR}/graphics/overlay_network_flattened.s
-    ${SOURCE_DIR}/platform/gba_platform.cpp)
+    ${SOURCE_DIR}/platform/interrupt.c
+    ${SOURCE_DIR}/platform/interrupt_dispatch.s
+    ${SOURCE_DIR}/platform/bios_math.s
+    ${SOURCE_DIR}/platform/reset.s
+
+    # Data files below. Because the gameboy advance does not have a filesystem,
+    # all of the sounds and images need to be compiled into the ROM.
+    ${CONF_SRC}
+    ${SOURCE_DIR}/data/scottbuckley_omega.s
+    ${SOURCE_DIR}/data/scottbuckley_computations.s
+    ${SOURCE_DIR}/data/scottbuckley_hiraeth.s
+    ${SOURCE_DIR}/data/september.s
+    ${SOURCE_DIR}/data/clair_de_lune.s
+    ${SOURCE_DIR}/data/overlay.s
+    ${SOURCE_DIR}/data/overlay_cutscene.s
+    ${SOURCE_DIR}/data/charset_en_spn_fr.s
+    ${SOURCE_DIR}/data/tilesheet_intro_cutscene_flattened.s
+    ${SOURCE_DIR}/data/tilesheet.s
+    ${SOURCE_DIR}/data/tilesheet2.s
+    ${SOURCE_DIR}/data/tilesheet3.s
+    ${SOURCE_DIR}/data/tilesheet_top.s
+    ${SOURCE_DIR}/data/tilesheet2_top.s
+    ${SOURCE_DIR}/data/tilesheet3_top.s
+    ${SOURCE_DIR}/data/spritesheet_intro_cutscene.s
+    ${SOURCE_DIR}/data/spritesheet_intro_clouds.s
+    ${SOURCE_DIR}/data/spritesheet.s
+    ${SOURCE_DIR}/data/spritesheet2.s
+    ${SOURCE_DIR}/data/spritesheet3.s
+    ${SOURCE_DIR}/data/spritesheet_launch_anim.s
+    ${SOURCE_DIR}/data/launch_flattened.s
+    ${SOURCE_DIR}/data/sound_pop.s
+    ${SOURCE_DIR}/data/sound_coin.s
+    ${SOURCE_DIR}/data/sound_bell.s
+    ${SOURCE_DIR}/data/sound_click.s
+    ${SOURCE_DIR}/data/sound_heart.s
+    ${SOURCE_DIR}/data/sound_creak.s
+    ${SOURCE_DIR}/data/sound_laser1.s
+    ${SOURCE_DIR}/data/sound_openbag.s
+    ${SOURCE_DIR}/data/sound_blaster.s
+    ${SOURCE_DIR}/data/sound_footstep1.s
+    ${SOURCE_DIR}/data/sound_footstep2.s
+    ${SOURCE_DIR}/data/sound_footstep3.s
+    ${SOURCE_DIR}/data/sound_footstep4.s
+    ${SOURCE_DIR}/data/sound_open_book.s
+    ${SOURCE_DIR}/data/sound_explosion1.s
+    ${SOURCE_DIR}/data/sound_explosion2.s
+    ${SOURCE_DIR}/data/overlay_journal.s
+    ${SOURCE_DIR}/data/spritesheet_boss0.s
+    ${SOURCE_DIR}/data/spritesheet_boss1.s
+    ${SOURCE_DIR}/data/old_poster_flattened.s
+    ${SOURCE_DIR}/data/blaster_info_flattened.s
+    ${SOURCE_DIR}/data/seed_packet_flattened.s
+    ${SOURCE_DIR}/data/overlay_network_flattened.s)
 else()
   set(SOURCES
     ${SOURCES}
@@ -159,34 +166,34 @@ add_executable(BlindJump
 
 function(compile_image filename mw mh flatten)
   if(${flatten} STREQUAL "YES")
-    add_custom_command(OUTPUT ${SOURCE_DIR}/graphics/${filename}_flattened.s
+    add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}_flattened.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png yes
       COMMAND grit tmp/${filename}_flattened.png -gB4 -gTFF00FF
-      COMMAND mv ${filename}_flattened.s ${SOURCE_DIR}/graphics/${filename}_flattened.s
-      COMMAND mv ${filename}_flattened.h ${SOURCE_DIR}/graphics/${filename}_flattened.h
+      COMMAND mv ${filename}_flattened.s ${SOURCE_DIR}/data/${filename}_flattened.s
+      COMMAND mv ${filename}_flattened.h ${SOURCE_DIR}/data/${filename}_flattened.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
 
-    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/graphics/${filename}_flattened.s)
+    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/data/${filename}_flattened.s)
 
   elseif(${mw} STREQUAL "0" AND ${mh} STREQUAL "0")
-    add_custom_command(OUTPUT ${SOURCE_DIR}/graphics/${filename}.s
+    add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
       COMMAND grit tmp/${filename}.png -gB4 -gTFF00FF
-      COMMAND mv ${filename}.s ${SOURCE_DIR}/graphics/${filename}.s
-      COMMAND mv ${filename}.h ${SOURCE_DIR}/graphics/${filename}.h
+      COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
+      COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
 
-    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/graphics/${filename}.s)
+    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/data/${filename}.s)
 
   else()
-    add_custom_command(OUTPUT ${SOURCE_DIR}/graphics/${filename}.s
+    add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
       COMMAND grit tmp/${filename}.png -gB4 -Mw ${mw} -Mh ${mh} -gTFF00FF
-      COMMAND mv ${filename}.s ${SOURCE_DIR}/graphics/${filename}.s
-      COMMAND mv ${filename}.h ${SOURCE_DIR}/graphics/${filename}.h
+      COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
+      COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
 
-    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/graphics/${filename}.s)
+    add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/data/${filename}.s)
 
   endif()
 
@@ -275,7 +282,7 @@ if(GAMEBOY_ADVANCE)
   endif()
 
   target_link_libraries(BlindJump PRIVATE
-    ${DEVKITPRO}/libgba/lib/libgba.a
+    # ${DEVKITPRO}/libgba/lib/libgba.a
     ARM_ROUTINES)
 
   target_compile_options(BlindJump PRIVATE
