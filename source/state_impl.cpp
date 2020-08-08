@@ -1872,8 +1872,13 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             timer_ = 0;
             return state_pool_.create<ActiveState>(game);
         } else {
-            sidebar_->set_display_percentage(
-                1.f - smoothstep(0.f, transition_duration, timer_));
+            if (pfrm.keyboard().pressed<Key::alt_2>()) {
+                timer_ = transition_duration - timer_;
+                display_mode_ = DisplayMode::enter;
+            } else {
+                sidebar_->set_display_percentage(
+                    1.f - smoothstep(0.f, transition_duration, timer_));
+            }
         }
         break;
     }
