@@ -1942,7 +1942,12 @@ Platform::Platform()
         break;
     }
 
-    REG_WAITCNT = 0b0000001100010111;
+    // NOTE: Non-sequential 8 and sequential 3 seem to work well for Cart 0 wait
+    // states, although setting these options unmasks a few obscure audio bugs,
+    // the game displays visibly less tearing. The cartridge prefetch unmasks
+    // even more aggressive audio bugs, and doesn't seem to grant obvious
+    // performance benefits, so I'm leaving the cartridge prefetch turned off...
+    // REG_WAITCNT = 0b0000001100010111;
 
     fill_overlay(0);
 
