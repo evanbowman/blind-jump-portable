@@ -17,6 +17,9 @@
 #include <algorithm>
 
 
+void english__to_string(int num, char* buffer, int base);
+
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wregister"
 #include "gba.h"
@@ -1833,6 +1836,8 @@ static void audio_update()
 
 void Platform::soft_exit()
 {
+    irqDisable(0b0011111111111111);
+    Stop();
 }
 
 
@@ -1910,7 +1915,8 @@ Platform::Platform()
 
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
-    // attempt to save, and if the save fails, assume flash.
+    // attempt to save, and if the save fails, assume flash. I don't really know
+    // anything about the EEPROM hardware interface...
     static const int sram_test_const = 0xAAAAAAAA;
     sram_save(&sram_test_const, log_write_loc, sizeof sram_test_const);
 
@@ -1922,6 +1928,19 @@ Platform::Platform()
         info(*this, "SRAM write failed, falling back to FLASH");
     }
 
+    info(*this, "Verifying BIOS...");
+
+    switch (BiosCheckSum()) {
+    case -1162995584:
+        info(*this, "BIOS matches Nintendo DS");
+        break;
+    case -1162995585:
+        info(*this, "BIOS matches GAMEBOY Advance");
+        break;
+    default:
+        warning(*this, "BIOS checksum failed, may be corrupt");
+        break;
+    }
 
     fill_overlay(0);
 
