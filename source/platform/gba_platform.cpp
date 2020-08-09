@@ -1942,6 +1942,8 @@ Platform::Platform()
         break;
     }
 
+    REG_WAITCNT = 0b0000001100010111;
+
     fill_overlay(0);
 
     REG_SOUNDCNT_H =

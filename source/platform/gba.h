@@ -10,6 +10,7 @@
 #define MODE_0 0x0
 #define OBJ_MAP_1D 0x40
 #define OBJ_ENABLE 0x1000
+#define REG_WAITCNT *(u16*)0x4000204
 
 #define KEY_A 0x0001
 #define KEY_B 0x0002

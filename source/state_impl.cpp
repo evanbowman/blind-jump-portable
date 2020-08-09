@@ -2440,7 +2440,10 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
         // sound effects, but not the music, get all glitched out until two
         // sounds are played consecutively. I've spent hours trying to figure
         // out what's going wrong, and I haven't solved this one yet, so for
-        // now, just play a couple quiet sounds.
+        // now, just play a couple quiet sounds. To add further confusion, after
+        // adjusting the instruction prefetch and waitstats, I need to play
+        // three sounds consecutively... obviously my interrupt service routine
+        // for the audio is flawed somehow.
         pfrm.speaker().play_sound("footstep1", 0);
         pfrm.speaker().play_sound("footstep2", 0);
     };

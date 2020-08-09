@@ -294,7 +294,7 @@ if(GAMEBOY_ADVANCE)
   add_custom_command(TARGET BlindJump POST_BUILD
     COMMENT "building cartridge"
     COMMAND ${DEVKITARM}/bin/arm-none-eabi-objcopy -O binary BlindJump BlindJump.gba
-    COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump BlindJump.gba)
+    COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump -cCBJE -r0 -mEB BlindJump.gba)
 
   target_compile_options(BlindJump PRIVATE
     -D__GBA__)
