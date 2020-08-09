@@ -188,6 +188,7 @@ private:
     Score score_;
     Inventory inventory_;
     PersistentData persistent_data_;
+    StatePtr next_state_;
     StatePtr state_;
     Powerups powerups_;
 

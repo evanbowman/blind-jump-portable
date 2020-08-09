@@ -770,6 +770,8 @@ static void update_ui_metrics(Platform& pfrm,
 
 void ActiveState::enter(Platform& pfrm, Game& game, State&)
 {
+    pfrm.screen().fade(0.f);
+
     if (restore_keystates) {
         pfrm.keyboard().restore_state(*restore_keystates);
         restore_keystates.reset();
@@ -792,6 +794,9 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 
     pfrm.screen().pixelate(0);
 }
+
+
+static constexpr auto inventory_key = Key::select;
 
 
 StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
@@ -843,7 +848,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<DeathFadeState>(game);
     }
 
-    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
+    if (pfrm.keyboard().down_transition<inventory_key>()) {
 
         // Menu states disabled in multiplayer mode. You can still use the
         // quickselect inventory though.
@@ -1417,7 +1422,7 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     MenuState::update(pfrm, game, delta);
 
-    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
+    if (pfrm.keyboard().down_transition<inventory_key>()) {
         return state_pool_.create<ActiveState>(game);
     }
 
@@ -1540,8 +1545,14 @@ static void draw_dot_grid(Platform& pfrm)
 }
 
 
-void InventoryState::enter(Platform& pfrm, Game& game, State&)
+void InventoryState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    if (not dynamic_cast<ActiveState*>(&prev_state)) {
+        pfrm.screen().fade(1.f);
+    }
+
+    pfrm.load_overlay_texture("overlay");
+
     update_arrow_icons(pfrm);
     draw_dot_grid(pfrm);
 }
@@ -1552,10 +1563,6 @@ void InventoryState::exit(Platform& pfrm, Game& game, State& next_state)
     // Un-fading and re-fading when switching from the inventory view to an item
     // view creates tearing. Only unfade the screen when switching back to the
     // active state.
-    if (dynamic_cast<ActiveState*>(&next_state)) {
-        pfrm.screen().fade(0.f);
-    }
-
     selector_.reset();
     left_icon_.reset();
     right_icon_.reset();
@@ -2037,6 +2044,7 @@ void NotebookState::repaint_page(Platform& pfrm)
 void NotebookState::exit(Platform& pfrm, Game&, State&)
 {
     pfrm.sleep(1);
+
     pfrm.fill_overlay(0); // The TextView destructor cleans up anyway, but we
                           // have ways of clearing the screen faster than the
                           // TextView implementation is able to. The TextView
@@ -2048,10 +2056,7 @@ void NotebookState::exit(Platform& pfrm, Game&, State&)
                           // memset, or special BIOS calls (depending on the
                           // platform) to clear out the screen.
 
-    pfrm.screen().fade(1.f);
-
     text_.reset();
-    pfrm.load_overlay_texture("overlay");
 }
 
 
@@ -2180,10 +2185,8 @@ void ImageViewState::exit(Platform& pfrm, Game& game, State&)
     pfrm.sleep(1);
     pfrm.fill_overlay(0);
     pfrm.sleep(1);
-    pfrm.screen().fade(1.f);
 
     pfrm.enable_glyph_mode(true);
-    pfrm.load_overlay_texture("overlay");
 }
 
 
@@ -2384,45 +2387,11 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 void NewLevelState::enter(Platform& pfrm, Game& game, State&)
 {
-    visited.clear();
-
-    pfrm.sleep(15);
-
     pfrm.screen().fade(1.f);
 
-    const auto s_tiles = calc_screen_tiles(pfrm);
+    pfrm.load_overlay_texture("overlay");
 
-    auto zone = zone_info(next_level_);
-    auto last_zone = zone_info(next_level_ - 1);
-    if (not(zone == last_zone) or next_level_ == 0) {
-
-        pos_ = OverlayCoord{1, u8(s_tiles.y * 0.3f)};
-        text_[0].emplace(pfrm, pos_);
-
-        pos_.y += 2;
-
-        text_[1].emplace(pfrm, pos_);
-
-        const auto l1str = locale_string(zone.title_line_1);
-        const auto margin = centered_text_margins(pfrm, utf8::len(l1str));
-        left_text_margin(*text_[0], std::max(0, int{margin} - 1));
-
-        text_[0]->append(l1str);
-
-        const auto l2str = locale_string(zone.title_line_2);
-        const auto margin2 = centered_text_margins(pfrm, utf8::len(l2str));
-        left_text_margin(*text_[1], std::max(0, int{margin2} - 1));
-
-        text_[1]->append(l2str);
-
-        pfrm.sleep(5);
-
-    } else {
-        text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
-        text_[0]->append(locale_string(LocaleString::waypoint_text));
-        text_[0]->append(next_level_);
-        pfrm.sleep(60);
-    }
+    visited.clear();
 }
 
 
@@ -2435,105 +2404,168 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto last_zone = zone_info(next_level_ - 1);
 
 
-    if (not(zone == last_zone) or next_level_ == 0) {
-
+    switch (display_mode_) {
+    case DisplayMode::wait_1:
         timer_ += delta;
+        if (timer_ > seconds(1) / 4) {
+            timer_ = 0;
+            display_mode_ = DisplayMode::wait_2;
 
-        const auto max_j =
-            (int)utf8::len(locale_string(zone.title_line_2)) / 2 + 1;
-        const auto max_i = max_j * 8;
+            const auto s_tiles = calc_screen_tiles(pfrm);
 
-        const int i = ease_out(timer_, 0, max_i, seconds(1));
+            auto zone = zone_info(next_level_);
+            auto last_zone = zone_info(next_level_ - 1);
+            if (not(zone == last_zone) or next_level_ == 0) {
 
-        auto repaint = [&pfrm, this](int max_i) {
-            while (true) {
-                int i = 0, j = 0;
-                auto center = calc_screen_tiles(pfrm).x / 2 - 1;
+                pos_ = OverlayCoord{1, u8(s_tiles.y * 0.3f)};
+                text_[0].emplace(pfrm, pos_);
 
+                pos_.y += 2;
+
+                text_[1].emplace(pfrm, pos_);
+
+                const auto l1str = locale_string(zone.title_line_1);
+                const auto margin =
+                    centered_text_margins(pfrm, utf8::len(l1str));
+                left_text_margin(*text_[0], std::max(0, int{margin} - 1));
+
+                text_[0]->append(l1str);
+
+                const auto l2str = locale_string(zone.title_line_2);
+                const auto margin2 =
+                    centered_text_margins(pfrm, utf8::len(l2str));
+                left_text_margin(*text_[1], std::max(0, int{margin2} - 1));
+
+                text_[1]->append(l2str);
+
+                pfrm.sleep(5);
+
+            } else {
+                text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
+                text_[0]->append(locale_string(LocaleString::waypoint_text));
+                text_[0]->append(next_level_);
+            }
+        }
+        break;
+
+
+    case DisplayMode::wait_2:
+        if (not(zone == last_zone) or next_level_ == 0) {
+
+            timer_ += delta;
+
+            const auto max_j =
+                (int)utf8::len(locale_string(zone.title_line_2)) / 2 + 1;
+            const auto max_i = max_j * 8;
+
+            const int i = ease_out(timer_, 0, max_i, seconds(1));
+
+            auto repaint = [&pfrm, this](int max_i) {
                 while (true) {
-                    const int y_off = 3;
+                    int i = 0, j = 0;
+                    auto center = calc_screen_tiles(pfrm).x / 2 - 1;
 
-                    if (max_i > i + 7 + j * 8) {
+                    while (true) {
+                        const int y_off = 3;
+
+                        if (max_i > i + 7 + j * 8) {
+                            pfrm.set_tile(Layer::overlay,
+                                          center - j,
+                                          pos_.y - y_off,
+                                          107);
+                            pfrm.set_tile(
+                                Layer::overlay, center - j, pos_.y + 2, 107);
+
+                            pfrm.set_tile(Layer::overlay,
+                                          center + 1 + j,
+                                          pos_.y - y_off,
+                                          107);
+                            pfrm.set_tile(Layer::overlay,
+                                          center + 1 + j,
+                                          pos_.y + 2,
+                                          107);
+
+                            i = 0;
+                            j += 1;
+                            continue;
+                        }
+
+                        if (j * 8 + i > max_i) {
+                            return;
+                        }
+
                         pfrm.set_tile(
-                            Layer::overlay, center - j, pos_.y - y_off, 107);
+                            Layer::overlay, center - j, pos_.y - y_off, 93 + i);
                         pfrm.set_tile(
-                            Layer::overlay, center - j, pos_.y + 2, 107);
+                            Layer::overlay, center - j, pos_.y + 2, 93 + i);
 
                         pfrm.set_tile(Layer::overlay,
                                       center + 1 + j,
                                       pos_.y - y_off,
-                                      107);
-                        pfrm.set_tile(
-                            Layer::overlay, center + 1 + j, pos_.y + 2, 107);
-
-                        i = 0;
-                        j += 1;
-                        continue;
-                    }
-
-                    if (j * 8 + i > max_i) {
-                        return;
-                    }
-
-                    pfrm.set_tile(
-                        Layer::overlay, center - j, pos_.y - y_off, 93 + i);
-                    pfrm.set_tile(
-                        Layer::overlay, center - j, pos_.y + 2, 93 + i);
-
-                    pfrm.set_tile(Layer::overlay,
-                                  center + 1 + j,
-                                  pos_.y - y_off,
-                                  100 + i);
-                    pfrm.set_tile(
-                        Layer::overlay, center + 1 + j, pos_.y + 2, 100 + i);
-
-                    i++;
-
-                    if (i == 8) {
-                        pfrm.set_tile(
-                            Layer::overlay, center - j, pos_.y - y_off, 107);
-                        pfrm.set_tile(
-                            Layer::overlay, center - j, pos_.y + 2, 107);
-
+                                      100 + i);
                         pfrm.set_tile(Layer::overlay,
                                       center + 1 + j,
-                                      pos_.y - y_off,
-                                      107);
-                        pfrm.set_tile(
-                            Layer::overlay, center + 1 + j, pos_.y + 2, 107);
+                                      pos_.y + 2,
+                                      100 + i);
 
-                        i = 0;
-                        j++;
-                    }
+                        i++;
 
-                    if (j * 8 + i >= max_i) {
-                        return;
+                        if (i == 8) {
+                            pfrm.set_tile(Layer::overlay,
+                                          center - j,
+                                          pos_.y - y_off,
+                                          107);
+                            pfrm.set_tile(
+                                Layer::overlay, center - j, pos_.y + 2, 107);
+
+                            pfrm.set_tile(Layer::overlay,
+                                          center + 1 + j,
+                                          pos_.y - y_off,
+                                          107);
+                            pfrm.set_tile(Layer::overlay,
+                                          center + 1 + j,
+                                          pos_.y + 2,
+                                          107);
+
+                            i = 0;
+                            j++;
+                        }
+
+                        if (j * 8 + i >= max_i) {
+                            return;
+                        }
                     }
                 }
+            };
+
+            repaint(std::min(max_i, i));
+
+            if (timer_ > seconds(1)) {
+                pfrm.sleep(80);
+
+                pfrm.speaker().play_music(
+                    zone.music_name_, true, zone.music_offset_);
+
+                startup = false;
+                return state_pool_.create<FadeInState>(game);
             }
-        };
 
-        repaint(std::min(max_i, i));
+        } else {
+            timer_ += delta;
 
-        if (timer_ > seconds(1)) {
-            pfrm.sleep(80);
+            if (timer_ > seconds(1)) {
 
-            pfrm.speaker().play_music(
-                zone.music_name_, true, zone.music_offset_);
-
-            startup = false;
-            return state_pool_.create<FadeInState>(game);
+                // If we're loading from a save state, we need to start the music, which
+                // normally starts when we enter a new zone.
+                if (startup) {
+                    pfrm.speaker().play_music(
+                        zone.music_name_, true, zone.music_offset_);
+                }
+                startup = false;
+                return state_pool_.create<FadeInState>(game);
+            }
         }
-
-    } else {
-        // If we're loading from a save state, we need to start the music, which
-        // normally starts when we enter a new zone.
-        if (startup) {
-            pfrm.speaker().play_music(
-                zone.music_name_, true, zone.music_offset_);
-        }
-        startup = false;
-        return state_pool_.create<FadeInState>(game);
+        break;
     }
 
     return null_state();
@@ -2741,12 +2773,10 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 
 void LaunchCutsceneState::exit(Platform& pfrm, Game& game, State& next_state)
 {
-    pfrm.sleep(1);
-    pfrm.screen().fade(1.f);
     pfrm.fill_overlay(0);
     altitude_text_.reset();
 
-    pfrm.load_overlay_texture("overlay");
+    // pfrm.load_overlay_texture("overlay");
 
     game.details().transform([](auto& buf) { buf.clear(); });
     game.effects().transform([](auto& buf) { buf.clear(); });
@@ -3064,8 +3094,6 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         constexpr auto fade_duration = milliseconds(2000);
         if (timer_ > fade_duration) {
             altitude_text_.reset();
-
-            pfrm.screen().fade(1.f);
 
             pfrm.sleep(5);
 
@@ -4006,10 +4034,6 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
     save_and_quit_text_.reset();
 
     pfrm.fill_overlay(0);
-
-    if (dynamic_cast<ActiveState*>(&next_state)) {
-        pfrm.screen().fade(0.f);
-    }
 }
 
 

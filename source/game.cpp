@@ -37,7 +37,8 @@ bool Game::load_save_data(Platform& pfrm)
 }
 
 
-Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
+Game::Game(Platform& pfrm)
+    : player_(pfrm), score_(0), next_state_(null_state()), state_(null_state())
 {
     if (not this->load_save_data(pfrm)) {
         persistent_data_.reset(pfrm);
@@ -122,6 +123,12 @@ Game::Game(Platform& pfrm) : player_(pfrm), score_(0), state_(null_state())
 
 HOT void Game::update(Platform& pfrm, Microseconds delta)
 {
+    if (next_state_) {
+        next_state_->enter(pfrm, *this, *state_);
+
+        state_ = std::move(next_state_);
+    }
+
     for (auto it = deferred_callbacks_.begin();
          it not_eq deferred_callbacks_.end();) {
 
@@ -137,13 +144,10 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
 
     pfrm.speaker().set_position(player_.get_position());
 
-    auto new_state = state_->update(pfrm, *this, delta);
+    next_state_ = state_->update(pfrm, *this, delta);
 
-    if (new_state) {
-        state_->exit(pfrm, *this, *new_state);
-        new_state->enter(pfrm, *this, *state_);
-
-        state_ = std::move(new_state);
+    if (next_state_) {
+        state_->exit(pfrm, *this, *next_state_);
     }
 }
 

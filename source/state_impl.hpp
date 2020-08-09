@@ -477,6 +477,8 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
+    enum DisplayMode { wait_1, wait_2 } display_mode_ = wait_1;
+
     std::optional<Text> text_[2];
     Microseconds timer_;
     OverlayCoord pos_;

@@ -26,6 +26,9 @@ void english__to_string(int num, char* buffer, int base);
 #pragma GCC diagnostic pop
 
 
+static int overlay_y = 0;
+
+
 Platform::DeviceName Platform::device_name() const
 {
     return "GameboyAdvance";
@@ -639,8 +642,7 @@ static bool enter_sleep = false;
 
 static void key_wake_isr()
 {
-    REG_KEYCNT = KEY_SELECT | KEY_R | KEY_L |
-        KEYIRQ_ENABLE | KEYIRQ_AND;
+    REG_KEYCNT = KEY_SELECT | KEY_R | KEY_L | KEYIRQ_ENABLE | KEYIRQ_AND;
 
     irqSet(IRQ_KEYPAD, key_standby_isr);
 }
@@ -648,13 +650,17 @@ static void key_wake_isr()
 
 static void key_standby_isr()
 {
-    REG_KEYCNT = KEY_SELECT | KEY_START | KEY_A | KEY_B | DPAD |
-        KEYIRQ_ENABLE | KEYIRQ_OR;
+    REG_KEYCNT = KEY_SELECT | KEY_START | KEY_A | KEY_B | DPAD | KEYIRQ_ENABLE |
+                 KEYIRQ_OR;
 
     irqSet(IRQ_KEYPAD, key_wake_isr);
 
     enter_sleep = true;
 }
+
+
+static ScreenBlock overlay_back_buffer alignas(4);
+static bool overlay_back_buffer_changed = false;
 
 
 void Platform::Screen::display()
@@ -663,9 +669,27 @@ void Platform::Screen::display()
 
     if (UNLIKELY(enter_sleep)) {
         enter_sleep = false;
-        if (not ::platform->network_peer().is_connected()) {
+        if (not::platform->network_peer().is_connected()) {
             ::platform->sleep(180);
             Stop();
+        }
+    }
+
+    if (overlay_back_buffer_changed) {
+        overlay_back_buffer_changed = false;
+
+        // If the overlay has not scrolled, then we do not need to bother with
+        // the lower twelve rows of the overlay tile data, because the screen is
+        // twenty tiles tall. This hack could be problematic if someone scrolls
+        // the screen a lot without editing the overlay.
+        if (overlay_y == 0) {
+            memcpy32(MEM_SCREENBLOCKS[sbb_overlay_tiles],
+                 overlay_back_buffer,
+                     (sizeof(u16) * (21 * 32)) / 4);
+        } else {
+            memcpy32(MEM_SCREENBLOCKS[sbb_overlay_tiles],
+                     overlay_back_buffer,
+                     (sizeof overlay_back_buffer) / 4);
         }
     }
 
@@ -1034,8 +1058,7 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
         if (x > 31 or y > 31) {
             return 0;
         }
-        return MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] &
-               ~(SE_PALBANK_MASK);
+        return overlay_back_buffer[x + y * 32] & ~(SE_PALBANK_MASK);
 
     case Layer::background:
         if (x > 31 or y > 31) {
@@ -1063,6 +1086,7 @@ void Platform::set_overlay_origin(Float x, Float y)
 {
     *bg2_x_scroll = static_cast<s16>(x);
     *bg2_y_scroll = static_cast<s16>(y);
+    overlay_y = y;
 }
 
 
@@ -2269,7 +2293,8 @@ void Platform::fill_overlay(u16 tile)
     const u16 tile_info = tile | SE_PALBANK(1);
     const u32 fill_word = tile_info | (tile_info << 16);
 
-    u32* const mem = (u32*)MEM_SCREENBLOCKS[sbb_overlay_tiles];
+    u32* const mem = (u32*)overlay_back_buffer;
+    overlay_back_buffer_changed = true;
 
     for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u32); ++i) {
         mem[i] = fill_word;
@@ -2325,7 +2350,8 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
         }
     }
 
-    MEM_SCREENBLOCKS[sbb_overlay_tiles][x + y * 32] = val | SE_PALBANK(palette);
+    overlay_back_buffer[x + y * 32] = val | SE_PALBANK(palette);
+    overlay_back_buffer_changed = true;
 }
 
 
