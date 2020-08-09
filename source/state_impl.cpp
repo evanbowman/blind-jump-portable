@@ -1707,8 +1707,7 @@ static bool item_is_quickselect(Item::Type item)
 }
 
 
-template <typename F>
-void foreach_quickselect_item(Game& game, F&& callback)
+template <typename F> void foreach_quickselect_item(Game& game, F&& callback)
 {
     for (int page = 0; page < Inventory::pages; ++page) {
         for (int row = 0; row < Inventory::rows; ++row) {
@@ -1745,8 +1744,7 @@ void QuickSelectInventoryState::draw_items(Platform& pfrm, Game& game)
         }
         items_.push_back(item);
 
-        const OverlayCoord coord{
-                                 static_cast<u8>(screen_tiles.x - 4),
+        const OverlayCoord coord{static_cast<u8>(screen_tiles.x - 4),
                                  static_cast<u8>(4 + item_icons_.size() * 5)};
 
         if (auto handler = inventory_item_handler(item)) {
@@ -1774,9 +1772,11 @@ void QuickSelectInventoryState::show_sidebar(Platform& pfrm)
     }
 
     if (more_pages_) {
-        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 154);
+        pfrm.set_tile(
+            Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 154);
     } else {
-        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 152);
+        pfrm.set_tile(
+            Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 152);
     }
 }
 
@@ -1891,27 +1891,26 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             if (selector_pos_ < items_.size()) {
                 int skip = page_ * items_.capacity() + selector_pos_;
                 bool done = false;
-                foreach_quickselect_item(game,  [&](Item::Type item,
-                                                    int page,
-                                                    int row,
-                                                    int col) {
-                    if (skip > 0) {
-                        --skip;
-                        return;
-                    }
-                    if (done) {
-                        return;
-                    }
-                    if (auto handler = inventory_item_handler(item)) {
-                        handler->callback_(pfrm, game);
-                        game.inventory().remove_item(page, col, row);
-                        done = true;
-
-                        if (item not_eq items_[selector_pos_]) {
-                            while (true) ;
+                foreach_quickselect_item(
+                    game, [&](Item::Type item, int page, int row, int col) {
+                        if (skip > 0) {
+                            --skip;
+                            return;
                         }
-                    }
-                });
+                        if (done) {
+                            return;
+                        }
+                        if (auto handler = inventory_item_handler(item)) {
+                            handler->callback_(pfrm, game);
+                            game.inventory().remove_item(page, col, row);
+                            done = true;
+
+                            if (item not_eq items_[selector_pos_]) {
+                                while (true)
+                                    ;
+                            }
+                        }
+                    });
                 draw_items(pfrm, game);
                 show_sidebar(pfrm); // Because MediumIcon resets tiles back to
                                     // zero, thus punching a hole in the
@@ -2435,19 +2434,6 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto zone = zone_info(next_level_);
     auto last_zone = zone_info(next_level_ - 1);
 
-    auto sound_sync_hack = [&pfrm] {
-        // FIXME!!!!!! Mysteriously, there's a weird audio glitch, where the
-        // sound effects, but not the music, get all glitched out until two
-        // sounds are played consecutively. I've spent hours trying to figure
-        // out what's going wrong, and I haven't solved this one yet, so for
-        // now, just play a couple quiet sounds. To add further confusion, after
-        // adjusting the instruction prefetch and waitstats, I need to play
-        // three sounds consecutively... obviously my interrupt service routine
-        // for the audio is flawed somehow.
-        pfrm.speaker().play_sound("footstep1", 0);
-        pfrm.speaker().play_sound("footstep2", 0);
-    };
-
 
     if (not(zone == last_zone) or next_level_ == 0) {
 
@@ -2535,10 +2521,6 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.speaker().play_music(
                 zone.music_name_, true, zone.music_offset_);
 
-            if (startup) {
-                sound_sync_hack();
-            }
-
             startup = false;
             return state_pool_.create<FadeInState>(game);
         }
@@ -2549,7 +2531,6 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (startup) {
             pfrm.speaker().play_music(
                 zone.music_name_, true, zone.music_offset_);
-            sound_sync_hack();
         }
         startup = false;
         return state_pool_.create<FadeInState>(game);

@@ -631,9 +631,43 @@ void Platform::Screen::clear()
     VBlankIntrWait();
 }
 
+
+static void key_wake_isr();
+static void key_standby_isr();
+static bool enter_sleep = false;
+
+
+static void key_wake_isr()
+{
+    REG_KEYCNT = KEY_SELECT | KEY_R | KEY_L |
+        KEYIRQ_ENABLE | KEYIRQ_AND;
+
+    irqSet(IRQ_KEYPAD, key_standby_isr);
+}
+
+
+static void key_standby_isr()
+{
+    REG_KEYCNT = KEY_SELECT | KEY_START | KEY_A | KEY_B | DPAD |
+        KEYIRQ_ENABLE | KEYIRQ_OR;
+
+    irqSet(IRQ_KEYPAD, key_wake_isr);
+
+    enter_sleep = true;
+}
+
+
 void Platform::Screen::display()
 {
     // platform->stopwatch().start();
+
+    if (UNLIKELY(enter_sleep)) {
+        enter_sleep = false;
+        if (not ::platform->network_peer().is_connected()) {
+            ::platform->sleep(180);
+            Stop();
+        }
+    }
 
     for (u32 i = oam_write_index; i < last_oam_write_index; ++i) {
         object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
@@ -1752,6 +1786,21 @@ void Platform::Speaker::play_music(const char* name,
     this->stop_music();
 
     ::play_music(name, loop, offset);
+
+    // FIXME!!!!!! Mysteriously, there's a weird audio glitch, where the sound
+    // effects, but not the music, get all glitched out until two sounds are
+    // played consecutively. I've spent hours trying to figure out what's going
+    // wrong, and I haven't solved this one yet, so for now, just play a couple
+    // quiet sounds. To add further confusion, after adjusting the instruction
+    // prefetch and waitstats, I need to play three sounds
+    // consecutively... obviously my interrupt service routine for the audio is
+    // flawed somehow. Do I need to completely disable the timers and sound
+    // chip, as well as the audio interrupts, when playing new sounds? Does
+    // disabling the audio interrupts when queueing a new sound effect cause
+    // audio artifacts, because the sound chip is not receiving samples?
+    play_sound("footstep1", 0);
+    play_sound("footstep2", 0);
+    play_sound("footstep3", 0);
 }
 
 
@@ -1836,7 +1885,6 @@ static void audio_update()
 
 void Platform::soft_exit()
 {
-    irqDisable(0b0011111111111111);
     Stop();
 }
 
@@ -1900,10 +1948,16 @@ static void enable_watchdog()
 }
 
 
+bool use_optimized_waitstates = false;
+
+
 Platform::Platform()
 {
     irqInit();
     irqEnable(IRQ_VBLANK);
+
+    irqEnable(IRQ_KEYPAD);
+    key_wake_isr();
 
     irqSet(IRQ_TIMER3, [] {
         delta_total += 0xffff;
@@ -1947,7 +2001,15 @@ Platform::Platform()
     // the game displays visibly less tearing. The cartridge prefetch unmasks
     // even more aggressive audio bugs, and doesn't seem to grant obvious
     // performance benefits, so I'm leaving the cartridge prefetch turned off...
-    // REG_WAITCNT = 0b0000001100010111;
+    if (use_optimized_waitstates) {
+        // Although there is less tearing when running with optimized
+        // waitstates, I actually prefer the feature turned off. I really tuned
+        // the feel of the controls before I knew about waitstates, and
+        // something just feels off to me when turning this feature on. The game
+        // is almost too smooth.
+        REG_WAITCNT = 0b0000001100010111;
+        info(*this, "enabled optimized waitstates...");
+    }
 
     fill_overlay(0);
 

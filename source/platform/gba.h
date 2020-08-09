@@ -12,17 +12,6 @@
 #define OBJ_ENABLE 0x1000
 #define REG_WAITCNT *(u16*)0x4000204
 
-#define KEY_A 0x0001
-#define KEY_B 0x0002
-#define KEY_SELECT 0x0004
-#define KEY_START 0x0008
-#define KEY_RIGHT 0x0010
-#define KEY_LEFT 0x0020
-#define KEY_UP 0x0040
-#define KEY_DOWN 0x0080
-#define KEY_R 0x0100
-#define KEY_L 0x0200
-
 #define SE_PALBANK_MASK 0xF000
 #define SE_PALBANK_SHIFT 12
 #define SE_PALBANK(n) ((n) << SE_PALBANK_SHIFT)
@@ -609,7 +598,7 @@ static inline void Stop()	{ SystemCall(3); }
 //---------------------------------------------------------------------------------
 static inline u32 BiosCheckSum() {
 //---------------------------------------------------------------------------------
-	register u32 result;
+	u32 result;
 	#if	defined	( __thumb__ )
 		__asm ("SWI	0x0d\nmov %0,r0\n" :  "=r"(result) :: "r1", "r2", "r3");
 	#else
@@ -692,6 +681,29 @@ void IntrWait(u32 ReturnFlag, u32 IntFlag);
 static inline
 void VBlankIntrWait()	{ SystemCall(5); }
 
+
+#define REG_KEYCNT		*(volatile u16*)(REG_BASE + 0x132)  // Key Control
+/*! \enum KEYPAD_BITS
+
+	\brief bit values for keypad buttons
+*/
+typedef enum KEYPAD_BITS {
+	KEY_A		=	(1<<0),	/*!< keypad A button */
+	KEY_B		=	(1<<1),	/*!< keypad B button */
+	KEY_SELECT	=	(1<<2),	/*!< keypad SELECT button */
+	KEY_START	=	(1<<3),	/*!< keypad START button */
+	KEY_RIGHT	=	(1<<4),	/*!< dpad RIGHT */
+	KEY_LEFT	=	(1<<5),	/*!< dpad LEFT */
+	KEY_UP		=	(1<<6),	/*!< dpad UP */
+	KEY_DOWN	=	(1<<7),	/*!< dpad DOWN */
+	KEY_R		=	(1<<8),	/*!< Right shoulder button */
+	KEY_L		=	(1<<9),	/*!< Left shoulder button */
+
+	KEYIRQ_ENABLE	=	(1<<14),	/*!< Enable keypad interrupt */
+	KEYIRQ_OR		=	(0<<15),	/*!< interrupt logical OR mode */
+	KEYIRQ_AND		=	(1<<15),	/*!< interrupt logical AND mode */
+	DPAD 		=	(KEY_UP | KEY_DOWN | KEY_LEFT | KEY_RIGHT) /*!< mask all dpad buttons */
+} KEYPAD_BITS;
 
 #ifdef __cplusplus
 }	   // extern "C"

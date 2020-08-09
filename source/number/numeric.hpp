@@ -194,6 +194,12 @@ constexpr Microseconds seconds(u32 count)
 }
 
 
+constexpr Microseconds minutes(u8 count)
+{
+    return count * seconds(60);
+}
+
+
 constexpr Microseconds milliseconds(u32 count)
 {
     return count * 1000;
