@@ -331,6 +331,14 @@ void Player::soft_update(Platform& pfrm, Game& game, Microseconds dt)
     fade_color_anim_.advance(sprite_, dt);
     blaster_.get_sprite().set_mix(sprite_.get_mix());
 
+    if (invulnerability_timer_ > 0) {
+        if (invulnerability_timer_ > dt) {
+            invulnerability_timer_ -= dt;
+        } else {
+            invulnerability_timer_ = 0;
+        }
+    }
+
     // Because we're comparing ranges below, make sure the someone hasn't
     // re-ordered the tiles.
     static_assert(player_still_left == 22 and player_still_right == 29 and
@@ -362,14 +370,6 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool shoot = input.pressed<Key::action_1>();
 
     const auto wc = check_wall_collisions(game.tiles(), *this);
-
-    if (invulnerability_timer_ > 0) {
-        if (invulnerability_timer_ > dt) {
-            invulnerability_timer_ -= dt;
-        } else {
-            invulnerability_timer_ = 0;
-        }
-    }
 
     soft_update(pfrm, game, dt);
 
