@@ -83,6 +83,8 @@ enum class LocaleString {
     network_rx_stats_suffix,
     network_tx_loss_stats_suffix,
     network_rx_loss_stats_suffix,
+    scratch_buf_avail_stats_suffix,
+    map_required,
     count
 };
 

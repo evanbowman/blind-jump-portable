@@ -15,15 +15,13 @@
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
+#include "scratchBufferBulkAllocator.hpp"
 
 
 void english__to_string(int num, char* buffer, int base);
 
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wregister"
 #include "gba.h"
-#pragma GCC diagnostic pop
 
 
 static int overlay_y = 0;
@@ -659,7 +657,7 @@ static void key_standby_isr()
 }
 
 
-static ScreenBlock overlay_back_buffer alignas(4);
+static ScreenBlock overlay_back_buffer alignas(u32);
 static bool overlay_back_buffer_changed = false;
 
 
@@ -1620,8 +1618,9 @@ static const struct AudioTrack {
 } music_tracks[] = {DEF_AUDIO(hiraeth, scottbuckley_hiraeth),
                     DEF_AUDIO(omega, scottbuckley_omega),
                     DEF_AUDIO(computations, scottbuckley_computations),
-                    DEF_AUDIO(clair_de_lune, clair_de_lune),
-                    DEF_AUDIO(september, september)};
+                    DEF_AUDIO(clair_de_lune, clair_de_lune)
+                    // DEF_AUDIO(september, september)
+};
 
 
 static const AudioTrack* find_track(const char* name)
@@ -1975,6 +1974,79 @@ static void enable_watchdog()
 bool use_optimized_waitstates = false;
 
 
+// EWRAM is large, but has a narrower bus. The platform offers a window into
+// EWRAM, called scratch space, for non-essential stuff. Right now, I am setting
+// the buffer to ~100K in size. One could theoretically make the buffer almost
+// 256kB, because I am using none of EWRAM as far as I know...
+static EWRAM_DATA
+    ObjectPool<RcBase<Platform::ScratchBuffer, 100>::ControlBlock, 100>
+        scratch_buffer_pool;
+
+
+static int scratch_buffers_in_use = 0;
+
+
+Rc<Platform::ScratchBuffer, 100> Platform::make_scratch_buffer()
+{
+    auto finalizer =
+        [](RcBase<Platform::ScratchBuffer, 100>::ControlBlock* ctrl) {
+            --scratch_buffers_in_use;
+            ctrl->pool_->post(ctrl);
+        };
+
+    auto maybe_buffer =
+        Rc<ScratchBuffer, 100>::create(&scratch_buffer_pool, finalizer);
+    if (maybe_buffer) {
+        ++scratch_buffers_in_use;
+        return *maybe_buffer;
+    } else {
+        screen().fade(1.f, ColorConstant::electric_blue);
+        error(*this, "scratch buffer pool exhausted");
+        fatal();
+    }
+}
+
+
+int Platform::scratch_buffers_remaining()
+{
+    return 100 - scratch_buffers_in_use;
+}
+
+
+Platform::~Platform()
+{
+    // ...
+}
+
+
+struct GlyphMapping {
+    utf8::Codepoint character_;
+
+    // -1 represents unassigned. Mapping a tile into memory sets the reference
+    //  count to zero. When a call to Platform::set_tile reduces the reference
+    //  count back to zero, the tile is once again considered to be unassigned,
+    //  and will be set to -1.
+    s16 reference_count_ = -1;
+
+    bool valid() const
+    {
+        return reference_count_ > -1;
+    }
+};
+
+
+static constexpr const auto glyph_start_offset = 1;
+static constexpr const auto glyph_mapping_count = 78;
+
+struct GlyphTable {
+    GlyphMapping mappings_[glyph_mapping_count];
+};
+
+static std::optional<ScratchBufferBulkAllocator> glyph_table_mem;
+static ScratchBufferBulkAllocator::Ptr<GlyphTable> glyph_table =
+    ScratchBufferBulkAllocator::null<GlyphTable>();
+
+
 Platform::Platform()
 {
     irqInit();
@@ -2005,6 +2077,16 @@ Platform::Platform()
         save_using_flash = true;
         info(*this, "SRAM write failed, falling back to FLASH");
     }
+
+    glyph_table_mem.emplace(*this);
+    glyph_table = glyph_table_mem->alloc<GlyphTable>();
+    if (not glyph_table) {
+        error(*this, "failed to allocate glyph table");
+        fatal();
+    }
+
+    // IMPORTANT: No calls to map_glyph() are allowed before reaching this
+    // line. Otherwise, the glyph table has not yet been constructed.
 
     info(*this, "Verifying BIOS...");
 
@@ -2078,40 +2160,13 @@ Platform::Platform()
 }
 
 
-Platform::~Platform()
-{
-    // ...
-}
-
-
-struct GlyphMapping {
-    utf8::Codepoint character_;
-
-    // -1 represents unassigned. Mapping a tile into memory sets the reference
-    //  count to zero. When a call to Platform::set_tile reduces the reference
-    //  count back to zero, the tile is once again considered to be unassigned,
-    //  and will be set to -1.
-    s16 reference_count_ = -1;
-
-    bool valid() const
-    {
-        return reference_count_ > -1;
-    }
-};
-
-
-static constexpr const auto glyph_start_offset = 1;
-static constexpr const auto glyph_mapping_count = 78;
-static GlyphMapping glyph_mapping_table[glyph_mapping_count];
-
-
 static bool glyph_mode = false;
 
 
 void Platform::enable_glyph_mode(bool enabled)
 {
     if (enabled) {
-        for (auto& gm : glyph_mapping_table) {
+        for (auto& gm : ::glyph_table->mappings_) {
             gm.reference_count_ = -1;
         }
     }
@@ -2139,7 +2194,7 @@ void Platform::load_overlay_texture(const char* name)
             }
 
             if (glyph_mode) {
-                for (auto& gm : glyph_mapping_table) {
+                for (auto& gm : ::glyph_table->mappings_) {
                     gm.reference_count_ = -1;
                 }
             }
@@ -2194,7 +2249,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
     }
 
     for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
-        auto& gm = glyph_mapping_table[tile];
+        auto& gm = ::glyph_table->mappings_[tile];
         if (gm.valid() and gm.character_ == glyph) {
             return glyph_start_offset + tile;
         }
@@ -2209,7 +2264,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
     for (auto& info : overlay_textures) {
         if (strcmp(mapping_info->texture_name_, info.name_) == 0) {
             for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
-                auto& gm = glyph_mapping_table[t];
+                auto& gm = ::glyph_table->mappings_[t];
                 if (not gm.valid()) {
                     gm.character_ = glyph;
                     gm.reference_count_ = 0;
@@ -2301,7 +2356,7 @@ void Platform::fill_overlay(u16 tile)
     }
 
     if (glyph_mode) {
-        for (auto& gm : glyph_mapping_table) {
+        for (auto& gm : ::glyph_table->mappings_) {
             gm.reference_count_ = -1;
         }
     }
@@ -2320,7 +2375,7 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
         const auto old_tile = pfrm.get_tile(Layer::overlay, x, y);
         if (old_tile not_eq val) {
             if (is_glyph(old_tile)) {
-                auto& gm = glyph_mapping_table[old_tile - glyph_start_offset];
+                auto& gm = ::glyph_table->mappings_[old_tile - glyph_start_offset];
                 if (gm.valid()) {
                     gm.reference_count_ -= 1;
 
@@ -2336,7 +2391,7 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
             }
 
             if (is_glyph(val)) {
-                auto& gm = glyph_mapping_table[val - glyph_start_offset];
+                auto& gm = ::glyph_table->mappings_[val - glyph_start_offset];
                 if (not gm.valid()) {
                     // Not clear exactly what to do here... Somehow we've
                     // gotten into an erroneous state, but not a permanently

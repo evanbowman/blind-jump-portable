@@ -337,6 +337,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::accelerator_title: return "Accelerator (60 shots)";
         case LocaleString::lethargy_title: return "Lethargy (18 sec)";
         case LocaleString::map_system_title: return "Map system";
+        case LocaleString::map_required: return "required: Map system";
         case LocaleString::explosive_rounds_title: return "Explosive rounds (2)";
         case LocaleString::seed_packet_title: return "Seed packet";
         case LocaleString::navigation_pamphlet_title: return "Navigation pamphlet";
@@ -388,6 +389,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::network_rx_stats_suffix: return " rx";
         case LocaleString::network_tx_loss_stats_suffix: return " tl";
         case LocaleString::network_rx_loss_stats_suffix: return " rl";
+        case LocaleString::scratch_buf_avail_stats_suffix: return " sbr";
 
         default: return empty_str;
         }

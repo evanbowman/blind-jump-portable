@@ -162,6 +162,7 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
     network_rx_msg_text_.reset();
     network_tx_loss_text_.reset();
     network_rx_loss_text_.reset();
+    scratch_buf_avail_text_.reset();
 
     // In case we're in the middle of an entry/exit animation for the
     // notification bar.
@@ -355,6 +356,7 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
         network_rx_msg_text_.emplace(pfrm, OverlayCoord{1, 4});
         network_tx_loss_text_.emplace(pfrm, OverlayCoord{1, 5});
         network_rx_loss_text_.emplace(pfrm, OverlayCoord{1, 6});
+        scratch_buf_avail_text_.emplace(pfrm, OverlayCoord{1, 7});
 
         const auto colors =
             fps_frame_count_ < 55
@@ -394,6 +396,9 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
         network_rx_loss_text_->append(
             locale_string(LocaleString::network_rx_loss_stats_suffix),
             rx_loss_colors);
+        scratch_buf_avail_text_->append(pfrm.scratch_buffers_remaining());
+        scratch_buf_avail_text_->append(
+            locale_string(LocaleString::scratch_buf_avail_stats_suffix));
     }
 }
 
@@ -648,21 +653,26 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 static void repaint_health_score(Platform& pfrm,
                                  Game& game,
                                  std::optional<UIMetric>* health,
-                                 std::optional<UIMetric>* score)
+                                 std::optional<UIMetric>* score,
+                                 UIMetric::Align align)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
+    const u8 x = align == UIMetric::Align::right ? screen_tiles.x - 2 : 1;
+
     health->emplace(
         pfrm,
-        OverlayCoord{1, u8(screen_tiles.y - (3 + game.powerups().size()))},
+        OverlayCoord{x, u8(screen_tiles.y - (3 + game.powerups().size()))},
         145,
-        (int)game.player().get_health());
+        (int)game.player().get_health(),
+        align);
 
     score->emplace(
         pfrm,
-        OverlayCoord{1, u8(screen_tiles.y - (2 + game.powerups().size()))},
+        OverlayCoord{x, u8(screen_tiles.y - (2 + game.powerups().size()))},
         146,
-        game.score());
+        game.score(),
+        align);
 }
 
 
@@ -671,24 +681,26 @@ static void repaint_powerups(Platform& pfrm,
                              bool clean,
                              std::optional<UIMetric>* health,
                              std::optional<UIMetric>* score,
-                             Buffer<UIMetric, Powerup::max_>* powerups)
+                             Buffer<UIMetric, Powerup::max_>* powerups,
+                             UIMetric::Align align)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     if (clean) {
 
-        repaint_health_score(pfrm, game, health, score);
+        repaint_health_score(pfrm, game, health, score, align);
 
         powerups->clear();
 
         u8 write_pos = screen_tiles.y - 2;
 
         for (auto& powerup : game.powerups()) {
-            // const u8 off = integer_text_length(powerup.parameter_) + 1;
-            powerups->emplace_back(pfrm,
-                                   OverlayCoord{1, write_pos},
-                                   powerup.icon_index(),
-                                   powerup.parameter_);
+            powerups->emplace_back(
+                pfrm,
+                OverlayCoord{(*health)->position().x, write_pos},
+                powerup.icon_index(),
+                powerup.parameter_,
+                align);
 
             powerup.dirty_ = false;
 
@@ -718,7 +730,8 @@ static void update_powerups(Platform& pfrm,
                             Game& game,
                             std::optional<UIMetric>* health,
                             std::optional<UIMetric>* score,
-                            Buffer<UIMetric, Powerup::max_>* powerups)
+                            Buffer<UIMetric, Powerup::max_>* powerups,
+                            UIMetric::Align align)
 {
     bool update_powerups = false;
     bool update_all = false;
@@ -736,7 +749,8 @@ static void update_powerups(Platform& pfrm,
     }
 
     if (update_powerups) {
-        repaint_powerups(pfrm, game, update_all, health, score, powerups);
+        repaint_powerups(
+            pfrm, game, update_all, health, score, powerups, align);
     }
 }
 
@@ -748,9 +762,10 @@ static void update_ui_metrics(Platform& pfrm,
                               std::optional<UIMetric>* score,
                               Buffer<UIMetric, Powerup::max_>* powerups,
                               Entity::Health last_health,
-                              Score last_score)
+                              Score last_score,
+                              UIMetric::Align align)
 {
-    update_powerups(pfrm, game, health, score, powerups);
+    update_powerups(pfrm, game, health, score, powerups, align);
 
     if (last_health not_eq game.player().get_health()) {
         (*health)->set_value(game.player().get_health());
@@ -778,9 +793,10 @@ void ActiveState::enter(Platform& pfrm, Game& game, State&)
         restore_keystates.reset();
     }
 
-    repaint_health_score(pfrm, game, &health_, &score_);
+    repaint_health_score(pfrm, game, &health_, &score_, UIMetric::Align::left);
 
-    repaint_powerups(pfrm, game, true, &health_, &score_, &powerups_);
+    repaint_powerups(
+        pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
 }
 
 
@@ -836,7 +852,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
                       &score_,
                       &powerups_,
                       last_health,
-                      last_score);
+                      last_score,
+                      UIMetric::Align::left);
 
     if (game.player().get_health() == 0) {
         pfrm.sleep(5);
@@ -884,7 +901,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (game.inventory().item_count(Item::Type::map_system) not_eq 0) {
             return state_pool_.create<QuickMapState>(game);
         } else {
-            // show a message: player doesn't have map system yet...
+            push_notification(
+                pfrm, game.state(), locale_string(LocaleString::map_required));
         }
     }
 
@@ -1698,7 +1716,8 @@ void QuickSelectInventoryState::enter(Platform& pfrm,
     sidebar_.emplace(pfrm, 6);
     sidebar_->set_display_percentage(0.f);
 
-    repaint_powerups(pfrm, game, true, &health_, &score_, &powerups_);
+    repaint_powerups(
+        pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
 
     game.camera().set_speed(2.8f);
 }
@@ -1827,7 +1846,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                       &score_,
                       &powerups_,
                       last_health,
-                      last_score);
+                      last_score,
+                      UIMetric::Align::left);
 
 
     static const auto transition_duration = milliseconds(160);
@@ -1944,8 +1964,13 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 draw_items(pfrm, game);
 
 
-                repaint_powerups(
-                    pfrm, game, true, &health_, &score_, &powerups_);
+                repaint_powerups(pfrm,
+                                 game,
+                                 true,
+                                 &health_,
+                                 &score_,
+                                 &powerups_,
+                                 UIMetric::Align::left);
                 redraw_selector(112);
             }
         }
@@ -2249,9 +2274,9 @@ static bool draw_minimap(Platform& pfrm,
                          bool force_icons = false)
 {
     auto set_tile = [&](s8 x, s8 y, int icon, bool dodge = true) {
-                        if (y < y_skip_top or y >= TileMap::height - y_skip_bot) {
-                            return;
-                        }
+        if (y < y_skip_top or y >= TileMap::height - y_skip_bot) {
+            return;
+        }
         const auto tile = pfrm.get_tile(Layer::overlay, x + x_start, y);
         if (dodge and (tile == 133 or tile == 132)) {
             // ...
@@ -2271,7 +2296,7 @@ static bool draw_minimap(Platform& pfrm,
         TileMap::width,
         interpolate(TileMap::width, (decltype(TileMap::width))0, percentage));
     game.tiles().for_each([&](Tile t, s8 x, s8 y) {
-                              if (x > current_column or x <= last_column) {
+        if (x > current_column or x <= last_column) {
             return;
         }
         bool visited_nearby = false;
@@ -2437,7 +2462,15 @@ void QuickMapState::enter(Platform& pfrm, Game& game, State& prev_state)
     sidebar_.emplace(pfrm, 15);
     sidebar_->set_display_percentage(0.f);
 
-    game.camera().set_speed(3.3f);
+    repaint_powerups(pfrm,
+                     game,
+                     true,
+                     &health_,
+                     &score_,
+                     &powerups_,
+                     UIMetric::Align::right);
+
+    game.camera().set_speed(2.9f);
 }
 
 
@@ -2448,6 +2481,12 @@ void QuickMapState::exit(Platform& pfrm, Game& game, State& next_state)
     sidebar_.reset();
     sidebar_->set_display_percentage(0.f);
 
+    powerups_.clear();
+    health_.reset();
+    score_.reset();
+
+    level_text_.reset();
+
     game.camera().set_speed(1.f);
 }
 
@@ -2456,11 +2495,25 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     const auto player_pos = game.player().get_position();
 
-    game.camera().push_ballast({player_pos.x - 95, player_pos.y});
+    game.camera().push_ballast({player_pos.x - 80, player_pos.y});
+
+    const auto last_health = game.player().get_health();
+    const auto last_score = game.score();
 
     OverworldState::update(pfrm, game, delta);
 
-    static const auto transition_duration = milliseconds(160);
+    update_ui_metrics(pfrm,
+                      game,
+                      delta,
+                      &health_,
+                      &score_,
+                      &powerups_,
+                      last_health,
+                      last_score,
+                      UIMetric::Align::right);
+
+
+    static const auto transition_duration = milliseconds(220);
 
     switch (display_mode_) {
     case DisplayMode::enter: {
@@ -2472,9 +2525,17 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             display_mode_ = DisplayMode::draw;
 
-            restore_keystates = pfrm.keyboard().dump_state();
-
             sidebar_->set_display_percentage(0.96f);
+
+            const char* level_str = locale_string(LocaleString::waypoint_text);
+            const auto text_len =
+                utf8::len(level_str) + integer_text_length(game.level());
+
+            level_text_.emplace(pfrm, OverlayCoord{u8((15 - text_len) / 2), 0});
+            level_text_->assign(level_str);
+            level_text_->append(game.level());
+
+            restore_keystates = pfrm.keyboard().dump_state();
 
         } else {
             if (not pfrm.keyboard().pressed<quick_map_key>()) {
@@ -2497,7 +2558,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         timer_ += delta;
 
-        const auto duration = milliseconds(120);
+        const auto duration = milliseconds(180);
 
         if (timer_ >= duration) {
             timer_ = 0;
@@ -2521,7 +2582,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         timer_ += delta;
 
-        if (timer_ > milliseconds(500)) {
+        if (timer_ > seconds(1) + milliseconds(60)) {
             timer_ = 0;
             last_map_column_ = -1;
             draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true);

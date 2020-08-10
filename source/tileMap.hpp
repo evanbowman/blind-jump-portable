@@ -4,6 +4,9 @@
 #include <array>
 
 
+// NOTE: if you ever change the size of a tile, make sure that you adjust the
+// code in the game class accordingly (two tilemaps may no longer fit in the
+// same scratch buffer. If not, you will receive a fatal error).
 enum class Tile : u8 {
     none,
     plate,

@@ -5,13 +5,20 @@
 #include <optional>
 
 
+//
+// A class for Reference Counted objects.
+//
 // This program targets embedded systems, and intentionally doesn't
-// link with the standard library (although we use some standard
+// link with the C++ standard library (although we use some standard
 // headers, like <type_traits>). Otherwise I might use
 // std::shared_ptr... Rc differs from the standard smart pointers in a
 // few other ways though:
 // 1) No upcasting.
 // 2) Can not contain null.
+//
+// Additionally, you need to supply a memory pool when creating an Rc<>.
+//
+
 
 template <typename T, u32 Count> class RcBase {
 public:
@@ -20,27 +27,30 @@ public:
         return control_->strong_count_;
     }
 
-protected:
     struct ControlBlock {
         template <typename... Args>
-        ControlBlock(Args&&... args)
-            : data_(std::forward<Args>(args)...), strong_count_(0),
-              weak_count_(0)
+        ControlBlock(ObjectPool<ControlBlock, Count>* pool,
+                     void (*finalizer_hook)(ControlBlock*),
+                     Args&&... args)
+            : data_(std::forward<Args>(args)...), pool_(pool),
+              finalizer_hook_(finalizer_hook), strong_count_(0), weak_count_(0)
         {
         }
 
         T data_;
+        ObjectPool<ControlBlock, Count>* pool_;
+        // Because the pool is an input parameter, I do not see much reason to
+        // allow custom finalizers, but in any event, having the option to
+        // customize deallocation might be useful in some unforseen way.
+        void (*finalizer_hook_)(ControlBlock*) = [](ControlBlock* ctrl) {
+            ctrl->pool_->post(ctrl);
+        };
         Atomic<u32> strong_count_;
         Atomic<u32> weak_count_;
     };
 
+protected:
     ControlBlock* control_;
-
-    static auto& pool()
-    {
-        static ObjectPool<ControlBlock, Count> p;
-        return p;
-    }
 
     void add_strong(ControlBlock* source)
     {
@@ -57,14 +67,14 @@ protected:
     void remove_strong()
     {
         if (--control_->strong_count_ == 0 and control_->weak_count_ == 0) {
-            pool().post(control_);
+            control_->finalizer_hook_(control_);
         }
     }
 
     void remove_weak()
     {
         if (--control_->weak_count_ == 0 and control_->strong_count_ == 0) {
-            pool().post(control_);
+            control_->finalizer_hook_(control_);
         }
     }
 };
@@ -103,9 +113,14 @@ public:
         Super::remove_strong();
     }
 
-    template <typename... Args> static std::optional<Rc> create(Args&&... args)
+    template <typename... Args>
+    static std::optional<Rc>
+    create(ObjectPool<typename RcBase<T, Count>::ControlBlock, Count>* pool,
+           void (*finalizer_hook)(typename RcBase<T, Count>::ControlBlock*),
+           Args&&... args)
     {
-        auto ctrl = Super::pool().get(std::forward<Args>(args)...);
+        auto ctrl =
+            pool->get(pool, finalizer_hook, std::forward<Args>(args)...);
         if (ctrl) {
             return Rc(ctrl);
         } else {

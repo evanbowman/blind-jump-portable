@@ -3,6 +3,7 @@
 #include "function.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
+#include "scratchBufferBulkAllocator.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
@@ -661,11 +662,19 @@ RETRY:
 }
 
 
-COLD static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
+COLD static u32
+flood_fill(Platform& pfrm, TileMap& map, Tile replace, TIdx x, TIdx y)
 {
     using Coord = Vec2<s8>;
 
-    Buffer<Coord, TileMap::width * TileMap::height> stack;
+    ScratchBufferBulkAllocator mem(pfrm);
+
+    auto stack = mem.alloc<Buffer<Coord, TileMap::width * TileMap::height>>();
+
+    if (UNLIKELY(not stack)) {
+        error(pfrm, "fatal error in floodfill");
+        pfrm.fatal();
+    }
 
     const Tile target = map.get_tile(x, y);
 
@@ -677,7 +686,7 @@ COLD static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
         if (x > 0 and x < TileMap::width and y > 0 and y < TileMap::height) {
             if (map.get_tile(x, y) == target) {
                 map.set_tile(x, y, replace);
-                stack.push_back({x, y});
+                stack->push_back({x, y});
                 count += 1;
             }
         }
@@ -685,9 +694,9 @@ COLD static u32 flood_fill(TileMap& map, Tile replace, TIdx x, TIdx y)
 
     action({x, y}, 0, 0);
 
-    while (not stack.empty()) {
-        Coord c = stack.back();
-        stack.pop_back();
+    while (not stack->empty()) {
+        Coord c = stack->back();
+        stack->pop_back();
         action(c, -1, 0);
         action(c, 0, 1);
         action(c, 0, -1);
@@ -861,9 +870,15 @@ void add_scavenger_ship(Level level,
 
 COLD void Game::regenerate_map(Platform& pfrm)
 {
-    TileMap temporary;
+    ScratchBufferBulkAllocator mem(pfrm);
 
-    seed_map(pfrm, temporary);
+    auto temporary = mem.alloc<TileMap>();
+    if (not temporary) {
+        error(pfrm, "falled to create temporary tilemap");
+        pfrm.fatal();
+    }
+
+    seed_map(pfrm, *temporary);
 
     // Remove tiles from edges of the map. Some platforms,
     // particularly consoles, have automatic tile-wrapping, and we
@@ -880,9 +895,9 @@ COLD void Game::regenerate_map(Platform& pfrm)
     // with all walkable tiles from the tilemap.
     tiles_.for_each([&](const Tile& tile, TIdx x, TIdx y) {
         if (is_walkable__precise(tile)) {
-            temporary.set_tile(x, y, Tile(1));
+            temporary->set_tile(x, y, Tile(1));
         } else {
-            temporary.set_tile(x, y, Tile(0));
+            temporary->set_tile(x, y, Tile(0));
         }
     });
 
@@ -892,9 +907,9 @@ COLD void Game::regenerate_map(Platform& pfrm)
         while (true) {
             const auto x = rng::choice(TileMap::width, rng::critical_state);
             const auto y = rng::choice(TileMap::height, rng::critical_state);
-            if (temporary.get_tile(x, y) not_eq Tile::none) {
-                flood_fill(temporary, Tile(2), x, y);
-                temporary.for_each([&](const Tile& tile, TIdx x, TIdx y) {
+            if (temporary->get_tile(x, y) not_eq Tile::none) {
+                flood_fill(pfrm, *temporary, Tile(2), x, y);
+                temporary->for_each([&](const Tile& tile, TIdx x, TIdx y) {
                     if (tile not_eq Tile(2)) {
                         tiles_.set_tile(x, y, Tile::none);
                     }
@@ -906,7 +921,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     }
 
-    TileMap grass_overlay([&](Tile& t, int, int) {
+    auto grass_overlay = mem.alloc<TileMap>([&](Tile& t, int, int) {
         if (rng::choice<3>(rng::critical_state)) {
             t = Tile::none;
         } else {
@@ -914,8 +929,13 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
+    if (not grass_overlay) {
+        error(pfrm, "failed to alloc map1 workspace");
+        pfrm.fatal();
+    }
+
     for (int i = 0; i < 2; ++i) {
-        condense(grass_overlay, temporary);
+        condense(*grass_overlay, *temporary);
     }
 
     // All tiles with four neighbors become sand tiles.
@@ -941,7 +961,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     // Crop the grass overlay tileset to fit the target tilemap.
     tiles_.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::none) {
-            grass_overlay.set_tile(x, y, Tile::none);
+            grass_overlay->set_tile(x, y, Tile::none);
         }
     });
 
@@ -952,20 +972,20 @@ COLD void Game::regenerate_map(Platform& pfrm)
     for (int x = 0; x < TileMap::width; ++x) {
         for (int y = 0; y < TileMap::height; ++y) {
             bitmask[x][y] = 0;
-            bitmask[x][y] += 1 * int(grass_overlay.get_tile(x, y - 1));
-            bitmask[x][y] += 2 * int(grass_overlay.get_tile(x + 1, y));
-            bitmask[x][y] += 4 * int(grass_overlay.get_tile(x, y + 1));
-            bitmask[x][y] += 8 * int(grass_overlay.get_tile(x - 1, y));
+            bitmask[x][y] += 1 * int(grass_overlay->get_tile(x, y - 1));
+            bitmask[x][y] += 2 * int(grass_overlay->get_tile(x + 1, y));
+            bitmask[x][y] += 4 * int(grass_overlay->get_tile(x, y + 1));
+            bitmask[x][y] += 8 * int(grass_overlay->get_tile(x - 1, y));
         }
     }
 
-    grass_overlay.for_each([&](Tile& tile, int x, int y) {
+    grass_overlay->for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::plate) {
             auto match = tiles_.get_tile(x, y);
             switch (match) {
             case Tile::plate:
             case Tile::sand:
-                grass_overlay.set_tile(
+                grass_overlay->set_tile(
                     x, y, Tile(int(Tile::grass_start) + bitmask[x][y]));
                 break;
 
@@ -975,7 +995,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
                                 (rng::choice<2>(rng::critical_state))
                                     ? Tile::grass_ledge
                                     : Tile::grass_ledge_vines);
-                grass_overlay.set_tile(x, y, Tile::none);
+                grass_overlay->set_tile(x, y, Tile::none);
                 break;
 
             default:
@@ -1008,7 +1028,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         tiles_.for_each([&](Tile& tile, int x, int y) {
             if (not is_walkable__precise(tile)) {
                 if (is_walkable__precise(tiles_.get_tile(x, y + 1))) {
-                    grass_overlay.set_tile(x, y, static_cast<Tile>(17));
+                    grass_overlay->set_tile(x, y, static_cast<Tile>(17));
                 }
             }
         });
@@ -1019,7 +1039,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     if (zone_info(level()) == zone_1) {
         tiles_.for_each([&](Tile& tile, int x, int y) {
             if (tile == Tile::plate and
-                grass_overlay.get_tile(x, y) == Tile::none) {
+                grass_overlay->get_tile(x, y) == Tile::none) {
                 const auto up = tiles_.get_tile(x, y + 1);
                 const auto down = tiles_.get_tile(x, y - 1);
                 const auto left = tiles_.get_tile(x - 1, y);
@@ -1055,7 +1075,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         });
     }
 
-    add_map_decorations(level(), pfrm, tiles_, grass_overlay);
+    add_map_decorations(level(), pfrm, tiles_, *grass_overlay);
 
     tiles_.for_each([&](Tile& tile, int x, int y) {
         if (tile == Tile::plate) {
@@ -1064,7 +1084,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
             }
         } else if (tile == Tile::sand) {
             if (rng::choice<4>(rng::critical_state) == 0 and
-                grass_overlay.get_tile(x, y) == Tile::none) {
+                grass_overlay->get_tile(x, y) == Tile::none) {
                 tile = Tile::sand_sprouted;
             }
         }

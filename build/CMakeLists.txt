@@ -109,7 +109,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/data/scottbuckley_omega.s
     ${SOURCE_DIR}/data/scottbuckley_computations.s
     ${SOURCE_DIR}/data/scottbuckley_hiraeth.s
-    ${SOURCE_DIR}/data/september.s
+#    ${SOURCE_DIR}/data/september.s
     ${SOURCE_DIR}/data/clair_de_lune.s
     ${SOURCE_DIR}/data/overlay.s
     ${SOURCE_DIR}/data/overlay_cutscene.s

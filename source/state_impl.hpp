@@ -78,6 +78,7 @@ private:
     std::optional<Text> network_rx_msg_text_;
     std::optional<Text> network_tx_loss_text_;
     std::optional<Text> network_rx_loss_text_;
+    std::optional<Text> scratch_buf_avail_text_;
 };
 
 
@@ -433,9 +434,14 @@ private:
 
     Microseconds timer_ = 0;
 
+    std::optional<UIMetric> health_;
+    std::optional<UIMetric> score_;
+    Buffer<UIMetric, Powerup::max_> powerups_;
+
     int last_map_column_ = -1;
 
     std::optional<LeftSidebar> sidebar_;
+    std::optional<Text> level_text_;
 };
 
 

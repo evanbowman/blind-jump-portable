@@ -57,6 +57,9 @@ typedef u32 HardwareTile[16];
 typedef HardwareTile TileBlock[256];
 typedef u16 ScreenBlock[1024];
 
+#define EWRAM_DATA	__attribute__((section(".ewram")))
+#define IWRAM_DATA	__attribute__((section(".iwram")))
+
 #define MEM_TILE ((TileBlock*)0x6000000)
 #define MEM_PALETTE ((u16*)(0x05000200))
 #define MEM_BG_PALETTE ((u16*)(0x05000000))

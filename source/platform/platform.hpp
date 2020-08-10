@@ -6,6 +6,7 @@
 #include "graphics/sprite.hpp"
 #include "graphics/view.hpp"
 #include "memory/buffer.hpp"
+#include "memory/rc.hpp"
 #include "number/numeric.hpp"
 #include "sound.hpp"
 #include "unicode.hpp"
@@ -117,6 +118,9 @@ public:
         return network_peer_;
     }
 
+    // NOTE: I must admit, the platform class interface has become quite
+    // bloated.
+
     // On some platforms, fatal() will trigger a soft reset. But soft-reset is
     // mostly reserved for bare-metal platforms, where it's usually easy to
     // perform a soft reset via a simple BIOS call to reset the ROM. When
@@ -205,6 +209,25 @@ public:
 
 
     const char* config_data() const;
+
+
+    struct ScratchBuffer {
+        // NOTE: do not make any assumptions about the alignment of the data_
+        // member.
+        char data_[1000];
+    };
+
+    // Scratch buffers are sort of a blunt instrument. Designed for uncommon
+    // scenarios where you need a lot of memory. The platform provides one
+    // hundred scratch buffers to work with. The Rc wrapper will automatically
+    // deallocate buffers when you're done with them. Creating a new scratch
+    // buffer when the buffer pool is exhausted will cause the system to lock
+    // up, so do not try to hold more than one hundred active references to
+    // scratch buffers (not sure why you would even need 100kB of temporary
+    // scratch space anyway...).
+    Rc<ScratchBuffer, 100> make_scratch_buffer();
+
+    int scratch_buffers_remaining();
 
 
     ////////////////////////////////////////////////////////////////////////////

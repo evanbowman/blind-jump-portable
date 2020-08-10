@@ -233,6 +233,11 @@ public:
         return index_ == anim_len + 1;
     }
 
+    void set_position(const OverlayCoord& position)
+    {
+        position_ = position;
+    }
+
     const auto& position() const
     {
         return position_;
@@ -293,11 +298,16 @@ u32 integer_text_length(int n);
 
 class UIMetric {
 public:
+    enum class Align { left, right };
+
+
     inline UIMetric(Platform& pfrm,
                     const OverlayCoord& pos,
                     int icon_tile,
-                    int value)
-        : icon_tile_(icon_tile), value_(value), anim_(pfrm, pos)
+                    int value,
+                    Align align)
+        : icon_tile_(icon_tile), value_(value), anim_(pfrm, pos), align_(align),
+          pos_(pos)
     {
         display(pfrm);
     }
@@ -310,8 +320,22 @@ public:
 
     inline void set_value(int value)
     {
+        const auto value_len = integer_text_length(value);
+
+        anim_.init(value_len);
         value_ = value;
-        anim_.init(integer_text_length(value) + 1);
+
+
+        switch (align_) {
+        case Align::left:
+            anim_.set_position({u8(pos_.x + 1), pos_.y});
+            break;
+
+        case Align::right: {
+            anim_.set_position({u8(pos_.x - value_len), pos_.y});
+            break;
+        }
+        }
     }
 
     inline void update(Platform& pfrm, Microseconds dt)
@@ -328,13 +352,31 @@ public:
     {
     }
 
+    const OverlayCoord& position() const
+    {
+        return pos_;
+    }
+
 private:
     inline void display(Platform& pfrm)
     {
-        const auto pos = anim_.position();
-        icon_.emplace(pfrm, icon_tile_, pos);
-        text_.emplace(pfrm, OverlayCoord{u8(pos.x + 1), pos.y});
+        switch (align_) {
+        case Align::left: {
+            icon_.emplace(pfrm, icon_tile_, pos_);
+            text_.emplace(pfrm, OverlayCoord{u8(pos_.x + 1), pos_.y});
+            break;
+        }
+
+        case Align::right: {
+            const auto len = integer_text_length(value_);
+            icon_.emplace(pfrm, icon_tile_, pos_);
+            text_.emplace(pfrm, OverlayCoord{u8(pos_.x - len), pos_.y});
+            break;
+        }
+        }
+
         text_->assign(value_);
+
         on_display(*text_, value_);
     }
 
@@ -343,6 +385,8 @@ private:
     std::optional<Text> text_;
     int value_;
     HorizontalFlashAnimation anim_;
+    const Align align_;
+    OverlayCoord pos_;
 };
 
 
