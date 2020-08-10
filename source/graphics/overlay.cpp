@@ -424,3 +424,47 @@ Sidebar::~Sidebar()
 {
     set_display_percentage(0.f);
 }
+
+
+LeftSidebar::LeftSidebar(Platform& pfrm, u8 width) : pfrm_(pfrm), width_(width)
+{
+}
+
+
+void LeftSidebar::set_display_percentage(Float percentage)
+{
+    constexpr int pixels_per_tile = 8;
+    const auto total_pixels = width_ * pixels_per_tile;
+
+    const int fractional_pixels = percentage * total_pixels;
+
+    const auto screen_tiles = calc_screen_tiles(pfrm_);
+
+    for (int y = 0; y < screen_tiles.y; ++y) {
+        int pixels = fractional_pixels;
+
+        int current_tile = 0;
+
+        while (pixels >= 8) {
+            pfrm_.set_tile(Layer::overlay, current_tile, y, 121);
+            pixels -= 8;
+            ++current_tile;
+        }
+
+        if (current_tile < width_ and pixels % 8 not_eq 0) {
+            pfrm_.set_tile(Layer::overlay, current_tile, y, 433 - pixels % 8);
+            ++current_tile;
+        }
+
+        while (current_tile < width_) {
+            pfrm_.set_tile(Layer::overlay, current_tile, y, 0);
+            ++current_tile;
+        }
+    }
+}
+
+
+LeftSidebar::~LeftSidebar()
+{
+    set_display_percentage(0.f);
+}

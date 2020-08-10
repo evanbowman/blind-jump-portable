@@ -401,7 +401,6 @@ private:
     Microseconds timer_ = 0;
     enum class AnimState {
         map_enter,
-        map_decorate,
         wp_text,
         legend,
         wait
@@ -411,6 +410,32 @@ private:
     std::array<std::optional<Text>, legend_strings.size()> legend_text_;
     std::optional<Border> legend_border_;
     Microseconds map_enter_duration_;
+};
+
+
+class QuickMapState : public OverworldState {
+public:
+    QuickMapState(Game& game) : OverworldState(game, true)
+    {
+    }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    enum class DisplayMode {
+        enter,
+        draw,
+        show,
+        exit
+    } display_mode_ = DisplayMode::enter;
+
+    Microseconds timer_ = 0;
+
+    int last_map_column_ = -1;
+
+    std::optional<LeftSidebar> sidebar_;
 };
 
 

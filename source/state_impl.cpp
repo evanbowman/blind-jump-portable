@@ -122,6 +122,7 @@ static StatePool<ActiveState,
                  NewLevelState,
                  CommandCodeState,
                  PauseScreenState,
+                 QuickMapState,
                  MapSystemState,
                  NewLevelIdleState,
                  EditSettingsState,
@@ -797,6 +798,8 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 
 
 static constexpr auto inventory_key = Key::select;
+static constexpr auto quick_select_inventory_key = Key::alt_2;
+static constexpr auto quick_map_key = Key::alt_1;
 
 
 StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
@@ -870,11 +873,19 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
-    if (pfrm.keyboard().down_transition<Key::alt_2>()) {
+    if (pfrm.keyboard().down_transition<quick_select_inventory_key>()) {
 
         pfrm.speaker().play_sound("openbag", 2);
 
         return state_pool_.create<QuickSelectInventoryState>(game);
+    }
+
+    if (pfrm.keyboard().down_transition<quick_map_key>()) {
+        if (game.inventory().item_count(Item::Type::map_system) not_eq 0) {
+            return state_pool_.create<QuickMapState>(game);
+        } else {
+            // show a message: player doesn't have map system yet...
+        }
     }
 
     if (pfrm.keyboard().down_transition<Key::start>()) {
@@ -1426,6 +1437,14 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool_.create<ActiveState>(game);
     }
 
+    if (pfrm.keyboard().down_transition<Key::start>()) {
+        if (restore_keystates) {
+            restore_keystates->set(static_cast<int>(inventory_key), false);
+            restore_keystates->set(static_cast<int>(Key::start), true);
+        }
+        return state_pool_.create<PauseScreenState>(false);
+    }
+
     selector_timer_ += delta;
 
     constexpr auto fade_duration = milliseconds(400);
@@ -1830,7 +1849,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             draw_items(pfrm, game);
 
         } else {
-            if (not pfrm.keyboard().pressed<Key::alt_2>()) {
+            if (not pfrm.keyboard().pressed<quick_select_inventory_key>()) {
                 timer_ = transition_duration - timer_;
                 display_mode_ = DisplayMode::exit;
             } else {
@@ -1936,7 +1955,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             redraw_selector(112);
         }
 
-        if (not pfrm.keyboard().pressed<Key::alt_2>()) {
+        if (not pfrm.keyboard().pressed<quick_select_inventory_key>()) {
             display_mode_ = DisplayMode::exit;
             timer_ = 0;
             redraw_selector(0);
@@ -1957,7 +1976,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             timer_ = 0;
             return state_pool_.create<ActiveState>(game);
         } else {
-            if (pfrm.keyboard().pressed<Key::alt_2>()) {
+            if (pfrm.keyboard().pressed<quick_select_inventory_key>()) {
                 timer_ = transition_duration - timer_;
                 display_mode_ = DisplayMode::enter;
             } else {
@@ -2217,6 +2236,110 @@ void MapSystemState::exit(Platform& pfrm, Game& game, State&)
 }
 
 
+// Return true when done drawing the map. Needs lastcolumn variable to store
+// display progress.  A couple different states share this code--the map system
+// state in the pause screen, and the simpler overworld minimap.
+static bool draw_minimap(Platform& pfrm,
+                         Game& game,
+                         Float percentage,
+                         int& last_column,
+                         int x_start = 1,
+                         int y_skip_top = 0,
+                         int y_skip_bot = 0,
+                         bool force_icons = false)
+{
+    auto set_tile = [&](s8 x, s8 y, int icon, bool dodge = true) {
+                        if (y < y_skip_top or y >= TileMap::height - y_skip_bot) {
+                            return;
+                        }
+        const auto tile = pfrm.get_tile(Layer::overlay, x + x_start, y);
+        if (dodge and (tile == 133 or tile == 132)) {
+            // ...
+        } else {
+            pfrm.set_tile(Layer::overlay, x + x_start, y, icon);
+        }
+    };
+
+    auto render_map_icon = [&](Entity& entity, s16 icon) {
+        auto t = to_tile_coord(entity.get_position().cast<s32>());
+        if (is_walkable__fast(game.tiles().get_tile(t.x, t.y))) {
+            set_tile(t.x, t.y, icon);
+        }
+    };
+
+    const auto current_column = std::min(
+        TileMap::width,
+        interpolate(TileMap::width, (decltype(TileMap::width))0, percentage));
+    game.tiles().for_each([&](Tile t, s8 x, s8 y) {
+                              if (x > current_column or x <= last_column) {
+            return;
+        }
+        bool visited_nearby = false;
+        static const int offset = 3;
+        for (int x2 = std::max(0, x - (offset + x_start));
+             x2 < std::min((int)TileMap::width, x + offset + x_start);
+             ++x2) {
+            for (int y2 = std::max(0, y - offset);
+                 y2 < std::min((int)TileMap::height, y + offset);
+                 ++y2) {
+                if (visited.get(x2, y2)) {
+                    visited_nearby = true;
+                }
+            }
+        }
+        if (not visited_nearby) {
+            set_tile(x, y, is_walkable__fast(t) ? 132 : 133, false);
+        } else if (is_walkable__fast(t)) {
+            set_tile(x, y, 143, false);
+        } else {
+            if (is_walkable__fast(game.tiles().get_tile(x, y - 1))) {
+                set_tile(x, y, 140);
+            } else {
+                set_tile(x, y, 144, false);
+            }
+        }
+    });
+    last_column = current_column;
+
+    if (force_icons or current_column == TileMap::width) {
+
+        game.enemies().transform([&](auto& buf) {
+            for (auto& entity : buf) {
+                render_map_icon(*entity, 139);
+            }
+        });
+
+        render_map_icon(game.transporter(), 141);
+        for (auto& chest : game.details().get<ItemChest>()) {
+            if (chest->state() not_eq ItemChest::State::opened) {
+                render_map_icon(*chest, 138);
+            }
+        }
+
+        auto player_tile =
+            to_tile_coord(game.player().get_position().cast<s32>());
+        //u32 integer_text_length(int n);
+        if (not is_walkable__fast(
+                game.tiles().get_tile(player_tile.x, player_tile.y))) {
+            // Player movement isn't constrained to tiles exactly, and sometimes the
+            // player's map icon displays as inside of a wall.
+            if (is_walkable__fast(game.tiles().get_tile(player_tile.x + x_start,
+                                                        player_tile.y))) {
+                player_tile.x += 1;
+            } else if (is_walkable__fast(game.tiles().get_tile(
+                           player_tile.x, player_tile.y + x_start))) {
+                player_tile.y += 1;
+            }
+        }
+        set_tile(player_tile.x, player_tile.y, 142);
+
+        return true;
+    }
+
+    return false;
+}
+
+
 StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     MenuState::update(pfrm, game, delta);
@@ -2232,92 +2355,14 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     };
 
-    auto render_map_icon = [&](Entity& entity, s16 icon) {
-        auto t = to_tile_coord(entity.get_position().cast<s32>());
-        if (is_walkable__fast(game.tiles().get_tile(t.x, t.y))) {
-            set_tile(t.x, t.y, icon);
-        }
-    };
-
     switch (anim_state_) {
     case AnimState::map_enter: {
         timer_ += delta;
-        const auto current_column =
-            std::min(TileMap::width,
-                     interpolate(TileMap::width,
-                                 (decltype(TileMap::width))0,
-                                 Float(timer_) / map_enter_duration_));
-        game.tiles().for_each([&](Tile t, s8 x, s8 y) {
-            if (x > current_column or x <= last_column_) {
-                return;
-            }
-            bool visited_nearby = false;
-            static const int offset = 3;
-            for (int x2 = std::max(0, x - (offset + 1));
-                 x2 < std::min((int)TileMap::width, x + offset + 1);
-                 ++x2) {
-                for (int y2 = std::max(0, y - offset);
-                     y2 < std::min((int)TileMap::height, y + offset);
-                     ++y2) {
-                    if (visited.get(x2, y2)) {
-                        visited_nearby = true;
-                    }
-                }
-            }
-            if (not visited_nearby) {
-                set_tile(x, y, is_walkable__fast(t) ? 132 : 133, false);
-            } else if (is_walkable__fast(t)) {
-                set_tile(x, y, 143, false);
-            } else {
-                if (is_walkable__fast(game.tiles().get_tile(x, y - 1))) {
-                    set_tile(x, y, 140);
-                } else {
-                    set_tile(x, y, 144, false);
-                }
-            }
-        });
-        last_column_ = current_column;
 
-        if (current_column == TileMap::width) {
-            timer_ = 0;
-            anim_state_ = AnimState::map_decorate;
-        }
-        break;
-    }
-
-    case AnimState::map_decorate: {
-        timer_ += delta;
-        if (timer_ > milliseconds(32)) {
-            game.enemies().transform([&](auto& buf) {
-                for (auto& entity : buf) {
-                    render_map_icon(*entity, 139);
-                }
-            });
-
-            render_map_icon(game.transporter(), 141);
-            for (auto& chest : game.details().get<ItemChest>()) {
-                if (chest->state() not_eq ItemChest::State::opened) {
-                    render_map_icon(*chest, 138);
-                }
-            }
-
-            auto player_tile =
-                to_tile_coord(game.player().get_position().cast<s32>());
-            //u32 integer_text_length(int n);
-            if (not is_walkable__fast(
-                    game.tiles().get_tile(player_tile.x, player_tile.y))) {
-                // Player movement isn't constrained to tiles exactly, and sometimes the
-                // player's map icon displays as inside of a wall.
-                if (is_walkable__fast(game.tiles().get_tile(player_tile.x + 1,
-                                                            player_tile.y))) {
-                    player_tile.x += 1;
-                } else if (is_walkable__fast(game.tiles().get_tile(
-                               player_tile.x, player_tile.y + 1))) {
-                    player_tile.y += 1;
-                }
-            }
-            set_tile(player_tile.x, player_tile.y, 142);
-
+        if (draw_minimap(pfrm,
+                         game,
+                         Float(timer_) / map_enter_duration_,
+                         last_column_)) {
             timer_ = 0;
             anim_state_ = AnimState::wp_text;
         }
@@ -2375,6 +2420,150 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
         break;
     }
+
+    return null_state();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// QuickMapState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void QuickMapState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    OverworldState::enter(pfrm, game, prev_state);
+
+    sidebar_.emplace(pfrm, 15);
+    sidebar_->set_display_percentage(0.f);
+
+    game.camera().set_speed(3.3f);
+}
+
+
+void QuickMapState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+    OverworldState::exit(pfrm, game, next_state);
+
+    sidebar_.reset();
+    sidebar_->set_display_percentage(0.f);
+
+    game.camera().set_speed(1.f);
+}
+
+
+StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    const auto player_pos = game.player().get_position();
+
+    game.camera().push_ballast({player_pos.x - 95, player_pos.y});
+
+    OverworldState::update(pfrm, game, delta);
+
+    static const auto transition_duration = milliseconds(160);
+
+    switch (display_mode_) {
+    case DisplayMode::enter: {
+        timer_ += delta;
+
+        game.player().update(pfrm, game, delta);
+
+        if (timer_ >= transition_duration) {
+            timer_ = 0;
+            display_mode_ = DisplayMode::draw;
+
+            restore_keystates = pfrm.keyboard().dump_state();
+
+            sidebar_->set_display_percentage(0.96f);
+
+        } else {
+            if (not pfrm.keyboard().pressed<quick_map_key>()) {
+                timer_ = transition_duration - timer_;
+                display_mode_ = DisplayMode::exit;
+            } else {
+                const auto amount =
+                    0.96f * smoothstep(0.f, transition_duration, timer_);
+
+                sidebar_->set_display_percentage(amount);
+            }
+        }
+        break;
+    }
+
+    case DisplayMode::draw: {
+
+        game.player().soft_update(pfrm, game, delta);
+
+
+        timer_ += delta;
+
+        const auto duration = milliseconds(120);
+
+        if (timer_ >= duration) {
+            timer_ = 0;
+            display_mode_ = DisplayMode::show;
+
+            draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true);
+        } else {
+            draw_minimap(pfrm,
+                         game,
+                         0.9f * (timer_ / Float(duration)),
+                         last_map_column_,
+                         -1,
+                         1,
+                         1);
+        }
+
+        break;
+    }
+
+    case DisplayMode::show: {
+
+        timer_ += delta;
+
+        if (timer_ > milliseconds(500)) {
+            timer_ = 0;
+            last_map_column_ = -1;
+            draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true);
+        }
+
+        game.player().soft_update(pfrm, game, delta);
+
+        if (not pfrm.keyboard().pressed<quick_map_key>()) {
+            display_mode_ = DisplayMode::exit;
+            timer_ = 0;
+
+            if (restore_keystates) {
+                pfrm.keyboard().restore_state(*restore_keystates);
+                restore_keystates.reset();
+            }
+        }
+        break;
+    }
+
+    case DisplayMode::exit: {
+        game.player().update(pfrm, game, delta);
+
+        timer_ += delta;
+        if (timer_ >= transition_duration) {
+            timer_ = 0;
+            return state_pool_.create<ActiveState>(game);
+        } else {
+            if (pfrm.keyboard().pressed<quick_map_key>()) {
+                timer_ = transition_duration - timer_;
+                display_mode_ = DisplayMode::enter;
+                last_map_column_ = -1;
+            } else {
+                const auto amount =
+                    1.f - smoothstep(0.f, transition_duration, timer_);
+
+                sidebar_->set_display_percentage(amount);
+            }
+        }
+        break;
+    }
+    }
+
 
     return null_state();
 }
@@ -3897,6 +4086,17 @@ StatePtr
 PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     MenuState::update(pfrm, game, delta);
+
+    if (pfrm.keyboard().pressed<inventory_key>()) {
+        if (restore_keystates) {
+            // The existing keystates when returning to the overworld think that
+            // we entered the pause screen, but now we're jumping over to the
+            // inventory, so adjust key cache accordingly.
+            restore_keystates->set(static_cast<int>(inventory_key), true);
+            restore_keystates->set(static_cast<int>(Key::start), false);
+        }
+        return state_pool_.create<InventoryState>(false);
+    }
 
     if (fade_timer_ < fade_duration) {
         fade_timer_ += delta;

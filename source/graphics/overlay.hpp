@@ -176,6 +176,20 @@ private:
 };
 
 
+class LeftSidebar {
+public:
+    LeftSidebar(Platform& pfrm, u8 width);
+    LeftSidebar(const Sidebar&) = delete;
+    ~LeftSidebar();
+
+    void set_display_percentage(Float percentage);
+
+private:
+    Platform& pfrm_;
+    const u8 width_;
+};
+
+
 class HorizontalFlashAnimation {
 public:
     HorizontalFlashAnimation(Platform& pfrm, const OverlayCoord& position)

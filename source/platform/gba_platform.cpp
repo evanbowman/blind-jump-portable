@@ -684,7 +684,7 @@ void Platform::Screen::display()
         // the screen a lot without editing the overlay.
         if (overlay_y == 0) {
             memcpy32(MEM_SCREENBLOCKS[sbb_overlay_tiles],
-                 overlay_back_buffer,
+                     overlay_back_buffer,
                      (sizeof(u16) * (21 * 32)) / 4);
         } else {
             memcpy32(MEM_SCREENBLOCKS[sbb_overlay_tiles],
