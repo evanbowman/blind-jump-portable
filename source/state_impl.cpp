@@ -2301,13 +2301,13 @@ static bool draw_minimap(Platform& pfrm,
         }
         bool visited_nearby = false;
         static const int offset = 3;
-        for (int x2 = std::max(0, x - (offset + x_start));
-             x2 < std::min((int)TileMap::width, x + offset + x_start);
+        for (int x2 = std::max(0, x - (offset + 1));
+             x2 < std::min((int)TileMap::width, x + offset + 1);
              ++x2) {
             for (int y2 = std::max(0, y - offset);
                  y2 < std::min((int)TileMap::height, y + offset);
                  ++y2) {
-                if (visited.get(x2, y2)) {
+                if (visited.get(x2, y2 + 1)) {
                     visited_nearby = true;
                 }
             }
