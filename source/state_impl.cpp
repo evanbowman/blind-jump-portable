@@ -2001,16 +2001,16 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             timer_ = 0;
             return state_pool_.create<ActiveState>(game);
         } else {
-            if (pfrm.keyboard().pressed<quick_select_inventory_key>()) {
-                timer_ = transition_duration - timer_;
-                display_mode_ = DisplayMode::enter;
-            } else {
+            // if (pfrm.keyboard().pressed<quick_select_inventory_key>()) {
+            //     timer_ = transition_duration - timer_;
+            //     display_mode_ = DisplayMode::enter;
+            // } else {
                 const auto amount =
                     1.f - smoothstep(0.f, transition_duration, timer_);
 
                 sidebar_->set_display_percentage(amount);
                 // pfrm.screen().fade(0.25f * amount);
-            }
+            // }
         }
         break;
     }
@@ -2261,6 +2261,26 @@ void MapSystemState::exit(Platform& pfrm, Game& game, State&)
 }
 
 
+static Vec2<s8> get_constrained_player_tile_coord(Game& game)
+{
+    auto player_tile = to_tile_coord(game.player().get_position().cast<s32>());
+    //u32 integer_text_length(int n);
+    if (not is_walkable__fast(
+            game.tiles().get_tile(player_tile.x, player_tile.y))) {
+        // Player movement isn't constrained to tiles exactly, and sometimes the
+        // player's map icon displays as inside of a wall.
+        if (is_walkable__fast(
+                game.tiles().get_tile(player_tile.x + 1, player_tile.y))) {
+            player_tile.x += 1;
+        } else if (is_walkable__fast(game.tiles().get_tile(
+                       player_tile.x, player_tile.y + 1))) {
+            player_tile.y += 1;
+        }
+    }
+    return player_tile;
+}
+
+
 // Return true when done drawing the map. Needs lastcolumn variable to store
 // display progress.  A couple different states share this code--the map system
 // state in the pause screen, and the simpler overworld minimap.
@@ -2341,21 +2361,8 @@ static bool draw_minimap(Platform& pfrm,
             }
         }
 
-        auto player_tile =
-            to_tile_coord(game.player().get_position().cast<s32>());
-        //u32 integer_text_length(int n);
-        if (not is_walkable__fast(
-                game.tiles().get_tile(player_tile.x, player_tile.y))) {
-            // Player movement isn't constrained to tiles exactly, and sometimes the
-            // player's map icon displays as inside of a wall.
-            if (is_walkable__fast(game.tiles().get_tile(player_tile.x + x_start,
-                                                        player_tile.y))) {
-                player_tile.x += 1;
-            } else if (is_walkable__fast(game.tiles().get_tile(
-                           player_tile.x, player_tile.y + x_start))) {
-                player_tile.y += 1;
-            }
-        }
+        const auto player_tile = get_constrained_player_tile_coord(game);
+
         set_tile(player_tile.x, player_tile.y, 142);
 
         return true;
@@ -2562,7 +2569,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         if (timer_ >= duration) {
             timer_ = 0;
-            display_mode_ = DisplayMode::show;
+            display_mode_ = DisplayMode::path_wait;
 
             draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true);
         } else {
@@ -2577,6 +2584,20 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         break;
     }
+
+    case DisplayMode::path_wait:
+        timer_ += delta;
+        if (timer_ > milliseconds(400)) {
+            timer_ = 0;
+            display_mode_ = DisplayMode::show;
+            path_ = find_path(
+                pfrm,
+                game.tiles(),
+                get_constrained_player_tile_coord(game).cast<u8>(),
+                to_tile_coord(game.transporter().get_position().cast<s32>())
+                .cast<u8>());
+        }
+        break;
 
     case DisplayMode::show: {
 
@@ -2605,21 +2626,22 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
     case DisplayMode::exit: {
         game.player().update(pfrm, game, delta);
 
+        puts("here");
         timer_ += delta;
         if (timer_ >= transition_duration) {
             timer_ = 0;
             return state_pool_.create<ActiveState>(game);
         } else {
-            if (pfrm.keyboard().pressed<quick_map_key>()) {
-                timer_ = transition_duration - timer_;
-                display_mode_ = DisplayMode::enter;
-                last_map_column_ = -1;
-            } else {
+            // if (pfrm.keyboard().pressed<quick_map_key>()) {
+            //     timer_ = transition_duration - timer_;
+            //     display_mode_ = DisplayMode::enter;
+            //     last_map_column_ = -1;
+            // } else {
                 const auto amount =
                     1.f - smoothstep(0.f, transition_duration, timer_);
 
                 sidebar_->set_display_percentage(amount);
-            }
+            // }
         }
         break;
     }

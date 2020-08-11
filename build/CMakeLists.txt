@@ -77,6 +77,7 @@ set(SOURCES
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/string.cpp
   ${SOURCE_DIR}/start.cpp
+  ${SOURCE_DIR}/path.cpp
   ${SOURCE_DIR}/game.cpp
   ${SOURCE_DIR}/conf.cpp)
 
@@ -223,6 +224,20 @@ elseif(WIN32)
   set(SHARED_COMPILE_OPTIONS
     /W4)
 
+endif()
+
+
+if(APPLE)
+  set(SHARED_COMPILE_OPTIONS
+    ${SHARED_COMPILE_OPTIONS}
+    -fno-stack-check # I started getting bizarre segfaults due to 16 byte
+                     # alignment on macOS. After searching around on the
+                     # internet, seems that this is a known issues with the
+                     # clang version distributed with macOS catalina. The code
+                     # in question is really benign, so I believe that this is
+                     # the compiler's fault.
+    )
+  message(${SHARED_COMPILE_OPTIONS})
 endif()
 
 

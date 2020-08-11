@@ -3,6 +3,7 @@
 #include "game.hpp"
 #include "graphics/overlay.hpp"
 #include "network_event.hpp"
+#include "path.hpp"
 #include "state.hpp"
 
 
@@ -428,11 +429,14 @@ private:
     enum class DisplayMode {
         enter,
         draw,
+        path_wait,
         show,
         exit
     } display_mode_ = DisplayMode::enter;
 
     Microseconds timer_ = 0;
+
+    std::optional<PathData> path_;
 
     std::optional<UIMetric> health_;
     std::optional<UIMetric> score_;

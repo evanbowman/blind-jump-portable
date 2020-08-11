@@ -12,10 +12,10 @@
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
 #include "platform.hpp"
+#include "scratchBufferBulkAllocator.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
-#include "scratchBufferBulkAllocator.hpp"
 
 
 void english__to_string(int num, char* buffer, int base);
@@ -1615,11 +1615,12 @@ static const struct AudioTrack {
     const char* name_;
     const AudioSample* data_;
     int length_;
-} music_tracks[] = {DEF_AUDIO(hiraeth, scottbuckley_hiraeth),
-                    DEF_AUDIO(omega, scottbuckley_omega),
-                    DEF_AUDIO(computations, scottbuckley_computations),
-                    DEF_AUDIO(clair_de_lune, clair_de_lune)
-                    // DEF_AUDIO(september, september)
+} music_tracks[] = {
+    DEF_AUDIO(hiraeth, scottbuckley_hiraeth),
+    DEF_AUDIO(omega, scottbuckley_omega),
+    DEF_AUDIO(computations, scottbuckley_computations),
+    DEF_AUDIO(clair_de_lune, clair_de_lune)
+    // DEF_AUDIO(september, september)
 };
 
 
@@ -2375,7 +2376,8 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
         const auto old_tile = pfrm.get_tile(Layer::overlay, x, y);
         if (old_tile not_eq val) {
             if (is_glyph(old_tile)) {
-                auto& gm = ::glyph_table->mappings_[old_tile - glyph_start_offset];
+                auto& gm =
+                    ::glyph_table->mappings_[old_tile - glyph_start_offset];
                 if (gm.valid()) {
                     gm.reference_count_ -= 1;
 

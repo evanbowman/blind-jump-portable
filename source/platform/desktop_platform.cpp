@@ -1279,6 +1279,45 @@ Platform::~Platform()
 }
 
 
+// EWRAM is large, but has a narrower bus. The platform offers a window into
+// EWRAM, called scratch space, for non-essential stuff. Right now, I am setting
+// the buffer to ~100K in size. One could theoretically make the buffer almost
+// 256kB, because I am using none of EWRAM as far as I know...
+static
+    ObjectPool<RcBase<Platform::ScratchBuffer, 100>::ControlBlock, 100>
+        scratch_buffer_pool;
+
+
+static int scratch_buffers_in_use = 0;
+
+
+Rc<Platform::ScratchBuffer, 100> Platform::make_scratch_buffer()
+{
+    auto finalizer =
+        [](RcBase<Platform::ScratchBuffer, 100>::ControlBlock* ctrl) {
+            --scratch_buffers_in_use;
+            ctrl->pool_->post(ctrl);
+        };
+
+    auto maybe_buffer =
+        Rc<ScratchBuffer, 100>::create(&scratch_buffer_pool, finalizer);
+    if (maybe_buffer) {
+        ++scratch_buffers_in_use;
+        return *maybe_buffer;
+    } else {
+        screen().fade(1.f, ColorConstant::electric_blue);
+        error(*this, "scratch buffer pool exhausted");
+        fatal();
+    }
+}
+
+
+int Platform::scratch_buffers_remaining()
+{
+    return 100 - scratch_buffers_in_use;
+}
+
+
 Platform::Platform()
 {
     ::platform = this;

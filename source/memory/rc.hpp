@@ -50,7 +50,7 @@ public:
     };
 
 protected:
-    ControlBlock* control_;
+    alignas(16) ControlBlock* control_;
 
     void add_strong(ControlBlock* source)
     {
