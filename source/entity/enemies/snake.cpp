@@ -253,16 +253,6 @@ void SnakeBody::update(Platform& pfrm, Game& game, Microseconds dt)
 
     sprite_.set_position(position_);
     shadow_.set_position(position_);
-
-    // const auto tile = game.tiles().get_tile(tile_coord_.x, tile_coord_.y);
-
-    // if (tile not_eq Tile::ledge
-    //     and tile not_eq Tile::grass_ledge
-    //     and tile not_eq Tile::none) {
-    //     shadow_.set_alpha(Sprite::Alpha::translucent);
-    // } else {
-    //     shadow_.set_alpha(Sprite::Alpha::transparent);
-    // }
 }
 
 
@@ -313,6 +303,20 @@ void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     SnakeBody::update(pfrm, game, dt);
+
+    if (tile_coord().x > next_coord_.x) {
+        sprite_.set_texture_index(90);
+        sprite_.set_flip({true, false});
+    } else if (tile_coord().x < next_coord_.x) {
+        sprite_.set_texture_index(90);
+        sprite_.set_flip({false, false});
+    } else if (tile_coord().y > next_coord_.y) {
+        sprite_.set_texture_index(91);
+        sprite_.set_flip({false, false});
+    } else if (tile_coord().y < next_coord_.y) {
+        sprite_.set_texture_index(92);
+        sprite_.set_flip({false, false});
+    }
 
     const auto& mix = sprite_.get_mix();
 

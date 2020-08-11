@@ -85,7 +85,7 @@ public:
     {
     }
 
-private:
+protected:
     Vec2<TIdx> next_coord_;
 };
 
