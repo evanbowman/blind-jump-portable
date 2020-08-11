@@ -227,20 +227,6 @@ elseif(WIN32)
 endif()
 
 
-if(APPLE)
-  set(SHARED_COMPILE_OPTIONS
-    ${SHARED_COMPILE_OPTIONS}
-    -fno-stack-check # I started getting bizarre segfaults due to 16 byte
-                     # alignment on macOS. After searching around on the
-                     # internet, seems that this is a known issues with the
-                     # clang version distributed with macOS catalina. The code
-                     # in question is really benign, so I believe that this is
-                     # the compiler's fault.
-    )
-  message(${SHARED_COMPILE_OPTIONS})
-endif()
-
-
 if(GAMEBOY_ADVANCE)
 
   # I am setting CMAKE_AR in the toolchain file, but for some reason, the

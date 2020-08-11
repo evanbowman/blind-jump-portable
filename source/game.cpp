@@ -3,7 +3,7 @@
 #include "function.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
-#include "scratchBufferBulkAllocator.hpp"
+#include "bulkAllocator.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>

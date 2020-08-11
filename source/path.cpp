@@ -16,11 +16,13 @@ std::optional<PathData> find_path(Platform& pfrm,
                                   const PathCoord& end)
 {
     static_assert(sizeof(PathVertexData*) <= 8,
-                  "What computer are you running this on?");
+                  "What computer are you running this on?"
+                  " You will probably need to increase the scratch buffer"
+                  " count (below)");
 
     // Technically, we don't always use all six buffers. On embedded
     // microprocessors, or on 32 bit systems, pointers are half as large, so
-    // PathVertexData doesn't take up as much space...
+    // PathVertexData doesn't take up nearly as much space...
     constexpr auto vertex_scratch_buffers = 6;
     constexpr auto result_scratch_buffers = 1;
 
@@ -30,15 +32,13 @@ std::optional<PathData> find_path(Platform& pfrm,
         return {};
     }
 
-    Buffer<ScratchBufferBulkAllocator, vertex_scratch_buffers> regions;
-    regions.emplace_back(pfrm);
+    BulkAllocator<vertex_scratch_buffers> memory(pfrm);
 
     // NOTE: our game does not use the edge tiles of the map, so we can save
     // some space...
     using VertexBuf =
         Buffer<PathVertexData*, (TileMap::width - 2) * (TileMap::height - 2)>;
     VertexBuf priority_q;
-    VertexBuf all_vertices;
 
     bool error_state = false;
 
@@ -46,22 +46,15 @@ std::optional<PathData> find_path(Platform& pfrm,
         if (error_state)
             return;
         if (is_walkable__precise(t)) {
-        RETRY:
-            if (auto obj = regions.back().alloc<PathVertexData>()) {
+            if (auto obj = memory.alloc<PathVertexData>(pfrm)) {
                 obj->coord_ = PathCoord{u8(x), u8(y)};
                 static_assert(std::is_trivially_destructible<PathVertexData>());
-                if (not all_vertices.push_back(obj.release())) {
+                if (not priority_q.push_back(obj.release())) {
                     error(pfrm, "not enough space in path node buffer");
                     error_state = true;
                 }
             } else {
-                if (regions.full()) {
-                    error(pfrm, "out of memory when generating path!");
-                    error_state = true;
-                } else {
-                    regions.emplace_back(pfrm);
-                    goto RETRY;
-                }
+                error_state = true;
             }
         }
     });
@@ -69,10 +62,6 @@ std::optional<PathData> find_path(Platform& pfrm,
     if (error_state) {
         return {};
     }
-
-    std::copy(all_vertices.begin(),
-              all_vertices.end(),
-              std::back_inserter(priority_q));
 
     auto start_v = [&]() -> PathVertexData* {
         for (auto& data : priority_q) {
@@ -102,7 +91,7 @@ std::optional<PathData> find_path(Platform& pfrm,
     // sacrifice cpu cycles for memory usage.
     auto neighbors = [&](PathVertexData* data) -> Buffer<PathVertexData*, 4> {
         Buffer<PathVertexData*, 4> result;
-        for (auto& elem : all_vertices) {
+        for (auto& elem : priority_q) {
             if (elem->coord_.x == data->coord_.x) {
                 if (elem->coord_.y not_eq data->coord_.y and
                     abs(elem->coord_.y - data->coord_.y) < 2) {
@@ -142,8 +131,8 @@ std::optional<PathData> find_path(Platform& pfrm,
         priority_q.pop_back();
 
         for (auto& neighbor : neighbors(min)) {
-            auto alt = min->dist_ + distance(min->coord_.cast<Float>(),
-                                             neighbor->coord_.cast<Float>());
+            auto alt = min->dist_ + manhattan_length(min->coord_,
+                                                     neighbor->coord_);
             if (alt < neighbor->dist_) {
                 neighbor->dist_ = alt;
                 neighbor->prev_ = min;

@@ -2005,11 +2005,11 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             //     timer_ = transition_duration - timer_;
             //     display_mode_ = DisplayMode::enter;
             // } else {
-                const auto amount =
-                    1.f - smoothstep(0.f, transition_duration, timer_);
+            const auto amount =
+                1.f - smoothstep(0.f, transition_duration, timer_);
 
-                sidebar_->set_display_percentage(amount);
-                // pfrm.screen().fade(0.25f * amount);
+            sidebar_->set_display_percentage(amount);
+            // pfrm.screen().fade(0.25f * amount);
             // }
         }
         break;
@@ -2595,7 +2595,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
                 game.tiles(),
                 get_constrained_player_tile_coord(game).cast<u8>(),
                 to_tile_coord(game.transporter().get_position().cast<s32>())
-                .cast<u8>());
+                    .cast<u8>());
         }
         break;
 
@@ -2626,7 +2626,6 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
     case DisplayMode::exit: {
         game.player().update(pfrm, game, delta);
 
-        puts("here");
         timer_ += delta;
         if (timer_ >= transition_duration) {
             timer_ = 0;
@@ -2637,10 +2636,10 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             //     display_mode_ = DisplayMode::enter;
             //     last_map_column_ = -1;
             // } else {
-                const auto amount =
-                    1.f - smoothstep(0.f, transition_duration, timer_);
+            const auto amount =
+                1.f - smoothstep(0.f, transition_duration, timer_);
 
-                sidebar_->set_display_percentage(amount);
+            sidebar_->set_display_percentage(amount);
             // }
         }
         break;

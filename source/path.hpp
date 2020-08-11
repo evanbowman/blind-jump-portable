@@ -1,6 +1,6 @@
 #pragma once
 
-#include "scratchBufferBulkAllocator.hpp"
+#include "bulkAllocator.hpp"
 #include "tileMap.hpp"
 #include <optional>
 

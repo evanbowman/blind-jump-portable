@@ -1283,9 +1283,8 @@ Platform::~Platform()
 // EWRAM, called scratch space, for non-essential stuff. Right now, I am setting
 // the buffer to ~100K in size. One could theoretically make the buffer almost
 // 256kB, because I am using none of EWRAM as far as I know...
-static
-    ObjectPool<RcBase<Platform::ScratchBuffer, 100>::ControlBlock, 100>
-        scratch_buffer_pool;
+static ObjectPool<RcBase<Platform::ScratchBuffer, 100>::ControlBlock, 100>
+    scratch_buffer_pool;
 
 
 static int scratch_buffers_in_use = 0;
