@@ -880,4 +880,7 @@ public:
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    bool ready_ = false;
 };

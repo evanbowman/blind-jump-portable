@@ -4313,7 +4313,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
-    if (pfrm.keyboard().pressed<Key::select>()) {
+    if (pfrm.keyboard().pressed<Key::alt_1>()) {
         log_timer_ += delta;
         if (log_timer_ > seconds(1)) {
             return state_pool_.create<LogfileViewerState>();
@@ -4555,6 +4555,11 @@ void NetworkConnectWaitState::exit(Platform& pfrm,
 StatePtr
 NetworkConnectWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    if (not ready_) {
+        ready_ = true;
+        return null_state();
+    }
+
     switch (pfrm.network_peer().interface()) {
     case Platform::NetworkPeer::serial_cable: {
 

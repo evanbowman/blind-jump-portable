@@ -2901,6 +2901,9 @@ void Platform::NetworkPeer::poll_consume(u32 size)
 }
 
 
+static bool multiplayer_connected = false;
+
+
 static void multiplayer_init()
 {
     ::platform->network_peer().disconnect();
@@ -2936,13 +2939,15 @@ static void multiplayer_init()
     // valid state anyway. So let's push out a message, regardless, and wait to
     // receive a response.
 
-    const char* handshake = "link__v0.0.0";
+    const char* handshake = "link__v0.0.1";
 
     if (str_len(handshake) not_eq Platform::NetworkPeer::max_message_size) {
         ::platform->network_peer().disconnect();
         error(*::platform, "handshake string does not equal message size");
         return;
     }
+
+    multiplayer_connected = true;
 
     ::platform->network_peer().send_message(
         {(byte*)handshake, sizeof handshake});
@@ -2986,19 +2991,8 @@ void Platform::NetworkPeer::listen()
 }
 
 
-// bool was_connected = false;
 void Platform::NetworkPeer::update()
 {
-    static bool was_connected = false;
-
-    if (was_connected) {
-        if (not multiplayer_validate()) {
-            disconnect();
-            return;
-        }
-    }
-
-    was_connected = is_connected();
 }
 
 
@@ -3018,7 +3012,7 @@ bool Platform::NetworkPeer::supported_by_device()
 
 bool Platform::NetworkPeer::is_connected() const
 {
-    return multiplayer_validate(); // FIXME: insufficient to detect disconnects.
+    return multiplayer_connected; // multiplayer_validate(); // FIXME: insufficient to detect disconnects.
 }
 
 
@@ -3031,6 +3025,7 @@ bool Platform::NetworkPeer::is_host() const
 void Platform::NetworkPeer::disconnect()
 {
     if (is_connected()) {
+        multiplayer_connected = false;
         irqDisable(IRQ_SERIAL);
         if (multiplayer_is_master()) {
             enable_watchdog();
