@@ -1,9 +1,9 @@
 #include "game.hpp"
+#include "bulkAllocator.hpp"
 #include "conf.hpp"
 #include "function.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
-#include "bulkAllocator.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>

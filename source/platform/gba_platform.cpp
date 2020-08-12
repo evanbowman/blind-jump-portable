@@ -12,7 +12,7 @@
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
 #include "platform.hpp"
-#include "scratchBufferBulkAllocator.hpp"
+#include "bulkAllocator.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
@@ -1980,23 +1980,25 @@ bool use_optimized_waitstates = false;
 // the buffer to ~100K in size. One could theoretically make the buffer almost
 // 256kB, because I am using none of EWRAM as far as I know...
 static EWRAM_DATA
-    ObjectPool<RcBase<Platform::ScratchBuffer, 100>::ControlBlock, 100>
+    ObjectPool<RcBase<Platform::ScratchBuffer,
+                      Platform::scratch_buffer_count>::ControlBlock,
+               Platform::scratch_buffer_count>
         scratch_buffer_pool;
 
 
 static int scratch_buffers_in_use = 0;
 
 
-Rc<Platform::ScratchBuffer, 100> Platform::make_scratch_buffer()
+Platform::ScratchBufferPtr Platform::make_scratch_buffer()
 {
-    auto finalizer =
-        [](RcBase<Platform::ScratchBuffer, 100>::ControlBlock* ctrl) {
-            --scratch_buffers_in_use;
-            ctrl->pool_->post(ctrl);
-        };
+    auto finalizer = [](RcBase<Platform::ScratchBuffer,
+                               scratch_buffer_count>::ControlBlock* ctrl) {
+        --scratch_buffers_in_use;
+        ctrl->pool_->post(ctrl);
+    };
 
-    auto maybe_buffer =
-        Rc<ScratchBuffer, 100>::create(&scratch_buffer_pool, finalizer);
+    auto maybe_buffer = Rc<ScratchBuffer, scratch_buffer_count>::create(
+        &scratch_buffer_pool, finalizer);
     if (maybe_buffer) {
         ++scratch_buffers_in_use;
         return *maybe_buffer;
@@ -2010,7 +2012,7 @@ Rc<Platform::ScratchBuffer, 100> Platform::make_scratch_buffer()
 
 int Platform::scratch_buffers_remaining()
 {
-    return 100 - scratch_buffers_in_use;
+    return scratch_buffer_count - scratch_buffers_in_use;
 }
 
 

@@ -211,11 +211,20 @@ public:
     const char* config_data() const;
 
 
+#ifdef __GBA__
+#define SCRATCH_BUFFER_SIZE 1200
+#else
+#define SCRATCH_BUFFER_SIZE 4000
+#endif // __GBA__
+
     struct ScratchBuffer {
         // NOTE: do not make any assumptions about the alignment of the data_
         // member.
-        char data_[1000];
+        char data_[SCRATCH_BUFFER_SIZE];
     };
+
+    static constexpr const int scratch_buffer_count = 100;
+    using ScratchBufferPtr = Rc<ScratchBuffer, scratch_buffer_count>;
 
     // Scratch buffers are sort of a blunt instrument. Designed for uncommon
     // scenarios where you need a lot of memory. The platform provides one
@@ -225,7 +234,7 @@ public:
     // up, so do not try to hold more than one hundred active references to
     // scratch buffers (not sure why you would even need 100kB of temporary
     // scratch space anyway...).
-    Rc<ScratchBuffer, 100> make_scratch_buffer();
+    ScratchBufferPtr make_scratch_buffer();
 
     int scratch_buffers_remaining();
 

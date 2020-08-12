@@ -2571,6 +2571,13 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             display_mode_ = DisplayMode::path_wait;
 
+            path_finder_.emplace(allocate<IncrementalPathfinder>(pfrm,
+                                    pfrm,
+                                    game.tiles(),
+                                    get_constrained_player_tile_coord(game).cast<u8>(),
+                                    to_tile_coord(game.transporter().get_position().cast<s32>())
+                                    .cast<u8>()));
+
             draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true);
         } else {
             draw_minimap(pfrm,
@@ -2585,19 +2592,32 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
         break;
     }
 
-    case DisplayMode::path_wait:
-        timer_ += delta;
-        if (timer_ > milliseconds(400)) {
-            timer_ = 0;
+    case DisplayMode::path_wait: {
+
+        bool incomplete = true;
+
+        if (auto result = path_finder_->obj_->compute(pfrm, 5, &incomplete)) {
+            path_ = std::move(result);
             display_mode_ = DisplayMode::show;
-            path_ = find_path(
-                pfrm,
-                game.tiles(),
-                get_constrained_player_tile_coord(game).cast<u8>(),
-                to_tile_coord(game.transporter().get_position().cast<s32>())
-                    .cast<u8>());
+            path_finder_.reset();
+        }
+
+        if (incomplete == false) {
+            display_mode_ = DisplayMode::show;
+            path_finder_.reset();
+        }
+
+        if (not pfrm.keyboard().pressed<quick_map_key>()) {
+            display_mode_ = DisplayMode::exit;
+            timer_ = 0;
+
+            if (restore_keystates) {
+                pfrm.keyboard().restore_state(*restore_keystates);
+                restore_keystates.reset();
+            }
         }
         break;
+    }
 
     case DisplayMode::show: {
 

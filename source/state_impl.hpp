@@ -5,6 +5,7 @@
 #include "network_event.hpp"
 #include "path.hpp"
 #include "state.hpp"
+#include "bulkAllocator.hpp"
 
 
 class CommonNetworkListener : public net_event::Listener {
@@ -436,8 +437,6 @@ private:
 
     Microseconds timer_ = 0;
 
-    std::optional<PathData> path_;
-
     std::optional<UIMetric> health_;
     std::optional<UIMetric> score_;
     Buffer<UIMetric, Powerup::max_> powerups_;
@@ -446,6 +445,9 @@ private:
 
     std::optional<LeftSidebar> sidebar_;
     std::optional<Text> level_text_;
+
+    std::optional<ManagedPtr<IncrementalPathfinder>> path_finder_;
+    std::optional<PathData> path_;
 };
 
 
