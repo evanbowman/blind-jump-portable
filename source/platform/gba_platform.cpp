@@ -9,10 +9,10 @@
 
 #ifdef __GBA__
 
+#include "bulkAllocator.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
 #include "platform.hpp"
-#include "bulkAllocator.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>

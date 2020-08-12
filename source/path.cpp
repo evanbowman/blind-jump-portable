@@ -9,8 +9,7 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
                                              TileMap& tiles,
                                              const PathCoord& start,
                                              const PathCoord& end)
-    : memory_(pfrm),
-      priority_q_(allocate<VertexBuf>(pfrm)), end_(end)
+    : memory_(pfrm), priority_q_(allocate<VertexBuf>(pfrm)), end_(end)
 {
     static_assert(sizeof(PathVertexData*) <= 8,
                   "What computer are you running this on?");

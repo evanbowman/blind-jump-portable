@@ -1329,7 +1329,7 @@ ItemRarity rarity(Item::Type item)
         return 3;
 
     case Item::Type::map_system:
-        return 5;
+        return 6;
     }
     return 0;
 }

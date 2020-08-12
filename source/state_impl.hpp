@@ -1,11 +1,11 @@
 #pragma once
 
+#include "bulkAllocator.hpp"
 #include "game.hpp"
 #include "graphics/overlay.hpp"
 #include "network_event.hpp"
 #include "path.hpp"
 #include "state.hpp"
-#include "bulkAllocator.hpp"
 
 
 class CommonNetworkListener : public net_event::Listener {
@@ -406,6 +406,7 @@ private:
         map_enter,
         wp_text,
         legend,
+        path_wait,
         wait
     } anim_state_ = AnimState::map_enter;
     std::optional<Text> level_text_;
@@ -413,6 +414,9 @@ private:
     std::array<std::optional<Text>, legend_strings.size()> legend_text_;
     std::optional<Border> legend_border_;
     Microseconds map_enter_duration_;
+
+    std::optional<ManagedPtr<IncrementalPathfinder>> path_finder_;
+    std::optional<PathData> path_;
 };
 
 

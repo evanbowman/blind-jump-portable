@@ -2282,8 +2282,11 @@ static Vec2<s8> get_constrained_player_tile_coord(Game& game)
 
 
 // Return true when done drawing the map. Needs lastcolumn variable to store
-// display progress.  A couple different states share this code--the map system
+// display progress. A couple different states share this code--the map system
 // state in the pause screen, and the simpler overworld minimap.
+//
+// FIXME: This function has too many inputs, I wouldn't call this particularly
+// great code.
 static bool draw_minimap(Platform& pfrm,
                          Game& game,
                          Float percentage,
@@ -2291,7 +2294,8 @@ static bool draw_minimap(Platform& pfrm,
                          int x_start = 1,
                          int y_skip_top = 0,
                          int y_skip_bot = 0,
-                         bool force_icons = false)
+                         bool force_icons = false,
+                         PathBuffer* path = nullptr)
 {
     auto set_tile = [&](s8 x, s8 y, int icon, bool dodge = true) {
         if (y < y_skip_top or y >= TileMap::height - y_skip_bot) {
@@ -2347,6 +2351,14 @@ static bool draw_minimap(Platform& pfrm,
     last_column = current_column;
 
     if (force_icons or current_column == TileMap::width) {
+
+        if (path) {
+            for (u32 i = 0; i < path->size(); ++i) {
+                if (i > 0 and i < path->size() - 1) {
+                    set_tile((*path)[i].x, (*path)[i].y, 131);
+                }
+            }
+        }
 
         game.enemies().transform([&](auto& buf) {
             for (auto& entity : buf) {
@@ -2424,7 +2436,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
         timer_ += delta;
         if (timer_ > milliseconds(32)) {
             timer_ = 0;
-            anim_state_ = AnimState::wait;
+            anim_state_ = AnimState::path_wait;
 
             set_tile(TileMap::width + 2, 11, 137, false); // you
             set_tile(TileMap::width + 2, 13, 135, false); // enemy
@@ -2443,8 +2455,52 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
                                         locale_string(legend_strings[i]),
                                         OverlayCoord{TileMap::width + 5, y});
             }
+
+            path_finder_.emplace(allocate<IncrementalPathfinder>(
+                pfrm,
+                pfrm,
+                game.tiles(),
+                get_constrained_player_tile_coord(game).cast<u8>(),
+                to_tile_coord(game.transporter().get_position().cast<s32>())
+                    .cast<u8>()));
         }
         break;
+
+    case AnimState::path_wait: {
+        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            return state_pool_.create<InventoryState>(false);
+        }
+
+        if (not path_finder_) {
+            anim_state_ = AnimState::wait;
+        }
+
+        bool incomplete = true;
+
+        if (auto result = path_finder_->obj_->compute(pfrm, 5, &incomplete)) {
+            path_ = std::move(result);
+            anim_state_ = AnimState::wait;
+            path_finder_.reset();
+
+            auto* const path = [&]() -> PathBuffer* {
+                if (path_) {
+                    return path_->path_.get();
+                } else {
+                    return nullptr;
+                }
+            }();
+
+            draw_minimap(
+                pfrm, game, 1.f, last_column_ = -1, 1, 0, 0, false, path);
+        }
+
+        if (incomplete == false) {
+            anim_state_ = AnimState::wait;
+            path_finder_.reset();
+        }
+        break;
+    }
+
 
     case AnimState::wait:
         if (pfrm.keyboard().down_transition<Key::action_2>()) {
@@ -2571,12 +2627,13 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             display_mode_ = DisplayMode::path_wait;
 
-            path_finder_.emplace(allocate<IncrementalPathfinder>(pfrm,
-                                    pfrm,
-                                    game.tiles(),
-                                    get_constrained_player_tile_coord(game).cast<u8>(),
-                                    to_tile_coord(game.transporter().get_position().cast<s32>())
-                                    .cast<u8>()));
+            path_finder_.emplace(allocate<IncrementalPathfinder>(
+                pfrm,
+                pfrm,
+                game.tiles(),
+                get_constrained_player_tile_coord(game).cast<u8>(),
+                to_tile_coord(game.transporter().get_position().cast<s32>())
+                    .cast<u8>()));
 
             draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true);
         } else {
@@ -2626,7 +2683,15 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (timer_ > seconds(1) + milliseconds(60)) {
             timer_ = 0;
             last_map_column_ = -1;
-            draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true);
+            auto* const path = [&]() -> PathBuffer* {
+                if (path_) {
+                    return path_->path_.get();
+                } else {
+                    return nullptr;
+                }
+            }();
+            draw_minimap(
+                pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true, path);
         }
 
         game.player().soft_update(pfrm, game, delta);
@@ -4532,6 +4597,7 @@ void NetworkConnectWaitState::exit(Platform& pfrm,
                                    State& next_state)
 {
     pfrm.fill_overlay(0);
+    pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, true, true);
     pfrm.load_overlay_texture("overlay");
 
     if (not dynamic_cast<MenuState*>(&next_state)) {
