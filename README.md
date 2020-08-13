@@ -40,22 +40,22 @@ The game uses procedural algorithms to generate the levels, so the level designs
 
 ### Controls
 
-On the gameboy advance, use the d-pad to move, the A button to shoot, and the B button to interact with things and to select items and options in the game's menus. If you hold the B button while walking, you will shoot repeatedly, and also the player will strafe. Use the right bumper to open or close your inventory, and the start button to open the pause menu. For the desktop version of the game, you can pick the button mappings yourself by editing the config.ini file in this repositiory.
+On the gameboy advance, use the d-pad to move, the A button to shoot, and the B button to interact with things and to select items and options in the game's menus. If you hold the B button while walking, you will shoot repeatedly, and also the player will strafe. Hold the right shoulder button, or the left shoulder button, to open up a quick item selector menu, or a minimap, respectively. To access all for your items, press select. Press start for more options.
 
 ### Multiplayer
 
 <img src="multiplayer1.png"/><img src="multiplayer2.png"/>
 
 The game supports multiplayer over the gameboy advance's serial port. While certainly incomplete, you should find the multiplayer mode to be more-or-less playable.
-To enable, press the start button on both devices, and then select the "Connect Peer" option within twenty seconds. You need to be on the very first level to connect a peer, otherwise the option will be grayed-out.
+To enable, press the start button on both devices, and then select the "Connect Peer" option within twenty seconds. You need to be on the very first level to connect a peer, otherwise the option will be grayed-out. If running on an actual GAMBOY ADVANCE, you may need to select "Connect Peer" on the device plugged into the gray end of the link cable first, followed by the device connected to the smaller purple end of the link cable. This is a known issue, and I am still working on resolving this, at time of writing.
 
 ### Settings
 
 <img src="settings1.png"/><img src="settings2.png"/>
 
-By opening the start menu, and selecting "Settings," you may configure a number of options while the game is running. The difficulty setting can only be changed when no enemies remain on the current level. 
+By opening the start menu, and selecting "Settings," you may configure a number of options while the game is running. The difficulty setting can only be changed when no enemies remain on the current level.
 
-When enabling "Show Stats," the game will print a number of metrics to the screen, such as framerate, link cable transmitted messages, link cable received messages, link transmit loss, and link receive loss. 
+When enabling "Show Stats," the game will print a number of metrics to the screen, such as framerate, link cable transmitted messages, link cable received messages, link transmit loss, and link receive loss.
 
 The contrast option allows you to increase/decrease the game's contrast. Early gameboy advance games, prior to frontlit/backlit screens, were especially high contrast (perhaps due to the poor quality of the screen), and if you are playing on a device without a backlight or a frontlight (such as the original AGB model), you may want to increase the contrast a bit. If you are running the game on an emulator, and your monitor has poor grayscale reproducution, and the game's colors display with excessive contrast, you may want to decrease the contrast. Or if your computer monitor is washed out, maybe you would bump up the contrast. Anyway, many days of work went into the design of the game's color palette, so if you can see the game fine, without distraction, with the default setting, you should just leave the contrast as-is.
 
