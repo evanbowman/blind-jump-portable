@@ -63,6 +63,7 @@ public:
     using net_event::Listener::receive;
 
     void receive(const net_event::PlayerSpawnLaser&, Platform&, Game&) override;
+    void receive(const net_event::ItemChestShared&, Platform&, Game&) override;
     void receive(const net_event::EnemyStateSync&, Platform&, Game&) override;
     void receive(const net_event::SyncSeed&, Platform&, Game&) override;
     void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
@@ -85,6 +86,7 @@ private:
     std::optional<Text> network_rx_msg_text_;
     std::optional<Text> network_tx_loss_text_;
     std::optional<Text> network_rx_loss_text_;
+    std::optional<Text> link_saturation_text_;
     std::optional<Text> scratch_buf_avail_text_;
 };
 

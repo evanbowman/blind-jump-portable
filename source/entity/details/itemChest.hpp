@@ -9,7 +9,7 @@
 
 class ItemChest : public Entity {
 public:
-    ItemChest(const Vec2<Float>& pos, Item::Type item);
+    ItemChest(const Vec2<Float>& pos, Item::Type item, bool locked = true);
 
     void update(Platform&, Game&, Microseconds dt);
 
@@ -21,12 +21,13 @@ public:
     }
 
     enum class State {
-        closed,
+        closed_locked,
+        closed_unlocked,
         opening,
         settle,
         opened,
         sync_opening,
-        sync_settle
+        sync_settle,
     };
 
     State state() const

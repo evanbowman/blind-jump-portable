@@ -1301,6 +1301,9 @@ ItemRarity rarity(Item::Type item)
     case Item::Type::null:
         return 1;
 
+    case Item::Type::orange:
+        return 1;
+
     case Item::Type::engineer_notebook:
         return 1;
 
@@ -1731,4 +1734,23 @@ Game::DeferredCallback screen_flash_animation(int remaining)
             pf.screen().fade(0);
         }
     };
+}
+
+
+bool share_item(Platform& pfrm,
+                Game& game,
+                const Vec2<Float>& position,
+                Item::Type item)
+{
+    if (create_item_chest(game, position, item, false)) {
+        net_event::ItemChestShared s;
+        s.id_.set((*game.details().get<ItemChest>().begin())->id());
+        s.item_ = item;
+
+        net_event::transmit(pfrm, s);
+
+        pfrm.sleep(20); // Wait for the item to arrive at the other player's game
+        return true;
+    }
+    return false;
 }

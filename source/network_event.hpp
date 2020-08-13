@@ -7,6 +7,7 @@
 #include "number/random.hpp"
 #include "platform/platform.hpp"
 #include "settings.hpp"
+#include "entity/details/item.hpp"
 
 
 namespace net_event {
@@ -27,6 +28,7 @@ struct Header {
         new_level_idle,
         item_taken,
         item_chest_opened,
+        item_chest_shared,
         quick_chat,
     } message_type_;
 };
@@ -190,6 +192,25 @@ struct ItemChestOpened {
 NET_EVENT_SIZE_CHECK(ItemChestOpened)
 
 
+// The sharer spawns its own item chest, and then transmits an ItemChestShared
+// event, with the Id of the newly created item chest. Upon receiving the event,
+// the other game needs to make sure that the entity id is not currently in use
+// in its own environment... or does it? Maybe, because entity ids are not
+// guaranteed to be synchronized after starting a level, we just need to make
+// sure that the given id is unique amongst the recipient game's own item
+// chests...
+struct ItemChestShared {
+    Header header_;
+    HostInteger<Entity::Id> id_;
+    Item::Type item_;
+
+    u8 unused_[6];
+
+    static const auto mt = Header::MessageType::item_chest_shared;
+};
+NET_EVENT_SIZE_CHECK(ItemChestShared)
+
+
 // Currently unused. In order to use ItemTaken, we'll need to keep entity ids
 // properly synchronized. If even one extra enemy bullet is spawned by one of
 // the peers, the ids will be out of sequence, rendering the ItemTaken message
@@ -329,6 +350,9 @@ public:
     {
     }
     virtual void receive(const ItemChestOpened&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const ItemChestShared&, Platform&, Game&)
     {
     }
     virtual void receive(const QuickChat&, Platform&, Game&)

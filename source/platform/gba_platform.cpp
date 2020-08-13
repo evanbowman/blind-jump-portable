@@ -116,7 +116,7 @@ int main()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-DeltaClock::DeltaClock() : impl_(nullptr)
+Platform::DeltaClock::DeltaClock() : impl_(nullptr)
 {
 }
 
@@ -144,19 +144,19 @@ static Microseconds delta_convert_tics(int tics)
 }
 
 
-DeltaClock::TimePoint DeltaClock::sample() const
+Platform::DeltaClock::TimePoint Platform::DeltaClock::sample() const
 {
     return delta_read_tics();
 }
 
 
-Microseconds DeltaClock::duration(TimePoint t1, TimePoint t2)
+Microseconds Platform::DeltaClock::duration(TimePoint t1, TimePoint t2)
 {
     return delta_convert_tics(t2 - t1);
 }
 
 
-Microseconds DeltaClock::reset()
+Microseconds Platform::DeltaClock::reset()
 {
     // (1 second / 60 frames) x (1,000,000 microseconds / 1 second) =
     // 16,666.6...
@@ -176,7 +176,7 @@ Microseconds DeltaClock::reset()
 }
 
 
-DeltaClock::~DeltaClock()
+Platform::DeltaClock::~DeltaClock()
 {
 }
 
@@ -1838,19 +1838,6 @@ Platform::Speaker::Speaker()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-s32 fast_divide(s32 numerator, s32 denominator)
-{
-    // NOTE: This is a BIOS call, but still faster than real division.
-    return Div(numerator, denominator);
-}
-
-
-s32 fast_mod(s32 numerator, s32 denominator)
-{
-    return DivMod(numerator, denominator);
-}
-
-
 #define REG_SGFIFOA *(volatile u32*)0x40000A0
 
 
@@ -2191,7 +2178,12 @@ void Platform::load_overlay_texture(const char* name)
 
             for (int i = 0; i < 16; ++i) {
                 auto from = Color::from_bgr_hex_555(info.palette_data_[i]);
-                MEM_BG_PALETTE[16 + i] = from.bgr_hex_555();
+                if (not overlay_was_faded) {
+                    MEM_BG_PALETTE[16 + i] = from.bgr_hex_555();
+                } else {
+                    const auto& c = real_color(last_color);
+                    MEM_BG_PALETTE[16 + i] = blend(from, c, last_fade_amt);
+                }
             }
 
             if (validate_overlay_texture_size(*this, info.tile_data_length_)) {
@@ -2544,7 +2536,7 @@ static int multiplayer_is_master()
 }
 
 
-// NOTE: you may only call this function immediatly after a transmission,
+// NOTE: you may only call this function immediately after a transmission,
 // otherwise, may return a garbage value.
 static int multiplayer_error()
 {
@@ -2860,10 +2852,9 @@ static void multiplayer_schedule_tx()
 
 static void multiplayer_serial_isr()
 {
-    if (multiplayer_error()) {
-        // This bit is only valid after a transmission is completed. So we have
-        // to handle the error here... but what to do? Perhaps, we should
-        // disconnect...
+    if (UNLIKELY(multiplayer_error())) {
+        ::platform->network_peer().disconnect();
+        return;
     }
     multiplayer_rx_receive();
     multiplayer_schedule_tx();
@@ -2900,9 +2891,11 @@ Platform::NetworkPeer::poll_message()
         return {};
     }
     if (auto msg = rx_ring_pop()) {
-        if (poller_current_message) {
-            while (true)
-                ; // failure to deallocate/consume message!
+        if (UNLIKELY(poller_current_message not_eq nullptr)) {
+            // failure to deallocate/consume message!
+            rx_message_pool.post(msg);
+            disconnect();
+            return {};
         }
         poller_current_message = msg;
         return Platform::NetworkPeer::Message{
@@ -2929,7 +2922,6 @@ void Platform::NetworkPeer::poll_consume(u32 size)
 
 static bool multiplayer_connected = false;
 
-
 static void multiplayer_init()
 {
     ::platform->network_peer().disconnect();
@@ -2946,11 +2938,9 @@ static void multiplayer_init()
     // Put this here for now, not sure whether it's really necessary...
     REG_SIOMLT_SEND = 0x5555;
 
-    auto& clk = DeltaClock::instance();
-
     Microseconds delta = 0;
     while (not multiplayer_validate()) {
-        delta += clk.reset();
+        delta += ::platform->delta_clock().reset();
         if (delta > seconds(20)) {
             if (not multiplayer_validate_modes()) {
                 error(*::platform, "not all GBAs are in MULTI mode");
@@ -2985,7 +2975,7 @@ static void multiplayer_init()
 
     while (true) {
         ::platform->feed_watchdog();
-        delta += clk.reset();
+        delta += ::platform->delta_clock().reset();
         if (auto msg = ::platform->network_peer().poll_message()) {
             for (u32 i = 0; i < sizeof handshake; ++i) {
                 if (((u8*)msg->data_)[i] not_eq handshake[i]) {
@@ -3026,16 +3016,34 @@ void Platform::NetworkPeer::update()
 }
 
 
-Platform::NetworkPeer::Stats Platform::NetworkPeer::stats() const
+static int last_tx_count = 0;
+
+
+Platform::NetworkPeer::Stats Platform::NetworkPeer::stats()
 {
-    return {tx_message_count, rx_message_count, tx_loss, rx_loss};
+    const int empty_transmits = null_bytes_written / max_message_size;
+    null_bytes_written = 0;
+
+    Float link_saturation = 0.f;
+
+    if (empty_transmits) {
+        auto tx_diff = tx_message_count - last_tx_count;
+
+        link_saturation = Float(tx_diff) / (empty_transmits + tx_diff);
+    }
+
+    last_tx_count = tx_message_count;
+
+    return {tx_message_count,
+            rx_message_count,
+            tx_loss,
+            rx_loss,
+            static_cast<int>(100 * link_saturation)};
 }
 
 
 bool Platform::NetworkPeer::supported_by_device()
 {
-    // FIXME: I intend to implement multiplayer over the game link cable, but I
-    // have not received my second everdrive in the mail yet!
     return true;
 }
 

@@ -162,6 +162,7 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
     network_rx_msg_text_.reset();
     network_tx_loss_text_.reset();
     network_rx_loss_text_.reset();
+    link_saturation_text_.reset();
     scratch_buf_avail_text_.reset();
 
     // In case we're in the middle of an entry/exit animation for the
@@ -171,6 +172,31 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
     }
 
     notification_status = NotificationStatus::hidden;
+}
+
+
+void OverworldState::receive(const net_event::ItemChestShared& s,
+                             Platform& pfrm,
+                             Game& game)
+{
+    bool collision = false;
+    game.details().transform([&](auto& buf) {
+                                 for (auto& e : buf) {
+                                     if (e->id() == s.id_.get()) {
+                                         collision = true;
+                                     }
+                                 }
+                             });
+    if (collision) {
+        error(pfrm, "failed to receive shared item chest, ID collision!");
+        return;
+    }
+
+    if (game.peer() and create_item_chest(game, game.peer()->get_position(), s.item_, false)) {
+        (*game.details().get<ItemChest>().begin())->override_id(s.id_.get());
+    } else {
+        error(pfrm, "failed to allocate shared item chest");
+    }
 }
 
 
@@ -352,11 +378,12 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
         fps_timer_ -= seconds(1);
 
         fps_text_.emplace(pfrm, OverlayCoord{1, 2});
-        network_tx_msg_text_.emplace(pfrm, OverlayCoord{1, 3});
-        network_rx_msg_text_.emplace(pfrm, OverlayCoord{1, 4});
-        network_tx_loss_text_.emplace(pfrm, OverlayCoord{1, 5});
-        network_rx_loss_text_.emplace(pfrm, OverlayCoord{1, 6});
-        scratch_buf_avail_text_.emplace(pfrm, OverlayCoord{1, 7});
+        link_saturation_text_.emplace(pfrm, OverlayCoord{1, 3});
+        network_tx_msg_text_.emplace(pfrm, OverlayCoord{1, 4});
+        network_rx_msg_text_.emplace(pfrm, OverlayCoord{1, 5});
+        network_tx_loss_text_.emplace(pfrm, OverlayCoord{1, 6});
+        network_rx_loss_text_.emplace(pfrm, OverlayCoord{1, 7});
+        scratch_buf_avail_text_.emplace(pfrm, OverlayCoord{1, 8});
 
         const auto colors =
             fps_frame_count_ < 55
@@ -396,6 +423,9 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
         network_rx_loss_text_->append(
             locale_string(LocaleString::network_rx_loss_stats_suffix),
             rx_loss_colors);
+        link_saturation_text_->append(net_stats.link_saturation_);
+        link_saturation_text_->append(
+            locale_string(LocaleString::link_saturation_stats_suffix));
         scratch_buf_avail_text_->append(pfrm.scratch_buffers_remaining());
         scratch_buf_avail_text_->append(
             locale_string(LocaleString::scratch_buf_avail_stats_suffix));
@@ -1435,7 +1465,14 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool_.create<NotebookState>(
              locale_string(LocaleString::navigation_pamphlet));
      },
-     LocaleString::navigation_pamphlet_title}};
+     LocaleString::navigation_pamphlet_title},
+    {STANDARD_ITEM_HANDLER(orange),
+     [](Platform&, Game& game) {
+         game.player().add_health(1);
+         return null_state();
+     },
+     LocaleString::orange_title,
+     InventoryItemHandler::yes}};
 
 
 static const InventoryItemHandler* inventory_item_handler(Item::Type type)
@@ -1946,7 +1983,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 }
             }
             redraw_selector(112);
-        } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        } else if (pfrm.keyboard().down_transition<Key::action_2>() or
+                   pfrm.keyboard().down_transition<Key::action_1>()) {
             if (selector_pos_ < items_.size()) {
                 int skip = page_ * items_.capacity() + selector_pos_;
                 bool done = false;
@@ -1959,15 +1997,29 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                         if (done) {
                             return;
                         }
-                        if (auto handler = inventory_item_handler(item)) {
-                            handler->callback_(pfrm, game);
-                            game.inventory().remove_item(page, col, row);
-                            done = true;
+                        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+                            if (auto handler = inventory_item_handler(item)) {
+                                handler->callback_(pfrm, game);
+                                game.inventory().remove_item(page, col, row);
+                                done = true;
 
-                            if (item not_eq items_[selector_pos_]) {
-                                while (true)
-                                    ;
+                                if (item not_eq items_[selector_pos_]) {
+                                    while (true)
+                                        ;
+                                }
                             }
+                        } else {
+                            done = true;
+                            // Intended for sharing items in multiplayer
+                            // mode. Drop an item chest, send a message to the
+                            // other game.
+                            if (share_item(pfrm,
+                                           game,
+                                           game.player().get_position(),
+                                           items_[selector_pos_])) {
+                                game.inventory().remove_item(page, col, row);
+                            }
+
                         }
                     });
                 draw_items(pfrm, game);
@@ -2950,7 +3002,7 @@ void NewLevelState::exit(Platform& pfrm, Game& game, State&)
     // logic during level generation, makes sense to zero-out the delta clock,
     // otherwise the game will go into the next update cycle in the new state
     // with a huge delta time.
-    DeltaClock::instance().reset();
+    pfrm.delta_clock().reset();
 
     text_[0].reset();
     text_[1].reset();

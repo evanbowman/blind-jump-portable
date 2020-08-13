@@ -58,7 +58,7 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
 
     case net_event::PlayerInfo::DisplayColor::got_coin:
         sprite_.set_mix({current_zone(game).energy_glow_color_,
-                         static_cast<u8>(info.get_color_amount() << 4)});
+                         static_cast<u8>(info.get_color_amount())});
         break;
 
     case net_event::PlayerInfo::DisplayColor::got_heart:

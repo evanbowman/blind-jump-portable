@@ -40,10 +40,6 @@ template <typename T, typename U = T> struct Rect {
 };
 
 
-s32 fast_divide(s32 numerator, s32 denominator);
-s32 fast_mod(s32 numerator, s32 denominator);
-
-
 template <typename T> T abs(const T& val)
 {
     return (val > 0) ? val : val * -1;

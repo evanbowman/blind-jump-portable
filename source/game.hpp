@@ -308,3 +308,52 @@ inline int enemies_remaining(Game& game)
 
     return remaining;
 }
+
+
+// Create an item chest, evicting any less-essential entities from the detail
+// group in the process. Mainly intended for item sharing in multiplayer
+// mode.
+inline bool create_item_chest(Game& game,
+                              const Vec2<Float>& position,
+                              Item::Type item,
+                              bool locked)
+{
+    // If you wanted to prevent one player from spawning too many item chests
+    // and lagging the game:
+    //
+    // if (length(game.details().get<ItemChest>()) > 6) {
+    //     for (auto it = game.details().get<ItemChest>().begin();
+    //          it not_eq game.details().get<ItemChest>().end(); ++it) {
+    //         if ((*it)->state() == ItemChest::State::opened) {
+    //             game.details().get<ItemChest>().erase(it);
+    //             break;
+    //         }
+    //     }
+    // }
+    //
+    if (game.details().spawn<ItemChest>(position, item, locked)) {
+        return true;
+    }
+
+    for (auto it = game.details().get<ItemChest>().begin();
+         it not_eq game.details().get<ItemChest>().end();
+         ++it) {
+        if ((*it)->state() == ItemChest::State::opened) {
+            game.details().get<ItemChest>().erase(it);
+            return game.details().spawn<ItemChest>(position, item, locked);
+        }
+    }
+
+    if (not game.details().get<Rubble>().empty()) {
+        game.details().get<Rubble>().pop();
+        return game.details().spawn<ItemChest>(position, item, locked);
+    }
+
+    return false;
+}
+
+
+bool share_item(Platform& pfrm,
+                Game& game,
+                const Vec2<Float>& position,
+                Item::Type item);

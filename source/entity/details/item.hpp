@@ -24,6 +24,7 @@ public:
         engineer_notebook,
         signal_jammer,
         navigation_pamphlet,
+        orange,
         count
     };
 

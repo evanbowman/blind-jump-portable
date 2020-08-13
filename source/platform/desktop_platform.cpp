@@ -1812,33 +1812,11 @@ Platform::NetworkPeer::~NetworkPeer()
 
 Platform::NetworkPeer::Stats Platform::NetworkPeer::stats() const
 {
-    return {0, 0, 0};
+    return {0, 0, 0, 0, 0};
 }
 
 
 Platform::NetworkPeer::Interface Platform::NetworkPeer::interface() const
 {
     return Interface::internet;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Misc
-////////////////////////////////////////////////////////////////////////////////
-
-
-// There was a reason to have platform specific versions of these functions,
-// some embedded systems do not support division in hardware, so it needs to be
-// implemented in software or via BIOS calls. For desktop systems, though, we
-// don't need to worry so much about the speed of a division operation, at least
-// not to the same extent as for older 32bit microcontrollers.
-s32 fast_divide(s32 numerator, s32 denominator)
-{
-    return numerator / denominator;
-}
-
-
-s32 fast_mod(s32 numerator, s32 denominator)
-{
-    return numerator % denominator;
 }

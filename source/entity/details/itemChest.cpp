@@ -6,8 +6,9 @@
 #include "string.hpp"
 
 
-ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item)
-    : state_(State::closed), item_(item)
+ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item, bool locked)
+    : state_(locked ? State::closed_locked : State::closed_unlocked),
+      item_(item)
 {
     position_ = pos;
 
@@ -34,14 +35,18 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
     const auto& pos = sprite_.get_position();
 
     switch (state_) {
-    case State::closed:
-
+    case State::closed_locked:
+    case State::closed_unlocked:
         if (visible()) {
             if (pfrm.keyboard().down_transition<Key::action_2>()) {
 
-                if (manhattan_length(player_pos, pos) < 32) {
+                if (distance(player_pos, pos) < 24) {
 
-                    if (int remaining = enemies_remaining(game)) {
+                    const int remaining = enemies_remaining(game);
+                    if (game.peer() and distance(pos, game.peer()->get_position()) < 32) {
+
+                        push_notification(pfrm, game.state(), locale_string(LocaleString::peer_too_close_to_item));
+                    } else if (state_ == State::closed_locked and remaining) {
 
                         NotificationStr str;
 
@@ -62,6 +67,16 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                         push_notification(pfrm, game.state(), str);
 
                     } else {
+                        if (state_ == State::closed_locked) {
+                            // Players can also drop their own item chests in
+                            // order to share items between games. Therefore, we
+                            // only want to give points to a player for opening
+                            // an item chest when that chest was originally
+                            // locked, i.e. one of the item chests spawned
+                            // during level generation.
+                            game.score() += 100;
+                        }
+
                         pfrm.sleep(10);
                         state_ = State::opening;
 
@@ -93,7 +108,6 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
         if (animation_.reverse(sprite_, dt)) {
             state_ = State::opened;
             game.inventory().push_item(pfrm, game, item_);
-            game.score() += 100;
         }
         break;
 
@@ -118,7 +132,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
 
 void ItemChest::sync(Platform& pfrm, const net_event::ItemChestOpened&)
 {
-    if (state_ == State::closed) {
+    if (state_ == State::closed_locked or state_ == State::closed_unlocked) {
         animation_.bind(sprite_);
         pfrm.speaker().play_sound("creak", 1, position_);
         state_ = State::sync_opening;

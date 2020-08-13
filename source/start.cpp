@@ -26,7 +26,7 @@ void UpdateTask::run()
         game_->acquire([this](Game& game) {
             pf_->keyboard().poll();
 
-            const auto delta = DeltaClock::instance().reset();
+            const auto delta = pf_->delta_clock().reset();
 
             game.update(*pf_, delta);
 

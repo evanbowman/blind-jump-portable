@@ -397,11 +397,11 @@ template <typename F> void instrument(Platform& pfrm, F&& callback)
     static int buffer[32];
     static std::optional<Text> text;
 
-    const auto before = DeltaClock::instance().sample();
+    const auto before = pfrm.delta_clock().sample();
 
     callback();
 
-    const auto after = DeltaClock::instance().sample();
+    const auto after = pfrm.delta_clock().sample();
 
     if (index < sample_count) {
         buffer[index++] = after - before;
@@ -417,7 +417,7 @@ template <typename F> void instrument(Platform& pfrm, F&& callback)
         accum /= 32;
 
         text.emplace(pfrm, OverlayCoord{1, 1});
-        text->assign(DeltaClock::duration(before, after));
+        text->assign(Platform::DeltaClock::duration(before, after));
         text->append(" micros");
     }
 }

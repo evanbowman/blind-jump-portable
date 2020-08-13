@@ -31,7 +31,7 @@ template <Value N> Value choice(Generator& gen)
 
 inline Value choice(Value n, Generator& gen)
 {
-    return fast_mod(get(gen), n);
+    return get(gen) % n;
 }
 
 

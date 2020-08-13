@@ -26,39 +26,6 @@ struct FontColors {
 // Anything platform specific should be defined here.
 
 
-////////////////////////////////////////////////////////////////////////////////
-// DeltaClock
-////////////////////////////////////////////////////////////////////////////////
-
-
-class DeltaClock {
-public:
-    static DeltaClock& instance()
-    {
-        static DeltaClock inst;
-        return inst;
-    }
-
-    ~DeltaClock();
-
-    Microseconds reset();
-
-
-    using TimePoint = int;
-
-    TimePoint sample() const;
-
-
-    static Microseconds duration(TimePoint t1, TimePoint t2);
-
-
-private:
-    DeltaClock();
-
-    void* impl_;
-};
-
-
 enum class Key {
     action_1,
     action_2,
@@ -89,6 +56,7 @@ public:
     class Logger;
     class Speaker;
     class NetworkPeer;
+    class DeltaClock;
 
     using DeviceName = StringBuffer<23>;
     DeviceName device_name() const;
@@ -116,6 +84,11 @@ public:
     inline NetworkPeer& network_peer()
     {
         return network_peer_;
+    }
+
+    inline DeltaClock& delta_clock()
+    {
+        return delta_clock_;
     }
 
     // NOTE: I must admit, the platform class interface has become quite
@@ -237,6 +210,35 @@ public:
     ScratchBufferPtr make_scratch_buffer();
 
     int scratch_buffers_remaining();
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // DeltaClock
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    class DeltaClock {
+    public:
+        ~DeltaClock();
+
+        Microseconds reset();
+
+
+        using TimePoint = int;
+
+        TimePoint sample() const;
+
+
+        static Microseconds duration(TimePoint t1, TimePoint t2);
+
+
+    private:
+        friend class Platform;
+
+        DeltaClock();
+
+        void* impl_;
+    };
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -502,9 +504,10 @@ public:
             int receive_count_;
             int transmit_loss_;
             int receive_loss_;
+            int link_saturation_; // percentage 0 to 100
         };
 
-        Stats stats() const;
+        Stats stats();
 
     private:
         void* impl_;
@@ -572,6 +575,7 @@ private:
     friend int main();
 
     NetworkPeer network_peer_;
+    DeltaClock delta_clock_;
     Screen screen_;
     Keyboard keyboard_;
     Speaker speaker_;

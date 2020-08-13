@@ -341,8 +341,10 @@ const char* locale_string(LocaleString ls)
         case LocaleString::explosive_rounds_title: return "Explosive rounds (2)";
         case LocaleString::seed_packet_title: return "Seed packet";
         case LocaleString::navigation_pamphlet_title: return "Navigation pamphlet";
+        case LocaleString::orange_title: return "Orange";
         case LocaleString::single_use_warning: return "(SINGLE USE)";
         case LocaleString::locked: return "locked, ";
+        case LocaleString::peer_too_close_to_item: return "blocked, Peer is in the way!";
         case LocaleString::enemies_remaining_singular: return " enemy left";
         case LocaleString::enemies_remaining_plural: return " enemies left";
         case LocaleString::nothing: return "Nothing";
@@ -389,6 +391,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::network_rx_stats_suffix: return " rx";
         case LocaleString::network_tx_loss_stats_suffix: return " tl";
         case LocaleString::network_rx_loss_stats_suffix: return " rl";
+        case LocaleString::link_saturation_stats_suffix: return " lnsat";
         case LocaleString::scratch_buf_avail_stats_suffix: return " sbr";
 
         default: return empty_str;

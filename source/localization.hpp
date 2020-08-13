@@ -35,8 +35,10 @@ enum class LocaleString {
     signal_jammer_title,
     seed_packet_title,
     navigation_pamphlet_title,
+    orange_title,
     single_use_warning,
     locked,
+    peer_too_close_to_item,
     enemies_remaining_singular,
     enemies_remaining_plural,
     nothing,
@@ -84,6 +86,7 @@ enum class LocaleString {
     network_tx_loss_stats_suffix,
     network_rx_loss_stats_suffix,
     scratch_buf_avail_stats_suffix,
+    link_saturation_stats_suffix,
     map_required,
     count
 };
