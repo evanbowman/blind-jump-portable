@@ -1859,7 +1859,7 @@ s32 fast_mod(s32 numerator, s32 denominator)
 // display. At the same time, the game was less laggy, so maybe when I work out
 // the kinks, this function will eventually be moved to arm code instead of
 // thumb.
-static void audio_update()
+static void audio_update_isr()
 {
     alignas(4) AudioSample mixing_buffer[4];
 
@@ -1919,7 +1919,7 @@ static Microseconds watchdog_counter;
 static std::optional<Platform::WatchdogCallback> watchdog_callback;
 
 
-static void watchdog_update()
+static void watchdog_update_isr()
 {
     // NOTE: The watchdog timer is configured to have a period of 61.04
     // microseconds. 0xffff is the max counter value upon overflow.
@@ -1965,7 +1965,7 @@ cartridge_interrupt_handler();
 static void enable_watchdog()
 {
     irqEnable(IRQ_TIMER2);
-    irqSet(IRQ_TIMER2, watchdog_update);
+    irqSet(IRQ_TIMER2, watchdog_update_isr);
 
     REG_TM2CNT_H = 0x00C3;
     REG_TM2CNT_L = 0;
@@ -2127,7 +2127,7 @@ Platform::Platform()
     REG_SOUNDCNT_X = 0x0080; //turn sound chip on
 
     irqEnable(IRQ_TIMER1);
-    irqSet(IRQ_TIMER1, audio_update);
+    irqSet(IRQ_TIMER1, audio_update_isr);
 
     REG_TM0CNT_L = 0xffff;
     REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
@@ -2540,15 +2540,24 @@ static int multiplayer_is_master()
 }
 
 
+// NOTE: you may only call this function immediatly after a transmission,
+// otherwise, may return a garbage value.
 static int multiplayer_error()
 {
     return REG_SIOCNT & (1 << 6);
 }
 
 
+static bool multiplayer_validate_modes()
+{
+    // 1 if all GBAs are in the correct mode, 0 otherwise.
+    return REG_SIOCNT & (1 << 3);
+}
+
+
 static bool multiplayer_validate()
 {
-    if ((REG_SIOCNT & (1 << 3)) == 0 or multiplayer_error()) {
+    if (not multiplayer_validate_modes()) {
         return false;
     } else {
     }
@@ -2802,8 +2811,19 @@ static void multiplayer_tx_send()
 static void multiplayer_schedule_master_tx()
 {
     REG_TM2CNT_H = 0x00C1;
-    REG_TM2CNT_L = 65000; // TODO: Try using a shorter delay
-                          // (63339 == approx 6.5 milliseconds)
+    REG_TM2CNT_L = 65000; // Be careful with this delay! Due to manufacturing
+                          // differences between Gameboy Advance units, you
+                          // really don't want to get too smart, and try to
+                          // calculate the time right up to the boundary of
+                          // where you expect the interrupt to happen. Allow
+                          // some extra wiggle room, for other devices that may
+                          // raise a serial receive interrupt later than you
+                          // expect. Maybe, this timer could be sped up a bit,
+                          // but I don't really know... here's the thing, this
+                          // code CURRENTLY WORKS, so don't use a faster timer
+                          // interrupt until you've tested the code on a bunch
+                          // different real gba units (try out the code on the
+                          // original gba, both sp models, etc.)
 
     irqEnable(IRQ_TIMER2);
     irqSet(IRQ_TIMER2, [] {
@@ -2836,6 +2856,11 @@ static void multiplayer_schedule_tx()
 
 static void multiplayer_serial_isr()
 {
+    if (multiplayer_error()) {
+        // This bit is only valid after a transmission is completed. So we have
+        // to handle the error here... but what to do? Perhaps, we should
+        // disconnect...
+    }
     multiplayer_rx_receive();
     multiplayer_schedule_tx();
 }
@@ -2923,6 +2948,12 @@ static void multiplayer_init()
     while (not multiplayer_validate()) {
         delta += clk.reset();
         if (delta > seconds(20)) {
+            if (not multiplayer_validate_modes()) {
+                error(*::platform, "not all GBAs are in MULTI mode");
+            }
+            if (multiplayer_error()) {
+                error(*::platform, "MULTI hardware raised error bit");
+            }
             ::platform->network_peer().disconnect(); // just for good measure
             REG_SIOCNT = 0;
             irqDisable(IRQ_SERIAL);
