@@ -4617,7 +4617,6 @@ void NetworkConnectWaitState::exit(Platform& pfrm,
     pfrm.load_overlay_texture("overlay");
 
     if (not dynamic_cast<MenuState*>(&next_state)) {
-        pfrm.screen().fade(0.f);
 
         if (auto os = dynamic_cast<OverworldState*>(&next_state)) {
             if (pfrm.network_peer().is_connected()) {

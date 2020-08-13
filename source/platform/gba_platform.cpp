@@ -2066,6 +2066,10 @@ Platform::Platform()
         REG_TM3CNT_H = 1 << 7 | 1 << 6;
     });
 
+    // Surprisingly, the default value of SIOCNT is not necessarily zero! The
+    // source of many past serial comms headaches...
+    REG_SIOCNT = 0;
+
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
     // attempt to save, and if the save fails, assume flash. I don't really know
@@ -2950,9 +2954,6 @@ static void multiplayer_init()
         if (delta > seconds(20)) {
             if (not multiplayer_validate_modes()) {
                 error(*::platform, "not all GBAs are in MULTI mode");
-            }
-            if (multiplayer_error()) {
-                error(*::platform, "MULTI hardware raised error bit");
             }
             ::platform->network_peer().disconnect(); // just for good measure
             REG_SIOCNT = 0;

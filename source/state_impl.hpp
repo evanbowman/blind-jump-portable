@@ -789,7 +789,8 @@ private:
             // allow modifying difficulty.
             if (game.level() == 0 or enemies_remaining(game) == 0) {
                 if (dir > 0) {
-                    if (difficulty < static_cast<int>(Settings::Difficulty::count) - 1) {
+                    if (difficulty <
+                        static_cast<int>(Settings::Difficulty::count) - 1) {
                         difficulty += 1;
                     }
                 } else if (dir < 0) {

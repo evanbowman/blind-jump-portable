@@ -182,14 +182,14 @@ void Theif::injured(Platform& pfrm, Game& game, Health amount)
 
     if (alive()) {
         pfrm.speaker().play_sound("click", 1, position_);
+    } else {
+        game.score() += 10;
     }
 }
 
 
 void Theif::on_death(Platform& pf, Game& game)
 {
-    game.score() += 10;
-
     pf.sleep(5);
 
     static const Item::Type item_drop_vec[] = {Item::Type::coin,

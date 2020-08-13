@@ -306,6 +306,21 @@ void Dasher::injured(Platform& pf, Game& game, Health amount)
 
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);
+    } else {
+        const auto add_score =
+            Conf(pf).expect<Conf::Integer>("scoring", "dasher");
+
+        switch (game.difficulty()) {
+        case Settings::Difficulty::count:
+        case Settings::Difficulty::normal:
+            game.score() += add_score;
+            break;
+
+        case Settings::Difficulty::hard:
+        case Settings::Difficulty::survival:
+            game.score() += add_score * 1.5f;
+            break;
+        }
     }
 
     sprite_.set_mix({c, 255});
@@ -338,21 +353,6 @@ void Dasher::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 
 void Dasher::on_death(Platform& pf, Game& game)
 {
-    const auto add_score = Conf(pf).expect<Conf::Integer>("scoring", "dasher");
-
-    switch (game.difficulty()) {
-    case Settings::Difficulty::count:
-    case Settings::Difficulty::normal:
-        game.score() += add_score;
-        break;
-
-    case Settings::Difficulty::hard:
-    case Settings::Difficulty::survival:
-        game.score() += add_score * 1.5f;
-        break;
-    }
-
-
     pf.sleep(5);
 
     static const Item::Type item_drop_vec[] = {Item::Type::coin,

@@ -201,6 +201,21 @@ void Drone::injured(Platform& pf, Game& game, Health amount)
 
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);
+    } else {
+        const auto add_score =
+            Conf(pf).expect<Conf::Integer>("scoring", "drone");
+
+        switch (game.difficulty()) {
+        case Settings::Difficulty::count:
+        case Settings::Difficulty::normal:
+            game.score() += add_score;
+            break;
+
+        case Settings::Difficulty::hard:
+        case Settings::Difficulty::survival:
+            game.score() += add_score * 1.5f;
+            break;
+        }
     }
 }
 
@@ -228,27 +243,13 @@ void Drone::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 void Drone::on_collision(Platform& pf, Game& game, Player& player)
 {
     if (state_ == State::rush) {
-        debit_health(pf, get_health());
+        injured(pf, game, get_health());
     }
 }
 
 
 void Drone::on_death(Platform& pf, Game& game)
 {
-    const auto add_score = Conf(pf).expect<Conf::Integer>("scoring", "drone");
-
-    switch (game.difficulty()) {
-    case Settings::Difficulty::count:
-    case Settings::Difficulty::normal:
-        game.score() += add_score;
-        break;
-
-    case Settings::Difficulty::hard:
-    case Settings::Difficulty::survival:
-        game.score() += add_score * 1.5f;
-        break;
-    }
-
     pf.sleep(5);
 
     static const Item::Type item_drop_vec[] = {Item::Type::coin,
