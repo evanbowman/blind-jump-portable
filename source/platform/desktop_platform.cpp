@@ -287,7 +287,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
-DeltaClock::DeltaClock() : impl_(new sf::Clock)
+Platform::DeltaClock::DeltaClock() : impl_(new sf::Clock)
 {
 }
 
@@ -299,7 +299,7 @@ std::chrono::time_point throttle_stop =
 static int sleep_time;
 
 
-Microseconds DeltaClock::reset()
+Microseconds Platform::DeltaClock::reset()
 {
     // NOTE: I originally developed the game on the nintendo gameboy
     // advance. The game was designed to use delta timing, but stuff still seems
@@ -337,7 +337,7 @@ Microseconds DeltaClock::reset()
 }
 
 
-DeltaClock::~DeltaClock()
+Platform::DeltaClock::~DeltaClock()
 {
     delete reinterpret_cast<sf::Clock*>(impl_);
 }
@@ -1810,7 +1810,7 @@ Platform::NetworkPeer::~NetworkPeer()
 }
 
 
-Platform::NetworkPeer::Stats Platform::NetworkPeer::stats() const
+Platform::NetworkPeer::Stats Platform::NetworkPeer::stats()
 {
     return {0, 0, 0, 0, 0};
 }
