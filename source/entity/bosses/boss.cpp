@@ -28,12 +28,12 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
                     for (int i = 0; i <
                                     [&] {
                                         switch (game.difficulty()) {
-                                        case Difficulty::count:
-                                        case Difficulty::normal:
+                                        case Settings::Difficulty::count:
+                                        case Settings::Difficulty::normal:
                                             break;
 
-                                        case Difficulty::survival:
-                                        case Difficulty::hard:
+                                        case Settings::Difficulty::survival:
+                                        case Settings::Difficulty::hard:
                                             return 2;
                                         }
                                         return 3;
@@ -57,13 +57,13 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
     const auto score = Conf(pf).expect<Conf::Integer>("scoring", "boss");
 
     switch (game.difficulty()) {
-    case Difficulty::count:
-    case Difficulty::normal:
+    case Settings::Difficulty::count:
+    case Settings::Difficulty::normal:
         game.score() += score;
         break;
 
-    case Difficulty::hard:
-    case Difficulty::survival:
+    case Settings::Difficulty::hard:
+    case Settings::Difficulty::survival:
         game.score() += score * 1.15f;
         break;
     }

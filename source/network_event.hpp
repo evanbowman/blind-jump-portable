@@ -6,6 +6,7 @@
 #include "number/numeric.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
+#include "settings.hpp"
 
 
 namespace net_event {
@@ -248,7 +249,11 @@ struct NewLevelSyncSeed {
     Header header_;
     HostInteger<rng::Generator> random_state_;
 
-    u8 unused_[7];
+    // Technically, this has nothing to do with the seed value. But we have lots
+    // of extra room in the message, to sync up other stuff.
+    u8 difficulty_;
+
+    u8 unused_[6];
 
     static const auto mt = Header::MessageType::new_level_sync_seed;
 };

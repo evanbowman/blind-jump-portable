@@ -28,12 +28,12 @@ Dasher::Dasher(const Vec2<Float>& position)
 static Float shot_speed(Game& game)
 {
     switch (game.difficulty()) {
-    case Difficulty::count:
-    case Difficulty::normal:
+    case Settings::Difficulty::count:
+    case Settings::Difficulty::normal:
         break;
 
-    case Difficulty::survival:
-    case Difficulty::hard:
+    case Settings::Difficulty::survival:
+    case Settings::Difficulty::hard:
         return 0.00015f;
     }
 
@@ -98,7 +98,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             if (game.level() > boss_0_level) {
                 add_health(2);
             }
-            if (game.difficulty() == Difficulty::hard) {
+            if (game.difficulty() == Settings::Difficulty::hard) {
                 add_health(1);
             }
         }
@@ -341,13 +341,13 @@ void Dasher::on_death(Platform& pf, Game& game)
     const auto add_score = Conf(pf).expect<Conf::Integer>("scoring", "dasher");
 
     switch (game.difficulty()) {
-    case Difficulty::count:
-    case Difficulty::normal:
+    case Settings::Difficulty::count:
+    case Settings::Difficulty::normal:
         game.score() += add_score;
         break;
 
-    case Difficulty::hard:
-    case Difficulty::survival:
+    case Settings::Difficulty::hard:
+    case Settings::Difficulty::survival:
         game.score() += add_score * 1.5f;
         break;
     }

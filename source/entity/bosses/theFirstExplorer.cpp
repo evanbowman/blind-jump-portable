@@ -218,12 +218,12 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
         if (timer_ > [&] {
                 switch (game.difficulty()) {
-                case Difficulty::count:
-                case Difficulty::normal:
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::normal:
                     break;
 
-                case Difficulty::survival:
-                case Difficulty::hard:
+                case Settings::Difficulty::survival:
+                case Settings::Difficulty::hard:
                     return milliseconds(70);
                 }
 
@@ -276,11 +276,11 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
         timer_ += dt;
         if (timer_ > [&]() {
                 switch (game.difficulty()) {
-                case Difficulty::count:
-                case Difficulty::normal:
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::normal:
                     break;
-                case Difficulty::survival:
-                case Difficulty::hard:
+                case Settings::Difficulty::survival:
+                case Settings::Difficulty::hard:
                     return milliseconds(580);
                 }
                 return milliseconds(640);

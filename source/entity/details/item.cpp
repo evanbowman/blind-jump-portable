@@ -56,7 +56,7 @@ void Item::update(Platform&, Game& game, Microseconds dt)
     timer_ += dt;
 
     if (visible()) {
-        if (game.difficulty() == Difficulty::survival and
+        if (game.difficulty() == Settings::Difficulty::survival and
             type_ == Type::heart) {
             set_type(Type::coin);
         }

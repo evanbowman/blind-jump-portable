@@ -11,13 +11,13 @@ public:
         : reload_(delay), shot_count_(0)
     {
         switch (game.difficulty()) {
-        case Difficulty::count:
-        case Difficulty::normal:
+        case Settings::Difficulty::count:
+        case Settings::Difficulty::normal:
             reload_ += milliseconds(300);
             break;
 
-        case Difficulty::hard:
-        case Difficulty::survival:
+        case Settings::Difficulty::hard:
+        case Settings::Difficulty::survival:
             break;
         }
     }
@@ -46,13 +46,13 @@ public:
             if (++shot_count_ == [&] { return 3; }()) {
                 shot_count_ = 0;
                 switch (game.difficulty()) {
-                case Difficulty::count:
-                case Difficulty::normal:
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::normal:
                     reload_ = milliseconds(1300);
                     break;
 
-                case Difficulty::hard:
-                case Difficulty::survival:
+                case Settings::Difficulty::hard:
+                case Settings::Difficulty::survival:
                     reload_ = milliseconds(900);
                     break;
                 }

@@ -81,7 +81,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::inactive;
 
-            if (game.difficulty() == Difficulty::hard) {
+            if (game.difficulty() == Settings::Difficulty::hard) {
                 add_health(1);
             }
         }
@@ -238,13 +238,13 @@ void Drone::on_death(Platform& pf, Game& game)
     const auto add_score = Conf(pf).expect<Conf::Integer>("scoring", "drone");
 
     switch (game.difficulty()) {
-    case Difficulty::count:
-    case Difficulty::normal:
+    case Settings::Difficulty::count:
+    case Settings::Difficulty::normal:
         game.score() += add_score;
         break;
 
-    case Difficulty::hard:
-    case Difficulty::survival:
+    case Settings::Difficulty::hard:
+    case Settings::Difficulty::survival:
         game.score() += add_score * 1.5f;
         break;
     }

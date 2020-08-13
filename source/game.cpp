@@ -1417,7 +1417,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                                    Item::Type::explosive_rounds_2);
         enemies().spawn<Drone>(Vec2<Float>{159, 275});
         if (static_cast<int>(difficulty()) <
-            static_cast<int>(Difficulty::hard)) {
+            static_cast<int>(Settings::Difficulty::hard)) {
             details().spawn<Item>(
                 Vec2<Float>{80, 332}, pfrm, Item::Type::heart);
         }
@@ -1517,7 +1517,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         int heart_count =
             Conf(pfrm).expect<Conf::Integer>("level-setup", "max_hearts");
 
-        if (difficulty() == Difficulty::hard) {
+        if (difficulty() == Settings::Difficulty::hard) {
             heart_count = 0;
         }
 
@@ -1582,7 +1582,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 // challenging. But for the first few levels, do not make hearts
                 // more scarce.
                 const auto heart_chance = [&]() -> int {
-                    if (difficulty() == Difficulty::hard) {
+                    if (difficulty() == Settings::Difficulty::hard) {
                         return 1;
                     } else {
                         return 3 + std::max(level() - 4, Level(0)) * 0.2f;
@@ -1672,11 +1672,11 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     const int max_hearts = [&] {
         switch (difficulty()) {
-        case Difficulty::survival:
-        case Difficulty::hard:
+        case Settings::Difficulty::survival:
+        case Settings::Difficulty::hard:
             return 0;
         default:
-        case Difficulty::normal:
+        case Settings::Difficulty::normal:
             return 2;
         }
     }();

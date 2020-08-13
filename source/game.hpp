@@ -169,7 +169,7 @@ public:
         return persistent_data_;
     }
 
-    Difficulty difficulty() const
+    Settings::Difficulty difficulty() const
     {
         return persistent_data_.settings_.difficulty_;
     }

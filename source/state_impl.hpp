@@ -789,7 +789,7 @@ private:
             // allow modifying difficulty.
             if (game.level() == 0 or enemies_remaining(game) == 0) {
                 if (dir > 0) {
-                    if (difficulty < static_cast<int>(Difficulty::count) - 1) {
+                    if (difficulty < static_cast<int>(Settings::Difficulty::count) - 1) {
                         difficulty += 1;
                     }
                 } else if (dir < 0) {
@@ -800,20 +800,20 @@ private:
             }
 
             game.persistent_data().settings_.difficulty_ =
-                static_cast<Difficulty>(difficulty);
+                static_cast<Settings::Difficulty>(difficulty);
 
-            switch (static_cast<Difficulty>(difficulty)) {
-            case Difficulty::normal:
+            switch (static_cast<Settings::Difficulty>(difficulty)) {
+            case Settings::Difficulty::normal:
                 return locale_string(LocaleString::settings_difficulty_normal);
 
-            case Difficulty::hard:
+            case Settings::Difficulty::hard:
                 return locale_string(LocaleString::settings_difficulty_hard);
 
-            case Difficulty::survival:
+            case Settings::Difficulty::survival:
                 return locale_string(
                     LocaleString::settings_difficulty_survival);
 
-            case Difficulty::count:
+            case Settings::Difficulty::count:
                 break;
             }
             return "";
