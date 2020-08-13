@@ -18,6 +18,7 @@ struct Header {
         player_info,
         player_spawn_laser,
         player_entered_gate,
+        player_died,
         enemy_health_changed,
         enemy_state_sync,
         sync_seed,
@@ -167,6 +168,16 @@ struct PlayerEnteredGate {
 NET_EVENT_SIZE_CHECK(PlayerEnteredGate)
 
 
+struct PlayerDied {
+    Header header_;
+
+    u8 unused_[11];
+
+    static const auto mt = Header::MessageType::player_died;
+};
+NET_EVENT_SIZE_CHECK(PlayerDied)
+
+
 struct ItemChestOpened {
     Header header_;
     HostInteger<Entity::Id> id_;
@@ -289,6 +300,9 @@ public:
     {
     }
     virtual void receive(const PlayerEnteredGate&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const PlayerDied&, Platform&, Game&)
     {
     }
     virtual void receive(const SyncSeed&, Platform&, Game&)

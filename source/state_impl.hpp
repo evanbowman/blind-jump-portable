@@ -29,6 +29,11 @@ public:
             }
         }
     }
+
+    void receive(const net_event::PlayerDied&, Platform& pfrm, Game&) override
+    {
+        pfrm.network_peer().disconnect();
+    }
 };
 
 

@@ -26,8 +26,8 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
         }                                                                      \
         MESSAGE_TYPE m;                                                        \
         memcpy(&m, message->data_, sizeof m);                                  \
-        listener.receive(m, pfrm, game);                                       \
         pfrm.network_peer().poll_consume(sizeof(MESSAGE_TYPE));                \
+        listener.receive(m, pfrm, game);                                       \
         continue;                                                              \
     }
 
@@ -42,8 +42,12 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             HANDLE_MESSAGE(ItemChestOpened)
             HANDLE_MESSAGE(QuickChat)
             HANDLE_MESSAGE(PlayerSpawnLaser)
+            HANDLE_MESSAGE(PlayerDied)
         }
 
+        error(pfrm, "garbled message!?");
+        // FIXME: rather than an endless loop, maybe we should disconnect our
+        // network peer?
         while (true) {
             // somehow, we've ended up in an erroneous state...
         }

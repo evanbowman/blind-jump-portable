@@ -862,7 +862,13 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         player_death(pfrm, game, game.player().get_position());
 
         if (pfrm.network_peer().is_connected()) {
-            pfrm.network_peer().disconnect();
+            net_event::PlayerDied pd;
+            net_event::transmit(pfrm, pd);
+
+            // Eventually, in a future state, we will want to disconnect our own
+            // network peer. But we don't want to disconnect right away,
+            // otherwise, the PlayerDied event may not be sent out. So wait
+            // until the next state, or the state afterwards.
         }
 
         return state_pool_.create<DeathFadeState>(game);
@@ -1147,6 +1153,13 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
                    image_width,
                    3,
                    Layer::overlay);
+
+        if (pfrm.network_peer().is_connected()) {
+            if (game.peer()) {
+                game.peer().reset();
+            }
+            pfrm.network_peer().disconnect();
+        }
 
         return state_pool_.create<DeathContinueState>();
     } else {

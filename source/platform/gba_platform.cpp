@@ -2529,9 +2529,6 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// #include "/opt/devkitpro/libgba/include/gba_sio.h"
-
-
 Platform::NetworkPeer::NetworkPeer()
 {
 }
@@ -2961,6 +2958,7 @@ static void multiplayer_init()
             for (u32 i = 0; i < sizeof handshake; ++i) {
                 if (((u8*)msg->data_)[i] not_eq handshake[i]) {
                     ::platform->network_peer().disconnect();
+                    info(*::platform, "invalid handshake");
                     return;
                 }
             }
@@ -3024,7 +3022,12 @@ bool Platform::NetworkPeer::is_host() const
 
 void Platform::NetworkPeer::disconnect()
 {
+    // Be very careful editing this function. We need to get ourselves back to a
+    // completely clean slate, otherwise, we won't be able to reconnect (e.g. if
+    // you leave a message sitting in the transmit ring, it may be erroneously
+    // sent out when you try to reconnect, instead of the handshake message);
     if (is_connected()) {
+        info(*::platform, "disconnected!");
         multiplayer_connected = false;
         irqDisable(IRQ_SERIAL);
         if (multiplayer_is_master()) {
@@ -3041,11 +3044,13 @@ void Platform::NetworkPeer::disconnect()
         rx_iter_state = 0;
         if (rx_current_message) {
             rx_message_pool.post(rx_current_message);
+            rx_current_message = nullptr;
         }
         rx_current_all_zeroes = true;
-        for (auto msg : rx_ring) {
+        for (auto& msg : rx_ring) {
             if (msg) {
                 rx_message_pool.post(msg);
+                msg = nullptr;
             }
         }
         rx_ring_write_pos = 0;
@@ -3054,10 +3059,12 @@ void Platform::NetworkPeer::disconnect()
         tx_iter_state = 0;
         if (tx_current_message) {
             tx_message_pool.post(tx_current_message);
+            tx_current_message = nullptr;
         }
-        for (auto msg : tx_ring) {
+        for (auto& msg : tx_ring) {
             if (msg) {
                 tx_message_pool.post(msg);
+                msg = nullptr;
             }
         }
         tx_ring_write_pos = 0;
