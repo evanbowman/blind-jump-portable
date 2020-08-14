@@ -2008,7 +2008,9 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                                         ;
                                 }
                             }
-                        } else {
+                            // NOTE: boss level spritesheets do not necessarily
+                            // include the sprites for item chests.
+                        } else if (not is_boss_level(game.level())) {
                             done = true;
                             // Intended for sharing items in multiplayer
                             // mode. Drop an item chest, send a message to the
