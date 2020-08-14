@@ -179,15 +179,15 @@ void OverworldState::receive(const net_event::ItemChestShared& s,
                              Platform& pfrm,
                              Game& game)
 {
-    bool collision = false;
+    bool id_collision = false;
     game.details().transform([&](auto& buf) {
                                  for (auto& e : buf) {
                                      if (e->id() == s.id_.get()) {
-                                         collision = true;
+                                         id_collision = true;
                                      }
                                  }
                              });
-    if (collision) {
+    if (id_collision) {
         error(pfrm, "failed to receive shared item chest, ID collision!");
         return;
     }
