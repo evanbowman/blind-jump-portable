@@ -2,6 +2,8 @@
 
 You should find this readme mosty up-to-date, but as the game is under active development, everything is subject to change, and sometimes edits to the readme lag significantly behind changes to the game itself.
 
+<img src="imgs_for_readme/header.gif"/>
+
 ## Contents
 <!--ts-->
    * [Contents](#contents)
