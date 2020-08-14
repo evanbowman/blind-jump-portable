@@ -74,10 +74,7 @@ public:
     static Id max_id();
     // Be careful with this function! Before calling, you should make sure that
     // no similar extant entities share the same id.
-    void override_id(Id id)
-    {
-        id_ = id;
-    }
+    void override_id(Id id);
 
 
     Id id() const

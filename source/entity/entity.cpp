@@ -4,6 +4,16 @@
 static Entity::Id id_counter_ = 0;
 
 
+void Entity::override_id(Id id)
+{
+    id_ = id;
+
+    if (id_counter_ < id) {
+        id_counter_ = id;
+    }
+}
+
+
 void Entity::reset_ids()
 {
     // I'm not actually worried about running out of ids. The real concern, is
