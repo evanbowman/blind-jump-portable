@@ -44,7 +44,7 @@ On the gameboy advance, use the d-pad to move, the A button to shoot, and the B 
 
 ### Multiplayer
 
-<img src="imgs_for_readme/multiplayer1.png"/><img src="imgs_for_readme/multiplayer2.png"/>
+<img src="imgs_for_readme/multiplayer_connect.gif"/>
 
 The game supports multiplayer over the gameboy advance's serial port. While certainly incomplete, you should find the multiplayer mode to be more-or-less playable.
 To enable, press the start button on both devices, and then select the "Connect Peer" option within twenty seconds. You need to be on the very first level to connect a peer, otherwise the option will be grayed-out. If running on an actual GAMBOY ADVANCE, you may need to select "Connect Peer" on the device plugged into the gray end of the link cable first, followed by the device connected to the smaller purple end of the link cable. This is a known issue, and I am still working on resolving this, at time of writing.
