@@ -1302,37 +1302,37 @@ ItemRarity rarity(Item::Type item)
         return 1;
 
     case Item::Type::orange:
-        return 1;
-
-    case Item::Type::engineer_notebook:
-        return 1;
-
-    case Item::Type::surveyor_logbook:
-        return 1;
-
-    case Item::Type::lethargy:
-        return 1;
-
-    case Item::Type::old_poster_1:
-        return 1;
-
-    case Item::Type::seed_packet:
-        return 1;
-
-    case Item::Type::navigation_pamphlet:
-        return 1;
-
-    case Item::Type::signal_jammer:
         return 2;
 
-    case Item::Type::accelerator:
+    case Item::Type::engineer_notebook:
+        return 2;
+
+    case Item::Type::surveyor_logbook:
+        return 2;
+
+    case Item::Type::lethargy:
+        return 2;
+
+    case Item::Type::old_poster_1:
+        return 2;
+
+    case Item::Type::seed_packet:
+        return 2;
+
+    case Item::Type::navigation_pamphlet:
+        return 2;
+
+    case Item::Type::signal_jammer:
         return 3;
+
+    case Item::Type::accelerator:
+        return 4;
 
     case Item::Type::explosive_rounds_2:
-        return 3;
+        return 4;
 
     case Item::Type::map_system:
-        return 6;
+        return 7;
     }
     return 0;
 }
