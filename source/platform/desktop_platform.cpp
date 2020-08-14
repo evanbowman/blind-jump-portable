@@ -1820,3 +1820,40 @@ Platform::NetworkPeer::Interface Platform::NetworkPeer::interface() const
 {
     return Interface::internet;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// SystemClock
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+DateTime Platform::SystemClock::now()
+{
+    const auto t = std::chrono::system_clock::now();
+
+    auto tt = std::chrono::system_clock::to_time_t(t);
+
+    tm local_tm = *localtime(&tt);
+
+    DateTime info;
+    info.year_ = local_tm.tm_year;
+    info.month_ = local_tm.tm_mon;
+    info.day_ = local_tm.tm_mday;
+    info.hour_ = local_tm.tm_hour;
+    info.minute_ = local_tm.tm_min;
+    info.second_ = local_tm.tm_sec;
+
+    return info;
+}
+
+
+void Platform::SystemClock::init(Platform& pfrm)
+{
+}
+
+
+Platform::SystemClock::SystemClock()
+{
+
+}
