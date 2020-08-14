@@ -40,7 +40,14 @@ The game uses procedural algorithms to generate the levels, so the level designs
 
 ### Controls
 
-On the gameboy advance, use the d-pad to move, the A button to shoot, and the B button to interact with things and to select items and options in the game's menus. If you hold the B button while walking, you will shoot repeatedly, and also the player will strafe. Hold the right shoulder button, or the left shoulder button, to open up a quick item selector menu, or a minimap, respectively. To access all for your items, press select. Press start for more options.
+On the gameboy advance, use the d-pad to move, the A button to shoot, and the B button to interact with things and to select items and options in the game's menus. If you hold the B button while walking, you will shoot repeatedly, and also the player will strafe. 
+
+Hold the right shoulder button, or the left shoulder button, to open up a quick item selector menu, or a minimap, respectively. 
+
+<img src="imgs_for_readme/item_quick_select.gif"/>
+<img src="imgs_for_readme/quick_map.gif"/>
+
+To access all for your items, press select. Press start for more options.
 
 ### Multiplayer
 
