@@ -6,6 +6,7 @@
 #include "number/numeric.hpp"
 #include "powerup.hpp"
 #include "settings.hpp"
+#include "dateTime.hpp"
 
 
 using Level = s32;
@@ -38,6 +39,8 @@ struct PersistentData {
     u32 powerup_count_ = 0;
 
     Settings settings_;
+
+    DateTime timestamp_ = {0, 0, 0, 0, 0, 0};
 
     void store_powerups(const Powerups& powerups);
 

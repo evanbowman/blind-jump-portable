@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entity/details/item.hpp"
 #include "entity/entity.hpp"
 #include "graphics/sprite.hpp"
 #include "number/endian.hpp"
@@ -7,7 +8,6 @@
 #include "number/random.hpp"
 #include "platform/platform.hpp"
 #include "settings.hpp"
-#include "entity/details/item.hpp"
 
 
 namespace net_event {

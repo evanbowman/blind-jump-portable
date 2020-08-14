@@ -181,18 +181,19 @@ void OverworldState::receive(const net_event::ItemChestShared& s,
 {
     bool id_collision = false;
     game.details().transform([&](auto& buf) {
-                                 for (auto& e : buf) {
-                                     if (e->id() == s.id_.get()) {
-                                         id_collision = true;
-                                     }
-                                 }
-                             });
+        for (auto& e : buf) {
+            if (e->id() == s.id_.get()) {
+                id_collision = true;
+            }
+        }
+    });
     if (id_collision) {
         error(pfrm, "failed to receive shared item chest, ID collision!");
         return;
     }
 
-    if (game.peer() and create_item_chest(game, game.peer()->get_position(), s.item_, false)) {
+    if (game.peer() and
+        create_item_chest(game, game.peer()->get_position(), s.item_, false)) {
         (*game.details().get<ItemChest>().begin())->override_id(s.id_.get());
     } else {
         error(pfrm, "failed to allocate shared item chest");
@@ -2021,7 +2022,6 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                                            items_[selector_pos_])) {
                                 game.inventory().remove_item(page, col, row);
                             }
-
                         }
                     });
                 draw_items(pfrm, game);
@@ -4978,10 +4978,11 @@ Enemy* SignalJammerSelectorState::make_selector_target(Game& game)
 
 void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    pfrm.speaker().stop_music();
+
+    game.persistent_data().timestamp_ = pfrm.system_clock().now();
     pfrm.write_save_data(&game.persistent_data(),
                          sizeof game.persistent_data());
-
-    pfrm.speaker().stop_music();
 
     const auto s_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});

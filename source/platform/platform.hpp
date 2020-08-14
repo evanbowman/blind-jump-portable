@@ -12,6 +12,7 @@
 #include "unicode.hpp"
 #include <array>
 #include <optional>
+#include "dateTime.hpp"
 
 
 using TileDesc = u16;
@@ -57,6 +58,7 @@ public:
     class Speaker;
     class NetworkPeer;
     class DeltaClock;
+    class SystemClock;
 
     using DeviceName = StringBuffer<23>;
     DeviceName device_name() const;
@@ -89,6 +91,11 @@ public:
     inline DeltaClock& delta_clock()
     {
         return delta_clock_;
+    }
+
+    inline SystemClock& system_clock()
+    {
+        return system_clock_;
     }
 
     // NOTE: I must admit, the platform class interface has become quite
@@ -238,6 +245,27 @@ public:
         DeltaClock();
 
         void* impl_;
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // SystemClock
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    class SystemClock {
+    public:
+
+        // NOTE: SystemClock::now() currently causes audio bugs on the gameboy
+        // advance.
+        DateTime now();
+
+    private:
+        friend class Platform;
+
+        void init(Platform& pfrm);
+
+        SystemClock();
     };
 
 
@@ -574,6 +602,7 @@ private:
 
     friend int main();
 
+    SystemClock system_clock_;
     NetworkPeer network_peer_;
     DeltaClock delta_clock_;
     Screen screen_;

@@ -47,11 +47,8 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
         }
 
         error(pfrm, "garbled message!?");
-        // FIXME: rather than an endless loop, maybe we should disconnect our
-        // network peer?
-        while (true) {
-            // somehow, we've ended up in an erroneous state...
-        }
+        pfrm.network_peer().disconnect();
+        return;
     }
 }
 

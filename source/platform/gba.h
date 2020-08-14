@@ -708,6 +708,33 @@ typedef enum KEYPAD_BITS {
 	DPAD 		=	(KEY_UP | KEY_DOWN | KEY_LEFT | KEY_RIGHT) /*!< mask all dpad buttons */
 } KEYPAD_BITS;
 
+
+// --- RTC -------------------------------------------------------------
+// For interfacing with the Seiko Instruments Inc. (SII) S-3511A real-time clock
+
+#define S3511A_WR 0
+#define S3511A_RD 1
+
+#define S3511A_CMD(n) (0x60 | (n << 1))
+
+#define S3511A_CMD_RESET    S3511A_CMD(0)
+#define S3511A_CMD_STATUS   S3511A_CMD(1)
+#define S3511A_CMD_DATETIME S3511A_CMD(2)
+#define S3511A_CMD_TIME     S3511A_CMD(3)
+#define S3511A_CMD_ALARM    S3511A_CMD(4)
+
+#define S3511A_GPIO_PORT_DATA        (*(volatile u16 *)0x80000C4)
+#define S3511A_GPIO_PORT_DIRECTION   (*(volatile u16 *)0x80000C6)
+#define S3511A_GPIO_PORT_READ_ENABLE (*(volatile u16 *)0x80000C8)
+
+#define S3511A_STATUS_INTFE  0x02 // frequency interrupt enable
+#define S3511A_STATUS_INTME  0x08 // per-minute interrupt enable
+#define S3511A_STATUS_INTAE  0x20 // alarm interrupt enable
+#define S3511A_STATUS_24HOUR 0x40 // 0: 12-hour mode, 1: 24-hour mode
+#define S3511A_STATUS_POWER  0x80 // power on or power failure occurred
+
+
+
 #ifdef __cplusplus
 }	   // extern "C"
 #endif

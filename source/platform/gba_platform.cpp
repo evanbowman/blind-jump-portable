@@ -2037,26 +2037,31 @@ static ScratchBufferBulkAllocator::Ptr<GlyphTable> glyph_table =
     ScratchBufferBulkAllocator::null<GlyphTable>();
 
 
+static void audio_start()
+{
+    REG_SOUNDCNT_H =
+        0x0B0F; //DirectSound A + fifo reset + max volume to L and R
+    REG_SOUNDCNT_X = 0x0080; //turn sound chip on
+
+    irqEnable(IRQ_TIMER1);
+    irqSet(IRQ_TIMER1, audio_update_isr);
+
+    REG_TM0CNT_L = 0xffff;
+    REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
+                               // certain... so we want to play four samples at
+                               // a time, which means that by subtracting three
+                               // from the initial count, the timer will
+                               // overflow at the correct rate, right?
+
+    // While it may look like TM0 is unused, it is in fact used for setting the
+    // sample rate for the digital audio chip.
+    REG_TM0CNT_H = 0x0083;
+    REG_TM1CNT_H = 0x00C3;
+}
+
+
 Platform::Platform()
 {
-    irqInit();
-    irqEnable(IRQ_VBLANK);
-
-    irqEnable(IRQ_KEYPAD);
-    key_wake_isr();
-
-    irqSet(IRQ_TIMER3, [] {
-        delta_total += 0xffff;
-
-        REG_TM3CNT_H = 0;
-        REG_TM3CNT_L = 0;
-        REG_TM3CNT_H = 1 << 7 | 1 << 6;
-    });
-
-    // Surprisingly, the default value of SIOCNT is not necessarily zero! The
-    // source of many past serial comms headaches...
-    REG_SIOCNT = 0;
-
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
     // attempt to save, and if the save fails, assume flash. I don't really know
@@ -2111,26 +2116,33 @@ Platform::Platform()
         info(*this, "enabled optimized waitstates...");
     }
 
+    system_clock_.init(*this);
+
+    // NOTE: initializing the system clock is easier before interrupts are
+    // enabled, because the system clock pulls data from the gpio port on the
+    // cartridge.
+    irqInit();
+    irqEnable(IRQ_VBLANK);
+
+    irqEnable(IRQ_KEYPAD);
+    key_wake_isr();
+
+    irqSet(IRQ_TIMER3, [] {
+        delta_total += 0xffff;
+
+        REG_TM3CNT_H = 0;
+        REG_TM3CNT_L = 0;
+        REG_TM3CNT_H = 1 << 7 | 1 << 6;
+    });
+
+    // Surprisingly, the default value of SIOCNT is not necessarily zero! The
+    // source of many past serial comms headaches...
+    REG_SIOCNT = 0;
+
+
     fill_overlay(0);
 
-    REG_SOUNDCNT_H =
-        0x0B0F; //DirectSound A + fifo reset + max volume to L and R
-    REG_SOUNDCNT_X = 0x0080; //turn sound chip on
-
-    irqEnable(IRQ_TIMER1);
-    irqSet(IRQ_TIMER1, audio_update_isr);
-
-    REG_TM0CNT_L = 0xffff;
-    REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
-                               // certain... so we want to play four samples at
-                               // a time, which means that by subtracting three
-                               // from the initial count, the timer will
-                               // overflow at the correct rate, right?
-
-    // While it may look like TM0 is unused, it is in fact used for setting the
-    // sample rate for the digital audio chip.
-    REG_TM0CNT_H = 0x0083;
-    REG_TM1CNT_H = 0x00C3;
+    audio_start();
 
     enable_watchdog();
 
@@ -3122,6 +3134,160 @@ Platform::NetworkPeer::Interface Platform::NetworkPeer::interface() const
 Platform::NetworkPeer::~NetworkPeer()
 {
     // ...
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// SystemClock
+//
+// Uses the cartridge RTC hardware, over the gpio port.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+static void rtc_gpio_write_command(u8 value)
+{
+    u8 temp;
+
+    for (u8 i = 0; i < 8; i++) {
+        temp = ((value >> (7 - i)) & 1);
+        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
+        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
+        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
+        S3511A_GPIO_PORT_DATA = (temp << 1) | 5;
+    }
+}
+
+
+[[gnu::
+      unused]] // Currently unused, but this is how you would write to the chip...
+static void
+rtc_gpio_write_data(u8 value)
+{
+    u8 temp;
+
+    for (u8 i = 0; i < 8; i++) {
+        temp = ((value >> i) & 1);
+        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
+        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
+        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
+        S3511A_GPIO_PORT_DATA = (temp << 1) | 5;
+    }
+}
+
+
+static u8 rtc_gpio_read_value()
+{
+    u8 temp;
+    u8 value = 0;
+
+    for (u8 i = 0; i < 8; i++) {
+        S3511A_GPIO_PORT_DATA = 4;
+        S3511A_GPIO_PORT_DATA = 4;
+        S3511A_GPIO_PORT_DATA = 4;
+        S3511A_GPIO_PORT_DATA = 4;
+        S3511A_GPIO_PORT_DATA = 4;
+        S3511A_GPIO_PORT_DATA = 5;
+
+        temp = ((S3511A_GPIO_PORT_DATA & 2) >> 1);
+        value = (value >> 1) | (temp << 7);
+    }
+
+    return value;
+}
+
+
+static u8 rtc_get_status()
+{
+    S3511A_GPIO_PORT_DATA = 1;
+    S3511A_GPIO_PORT_DATA = 5;
+    S3511A_GPIO_PORT_DIRECTION = 7;
+
+    rtc_gpio_write_command(S3511A_CMD_STATUS | S3511A_RD);
+
+    S3511A_GPIO_PORT_DIRECTION = 5;
+
+    const auto status = rtc_gpio_read_value();
+
+    S3511A_GPIO_PORT_DATA = 1;
+    S3511A_GPIO_PORT_DATA = 1;
+
+    return status;
+}
+
+
+static auto rtc_get_datetime()
+{
+    std::array<u8, 7> result;
+
+    S3511A_GPIO_PORT_DATA = 1;
+    S3511A_GPIO_PORT_DATA = 5;
+    S3511A_GPIO_PORT_DIRECTION = 7;
+
+    rtc_gpio_write_command(S3511A_CMD_DATETIME | S3511A_RD);
+
+    S3511A_GPIO_PORT_DIRECTION = 5;
+
+    for (auto& val : result) {
+        val = rtc_gpio_read_value();
+    }
+
+    result[4] &= 0x7F;
+
+    S3511A_GPIO_PORT_DATA = 1;
+    S3511A_GPIO_PORT_DATA = 1;
+
+    return result;
+}
+
+
+Platform::SystemClock::SystemClock()
+{
+}
+
+
+static u32 bcd_to_binary(u8 bcd)
+{
+    if (bcd > 0x9f)
+        return 0xff;
+
+    if ((bcd & 0xf) <= 9)
+        return (10 * ((bcd >> 4) & 0xf)) + (bcd & 0xf);
+    else
+        return 0xff;
+}
+
+
+DateTime Platform::SystemClock::now()
+{
+    REG_IME = 0; // hopefully we don't miss anything important, like a serial
+                 // interrupt! But nothing should call SystemClock::now() very
+                 // often...
+
+    const auto [year, month, day, dow, hr, min, sec] = rtc_get_datetime();
+
+    REG_IME = 1;
+
+    DateTime info;
+    info.year_ = bcd_to_binary(year);
+    info.month_ = bcd_to_binary(month);
+    info.day_ = bcd_to_binary(day);
+    info.hour_ = bcd_to_binary(hr);
+    info.minute_ = bcd_to_binary(min);
+    info.second_ = bcd_to_binary(sec);
+
+    return info;
+}
+
+
+void Platform::SystemClock::init(Platform& pfrm)
+{
+    S3511A_GPIO_PORT_READ_ENABLE = 1;
+
+    auto status = rtc_get_status();
+    if (status & S3511A_STATUS_POWER) {
+        error(pfrm, "RTC chip power failure");
+    }
 }
 
 

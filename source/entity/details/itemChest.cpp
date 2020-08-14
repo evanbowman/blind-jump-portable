@@ -43,9 +43,14 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                 if (distance(player_pos, pos) < 24) {
 
                     const int remaining = enemies_remaining(game);
-                    if (game.peer() and distance(pos, game.peer()->get_position()) < 32) {
+                    if (game.peer() and
+                        distance(pos, game.peer()->get_position()) < 32) {
 
-                        push_notification(pfrm, game.state(), locale_string(LocaleString::peer_too_close_to_item));
+                        push_notification(
+                            pfrm,
+                            game.state(),
+                            locale_string(
+                                LocaleString::peer_too_close_to_item));
                     } else if (state_ == State::closed_locked and remaining) {
 
                         NotificationStr str;
