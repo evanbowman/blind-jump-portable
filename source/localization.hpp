@@ -91,6 +91,7 @@ enum class LocaleString {
     map_required,
     boss0_defeated,
     boss1_defeated,
+    peer_transport_waiting,
     count
 };
 
