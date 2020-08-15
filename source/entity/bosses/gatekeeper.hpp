@@ -18,6 +18,11 @@ public:
     static constexpr bool multiface_sprite = true;
     static constexpr bool has_shadow = true;
 
+    inline LocaleString defeated_text() const
+    {
+        return LocaleString::boss1_defeated;
+    }
+
     constexpr bool is_allied()
     {
         return false;

@@ -479,7 +479,7 @@ static PaletteBank color_mix(ColorConstant k, u8 amount)
             MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amount),
                                        fast_interpolate(c.g_, from.g_, amount),
                                        fast_interpolate(c.b_, from.b_, amount))
-                .bgr_hex_555();
+                                     .bgr_hex_555();
         }
     } else {
         for (int i = 0; i < 16; ++i) {

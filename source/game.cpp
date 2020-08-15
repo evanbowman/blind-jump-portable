@@ -1733,7 +1733,8 @@ bool share_item(Platform& pfrm,
 
         net_event::transmit(pfrm, s);
 
-        pfrm.sleep(20); // Wait for the item to arrive at the other player's game
+        pfrm.sleep(
+            20); // Wait for the item to arrive at the other player's game
         return true;
     }
     return false;

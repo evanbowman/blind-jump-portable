@@ -69,7 +69,8 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
                 if (sprite_.get_mix().amount_) {
                     sprite_.set_mix({});
                 } else {
-                    sprite_.set_mix({zone_info(game.level()).energy_glow_color_2_, 255});
+                    sprite_.set_mix(
+                        {zone_info(game.level()).energy_glow_color_2_, 255});
                 }
             }
         }

@@ -93,8 +93,11 @@ private:
 
 class BossDeathSequenceState : public OverworldState {
 public:
-    BossDeathSequenceState(Game& game, const Vec2<Float>& boss_position) :
-        OverworldState(game, false), boss_position_(boss_position)
+    BossDeathSequenceState(Game& game,
+                           const Vec2<Float>& boss_position,
+                           LocaleString boss_defeated_text)
+        : OverworldState(game, false), boss_position_(boss_position),
+          defeated_text_(boss_defeated_text)
     {
     }
 
@@ -105,10 +108,15 @@ public:
 
 private:
     enum class AnimState {
-        init, explosion_wait1, explosion_wait2, fade
+        init,
+        explosion_wait1,
+        explosion_wait2,
+        fade
     } anim_state_ = AnimState::init;
 
     const Vec2<Float> boss_position_;
+    LocaleString defeated_text_;
+    bool pushed_notification_ = false;
     Microseconds counter_ = 0;
 
     std::optional<UIMetric> health_;

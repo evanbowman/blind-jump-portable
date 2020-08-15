@@ -8,6 +8,7 @@ enum class LocaleLanguage { null, english, count };
 
 
 enum class LocaleString {
+    empty,
     intro_text_1,
     intro_text_2,
     map_legend_1,
@@ -88,6 +89,8 @@ enum class LocaleString {
     scratch_buf_avail_stats_suffix,
     link_saturation_stats_suffix,
     map_required,
+    boss0_defeated,
+    boss1_defeated,
     count
 };
 

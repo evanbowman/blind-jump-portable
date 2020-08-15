@@ -25,10 +25,10 @@ struct DateTime {
         auto month = [&day](u64 n) { return n * day(31); }; // FIXME...
         auto year = [&day](u64 n) { return n * day(365); }; // FIXME...
 
-        return second_ + minute(minute_) + hour(hour_) + day(date_.day_) + month(date_.month_) + year(date_.year_);
+        return second_ + minute(minute_) + hour(hour_) + day(date_.day_) +
+               month(date_.month_) + year(date_.year_);
     }
 };
-
 
 
 inline u64 time_diff(const DateTime& before, const DateTime& after)

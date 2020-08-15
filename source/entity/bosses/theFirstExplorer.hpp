@@ -23,6 +23,11 @@ public:
         return false;
     }
 
+    inline LocaleString defeated_text() const
+    {
+        return LocaleString::boss0_defeated;
+    }
+
     void update(Platform& pf, Game& game, Microseconds dt);
 
     std::array<const Sprite*, 2> get_sprites() const

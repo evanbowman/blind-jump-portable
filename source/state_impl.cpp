@@ -635,25 +635,28 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     const bool boss_level = is_boss_level(game.level());
 
     auto bosses_remaining = [&] {
-                                return boss_level and
-                                    (length(game.enemies().get<TheFirstExplorer>()) or
-                                     length(game.enemies().get<Gatekeeper>()));
-                            };
+        return boss_level and (length(game.enemies().get<TheFirstExplorer>()) or
+                               length(game.enemies().get<Gatekeeper>()));
+    };
 
-    const auto boss_position = [&]() {
-                                   if (boss_level) {
-                                       Vec2<Float> result;
-                                       for (auto& elem : game.enemies().get<TheFirstExplorer>()) {
-                                           result = elem->get_position();
-                                       }
-                                       for (auto& elem : game.enemies().get<Gatekeeper>()) {
-                                           result = elem->get_position();
-                                       }
-                                       return result;
-                                   } else {
-                                       return Vec2<Float>{};
-                                   }
-                               }();
+    const auto [boss_position, boss_defeated_text] =
+        [&]() -> std::pair<Vec2<Float>, LocaleString> {
+        if (boss_level) {
+            Vec2<Float> result;
+            LocaleString lstr = LocaleString::empty;
+            for (auto& elem : game.enemies().get<TheFirstExplorer>()) {
+                result = elem->get_position();
+                lstr = elem->defeated_text();
+            }
+            for (auto& elem : game.enemies().get<Gatekeeper>()) {
+                result = elem->get_position();
+                lstr = elem->defeated_text();
+            }
+            return {result, lstr};
+        } else {
+            return {{}, LocaleString::empty};
+        }
+    }();
 
     const bool bosses_were_remaining = bosses_remaining();
 
@@ -826,7 +829,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (bosses_were_remaining and not bosses_remaining()) {
         game.effects().transform([](auto& buf) { buf.clear(); });
         pfrm.sleep(10);
-        return state_pool_.create<BossDeathSequenceState>(game, boss_position);
+        return state_pool_.create<BossDeathSequenceState>(
+            game, boss_position, boss_defeated_text);
     }
 
     return null_state();
@@ -838,10 +842,13 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void BossDeathSequenceState::enter(Platform& pfrm, Game& game, State& prev_state)
+void BossDeathSequenceState::enter(Platform& pfrm,
+                                   Game& game,
+                                   State& prev_state)
 {
     OverworldState::enter(pfrm, game, prev_state);
-    repaint_powerups(pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
+    repaint_powerups(
+        pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
 }
 
 
@@ -854,7 +861,8 @@ void BossDeathSequenceState::exit(Platform& pfrm, Game& game, State& next_state)
 }
 
 
-StatePtr BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     const auto last_health = game.player().get_health();
     const auto last_score = game.score();
@@ -883,8 +891,10 @@ StatePtr BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds
 
         const auto off = 50.f;
 
-        big_explosion(pfrm, game, {boss_position_.x - off, boss_position_.y - off});
-        big_explosion(pfrm, game, {boss_position_.x + off, boss_position_.y + off});
+        big_explosion(
+            pfrm, game, {boss_position_.x - off, boss_position_.y - off});
+        big_explosion(
+            pfrm, game, {boss_position_.x + off, boss_position_.y + off});
         counter_ = 0;
         anim_state_ = AnimState::explosion_wait1;
         break;
@@ -895,10 +905,13 @@ StatePtr BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds
             big_explosion(pfrm, game, boss_position_);
             const auto off = -50.f;
 
-            big_explosion(pfrm, game, {boss_position_.x - off, boss_position_.y + off});
-            big_explosion(pfrm, game, {boss_position_.x + off, boss_position_.y - off});
+            big_explosion(
+                pfrm, game, {boss_position_.x - off, boss_position_.y + off});
+            big_explosion(
+                pfrm, game, {boss_position_.x + off, boss_position_.y - off});
 
             anim_state_ = AnimState::explosion_wait2;
+
             counter_ = 0;
         }
         break;
@@ -909,30 +922,35 @@ StatePtr BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds
             anim_state_ = AnimState::fade;
 
             for (int i = 0; i <
-                                    [&] {
-                                        switch (game.difficulty()) {
-                                        case Settings::Difficulty::count:
-                                        case Settings::Difficulty::normal:
-                                            break;
+                            [&] {
+                                switch (game.difficulty()) {
+                                case Settings::Difficulty::count:
+                                case Settings::Difficulty::normal:
+                                    break;
 
-                                        case Settings::Difficulty::survival:
-                                        case Settings::Difficulty::hard:
-                                            return 2;
-                                        }
-                                        return 3;
-                                    }();
-                         ++i) {
-                        game.details().spawn<Item>(
-                            rng::sample<32>(boss_position_, rng::utility_state),
-                            pfrm,
-                            Item::Type::heart);
-                    }
+                                case Settings::Difficulty::survival:
+                                case Settings::Difficulty::hard:
+                                    return 2;
+                                }
+                                return 3;
+                            }();
+                 ++i) {
+                game.details().spawn<Item>(
+                    rng::sample<32>(boss_position_, rng::utility_state),
+                    pfrm,
+                    Item::Type::heart);
+            }
             game.transporter().set_position(boss_position_);
         }
         break;
 
     case AnimState::fade:
-        constexpr auto fade_duration = seconds(5) + milliseconds(500);
+        constexpr auto fade_duration = seconds(4) + milliseconds(500);
+        if (counter_ > seconds(1) + milliseconds(700) and
+            not pushed_notification_) {
+            pushed_notification_ = true;
+            push_notification(pfrm, this, locale_string(defeated_text_));
+        }
         if (counter_ > fade_duration) {
             pfrm.screen().fade(0.f);
             return state_pool_.create<ActiveState>(game);
@@ -952,7 +970,6 @@ StatePtr BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds
 ////////////////////////////////////////////////////////////////////////////////
 // ActiveState
 ////////////////////////////////////////////////////////////////////////////////
-
 
 
 void ActiveState::enter(Platform& pfrm, Game& game, State&)
@@ -3902,7 +3919,7 @@ LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    if (pfrm.keyboard().down_transition<Key::select>()) {
+    if (pfrm.keyboard().down_transition<Key::alt_1>()) {
         return state_pool_.create<ActiveState>(game);
     } else if (pfrm.keyboard().down_transition<Key::down>()) {
         offset_ += screen_tiles.x;

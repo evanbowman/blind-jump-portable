@@ -1827,7 +1827,6 @@ Platform::NetworkPeer::Interface Platform::NetworkPeer::interface() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 std::optional<DateTime> Platform::SystemClock::now()
 {
     const auto t = std::chrono::system_clock::now();
@@ -1855,5 +1854,4 @@ void Platform::SystemClock::init(Platform& pfrm)
 
 Platform::SystemClock::SystemClock()
 {
-
 }

@@ -291,6 +291,7 @@ const char* locale_string(LocaleString ls)
     switch (language) {
     case LocaleLanguage::english:
         switch (ls) {
+        case LocaleString::empty: return "";
         case LocaleString::intro_text_1: return "Unlicensed by Nintendo";
         case LocaleString::intro_text_2: return "Evan Bowman presents";
         case LocaleString::map_legend_1: return "you";
@@ -393,7 +394,8 @@ const char* locale_string(LocaleString ls)
         case LocaleString::network_rx_loss_stats_suffix: return " rl";
         case LocaleString::link_saturation_stats_suffix: return " lnsat";
         case LocaleString::scratch_buf_avail_stats_suffix: return " sbr";
-
+        case LocaleString::boss0_defeated: return "Destroyed The First Explorer";
+        case LocaleString::boss1_defeated: return "Gatekeeper Defeated";
         default: return empty_str;
         }
         break;

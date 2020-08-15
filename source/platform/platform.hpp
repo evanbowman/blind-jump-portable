@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "dateTime.hpp"
 #include "function.hpp"
 #include "graphics/contrast.hpp"
 #include "graphics/sprite.hpp"
@@ -12,7 +13,6 @@
 #include "unicode.hpp"
 #include <array>
 #include <optional>
-#include "dateTime.hpp"
 
 
 using TileDesc = u16;
@@ -259,7 +259,6 @@ public:
 
     class SystemClock {
     public:
-
         // NOTE: SystemClock::now() sometimes causes minor audio bugs on the
         // GAMEBOY ADVANCE. In the meantime, use Platform::startup_time() to
         // access an initial startup timestamp, and only call DateTime::now()
