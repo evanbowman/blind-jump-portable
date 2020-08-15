@@ -63,6 +63,10 @@ public:
     using DeviceName = StringBuffer<23>;
     DeviceName device_name() const;
 
+    // Timestamp recorded when the process launched, returns an empty optional
+    // if the platform does not provide a functional clock.
+    std::optional<DateTime> startup_time() const;
+
     inline Screen& screen()
     {
         return screen_;
@@ -256,9 +260,11 @@ public:
     class SystemClock {
     public:
 
-        // NOTE: SystemClock::now() currently causes audio bugs on the gameboy
-        // advance.
-        DateTime now();
+        // NOTE: SystemClock::now() sometimes causes minor audio bugs on the
+        // GAMEBOY ADVANCE. In the meantime, use Platform::startup_time() to
+        // access an initial startup timestamp, and only call DateTime::now()
+        // during shutdown, when saving a game.
+        std::optional<DateTime> now();
 
     private:
         friend class Platform;

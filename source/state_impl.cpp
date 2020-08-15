@@ -69,6 +69,140 @@ void push_notification(Platform& pfrm,
 }
 
 
+static void repaint_health_score(Platform& pfrm,
+                                 Game& game,
+                                 std::optional<UIMetric>* health,
+                                 std::optional<UIMetric>* score,
+                                 UIMetric::Align align)
+{
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    const u8 x = align == UIMetric::Align::right ? screen_tiles.x - 2 : 1;
+
+    health->emplace(
+        pfrm,
+        OverlayCoord{x, u8(screen_tiles.y - (3 + game.powerups().size()))},
+        145,
+        (int)game.player().get_health(),
+        align);
+
+    score->emplace(
+        pfrm,
+        OverlayCoord{x, u8(screen_tiles.y - (2 + game.powerups().size()))},
+        146,
+        game.score(),
+        align);
+}
+
+
+static void repaint_powerups(Platform& pfrm,
+                             Game& game,
+                             bool clean,
+                             std::optional<UIMetric>* health,
+                             std::optional<UIMetric>* score,
+                             Buffer<UIMetric, Powerup::max_>* powerups,
+                             UIMetric::Align align)
+{
+    auto screen_tiles = calc_screen_tiles(pfrm);
+
+    if (clean) {
+
+        repaint_health_score(pfrm, game, health, score, align);
+
+        powerups->clear();
+
+        u8 write_pos = screen_tiles.y - 2;
+
+        for (auto& powerup : game.powerups()) {
+            powerups->emplace_back(
+                pfrm,
+                OverlayCoord{(*health)->position().x, write_pos},
+                powerup.icon_index(),
+                powerup.parameter_,
+                align);
+
+            powerup.dirty_ = false;
+
+            --write_pos;
+        }
+    } else {
+        for (u32 i = 0; i < game.powerups().size(); ++i) {
+            if (game.powerups()[i].dirty_) {
+                switch (game.powerups()[i].display_mode_) {
+                case Powerup::DisplayMode::integer:
+                    (*powerups)[i].set_value(game.powerups()[i].parameter_);
+                    break;
+
+                case Powerup::DisplayMode::timestamp:
+                    (*powerups)[i].set_value(game.powerups()[i].parameter_ /
+                                             1000000);
+                    break;
+                }
+                game.powerups()[i].dirty_ = false;
+            }
+        }
+    }
+}
+
+
+static void update_powerups(Platform& pfrm,
+                            Game& game,
+                            std::optional<UIMetric>* health,
+                            std::optional<UIMetric>* score,
+                            Buffer<UIMetric, Powerup::max_>* powerups,
+                            UIMetric::Align align)
+{
+    bool update_powerups = false;
+    bool update_all = false;
+    for (auto it = game.powerups().begin(); it not_eq game.powerups().end();) {
+        if (it->parameter_ <= 0) {
+            it = game.powerups().erase(it);
+            update_powerups = true;
+            update_all = true;
+        } else {
+            if (it->dirty_) {
+                update_powerups = true;
+            }
+            ++it;
+        }
+    }
+
+    if (update_powerups) {
+        repaint_powerups(
+            pfrm, game, update_all, health, score, powerups, align);
+    }
+}
+
+
+static void update_ui_metrics(Platform& pfrm,
+                              Game& game,
+                              Microseconds delta,
+                              std::optional<UIMetric>* health,
+                              std::optional<UIMetric>* score,
+                              Buffer<UIMetric, Powerup::max_>* powerups,
+                              Entity::Health last_health,
+                              Score last_score,
+                              UIMetric::Align align)
+{
+    update_powerups(pfrm, game, health, score, powerups, align);
+
+    if (last_health not_eq game.player().get_health()) {
+        (*health)->set_value(game.player().get_health());
+    }
+
+    if (last_score not_eq game.score()) {
+        (*score)->set_value(game.score());
+    }
+
+    (*health)->update(pfrm, delta);
+    (*score)->update(pfrm, delta);
+
+    for (auto& powerup : *powerups) {
+        powerup.update(pfrm, delta);
+    }
+}
+
+
 // FIXME: this shouldn't be global...
 static std::optional<Platform::Keyboard::RestoreState> restore_keystates;
 
@@ -135,6 +269,7 @@ static StatePool<ActiveState,
                  NetworkConnectSetupState,
                  NetworkConnectWaitState,
                  LaunchCutsceneState,
+                 BossDeathSequenceState,
                  QuickSelectInventoryState,
                  SignalJammerSelectorState>
     state_pool_;
@@ -223,15 +358,6 @@ void OverworldState::receive(const net_event::EnemyStateSync& s,
                              Platform&,
                              Game& game)
 {
-    if (is_boss_level(game.level())) {
-        for (auto& e : game.enemies().get<TheFirstExplorer>()) {
-            if (e->id() == s.id_.get()) {
-                e->sync(s, game);
-                return;
-            }
-        }
-    }
-
     for (auto& e : game.enemies().get<Turret>()) {
         if (e->id() == s.id_.get()) {
             e->sync(s, game);
@@ -506,6 +632,31 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         camera_snap_timer_ -= delta;
     }
 
+    const bool boss_level = is_boss_level(game.level());
+
+    auto bosses_remaining = [&] {
+                                return boss_level and
+                                    (length(game.enemies().get<TheFirstExplorer>()) or
+                                     length(game.enemies().get<Gatekeeper>()));
+                            };
+
+    const auto boss_position = [&]() {
+                                   if (boss_level) {
+                                       Vec2<Float> result;
+                                       for (auto& elem : game.enemies().get<TheFirstExplorer>()) {
+                                           result = elem->get_position();
+                                       }
+                                       for (auto& elem : game.enemies().get<Gatekeeper>()) {
+                                           result = elem->get_position();
+                                       }
+                                       return result;
+                                   } else {
+                                       return Vec2<Float>{};
+                                   }
+                               }();
+
+    const bool bosses_were_remaining = bosses_remaining();
+
     bool enemies_remaining = false;
     bool enemies_destroyed = false;
     bool enemies_visible = false;
@@ -644,7 +795,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     check_collisions(pfrm, game, player, game.details().get<Item>());
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
 
-    if (UNLIKELY(is_boss_level(game.level()))) {
+    if (UNLIKELY(boss_level)) {
         check_collisions(
             pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
         check_collisions(
@@ -672,6 +823,128 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     });
 
+    if (bosses_were_remaining and not bosses_remaining()) {
+        game.effects().transform([](auto& buf) { buf.clear(); });
+        pfrm.sleep(10);
+        return state_pool_.create<BossDeathSequenceState>(game, boss_position);
+    }
+
+    return null_state();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// BossDeathSequenceState
+////////////////////////////////////////////////////////////////////////////////
+
+
+void BossDeathSequenceState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    OverworldState::enter(pfrm, game, prev_state);
+    repaint_powerups(pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
+}
+
+
+void BossDeathSequenceState::exit(Platform& pfrm, Game& game, State& next_state)
+{
+    OverworldState::exit(pfrm, game, next_state);
+    powerups_.clear();
+    health_.reset();
+    score_.reset();
+}
+
+
+StatePtr BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
+{
+    const auto last_health = game.player().get_health();
+    const auto last_score = game.score();
+
+    game.player().update(pfrm, game, delta);
+
+    OverworldState::update(pfrm, game, delta);
+
+    update_ui_metrics(pfrm,
+                      game,
+                      delta,
+                      &health_,
+                      &score_,
+                      &powerups_,
+                      last_health,
+                      last_score,
+                      UIMetric::Align::left);
+
+    counter_ += delta;
+
+    switch (anim_state_) {
+    case AnimState::init: {
+        pfrm.speaker().stop_music();
+
+        big_explosion(pfrm, game, boss_position_);
+
+        const auto off = 50.f;
+
+        big_explosion(pfrm, game, {boss_position_.x - off, boss_position_.y - off});
+        big_explosion(pfrm, game, {boss_position_.x + off, boss_position_.y + off});
+        counter_ = 0;
+        anim_state_ = AnimState::explosion_wait1;
+        break;
+    }
+
+    case AnimState::explosion_wait1:
+        if (counter_ > milliseconds(300)) {
+            big_explosion(pfrm, game, boss_position_);
+            const auto off = -50.f;
+
+            big_explosion(pfrm, game, {boss_position_.x - off, boss_position_.y + off});
+            big_explosion(pfrm, game, {boss_position_.x + off, boss_position_.y - off});
+
+            anim_state_ = AnimState::explosion_wait2;
+            counter_ = 0;
+        }
+        break;
+
+    case AnimState::explosion_wait2:
+        if (counter_ > milliseconds(100)) {
+            counter_ = 0;
+            anim_state_ = AnimState::fade;
+
+            for (int i = 0; i <
+                                    [&] {
+                                        switch (game.difficulty()) {
+                                        case Settings::Difficulty::count:
+                                        case Settings::Difficulty::normal:
+                                            break;
+
+                                        case Settings::Difficulty::survival:
+                                        case Settings::Difficulty::hard:
+                                            return 2;
+                                        }
+                                        return 3;
+                                    }();
+                         ++i) {
+                        game.details().spawn<Item>(
+                            rng::sample<32>(boss_position_, rng::utility_state),
+                            pfrm,
+                            Item::Type::heart);
+                    }
+            game.transporter().set_position(boss_position_);
+        }
+        break;
+
+    case AnimState::fade:
+        constexpr auto fade_duration = seconds(5) + milliseconds(500);
+        if (counter_ > fade_duration) {
+            pfrm.screen().fade(0.f);
+            return state_pool_.create<ActiveState>(game);
+
+        } else {
+            const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
+            pfrm.screen().fade(amount, ColorConstant::silver_white);
+        }
+        break;
+    }
+
+
     return null_state();
 }
 
@@ -680,139 +953,6 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 // ActiveState
 ////////////////////////////////////////////////////////////////////////////////
 
-
-static void repaint_health_score(Platform& pfrm,
-                                 Game& game,
-                                 std::optional<UIMetric>* health,
-                                 std::optional<UIMetric>* score,
-                                 UIMetric::Align align)
-{
-    auto screen_tiles = calc_screen_tiles(pfrm);
-
-    const u8 x = align == UIMetric::Align::right ? screen_tiles.x - 2 : 1;
-
-    health->emplace(
-        pfrm,
-        OverlayCoord{x, u8(screen_tiles.y - (3 + game.powerups().size()))},
-        145,
-        (int)game.player().get_health(),
-        align);
-
-    score->emplace(
-        pfrm,
-        OverlayCoord{x, u8(screen_tiles.y - (2 + game.powerups().size()))},
-        146,
-        game.score(),
-        align);
-}
-
-
-static void repaint_powerups(Platform& pfrm,
-                             Game& game,
-                             bool clean,
-                             std::optional<UIMetric>* health,
-                             std::optional<UIMetric>* score,
-                             Buffer<UIMetric, Powerup::max_>* powerups,
-                             UIMetric::Align align)
-{
-    auto screen_tiles = calc_screen_tiles(pfrm);
-
-    if (clean) {
-
-        repaint_health_score(pfrm, game, health, score, align);
-
-        powerups->clear();
-
-        u8 write_pos = screen_tiles.y - 2;
-
-        for (auto& powerup : game.powerups()) {
-            powerups->emplace_back(
-                pfrm,
-                OverlayCoord{(*health)->position().x, write_pos},
-                powerup.icon_index(),
-                powerup.parameter_,
-                align);
-
-            powerup.dirty_ = false;
-
-            --write_pos;
-        }
-    } else {
-        for (u32 i = 0; i < game.powerups().size(); ++i) {
-            if (game.powerups()[i].dirty_) {
-                switch (game.powerups()[i].display_mode_) {
-                case Powerup::DisplayMode::integer:
-                    (*powerups)[i].set_value(game.powerups()[i].parameter_);
-                    break;
-
-                case Powerup::DisplayMode::timestamp:
-                    (*powerups)[i].set_value(game.powerups()[i].parameter_ /
-                                             1000000);
-                    break;
-                }
-                game.powerups()[i].dirty_ = false;
-            }
-        }
-    }
-}
-
-
-static void update_powerups(Platform& pfrm,
-                            Game& game,
-                            std::optional<UIMetric>* health,
-                            std::optional<UIMetric>* score,
-                            Buffer<UIMetric, Powerup::max_>* powerups,
-                            UIMetric::Align align)
-{
-    bool update_powerups = false;
-    bool update_all = false;
-    for (auto it = game.powerups().begin(); it not_eq game.powerups().end();) {
-        if (it->parameter_ <= 0) {
-            it = game.powerups().erase(it);
-            update_powerups = true;
-            update_all = true;
-        } else {
-            if (it->dirty_) {
-                update_powerups = true;
-            }
-            ++it;
-        }
-    }
-
-    if (update_powerups) {
-        repaint_powerups(
-            pfrm, game, update_all, health, score, powerups, align);
-    }
-}
-
-
-static void update_ui_metrics(Platform& pfrm,
-                              Game& game,
-                              Microseconds delta,
-                              std::optional<UIMetric>* health,
-                              std::optional<UIMetric>* score,
-                              Buffer<UIMetric, Powerup::max_>* powerups,
-                              Entity::Health last_health,
-                              Score last_score,
-                              UIMetric::Align align)
-{
-    update_powerups(pfrm, game, health, score, powerups, align);
-
-    if (last_health not_eq game.player().get_health()) {
-        (*health)->set_value(game.player().get_health());
-    }
-
-    if (last_score not_eq game.score()) {
-        (*score)->set_value(game.score());
-    }
-
-    (*health)->update(pfrm, delta);
-    (*score)->update(pfrm, delta);
-
-    for (auto& powerup : *powerups) {
-        powerup.update(pfrm, delta);
-    }
-}
 
 
 void ActiveState::enter(Platform& pfrm, Game& game, State&)
@@ -874,7 +1014,9 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     const auto last_health = game.player().get_health();
     const auto last_score = game.score();
 
-    OverworldState::update(pfrm, game, delta);
+    if (auto new_state = OverworldState::update(pfrm, game, delta)) {
+        return new_state;
+    }
 
     update_ui_metrics(pfrm,
                       game,
@@ -1888,7 +2030,9 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
 
     game.camera().push_ballast({player_pos.x + 20, player_pos.y});
 
-    OverworldState::update(pfrm, game, delta);
+    if (auto new_state = OverworldState::update(pfrm, game, delta)) {
+        return new_state;
+    }
 
     update_ui_metrics(pfrm,
                       game,
@@ -2630,7 +2774,9 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
     const auto last_health = game.player().get_health();
     const auto last_score = game.score();
 
-    OverworldState::update(pfrm, game, delta);
+    if (auto new_state = OverworldState::update(pfrm, game, delta)) {
+        return new_state;
+    }
 
     update_ui_metrics(pfrm,
                       game,
@@ -4980,7 +5126,9 @@ void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     pfrm.speaker().stop_music();
 
-    game.persistent_data().timestamp_ = pfrm.system_clock().now();
+    if (auto tm = pfrm.system_clock().now()) {
+        game.persistent_data().timestamp_ = *tm;
+    }
     pfrm.write_save_data(&game.persistent_data(),
                          sizeof game.persistent_data());
 

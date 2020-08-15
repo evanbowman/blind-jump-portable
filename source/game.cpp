@@ -479,6 +479,7 @@ static constexpr const ZoneInfo zone_1{
     "hiraeth",
     Microseconds{0},
     ColorConstant::electric_blue,
+    ColorConstant::picton_blue,
     ColorConstant::aerospace_orange,
     [](Platform& pfrm, Game&) {
         draw_starfield(pfrm);
@@ -500,6 +501,7 @@ static constexpr const ZoneInfo zone_2{
     "computations",
     seconds(8) + milliseconds(700),
     ColorConstant::turquoise_blue,
+    ColorConstant::maya_blue,
     ColorConstant::safety_orange,
     [](Platform& pfrm, Game&) {
         draw_starfield(pfrm);
@@ -526,6 +528,7 @@ static constexpr const ZoneInfo zone_3{
     "september",
     Microseconds{0},
     ColorConstant::cerulean_blue,
+    ColorConstant::picton_blue,
     ColorConstant::aerospace_orange,
     [](Platform& pfrm, Game&) {
         draw_starfield(pfrm);
@@ -549,6 +552,7 @@ const ZoneInfo& zone_info(Level level)
             "",
             "",
             0,
+            ColorConstant::null,
             ColorConstant::null,
             ColorConstant::null,
             [](Platform&, Game&) {},
@@ -1714,26 +1718,6 @@ bool within_view_frustum(const Platform::Screen& screen, const Vec2<Float>& pos)
 
     return pos.x > view_center.x - 32 and pos.x < view_br.x + 32 and
            pos.y > view_center.y - 32 and pos.y < view_br.y + 32;
-}
-
-
-Game::DeferredCallback screen_flash_animation(int remaining)
-{
-    // FIXME: I wrote the code this way out of pure laziness. Works fine on
-    // small screens, like the gameboy advance, but may appear choppy on a
-    // desktop version of the game. Would be better to add a new game State,
-    // which smoothly interpolates the fade values.
-    return [remain = remaining](Platform& pf, Game& game) {
-        if (remain > 0) {
-            pf.screen().fade(255 - remain, ColorConstant::silver_white);
-
-            game.on_timeout(
-                pf, milliseconds(35), screen_flash_animation(remain - 1));
-
-        } else {
-            pf.screen().fade(0);
-        }
-    };
 }
 
 

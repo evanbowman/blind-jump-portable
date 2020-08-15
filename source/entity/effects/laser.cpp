@@ -54,7 +54,7 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
     if (timer_ > milliseconds(20)) {
         timer_ = 0;
         const auto flip = sprite_.get_flip();
-        const auto spr = sprite_.get_texture_index();
+        // const auto spr = sprite_.get_texture_index();
         if (dir_ == Cardinal::north or dir_ == Cardinal::south) {
             sprite_.set_flip(
                 {static_cast<bool>(rng::choice<2>(rng::utility_state)),
@@ -64,15 +64,13 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
                 {flip.x,
                  static_cast<bool>(rng::choice<2>(rng::utility_state))});
         }
-        if (rng::choice<3>(rng::utility_state) == 0) {
-            if (spr == TextureMap::v_laser) {
-                sprite_.set_texture_index(TextureMap::v_laser2);
-            } else if (spr == TextureMap::v_laser2) {
-                sprite_.set_texture_index(TextureMap::v_laser);
-            } else if (spr == TextureMap::h_laser) {
-                sprite_.set_texture_index(TextureMap::h_laser2);
-            } else if (spr == TextureMap::h_laser2) {
-                sprite_.set_texture_index(TextureMap::h_laser);
+        if (mode_ not_eq Mode::explosive) {
+            if (rng::choice<3>(rng::utility_state) == 0) {
+                if (sprite_.get_mix().amount_) {
+                    sprite_.set_mix({});
+                } else {
+                    sprite_.set_mix({zone_info(game.level()).energy_glow_color_2_, 255});
+                }
             }
         }
     }

@@ -341,7 +341,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::explosive_rounds_title: return "Explosive rounds (2)";
         case LocaleString::seed_packet_title: return "Seed packet";
         case LocaleString::navigation_pamphlet_title: return "Navigation pamphlet";
-        case LocaleString::orange_title: return "Orange";
+        case LocaleString::orange_title: return "Orange (+1 hp)";
         case LocaleString::single_use_warning: return "(SINGLE USE)";
         case LocaleString::locked: return "locked, ";
         case LocaleString::peer_too_close_to_item: return "blocked, Peer is in the way!";

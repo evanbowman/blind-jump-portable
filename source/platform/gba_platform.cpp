@@ -341,6 +341,10 @@ const Color& real_color(ColorConstant k)
         static const Color picton_blue(9, 20, 31);
         return picton_blue;
 
+    case ColorConstant::maya_blue:
+        static const Color maya_blue(10, 23, 31);
+        return maya_blue;
+
     case ColorConstant::aerospace_orange:
         static const Color aerospace_orange(31, 10, 0);
         return aerospace_orange;
@@ -468,13 +472,22 @@ static PaletteBank color_mix(ColorConstant k, u8 amount)
 
     const auto& c = real_color(k);
 
-    for (int i = 0; i < 16; ++i) {
-        auto from = Color::from_bgr_hex_555(MEM_PALETTE[i]);
-        const u32 index = 16 * palette_counter + i;
-        MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amount),
-                                   fast_interpolate(c.g_, from.g_, amount),
-                                   fast_interpolate(c.b_, from.b_, amount))
-                                 .bgr_hex_555();
+    if (amount not_eq 255) {
+        for (int i = 0; i < 16; ++i) {
+            auto from = Color::from_bgr_hex_555(MEM_PALETTE[i]);
+            const u32 index = 16 * palette_counter + i;
+            MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amount),
+                                       fast_interpolate(c.g_, from.g_, amount),
+                                       fast_interpolate(c.b_, from.b_, amount))
+                .bgr_hex_555();
+        }
+    } else {
+        for (int i = 0; i < 16; ++i) {
+            const u32 index = 16 * palette_counter + i;
+            // No need to actually perform the blend operation if we're mixing
+            // in 100% of the other color.
+            MEM_PALETTE[index] = c.bgr_hex_555();
+        }
     }
 
     palette_info[palette_counter] = {k, amount, true};
@@ -2060,6 +2073,37 @@ static void audio_start()
 }
 
 
+// We want our code to be resiliant to cartridges lacking an RTC chip. Run the
+// timer-based delta clock for a while, and make sure that the RTC also counted
+// up.
+static bool rtc_verify_operability(Platform& pfrm)
+{
+    Microseconds counter = 0;
+
+    const auto tm1 = pfrm.system_clock().now();
+
+    while (counter < seconds(1) + milliseconds(250)) {
+        counter += pfrm.delta_clock().reset();
+    }
+
+    const auto tm2 = pfrm.system_clock().now();
+
+    return tm1 and tm2 and time_diff(*tm1, *tm2) > 0;
+}
+
+
+static bool rtc_faulty = false;
+
+
+static std::optional<DateTime> start_time;
+
+
+std::optional<DateTime> Platform::startup_time() const
+{
+    return ::start_time;
+}
+
+
 Platform::Platform()
 {
     // Not sure how else to determine whether the cartridge has sram, flash, or
@@ -2116,11 +2160,11 @@ Platform::Platform()
         info(*this, "enabled optimized waitstates...");
     }
 
-    system_clock_.init(*this);
-
     // NOTE: initializing the system clock is easier before interrupts are
     // enabled, because the system clock pulls data from the gpio port on the
     // cartridge.
+    system_clock_.init(*this);
+
     irqInit();
     irqEnable(IRQ_VBLANK);
 
@@ -2134,6 +2178,12 @@ Platform::Platform()
         REG_TM3CNT_L = 0;
         REG_TM3CNT_H = 1 << 7 | 1 << 6;
     });
+
+    if ((rtc_faulty = not rtc_verify_operability(*this))) {
+        info(*this, "RTC chip appears either non-existant or non-functional");
+    } else {
+        ::start_time = system_clock_.now();
+    }
 
     // Surprisingly, the default value of SIOCNT is not necessarily zero! The
     // source of many past serial comms headaches...
@@ -2156,8 +2206,8 @@ Platform::Platform()
         // layer, but not exactly. The tile in the high priority background
         // layer still shows up, but lower priority sprites show through the top
         // left tile, I guess I'm observing some weird interaction involving an
-        // overlap between a priority 0 sprite and a priority 1 sprite: when a
-        // priority 0 background is sandwitched in between the two sprites, the
+        // overlap between a priority 0 tile and a priority 1 sprite: when a
+        // priority 1 sprite is sandwitched in between the two tile layers, the
         // priority 0 background tiles seems to be drawn behind the priority 1
         // sprite. I have no idea why!
         object_attribute_back_buffer[i].attribute_2 = ATTR2_PRIORITY(3);
@@ -3258,8 +3308,12 @@ static u32 bcd_to_binary(u8 bcd)
 }
 
 
-DateTime Platform::SystemClock::now()
+std::optional<DateTime> Platform::SystemClock::now()
 {
+    if (rtc_faulty) {
+        return {};
+    }
+
     REG_IME = 0; // hopefully we don't miss anything important, like a serial
                  // interrupt! But nothing should call SystemClock::now() very
                  // often...
@@ -3269,9 +3323,9 @@ DateTime Platform::SystemClock::now()
     REG_IME = 1;
 
     DateTime info;
-    info.year_ = bcd_to_binary(year);
-    info.month_ = bcd_to_binary(month);
-    info.day_ = bcd_to_binary(day);
+    info.date_.year_ = bcd_to_binary(year);
+    info.date_.month_ = bcd_to_binary(month);
+    info.date_.day_ = bcd_to_binary(day);
     info.hour_ = bcd_to_binary(hr);
     info.minute_ = bcd_to_binary(min);
     info.second_ = bcd_to_binary(sec);

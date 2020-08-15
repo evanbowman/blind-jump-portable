@@ -15,6 +15,7 @@ enum class ColorConstant {
     turquoise_blue    = 0x00FFDD,
     cerulean_blue     = 0x66E0FF,
     picton_blue       = 0x4DACFF,
+    maya_blue         = 0x4FBCFF,
     steel_blue        = 0x345680,
     spanish_crimson   = 0xE81858,
     aerospace_orange  = 0xFD5200,

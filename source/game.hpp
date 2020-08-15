@@ -221,6 +221,7 @@ struct ZoneInfo {
     Microseconds music_offset_;
 
     ColorConstant energy_glow_color_;
+    ColorConstant energy_glow_color_2_;
     ColorConstant injury_glow_color_;
 
     BackgroundGenerator generate_background_;
@@ -232,9 +233,6 @@ const ZoneInfo& zone_info(Level level);
 const ZoneInfo& current_zone(Game& game);
 
 bool operator==(const ZoneInfo&, const ZoneInfo&);
-
-
-Game::DeferredCallback screen_flash_animation(int remaining);
 
 
 enum {

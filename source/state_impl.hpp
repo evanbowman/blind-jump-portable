@@ -91,6 +91,33 @@ private:
 };
 
 
+class BossDeathSequenceState : public OverworldState {
+public:
+    BossDeathSequenceState(Game& game, const Vec2<Float>& boss_position) :
+        OverworldState(game, false), boss_position_(boss_position)
+    {
+    }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    enum class AnimState {
+        init, explosion_wait1, explosion_wait2, fade
+    } anim_state_ = AnimState::init;
+
+    const Vec2<Float> boss_position_;
+    Microseconds counter_ = 0;
+
+    std::optional<UIMetric> health_;
+    std::optional<UIMetric> score_;
+
+    Buffer<UIMetric, Powerup::max_> powerups_;
+};
+
+
 // We want to make sure that we process network events while we have pause menus
 // open...
 class MenuState : public State, public CommonNetworkListener {
