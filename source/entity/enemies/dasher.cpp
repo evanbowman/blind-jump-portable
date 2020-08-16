@@ -158,7 +158,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
                 pf,
                 game,
                 position_,
-                rng::sample<8>(target.get_position(), rng::critical_state),
+                rng::sample<8>(target.get_position(), rng::utility_state),
                 shot_speed(game));
         }
         break;
@@ -178,7 +178,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
                 pf,
                 game,
                 position_,
-                rng::sample<16>(target.get_position(), rng::critical_state),
+                rng::sample<16>(target.get_position(), rng::utility_state),
                 shot_speed(game));
         }
         break;
@@ -194,7 +194,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
                 pf,
                 game,
                 position_,
-                rng::sample<32>(target.get_position(), rng::critical_state),
+                rng::sample<32>(target.get_position(), rng::utility_state),
                 shot_speed(game));
         }
         break;
