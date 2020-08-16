@@ -25,7 +25,7 @@ align(size_t __align, size_t __size, void*& __ptr, size_t& __space) noexcept
 // memory. If your data is nowhere near 1k, and the data is long lived, might be
 // better to use a bulk allocator, and share the underlying scratch buffer with
 // other stuff.
-template <typename T> struct ManagedPtr {
+template <typename T> struct DynamicMemory {
     static_assert(sizeof(T) + alignof(T) <=
                   sizeof Platform::ScratchBuffer::data_);
     Platform::ScratchBufferPtr memory_;
@@ -34,7 +34,7 @@ template <typename T> struct ManagedPtr {
 
 
 template <typename T, typename... Args>
-ManagedPtr<T> allocate_dynamic(Platform& pfrm, Args&&... args)
+DynamicMemory<T> allocate_dynamic(Platform& pfrm, Args&&... args)
 {
     auto sc_buf = pfrm.make_scratch_buffer();
 

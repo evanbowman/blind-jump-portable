@@ -3902,11 +3902,14 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 void LogfileViewerState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     repaint(pfrm, 0);
+    // The game's logfile is not localized, not worth the trouble.
+    locale_set_language(LocaleLanguage::english);
 }
 
 
 void LogfileViewerState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    locale_set_language(game.persistent_data().settings_.language_);
     pfrm.screen().fade(0.f);
     pfrm.fill_overlay(0);
 }
@@ -3960,9 +3963,16 @@ void LogfileViewerState::repaint(Platform& pfrm, int offset)
         for (int i = 0; i < screen_tiles.x; ++i) {
             // const int index = i + j * screen_tiles.x;
             if (index < buffer_size) {
-                const auto t =
-                    pfrm.map_glyph(buffer[index], locale_texture_map());
-                pfrm.set_tile(Layer::overlay, i, j, t);
+                if (buffer[index] == '\n') {
+                     for (; i < screen_tiles.x; ++i) {
+                         // eat the rest of the space in the current line
+                         pfrm.set_tile(Layer::overlay, i, j, 0);
+                     }
+                } else {
+                    const auto t =
+                        pfrm.map_glyph(buffer[index], locale_texture_map());
+                    pfrm.set_tile(Layer::overlay, i, j, t);
+                }
                 index += 1;
             }
         }

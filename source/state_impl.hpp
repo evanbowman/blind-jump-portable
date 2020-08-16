@@ -462,7 +462,7 @@ private:
     std::optional<Border> legend_border_;
     Microseconds map_enter_duration_;
 
-    std::optional<ManagedPtr<IncrementalPathfinder>> path_finder_;
+    std::optional<DynamicMemory<IncrementalPathfinder>> path_finder_;
     std::optional<PathData> path_;
 };
 
@@ -497,7 +497,7 @@ private:
     std::optional<LeftSidebar> sidebar_;
     std::optional<Text> level_text_;
 
-    std::optional<ManagedPtr<IncrementalPathfinder>> path_finder_;
+    std::optional<DynamicMemory<IncrementalPathfinder>> path_finder_;
     std::optional<PathData> path_;
 };
 

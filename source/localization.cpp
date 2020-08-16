@@ -256,6 +256,12 @@ void locale_set_language(LocaleLanguage ll)
 }
 
 
+LocaleLanguage locale_get_language()
+{
+    return language;
+}
+
+
 StringBuffer<31> locale_language_name(LocaleLanguage ll)
 {
     switch (language) {

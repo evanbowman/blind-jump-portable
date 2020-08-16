@@ -1529,6 +1529,12 @@ Platform::Logger::Logger()
 
 void Platform::Logger::log(Logger::Severity level, const char* msg)
 {
+    // We don't want to wear out the flash chip! The code below still works on
+    // flash though, if you just comment out the if statement below.
+    if (save_using_flash) {
+        return;
+    }
+
     std::array<char, 256> buffer;
 
     buffer[0] = '[';
@@ -2045,7 +2051,7 @@ struct GlyphTable {
     GlyphMapping mappings_[glyph_mapping_count];
 };
 
-static std::optional<ManagedPtr<GlyphTable>> glyph_table;
+static std::optional<DynamicMemory<GlyphTable>> glyph_table;
 
 
 static void audio_start()
@@ -2180,6 +2186,12 @@ Platform::Platform()
         info(*this, "RTC chip appears either non-existant or non-functional");
     } else {
         ::start_time = system_clock_.now();
+
+        StringBuffer<100> str = "startup time: ";
+
+        log_format_time(str, *::start_time);
+
+        info(*::platform, str.c_str());
     }
 
     // Surprisingly, the default value of SIOCNT is not necessarily zero! The
@@ -3338,7 +3350,7 @@ void Platform::SystemClock::init(Platform& pfrm)
 
     auto status = rtc_get_status();
     if (status & S3511A_STATUS_POWER) {
-        error(pfrm, "RTC chip power failure");
+        warning(pfrm, "RTC chip power failure");
     }
 }
 

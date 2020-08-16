@@ -2,6 +2,7 @@
 
 
 #include "string.hpp"
+#include "dateTime.hpp"
 
 
 enum class LocaleLanguage { null, english, count };
@@ -97,6 +98,7 @@ enum class LocaleString {
 
 
 void locale_set_language(LocaleLanguage ll);
+LocaleLanguage locale_get_language();
 
 
 StringBuffer<31> locale_language_name(LocaleLanguage ll);
@@ -112,3 +114,45 @@ void english__to_string(int num, char* buffer, int base);
 
 
 void locale_num2str(int num, char* buffer, int base);
+
+
+template <u32 buffer_size>
+void format_time(StringBuffer<buffer_size>& str, const DateTime& dt)
+{
+    char buffer[48];
+
+    locale_num2str(dt.date_.month_, buffer, 10);
+    str += buffer;
+    str += "/";
+
+    locale_num2str(dt.date_.day_, buffer, 10);
+    str += buffer;
+    str += "/";
+
+    locale_num2str(dt.date_.year_, buffer, 10);
+    str += buffer;
+    str += " ";
+
+    locale_num2str(dt.hour_, buffer, 10);
+    str += buffer;
+    str += ":";
+
+    locale_num2str(dt.minute_, buffer, 10);
+    str += buffer;
+    str += ":";
+
+    locale_num2str(dt.second_, buffer, 10);
+    str += buffer;
+}
+
+
+template <u32 buffer_size>
+void log_format_time(StringBuffer<buffer_size>& str, const DateTime& dt)
+{
+    const auto saved_language = locale_get_language();
+    locale_set_language(LocaleLanguage::english);
+
+    format_time(str, dt);
+
+    locale_set_language(saved_language);
+}

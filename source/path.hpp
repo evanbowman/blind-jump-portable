@@ -68,6 +68,6 @@ private:
 
 
     BulkAllocator<vertex_scratch_buffers> memory_;
-    ManagedPtr<VertexBuf> priority_q_;
+    DynamicMemory<VertexBuf> priority_q_;
     PathCoord end_;
 };
