@@ -2045,9 +2045,7 @@ struct GlyphTable {
     GlyphMapping mappings_[glyph_mapping_count];
 };
 
-static std::optional<ScratchBufferBulkAllocator> glyph_table_mem;
-static ScratchBufferBulkAllocator::Ptr<GlyphTable> glyph_table =
-    ScratchBufferBulkAllocator::null<GlyphTable>();
+static std::optional<ManagedPtr<GlyphTable>> glyph_table;
 
 
 static void audio_start()
@@ -2121,8 +2119,7 @@ Platform::Platform()
         info(*this, "SRAM write failed, falling back to FLASH");
     }
 
-    glyph_table_mem.emplace(*this);
-    glyph_table = glyph_table_mem->alloc<GlyphTable>();
+    glyph_table.emplace(allocate_dynamic<GlyphTable>(*this));
     if (not glyph_table) {
         error(*this, "failed to allocate glyph table");
         fatal();
@@ -2222,7 +2219,7 @@ static bool glyph_mode = false;
 void Platform::enable_glyph_mode(bool enabled)
 {
     if (enabled) {
-        for (auto& gm : ::glyph_table->mappings_) {
+        for (auto& gm : ::glyph_table->obj_->mappings_) {
             gm.reference_count_ = -1;
         }
     }
@@ -2255,7 +2252,7 @@ void Platform::load_overlay_texture(const char* name)
             }
 
             if (glyph_mode) {
-                for (auto& gm : ::glyph_table->mappings_) {
+                for (auto& gm : ::glyph_table->obj_->mappings_) {
                     gm.reference_count_ = -1;
                 }
             }
@@ -2310,7 +2307,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
     }
 
     for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
-        auto& gm = ::glyph_table->mappings_[tile];
+        auto& gm = ::glyph_table->obj_->mappings_[tile];
         if (gm.valid() and gm.character_ == glyph) {
             return glyph_start_offset + tile;
         }
@@ -2325,7 +2322,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
     for (auto& info : overlay_textures) {
         if (strcmp(mapping_info->texture_name_, info.name_) == 0) {
             for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
-                auto& gm = ::glyph_table->mappings_[t];
+                auto& gm = ::glyph_table->obj_->mappings_[t];
                 if (not gm.valid()) {
                     gm.character_ = glyph;
                     gm.reference_count_ = 0;
@@ -2417,7 +2414,7 @@ void Platform::fill_overlay(u16 tile)
     }
 
     if (glyph_mode) {
-        for (auto& gm : ::glyph_table->mappings_) {
+        for (auto& gm : ::glyph_table->obj_->mappings_) {
             gm.reference_count_ = -1;
         }
     }
@@ -2436,8 +2433,8 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
         const auto old_tile = pfrm.get_tile(Layer::overlay, x, y);
         if (old_tile not_eq val) {
             if (is_glyph(old_tile)) {
-                auto& gm =
-                    ::glyph_table->mappings_[old_tile - glyph_start_offset];
+                auto& gm = ::glyph_table->obj_
+                               ->mappings_[old_tile - glyph_start_offset];
                 if (gm.valid()) {
                     gm.reference_count_ -= 1;
 
@@ -2453,7 +2450,8 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
             }
 
             if (is_glyph(val)) {
-                auto& gm = ::glyph_table->mappings_[val - glyph_start_offset];
+                auto& gm =
+                    ::glyph_table->obj_->mappings_[val - glyph_start_offset];
                 if (not gm.valid()) {
                     // Not clear exactly what to do here... Somehow we've
                     // gotten into an erroneous state, but not a permanently

@@ -34,7 +34,7 @@ template <typename T> struct ManagedPtr {
 
 
 template <typename T, typename... Args>
-ManagedPtr<T> allocate(Platform& pfrm, Args&&... args)
+ManagedPtr<T> allocate_dynamic(Platform& pfrm, Args&&... args)
 {
     auto sc_buf = pfrm.make_scratch_buffer();
 

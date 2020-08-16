@@ -2684,7 +2684,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
                                         OverlayCoord{TileMap::width + 5, y});
             }
 
-            path_finder_.emplace(allocate<IncrementalPathfinder>(
+            path_finder_.emplace(allocate_dynamic<IncrementalPathfinder>(
                 pfrm,
                 pfrm,
                 game.tiles(),
@@ -2857,7 +2857,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             display_mode_ = DisplayMode::path_wait;
 
-            path_finder_.emplace(allocate<IncrementalPathfinder>(
+            path_finder_.emplace(allocate_dynamic<IncrementalPathfinder>(
                 pfrm,
                 pfrm,
                 game.tiles(),
