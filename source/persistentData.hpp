@@ -40,7 +40,7 @@ struct PersistentData {
 
     Settings settings_;
 
-    DateTime timestamp_ = {0, 0, 0, 0, 0, 0};
+    DateTime timestamp_ = {{0, 0, 0}, 0, 0, 0};
 
     void store_powerups(const Powerups& powerups);
 

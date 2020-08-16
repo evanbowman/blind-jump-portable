@@ -24,6 +24,14 @@ public:
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
+    auto get_sprites() const
+    {
+        std::array<const Sprite*, 2> ret;
+        ret[0] = &sprite_;
+        ret[1] = &head_;
+        return ret;
+    }
+
     const Sprite& get_shadow()
     {
         return shadow_;
@@ -44,6 +52,7 @@ private:
 
     Vec2<Float> speed_;
     Sprite shadow_;
+    Sprite head_;
     Vec2<Float> interp_offset_;
     Microseconds anim_timer_;
     Sprite blaster_;

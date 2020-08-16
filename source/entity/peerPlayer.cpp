@@ -13,6 +13,9 @@ PeerPlayer::PeerPlayer()
     blaster_.set_origin({8, 8});
     blaster_.set_size(Sprite::Size::w16_h32);
     blaster_.set_texture_index(h_blaster);
+
+    head_.set_texture_index(120);
+    head_.set_size(Sprite::Size::w16_h32);
 }
 
 
@@ -33,9 +36,11 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
     }
 
     if (info.get_visible()) {
+        head_.set_alpha(Sprite::Alpha::opaque);
         sprite_.set_alpha(Sprite::Alpha::opaque);
         shadow_.set_alpha(Sprite::Alpha::translucent);
     } else {
+        head_.set_alpha(Sprite::Alpha::transparent);
         sprite_.set_alpha(Sprite::Alpha::transparent);
         shadow_.set_alpha(Sprite::Alpha::transparent);
     }
@@ -67,16 +72,93 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
         break;
     }
 
+    head_.set_mix(sprite_.get_mix());
     blaster_.set_mix(sprite_.get_mix());
-
-    update_sprite_position();
 
     anim_timer_ = milliseconds(100);
 
     sprite_.set_texture_index(info.get_texture_index());
+
+    // Sorry about this switch statement. Basically, we want to render a
+    // different colored helmet for the second player in multiplayer
+    // modes. Given the limited size of available sprite memory on the gameboy
+    // advance, we're drawing another sprite overtop of the player's head. But
+    // because the player moves up and down by one pixel in some keyframes of
+    // the walk cycle, we need to adjust the helmet's origin based on the
+    // current keyframe.
+    switch (sprite_.get_texture_index()) {
+    case player_still_down:
+    case player_still_down + 3:
+    case player_still_down + 5:
+        head_.set_texture_index(120);
+        head_.set_origin({8, 40});
+        break;
+
+    case player_still_down + 1:
+    case player_still_down + 2:
+    case player_still_down + 4:
+        head_.set_texture_index(120);
+        head_.set_origin({8, 39});
+        break;
+
+    case player_walk_up:
+    case player_walk_up + 1:
+    case player_walk_up + 3:
+        head_.set_texture_index(121);
+        head_.set_origin({8, 39});
+        break;
+
+    case player_walk_up + 2:
+    case player_walk_up + 4:
+    case player_walk_up + 5:
+        head_.set_texture_index(121);
+        head_.set_origin({8, 40});
+        break;
+
+    case player_walk_left:
+    case player_walk_left + 1:
+    case player_walk_left + 5:
+        head_.set_texture_index(122);
+        head_.set_origin({10, 39});
+        break;
+
+    case player_still_left:
+        head_.set_texture_index(122);
+        head_.set_origin({9, 40});
+        break;
+
+    case player_walk_left + 2:
+    case player_walk_left + 3:
+    case player_walk_left + 4:
+        head_.set_texture_index(122);
+        head_.set_origin({10, 40});
+        break;
+
+    case player_walk_right:
+    case player_walk_right + 1:
+    case player_walk_right + 5:
+        head_.set_texture_index(123);
+        head_.set_origin({6, 39});
+        break;
+
+    case player_still_right:
+        head_.set_texture_index(123);
+        head_.set_origin({7, 40});
+        break;
+
+    case player_walk_right + 2:
+    case player_walk_right + 3:
+    case player_walk_right + 4:
+        head_.set_texture_index(123);
+        head_.set_origin({6, 40});
+        break;
+    }
+
     sprite_.set_size(info.get_sprite_size());
     speed_.x = Float(info.x_speed_) / 10;
     speed_.y = Float(info.y_speed_) / 10;
+
+    update_sprite_position();
 
     switch (info.get_sprite_size()) {
     case Sprite::Size::w16_h32:
@@ -93,6 +175,13 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
 
 void PeerPlayer::update_sprite_position()
 {
+    // Note: head has origin shifted, with corresponding adjustment here. This
+    // is a draw order hack, because the head sprite technically has a lower y
+    // value, so it is drawn behind the player. Therefore, we've increased the
+    // y-offset of the head sprite, and adjusted the head origin by the same
+    // amount, to compensate.
+    head_.set_position(Vec2<Float>{position_.x, position_.y + 24} +
+                       interp_offset_);
     sprite_.set_position(position_ + interp_offset_);
     shadow_.set_position(position_ + interp_offset_);
 }
@@ -101,6 +190,7 @@ void PeerPlayer::update_sprite_position()
 void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     if (warping_) {
+        head_.set_alpha(Sprite::Alpha::transparent);
         sprite_.set_alpha(Sprite::Alpha::transparent);
         shadow_.set_alpha(Sprite::Alpha::transparent);
     }

@@ -10,14 +10,17 @@
 
 class CommonNetworkListener : public net_event::Listener {
 public:
-    void
-    receive(const net_event::PlayerEnteredGate&, Platform& pfrm, Game& game) override
+    void receive(const net_event::PlayerEnteredGate&,
+                 Platform& pfrm,
+                 Game& game) override
     {
         if (game.peer()) {
             game.peer()->warping() = true;
         }
 
-        push_notification(pfrm, game.state(), locale_string(LocaleString::peer_transport_waiting));
+        push_notification(pfrm,
+                          game.state(),
+                          locale_string(LocaleString::peer_transport_waiting));
     }
 
     void receive(const net_event::ItemChestOpened& o,

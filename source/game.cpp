@@ -207,6 +207,7 @@ HOT void Game::render(Platform& pfrm)
     if (peer_player_) {
         if (within_view_frustum(pfrm.screen(), peer_player_->get_position())) {
             display_buffer.push_back(&peer_player_->get_sprite());
+            display_buffer.push_back(peer_player_->get_sprites()[1]);
             display_buffer.push_back(&peer_player_->get_blaster_sprite());
             shadows_buffer.push_back(&peer_player_->get_shadow());
         }
