@@ -67,6 +67,7 @@ public:
 
     using net_event::Listener::receive;
 
+    void receive(const net_event::NewLevelIdle&, Platform&, Game&) override;
     void receive(const net_event::PlayerSpawnLaser&, Platform&, Game&) override;
     void receive(const net_event::ItemChestShared&, Platform&, Game&) override;
     void receive(const net_event::EnemyStateSync&, Platform&, Game&) override;
@@ -93,6 +94,7 @@ private:
     std::optional<Text> network_rx_loss_text_;
     std::optional<Text> link_saturation_text_;
     std::optional<Text> scratch_buf_avail_text_;
+    int idle_rx_count_ = 0;
 };
 
 
@@ -910,8 +912,12 @@ public:
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
 private:
+
+    void display_text(Platform& pfrm, LocaleString ls);
+
     Microseconds timer_ = 0;
     bool peer_ready_ = false;
+    int matching_syncs_received_ = 0;
     bool ready_ = false;
     std::optional<Text> text_;
 };

@@ -25,6 +25,7 @@ public:
         signal_jammer,
         navigation_pamphlet,
         orange,
+        orange_seeds,
         count
     };
 
@@ -69,7 +70,8 @@ inline bool item_is_persistent(Item::Type type)
            type == Item::Type::old_poster_1 or type == Item::Type::map_system or
            type == Item::Type::seed_packet or
            type == Item::Type::engineer_notebook or
-           type == Item::Type::navigation_pamphlet;
+           type == Item::Type::navigation_pamphlet or
+           type == Item::Type::orange_seeds;
 }
 
 

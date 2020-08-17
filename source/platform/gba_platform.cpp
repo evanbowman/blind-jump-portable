@@ -1537,27 +1537,26 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
 
     std::array<char, 256> buffer;
 
-    buffer[0] = '[';
-    buffer[2] = ']';
+    buffer[1] = ':';
 
     switch (level) {
     case Severity::info:
-        buffer[1] = 'i';
+        buffer[0] = 'i';
         break;
 
     case Severity::warning:
-        buffer[1] = 'w';
+        buffer[0] = 'w';
         break;
 
     case Severity::error:
-        buffer[1] = 'E';
+        buffer[0] = 'E';
         break;
     }
 
     const auto msg_size = str_len(msg);
 
     u32 i;
-    constexpr size_t prefix_size = 3;
+    constexpr size_t prefix_size = 2;
 
     if (log_write_loc + prefix_size + msg_size + 2 >= 64000) {
         // We cannot be certain of how much cartridge ram will be available. But
@@ -1570,10 +1569,10 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
     for (i = 0;
          i < std::min(size_t(msg_size), buffer.size() - (prefix_size + 1));
          ++i) {
-        buffer[i + 3] = msg[i];
+        buffer[i + prefix_size] = msg[i];
     }
-    buffer[i + 3] = '\n';
-    buffer[i + 4] = '\n'; // This char will be overwritten, meant to identify
+    buffer[i + prefix_size] = '\n';
+    buffer[i + prefix_size + 1] = '\n'; // This char will be overwritten, meant to identify
                           // the end of the log, in the case where the log wraps
                           // around.
 

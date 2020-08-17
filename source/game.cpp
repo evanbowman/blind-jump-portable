@@ -44,6 +44,21 @@ Game::Game(Platform& pfrm)
     if (not this->load_save_data(pfrm)) {
         persistent_data_.reset(pfrm);
         info(pfrm, "no save file found");
+        if (auto tm = pfrm.startup_time()) {
+            persistent_data_.timestamp_ = *tm;
+        }
+    } else {
+        if (auto tm = pfrm.startup_time()) {
+            StringBuffer<80> str = "save file age: ";
+
+            char buffer[30];
+            english__to_string(time_diff(persistent_data_.timestamp_, *tm), buffer, 10);
+
+            str += buffer;
+            str += "sec";
+
+            info(pfrm, str.c_str());
+        }
     }
 
     if (persistent_data_.settings_.language_ not_eq LocaleLanguage::null) {
@@ -1301,6 +1316,7 @@ ItemRarity rarity(Item::Type item)
     case Item::Type::coin:
     case Item::Type::blaster:
     case Item::Type::count:
+    case Item::Type::orange_seeds:
         return 0;
 
     case Item::Type::null:

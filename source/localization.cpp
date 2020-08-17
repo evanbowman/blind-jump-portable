@@ -349,6 +349,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::seed_packet_title: return "Seed packet";
         case LocaleString::navigation_pamphlet_title: return "Navigation pamphlet";
         case LocaleString::orange_title: return "Orange (+1 hp)";
+        case LocaleString::orange_seeds_title: return "Orange seeds";
         case LocaleString::single_use_warning: return "(SINGLE USE)";
         case LocaleString::locked: return "locked, ";
         case LocaleString::peer_too_close_to_item: return "blocked, Peer is in the way!";
@@ -393,6 +394,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::peer_connection_failed: return "Peer connection failed!";
         case LocaleString::peer_lost: return "Peer died!";
         case LocaleString::level_transition_awaiting_peers: return "Waiting for Peers...";
+        case LocaleString::level_transition_synchronizing: return "Synchronizing Games...";
         case LocaleString::fps_stats_suffix: return " fps";
         case LocaleString::network_tx_stats_suffix: return " tx";
         case LocaleString::network_rx_stats_suffix: return " rx";

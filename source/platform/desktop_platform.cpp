@@ -1317,6 +1317,15 @@ int Platform::scratch_buffers_remaining()
 }
 
 
+static std::optional<DateTime> start_time;
+
+
+std::optional<DateTime> Platform::startup_time() const
+{
+    return ::start_time;
+}
+
+
 Platform::Platform()
 {
     ::platform = this;
@@ -1328,6 +1337,9 @@ Platform::Platform()
         error(*this, "Failed to allocate context");
         exit(EXIT_FAILURE);
     }
+
+
+    ::start_time = system_clock_.now();
 
 
     screen_.view_.set_size(screen_.size().cast<Float>());
@@ -1836,9 +1848,9 @@ std::optional<DateTime> Platform::SystemClock::now()
     tm local_tm = *localtime(&tt);
 
     DateTime info;
-    info.year_ = local_tm.tm_year;
-    info.month_ = local_tm.tm_mon;
-    info.day_ = local_tm.tm_mday;
+    info.date_.year_ = local_tm.tm_year;
+    info.date_.month_ = local_tm.tm_mon;
+    info.date_.day_ = local_tm.tm_mday;
     info.hour_ = local_tm.tm_hour;
     info.minute_ = local_tm.tm_min;
     info.second_ = local_tm.tm_sec;
