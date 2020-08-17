@@ -35,6 +35,11 @@ public:
             : data_(std::forward<Args>(args)...), pool_(pool),
               finalizer_hook_(finalizer_hook), strong_count_(0), weak_count_(0)
         {
+            if (finalizer_hook_ == nullptr) {
+                finalizer_hook_ = [](ControlBlock* ctrl) {
+                                      ctrl->pool_->post(ctrl);
+                                  };
+            }
         }
 
         T data_;
@@ -42,9 +47,7 @@ public:
         // Because the pool is an input parameter, I do not see much reason to
         // allow custom finalizers, but in any event, having the option to
         // customize deallocation might be useful in some unforseen way.
-        void (*finalizer_hook_)(ControlBlock*) = [](ControlBlock* ctrl) {
-            ctrl->pool_->post(ctrl);
-        };
+        void (*finalizer_hook_)(ControlBlock*);
         Atomic<u32> strong_count_;
         Atomic<u32> weak_count_;
     };

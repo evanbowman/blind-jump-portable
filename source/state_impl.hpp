@@ -465,7 +465,7 @@ private:
     Microseconds map_enter_duration_;
 
     std::optional<DynamicMemory<IncrementalPathfinder>> path_finder_;
-    std::optional<PathData> path_;
+    std::optional<DynamicMemory<PathBuffer>> path_;
 };
 
 
@@ -500,7 +500,7 @@ private:
     std::optional<Text> level_text_;
 
     std::optional<DynamicMemory<IncrementalPathfinder>> path_finder_;
-    std::optional<PathData> path_;
+    std::optional<DynamicMemory<PathBuffer>> path_;
 };
 
 

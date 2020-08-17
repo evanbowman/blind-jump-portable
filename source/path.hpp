@@ -26,18 +26,10 @@ using PathCoord = Vec2<u8>;
 using PathBuffer = Buffer<PathCoord, max_path>;
 
 
-struct PathData {
-    using BackingMemory = ScratchBufferBulkAllocator;
-
-    BackingMemory memory_;
-    BackingMemory::Ptr<PathBuffer> path_;
-};
-
-
-std::optional<PathData> find_path(Platform& pfrm,
-                                  TileMap& tiles,
-                                  const PathCoord& start,
-                                  const PathCoord& end);
+std::optional<DynamicMemory<PathBuffer>> find_path(Platform& pfrm,
+                                                   TileMap& tiles,
+                                                   const PathCoord& start,
+                                                   const PathCoord& end);
 
 
 static constexpr const auto vertex_scratch_buffers = 3;
@@ -49,7 +41,7 @@ struct IncrementalPathfinder {
                           const PathCoord& start,
                           const PathCoord& end);
 
-    std::optional<PathData>
+    std::optional<DynamicMemory<PathBuffer>>
     compute(Platform& pfrm, int max_iters, bool* incomplete);
 
 private:

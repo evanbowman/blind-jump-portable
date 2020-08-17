@@ -74,7 +74,7 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
 }
 
 
-std::optional<PathData>
+std::optional<DynamicMemory<PathBuffer>>
 IncrementalPathfinder::compute(Platform& pfrm, int max_iters, bool* incomplete)
 {
     for (int i = 0; i < max_iters; ++i) {
@@ -86,19 +86,18 @@ IncrementalPathfinder::compute(Platform& pfrm, int max_iters, bool* incomplete)
                 return {};
             }
             if (min->coord_ == end_) {
-                ScratchBufferBulkAllocator path_mem(pfrm);
-                auto path = path_mem.alloc<PathBuffer>();
-                if (not path) {
+                auto path_mem = allocate_dynamic<PathBuffer>(pfrm);
+                if (not path_mem.obj_) {
                     return {};
                 }
 
                 auto current_v = priority_q_.obj_->back();
                 while (current_v) {
-                    path->push_back(current_v->coord_);
+                    path_mem.obj_->push_back(current_v->coord_);
                     current_v = current_v->prev_;
                 }
                 *incomplete = false;
-                return {PathData{path_mem, std::move(path)}};
+                return path_mem;
             }
             priority_q_.obj_->pop_back();
 
@@ -149,10 +148,10 @@ void IncrementalPathfinder::sort_q()
 }
 
 
-std::optional<PathData> find_path(Platform& pfrm,
-                                  TileMap& tiles,
-                                  const PathCoord& start,
-                                  const PathCoord& end)
+std::optional<DynamicMemory<PathBuffer>> find_path(Platform& pfrm,
+                                                   TileMap& tiles,
+                                                   const PathCoord& start,
+                                                   const PathCoord& end)
 {
     IncrementalPathfinder p(pfrm, tiles, start, end);
 

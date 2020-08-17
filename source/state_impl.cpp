@@ -2731,7 +2731,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             auto* const path = [&]() -> PathBuffer* {
                 if (path_) {
-                    return path_->path_.get();
+                    return path_->obj_.get();
                 } else {
                     return nullptr;
                 }
@@ -2934,7 +2934,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             last_map_column_ = -1;
             auto* const path = [&]() -> PathBuffer* {
                 if (path_) {
-                    return path_->path_.get();
+                    return path_->obj_.get();
                 } else {
                     return nullptr;
                 }
