@@ -97,12 +97,12 @@ if(GAMEBOY_ADVANCE)
 
   set(SOURCES
     ${SOURCES}
-    ${SOURCE_DIR}/platform/gba_platform.cpp
-    ${SOURCE_DIR}/platform/memcpy.s
-    ${SOURCE_DIR}/platform/interrupt.c
-    ${SOURCE_DIR}/platform/interrupt_dispatch.s
-    ${SOURCE_DIR}/platform/bios_math.s
-    ${SOURCE_DIR}/platform/reset.s
+    ${SOURCE_DIR}/platform/gba/gba_platform.cpp
+    ${SOURCE_DIR}/platform/gba/memcpy.s
+    ${SOURCE_DIR}/platform/gba/interrupt.c
+    ${SOURCE_DIR}/platform/gba/interrupt_dispatch.s
+    ${SOURCE_DIR}/platform/gba/bios_math.s
+    ${SOURCE_DIR}/platform/gba/reset.s
 
     # Data files below. Because the gameboy advance does not have a filesystem,
     # all of the sounds and images need to be compiled into the ROM.
@@ -110,7 +110,6 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/data/scottbuckley_omega.s
     ${SOURCE_DIR}/data/scottbuckley_computations.s
     ${SOURCE_DIR}/data/scottbuckley_hiraeth.s
-#    ${SOURCE_DIR}/data/september.s
     ${SOURCE_DIR}/data/clair_de_lune.s
     ${SOURCE_DIR}/data/overlay.s
     ${SOURCE_DIR}/data/overlay_cutscene.s
@@ -155,7 +154,7 @@ if(GAMEBOY_ADVANCE)
 else()
   set(SOURCES
     ${SOURCES}
-    ${SOURCE_DIR}/platform/desktop_platform.cpp)
+    ${SOURCE_DIR}/platform/desktop/desktop_platform.cpp)
 endif()
 
 
@@ -234,7 +233,7 @@ if(GAMEBOY_ADVANCE)
   # other variables set in the toolchain file seem to be persistent...
   set(CMAKE_AR $ENV{DEVKITARM}/bin/arm-none-eabi-ar)
 
-  add_library(ARM_ROUTINES ${SOURCE_DIR}/platform/gba_arm_routines.cpp)
+  add_library(ARM_ROUTINES ${SOURCE_DIR}/platform/gba/gba_arm_routines.cpp)
 
   target_compile_options(ARM_ROUTINES PRIVATE
     ${SHARED_COMPILE_OPTIONS})
