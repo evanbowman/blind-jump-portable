@@ -38,8 +38,20 @@ public:
         return *this;
     }
 
-    Buffer(Buffer&&) = delete;                  // TODO
-    const Buffer& operator=(Buffer&&) = delete; // TODO
+    Buffer(Buffer&& other)
+    {
+        for (auto& elem : other) {
+            this->push_back(std::move(elem));
+        }
+    }
+
+    const Buffer& operator=(Buffer&& other)
+    {
+        for (auto& elem : other) {
+            this->push_back(std::move(elem));
+        }
+        return *this;
+    }
 
     ~Buffer()
     {
