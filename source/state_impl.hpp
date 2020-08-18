@@ -258,7 +258,8 @@ public:
 
 class GlowFadeState : public OverworldState {
 public:
-    GlowFadeState(Game& game, ColorConstant color) : OverworldState(game, false), color_(color)
+    GlowFadeState(Game& game, ColorConstant color)
+        : OverworldState(game, false), color_(color)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -271,7 +272,8 @@ private:
 
 class FadeOutState : public OverworldState {
 public:
-    FadeOutState(Game& game, ColorConstant color) : OverworldState(game, false), color_(color)
+    FadeOutState(Game& game, ColorConstant color)
+        : OverworldState(game, false), color_(color)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -925,7 +927,6 @@ public:
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
 private:
-
     void display_text(Platform& pfrm, LocaleString ls);
 
     Microseconds timer_ = 0;

@@ -44,6 +44,10 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             HANDLE_MESSAGE(QuickChat)
             HANDLE_MESSAGE(PlayerSpawnLaser)
             HANDLE_MESSAGE(PlayerDied)
+            HANDLE_MESSAGE(DataStreamAvail)
+            HANDLE_MESSAGE(DataStreamReadResponse)
+            HANDLE_MESSAGE(DataStreamReadRequest)
+            HANDLE_MESSAGE(DataStreamDoneReading)
         }
 
         error(pfrm, "garbled message!?");

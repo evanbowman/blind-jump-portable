@@ -29,6 +29,10 @@ struct Header {
         item_taken,
         item_chest_opened,
         item_chest_shared,
+        data_stream_avail,
+        data_stream_read_request,
+        data_stream_read_response,
+        data_stream_done_reading,
         quick_chat,
     } message_type_;
 };
@@ -291,6 +295,57 @@ struct NewLevelIdle {
 NET_EVENT_SIZE_CHECK(NewLevelIdle)
 
 
+// Currently unused, reserved for future use.
+struct DataStreamAvail {
+    Header header_;
+    host_u16 stream_id_;
+    host_u32 stream_length_;
+
+    u8 unused_[5];
+
+    static const auto mt = Header::MessageType::data_stream_avail;
+};
+NET_EVENT_SIZE_CHECK(DataStreamAvail)
+
+
+// Currently unused, reserved for future use.
+struct DataStreamReadRequest {
+    Header header_;
+    host_u16 stream_id_;
+    host_u32 stream_index_;
+    u8 request_id_;
+
+    u8 unused_[4];
+
+    static const auto mt = Header::MessageType::data_stream_read_request;
+};
+NET_EVENT_SIZE_CHECK(DataStreamReadRequest)
+
+
+// Currently unused, reserved for future use.
+struct DataStreamReadResponse {
+    Header header_;
+    u8 request_id_;
+
+    u8 data_[10];
+
+    static const auto mt = Header::MessageType::data_stream_read_response;
+};
+NET_EVENT_SIZE_CHECK(DataStreamReadResponse)
+
+
+// Currently unused, reserved for future use.
+struct DataStreamDoneReading {
+    Header header_;
+    host_u16 stream_id_;
+
+    u8 unused_[9];
+
+    static const auto mt = Header::MessageType::data_stream_done_reading;
+};
+NET_EVENT_SIZE_CHECK(DataStreamDoneReading)
+
+
 struct QuickChat {
     Header header_;
     host_u32 message_;
@@ -356,6 +411,18 @@ public:
     {
     }
     virtual void receive(const QuickChat&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const DataStreamAvail&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const DataStreamReadRequest&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const DataStreamReadResponse&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const DataStreamDoneReading&, Platform&, Game&)
     {
     }
     virtual void receive(const PlayerSpawnLaser&, Platform&, Game&)

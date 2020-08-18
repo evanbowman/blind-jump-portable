@@ -52,7 +52,8 @@ Game::Game(Platform& pfrm)
             StringBuffer<80> str = "save file age: ";
 
             char buffer[30];
-            english__to_string(time_diff(persistent_data_.timestamp_, *tm), buffer, 10);
+            english__to_string(
+                time_diff(persistent_data_.timestamp_, *tm), buffer, 10);
 
             str += buffer;
             str += "sec";

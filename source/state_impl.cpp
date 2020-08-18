@@ -311,7 +311,8 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 
 
 void OverworldState::receive(const net_event::NewLevelIdle& n,
-                             Platform& pfrm, Game& game)
+                             Platform& pfrm,
+                             Game& game)
 {
     if (++idle_rx_count_ == 120) {
         idle_rx_count_ = 0;
@@ -1259,7 +1260,8 @@ PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
                              pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {
         game.camera().set_speed(1.f);
-        return state_pool_.create<GlowFadeState>(game, current_zone(game).energy_glow_color_);
+        return state_pool_.create<GlowFadeState>(
+            game, current_zone(game).energy_glow_color_);
     } else {
         return null_state();
     }
@@ -3988,10 +3990,10 @@ void LogfileViewerState::repaint(Platform& pfrm, int offset)
             // const int index = i + j * screen_tiles.x;
             if (index < buffer_size) {
                 if (buffer[index] == '\n') {
-                     for (; i < screen_tiles.x; ++i) {
-                         // eat the rest of the space in the current line
-                         pfrm.set_tile(Layer::overlay, i, j, 0);
-                     }
+                    for (; i < screen_tiles.x; ++i) {
+                        // eat the rest of the space in the current line
+                        pfrm.set_tile(Layer::overlay, i, j, 0);
+                    }
                 } else {
                     const auto t =
                         pfrm.map_glyph(buffer[index], locale_texture_map());
@@ -4729,8 +4731,7 @@ void NewLevelIdleState::display_text(Platform& pfrm, LocaleString ls)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    text_.emplace(pfrm,
-                  OverlayCoord{(u8)margin, (u8)(screen_tiles.y / 2 - 1)});
+    text_.emplace(pfrm, OverlayCoord{(u8)margin, (u8)(screen_tiles.y / 2 - 1)});
 
     text_->assign(str);
 }

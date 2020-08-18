@@ -1572,9 +1572,10 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
         buffer[i + prefix_size] = msg[i];
     }
     buffer[i + prefix_size] = '\n';
-    buffer[i + prefix_size + 1] = '\n'; // This char will be overwritten, meant to identify
-                          // the end of the log, in the case where the log wraps
-                          // around.
+    buffer[i + prefix_size + 1] =
+        '\n'; // This char will be overwritten, meant to identify
+              // the end of the log, in the case where the log wraps
+              // around.
 
     if (save_using_flash) {
         flash_save(buffer.data(), log_write_loc, buffer.size());

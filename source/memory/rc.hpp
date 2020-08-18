@@ -37,8 +37,8 @@ public:
         {
             if (finalizer_hook_ == nullptr) {
                 finalizer_hook_ = [](ControlBlock* ctrl) {
-                                      ctrl->pool_->post(ctrl);
-                                  };
+                    ctrl->pool_->post(ctrl);
+                };
             }
         }
 
