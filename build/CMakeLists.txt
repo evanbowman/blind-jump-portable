@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
+project(BlindJump)
+
 set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 set(SOURCE_DIR ${ROOT_DIR}/source)
 set(IMAGE_DIR ${ROOT_DIR}/images)
@@ -168,7 +170,7 @@ function(compile_image filename mw mh flatten)
   if(${flatten} STREQUAL "YES")
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}_flattened.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png yes
-      COMMAND grit tmp/${filename}_flattened.png -gB4 -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}_flattened.png -gB4 -gTFF00FF
       COMMAND mv ${filename}_flattened.s ${SOURCE_DIR}/data/${filename}_flattened.s
       COMMAND mv ${filename}_flattened.h ${SOURCE_DIR}/data/${filename}_flattened.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -178,7 +180,7 @@ function(compile_image filename mw mh flatten)
   elseif(${mw} STREQUAL "0" AND ${mh} STREQUAL "0")
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
-      COMMAND grit tmp/${filename}.png -gB4 -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit  tmp/${filename}.png -gB4 -gTFF00FF
       COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
       COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -188,7 +190,7 @@ function(compile_image filename mw mh flatten)
   else()
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
-      COMMAND grit tmp/${filename}.png -gB4 -Mw ${mw} -Mh ${mh} -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}.png -gB4 -Mw ${mw} -Mh ${mh} -gTFF00FF
       COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
       COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -306,6 +308,17 @@ elseif(APPLE)
     PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
 
   include_directories("/usr/local/include/")
+
+elseif(UNIX)
+
+  target_link_libraries(BlindJump
+    -lpthread
+    -lsfml-window
+    -lsfml-graphics
+    -lsfml-system
+    -lsfml-audio
+    -lsfml-network)
+
 endif()
 
 

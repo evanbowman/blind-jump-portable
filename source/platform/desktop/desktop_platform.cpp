@@ -26,6 +26,7 @@
 #include <sstream>
 #include <thread>
 #include <unordered_map>
+#include <mutex>
 
 
 Platform::DeviceName Platform::device_name() const
@@ -309,14 +310,19 @@ Microseconds Platform::DeltaClock::reset()
 
     throttle_stop = std::chrono::high_resolution_clock::now();
 
-    const auto gba_fixed_step = 2000;
 
+#ifndef __linux__ // Unfortunately, this code seems to make the linux builds
+                  // really stuttery. Without this enabled, you're likely to see
+                  // high cpu usage.
+    const auto gba_fixed_step = 2000;
     const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
         throttle_stop - throttle_start);
+
     if (elapsed.count() < gba_fixed_step) {
         std::this_thread::sleep_for(std::chrono::microseconds(
             (gba_fixed_step - 1000) - (elapsed.count() - sleep_time)));
     }
+#endif
 
     auto val = reinterpret_cast<sf::Clock*>(impl_)->restart().asMicroseconds();
 
@@ -680,6 +686,8 @@ void Platform::Screen::clear()
                     case TextureSwap::overlay:
                         return &::platform->data()->overlay_texture_;
                     }
+                    error(*::platform, "invalid texture swap enumeration");
+                    ::platform->fatal();
                 }()
                        ->loadFromImage(image)) {
                 error(*::platform, "Failed to create texture");

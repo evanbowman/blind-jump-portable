@@ -6,22 +6,20 @@
 
 template <u32 bits> class Bitvector {
 public:
-    explicit constexpr Bitvector(u8 init)
+    explicit constexpr Bitvector(u8 init) : data_{init}
     {
         static_assert(sizeof(init) * 8 == bits);
-        data_[0] = init;
     }
 
     constexpr Bitvector(const std::array<bool, bits> init) : data_({})
     {
-        for (size_t bit = 0; bit < init.size(); ++bit) {
+        for (std::size_t bit = 0; bit < init.size(); ++bit) {
             this->set(bit, init[bit]);
         }
     }
 
     constexpr Bitvector() : data_({})
     {
-        clear();
     }
 
     Bitvector& operator=(const Bitvector& other)

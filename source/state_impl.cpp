@@ -4569,7 +4569,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 locale_string(LocaleString::menu_connect_peer),
                 [&]() -> Text::OptColors {
                     if (connect_peer_option_available(game)) {
-                        return {};
+                        return std::nullopt;
                     } else {
                         return FontColors{ColorConstant::med_blue_gray,
                                           ColorConstant::rich_black};

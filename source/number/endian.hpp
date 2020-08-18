@@ -6,8 +6,14 @@
 // order for binary encoded data.
 
 
+#ifdef __bswap_constant_16
+#undef __bswap_constant_16
+#endif
 #define __bswap_constant_16(x) ((u16)((((x) >> 8) & 0xff) | (((x)&0xff) << 8)))
 
+#ifdef __bswap_constant_32
+#undef __bswap_constant_32
+#endif
 #define __bswap_constant_32(x)                                                 \
     ((((x)&0xff000000) >> 24) | (((x)&0x00ff0000) >> 8) |                      \
      (((x)&0x0000ff00) << 8) | (((x)&0x000000ff) << 24))

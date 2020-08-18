@@ -3,6 +3,7 @@
 #include "bulkAllocator.hpp"
 #include "tileMap.hpp"
 #include <optional>
+#include <limits>
 
 
 //

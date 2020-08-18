@@ -2137,10 +2137,10 @@ Platform::Platform()
     info(*this, "Verifying BIOS...");
 
     switch (BiosCheckSum()) {
-    case -1162995584:
+    case static_cast<long unsigned int>(-1162995584):
         info(*this, "BIOS matches Nintendo DS");
         break;
-    case -1162995585:
+    case static_cast<long unsigned int>(-1162995585):
         info(*this, "BIOS matches GAMEBOY Advance");
         break;
     default:
