@@ -76,6 +76,17 @@ public:
     void
     receive(const net_event::EnemyHealthChanged&, Platform&, Game&) override;
 
+protected:
+    void hide_notifications(Platform& pfrm)
+    {
+        if (notification_status not_eq NotificationStatus::hidden) {
+            for (int i = 0; i < 32; ++i) {
+                pfrm.set_tile(Layer::overlay, i, 0, 0);
+            }
+
+            notification_status = NotificationStatus::hidden;
+        }
+    }
 
 private:
     void show_stats(Platform& pfrm, Game& game, Microseconds delta);
@@ -247,25 +258,27 @@ public:
 
 class GlowFadeState : public OverworldState {
 public:
-    GlowFadeState(Game& game) : OverworldState(game, false)
+    GlowFadeState(Game& game, ColorConstant color) : OverworldState(game, false), color_(color)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
+    ColorConstant color_;
 };
 
 
 class FadeOutState : public OverworldState {
 public:
-    FadeOutState(Game& game) : OverworldState(game, false)
+    FadeOutState(Game& game, ColorConstant color) : OverworldState(game, false), color_(color)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
     Microseconds counter_ = 0;
+    ColorConstant color_;
 };
 
 

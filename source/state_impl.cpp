@@ -1259,7 +1259,7 @@ PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
                              pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {
         game.camera().set_speed(1.f);
-        return state_pool_.create<GlowFadeState>(game);
+        return state_pool_.create<GlowFadeState>(game, current_zone(game).energy_glow_color_);
     } else {
         return null_state();
     }
@@ -1281,13 +1281,13 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     constexpr auto fade_duration = milliseconds(950);
     if (counter_ > fade_duration) {
-        pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
+        pfrm.screen().fade(1.f, color_);
         pfrm.screen().pixelate(0);
         game.player().set_visible(false);
-        return state_pool_.create<FadeOutState>(game);
+        return state_pool_.create<FadeOutState>(game, color_);
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);
-        pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
+        pfrm.screen().fade(amount, color_);
         if (amount > 0.25f) {
             pfrm.screen().pixelate((amount - 0.25f) * 60);
         }
@@ -1318,7 +1318,7 @@ StatePtr FadeOutState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else {
         pfrm.screen().fade(smoothstep(0.f, fade_duration, counter_),
                            ColorConstant::rich_black,
-                           current_zone(game).energy_glow_color_);
+                           color_);
 
         return null_state();
     }
@@ -2103,6 +2103,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             if (not pfrm.keyboard().pressed<quick_select_inventory_key>()) {
                 timer_ = transition_duration - timer_;
                 display_mode_ = DisplayMode::exit;
+                hide_notifications(pfrm);
             } else {
                 const auto amount =
                     smoothstep(0.f, transition_duration, timer_);
@@ -2231,6 +2232,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             display_mode_ = DisplayMode::exit;
             timer_ = 0;
             redraw_selector(0);
+            hide_notifications(pfrm);
 
             if (restore_keystates) {
                 pfrm.keyboard().restore_state(*restore_keystates);
@@ -2853,6 +2855,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (not pfrm.keyboard().pressed<quick_map_key>()) {
                 timer_ = transition_duration - timer_;
                 display_mode_ = DisplayMode::exit;
+                hide_notifications(pfrm);
             } else {
                 const auto amount =
                     0.96f * smoothstep(0.f, transition_duration, timer_);
@@ -2916,6 +2919,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (not pfrm.keyboard().pressed<quick_map_key>()) {
             display_mode_ = DisplayMode::exit;
             timer_ = 0;
+            hide_notifications(pfrm);
 
             if (restore_keystates) {
                 pfrm.keyboard().restore_state(*restore_keystates);
@@ -2948,6 +2952,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (not pfrm.keyboard().pressed<quick_map_key>()) {
             display_mode_ = DisplayMode::exit;
             timer_ = 0;
+            hide_notifications(pfrm);
 
             if (restore_keystates) {
                 pfrm.keyboard().restore_state(*restore_keystates);
