@@ -2061,6 +2061,13 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                                            Game& game,
                                            Microseconds delta)
 {
+    // We can end up with graphical glitches if we allow the notification bar to
+    // play its exit animation while in the one of the sidebar states, so keep
+    // the notification text alive until we exit this state.
+    if (notification_status == NotificationStatus::display) {
+        notification_text_timer = seconds(3);
+    }
+
     const auto last_health = game.player().get_health();
     const auto last_score = game.score();
 
@@ -2809,6 +2816,13 @@ void QuickMapState::exit(Platform& pfrm, Game& game, State& next_state)
 
 StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    // We can end up with graphical glitches if we allow the notification bar to
+    // play its exit animation while in the one of the sidebar states, so keep
+    // the notification text alive until we exit this state.
+    if (notification_status == NotificationStatus::display) {
+        notification_text_timer = seconds(3);
+    }
+
     const auto player_pos = game.player().get_position();
 
     game.camera().push_ballast({player_pos.x - 80, player_pos.y});
