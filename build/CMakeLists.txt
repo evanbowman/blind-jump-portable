@@ -44,8 +44,8 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 
 set(SOURCES
-  ${SOURCE_DIR}/entity/effects/firstExplorerSmallLaser.cpp
-  ${SOURCE_DIR}/entity/effects/firstExplorerBigLaser.cpp
+  ${SOURCE_DIR}/entity/effects/wandererSmallLaser.cpp
+  ${SOURCE_DIR}/entity/effects/wandererBigLaser.cpp
   ${SOURCE_DIR}/entity/details/cutsceneCloud.cpp
   ${SOURCE_DIR}/entity/details/cutsceneBird.cpp
   ${SOURCE_DIR}/entity/bosses/gatekeeper.cpp

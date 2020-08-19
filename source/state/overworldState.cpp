@@ -526,9 +526,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (UNLIKELY(boss_level)) {
         check_collisions(
-            pfrm, game, player, game.effects().get<FirstExplorerBigLaser>());
+            pfrm, game, player, game.effects().get<WandererBigLaser>());
         check_collisions(
-            pfrm, game, player, game.effects().get<FirstExplorerSmallLaser>());
+            pfrm, game, player, game.effects().get<WandererSmallLaser>());
     }
 
     game.enemies().transform([&](auto& buf) {
