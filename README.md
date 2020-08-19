@@ -1,4 +1,4 @@
-# Blind Jump Portable
+# Blind Jump (portable)
 
 You should find this readme mosty up-to-date, but as the game is under active development, everything is subject to change, and sometimes edits to the readme lag significantly behind changes to the game itself.
 
@@ -73,6 +73,8 @@ The settings screen also allows you to change the language, although the only la
 ## Implementation
 
 This repository contains a substantial re-write of the original BlindJump code. In the current iteration, the core parts of the code have no external dependencies, and target a [theoretically] platform-neutral hardware abstraction layer. The embedded version of BlindJump runs on Gameboy Advance, and has partial support for Desktop OSs via SFML. When porting the game to a new platform, one only needs to re-implement the Platform class in source/platform/.
+
+The game is written almost entirely in C++, with a small amount of C, as well as a teeny bit of ARM assembly.
 
 ## Building
 
