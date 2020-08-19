@@ -7,11 +7,11 @@
 class Player;
 
 
-class FirstExplorerBigLaser : public Projectile {
+class WandererBigLaser : public Projectile {
 public:
-    FirstExplorerBigLaser(const Vec2<Float>& position,
-                          const Vec2<Float>& target,
-                          Float speed);
+    WandererBigLaser(const Vec2<Float>& position,
+                     const Vec2<Float>& target,
+                     Float speed);
 
     void update(Platform& pf, Game& game, Microseconds dt);
 

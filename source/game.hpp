@@ -4,7 +4,7 @@
 
 #include "camera.hpp"
 #include "entity/bosses/gatekeeper.hpp"
-#include "entity/bosses/theFirstExplorer.hpp"
+#include "entity/bosses/wanderer.hpp"
 #include "entity/details/cutsceneBird.hpp"
 #include "entity/details/cutsceneCloud.hpp"
 #include "entity/details/item.hpp"
@@ -14,8 +14,8 @@
 #include "entity/details/scavenger.hpp"
 #include "entity/details/transporter.hpp"
 #include "entity/effects/explosion.hpp"
-#include "entity/effects/firstExplorerBigLaser.hpp"
-#include "entity/effects/firstExplorerSmallLaser.hpp"
+#include "entity/effects/wandererBigLaser.hpp"
+#include "entity/effects/wandererSmallLaser.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
 #include "entity/effects/proxy.hpp"
@@ -74,7 +74,7 @@ public:
                                    SnakeBody,
                                    SnakeTail,
                                    Scarecrow,
-                                   TheFirstExplorer,
+                                   Wanderer,
                                    Gatekeeper,
                                    GatekeeperShield,
                                    Theif,
@@ -97,8 +97,8 @@ public:
                                     Laser,
                                     PeerLaser,
                                     Explosion,
-                                    FirstExplorerBigLaser,
-                                    FirstExplorerSmallLaser>;
+                                    WandererBigLaser,
+                                    WandererSmallLaser>;
 
     inline Transporter& transporter()
     {

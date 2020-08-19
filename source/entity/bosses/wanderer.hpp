@@ -12,9 +12,9 @@ class Player;
 class Laser;
 
 
-class TheFirstExplorer : public Enemy {
+class Wanderer : public Enemy {
 public:
-    TheFirstExplorer(const Vec2<Float>& position);
+    Wanderer(const Vec2<Float>& position);
 
     static constexpr bool multiface_sprite = true;
 

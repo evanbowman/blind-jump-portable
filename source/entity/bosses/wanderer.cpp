@@ -1,4 +1,4 @@
-#include "theFirstExplorer.hpp"
+#include "wanderer.hpp"
 #include "boss.hpp"
 #include "entity/effects/explosion.hpp"
 #include "game.hpp"
@@ -12,7 +12,7 @@ static const char* boss_music = "omega";
 static const Entity::Health initial_health = 100;
 
 
-TheFirstExplorer::TheFirstExplorer(const Vec2<Float>& position)
+Wanderer::Wanderer(const Vec2<Float>& position)
     : Enemy(initial_health, position, {{16, 38}, {8, 24}}), timer_(0),
       timer2_(0), chase_player_(0), dashes_remaining_(0)
 {
@@ -35,19 +35,19 @@ TheFirstExplorer::TheFirstExplorer(const Vec2<Float>& position)
 }
 
 
-bool TheFirstExplorer::second_form() const
+bool Wanderer::second_form() const
 {
     return get_health() < 58;
 }
 
 
-bool TheFirstExplorer::third_form() const
+bool Wanderer::third_form() const
 {
     return get_health() < 20;
 }
 
 
-void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
+void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
 {
     auto face_left = [this] {
         sprite_.set_flip({1, 0});
@@ -233,7 +233,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                     return milliseconds(90);
                 }
             }()) {
-            game.effects().spawn<FirstExplorerSmallLaser>(
+            game.effects().spawn<WandererSmallLaser>(
                 position_ + shoot_offset(), scattershot_target_, 0.00013f);
 
             Angle angle;
@@ -247,7 +247,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
                 angle = 360 - angle / 2;
             }
 
-            (*game.effects().get<FirstExplorerSmallLaser>().begin())
+            (*game.effects().get<WandererSmallLaser>().begin())
                 ->rotate(angle);
 
             timer_ = 0;
@@ -288,7 +288,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
             game.camera().shake();
             medium_explosion(pf, game, position_ + shoot_offset());
 
-            game.effects().spawn<FirstExplorerBigLaser>(
+            game.effects().spawn<WandererBigLaser>(
                 position_ + shoot_offset(),
                 rng::sample<8>(target.get_position(), rng::critical_state),
                 0.00028f);
@@ -302,7 +302,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
         timer_ += dt;
         if (timer_ > milliseconds(180)) {
-            game.effects().spawn<FirstExplorerBigLaser>(
+            game.effects().spawn<WandererBigLaser>(
                 position_ + shoot_offset(),
                 rng::sample<12>(target.get_position(), rng::critical_state),
                 0.00021f);
@@ -319,7 +319,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 
         timer_ += dt;
         if (timer_ > milliseconds(180)) {
-            game.effects().spawn<FirstExplorerBigLaser>(
+            game.effects().spawn<WandererBigLaser>(
                 position_ + shoot_offset(),
                 rng::sample<22>(target.get_position(), rng::critical_state),
                 0.00015f);
@@ -474,7 +474,7 @@ void TheFirstExplorer::update(Platform& pf, Game& game, Microseconds dt)
 }
 
 
-void TheFirstExplorer::injured(Platform& pf, Game& game, Health amount)
+void Wanderer::injured(Platform& pf, Game& game, Health amount)
 {
     const bool was_second_form = second_form();
 
@@ -503,19 +503,19 @@ void TheFirstExplorer::injured(Platform& pf, Game& game, Health amount)
 }
 
 
-void TheFirstExplorer::on_collision(Platform& pf, Game& game, Laser&)
+void Wanderer::on_collision(Platform& pf, Game& game, Laser&)
 {
     injured(pf, game, Health{1});
 }
 
 
-void TheFirstExplorer::on_collision(Platform& pf, Game& game, LaserExplosion&)
+void Wanderer::on_collision(Platform& pf, Game& game, LaserExplosion&)
 {
     injured(pf, game, Health{8});
 }
 
 
-void TheFirstExplorer::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
+void Wanderer::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 {
     if (not is_allied()) {
         injured(pf, game, Health{1});
@@ -523,13 +523,13 @@ void TheFirstExplorer::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 }
 
 
-void TheFirstExplorer::on_death(Platform& pf, Game& game)
+void Wanderer::on_death(Platform& pf, Game& game)
 {
     boss_explosion(pf, game, position_);
 }
 
 
-void TheFirstExplorer::sync(const net_event::EnemyStateSync& s, Game& game)
+void Wanderer::sync(const net_event::EnemyStateSync& s, Game& game)
 {
     state_ = State::
         after_dash; // Currently, this is the only state where we send a sync message...

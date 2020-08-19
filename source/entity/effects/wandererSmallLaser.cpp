@@ -1,16 +1,16 @@
-#include "firstExplorerSmallLaser.hpp"
+#include "wandererSmallLaser.hpp"
 #include "number/random.hpp"
 
 
-FirstExplorerSmallLaser::FirstExplorerSmallLaser(const Vec2<Float>& position,
-                                                 const Vec2<Float>& target,
-                                                 Float speed)
+WandererSmallLaser::WandererSmallLaser(const Vec2<Float>& position,
+                                       const Vec2<Float>& target,
+                                       Float speed)
     : OrbShot(position, target, speed)
 {
 }
 
 
-void FirstExplorerSmallLaser::update(Platform& pf, Game& game, Microseconds dt)
+void WandererSmallLaser::update(Platform& pf, Game& game, Microseconds dt)
 {
     OrbShot::update(pf, game, dt);
 

@@ -1,11 +1,11 @@
-#include "firstExplorerBigLaser.hpp"
+#include "wandererBigLaser.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
 
 
-FirstExplorerBigLaser::FirstExplorerBigLaser(const Vec2<Float>& position,
-                                             const Vec2<Float>& target,
-                                             Float speed)
+WandererBigLaser::WandererBigLaser(const Vec2<Float>& position,
+                                   const Vec2<Float>& target,
+                                   Float speed)
     : Projectile(position, target, speed), timer_(0),
       flicker_timer_(0), hitbox_{&position_, {{18, 18}, {16, 16}}}
 {
@@ -16,7 +16,7 @@ FirstExplorerBigLaser::FirstExplorerBigLaser(const Vec2<Float>& position,
 }
 
 
-void FirstExplorerBigLaser::update(Platform& pf, Game& game, Microseconds dt)
+void WandererBigLaser::update(Platform& pf, Game& game, Microseconds dt)
 {
     Projectile::update(pf, game, dt);
 
@@ -49,7 +49,7 @@ void FirstExplorerBigLaser::update(Platform& pf, Game& game, Microseconds dt)
 }
 
 
-void FirstExplorerBigLaser::on_collision(Platform& pf, Game&, Player&)
+void WandererBigLaser::on_collision(Platform& pf, Game&, Player&)
 {
     Entity::kill();
     pf.sleep(5);

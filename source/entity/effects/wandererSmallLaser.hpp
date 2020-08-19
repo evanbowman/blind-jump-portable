@@ -7,11 +7,11 @@
 class Player;
 
 
-class FirstExplorerSmallLaser : public OrbShot {
+class WandererSmallLaser : public OrbShot {
 public:
-    FirstExplorerSmallLaser(const Vec2<Float>& position,
-                            const Vec2<Float>& target,
-                            Float speed);
+    WandererSmallLaser(const Vec2<Float>& position,
+                       const Vec2<Float>& target,
+                       Float speed);
 
     void update(Platform& pf, Game& game, Microseconds dt);
 

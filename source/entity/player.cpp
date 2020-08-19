@@ -86,13 +86,13 @@ void Player::on_collision(Platform& pf, Game& game, OrbShot&)
     Player::injured(pf, game, Health(1));
 }
 
-void Player::on_collision(Platform& pf, Game& game, FirstExplorerBigLaser&)
+void Player::on_collision(Platform& pf, Game& game, WandererBigLaser&)
 {
     medium_explosion(pf, game, position_);
     Player::injured(pf, game, Health(2));
 }
 
-void Player::on_collision(Platform& pf, Game& game, TheFirstExplorer&)
+void Player::on_collision(Platform& pf, Game& game, Wanderer&)
 {
     Player::injured(pf, game, Health(1));
 }

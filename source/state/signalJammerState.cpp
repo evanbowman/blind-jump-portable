@@ -212,7 +212,7 @@ Enemy* SignalJammerSelectorState::make_selector_target(Game& game)
                               not std::is_same<VT, SnakeTail>() and
                               not std::is_same<VT, SnakeHead>() and
                               not std::is_same<VT, Gatekeeper>() and
-                              not std::is_same<VT, TheFirstExplorer>()) {
+                              not std::is_same<VT, Wanderer>()) {
                     targets.push_back(element.get());
                     proxies.emplace_back(*element.get());
                 }

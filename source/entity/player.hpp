@@ -17,8 +17,8 @@ class Drone;
 class Theif;
 class OrbShot;
 class SnakeHead;
-class TheFirstExplorer;
-class FirstExplorerBigLaser;
+class Wanderer;
+class WandererBigLaser;
 
 
 class Blaster : public Entity {
@@ -54,8 +54,8 @@ class Player : public Entity {
 public:
     Player(Platform& pfrm);
 
-    void on_collision(Platform& pf, Game& game, FirstExplorerBigLaser&);
-    void on_collision(Platform& pf, Game& game, TheFirstExplorer&);
+    void on_collision(Platform& pf, Game& game, WandererBigLaser&);
+    void on_collision(Platform& pf, Game& game, Wanderer&);
     void on_collision(Platform& pf, Game& game, SnakeHead&);
     void on_collision(Platform& pf, Game& game, OrbShot&);
     void on_collision(Platform& pf, Game& game, Enemy&);

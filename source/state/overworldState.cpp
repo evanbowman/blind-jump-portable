@@ -361,7 +361,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     const bool boss_level = is_boss_level(game.level());
 
     auto bosses_remaining = [&] {
-        return boss_level and (length(game.enemies().get<TheFirstExplorer>()) or
+        return boss_level and (length(game.enemies().get<Wanderer>()) or
                                length(game.enemies().get<Gatekeeper>()));
     };
 
@@ -370,7 +370,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (boss_level) {
             Vec2<Float> result;
             LocaleString lstr = LocaleString::empty;
-            for (auto& elem : game.enemies().get<TheFirstExplorer>()) {
+            for (auto& elem : game.enemies().get<Wanderer>()) {
                 result = elem->get_position();
                 lstr = elem->defeated_text();
             }

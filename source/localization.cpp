@@ -402,8 +402,8 @@ const char* locale_string(LocaleString ls)
         case LocaleString::network_rx_loss_stats_suffix: return " rl";
         case LocaleString::link_saturation_stats_suffix: return " lnsat";
         case LocaleString::scratch_buf_avail_stats_suffix: return " sbr";
-        case LocaleString::boss0_defeated: return "Destroyed The First Explorer";
-        case LocaleString::boss1_defeated: return "Gatekeeper Defeated";
+        case LocaleString::boss0_defeated: return "The Wanderer Defeated";
+        case LocaleString::boss1_defeated: return "Gatekeeper Destroyed";
         case LocaleString::peer_transport_waiting: return "Peer waiting in gate...";
         default: return empty_str;
         }

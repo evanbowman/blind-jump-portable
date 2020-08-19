@@ -1526,7 +1526,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
         switch (level()) {
         case boss_0_level:
-            enemies_.spawn<TheFirstExplorer>(target);
+            enemies_.spawn<Wanderer>(target);
             break;
 
         case boss_1_level:
