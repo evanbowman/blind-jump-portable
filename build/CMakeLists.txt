@@ -221,11 +221,14 @@ if(APPLE OR UNIX OR GAMEBOY_ADVANCE)
 
 elseif(WIN32)
 
-  include_directories(C:/Users/evana/Downloads/SFML-2.5.1/SFML-2.5.1/include/) #FIXME!!!
+  message("WARNING: Windows support is experimental")
   message("TODO: set up proper compiler flags for windows")
   set(SHARED_COMPILE_OPTIONS
     /W4)
 
+  message("The CMakeLists.txt for Windows is incomplete.
+Please manually copy the dependent sfml libraries into the build directory")
+  message("You should also copy the SFML directory containing the SFML headers into the source directory")
   link_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
   target_link_libraries(BlindJump sfml-graphics-d sfml-window-d sfml-system-d sfml-audio-d sfml-network-d)

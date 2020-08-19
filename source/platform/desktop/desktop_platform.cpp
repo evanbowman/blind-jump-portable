@@ -1722,11 +1722,15 @@ void Platform::NetworkPeer::connect(const char* peer)
     auto port = Conf{*::platform}.expect<Conf::Integer>(
         ::platform->device_name().c_str(), "network_port");
 
-    info(*::platform,
-         ("connecting to " + std::string(peer) + ":" + std::to_string(port))
-             .c_str());
+    auto addr =
+        Conf{*::platform}.expect<Conf::String>(::platform->device_name().c_str(),
+                                               "host_address");
 
-    if (impl->socket_.connect(peer, port) == sf::Socket::Status::Done) {
+    info(*::platform,
+         ("connecting to " + std::string(addr.c_str()) + ":" +
+          std::to_string(port)).c_str());
+
+    if (impl->socket_.connect(addr.c_str(), port) == sf::Socket::Status::Done) {
         info(*::platform, "Peer connected!");
     } else {
         error(*::platform, "connection failed :(");
