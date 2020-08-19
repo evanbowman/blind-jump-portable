@@ -144,7 +144,9 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/data/sound_click.s
     ${SOURCE_DIR}/data/sound_heart.s
     ${SOURCE_DIR}/data/sound_creak.s
+    ${SOURCE_DIR}/data/sound_scroll.s
     ${SOURCE_DIR}/data/sound_laser1.s
+    ${SOURCE_DIR}/data/sound_select.s
     ${SOURCE_DIR}/data/sound_openbag.s
     ${SOURCE_DIR}/data/sound_blaster.s
     ${SOURCE_DIR}/data/sound_footstep1.s

@@ -120,6 +120,9 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (pfrm.keyboard().down_transition<quick_map_key>()) {
         if (game.inventory().item_count(Item::Type::map_system) not_eq 0) {
+            // TODO: add a specific sound for opening the map
+            pfrm.speaker().play_sound("openbag", 2);
+
             return state_pool().create<QuickMapState>(game);
         } else {
             push_notification(

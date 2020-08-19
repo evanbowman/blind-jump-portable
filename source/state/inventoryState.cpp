@@ -64,8 +64,10 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (pfrm.keyboard().down_transition<Key::left>()) {
             if (selector_coord_.x > 0) {
                 selector_coord_.x -= 1;
+                pfrm.speaker().play_sound("scroll", 1);
             } else {
                 if (page_ > 0) {
+                    pfrm.speaker().play_sound("scroll", 1);
                     page_ -= 1;
                     selector_coord_.x = 4;
                     if (page_text_) {
@@ -80,8 +82,10 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         } else if (pfrm.keyboard().down_transition<Key::right>()) {
             if (selector_coord_.x < 4) {
                 selector_coord_.x += 1;
+                pfrm.speaker().play_sound("scroll", 1);
             } else {
                 if (page_ < Inventory::pages - 1) {
+                    pfrm.speaker().play_sound("scroll", 1);
                     page_ += 1;
                     selector_coord_.x = 0;
                     if (page_text_) {
@@ -95,12 +99,14 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         } else if (pfrm.keyboard().down_transition<Key::down>()) {
             if (selector_coord_.y < 1) {
+                pfrm.speaker().play_sound("scroll", 1);
                 selector_coord_.y += 1;
             }
             update_item_description(pfrm, game);
 
         } else if (pfrm.keyboard().down_transition<Key::up>()) {
             if (selector_coord_.y > 0) {
+                pfrm.speaker().play_sound("scroll", 1);
                 selector_coord_.y -= 1;
             }
             update_item_description(pfrm, game);

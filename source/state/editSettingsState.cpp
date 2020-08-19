@@ -78,6 +78,7 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     MenuState::update(pfrm, game, delta);
 
     if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        pfrm.speaker().play_sound("select", 1);
         return state_pool().create<PauseScreenState>(false);
     }
 
@@ -110,11 +111,13 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         message_.reset();
         if (select_row_ < static_cast<int>(lines_.size() - 1)) {
             select_row_ += 1;
+            pfrm.speaker().play_sound("scroll", 1);
         }
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
         message_.reset();
         if (select_row_ > 0) {
             select_row_ -= 1;
+            pfrm.speaker().play_sound("scroll", 1);
         }
     } else if (pfrm.keyboard().down_transition<Key::right>()) {
         message_.reset();
@@ -127,6 +130,8 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         updater.complete(pfrm, game, *this);
 
+        pfrm.speaker().play_sound("scroll", 1);
+
     } else if (pfrm.keyboard().down_transition<Key::left>()) {
         message_.reset();
 
@@ -137,6 +142,8 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         draw_line(pfrm, select_row_, updater.update(pfrm, game, -1).c_str());
 
         updater.complete(pfrm, game, *this);
+
+        pfrm.speaker().play_sound("scroll", 1);
     }
 
     if (not message_ and not message_anim_) {

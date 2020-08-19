@@ -180,12 +180,15 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 3) {
             cursor_loc_ += 1;
+            pfrm.speaker().play_sound("scroll", 1);
             draw_cursor(pfrm);
         } else if (pfrm.keyboard().down_transition<Key::up>() and
                    cursor_loc_ > 0) {
             cursor_loc_ -= 1;
+            pfrm.speaker().play_sound("scroll", 1);
             draw_cursor(pfrm);
         } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            pfrm.speaker().play_sound("select", 1);
             switch (cursor_loc_) {
             case 0:
                 return state_pool().create<ActiveState>(game);

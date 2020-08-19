@@ -1660,6 +1660,7 @@ static const AudioTrack* find_track(const char* name)
 // assembly output, adding the file to CMake, adding the include, and adding the
 // sound to the sounds array, it's just too tedious to keep working this way...
 #include "data/sound_bell.hpp"
+#include "data/sound_scroll.hpp"
 #include "data/sound_blaster.hpp"
 #include "data/sound_click.hpp"
 #include "data/sound_coin.hpp"
@@ -1675,6 +1676,7 @@ static const AudioTrack* find_track(const char* name)
 #include "data/sound_open_book.hpp"
 #include "data/sound_openbag.hpp"
 #include "data/sound_pop.hpp"
+#include "data/sound_select.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
@@ -1686,7 +1688,9 @@ static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
                                     DEF_AUDIO(open_book, sound_open_book),
                                     DEF_AUDIO(openbag, sound_openbag),
                                     DEF_AUDIO(blaster, sound_blaster),
+                                    DEF_AUDIO(select, sound_select),
                                     DEF_AUDIO(laser1, sound_laser1),
+                                    DEF_AUDIO(scroll, sound_scroll),
                                     DEF_AUDIO(creak, sound_creak),
                                     DEF_AUDIO(heart, sound_heart),
                                     DEF_AUDIO(click, sound_click),

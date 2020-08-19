@@ -216,8 +216,10 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
 
         if (pfrm.keyboard().down_transition<Key::up>()) {
             if (selector_pos_ > 0) {
+                pfrm.speaker().play_sound("scroll", 1);
                 selector_pos_ -= 1;
             } else if (page_ > 0) {
+                pfrm.speaker().play_sound("scroll", 1);
                 page_ -= 1;
                 selector_pos_ = items_.capacity() - 1;
                 draw_items(pfrm, game);
@@ -228,8 +230,10 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
         } else if (pfrm.keyboard().down_transition<Key::down>()) {
             if (selector_pos_ < items_.capacity() - 1) {
                 selector_pos_ += 1;
+                pfrm.speaker().play_sound("scroll", 1);
             } else {
                 if (more_pages_) {
+                    pfrm.speaker().play_sound("scroll", 1);
                     selector_pos_ = 0;
                     page_ += 1;
                     draw_items(pfrm, game);
