@@ -1,6 +1,7 @@
 #pragma once
 
 #include "int.h"
+#include <ciso646> // For MSVC. What an inept excuse for a compiler.
 
 
 #ifdef __GBA__

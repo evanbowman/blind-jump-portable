@@ -12,9 +12,9 @@ namespace utf8 {
 using Codepoint = u32;
 
 
+template <typename Callback>
 inline bool
-    scan(Function<32, void(const Codepoint& cp, const char* raw, int index)>
-             callback,
+    scan(Callback&& callback,
          const char* data,
          size_t len)
 {
@@ -71,7 +71,7 @@ inline Codepoint getc(const char* data)
     scan(
         [&front](const Codepoint& cp, const char*, int) {
             if (not front)
-                front = cp;
+                front.emplace(cp);
         },
         data,
         str_len(data));

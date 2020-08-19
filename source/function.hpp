@@ -2,6 +2,8 @@
 
 #include <array>
 #include <stdint.h>
+#include <ciso646>
+
 
 // A fixed-space version of std::function, does not allocate.
 

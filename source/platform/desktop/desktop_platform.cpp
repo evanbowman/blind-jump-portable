@@ -12,10 +12,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include <SFML/Audio.hpp>
-#include <SFML/Graphics.hpp>
-#include <SFML/Network.hpp>
-#include <SFML/System.hpp>
+#include "SFML/Audio.hpp"
+#include "SFML/Graphics.hpp"
+#include "SFML/Network.hpp"
+#include "SFML/System.hpp"
 #include <chrono>
 #include <cmath>
 #include <filesystem>
@@ -311,7 +311,8 @@ Microseconds Platform::DeltaClock::reset()
     throttle_stop = std::chrono::high_resolution_clock::now();
 
 
-#ifndef __linux__ // Unfortunately, this code seems to make the linux builds
+#if not defined(__linux__) and not defined(_WIN32)
+    // Unfortunately, this code seems to make the linux builds
                   // really stuttery. Without this enabled, you're likely to see
                   // high cpu usage.
     const auto gba_fixed_step = 2000;
@@ -1619,13 +1620,6 @@ int main()
     }
 }
 
-#ifdef _WIN32
-int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
-{
-    return main();
-}
-#endif
-
 
 void SynchronizedBase::init(Platform& pf)
 {
@@ -1875,3 +1869,21 @@ void Platform::SystemClock::init(Platform& pfrm)
 Platform::SystemClock::SystemClock()
 {
 }
+
+
+
+
+
+
+#ifdef _WIN32
+// I am not interested in pulling in all of the stuff in windows.h, some of which is truely horrendous code.A
+#ifndef _WINDEF_
+class HINSTANCE__;
+typedef HINSTANCE__* HINSTANCE;
+typedef char* LPSTR;
+#endif
+int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+{
+    return main();
+}
+#endif

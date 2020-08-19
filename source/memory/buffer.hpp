@@ -38,7 +38,7 @@ public:
         return *this;
     }
 
-    Buffer(Buffer&& other)
+    Buffer(Buffer&& other) : begin_((Iterator)mem_.data()), end_(begin_)
     {
         for (auto& elem : other) {
             this->push_back(std::move(elem));

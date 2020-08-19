@@ -2375,22 +2375,24 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
         display_mode_ = DisplayMode::fade_in;
         break;
 
-    case DisplayMode::fade_in:
+    case DisplayMode::fade_in: {
         static const auto fade_duration = milliseconds(200);
         timer_ += delta;
         if (timer_ < fade_duration) {
 
             pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, timer_),
-                               ColorConstant::aged_paper,
-                               {},
-                               true,
-                               true);
-        } else {
+                ColorConstant::aged_paper,
+                {},
+                true,
+                true);
+        }
+        else {
             timer_ = 0;
             pfrm.screen().fade(0.f);
             display_mode_ = DisplayMode::show;
         }
         break;
+    }
 
     case DisplayMode::show:
         if (pfrm.keyboard().down_transition<Key::down>()) {
