@@ -30,6 +30,14 @@ endif()
 
 
 include_directories(${SOURCE_DIR})
+
+
+if(APPLE)
+  set(EMACS_FLYCHECK_FRONTEND clang)
+else()
+  set(EMACS_FLYCHECK_FRONTEND gcc)
+endif()
+
 # For emacs flycheck users
 configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
@@ -61,6 +69,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/details/item.cpp
   ${SOURCE_DIR}/entity/bosses/boss.cpp
   ${SOURCE_DIR}/entity/peerPlayer.cpp
+  ${SOURCE_DIR}/state/state_impl.cpp
   ${SOURCE_DIR}/graphics/overlay.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
   ${SOURCE_DIR}/persistentData.cpp
@@ -71,7 +80,6 @@ set(SOURCES
   ${SOURCE_DIR}/network_event.cpp
   ${SOURCE_DIR}/entity/player.cpp
   ${SOURCE_DIR}/localization.cpp
-  ${SOURCE_DIR}/state_impl.cpp
   ${SOURCE_DIR}/inventory.cpp
   ${SOURCE_DIR}/collision.cpp
   ${SOURCE_DIR}/powerup.cpp

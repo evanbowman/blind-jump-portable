@@ -22,6 +22,8 @@ public:
         }
     }
 
+    Pool(const Pool&) = delete;
+
     byte* get()
     {
         if (freelist_) {

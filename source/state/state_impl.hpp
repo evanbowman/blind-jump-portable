@@ -388,10 +388,13 @@ private:
     enum class DisplayMode {
         enter,
         show,
+        used_item,
         exit
     } display_mode_ = DisplayMode::enter;
 
     void show_sidebar(Platform& pfrm);
+
+    int used_item_anim_index_ = 0;
 
     Microseconds timer_ = 0;
 
@@ -956,3 +959,148 @@ public:
 private:
     bool ready_ = false;
 };
+
+
+void state_deleter(State* s);
+
+
+template <typename... States> class StatePool {
+public:
+    template <typename TState, typename... Args> StatePtr create(Args&&... args)
+    {
+        static_assert(std::disjunction<std::is_same<TState, States>...>(),
+                      "State missing from state pool");
+
+        if (auto mem = pool_.get()) {
+            new (mem) TState(std::forward<Args>(args)...);
+
+            return {reinterpret_cast<TState*>(mem), state_deleter};
+        } else {
+
+            return null_state();
+        }
+    }
+
+    Pool<std::max({sizeof(States)...}),
+         // We should only need memory for two states at any given time: the
+         // current state, and the next state.
+         3,
+         std::max({alignof(States)...})>
+        pool_;
+};
+
+
+using StatePoolInst = StatePool<ActiveState,
+                                FadeInState,
+                                WarpInState,
+                                PreFadePauseState,
+                                GlowFadeState,
+                                FadeOutState,
+                                GoodbyeState,
+                                DeathFadeState,
+                                InventoryState,
+                                NotebookState,
+                                ImageViewState,
+                                NewLevelState,
+                                CommandCodeState,
+                                PauseScreenState,
+                                QuickMapState,
+                                MapSystemState,
+                                NewLevelIdleState,
+                                EditSettingsState,
+                                IntroCreditsState,
+                                IntroLegalMessage,
+                                DeathContinueState,
+                                RespawnWaitState,
+                                LogfileViewerState,
+                                EndingCreditsState,
+                                NetworkConnectSetupState,
+                                NetworkConnectWaitState,
+                                LaunchCutsceneState,
+                                BossDeathSequenceState,
+                                QuickSelectInventoryState,
+                                SignalJammerSelectorState>;
+
+
+StatePoolInst& state_pool();
+
+
+[[noreturn]] void factory_reset(Platform& pfrm);
+
+
+void repaint_powerups(Platform& pfrm,
+                      Game& game,
+                      bool clean,
+                      std::optional<UIMetric>* health,
+                      std::optional<UIMetric>* score,
+                      Buffer<UIMetric, Powerup::max_>* powerups,
+                      UIMetric::Align align);
+
+
+void repaint_health_score(Platform& pfrm,
+                          Game& game,
+                          std::optional<UIMetric>* health,
+                          std::optional<UIMetric>* score,
+                          UIMetric::Align align);
+
+
+void update_powerups(Platform& pfrm,
+                     Game& game,
+                     std::optional<UIMetric>* health,
+                     std::optional<UIMetric>* score,
+                     Buffer<UIMetric, Powerup::max_>* powerups,
+                     UIMetric::Align align);
+
+
+void update_ui_metrics(Platform& pfrm,
+                       Game& game,
+                       Microseconds delta,
+                       std::optional<UIMetric>* health,
+                       std::optional<UIMetric>* score,
+                       Buffer<UIMetric, Powerup::max_>* powerups,
+                       Entity::Health last_health,
+                       Score last_score,
+                       UIMetric::Align align);
+
+
+Vec2<s8> get_constrained_player_tile_coord(Game& game);
+
+
+// Return true when done drawing the map. Needs lastcolumn variable to store
+// display progress. A couple different states share this code--the map system
+// state in the pause screen, and the simpler overworld minimap.
+//
+// FIXME: This function has too many inputs, I wouldn't call this particularly
+// great code.
+bool draw_minimap(Platform& pfrm,
+                  Game& game,
+                  Float percentage,
+                  int& last_column,
+                  int x_start = 1,
+                  int y_skip_top = 0,
+                  int y_skip_bot = 0,
+                  bool force_icons = false,
+                  PathBuffer* path = nullptr);
+
+
+
+struct InventoryItemHandler {
+    Item::Type type_;
+    int icon_;
+    StatePtr (*callback_)(Platform& pfrm, Game& game);
+    LocaleString description_;
+    enum { no = 0, yes, custom } single_use_ = no;
+};
+
+
+const InventoryItemHandler* inventory_item_handler(Item::Type type);
+
+
+static constexpr auto inventory_key = Key::select;
+static constexpr auto quick_select_inventory_key = Key::alt_2;
+static constexpr auto quick_map_key = Key::alt_1;
+
+
+// FIXME!!!
+extern std::optional<Platform::Keyboard::RestoreState> restore_keystates;
+extern Bitmatrix<TileMap::width, TileMap::height> visited;
