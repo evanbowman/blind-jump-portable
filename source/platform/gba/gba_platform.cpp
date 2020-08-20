@@ -1920,8 +1920,8 @@ Platform::Speaker::Speaker()
 //
 // NOTE: We play music at 16kHz, and we can load four samples upon each audio
 // interrupt, i.e. 4000 interrupts per second, i.e. approximately sixty-seven
-// interrupts per frame at given sixty fps. Considering how many interrupts
-// we're dealing with here, this isr should be kept small and simple. We're only
+// interrupts per frame (given sixty fps). Considering how many interrupts we're
+// dealing with here, this isr should be kept small and simple. We're only
 // supporting one music channel (which loops by default), and three concurrent
 // sound channels, in our audio mixer.
 //
