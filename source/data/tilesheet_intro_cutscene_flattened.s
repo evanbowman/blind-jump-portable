@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	tilesheet_intro_cutscene_flattened, 3368x8@4, 
+@	tilesheet_intro_cutscene_flattened, 3368x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 421 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global tilesheet_intro_cutscene_flattenedTiles		@ 13472 bytes
 tilesheet_intro_cutscene_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -495,7 +495,7 @@ tilesheet_intro_cutscene_flattenedTiles:
 	.size	tilesheet_intro_cutscene_flattenedTiles, .-tilesheet_intro_cutscene_flattenedTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global tilesheet_intro_cutscene_flattenedPal		@ 512 bytes
 tilesheet_intro_cutscene_flattenedPal:
 	.hword 0x7C1F,0x49E9,0x0800,0x6AB4,0x6FBC,0x55E1,0x25B5,0x28A2

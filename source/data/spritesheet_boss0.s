@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	spritesheet_boss0, 2016x32@4, 
+@	spritesheet_boss0, 2016x32@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 1008 tiles Metatiled by 2x4 not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet_boss0Tiles		@ 32256 bytes
 spritesheet_boss0Tiles:
 	.word 0x66088000,0x66680000,0x66680000,0x66680000,0x86680000,0x86600000,0x66600000,0x66100000
@@ -1155,7 +1155,7 @@ spritesheet_boss0Tiles:
 	.size	spritesheet_boss0Tiles, .-spritesheet_boss0Tiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet_boss0Pal		@ 512 bytes
 spritesheet_boss0Pal:
 	.hword 0x7C1F,0x20C5,0x7FE0,0x3D34,0x6EB6,0x029E,0x4145,0x2C7D

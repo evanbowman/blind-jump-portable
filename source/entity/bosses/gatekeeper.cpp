@@ -233,7 +233,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 state_ = State::idle;
                 timer_ = 0;
 
-                pfrm.speaker().play_music(boss_music, true, 0);
+                pfrm.speaker().play_music(boss_music, 0);
 
                 show_boss_health(
                     pfrm, game, Float(get_health()) / initial_health);

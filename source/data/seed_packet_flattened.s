@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	seed_packet_flattened, 3816x8@4, 
+@	seed_packet_flattened, 3816x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 477 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global seed_packet_flattenedTiles		@ 15264 bytes
 seed_packet_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -558,7 +558,7 @@ seed_packet_flattenedTiles:
 	.size	seed_packet_flattenedTiles, .-seed_packet_flattenedTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global seed_packet_flattenedPal		@ 512 bytes
 seed_packet_flattenedPal:
 	.hword 0x7C1F,0x5F3B,0x2DB4,0x737B,0x00DF,0x3269,0x0D9F,0x1A5A

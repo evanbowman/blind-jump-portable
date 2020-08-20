@@ -146,7 +146,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         bool incomplete = true;
 
-        if (auto result = path_finder_->obj_->compute(pfrm, 5, &incomplete)) {
+        if (auto result = path_finder_->obj_->compute(pfrm, 8, &incomplete)) {
             path_ = std::move(result);
             display_mode_ = DisplayMode::show;
             path_finder_.reset();

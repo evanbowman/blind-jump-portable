@@ -1527,8 +1527,21 @@ Platform::Logger::Logger()
 }
 
 
-void Platform::Logger::log(Logger::Severity level, const char* msg)
+static Severity log_threshold;
+
+
+void Platform::Logger::set_threshold(Severity severity)
 {
+    log_threshold = severity;
+}
+
+
+void Platform::Logger::log(Severity level, const char* msg)
+{
+    if (static_cast<int>(level) < static_cast<int>(::log_threshold)) {
+        return;
+    }
+
     // We don't want to wear out the flash chip! The code below still works on
     // flash though, if you just comment out the if statement below.
     if (save_using_flash) {
@@ -1540,6 +1553,10 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
     buffer[1] = ':';
 
     switch (level) {
+    case Severity::debug:
+        buffer[0] = 'd';
+        break;
+
     case Severity::info:
         buffer[0] = 'i';
         break;
@@ -1551,6 +1568,9 @@ void Platform::Logger::log(Logger::Severity level, const char* msg)
     case Severity::error:
         buffer[0] = 'E';
         break;
+
+    case Severity::count:
+        return;
     }
 
     const auto msg_size = str_len(msg);
@@ -1618,10 +1638,23 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #include "data/september.hpp"
 
 
-#define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__)                                \
-    {                                                                          \
-        STR(__STR_NAME__), (AudioSample*)__TRACK_NAME__, __TRACK_NAME__##Len   \
+static const int null_music_len = 8;
+static const u32 null_music[null_music_len] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+
+
+#define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__, __DIV__)                        \
+    {                                                                   \
+        STR(__STR_NAME__), (AudioSample*)__TRACK_NAME__, __TRACK_NAME__##Len / __DIV__ \
     }
+
+
+#define DEF_MUSIC(__STR_NAME__, __TRACK_NAME__) \
+    DEF_AUDIO(__STR_NAME__, __TRACK_NAME__, 4)
+
+
+#define DEF_SOUND(__STR_NAME__, __TRACK_NAME__) \
+    DEF_AUDIO(__STR_NAME__, __TRACK_NAME__, 1)
 
 
 #include "gba_platform_soundcontext.hpp"
@@ -1633,13 +1666,13 @@ SoundContext snd_ctx;
 static const struct AudioTrack {
     const char* name_;
     const AudioSample* data_;
-    int length_;
+    int length_; // NOTE: For music, this is the track length in 32 bit words,
+                 // but for sounds, length_ reprepresents bytes.
 } music_tracks[] = {
-    DEF_AUDIO(hiraeth, scottbuckley_hiraeth),
-    DEF_AUDIO(omega, scottbuckley_omega),
-    DEF_AUDIO(computations, scottbuckley_computations),
-    DEF_AUDIO(clair_de_lune, clair_de_lune)
-    // DEF_AUDIO(september, september)
+    DEF_MUSIC(hiraeth, scottbuckley_hiraeth),
+    DEF_MUSIC(omega, scottbuckley_omega),
+    DEF_MUSIC(computations, scottbuckley_computations),
+    DEF_MUSIC(clair_de_lune, clair_de_lune)
 };
 
 
@@ -1678,27 +1711,29 @@ static const AudioTrack* find_track(const char* name)
 #include "data/sound_pop.hpp"
 #include "data/sound_select.hpp"
 #include "data/sound_dropitem.hpp"
+#include "data/sound_reload.hpp"
 
 
-static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
-                                    DEF_AUDIO(explosion1, sound_explosion2),
-                                    DEF_AUDIO(footstep1, sound_footstep1),
-                                    DEF_AUDIO(footstep2, sound_footstep2),
-                                    DEF_AUDIO(footstep3, sound_footstep3),
-                                    DEF_AUDIO(footstep4, sound_footstep4),
-                                    DEF_AUDIO(open_book, sound_open_book),
-                                    DEF_AUDIO(dropitem, sound_dropitem),
-                                    DEF_AUDIO(openbag, sound_openbag),
-                                    DEF_AUDIO(blaster, sound_blaster),
-                                    DEF_AUDIO(select, sound_select),
-                                    DEF_AUDIO(laser1, sound_laser1),
-                                    DEF_AUDIO(scroll, sound_scroll),
-                                    DEF_AUDIO(creak, sound_creak),
-                                    DEF_AUDIO(heart, sound_heart),
-                                    DEF_AUDIO(click, sound_click),
-                                    DEF_AUDIO(coin, sound_coin),
-                                    DEF_AUDIO(bell, sound_bell),
-                                    DEF_AUDIO(pop, sound_pop)};
+static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
+                                    DEF_SOUND(explosion1, sound_explosion2),
+                                    DEF_SOUND(footstep1, sound_footstep1),
+                                    DEF_SOUND(footstep2, sound_footstep2),
+                                    DEF_SOUND(footstep3, sound_footstep3),
+                                    DEF_SOUND(footstep4, sound_footstep4),
+                                    DEF_SOUND(open_book, sound_open_book),
+                                    DEF_SOUND(dropitem, sound_dropitem),
+                                    DEF_SOUND(openbag, sound_openbag),
+                                    DEF_SOUND(blaster, sound_blaster),
+                                    DEF_SOUND(select, sound_select),
+                                    DEF_SOUND(reload, sound_reload),
+                                    DEF_SOUND(laser1, sound_laser1),
+                                    DEF_SOUND(scroll, sound_scroll),
+                                    DEF_SOUND(creak, sound_creak),
+                                    DEF_SOUND(heart, sound_heart),
+                                    DEF_SOUND(click, sound_click),
+                                    DEF_SOUND(coin, sound_coin),
+                                    DEF_SOUND(bell, sound_bell),
+                                    DEF_SOUND(pop, sound_pop)};
 
 
 static const AudioTrack* get_sound(const char* name)
@@ -1792,9 +1827,22 @@ void Platform::Speaker::play_sound(const char* name,
 }
 
 
+static void clear_music()
+{
+    // The audio interrupt handler can be smaller and simpler if we use a track
+    // of empty bytes to represent scenarios where music is not playing, rather
+    // than adding another if condition to the audio isr.
+    snd_ctx.music_track = reinterpret_cast<const AudioSample*>(null_music);
+    snd_ctx.music_track_length = null_music_len - 1;
+    snd_ctx.music_track_pos = 0;
+}
+
+
 static void stop_music()
 {
-    modify_audio([] { snd_ctx.music_track = nullptr; });
+    modify_audio([] {
+        clear_music();
+    });
 }
 
 
@@ -1804,7 +1852,7 @@ void Platform::Speaker::stop_music()
 }
 
 
-static void play_music(const char* name, bool loop, Microseconds offset)
+static void play_music(const char* name, Microseconds offset)
 {
     const auto track = find_track(name);
     if (track == nullptr) {
@@ -1815,15 +1863,13 @@ static void play_music(const char* name, bool loop, Microseconds offset)
 
     modify_audio([&] {
         snd_ctx.music_track_length = track->length_;
-        snd_ctx.music_track_loop = loop;
         snd_ctx.music_track = track->data_;
-        snd_ctx.music_track_pos = sample_offset % track->length_;
+        snd_ctx.music_track_pos = (sample_offset / 4) % track->length_;
     });
 }
 
 
 void Platform::Speaker::play_music(const char* name,
-                                   bool loop,
                                    Microseconds offset)
 {
     // NOTE: The sound sample needs to be mono, and 8-bit signed. To export this
@@ -1834,7 +1880,7 @@ void Platform::Speaker::play_music(const char* name,
 
     this->stop_music();
 
-    ::play_music(name, loop, offset);
+    ::play_music(name, offset);
 
     // FIXME!!!!!! Mysteriously, there's a weird audio glitch, where the sound
     // effects, but not the music, get all glitched out until two sounds are
@@ -1871,33 +1917,28 @@ Platform::Speaker::Speaker()
 // display. At the same time, the game was less laggy, so maybe when I work out
 // the kinks, this function will eventually be moved to arm code instead of
 // thumb.
+//
+// NOTE: We play music at 16kHz, and we can load four samples upon each audio
+// interrupt, i.e. 4000 interrupts per second, i.e. approximately sixty-seven
+// interrupts per frame at given sixty fps. Considering how many interrupts
+// we're dealing with here, this isr should be kept small and simple. We're only
+// supporting one music channel (which loops by default), and three concurrent
+// sound channels, in our audio mixer.
+//
+// Considering the number of interrupts that we're dealing with here, one might
+// wonder why we aren't using one of the DMA channels to load sound samples. The
+// DMA halts the CPU, which could result in missed serial I/O interrupts during
+// multiplayer games.
 static void audio_update_isr()
 {
     alignas(4) AudioSample mixing_buffer[4];
 
-    if (snd_ctx.music_track) {
+    // NOTE: audio tracks in ROM should therefore have four byte alignment!
+    *((u32*)mixing_buffer) =
+        ((u32*)(snd_ctx.music_track))[snd_ctx.music_track_pos++];
 
-        for (int i = 0; i < 4; ++i) {
-            // FIXME: Is the stuff stored in the data segment guaranteed to be
-            // word-aligned? If so, we can potentially copy faster by casting to
-            // u32.
-            mixing_buffer[i] = snd_ctx.music_track[snd_ctx.music_track_pos++];
-        }
-
-        if (snd_ctx.music_track_pos > snd_ctx.music_track_length) {
-            if (snd_ctx.music_track_loop) {
-                snd_ctx.music_track_pos = 0;
-
-            } else {
-                snd_ctx.music_track = nullptr;
-            }
-        }
-
-    } else {
-
-        for (auto& val : mixing_buffer) {
-            val = 0;
-        }
+    if (UNLIKELY(snd_ctx.music_track_pos > snd_ctx.music_track_length)) {
+        snd_ctx.music_track_pos = 0;
     }
 
     // Maybe the world's worst sound mixing code...
@@ -1999,6 +2040,7 @@ static EWRAM_DATA
 
 
 static int scratch_buffers_in_use = 0;
+static int scratch_buffer_highwater = 0;
 
 
 Platform::ScratchBufferPtr Platform::make_scratch_buffer()
@@ -2013,6 +2055,17 @@ Platform::ScratchBufferPtr Platform::make_scratch_buffer()
         &scratch_buffer_pool, finalizer);
     if (maybe_buffer) {
         ++scratch_buffers_in_use;
+        if (scratch_buffers_in_use > scratch_buffer_highwater) {
+            scratch_buffer_highwater = scratch_buffers_in_use;
+
+            StringBuffer<60> str = "sbr highwater: ";
+            char buf[10];
+            english__to_string(scratch_buffer_highwater, buf, 10);
+
+            str += buf;
+
+            info(*::platform, str.c_str());
+        }
         return *maybe_buffer;
     } else {
         screen().fade(1.f, ColorConstant::electric_blue);
@@ -2062,6 +2115,8 @@ static std::optional<DynamicMemory<GlyphTable>> glyph_table;
 
 static void audio_start()
 {
+    clear_music();
+
     REG_SOUNDCNT_H =
         0x0B0F; //DirectSound A + fifo reset + max volume to L and R
     REG_SOUNDCNT_X = 0x0080; //turn sound chip on

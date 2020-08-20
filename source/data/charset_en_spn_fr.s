@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	charset_en_spn_fr, 824x8@4, 
+@	charset_en_spn_fr, 824x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 103 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global charset_en_spn_frTiles		@ 3296 bytes
 charset_en_spn_frTiles:
 	.word 0x00000002,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -137,7 +137,7 @@ charset_en_spn_frTiles:
 	.size	charset_en_spn_frTiles, .-charset_en_spn_frTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global charset_en_spn_frPal		@ 512 bytes
 charset_en_spn_frPal:
 	.hword 0x7C1F,0x7719,0x0800,0x0000,0x0000,0x0000,0x0000,0x0000

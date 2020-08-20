@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	spritesheet_intro_clouds, 2016x32@4, 
+@	spritesheet_intro_clouds, 2016x32@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 1008 tiles Metatiled by 2x4 not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet_intro_cloudsTiles		@ 32256 bytes
 spritesheet_intro_cloudsTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -1155,7 +1155,7 @@ spritesheet_intro_cloudsTiles:
 	.size	spritesheet_intro_cloudsTiles, .-spritesheet_intro_cloudsTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet_intro_cloudsPal		@ 512 bytes
 spritesheet_intro_cloudsPal:
 	.hword 0x7C1F,0x25B5,0x679F,0x5A97,0x77DF,0x56BC,0x2E17,0x0000

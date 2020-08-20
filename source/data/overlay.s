@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	overlay, 4032x8@4, 
+@	overlay, 4032x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 504 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global overlayTiles		@ 16128 unsigned chars
 	.hidden overlayTiles
 overlayTiles:
@@ -588,7 +588,7 @@ overlayTiles:
 	.word 0x00000EEE,0x000000EE,0x0000000E,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global overlayPal		@ 512 unsigned chars
 	.hidden overlayPal
 overlayPal:

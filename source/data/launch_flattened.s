@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	launch_flattened, 3368x8@4, 
+@	launch_flattened, 3368x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 421 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global launch_flattenedTiles		@ 13472 bytes
 launch_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -495,7 +495,7 @@ launch_flattenedTiles:
 	.size	launch_flattenedTiles, .-launch_flattenedTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global launch_flattenedPal		@ 512 bytes
 launch_flattenedPal:
 	.hword 0x7C1F,0x1D05,0x664C,0x5A23,0x6A72,0x5E45,0x6AB4,0x6AB2

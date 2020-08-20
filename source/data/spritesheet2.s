@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	spritesheet2, 2016x32@4, 
+@	spritesheet2, 2016x32@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 1008 tiles Metatiled by 2x4 not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet2Tiles		@ 32256 bytes
 spritesheet2Tiles:
 	.word 0x660CC000,0x666C0000,0x666C0000,0x666C0000,0xC66C0000,0xC6600000,0x66600000,0x66300000
@@ -1155,7 +1155,7 @@ spritesheet2Tiles:
 	.size	spritesheet2Tiles, .-spritesheet2Tiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet2Pal		@ 512 bytes
 spritesheet2Pal:
 	.hword 0x7C1F,0x6FE0,0x45BE,0x20C5,0x398C,0x6255,0x4526,0x77BE

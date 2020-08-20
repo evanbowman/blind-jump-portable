@@ -22,5 +22,4 @@ struct SoundContext {
     const AudioSample* music_track = nullptr;
     s32 music_track_length = 0;
     s32 music_track_pos = 0;
-    bool music_track_loop = false;
 };

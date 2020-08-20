@@ -18,9 +18,10 @@ void EditSettingsState::message(Platform& pfrm, const char* str)
 EditSettingsState::EditSettingsState()
     : lines_{{{dynamic_camera_line_updater_},
               {difficulty_line_updater_},
-              {show_stats_line_updater_},
+              {language_line_updater_},
               {contrast_line_updater_},
-              {language_line_updater_}}}
+              {show_stats_line_updater_},
+              {log_severity_line_updater_}}}
 {
 }
 
@@ -32,7 +33,7 @@ void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
 
     const auto margin = centered_text_margins(pfrm, value_len + field_len + 2);
 
-    lines_[row].text_.emplace(pfrm, OverlayCoord{0, u8(4 + row * 2)});
+    lines_[row].text_.emplace(pfrm, OverlayCoord{0, u8(3 + row * 2)});
 
     left_text_margin(*lines_[row].text_, margin);
     lines_[row].text_->append(locale_string(strings[row]));

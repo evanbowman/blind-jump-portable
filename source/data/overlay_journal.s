@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	overlay_journal, 664x8@4, 
+@	overlay_journal, 664x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 83 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global overlay_journalTiles		@ 2656 bytes
 overlay_journalTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -115,7 +115,7 @@ overlay_journalTiles:
 	.size	overlay_journalTiles, .-overlay_journalTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global overlay_journalPal		@ 512 bytes
 overlay_journalPal:
 	.hword 0x7C1F,0x2CC2,0x4B1B,0x0000,0x0000,0x0000,0x0000,0x0000

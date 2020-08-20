@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	tilesheet2_top, 1184x24@4, 
+@	tilesheet2_top, 1184x24@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 444 tiles Metatiled by 4x3 not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global tilesheet2_topTiles		@ 14208 bytes
 tilesheet2_topTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -521,7 +521,7 @@ tilesheet2_topTiles:
 	.size	tilesheet2_topTiles, .-tilesheet2_topTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global tilesheet2_topPal		@ 512 bytes
 tilesheet2_topPal:
 	.hword 0x7C1F,0x4E24,0x5E35,0x7FFF,0x5EC7,0x3B37,0x50C7,0x0000

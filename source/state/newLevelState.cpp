@@ -160,7 +160,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                 pfrm.sleep(80);
 
                 pfrm.speaker().play_music(
-                    zone.music_name_, true, zone.music_offset_);
+                    zone.music_name_, zone.music_offset_);
 
                 startup = false;
                 return state_pool().create<FadeInState>(game);
@@ -175,7 +175,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                 // normally starts when we enter a new zone.
                 if (startup) {
                     pfrm.speaker().play_music(
-                        zone.music_name_, true, zone.music_offset_);
+                        zone.music_name_, zone.music_offset_);
                 }
                 startup = false;
                 return state_pool().create<FadeInState>(game);

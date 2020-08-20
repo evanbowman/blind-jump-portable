@@ -74,6 +74,7 @@ enum class LocaleString {
     settings_difficulty_hard,
     settings_difficulty_survival,
     settings_difficulty_err,
+    settings_log_severity,
     yes,
     no,
     menu_disabled,
@@ -95,6 +96,10 @@ enum class LocaleString {
     boss0_defeated,
     boss1_defeated,
     peer_transport_waiting,
+    severity_debug,
+    severity_info,
+    severity_warning,
+    severity_error,
     count
 };
 

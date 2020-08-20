@@ -9,7 +9,10 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
                                              TileMap& tiles,
                                              const PathCoord& start,
                                              const PathCoord& end)
-    : memory_(pfrm), priority_q_(allocate_dynamic<VertexBuf>(pfrm)), end_(end)
+    : memory_(pfrm),
+      priority_q_(allocate_dynamic<VertexBuf>(pfrm)),
+      map_matrix_(allocate_dynamic<VertexMat>(pfrm)),
+      end_(end)
 {
     static_assert(sizeof(PathVertexData*) <= 8,
                   "What computer are you running this on?");
@@ -22,8 +25,20 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
             ;
     }
 
+    if (not map_matrix_.obj_) {
+        error(pfrm, "failed to alloc map matrix");
+        while (true)
+            ;
+    } else {
+        for (int x = 0; x < TileMap::width - 1; ++x) {
+            for (int y = 0; y < TileMap::height - 1; ++y) {
+                (*map_matrix_.obj_)[x][y] = nullptr;
+            }
+        }
+    }
+
     if (pfrm.scratch_buffers_remaining() <
-        vertex_scratch_buffers + result_scratch_buffers) {
+        vertex_scratch_buffers + result_scratch_buffers + 1) {
         error(pfrm, "not enough memory to compute path...");
         while (true)
             ;
@@ -42,6 +57,8 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
                 if (not priority_q_.obj_->push_back(obj.release())) {
                     error(pfrm, "not enough space in path node buffer");
                     error_state = true;
+                } else {
+                    (*map_matrix_.obj_)[x][y] = priority_q_.obj_->back();
                 }
             } else {
                 error_state = true;
@@ -124,16 +141,28 @@ Buffer<IncrementalPathfinder::PathVertexData*, 4>
 IncrementalPathfinder::neighbors(PathVertexData* data) const
 {
     Buffer<PathVertexData*, 4> result;
-    for (auto& elem : *priority_q_.obj_) {
-        if (elem->coord_.x == data->coord_.x) {
-            if (elem->coord_.y not_eq data->coord_.y and
-                abs(elem->coord_.y - data->coord_.y) < 2) {
-                result.push_back(elem);
-            }
-        } else if (elem->coord_.y == data->coord_.y) {
-            if (abs(elem->coord_.x - data->coord_.x) < 2) {
-                result.push_back(elem);
-            }
+    if (data->coord_.x > 0) {
+        auto n = (*map_matrix_.obj_)[data->coord_.x - 1][data->coord_.y];
+        if (n) {
+            result.push_back(n);
+        }
+    }
+    if (data->coord_.x < TileMap::width - 2) { // -2 b/c we don't include the last column
+        auto n = (*map_matrix_.obj_)[data->coord_.x + 1][data->coord_.y];
+        if (n) {
+            result.push_back(n);
+        }
+    }
+    if (data->coord_.y > 0) {
+        auto n = (*map_matrix_.obj_)[data->coord_.x][data->coord_.y - 1];
+        if (n) {
+            result.push_back(n);
+        }
+    }
+    if (data->coord_.y < TileMap::height - 2) {
+        auto n = (*map_matrix_.obj_)[data->coord_.x][data->coord_.y + 1];
+        if (n) {
+            result.push_back(n);
         }
     }
     return result;

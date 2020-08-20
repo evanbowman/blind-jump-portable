@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	blaster_info_flattened, 3816x8@4, 
+@	blaster_info_flattened, 3816x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 477 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global blaster_info_flattenedTiles		@ 15264 bytes
 blaster_info_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -558,7 +558,7 @@ blaster_info_flattenedTiles:
 	.size	blaster_info_flattenedTiles, .-blaster_info_flattenedTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global blaster_info_flattenedPal		@ 512 bytes
 blaster_info_flattenedPal:
 	.hword 0x7C1F,0x7719,0x255E,0x4567,0x20A2,0x571A,0x0000,0x0000

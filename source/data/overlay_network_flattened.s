@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	overlay_network_flattened, 3816x8@4, 
+@	overlay_network_flattened, 3816x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 477 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global overlay_network_flattenedTiles		@ 15264 bytes
 overlay_network_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -558,7 +558,7 @@ overlay_network_flattenedTiles:
 	.size	overlay_network_flattenedTiles, .-overlay_network_flattenedTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global overlay_network_flattenedPal		@ 512 bytes
 overlay_network_flattenedPal:
 	.hword 0x7C1F,0x5AD5,0x3D64,0x4164,0x77BE,0x0000,0x0000,0x0000

@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	overlay_cutscene, 904x8@4, 
+@	overlay_cutscene, 904x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 113 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global overlay_cutsceneTiles		@ 3616 bytes
 overlay_cutsceneTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -149,7 +149,7 @@ overlay_cutsceneTiles:
 	.size	overlay_cutsceneTiles, .-overlay_cutsceneTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global overlay_cutscenePal		@ 512 bytes
 overlay_cutscenePal:
 	.hword 0x7C1F,0x2C7D,0x0800,0x55CE,0x72D8,0x7FFF,0x0000,0x0000

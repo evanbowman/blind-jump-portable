@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	spritesheet_intro_cutscene, 2016x32@4, 
+@	spritesheet_intro_cutscene, 2016x32@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 1008 tiles Metatiled by 2x4 not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet_intro_cutsceneTiles		@ 32256 bytes
 spritesheet_intro_cutsceneTiles:
 	.word 0x550DD000,0x555D0000,0x555D0000,0x555D0000,0xD55D0000,0xD5500000,0x55500000,0x55300000
@@ -1155,7 +1155,7 @@ spritesheet_intro_cutsceneTiles:
 	.size	spritesheet_intro_cutsceneTiles, .-spritesheet_intro_cutsceneTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet_intro_cutscenePal		@ 512 bytes
 spritesheet_intro_cutscenePal:
 	.hword 0x7C1F,0x7FE0,0x3D34,0x20C5,0x6255,0x4145,0x39BE,0x4E66

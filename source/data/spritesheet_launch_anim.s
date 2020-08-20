@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	spritesheet_launch_anim, 1392x32@4, 
+@	spritesheet_launch_anim, 1392x32@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 696 tiles Metatiled by 2x4 not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet_launch_animTiles		@ 22272 bytes
 spritesheet_launch_animTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -804,7 +804,7 @@ spritesheet_launch_animTiles:
 	.size	spritesheet_launch_animTiles, .-spritesheet_launch_animTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global spritesheet_launch_animPal		@ 512 bytes
 spritesheet_launch_animPal:
 	.hword 0x5A23,0x6AB4,0x35BF,0x6FF3,0x6FBC,0x0000,0x0000,0x0000

@@ -3,7 +3,7 @@
 
 @=======================================================================
 @
-@	old_poster_flattened, 3816x8@4, 
+@	old_poster_flattened, 3816x8@4,
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 477 tiles not compressed
@@ -16,7 +16,7 @@
 @=======================================================================
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global old_poster_flattenedTiles		@ 15264 bytes
 old_poster_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -558,7 +558,7 @@ old_poster_flattenedTiles:
 	.size	old_poster_flattenedTiles, .-old_poster_flattenedTiles
 
 	.section .rodata
-	.align	2
+	.align	4
 	.global old_poster_flattenedPal		@ 512 bytes
 old_poster_flattenedPal:
 	.hword 0x7C1F,0x0D7F,0x4AFA,0x0800,0x4146,0x0000,0x0000,0x0000

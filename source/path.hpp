@@ -54,6 +54,17 @@ private:
 
     using VertexBuf = Buffer<PathVertexData*, max_path>;
 
+    // note: does not include the last row and column of the map grid, in order
+    // to save memory, and to make the matrix fit in a 1k allocation for the
+    // GBA. Technically, we don't need the first row or column either, but
+    // excluding them complicates indexing. We're using the vertex mat to speed
+    // up neighbor calculation, otherwise, we have to scan through all of the
+    // nodes in the priority q whenever we need to find which nodes are
+    // neighbors. One could attach a list of neighbors to every vertex, but I
+    // tried doing this, and you end up doing a bunch of unnecessary work (for
+    // vertices which we will never visit), and using a lot more memory.
+    using VertexMat = PathVertexData*[(TileMap::width - 1)][(TileMap::height - 1)];
+
 
     Buffer<PathVertexData*, 4> neighbors(PathVertexData* data) const;
 
@@ -62,5 +73,6 @@ private:
 
     BulkAllocator<vertex_scratch_buffers> memory_;
     DynamicMemory<VertexBuf> priority_q_;
+    DynamicMemory<VertexMat> map_matrix_;
     PathCoord end_;
 };

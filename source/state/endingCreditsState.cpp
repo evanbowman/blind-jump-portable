@@ -8,8 +8,10 @@ void EndingCreditsState::enter(Platform& pfrm, Game& game, State&)
     next_y_ = screen_tiles.y + 2;
 
     game.on_timeout(pfrm, milliseconds(500), [](Platform& pfrm, Game&) {
-        pfrm.speaker().play_music("clair_de_lune", false, 0);
+        pfrm.speaker().play_music("clair_de_lune", 0);
     });
+
+    locale_set_language(LocaleLanguage::english);
 }
 
 
@@ -18,6 +20,8 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
     lines_.clear();
     pfrm.set_overlay_origin(0, 0);
     pfrm.speaker().stop_music();
+
+    locale_set_language(game.persistent_data().settings_.language_);
 }
 
 

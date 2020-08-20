@@ -40,7 +40,9 @@ DynamicMemory<T> allocate_dynamic(Platform& pfrm, Args&&... args)
 
     auto deleter = [](T* val) {
         if (val) {
-            val->~T();
+            if constexpr (not std::is_trivial<T>()) {
+                val->~T();
+            }
             // No need to actually deallocate anything, we
             // just need to make sure that we're calling the
             // destructor.

@@ -4,18 +4,6 @@
 #include "number/random.hpp"
 
 
-// I know that this is a huge file. But this is basically a giant
-// object-oriented state machine, and each state is generally less than 100
-// lines, which would make creating files for each state tedious. Furthermore,
-// all of the state class instances share a memory pool, and the pool definition
-// needs to know about all of the constituent class definitions, so at the very
-// least, all of the source files, if split up, would share a giant header file,
-// and I would need to make the pool extern... which I would really prefer not
-// to do. Also, the game targets embedded systems, like the gameboy advance, and
-// putting lots of stuff in a single source file is a tried-and-true method for
-// decreasing size of the compiled ROM.
-
-
 void State::enter(Platform&, Game&, State&)
 {
 }

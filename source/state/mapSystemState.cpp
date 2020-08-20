@@ -117,7 +117,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         bool incomplete = true;
 
-        if (auto result = path_finder_->obj_->compute(pfrm, 5, &incomplete)) {
+        if (auto result = path_finder_->obj_->compute(pfrm, 8, &incomplete)) {
             path_ = std::move(result);
             anim_state_ = AnimState::wait;
             path_finder_.reset();

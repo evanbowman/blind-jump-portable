@@ -11,6 +11,7 @@
 #include "number/numeric.hpp"
 #include "sound.hpp"
 #include "unicode.hpp"
+#include "severity.hpp"
 #include <array>
 #include <optional>
 
@@ -427,11 +428,11 @@ public:
 
     class Logger {
     public:
-        enum class Severity { info, warning, error };
-
         void log(Severity severity, const char* msg);
 
         void read(void* buffer, u32 start_offset, u32 num_bytes);
+
+        void set_threshold(Severity severity);
 
     private:
         Logger();
@@ -450,7 +451,11 @@ public:
 
         void play_note(Note n, Octave o, Channel c);
 
-        void play_music(const char* name, bool loop, Microseconds offset);
+        // NOTE: All music will loop. It's just more efficient to implement the
+        // music such that all tracks are either looped or non-looping, and I
+        // decided to make tracks loop. If you want music to stop when finished,
+        // stop it yourself.
+        void play_music(const char* name, Microseconds offset);
         void stop_music();
 
         // A platform's speaker may only have the resources to handle a limited
@@ -680,15 +685,15 @@ inline void draw_image(Platform& pfrm,
 #endif
 inline void info(Platform& pf, const char* msg)
 {
-    pf.logger().log(Platform::Logger::Severity::info, msg);
+    pf.logger().log(Severity::info, msg);
 }
 inline void warning(Platform& pf, const char* msg)
 {
-    pf.logger().log(Platform::Logger::Severity::warning, msg);
+    pf.logger().log(Severity::warning, msg);
 }
 inline void error(Platform& pf, const char* msg)
 {
-    pf.logger().log(Platform::Logger::Severity::error, msg);
+    pf.logger().log(Severity::error, msg);
 }
 #else
 inline void info(Platform&, const char*)

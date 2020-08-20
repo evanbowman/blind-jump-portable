@@ -385,6 +385,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::settings_dynamic_camera: return "Sticky Camera: ";
         case LocaleString::settings_default: return "default";
         case LocaleString::settings_difficulty_err: return "level must be clear!";
+        case LocaleString::settings_log_severity: return "Log Severity: ";
         case LocaleString::yes: return "yes";
         case LocaleString::no: return "no";
         case LocaleString::menu_disabled: return "menu disabled";
@@ -405,6 +406,10 @@ const char* locale_string(LocaleString ls)
         case LocaleString::boss0_defeated: return "The Wanderer Defeated";
         case LocaleString::boss1_defeated: return "Gatekeeper Destroyed";
         case LocaleString::peer_transport_waiting: return "Peer waiting in gate...";
+        case LocaleString::severity_debug: return "debug";
+        case LocaleString::severity_info: return "info";
+        case LocaleString::severity_warning: return "warning";
+        case LocaleString::severity_error: return "error";
         default: return empty_str;
         }
         break;
