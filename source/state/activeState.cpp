@@ -134,6 +134,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         if (not pfrm.network_peer().is_connected() and
             not is_boss_level(game.level())) {
+
             restore_keystates = pfrm.keyboard().dump_state();
 
             return state_pool().create<PauseScreenState>();

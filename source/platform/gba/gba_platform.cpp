@@ -1677,6 +1677,7 @@ static const AudioTrack* find_track(const char* name)
 #include "data/sound_openbag.hpp"
 #include "data/sound_pop.hpp"
 #include "data/sound_select.hpp"
+#include "data/sound_dropitem.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
@@ -1686,6 +1687,7 @@ static const AudioTrack sounds[] = {DEF_AUDIO(explosion1, sound_explosion1),
                                     DEF_AUDIO(footstep3, sound_footstep3),
                                     DEF_AUDIO(footstep4, sound_footstep4),
                                     DEF_AUDIO(open_book, sound_open_book),
+                                    DEF_AUDIO(dropitem, sound_dropitem),
                                     DEF_AUDIO(openbag, sound_openbag),
                                     DEF_AUDIO(blaster, sound_blaster),
                                     DEF_AUDIO(select, sound_select),

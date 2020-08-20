@@ -278,6 +278,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                                            game,
                                            game.player().get_position(),
                                            items_[selector_pos_])) {
+                                pfrm.speaker().play_sound("dropitem", 3);
                                 game.inventory().remove_item(page, col, row);
                             }
                         }

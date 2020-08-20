@@ -55,6 +55,7 @@ void OverworldState::receive(const net_event::ItemChestShared& s,
 
     if (game.peer() and
         create_item_chest(game, game.peer()->get_position(), s.item_, false)) {
+        pfrm.speaker().play_sound("dropitem", 3);
         (*game.details().get<ItemChest>().begin())->override_id(s.id_.get());
     } else {
         error(pfrm, "failed to allocate shared item chest");
