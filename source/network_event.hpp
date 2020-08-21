@@ -149,7 +149,6 @@ struct PlayerInfo {
 
     static const auto mt = Header::MessageType::player_info;
 };
-NET_EVENT_SIZE_CHECK(PlayerInfo)
 
 
 struct PlayerSpawnLaser {
@@ -162,7 +161,6 @@ struct PlayerSpawnLaser {
 
     static const auto mt = Header::MessageType::player_spawn_laser;
 };
-NET_EVENT_SIZE_CHECK(PlayerSpawnLaser)
 
 
 struct PlayerEnteredGate {
@@ -172,7 +170,6 @@ struct PlayerEnteredGate {
 
     static const auto mt = Header::MessageType::player_entered_gate;
 };
-NET_EVENT_SIZE_CHECK(PlayerEnteredGate)
 
 
 struct PlayerDied {
@@ -182,7 +179,6 @@ struct PlayerDied {
 
     static const auto mt = Header::MessageType::player_died;
 };
-NET_EVENT_SIZE_CHECK(PlayerDied)
 
 
 struct ItemChestOpened {
@@ -193,7 +189,6 @@ struct ItemChestOpened {
 
     static const auto mt = Header::MessageType::item_chest_opened;
 };
-NET_EVENT_SIZE_CHECK(ItemChestOpened)
 
 
 // The sharer spawns its own item chest, and then transmits an ItemChestShared
@@ -212,7 +207,6 @@ struct ItemChestShared {
 
     static const auto mt = Header::MessageType::item_chest_shared;
 };
-NET_EVENT_SIZE_CHECK(ItemChestShared)
 
 
 // Currently unused. In order to use ItemTaken, we'll need to keep entity ids
@@ -227,7 +221,6 @@ struct ItemTaken {
 
     static const auto mt = Header::MessageType::item_taken;
 };
-NET_EVENT_SIZE_CHECK(ItemTaken)
 
 
 struct EnemyHealthChanged {
@@ -239,7 +232,6 @@ struct EnemyHealthChanged {
 
     static const auto mt = Header::MessageType::enemy_health_changed;
 };
-NET_EVENT_SIZE_CHECK(EnemyHealthChanged)
 
 
 struct EnemyStateSync {
@@ -253,7 +245,6 @@ struct EnemyStateSync {
 
     static const auto mt = Header::MessageType::enemy_state_sync;
 };
-NET_EVENT_SIZE_CHECK(EnemyStateSync)
 
 
 struct SyncSeed {
@@ -264,7 +255,6 @@ struct SyncSeed {
 
     static const auto mt = Header::MessageType::sync_seed;
 };
-NET_EVENT_SIZE_CHECK(SyncSeed)
 
 
 // We make a special distinction for new level seeds, due to a special handshake
@@ -282,7 +272,6 @@ struct NewLevelSyncSeed {
 
     static const auto mt = Header::MessageType::new_level_sync_seed;
 };
-NET_EVENT_SIZE_CHECK(NewLevelSyncSeed)
 
 
 struct NewLevelIdle {
@@ -292,7 +281,6 @@ struct NewLevelIdle {
 
     static const auto mt = Header::MessageType::new_level_idle;
 };
-NET_EVENT_SIZE_CHECK(NewLevelIdle)
 
 
 // Currently unused, reserved for future use.
@@ -305,7 +293,6 @@ struct DataStreamAvail {
 
     static const auto mt = Header::MessageType::data_stream_avail;
 };
-NET_EVENT_SIZE_CHECK(DataStreamAvail)
 
 
 // Currently unused, reserved for future use.
@@ -319,7 +306,6 @@ struct DataStreamReadRequest {
 
     static const auto mt = Header::MessageType::data_stream_read_request;
 };
-NET_EVENT_SIZE_CHECK(DataStreamReadRequest)
 
 
 // Currently unused, reserved for future use.
@@ -331,7 +317,6 @@ struct DataStreamReadResponse {
 
     static const auto mt = Header::MessageType::data_stream_read_response;
 };
-NET_EVENT_SIZE_CHECK(DataStreamReadResponse)
 
 
 // Currently unused, reserved for future use.
@@ -343,7 +328,6 @@ struct DataStreamDoneReading {
 
     static const auto mt = Header::MessageType::data_stream_done_reading;
 };
-NET_EVENT_SIZE_CHECK(DataStreamDoneReading)
 
 
 struct QuickChat {
@@ -354,7 +338,6 @@ struct QuickChat {
 
     static const auto mt = Header::MessageType::quick_chat;
 };
-NET_EVENT_SIZE_CHECK(QuickChat)
 
 
 template <typename T> void transmit(Platform& pfrm, T& message)

@@ -21,6 +21,7 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
 
 #define HANDLE_MESSAGE(MESSAGE_TYPE)                                           \
     case MESSAGE_TYPE::mt: {                                                   \
+        NET_EVENT_SIZE_CHECK(MESSAGE_TYPE)                                     \
         if (message->length_ < sizeof(MESSAGE_TYPE)) {                         \
             return;                                                            \
         }                                                                      \
