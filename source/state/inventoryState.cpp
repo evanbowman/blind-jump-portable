@@ -113,7 +113,7 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
-    if (pfrm.keyboard().down_transition<Key::action_2>()) {
+    if (pfrm.keyboard().down_transition(game.action2_key())) {
 
         const auto item = game.inventory().get_item(
             page_, selector_coord_.x, selector_coord_.y);

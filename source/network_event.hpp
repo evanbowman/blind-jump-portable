@@ -136,7 +136,9 @@ struct PlayerInfo {
         return opt2_ & opt2_texture_mask;
     }
 
-    u8 unused2_[3];
+    u8 player_id_;
+
+    u8 unused2_[2];
 
     // For speed values, the player's speed ranges from float -1.5 to
     // 1.5. Therefore, we can save a lot of space in the message by using single
@@ -157,7 +159,7 @@ struct PlayerSpawnLaser {
     host_s16 x_;
     host_s16 y_;
 
-    u8 more_unused_[6];
+    u8 unused_[6];
 
     static const auto mt = Header::MessageType::player_spawn_laser;
 };
@@ -166,7 +168,9 @@ struct PlayerSpawnLaser {
 struct PlayerEnteredGate {
     Header header_;
 
-    u8 unused_[11];
+    u8 player_id_;
+
+    u8 unused_[10];
 
     static const auto mt = Header::MessageType::player_entered_gate;
 };
@@ -175,7 +179,9 @@ struct PlayerEnteredGate {
 struct PlayerDied {
     Header header_;
 
-    u8 unused_[11];
+    u8 player_id_;
+
+    u8 unused_[10];
 
     static const auto mt = Header::MessageType::player_died;
 };

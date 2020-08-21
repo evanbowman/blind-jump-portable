@@ -242,8 +242,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 }
             }
             redraw_selector(112);
-        } else if (pfrm.keyboard().down_transition<Key::action_2>() or
-                   pfrm.keyboard().down_transition<Key::action_1>()) {
+        } else if (pfrm.keyboard().down_transition(game.action2_key()) or
+                   pfrm.keyboard().down_transition(game.action1_key())) {
             if (selector_pos_ < items_.size()) {
                 int skip = page_ * items_.capacity() + selector_pos_;
                 bool done = false;
@@ -256,7 +256,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                         if (done) {
                             return;
                         }
-                        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+                        if (pfrm.keyboard().down_transition(game.action2_key())) {
                             if (auto handler = inventory_item_handler(item)) {
                                 handler->callback_(pfrm, game);
                                 game.inventory().remove_item(page, col, row);

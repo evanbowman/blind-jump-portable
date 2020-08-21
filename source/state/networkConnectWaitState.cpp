@@ -61,10 +61,10 @@ NetworkConnectWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
     case Platform::NetworkPeer::internet: {
         // TODO: display some more interesting graphics, allow user to enter ip
         // address, display our ip address if we're the host.
-        if (pfrm.keyboard().down_transition<Key::action_1>()) {
+        if (pfrm.keyboard().down_transition(game.action1_key())) {
             pfrm.network_peer().connect("127.0.0.1");
             return state_pool().create<PauseScreenState>(false);
-        } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        } else if (pfrm.keyboard().down_transition(game.action2_key())) {
             pfrm.network_peer().listen();
 
             net_event::SyncSeed s;

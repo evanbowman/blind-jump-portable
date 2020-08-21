@@ -3,6 +3,7 @@
 #include "graphics/contrast.hpp"
 #include "localization.hpp"
 #include "severity.hpp"
+#include "platform/key.hpp"
 
 
 struct Settings {
@@ -14,4 +15,9 @@ struct Settings {
     Contrast contrast_ = 0;
     Difficulty difficulty_ = Difficulty::normal;
     Severity log_severity_ = Severity::error;
+
+    static constexpr const auto default_action1_key = Key::action_1;
+    static constexpr const auto default_action2_key = Key::action_2;
+    Key action1_key_ = default_action1_key;
+    Key action2_key_ = default_action2_key;
 };

@@ -85,7 +85,7 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
                 print(pfrm, locale_string(LocaleString::select_target_text));
 
             } else {
-                return state_pool_.create<InventoryState>(true);
+                return state_pool().create<InventoryState>(true);
             }
         }
         break;
@@ -109,7 +109,7 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
 
                 pfrm.sleep(8);
 
-                return state_pool_.create<InventoryState>(true);
+                return state_pool().create<InventoryState>(true);
 
             } else {
                 if (flicker_anim_index_++ % 2 == 0) {
@@ -127,14 +127,14 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     case Mode::active: {
-        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        if (pfrm.keyboard().down_transition(game.action2_key())) {
             if (target_) {
                 mode_ = Mode::selected;
                 timer_ = 0;
                 pfrm.sleep(3);
             }
-        } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
-            return state_pool_.create<InventoryState>(true);
+        } else if (pfrm.keyboard().down_transition(game.action1_key())) {
+            return state_pool().create<InventoryState>(true);
         }
 
         if (pfrm.keyboard().down_transition<Key::right>() or

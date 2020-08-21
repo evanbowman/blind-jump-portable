@@ -99,8 +99,8 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
 
         if (score_) {
-            if (pfrm.keyboard().pressed<Key::action_1>() or
-                pfrm.keyboard().pressed<Key::action_2>()) {
+            if (pfrm.keyboard().pressed(game.action1_key()) or
+                pfrm.keyboard().pressed(game.action2_key())) {
 
                 game.score() = 0;
                 game.player().revive(pfrm);

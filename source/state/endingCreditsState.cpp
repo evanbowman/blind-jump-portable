@@ -70,7 +70,7 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
     timer_ += delta;
 
     if (timer_ > milliseconds([&] {
-            if (pfrm.keyboard().pressed<Key::action_2>()) {
+            if (pfrm.keyboard().pressed(game.action2_key())) {
                 return 15;
             } else {
                 return 60;

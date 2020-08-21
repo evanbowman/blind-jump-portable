@@ -17,6 +17,7 @@ void EditSettingsState::message(Platform& pfrm, const char* str)
 
 EditSettingsState::EditSettingsState()
     : lines_{{{dynamic_camera_line_updater_},
+              {swap_action_keys_line_updater_},
               {difficulty_line_updater_},
               {language_line_updater_},
               {contrast_line_updater_},
@@ -78,7 +79,7 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     MenuState::update(pfrm, game, delta);
 
-    if (pfrm.keyboard().down_transition<Key::action_2>()) {
+    if (pfrm.keyboard().down_transition(game.action2_key())) {
         pfrm.speaker().play_sound("select", 1);
         return state_pool().create<PauseScreenState>(false);
     }
@@ -151,7 +152,7 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         const auto& line = lines_[select_row_];
         const Float y_center = pfrm.screen().size().y / 2;
         const Float y_line = line.text_->coord().y * 8;
-        const auto y_diff = (y_line - y_center) * 0.4f;
+        const auto y_diff = (y_line - y_center) * 0.3f;
 
         y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
 

@@ -114,10 +114,10 @@ CommandCodeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             push_char(pfrm, game, *(input_.end() - 1));
         }
-    } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+    } else if (pfrm.keyboard().down_transition(game.action2_key())) {
         push_char(pfrm, game, "0123456789"[selector_index_]);
 
-    } else if (pfrm.keyboard().down_transition<Key::action_1>()) {
+    } else if (pfrm.keyboard().down_transition(game.action1_key())) {
         if (input_.empty()) {
             return state_pool().create<NewLevelState>(next_level_);
 

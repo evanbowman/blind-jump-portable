@@ -367,7 +367,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool down = input.pressed<Key::down>();
     const bool left = input.pressed<Key::left>();
     const bool right = input.pressed<Key::right>();
-    const bool shoot = input.pressed<Key::action_1>();
+    const bool shoot = input.pressed(game.action1_key());
 
     const auto wc = check_wall_collisions(game.tiles(), *this);
 

@@ -12,7 +12,7 @@ StatePtr ImageViewState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     MenuState::update(pfrm, game, delta);
 
-    if (pfrm.keyboard().down_transition<Key::action_2>()) {
+    if (pfrm.keyboard().down_transition(game.action2_key())) {
         return state_pool().create<InventoryState>(false);
     }
 

@@ -74,7 +74,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     timer_ += delta;
 
-    const auto skip = pfrm.keyboard().down_transition<Key::action_2>();
+    const auto skip = pfrm.keyboard().down_transition(game.action2_key());
 
     if (text_) {
         if (timer_ > seconds(2) + milliseconds(500) or skip) {

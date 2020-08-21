@@ -772,6 +772,22 @@ private:
         }
     } dynamic_camera_line_updater_;
 
+    class SwapActionKeysLineUpdater : public LineUpdater {
+        Result update(Platform&, Game& game, int dir) override
+        {
+            if (dir not_eq 0) {
+                std::swap(game.persistent_data().settings_.action1_key_,
+                          game.persistent_data().settings_.action2_key_);
+            }
+            if (game.persistent_data().settings_.action1_key_ ==
+                Settings::default_action1_key) {
+                return locale_string(LocaleString::no);
+            } else {
+                return locale_string(LocaleString::yes);
+            }
+        }
+    } swap_action_keys_line_updater_;
+
     class LanguageLineUpdater : public LineUpdater {
         Result update(Platform&, Game& game, int dir) override
         {
@@ -932,12 +948,13 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 6;
+    static constexpr const int line_count_ = 7;
 
     std::array<LineInfo, line_count_> lines_;
 
     static constexpr const LocaleString strings[line_count_] = {
         LocaleString::settings_dynamic_camera,
+        LocaleString::settings_swap_action_keys,
         LocaleString::settings_difficulty,
         LocaleString::settings_language,
         LocaleString::settings_contrast,

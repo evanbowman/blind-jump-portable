@@ -12,6 +12,7 @@
 #include "sound.hpp"
 #include "unicode.hpp"
 #include "severity.hpp"
+#include "key.hpp"
 #include <array>
 #include <optional>
 
@@ -26,21 +27,6 @@ struct FontColors {
 
 
 // Anything platform specific should be defined here.
-
-
-enum class Key {
-    action_1,
-    action_2,
-    start,
-    select,
-    left,
-    right,
-    up,
-    down,
-    alt_1,
-    alt_2,
-    count
-};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -361,9 +347,24 @@ public:
             return states_[int(k)];
         }
 
+        bool pressed(Key k) const
+        {
+            return states_[int(k)];
+        }
+
+        bool down_transition(Key k) const
+        {
+            return states_[int(k)] and not prev_[int(k)];
+        }
+
         template <Key... k> bool down_transition() const
         {
             return (... or down_transition_helper<k>());
+        }
+
+        bool up_transition(Key k) const
+        {
+            return not states_[int(k)] and prev_[int(k)];
         }
 
         template <Key k> bool up_transition() const

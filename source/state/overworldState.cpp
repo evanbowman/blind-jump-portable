@@ -348,12 +348,12 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
-    if (pfrm.keyboard().up_transition<Key::action_1>()) {
+    if (pfrm.keyboard().up_transition(game.action1_key())) {
         camera_snap_timer_ = seconds(2) + milliseconds(250);
     }
 
     if (camera_snap_timer_ > 0) {
-        if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        if (pfrm.keyboard().down_transition(game.action2_key())) {
             camera_snap_timer_ = 0;
         }
         camera_snap_timer_ -= delta;
@@ -402,7 +402,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                 (*it)->update(pfrm, game, enemy_timestep);
 
                 if (camera_tracking_ and
-                    (pfrm.keyboard().pressed<Key::action_1>() or
+                    (pfrm.keyboard().pressed(game.action1_key()) or
                      camera_snap_timer_ > 0)) {
                     // NOTE: snake body segments do not make much sense to
                     // center the camera on, so exclude them. Same for various

@@ -382,7 +382,8 @@ const char* locale_string(LocaleString ls)
         case LocaleString::settings_difficulty_normal: return "normal";
         case LocaleString::settings_difficulty_hard: return "hard";
         case LocaleString::settings_difficulty_survival: return "survival";
-        case LocaleString::settings_dynamic_camera: return "Sticky Camera: ";
+        case LocaleString::settings_dynamic_camera: return "Balanced Camera: ";
+        case LocaleString::settings_swap_action_keys: return "Swap A/B: ";
         case LocaleString::settings_default: return "default";
         case LocaleString::settings_difficulty_err: return "level must be clear!";
         case LocaleString::settings_log_severity: return "Log Severity: ";

@@ -38,7 +38,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::closed_locked:
     case State::closed_unlocked:
         if (visible()) {
-            if (pfrm.keyboard().down_transition<Key::action_2>()) {
+            if (pfrm.keyboard().down_transition(game.action2_key())) {
 
                 if (distance(player_pos, pos) < 24) {
 

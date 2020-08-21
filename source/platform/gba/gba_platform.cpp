@@ -2692,6 +2692,11 @@ static int multiplayer_error()
 }
 
 
+// NOTE: This function should only be called in a serial interrupt handler,
+// otherwise, may return a garbage value.
+
+
+
 static bool multiplayer_validate_modes()
 {
     // 1 if all GBAs are in the correct mode, 0 otherwise.
@@ -3004,6 +3009,7 @@ static void multiplayer_serial_isr()
         ::platform->network_peer().disconnect();
         return;
     }
+
     multiplayer_rx_receive();
     multiplayer_schedule_tx();
 }
@@ -3068,13 +3074,23 @@ void Platform::NetworkPeer::poll_consume(u32 size)
 }
 
 
+static void __attribute__ ((noinline)) busy_wait(unsigned max) {
+    for (unsigned i = 0; i < max; i++) {
+        __asm__ volatile("" : "+g" (i) : :);
+    }
+}
+
+
 static bool multiplayer_connected = false;
 
 static void multiplayer_init()
 {
+    Microseconds delta = 0;
+
+ MASTER_RETRY:
     ::platform->network_peer().disconnect();
 
-    ::platform->sleep(3);
+    ::platform->sleep(5);
 
     REG_RCNT = R_MULTI;
     REG_SIOCNT = SIO_MULTI;
@@ -3086,7 +3102,6 @@ static void multiplayer_init()
     // Put this here for now, not sure whether it's really necessary...
     REG_SIOMLT_SEND = 0x5555;
 
-    Microseconds delta = 0;
     while (not multiplayer_validate()) {
         delta += ::platform->delta_clock().reset();
         if (delta > seconds(20)) {
@@ -3100,13 +3115,8 @@ static void multiplayer_init()
         }
         ::platform->feed_watchdog();
     }
-    // When the multi link cable is actually plugged into both gameboys, the
-    // connection should already be established at this point. But when no cable
-    // is connected to the link port, all of the SIOCNT bits will represent a
-    // valid state anyway. So let's push out a message, regardless, and wait to
-    // receive a response.
 
-    const char* handshake = "link__v0.0.1";
+    const char* handshake = "link__v00002";
 
     if (str_len(handshake) not_eq Platform::NetworkPeer::max_message_size) {
         ::platform->network_peer().disconnect();
@@ -3124,26 +3134,44 @@ static void multiplayer_init()
     while (true) {
         ::platform->feed_watchdog();
         delta += ::platform->delta_clock().reset();
-        if (auto msg = ::platform->network_peer().poll_message()) {
+        if (delta > seconds(20)) {
+            error(*::platform,
+                  "no valid handshake received within a reasonable window");
+            ::platform->network_peer().disconnect();
+            return;
+        } else if (auto msg = ::platform->network_peer().poll_message()) {
             for (u32 i = 0; i < sizeof handshake; ++i) {
                 if (((u8*)msg->data_)[i] not_eq handshake[i]) {
-                    ::platform->network_peer().disconnect();
-                    info(*::platform, "invalid handshake");
-                    return;
+                    if (multiplayer_is_master()) {
+                        // For the master, if none of the other GBAs are in
+                        // multi serial mode yet, the SIOCNT register will show
+                        // that all gbas are in a ready state (all of one
+                        // device). The master will, therefore, push out a
+                        // message, and receive back garbage data. So we want to
+                        // keep retrying, in order to account for the scenario
+                        // where the other device is not yet plugged in, or the
+                        // other player has not initiated their own connection.
+                        info(*::platform, "master retrying...");
+
+                        // busy-wait for a bit. This is sort of necessary;
+                        // Platform::sleep() does not contribute to the
+                        // delta clock offset (by design), so if we don't
+                        // burn up some time here, we will take a _long_
+                        // time to reach the timeout interval.
+                        busy_wait(10000);
+                        goto MASTER_RETRY; // lol yikes a goto
+                    } else {
+                        ::platform->network_peer().disconnect();
+                        info(*::platform, "invalid handshake");
+                        return;
+                    }
                 }
             }
             info(*::platform, "validated handshake");
             ::platform->network_peer().poll_consume(sizeof handshake);
             return;
-        } else if (delta > seconds(20)) {
-            error(*::platform,
-                  "no handshake received within a reasonable window");
-            ::platform->network_peer().disconnect();
-            return;
         }
     }
-
-    // OK, we've extablished a connection!
 }
 
 

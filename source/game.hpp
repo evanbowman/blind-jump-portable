@@ -174,6 +174,16 @@ public:
         return persistent_data_.settings_.difficulty_;
     }
 
+    Key action1_key() const
+    {
+        return persistent_data_.settings_.action1_key_;
+    }
+
+    Key action2_key() const
+    {
+        return persistent_data_.settings_.action2_key_;
+    }
+
 private:
     bool load_save_data(Platform& pfrm);
 

@@ -187,7 +187,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             cursor_loc_ -= 1;
             pfrm.speaker().play_sound("scroll", 1);
             draw_cursor(pfrm);
-        } else if (pfrm.keyboard().down_transition<Key::action_2>()) {
+        } else if (pfrm.keyboard().down_transition(game.action2_key())) {
             pfrm.speaker().play_sound("select", 1);
             switch (cursor_loc_) {
             case 0:

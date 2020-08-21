@@ -409,7 +409,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
     }
 
-    if (pfrm.keyboard().down_transition<Key::action_2>()) {
+    if (pfrm.keyboard().down_transition(game.action2_key())) {
         return state_pool().create<NewLevelState>(Level{0});
     }
 
