@@ -1124,7 +1124,6 @@ Platform::Speaker::Speaker()
 
 
 void Platform::Speaker::play_music(const char* name,
-                                   bool loop,
                                    Microseconds offset)
 {
     auto dest = Conf(*::platform).expect<Conf::String>("paths", "sound_folder");
@@ -1207,8 +1206,21 @@ static const char* const logfile_name = "logfile.txt";
 static std::ofstream logfile_out(logfile_name);
 
 
-void Platform::Logger::log(Logger::Severity level, const char* msg)
+static Severity log_threshold;
+
+
+void Platform::Logger::set_threshold(Severity severity)
 {
+    log_threshold = severity;
+}
+
+
+void Platform::Logger::log(Severity level, const char* msg)
+{
+    if (static_cast<int>(level) < static_cast<int>(::log_threshold)) {
+        return;
+    }
+
     auto write_msg = [&](std::ostream& target) {
         target << '[' <<
             [&] {
