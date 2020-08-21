@@ -474,6 +474,8 @@ public:
         // Updates the listener position for spatialized audio, if supported.
         void set_position(const Vec2<Float>& position);
 
+        Microseconds track_length(const char* sound_or_music_name);
+
     private:
         friend class Platform;
 

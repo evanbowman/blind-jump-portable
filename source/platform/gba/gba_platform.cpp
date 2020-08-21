@@ -1676,7 +1676,7 @@ static const struct AudioTrack {
 };
 
 
-static const AudioTrack* find_track(const char* name)
+static const AudioTrack* find_music(const char* name)
 {
     for (auto& track : music_tracks) {
 
@@ -1745,6 +1745,21 @@ static const AudioTrack* get_sound(const char* name)
     }
     return nullptr;
 }
+
+
+Microseconds Platform::Speaker::track_length(const char* name)
+{
+    if (const auto music = find_music(name)) {
+        return (music->length_ * sizeof(u32)) / 0.016f;
+    }
+
+    if (const auto sound = get_sound(name)) {
+        return sound->length_ / 0.016f;
+    }
+
+    return 0;
+}
+
 
 
 static std::optional<ActiveSoundInfo> make_sound(const char* name)
@@ -1854,7 +1869,7 @@ void Platform::Speaker::stop_music()
 
 static void play_music(const char* name, Microseconds offset)
 {
-    const auto track = find_track(name);
+    const auto track = find_music(name);
     if (track == nullptr) {
         return;
     }
