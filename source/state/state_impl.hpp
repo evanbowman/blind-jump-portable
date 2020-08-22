@@ -8,6 +8,9 @@
 #include "state.hpp"
 
 
+using DeferredState = Function<16, StatePtr()>;
+
+
 class CommonNetworkListener : public net_event::Listener {
 public:
     void receive(const net_event::PlayerEnteredGate&,
@@ -712,7 +715,7 @@ private:
 
 class EditSettingsState : public MenuState {
 public:
-    EditSettingsState();
+    EditSettingsState(DeferredState exit_state);
 
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
@@ -726,6 +729,8 @@ private:
 
     std::optional<HorizontalFlashAnimation> message_anim_;
     const char* str_ = nullptr;
+
+    DeferredState exit_state_;
 
     void message(Platform& pfrm, const char* str);
 
@@ -1156,3 +1161,24 @@ static constexpr auto quick_map_key = Key::alt_1;
 // FIXME!!!
 extern std::optional<Platform::Keyboard::RestoreState> restore_keystates;
 extern Bitmatrix<TileMap::width, TileMap::height> visited;
+
+
+// Sometimes, the creator of a new state wants to inject its own next state into
+// the newly created state. For example, let's say we have a credits screen,
+// which we want to show if a user selects an option from a pause menu, but also
+// when a user beats the game. In once secenario, the next state after the
+// credits screen is once again the pause menu state, but in the other scenario,
+// the next state is not the pause menu state, becaues we did not arrive in the
+// credits screen from the pause menu. Now we could start adding all sorts of
+// enumerations to various states, to coordinate which state the next state
+// should ultimately produce, but seems easier to simply pass the next state in
+// as an argument...
+template <typename S, typename ...Args>
+DeferredState make_deferred_state(Args&& ...args)
+{
+    return [args = std::make_tuple(std::forward<Args>(args)...)] {
+        return std::apply([](auto&& ...args) {
+            return state_pool().create<S>(args...);
+        }, std::move(args));
+    };
+}

@@ -80,6 +80,14 @@ void NewLevelIdleState::exit(Platform& pfrm, Game& game, State& next_state)
 StatePtr
 NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    // We don't allow players to pause the game when multiplayer peers are
+    // connected, because allowing pauses complicates the game logic, but we can
+    // at least allow players to edit the settings while they're waiting in a
+    // transporter for the next level.
+    if (not peer_ready_ and pfrm.keyboard().down_transition<Key::start>()) {
+        return state_pool().create<EditSettingsState>(make_deferred_state<NewLevelIdleState>());
+    }
+
     // Synchronization procedure for seed values at level transition:
     //
     // Players transmit NewLevelIdle messages until both players are ready. Once
