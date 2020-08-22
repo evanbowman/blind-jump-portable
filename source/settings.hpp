@@ -12,6 +12,7 @@ struct Settings {
     LocaleLanguage language_ = LocaleLanguage::null;
     bool show_stats_ = false;
     bool dynamic_camera_ = true;
+    bool night_mode_ = false;
     Contrast contrast_ = 0;
     Difficulty difficulty_ = Difficulty::normal;
     Severity log_severity_ = Severity::error;

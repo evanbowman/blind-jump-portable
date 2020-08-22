@@ -68,7 +68,7 @@ enum class LocaleString {
     settings_show_stats,
     settings_language,
     settings_contrast,
-    settings_dynamic_camera,
+    settings_night_mode,
     settings_swap_action_keys,
     settings_default,
     settings_difficulty,

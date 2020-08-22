@@ -64,6 +64,8 @@ Game::Game(Platform& pfrm)
 
     pfrm.logger().set_threshold(persistent_data_.settings_.log_severity_);
 
+    pfrm.screen().enable_night_mode(persistent_data_.settings_.night_mode_);
+
     if (persistent_data_.settings_.language_ not_eq LocaleLanguage::null) {
         locale_set_language(persistent_data_.settings_.language_);
     } else {

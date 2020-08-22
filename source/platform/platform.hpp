@@ -282,6 +282,8 @@ public:
 
         Contrast get_contrast() const;
 
+        void enable_night_mode(bool enabled);
+
         void set_view(const View& view)
         {
             view_ = view;
@@ -305,8 +307,6 @@ public:
                       bool include_overlay = true,
                       bool include_background = true,
                       bool include_sprites = true);
-
-        void invert();
 
     private:
         Screen();

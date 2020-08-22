@@ -762,12 +762,13 @@ private:
         }
     } show_stats_line_updater_;
 
-    class DynamicCameraLineUpdater : public LineUpdater {
-        Result update(Platform&, Game& game, int dir) override
+    class NightModeLineUpdater : public LineUpdater {
+        Result update(Platform& pfrm, Game& game, int dir) override
         {
-            bool& enabled = game.persistent_data().settings_.dynamic_camera_;
+            bool& enabled = game.persistent_data().settings_.night_mode_;
             if (dir not_eq 0) {
                 enabled = not enabled;
+                pfrm.screen().enable_night_mode(enabled);
             }
             if (enabled) {
                 return locale_string(LocaleString::yes);
@@ -775,7 +776,7 @@ private:
                 return locale_string(LocaleString::no);
             }
         }
-    } dynamic_camera_line_updater_;
+    } night_mode_line_updater_;
 
     class SwapActionKeysLineUpdater : public LineUpdater {
         Result update(Platform&, Game& game, int dir) override
@@ -958,11 +959,11 @@ private:
     std::array<LineInfo, line_count_> lines_;
 
     static constexpr const LocaleString strings[line_count_] = {
-        LocaleString::settings_dynamic_camera,
         LocaleString::settings_swap_action_keys,
         LocaleString::settings_difficulty,
         LocaleString::settings_language,
         LocaleString::settings_contrast,
+        LocaleString::settings_night_mode,
         LocaleString::settings_show_stats,
         LocaleString::settings_log_severity,
     };

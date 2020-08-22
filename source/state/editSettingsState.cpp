@@ -17,11 +17,11 @@ void EditSettingsState::message(Platform& pfrm, const char* str)
 
 EditSettingsState::EditSettingsState(DeferredState exit_state)
     :  exit_state_(exit_state),
-       lines_{{{dynamic_camera_line_updater_},
-              {swap_action_keys_line_updater_},
+       lines_{{{swap_action_keys_line_updater_},
               {difficulty_line_updater_},
               {language_line_updater_},
               {contrast_line_updater_},
+              {night_mode_line_updater_},
               {show_stats_line_updater_},
               {log_severity_line_updater_}}}
 {
@@ -83,7 +83,6 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (pfrm.keyboard().down_transition(game.action2_key())) {
         pfrm.speaker().play_sound("select", 1);
         return exit_state_();
-        // return state_pool().create<PauseScreenState>(false);
     }
 
     if (message_anim_ and not message_anim_->done()) {
