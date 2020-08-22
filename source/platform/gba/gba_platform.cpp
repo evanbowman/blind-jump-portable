@@ -253,9 +253,9 @@ struct alignas(4) ObjectAffineMatrix {
 
     void identity()
     {
-	pa() = 0x0100l;
-	pb() = 0;
-	pc() = 0;
+        pa() = 0x0100l;
+        pb() = 0;
+        pc() = 0;
         pd() = 0x0100;
     }
 
@@ -636,15 +636,15 @@ void Platform::Screen::draw(const Sprite& spr)
                 auto& affine =
                     affine_transform_back_buffer[affine_transform_write_index];
 
-                if (spr.get_rotation() and (spr.get_scale().x or spr.get_scale().y)) {
+                if (spr.get_rotation() and
+                    (spr.get_scale().x or spr.get_scale().y)) {
                     affine.rot_scale(spr.get_rotation(),
                                      spr.get_scale().x,
                                      spr.get_scale().y);
                 } else if (spr.get_rotation()) {
                     affine.rotate(spr.get_rotation());
                 } else {
-                    affine.scale(spr.get_scale().x,
-                                 spr.get_scale().y);
+                    affine.scale(spr.get_scale().x, spr.get_scale().y);
                 }
 
                 oa->attribute_0 |= 1 << 8;
@@ -837,7 +837,8 @@ void Platform::Screen::display()
     }
 
     for (u32 i = affine_transform_write_index;
-         i < last_affine_transform_write_index; ++i) {
+         i < last_affine_transform_write_index;
+         ++i) {
 
         auto& affine = affine_transform_back_buffer[i];
         affine.pa() = 0;

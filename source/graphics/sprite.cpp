@@ -60,7 +60,6 @@ void Sprite::set_size(Size size)
 }
 
 
-
 Sprite::Rotation Sprite::get_rotation() const
 {
     return rot_;

@@ -250,9 +250,48 @@ HOT void Game::render(Platform& pfrm)
     display_buffer.push_back(&player_.get_shadow());
 
     if (peer_player_ and not peer_player_->visible()) {
+        const auto peer_pos = peer_player_->get_position();
+
         Sprite arrow_spr;
         arrow_spr.set_texture_index(119);
-        arrow_spr.set_position(camera_.center());
+        arrow_spr.set_size(Sprite::Size::w16_h32);
+
+        const auto view_size = pfrm.screen().get_view().get_size();
+
+        const auto view_tl = pfrm.screen().get_view().get_center();
+        const auto view_center = view_tl + view_size / 2.f;
+
+        // const auto view_br = view_tl +
+        //     view_size;
+
+        const auto slope =
+            (view_center.y - peer_pos.y) /
+            (view_center.x - peer_pos.x);
+
+        if (-view_size.y / 2 <= slope * (view_size.x / 2) and
+            slope * (view_size.x / 2) <= view_size.y / 2) {
+            if (view_center.x < peer_pos.x) {
+                arrow_spr.set_position({view_tl.x + view_size.x - 32,
+                                        view_tl.y + view_size.y / 2});
+                // right edge
+            } else {
+                arrow_spr.set_position({view_tl.x + 8,
+                                        view_tl.y + view_size.y / 2});
+                // left edge
+            }
+        } else if (-view_size.x / 2 <= (view_size.y / 2) / slope and
+                   (view_size.y / 2) / slope <= view_size.x / 2) {
+            if (view_center.y < peer_pos.y) {
+                arrow_spr.set_position({view_tl.x + view_size.x / 2,
+                                        view_tl.y + view_size.y - 32});
+                // right edge
+            } else {
+                arrow_spr.set_position({view_tl.x + view_size.x / 2,
+                                        view_tl.y + 8});
+                // left edge
+            }
+        }
+
         pfrm.screen().draw(arrow_spr);
     }
 

@@ -62,8 +62,8 @@ def rgb_to_bgr(file_name):
     """
     im = Image.open(image_dir + file_name)
 
-    # r, g, b, a = im.split()
-    # im = Image.merge('RGBA', (b, g, r, a))
+    r, g, b, a = im.split()
+    im = Image.merge('RGBA', (b, g, r, a))
 
     im.save('tmp/' + file_name)
 
