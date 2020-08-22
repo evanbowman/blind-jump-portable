@@ -222,7 +222,7 @@ struct alignas(4) ObjectAttributes {
     u16 attribute_1;
     u16 attribute_2;
 
-    u16 affine_transform;
+    s16 affine_transform;
 };
 
 
@@ -250,6 +250,49 @@ struct alignas(4) ObjectAffineMatrix {
     {
         return o3.affine_transform;
     }
+
+    void identity()
+    {
+	pa() = 0x0100l;
+	pb() = 0;
+	pc() = 0;
+        pd() = 0x0100;
+    }
+
+    void scale(s16 sx, s16 sy)
+    {
+        pa() = (1 << 8) - sx;
+        pb() = 0;
+        pc() = 0;
+        pd() = (1 << 8) - sy;
+    }
+
+    void rotate(s16 degrees)
+    {
+        // I have no recollection of why the shift by seven works. I saw some
+        // libraries shift by four, but that seemed not to work from what I
+        // remember. Everyone seems to use a different sine lookup table, might
+        // be the culprit.
+        const int ss = sine(degrees) >> 7;
+        const int cc = cosine(degrees) >> 7;
+
+        pa() = cc;
+        pb() = -ss;
+        pc() = ss;
+        pd() = cc;
+    }
+
+    void rot_scale(s16 degrees, s16 x, s16 y)
+    {
+        // FIXME: This code doesn't seem to work correctly yet...
+        const int ss = sine(degrees);
+        const int cc = cosine(degrees);
+
+        pa() = cc * x >> 12;
+        pb() = -ss * x >> 12;
+        pc() = ss * y >> 12;
+        pd() = cc * y >> 12;
+    }
 };
 
 
@@ -266,6 +309,15 @@ static ObjectAttributes* const object_attribute_memory = {
 
 static ObjectAttributes
     object_attribute_back_buffer[Platform::Screen::sprite_limit];
+
+
+static auto affine_transform_back_buffer =
+    reinterpret_cast<ObjectAffineMatrix*>(object_attribute_back_buffer);
+
+
+static const u32 affine_transform_limit = 32;
+static u32 affine_transform_write_index = 0;
+static u32 last_affine_transform_write_index = 0;
 
 
 static volatile u16* bg0_control = (volatile u16*)0x4000008;
@@ -573,14 +625,44 @@ void Platform::Screen::draw(const Sprite& spr)
         } else {
             oa->attribute_0 = ATTR0_COLOR_16 | ATTR0_TALL | ATTR0_BLEND;
         }
-        oa->attribute_1 = ATTR1_SIZE_32;
+        oa->attribute_1 = ATTR1_SIZE_32; // clear attr1
 
-        const auto& flip = spr.get_flip();
-        oa->attribute_1 |= ((int)flip.y << 13);
-        oa->attribute_1 |= ((int)flip.x << 12);
+        auto abs_position = position - view_center;
 
-        const auto abs_position = position - view_center;
-        oa->attribute_0 &= 0xff00;
+        oa->attribute_0 &= (0xff00 & ~((1 << 8) | (1 << 9))); // clear attr0
+
+        if (spr.get_rotation() or spr.get_scale().x or spr.get_scale().y) {
+            if (affine_transform_write_index not_eq affine_transform_limit) {
+                auto& affine =
+                    affine_transform_back_buffer[affine_transform_write_index];
+
+                if (spr.get_rotation() and (spr.get_scale().x or spr.get_scale().y)) {
+                    affine.rot_scale(spr.get_rotation(),
+                                     spr.get_scale().x,
+                                     spr.get_scale().y);
+                } else if (spr.get_rotation()) {
+                    affine.rotate(spr.get_rotation());
+                } else {
+                    affine.scale(spr.get_scale().x,
+                                 spr.get_scale().y);
+                }
+
+                oa->attribute_0 |= 1 << 8;
+                oa->attribute_0 |= 1 << 9;
+
+                abs_position.x -= 8;
+                abs_position.y -= 16;
+
+                oa->attribute_1 |= affine_transform_write_index << 9;
+
+                affine_transform_write_index += 1;
+            }
+        } else {
+            const auto& flip = spr.get_flip();
+            oa->attribute_1 |= ((int)flip.y << 13);
+            oa->attribute_1 |= ((int)flip.x << 12);
+        }
+
         oa->attribute_0 |= abs_position.y & 0x00ff;
 
         if ((mix.amount_ > 215 and mix.amount_ < 255) or
@@ -589,7 +671,6 @@ void Platform::Screen::draw(const Sprite& spr)
             oa->attribute_0 |= ATTR0_MOSAIC;
         }
 
-        oa->attribute_1 &= 0xfe00;
         oa->attribute_1 |= (abs_position.x + x_off) & 0x01ff;
         oa->attribute_2 = 2 + spr.get_texture_index() * scale + tex_off;
         oa->attribute_2 |= pb;
@@ -755,6 +836,16 @@ void Platform::Screen::display()
         // object_attribute_back_buffer[i].attribute_2 = ATTR2_PRIORITY(3);
     }
 
+    for (u32 i = affine_transform_write_index;
+         i < last_affine_transform_write_index; ++i) {
+
+        auto& affine = affine_transform_back_buffer[i];
+        affine.pa() = 0;
+        affine.pb() = 0;
+        affine.pc() = 0;
+        affine.pd() = 0;
+    }
+
     // I noticed less graphical artifacts when using a back buffer. I thought I
     // would see better performance when writing directly to OAM, rather than
     // doing a copy later, but I did not notice any performance difference when
@@ -762,6 +853,9 @@ void Platform::Screen::display()
     memcpy32(object_attribute_memory,
              object_attribute_back_buffer,
              (sizeof object_attribute_back_buffer) / 4);
+
+    last_affine_transform_write_index = 0;
+    affine_transform_write_index = last_affine_transform_write_index;
 
     last_oam_write_index = oam_write_index;
     oam_write_index = 0;

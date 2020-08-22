@@ -183,7 +183,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
             if (index < 12) {
                 sprite_.set_texture_index(index + 1);
                 head_.set_texture_index(
-                    std::min(u32(45), head_.get_texture_index() + 1));
+                    std::min(u16(45), u16(head_.get_texture_index() + 1)));
 
             } else {
                 timer_ = 0;

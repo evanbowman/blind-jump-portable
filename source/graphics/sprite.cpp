@@ -6,9 +6,15 @@ Sprite::Sprite(Size size) : size_(size)
 }
 
 
-void Sprite::set_option(Option opt, bool enabled)
+void Sprite::set_scale(const Scale& scale)
 {
-    opts_.set(static_cast<int>(opt), enabled);
+    scale_ = scale;
+}
+
+
+void Sprite::set_rotation(Rotation rot)
+{
+    rot_ = rot;
 }
 
 
@@ -54,15 +60,16 @@ void Sprite::set_size(Size size)
 }
 
 
-void Sprite::set_rotation(Rotation rotation)
+
+Sprite::Rotation Sprite::get_rotation() const
 {
-    rotation_ = rotation;
+    return rot_;
 }
 
 
-bool Sprite::get_option(Option opt) const
+Sprite::Scale Sprite::get_scale() const
 {
-    return opts_.get(static_cast<int>(opt));
+    return scale_;
 }
 
 
@@ -105,10 +112,4 @@ const ColorMix& Sprite::get_mix() const
 Sprite::Size Sprite::get_size() const
 {
     return size_;
-}
-
-
-Sprite::Rotation Sprite::get_rotation() const
-{
-    return rotation_;
 }

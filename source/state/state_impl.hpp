@@ -47,9 +47,8 @@ public:
 
 class OverworldState : public State, public CommonNetworkListener {
 public:
-    OverworldState(Game& game, bool camera_tracking)
-        : camera_tracking_(game.persistent_data().settings_.dynamic_camera_ and
-                           camera_tracking)
+    OverworldState(Game&, bool camera_tracking)
+        : camera_tracking_(camera_tracking)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;

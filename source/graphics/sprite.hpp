@@ -5,13 +5,11 @@
 #include "number/numeric.hpp"
 
 
-using TextureIndex = u32;
+using TextureIndex = u16;
 
 
 class Sprite {
 public:
-    enum class Option { count };
-
     enum class Alpha : u8 {
         opaque,
         translucent,
@@ -19,15 +17,20 @@ public:
         count
     };
 
-    enum Size { w32_h32, w16_h32 };
-
-    using Rotation = u16;
+    enum Size : u8 { w32_h32, w16_h32 };
 
 
     Sprite(Size size = Size::w32_h32);
 
 
-    void set_option(Option opt, bool enabled);
+    using Rotation = s16;
+    using Scale = Vec2<s16>;
+
+
+    void set_rotation(Rotation rot);
+
+
+    void set_scale(const Scale& scale);
 
 
     void set_position(const Vec2<Float>& position);
@@ -49,12 +52,6 @@ public:
 
 
     void set_size(Size size);
-
-
-    void set_rotation(Rotation degrees);
-
-
-    bool get_option(Option opt) const;
 
 
     const Vec2<Float>& get_position() const;
@@ -81,15 +78,18 @@ public:
     Rotation get_rotation() const;
 
 
+    Scale get_scale() const;
+
+
 private:
-    Vec2<Float> position_;
-    Vec2<s32> origin_;
-    Vec2<bool> flip_;
-    Rotation rotation_ = 0;
-    TextureIndex texture_index_ = 0;
     Alpha alpha_ = Alpha::opaque;
     Size size_ = Size::w32_h32;
-    Bitvector<static_cast<int>(Option::count)> opts_;
+    Vec2<bool> flip_;
+    Vec2<Float> position_;
+    Vec2<s32> origin_;
+    Vec2<s16> scale_;
+    Rotation rot_ = 0;
+    TextureIndex texture_index_ = 0;
     ColorMix mix_;
 };
 

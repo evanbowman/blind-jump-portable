@@ -53,7 +53,7 @@ public:
     };
 
 protected:
-    alignas(16) ControlBlock* control_;
+    ControlBlock* control_;
 
     void add_strong(ControlBlock* source)
     {
@@ -107,6 +107,11 @@ public:
     }
 
     T* operator->() const
+    {
+        return &Super::control_->data_;
+    }
+
+    T* get() const
     {
         return &Super::control_->data_;
     }
