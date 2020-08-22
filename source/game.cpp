@@ -230,6 +230,9 @@ HOT void Game::render(Platform& pfrm)
             display_buffer.push_back(peer_player_->get_sprites()[1]);
             display_buffer.push_back(&peer_player_->get_blaster_sprite());
             shadows_buffer.push_back(&peer_player_->get_shadow());
+            peer_player_->mark_visible(true);
+        } else {
+            peer_player_->mark_visible(false);
         }
     }
 
@@ -246,6 +249,12 @@ HOT void Game::render(Platform& pfrm)
 
     display_buffer.push_back(&player_.get_shadow());
 
+    if (peer_player_ and not peer_player_->visible()) {
+        Sprite arrow_spr;
+        arrow_spr.set_texture_index(119);
+        arrow_spr.set_position(camera_.center());
+        pfrm.screen().draw(arrow_spr);
+    }
 
     for (auto spr : display_buffer) {
         pfrm.screen().draw(*spr);
