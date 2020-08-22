@@ -2,8 +2,8 @@
 
 #include "bulkAllocator.hpp"
 #include "tileMap.hpp"
-#include <optional>
 #include <limits>
+#include <optional>
 
 
 //
@@ -63,7 +63,8 @@ private:
     // neighbors. One could attach a list of neighbors to every vertex, but I
     // tried doing this, and you end up doing a bunch of unnecessary work (for
     // vertices which we will never visit), and using a lot more memory.
-    using VertexMat = PathVertexData*[(TileMap::width - 1)][(TileMap::height - 1)];
+    using VertexMat =
+        PathVertexData * [(TileMap::width - 1)][(TileMap::height - 1)];
 
 
     Buffer<PathVertexData*, 4> neighbors(PathVertexData* data) const;

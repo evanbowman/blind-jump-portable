@@ -434,7 +434,8 @@ static Color nightmode_adjust(const Color& c)
     if (not night_mode) {
         return c;
     } else {
-        return adjust_warmth(Color::from_bgr_hex_555(blend(c, c.grayscale(), 190)), 2);
+        return adjust_warmth(
+            Color::from_bgr_hex_555(blend(c, c.grayscale(), 190)), 2);
     }
 }
 
@@ -796,11 +797,11 @@ Vec2<u32> Platform::Screen::size() const
 #include "data/charset_en_spn_fr.h"
 #include "data/launch_flattened.h"
 #include "data/old_poster_flattened.h"
-#include "data/postal_advert_flattened.h"
 #include "data/overlay.h"
 #include "data/overlay_cutscene.h"
 #include "data/overlay_journal.h"
 #include "data/overlay_network_flattened.h"
+#include "data/postal_advert_flattened.h"
 #include "data/seed_packet_flattened.h"
 #include "data/spritesheet.h"
 #include "data/spritesheet2.h"
@@ -895,15 +896,16 @@ Contrast Platform::Screen::get_contrast() const
 }
 
 
-static void init_palette(const TextureData* td, u16* palette, bool skip_contrast)
+static void
+init_palette(const TextureData* td, u16* palette, bool skip_contrast)
 {
     const auto adj_cr = contrast + base_contrast;
 
     for (int i = 0; i < 16; ++i) {
         if (not skip_contrast and adj_cr not_eq 0) {
-            const Float f =
-                (259.f * (adj_cr + 255)) / (255 * (259 - adj_cr));
-            const auto c = nightmode_adjust(Color::from_bgr_hex_555(td->palette_data_[i]));
+            const Float f = (259.f * (adj_cr + 255)) / (255 * (259 - adj_cr));
+            const auto c =
+                nightmode_adjust(Color::from_bgr_hex_555(td->palette_data_[i]));
 
             const auto r =
                 clamp(f * (Color::upsample(c.r_) - 128) + 128, 0.f, 255.f);
@@ -918,7 +920,9 @@ static void init_palette(const TextureData* td, u16* palette, bool skip_contrast
                              .bgr_hex_555();
 
         } else {
-            palette[i] = nightmode_adjust(Color::from_bgr_hex_555(td->palette_data_[i])).bgr_hex_555();
+            palette[i] =
+                nightmode_adjust(Color::from_bgr_hex_555(td->palette_data_[i]))
+                    .bgr_hex_555();
         }
     }
 }
@@ -1671,18 +1675,18 @@ static const int null_music_len = 8;
 static const u32 null_music[null_music_len] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 
-
-#define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__, __DIV__)                        \
-    {                                                                   \
-        STR(__STR_NAME__), (AudioSample*)__TRACK_NAME__, __TRACK_NAME__##Len / __DIV__ \
+#define DEF_AUDIO(__STR_NAME__, __TRACK_NAME__, __DIV__)                       \
+    {                                                                          \
+        STR(__STR_NAME__), (AudioSample*)__TRACK_NAME__,                       \
+            __TRACK_NAME__##Len / __DIV__                                      \
     }
 
 
-#define DEF_MUSIC(__STR_NAME__, __TRACK_NAME__) \
+#define DEF_MUSIC(__STR_NAME__, __TRACK_NAME__)                                \
     DEF_AUDIO(__STR_NAME__, __TRACK_NAME__, 4)
 
 
-#define DEF_SOUND(__STR_NAME__, __TRACK_NAME__) \
+#define DEF_SOUND(__STR_NAME__, __TRACK_NAME__)                                \
     DEF_AUDIO(__STR_NAME__, __TRACK_NAME__, 1)
 
 
@@ -1697,12 +1701,10 @@ static const struct AudioTrack {
     const AudioSample* data_;
     int length_; // NOTE: For music, this is the track length in 32 bit words,
                  // but for sounds, length_ reprepresents bytes.
-} music_tracks[] = {
-    DEF_MUSIC(hiraeth, scottbuckley_hiraeth),
-    DEF_MUSIC(omega, scottbuckley_omega),
-    DEF_MUSIC(computations, scottbuckley_computations),
-    DEF_MUSIC(clair_de_lune, clair_de_lune)
-};
+} music_tracks[] = {DEF_MUSIC(hiraeth, scottbuckley_hiraeth),
+                    DEF_MUSIC(omega, scottbuckley_omega),
+                    DEF_MUSIC(computations, scottbuckley_computations),
+                    DEF_MUSIC(clair_de_lune, clair_de_lune)};
 
 
 static const AudioTrack* find_music(const char* name)
@@ -1722,11 +1724,11 @@ static const AudioTrack* find_music(const char* name)
 // assembly output, adding the file to CMake, adding the include, and adding the
 // sound to the sounds array, it's just too tedious to keep working this way...
 #include "data/sound_bell.hpp"
-#include "data/sound_scroll.hpp"
 #include "data/sound_blaster.hpp"
 #include "data/sound_click.hpp"
 #include "data/sound_coin.hpp"
 #include "data/sound_creak.hpp"
+#include "data/sound_dropitem.hpp"
 #include "data/sound_explosion1.hpp"
 #include "data/sound_explosion2.hpp"
 #include "data/sound_footstep1.hpp"
@@ -1738,8 +1740,8 @@ static const AudioTrack* find_music(const char* name)
 #include "data/sound_open_book.hpp"
 #include "data/sound_openbag.hpp"
 #include "data/sound_pop.hpp"
+#include "data/sound_scroll.hpp"
 #include "data/sound_select.hpp"
-#include "data/sound_dropitem.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
@@ -1786,7 +1788,6 @@ Microseconds Platform::Speaker::track_length(const char* name)
 
     return 0;
 }
-
 
 
 static std::optional<ActiveSoundInfo> make_sound(const char* name)
@@ -1882,9 +1883,7 @@ static void clear_music()
 
 static void stop_music()
 {
-    modify_audio([] {
-        clear_music();
-    });
+    modify_audio([] { clear_music(); });
 }
 
 
@@ -1911,8 +1910,7 @@ static void play_music(const char* name, Microseconds offset)
 }
 
 
-void Platform::Speaker::play_music(const char* name,
-                                   Microseconds offset)
+void Platform::Speaker::play_music(const char* name, Microseconds offset)
 {
     // NOTE: The sound sample needs to be mono, and 8-bit signed. To export this
     // format from Audacity, convert the tracks to mono via the Tracks dropdown,
@@ -2728,7 +2726,6 @@ static int multiplayer_error()
 // otherwise, may return a garbage value.
 
 
-
 static bool multiplayer_validate_modes()
 {
     // 1 if all GBAs are in the correct mode, 0 otherwise.
@@ -3106,9 +3103,10 @@ void Platform::NetworkPeer::poll_consume(u32 size)
 }
 
 
-static void __attribute__ ((noinline)) busy_wait(unsigned max) {
+static void __attribute__((noinline)) busy_wait(unsigned max)
+{
     for (unsigned i = 0; i < max; i++) {
-        __asm__ volatile("" : "+g" (i) : :);
+        __asm__ volatile("" : "+g"(i) : :);
     }
 }
 
@@ -3119,7 +3117,7 @@ static void multiplayer_init()
 {
     Microseconds delta = 0;
 
- MASTER_RETRY:
+MASTER_RETRY:
     ::platform->network_peer().disconnect();
 
     ::platform->sleep(5);

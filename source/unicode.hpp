@@ -13,10 +13,7 @@ using Codepoint = u32;
 
 
 template <typename Callback>
-inline bool
-    scan(Callback&& callback,
-         const char* data,
-         size_t len)
+inline bool scan(Callback&& callback, const char* data, size_t len)
 {
     size_t index = 0;
     while (index < len) {

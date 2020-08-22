@@ -193,7 +193,8 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 0:
                 return state_pool().create<ActiveState>(game);
             case 1:
-                return state_pool().create<EditSettingsState>(make_deferred_state<PauseScreenState>(false));
+                return state_pool().create<EditSettingsState>(
+                    make_deferred_state<PauseScreenState>(false));
             case 2:
                 if (connect_peer_option_available(game)) {
                     return state_pool().create<NetworkConnectSetupState>();

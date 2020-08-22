@@ -22,11 +22,11 @@
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <mutex>
 #include <queue>
 #include <sstream>
 #include <thread>
 #include <unordered_map>
-#include <mutex>
 
 
 Platform::DeviceName Platform::device_name() const
@@ -313,8 +313,8 @@ Microseconds Platform::DeltaClock::reset()
 
 #if not defined(__linux__) and not defined(_WIN32)
     // Unfortunately, this code seems to make the linux builds
-                  // really stuttery. Without this enabled, you're likely to see
-                  // high cpu usage.
+    // really stuttery. Without this enabled, you're likely to see
+    // high cpu usage.
     const auto gba_fixed_step = 2000;
     const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
         throttle_stop - throttle_start);
@@ -1123,8 +1123,7 @@ Platform::Speaker::Speaker()
 }
 
 
-void Platform::Speaker::play_music(const char* name,
-                                   Microseconds offset)
+void Platform::Speaker::play_music(const char* name, Microseconds offset)
 {
     auto dest = Conf(*::platform).expect<Conf::String>("paths", "sound_folder");
 
@@ -1734,13 +1733,13 @@ void Platform::NetworkPeer::connect(const char* peer)
     auto port = Conf{*::platform}.expect<Conf::Integer>(
         ::platform->device_name().c_str(), "network_port");
 
-    auto addr =
-        Conf{*::platform}.expect<Conf::String>(::platform->device_name().c_str(),
-                                               "host_address");
+    auto addr = Conf{*::platform}.expect<Conf::String>(
+        ::platform->device_name().c_str(), "host_address");
 
     info(*::platform,
          ("connecting to " + std::string(addr.c_str()) + ":" +
-          std::to_string(port)).c_str());
+          std::to_string(port))
+             .c_str());
 
     if (impl->socket_.connect(addr.c_str(), port) == sf::Socket::Status::Done) {
         info(*::platform, "Peer connected!");
@@ -1885,10 +1884,6 @@ void Platform::SystemClock::init(Platform& pfrm)
 Platform::SystemClock::SystemClock()
 {
 }
-
-
-
-
 
 
 #ifdef _WIN32

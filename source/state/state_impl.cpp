@@ -223,37 +223,36 @@ StatePoolInst& state_pool()
 
 
 // FIXME!!! This does decrease the size of the compiled ROM though...
-#include "overworldState.cpp"
-#include "bossDeathSequenceState.cpp"
 #include "activeState.cpp"
-#include "fadeInState.cpp"
-#include "warpInState.cpp"
-#include "preFadePauseState.cpp"
-#include "glowFadeState.cpp"
-#include "fadeOutState.cpp"
-#include "deathFadeState.cpp"
-#include "respawnWaitState.cpp"
-#include "deathContinueState.cpp"
-#include "inventoryState.cpp"
-#include "quickSelectInventoryState.cpp"
-#include "notebookState.cpp"
-#include "imageViewState.cpp"
-#include "mapSystemState.cpp"
-#include "quickMapState.cpp"
-#include "newLevelState.cpp"
-#include "introCreditsState.cpp"
-#include "launchCutsceneState.cpp"
-#include "editSettingsState.cpp"
-#include "logfileViewerState.cpp"
+#include "bossDeathSequenceState.cpp"
 #include "commandCodeState.cpp"
+#include "deathContinueState.cpp"
+#include "deathFadeState.cpp"
+#include "editSettingsState.cpp"
 #include "endingCreditsState.cpp"
-#include "pauseScreenState.cpp"
-#include "newLevelIdleState.cpp"
+#include "fadeInState.cpp"
+#include "fadeOutState.cpp"
+#include "glowFadeState.cpp"
+#include "goodbyeState.cpp"
+#include "imageViewState.cpp"
+#include "introCreditsState.cpp"
+#include "inventoryState.cpp"
+#include "launchCutsceneState.cpp"
+#include "logfileViewerState.cpp"
+#include "mapSystemState.cpp"
 #include "networkConnectSetupState.cpp"
 #include "networkConnectWaitState.cpp"
+#include "newLevelIdleState.cpp"
+#include "newLevelState.cpp"
+#include "notebookState.cpp"
+#include "overworldState.cpp"
+#include "pauseScreenState.cpp"
+#include "preFadePauseState.cpp"
+#include "quickMapState.cpp"
+#include "quickSelectInventoryState.cpp"
+#include "respawnWaitState.cpp"
 #include "signalJammerState.cpp"
-#include "goodbyeState.cpp"
-
+#include "warpInState.cpp"
 
 
 constexpr int item_icon(Item::Type item)
@@ -282,10 +281,11 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [](Platform&, Game&) {
          static const auto str = "old_poster_flattened";
          return state_pool().create<ImageViewState>(str,
-                                                   ColorConstant::steel_blue);
+                                                    ColorConstant::steel_blue);
      },
      LocaleString::old_poster_title},
-    {Item::Type::postal_advert, item_icon(Item::Type::old_poster_1),
+    {Item::Type::postal_advert,
+     item_icon(Item::Type::old_poster_1),
      [](Platform&, Game&) {
          static const auto str = "postal_advert_flattened";
          return state_pool().create<ImageViewState>(str,
@@ -332,7 +332,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [](Platform&, Game&) {
          static const auto str = "seed_packet_flattened";
          return state_pool().create<ImageViewState>(str,
-                                                   ColorConstant::steel_blue);
+                                                    ColorConstant::steel_blue);
      },
      LocaleString::seed_packet_title},
     {STANDARD_ITEM_HANDLER(engineer_notebook),

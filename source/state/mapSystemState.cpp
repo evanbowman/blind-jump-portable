@@ -1,5 +1,5 @@
-#include "state_impl.hpp"
 #include "conf.hpp"
+#include "state_impl.hpp"
 
 
 void MapSystemState::enter(Platform& pfrm, Game& game, State&)

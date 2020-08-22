@@ -16,14 +16,13 @@ void EditSettingsState::message(Platform& pfrm, const char* str)
 
 
 EditSettingsState::EditSettingsState(DeferredState exit_state)
-    :  exit_state_(exit_state),
-       lines_{{{swap_action_keys_line_updater_},
-              {difficulty_line_updater_},
-              {language_line_updater_},
-              {contrast_line_updater_},
-              {night_mode_line_updater_},
-              {show_stats_line_updater_},
-              {log_severity_line_updater_}}}
+    : exit_state_(exit_state), lines_{{{swap_action_keys_line_updater_},
+                                       {difficulty_line_updater_},
+                                       {language_line_updater_},
+                                       {contrast_line_updater_},
+                                       {night_mode_line_updater_},
+                                       {show_stats_line_updater_},
+                                       {log_severity_line_updater_}}}
 {
 }
 

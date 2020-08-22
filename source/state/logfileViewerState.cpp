@@ -1,7 +1,6 @@
 #include "state_impl.hpp"
 
 
-
 void LogfileViewerState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     repaint(pfrm, 0);

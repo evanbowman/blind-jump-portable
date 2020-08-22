@@ -1141,7 +1141,6 @@ bool draw_minimap(Platform& pfrm,
                   PathBuffer* path = nullptr);
 
 
-
 struct InventoryItemHandler {
     Item::Type type_;
     int icon_;
@@ -1174,12 +1173,12 @@ extern Bitmatrix<TileMap::width, TileMap::height> visited;
 // enumerations to various states, to coordinate which state the next state
 // should ultimately produce, but seems easier to simply pass the next state in
 // as an argument...
-template <typename S, typename ...Args>
-DeferredState make_deferred_state(Args&& ...args)
+template <typename S, typename... Args>
+DeferredState make_deferred_state(Args&&... args)
 {
     return [args = std::make_tuple(std::forward<Args>(args)...)] {
-        return std::apply([](auto&& ...args) {
-            return state_pool().create<S>(args...);
-        }, std::move(args));
+        return std::apply(
+            [](auto&&... args) { return state_pool().create<S>(args...); },
+            std::move(args));
     };
 }

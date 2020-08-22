@@ -85,7 +85,8 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
     // at least allow players to edit the settings while they're waiting in a
     // transporter for the next level.
     if (not peer_ready_ and pfrm.keyboard().down_transition<Key::start>()) {
-        return state_pool().create<EditSettingsState>(make_deferred_state<NewLevelIdleState>());
+        return state_pool().create<EditSettingsState>(
+            make_deferred_state<NewLevelIdleState>());
     }
 
     // Synchronization procedure for seed values at level transition:

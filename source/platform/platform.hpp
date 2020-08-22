@@ -6,13 +6,13 @@
 #include "graphics/contrast.hpp"
 #include "graphics/sprite.hpp"
 #include "graphics/view.hpp"
+#include "key.hpp"
 #include "memory/buffer.hpp"
 #include "memory/rc.hpp"
 #include "number/numeric.hpp"
+#include "severity.hpp"
 #include "sound.hpp"
 #include "unicode.hpp"
-#include "severity.hpp"
-#include "key.hpp"
 #include <array>
 #include <optional>
 

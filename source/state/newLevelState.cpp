@@ -159,8 +159,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (timer_ > seconds(1)) {
                 pfrm.sleep(80);
 
-                pfrm.speaker().play_music(
-                    zone.music_name_, zone.music_offset_);
+                pfrm.speaker().play_music(zone.music_name_, zone.music_offset_);
 
                 startup = false;
                 return state_pool().create<FadeInState>(game);
@@ -174,8 +173,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                 // If we're loading from a save state, we need to start the music, which
                 // normally starts when we enter a new zone.
                 if (startup) {
-                    pfrm.speaker().play_music(
-                        zone.music_name_, zone.music_offset_);
+                    pfrm.speaker().play_music(zone.music_name_,
+                                              zone.music_offset_);
                 }
                 startup = false;
                 return state_pool().create<FadeInState>(game);

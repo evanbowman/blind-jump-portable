@@ -9,10 +9,8 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
                                              TileMap& tiles,
                                              const PathCoord& start,
                                              const PathCoord& end)
-    : memory_(pfrm),
-      priority_q_(allocate_dynamic<VertexBuf>(pfrm)),
-      map_matrix_(allocate_dynamic<VertexMat>(pfrm)),
-      end_(end)
+    : memory_(pfrm), priority_q_(allocate_dynamic<VertexBuf>(pfrm)),
+      map_matrix_(allocate_dynamic<VertexMat>(pfrm)), end_(end)
 {
     static_assert(sizeof(PathVertexData*) <= 8,
                   "What computer are you running this on?");
@@ -147,7 +145,8 @@ IncrementalPathfinder::neighbors(PathVertexData* data) const
             result.push_back(n);
         }
     }
-    if (data->coord_.x < TileMap::width - 2) { // -2 b/c we don't include the last column
+    if (data->coord_.x <
+        TileMap::width - 2) { // -2 b/c we don't include the last column
         auto n = (*map_matrix_.obj_)[data->coord_.x + 1][data->coord_.y];
         if (n) {
             result.push_back(n);

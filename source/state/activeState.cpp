@@ -30,7 +30,6 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 }
 
 
-
 StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     game.player().update(pfrm, game, delta);

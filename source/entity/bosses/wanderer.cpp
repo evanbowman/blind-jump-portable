@@ -247,8 +247,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                 angle = 360 - angle / 2;
             }
 
-            (*game.effects().get<WandererSmallLaser>().begin())
-                ->rotate(angle);
+            (*game.effects().get<WandererSmallLaser>().begin())->rotate(angle);
 
             timer_ = 0;
         }

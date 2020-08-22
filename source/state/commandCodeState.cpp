@@ -10,7 +10,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 [[noreturn]] void debug_boss_level(Platform& pfrm, Level level)
 {
     PersistentData data;

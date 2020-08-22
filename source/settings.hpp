@@ -2,8 +2,8 @@
 
 #include "graphics/contrast.hpp"
 #include "localization.hpp"
-#include "severity.hpp"
 #include "platform/key.hpp"
+#include "severity.hpp"
 
 
 struct Settings {

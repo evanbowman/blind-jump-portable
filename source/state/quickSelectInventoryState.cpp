@@ -165,12 +165,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 pfrm, OverlayCoord{4, 4}, pos, false, 8 + 278, erase_color);
             selector_shaded_ = false;
         } else {
-            selector_.emplace(pfrm,
-                              OverlayCoord{4, 4},
-                              pos,
-                              false,
-                              16 + 278,
-                              erase_color);
+            selector_.emplace(
+                pfrm, OverlayCoord{4, 4}, pos, false, 16 + 278, erase_color);
             selector_shaded_ = true;
         }
     };
@@ -256,7 +252,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                         if (done) {
                             return;
                         }
-                        if (pfrm.keyboard().down_transition(game.action2_key())) {
+                        if (pfrm.keyboard().down_transition(
+                                game.action2_key())) {
                             if (auto handler = inventory_item_handler(item)) {
                                 handler->callback_(pfrm, game);
                                 game.inventory().remove_item(page, col, row);
@@ -283,7 +280,8 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                             }
                         }
                     });
-                while (not selector_shaded_) redraw_selector(112);
+                while (not selector_shaded_)
+                    redraw_selector(112);
 
                 display_mode_ = DisplayMode::used_item;
                 timer_ = 0;
@@ -334,7 +332,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                 auto screen_tiles = calc_screen_tiles(pfrm);
 
                 const OverlayCoord pos{static_cast<u8>(screen_tiles.x - 5),
-                    static_cast<u8>(3 + selector_pos_ * 5)};
+                                       static_cast<u8>(3 + selector_pos_ * 5)};
 
                 const auto idx = 394 + used_item_anim_index_;
 

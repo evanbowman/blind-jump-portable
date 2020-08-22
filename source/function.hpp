@@ -1,8 +1,8 @@
 #pragma once
 
 #include <array>
-#include <stdint.h>
 #include <ciso646>
+#include <stdint.h>
 
 
 // A fixed-space version of std::function, does not allocate.
