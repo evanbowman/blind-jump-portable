@@ -221,7 +221,35 @@ struct alignas(4) ObjectAttributes {
     u16 attribute_0;
     u16 attribute_1;
     u16 attribute_2;
-    u16 pad;
+
+    u16 affine_transform;
+};
+
+
+// See documentation. Object memory provides thirty-two matrices for affine
+// transformation; the parameters nestled between every four objects.
+struct alignas(4) ObjectAffineMatrix {
+    ObjectAttributes o0;
+    ObjectAttributes o1;
+    ObjectAttributes o2;
+    ObjectAttributes o3;
+
+    auto& pa()
+    {
+        return o0.affine_transform;
+    }
+    auto& pb()
+    {
+        return o1.affine_transform;
+    }
+    auto& pc()
+    {
+        return o2.affine_transform;
+    }
+    auto& pd()
+    {
+        return o3.affine_transform;
+    }
 };
 
 

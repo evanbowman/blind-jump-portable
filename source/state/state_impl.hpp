@@ -1163,6 +1163,9 @@ extern std::optional<Platform::Keyboard::RestoreState> restore_keystates;
 extern Bitmatrix<TileMap::width, TileMap::height> visited;
 
 
+void player_death(Platform& pfrm, Game& game, const Vec2<Float>& position);
+
+
 // Sometimes, the creator of a new state wants to inject its own next state into
 // the newly created state. For example, let's say we have a credits screen,
 // which we want to show if a user selects an option from a pause menu, but also

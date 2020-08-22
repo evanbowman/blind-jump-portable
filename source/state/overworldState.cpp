@@ -215,8 +215,7 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
 }
 
 
-static void
-player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
+void player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
 {
     pfrm.speaker().play_sound("explosion1", 3, position);
     big_explosion(pfrm, game, position);
