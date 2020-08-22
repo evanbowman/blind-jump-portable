@@ -780,6 +780,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "data/charset_en_spn_fr.h"
 #include "data/launch_flattened.h"
 #include "data/old_poster_flattened.h"
+#include "data/postal_advert_flattened.h"
 #include "data/overlay.h"
 #include "data/overlay_cutscene.h"
 #include "data/overlay_journal.h"
@@ -846,6 +847,7 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(overlay_cutscene),
     TEXTURE_INFO(overlay_journal),
     TEXTURE_INFO(old_poster_flattened),
+    TEXTURE_INFO(postal_advert_flattened),
     TEXTURE_INFO(blaster_info_flattened),
     TEXTURE_INFO(seed_packet_flattened),
     TEXTURE_INFO(overlay_network_flattened)};
@@ -1711,7 +1713,6 @@ static const AudioTrack* find_music(const char* name)
 #include "data/sound_pop.hpp"
 #include "data/sound_select.hpp"
 #include "data/sound_dropitem.hpp"
-#include "data/sound_reload.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
@@ -1725,7 +1726,6 @@ static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
                                     DEF_SOUND(openbag, sound_openbag),
                                     DEF_SOUND(blaster, sound_blaster),
                                     DEF_SOUND(select, sound_select),
-                                    DEF_SOUND(reload, sound_reload),
                                     DEF_SOUND(laser1, sound_laser1),
                                     DEF_SOUND(scroll, sound_scroll),
                                     DEF_SOUND(creak, sound_creak),

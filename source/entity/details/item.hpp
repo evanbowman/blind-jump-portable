@@ -26,6 +26,7 @@ public:
         navigation_pamphlet,
         orange,
         orange_seeds,
+        postal_advert,
         count
     };
 
@@ -71,7 +72,8 @@ inline bool item_is_persistent(Item::Type type)
            type == Item::Type::seed_packet or
            type == Item::Type::engineer_notebook or
            type == Item::Type::navigation_pamphlet or
-           type == Item::Type::orange_seeds;
+           type == Item::Type::orange_seeds or
+           type == Item::Type::postal_advert;
 }
 
 

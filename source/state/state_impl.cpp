@@ -285,6 +285,13 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
                                                    ColorConstant::steel_blue);
      },
      LocaleString::old_poster_title},
+    {Item::Type::postal_advert, item_icon(Item::Type::old_poster_1),
+     [](Platform&, Game&) {
+         static const auto str = "postal_advert_flattened";
+         return state_pool().create<ImageViewState>(str,
+                                                    ColorConstant::steel_blue);
+     },
+     LocaleString::postal_advert_title},
     {STANDARD_ITEM_HANDLER(surveyor_logbook),
      [](Platform&, Game&) {
          return state_pool().create<NotebookState>(

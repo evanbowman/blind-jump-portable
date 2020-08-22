@@ -39,6 +39,7 @@ enum class LocaleString {
     navigation_pamphlet_title,
     orange_title,
     orange_seeds_title,
+    postal_advert_title,
     single_use_warning,
     locked,
     peer_too_close_to_item,

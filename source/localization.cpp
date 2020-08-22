@@ -342,6 +342,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::engineer_notebook_title: return "Engineer's notebook";
         case LocaleString::blaster_title: return "Blaster";
         case LocaleString::accelerator_title: return "Accelerator (60 shots)";
+        case LocaleString::postal_advert_title: return "Low Orbit Postal Advert";
         case LocaleString::lethargy_title: return "Lethargy (18 sec)";
         case LocaleString::map_system_title: return "Map system";
         case LocaleString::map_required: return "required: Map system";

@@ -145,7 +145,6 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/data/sound_heart.s
     ${SOURCE_DIR}/data/sound_creak.s
     ${SOURCE_DIR}/data/sound_dropitem.s
-    ${SOURCE_DIR}/data/sound_reload.s
     ${SOURCE_DIR}/data/sound_scroll.s
     ${SOURCE_DIR}/data/sound_laser1.s
     ${SOURCE_DIR}/data/sound_select.s
@@ -162,6 +161,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/data/spritesheet_boss0.s
     ${SOURCE_DIR}/data/spritesheet_boss1.s
     ${SOURCE_DIR}/data/old_poster_flattened.s
+    ${SOURCE_DIR}/data/postal_advert_flattened.s
     ${SOURCE_DIR}/data/blaster_info_flattened.s
     ${SOURCE_DIR}/data/seed_packet_flattened.s
     ${SOURCE_DIR}/data/overlay_network_flattened.s)
@@ -290,6 +290,7 @@ if(GAMEBOY_ADVANCE)
     compile_image(charset_en_spn_fr 0 0 NO)
     compile_image(overlay_journal 0 0 NO)
     compile_image(old_poster 0 0 YES)
+    compile_image(postal_advert 0 0 YES)
     compile_image(blaster_info 0 0 YES)
     compile_image(seed_packet 0 0 YES)
     compile_image(overlay_network 0 0 YES)

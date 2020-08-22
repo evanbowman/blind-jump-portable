@@ -1331,14 +1331,17 @@ ItemRarity rarity(Item::Type item)
     case Item::Type::engineer_notebook:
         return 2;
 
-    case Item::Type::surveyor_logbook:
+    case Item::Type::postal_advert:
         return 2;
+
+    case Item::Type::surveyor_logbook:
+        return 3;
 
     case Item::Type::lethargy:
         return 2;
 
     case Item::Type::old_poster_1:
-        return 2;
+        return 3;
 
     case Item::Type::seed_packet:
         return 2;
