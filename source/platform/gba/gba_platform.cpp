@@ -872,6 +872,16 @@ Contrast Platform::Screen::get_contrast() const
 }
 
 
+Color adjust_warmth(const Color& c, int amount)
+{
+    auto ret = c;
+    ret.r_ = clamp(c.r_ + amount, 0, 31);
+    ret.b_ = clamp(c.b_ - amount, 0, 31);
+
+    return ret;
+}
+
+
 static void init_palette(const TextureData* td, u16* palette)
 {
     for (int i = 0; i < 16; ++i) {
@@ -1314,7 +1324,6 @@ void Platform::load_tile1_texture(const char* name)
             for (int i = 0; i < 16; ++i) {
                 auto from = Color::from_bgr_hex_555(tilesheet_1_palette[i]);
                 MEM_BG_PALETTE[32 + i] = blend(from, c, last_fade_amt);
-                tilesheet_1_palette[i] = info.palette_data_[i];
             }
 
             if (validate_tilemap_texture_size(*this, info.tile_data_length_)) {
