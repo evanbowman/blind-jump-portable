@@ -248,3 +248,39 @@ inline Float distance(const Vec2<Float>& from, const Vec2<Float>& to)
 
 
 enum class Cardinal : u8 { north, south, west, east };
+
+
+inline Float fast_atan_approx(Float x)
+{
+    return 57.2f * // degrees per radian
+               (3.14f / 4) * x -
+           x * (abs(x) - 1) * (0.2447f + 0.0663f * abs(x));
+}
+
+
+#include <algorithm>
+
+// This is really inefficient. Ideally, I'd convert all these numbers to
+// degrees, instead of multipying by 57.2f at the end. I think there's room for
+// improvement here, but math theory has never been one of my strong suits.
+inline Float fast_atan2_approx(Float x, Float y)
+{
+    auto a = std::min(abs(x), abs(y)) / std::max(abs(x), abs(y));
+    auto s = a * a;
+    auto r = ((-0.0464f * s + 0.1593f) * s - 0.3276f) * s * a + a;
+    if (abs(y) > abs(x)) {
+        r = 1.5707f - r;
+    }
+    if (x < 0) {
+        r = 3.1415f - r;
+    }
+    if (y < 0) {
+        r = -r;
+    }
+
+    auto result = 57.2f * r;
+    if (result < 0) {
+        result = 360 + result;
+    }
+    return result;
+}

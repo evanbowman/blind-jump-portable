@@ -173,6 +173,69 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
 }
 
 
+static void show_offscreen_player_icon(Platform& pfrm, Game& game)
+{
+    // Basically, this code draws an imaginary line between the center of the
+    // window, and the coordinate of the offscreen player character. The
+    // intersection point between the edge of the screen and the imaginary line
+    // represents the position to draw the arrow... more or less.
+
+    const auto peer_pos = game.peer()->get_position().cast<int>();
+
+    Sprite arrow_spr;
+    arrow_spr.set_texture_index(119);
+    arrow_spr.set_size(Sprite::Size::w16_h32);
+
+    const auto view_size = pfrm.screen().get_view().get_size().cast<int>();
+
+    const auto view_tl = pfrm.screen().get_view().get_center().cast<int>();
+    const auto view_center = view_tl + view_size.cast<int>() / 2;
+
+    const auto dy = view_center.y - peer_pos.y;
+    const auto dx = view_center.x - peer_pos.x;
+
+    if (dx == 0) {
+        return;
+    }
+
+    const auto slope = Float(dy) / dx;
+
+    if (-view_size.y / 2 <= slope * (view_size.x / 2) and
+        slope * (view_size.x / 2) <= view_size.y / 2) {
+        if (view_center.x < peer_pos.x) {
+            const auto y =
+                clamp(peer_pos.y, view_tl.y, view_tl.y + view_size.y - 32);
+            arrow_spr.set_position(
+                {Float(view_tl.x + view_size.x - 24), Float(y)});
+            // right edge
+            arrow_spr.set_rotation((std::numeric_limits<s16>::max() * 3) / 4);
+        } else {
+            const auto y =
+                clamp(peer_pos.y, view_tl.y, view_tl.y + view_size.y - 32);
+            arrow_spr.set_position({Float(view_tl.x + 8), Float(y)});
+            // left edge
+            arrow_spr.set_rotation((std::numeric_limits<s16>::max() * 1) / 4);
+        }
+    } else if (-view_size.x / 2 <= (view_size.y / 2) / slope and
+               (view_size.y / 2) / slope <= view_size.x / 2) {
+        if (view_center.y < peer_pos.y) {
+            const auto x =
+                clamp(peer_pos.x, view_tl.x, view_tl.x + view_size.x - 32);
+            arrow_spr.set_position(
+                {Float(x), Float(view_tl.y + view_size.y - 32)});
+            arrow_spr.set_rotation(std::numeric_limits<s16>::max() / 2);
+        } else {
+            const auto x =
+                clamp(peer_pos.x, view_tl.x, view_tl.x + view_size.x - 32);
+            arrow_spr.set_position({Float(x), Float(view_tl.y)});
+            arrow_spr.set_rotation(0);
+        }
+    }
+
+    pfrm.screen().draw(arrow_spr);
+}
+
+
 HOT void Game::render(Platform& pfrm)
 {
     Buffer<const Sprite*, Platform::Screen::sprite_limit> display_buffer;
@@ -250,49 +313,7 @@ HOT void Game::render(Platform& pfrm)
     display_buffer.push_back(&player_.get_shadow());
 
     if (peer_player_ and not peer_player_->visible()) {
-        const auto peer_pos = peer_player_->get_position();
-
-        Sprite arrow_spr;
-        arrow_spr.set_texture_index(119);
-        arrow_spr.set_size(Sprite::Size::w16_h32);
-
-        const auto view_size = pfrm.screen().get_view().get_size();
-
-        const auto view_tl = pfrm.screen().get_view().get_center();
-        const auto view_center = view_tl + view_size / 2.f;
-
-        // const auto view_br = view_tl +
-        //     view_size;
-
-        const auto slope =
-            (view_center.y - peer_pos.y) /
-            (view_center.x - peer_pos.x);
-
-        if (-view_size.y / 2 <= slope * (view_size.x / 2) and
-            slope * (view_size.x / 2) <= view_size.y / 2) {
-            if (view_center.x < peer_pos.x) {
-                arrow_spr.set_position({view_tl.x + view_size.x - 32,
-                                        view_tl.y + view_size.y / 2});
-                // right edge
-            } else {
-                arrow_spr.set_position({view_tl.x + 8,
-                                        view_tl.y + view_size.y / 2});
-                // left edge
-            }
-        } else if (-view_size.x / 2 <= (view_size.y / 2) / slope and
-                   (view_size.y / 2) / slope <= view_size.x / 2) {
-            if (view_center.y < peer_pos.y) {
-                arrow_spr.set_position({view_tl.x + view_size.x / 2,
-                                        view_tl.y + view_size.y - 32});
-                // right edge
-            } else {
-                arrow_spr.set_position({view_tl.x + view_size.x / 2,
-                                        view_tl.y + 8});
-                // left edge
-            }
-        }
-
-        pfrm.screen().draw(arrow_spr);
+        show_offscreen_player_icon(pfrm, *this);
     }
 
     for (auto spr : display_buffer) {

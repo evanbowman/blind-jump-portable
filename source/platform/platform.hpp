@@ -709,3 +709,6 @@ inline void error(Platform&, const char*)
 {
 }
 #endif // __BLINDJUMP_ENABLE_LOGS
+
+
+u16 arctangent(u16 y, u16 x);
