@@ -1403,7 +1403,7 @@ ItemRarity rarity(Item::Type item)
         return 2;
 
     case Item::Type::postal_advert:
-        return 2;
+        return 0;
 
     case Item::Type::surveyor_logbook:
         return 3;
