@@ -377,6 +377,55 @@ BossHealthBar::~BossHealthBar()
 }
 
 
+LoadingBar::LoadingBar(Platform& pfrm, u8 width, const OverlayCoord& position)
+    : pfrm_(pfrm), position_(position), width_(width)
+{
+    pfrm_.set_tile(Layer::overlay, position_.x, position_.y, 401);
+    pfrm_.set_tile(Layer::overlay, position_.x + width + 1, position_.y, 411);
+
+    set_progress(0.f);
+}
+
+
+LoadingBar::~LoadingBar()
+{
+    for (int x = 0; x < width_ + 5; ++x) {
+        pfrm_.set_tile(Layer::overlay, position_.x + x, position_.y, 0);
+    }
+}
+
+
+void LoadingBar::set_progress(Float percentage)
+{
+    constexpr int pixels_per_tile = 8;
+    const auto total_pixels = width_ * pixels_per_tile;
+
+    int fractional_pixels = percentage * total_pixels;
+    int current_tile = 0;
+
+    while (fractional_pixels >= 8) {
+        pfrm_.set_tile(
+            Layer::overlay, position_.x + 1 + current_tile, position_.y, 410);
+        fractional_pixels -= 8;
+        ++current_tile;
+    }
+
+    if (current_tile < width_ and fractional_pixels % 8 not_eq 0) {
+        pfrm_.set_tile(Layer::overlay,
+                       position_.x + 1 + current_tile,
+                       position_.y,
+                       402 + fractional_pixels % 8);
+        ++current_tile;
+    }
+
+    while (current_tile < width_) {
+        pfrm_.set_tile(
+            Layer::overlay, position_.x + 1 + current_tile, position_.y, 402);
+        ++current_tile;
+    }
+}
+
+
 Sidebar::Sidebar(Platform& pfrm, u8 width) : pfrm_(pfrm), width_(width)
 {
 }

@@ -5,6 +5,7 @@
 from PIL import Image
 import os
 import sys
+import platform
 
 
 image_dir = None
@@ -62,8 +63,13 @@ def rgb_to_bgr(file_name):
     """
     im = Image.open(image_dir + file_name)
 
-    r, g, b, a = im.split()
-    im = Image.merge('RGBA', (b, g, r, a))
+    os_name = platform.system()
+
+    # For some reason, to be determined, images in linux do not need to be
+    # bgr-swapped as newly-saved images do on my macbook.
+    if os_name != 'Linux':
+        r, g, b, a = im.split()
+        im = Image.merge('RGBA', (b, g, r, a))
 
     im.save('tmp/' + file_name)
 

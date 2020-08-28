@@ -193,7 +193,6 @@ private:
     EnemyGroup enemies_;
     DetailGroup details_;
     EffectGroup effects_;
-    // BossGroup bosses_;
     Transporter transporter_;
     Score score_;
     Inventory inventory_;

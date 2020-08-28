@@ -161,6 +161,20 @@ private:
 };
 
 
+class LoadingBar {
+public:
+    LoadingBar(Platform& pfrm, u8 width, const OverlayCoord& position);
+    LoadingBar(const LoadingBar&) = delete;
+    ~LoadingBar();
+
+    void set_progress(Float percentage);
+private:
+    Platform& pfrm_;
+    OverlayCoord position_;
+    u8 width_;
+};
+
+
 // Swoops in/out from the right side of the screen, based on display percentage.
 class Sidebar {
 public:

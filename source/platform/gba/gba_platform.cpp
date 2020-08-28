@@ -712,7 +712,7 @@ void Platform::Screen::draw(const Sprite& spr)
 }
 
 
-static Buffer<Platform::Task*, 8> task_queue_;
+static Buffer<Platform::Task*, 7> task_queue_;
 
 
 void Platform::push_task(Task* task)

@@ -19,12 +19,25 @@ void NewLevelIdleState::receive(const net_event::NewLevelSyncSeed& sync_seed,
 
         if (matching_syncs_received_ == 0) {
             display_text(pfrm, LocaleString::level_transition_synchronizing);
+
+            auto st = calc_screen_tiles(pfrm);
+
+            loading_bar_.emplace(pfrm, 6, OverlayCoord{u8(-1 + (st.x - 6) / 2),
+                                                       (u8)(st.y / 2 + 2)});
         }
 
         matching_syncs_received_ += 1;
 
         static const int required_matching_syncs = 10;
+
+        if (loading_bar_) {
+            loading_bar_->set_progress(Float(matching_syncs_received_) /
+                                       required_matching_syncs);
+        }
+
         if (matching_syncs_received_ == required_matching_syncs) {
+
+            loading_bar_->set_progress(1.f);
 
             // We're ready, but what if, for some reason, the other peer has one
             // or more fewer matching syncs than we do? In that case, let's spam
@@ -73,6 +86,7 @@ void NewLevelIdleState::enter(Platform& pfrm, Game& game, State& prev_state)
 
 void NewLevelIdleState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    loading_bar_.reset();
     text_.reset();
 }
 

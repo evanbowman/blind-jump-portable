@@ -5,7 +5,7 @@
 const Entity& Enemy::get_target(Game& game)
 {
     if (not is_allied_) {
-        if (game.peer()) {
+        if (game.peer() and not game.peer()->warping()) {
             if (manhattan_length(position_, game.player().get_position()) >
                 manhattan_length(position_, game.peer()->get_position())) {
 

@@ -994,6 +994,7 @@ private:
     int matching_syncs_received_ = 0;
     bool ready_ = false;
     std::optional<Text> text_;
+    std::optional<LoadingBar> loading_bar_;
 };
 
 
