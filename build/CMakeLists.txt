@@ -92,6 +92,39 @@ set(SOURCES
   ${SOURCE_DIR}/conf.cpp)
 
 
+set(SOURCES
+  ${SOURCES}
+  ${SOURCE_DIR}/state/quickSelectInventoryState.cpp
+  ${SOURCE_DIR}/state/networkConnectSetupState.cpp
+  ${SOURCE_DIR}/state/networkConnectWaitState.cpp
+  ${SOURCE_DIR}/state/bossDeathSequenceState.cpp
+  ${SOURCE_DIR}/state/launchCutsceneState.cpp
+  ${SOURCE_DIR}/state/deathContinueState.cpp
+  ${SOURCE_DIR}/state/endingCreditsState.cpp
+  ${SOURCE_DIR}/state/logfileViewerState.cpp
+  ${SOURCE_DIR}/state/preFadePauseState.cpp
+  ${SOURCE_DIR}/state/introCreditsState.cpp
+  ${SOURCE_DIR}/state/editSettingsState.cpp
+  ${SOURCE_DIR}/state/newLevelIdleState.cpp
+  ${SOURCE_DIR}/state/signalJammerState.cpp
+  ${SOURCE_DIR}/state/respawnWaitState.cpp
+  ${SOURCE_DIR}/state/commandCodeState.cpp
+  ${SOURCE_DIR}/state/pauseScreenState.cpp
+  ${SOURCE_DIR}/state/imageViewState.cpp
+  ${SOURCE_DIR}/state/inventoryState.cpp
+  ${SOURCE_DIR}/state/overworldState.cpp
+  ${SOURCE_DIR}/state/mapSystemState.cpp
+  ${SOURCE_DIR}/state/deathFadeState.cpp
+  ${SOURCE_DIR}/state/newLevelState.cpp
+  ${SOURCE_DIR}/state/quickMapState.cpp
+  ${SOURCE_DIR}/state/notebookState.cpp
+  ${SOURCE_DIR}/state/glowFadeState.cpp
+  ${SOURCE_DIR}/state/fadeOutState.cpp
+  ${SOURCE_DIR}/state/goodbyeState.cpp
+  ${SOURCE_DIR}/state/activeState.cpp
+  ${SOURCE_DIR}/state/fadeInState.cpp
+  ${SOURCE_DIR}/state/warpInState.cpp)
+
 
 if(GAMEBOY_ADVANCE)
   set(CONF_INI "${SOURCE_DIR}/../config.ini")

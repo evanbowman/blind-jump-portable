@@ -8,7 +8,7 @@ int InventoryState::page_{0};
 Vec2<u8> InventoryState::selector_coord_{0, 0};
 
 
-static void consume_selected_item(Game& game)
+void consume_selected_item(Game& game)
 {
     game.inventory().remove_item(InventoryState::page_,
                                  InventoryState::selector_coord_.x,

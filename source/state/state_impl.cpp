@@ -222,39 +222,6 @@ StatePoolInst& state_pool()
 }
 
 
-// FIXME!!! This does decrease the size of the compiled ROM though...
-#include "activeState.cpp"
-#include "bossDeathSequenceState.cpp"
-#include "commandCodeState.cpp"
-#include "deathContinueState.cpp"
-#include "deathFadeState.cpp"
-#include "editSettingsState.cpp"
-#include "endingCreditsState.cpp"
-#include "fadeInState.cpp"
-#include "fadeOutState.cpp"
-#include "glowFadeState.cpp"
-#include "goodbyeState.cpp"
-#include "imageViewState.cpp"
-#include "introCreditsState.cpp"
-#include "inventoryState.cpp"
-#include "launchCutsceneState.cpp"
-#include "logfileViewerState.cpp"
-#include "mapSystemState.cpp"
-#include "networkConnectSetupState.cpp"
-#include "networkConnectWaitState.cpp"
-#include "newLevelIdleState.cpp"
-#include "newLevelState.cpp"
-#include "notebookState.cpp"
-#include "overworldState.cpp"
-#include "pauseScreenState.cpp"
-#include "preFadePauseState.cpp"
-#include "quickMapState.cpp"
-#include "quickSelectInventoryState.cpp"
-#include "respawnWaitState.cpp"
-#include "signalJammerState.cpp"
-#include "warpInState.cpp"
-
-
 constexpr int item_icon(Item::Type item)
 {
     int icon_base = 177;

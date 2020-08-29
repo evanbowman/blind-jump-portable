@@ -1153,6 +1153,9 @@ struct InventoryItemHandler {
 const InventoryItemHandler* inventory_item_handler(Item::Type type);
 
 
+void consume_selected_item(Game& game);
+
+
 static constexpr auto inventory_key = Key::select;
 static constexpr auto quick_select_inventory_key = Key::alt_2;
 static constexpr auto quick_map_key = Key::alt_1;
