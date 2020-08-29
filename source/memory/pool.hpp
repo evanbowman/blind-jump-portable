@@ -6,13 +6,13 @@
 
 
 template <u32 size, u32 count, u32 align = size> class Pool {
-private:
+public:
     struct Cell {
         alignas(align) std::array<byte, size> mem_;
         Cell* next_;
     };
 
-public:
+
     Pool() : freelist_(nullptr)
     {
         for (decltype(count) i = 0; i < count; ++i) {
@@ -52,8 +52,14 @@ public:
         return align;
     }
 
+    using Memory = std::array<Cell, count>;
+    Memory& memory()
+    {
+        return cells_;
+    }
+
 private:
-    std::array<Cell, count> cells_;
+    Memory cells_;
     Cell* freelist_;
 };
 
