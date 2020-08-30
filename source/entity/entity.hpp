@@ -96,13 +96,13 @@ public:
     {
     }
 
+    void set_position(const Vec2<Float>& position);
+
 protected:
     void debit_health(Health amount = 1)
     {
         health_ = std::max(Health(0), health_ - amount);
     }
-
-    void set_position(const Vec2<Float>& position);
 
     void kill()
     {

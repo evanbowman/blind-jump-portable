@@ -167,6 +167,33 @@ static Platform* interp_get_pfrm()
 }
 
 
+static Entity* get_entity_by_id(Game& game, Entity::Id id)
+{
+    if (id == game.player().id()) {
+        return &game.player();
+    }
+    if (id == game.transporter().id()) {
+        return &game.transporter();
+    }
+
+    Entity* result = nullptr;
+
+    auto match_id = [&](auto& buf) {
+        for (auto& entity : buf) {
+            if (entity->id() == id) {
+                result = entity.get();
+            }
+        }
+    };
+
+    game.effects().transform(match_id);
+    game.details().transform(match_id);
+    game.enemies().transform(match_id);
+
+    return result;
+}
+
+
 void Game::init_script(Platform& pfrm)
 {
     lisp::init(pfrm);
@@ -198,6 +225,42 @@ void Game::init_script(Platform& pfrm)
         }
 
         return L_NIL;
+    }));
+
+    lisp::set_var("set-hp", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(0, integer);
+        L_EXPECT_OP(1, integer);
+
+        auto game = interp_get_game();
+        if (not game) {
+            return L_NIL;
+        }
+
+        auto entity = get_entity_by_id(*game, lisp::get_op(1)->integer_.value_);
+        if (entity) {
+            entity->set_health(lisp::get_op(0)->integer_.value_);
+        }
+
+        return L_NIL;
+    }));
+
+    lisp::set_var("get-pos", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, integer);
+
+        auto game = interp_get_game();
+        if (not game) {
+            return L_NIL;
+        }
+
+        auto entity = get_entity_by_id(*game, lisp::get_op(0)->integer_.value_);
+        if (not entity) {
+            return L_NIL;
+        }
+
+        return lisp::make_cons(lisp::make_integer(entity->get_position().x),
+                               lisp::make_integer(entity->get_position().y));
     }));
 }
 
