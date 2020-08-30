@@ -52,8 +52,8 @@ public:
         return align;
     }
 
-    using Memory = std::array<Cell, count>;
-    Memory& memory()
+    using Cells = std::array<Cell, count>;
+    Cells& cells()
     {
         return cells_;
     }
@@ -75,7 +75,7 @@ public:
     }
 
 private:
-    Memory cells_;
+    Cells cells_;
     Cell* freelist_;
 };
 
@@ -107,6 +107,16 @@ public:
     bool empty() const
     {
         return pool_.empty();
+    }
+
+    template <typename F>
+    void scan_cells(F&& callback)
+    {
+        auto& mem = pool_.cells();
+        for (auto& cell : mem) {
+            T* obj = reinterpret_cast<T*>(cell.mem_.data());
+            callback(obj);
+        }
     }
 
 private:

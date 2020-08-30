@@ -7,29 +7,25 @@
 void english__to_string(int num, char* buffer, int base);
 
 
-// TODO: GARBAGE COLLECTION!
-//
-// Each object already contains a mark bit. We will need to trace the global
-// variable table and the operand stack, and deal with all of the gc
-// roots. Then, we'll need to scan through the raw slab of memory allocated
-// toward each memory pool used for lisp::Value instances (not the
-// freelist!). For any cell in the pool with an unset mark bit, we'll add that
-// node back to the pool.
-
-
 namespace lisp {
 
 
 #define NIL L_NIL
 
 
-Value nil { lisp::Value::Type::nil, true };
+Value nil { lisp::Value::Type::nil, true, true };
+
+
+static Value oom { lisp::Value::Type::error, true, true };
 
 
 struct Variable {
     const char* name_ = "";
     Value* value_ = NIL;
 };
+
+
+static void run_gc();
 
 
 static const u32 string_intern_table_size = 1000;
@@ -117,11 +113,27 @@ static const char* intern(const char* string)
 
 static Value* alloc_value()
 {
+    auto init_val = [](Value* val) {
+        val->mark_bit_ = false;
+        val->alive_ = true;
+        return val;
+    };
+
     for (auto& pl : bound_context->value_pools_) {
         if (not pl.obj_->empty()) {
-            return pl.obj_->get();
+            return init_val(pl.obj_->get());
         }
     }
+
+    run_gc();
+
+    // Hopefully, we've freed up enough memory...
+    for (auto& pl : bound_context->value_pools_) {
+        if (not pl.obj_->empty()) {
+            return init_val(pl.obj_->get());
+        }
+    }
+
     return nullptr;
 }
 
@@ -130,11 +142,10 @@ Value* make_function(Function::Impl impl)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::function;
-        val->mark_bit_ = false;
         val->function_.impl_ = impl;
         return val;
     }
-    return NIL;
+    return &oom;
 }
 
 
@@ -142,12 +153,11 @@ Value* make_cons(Value* car, Value* cdr)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::cons;
-        val->mark_bit_ = false;
         val->cons_.car_ = car;
         val->cons_.cdr_ = cdr;
         return val;
     }
-    return NIL;
+    return &oom;
 }
 
 
@@ -155,11 +165,10 @@ Value* make_integer(s32 value)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::integer;
-        val->mark_bit_ = false;
         val->integer_.value_ = value;
         return val;
     }
-    return NIL;
+    return &oom;
 }
 
 
@@ -181,11 +190,10 @@ Value* make_error(Error::Code error_code)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::error;
-        val->mark_bit_ = false;
         val->error_.code_ = error_code;
         return val;
     }
-    return NIL;
+    return &oom;
 }
 
 
@@ -193,11 +201,10 @@ Value* make_symbol(const char* name)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::symbol;
-        val->mark_bit_ = false;
         val->symbol_.name_ = intern(name);
         return val;
     }
-    return NIL;
+    return &oom;
 }
 
 
@@ -205,11 +212,10 @@ Value* make_userdata(void* obj)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::user_data;
-        val->mark_bit_ = false;
         val->user_data_.obj_ = obj;
         return val;
     }
-    return NIL;
+    return &oom;
 }
 
 
@@ -330,85 +336,6 @@ Value* get_var(const char* name)
     }
 
     return make_error(Error::Code::undefined_variable_access);
-}
-
-
-void init(Platform& pfrm)
-{
-    bound_context.emplace(pfrm);
-
-    set_var("cons", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        return make_cons(get_op(1), get_op(0));
-    }));
-
-    set_var("car", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, cons);
-        return get_op(0)->cons_.car_;
-    }));
-
-    set_var("cdr", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, cons);
-        return get_op(0)->cons_.cdr_;
-    }));
-
-    set_var("list", make_function([](int argc) {
-        auto lat = make_list(argc);
-        for (int i = 0; i < argc; ++i) {
-            set_list(lat, i, get_op((argc - 1) - i));
-        }
-        return lat;
-    }));
-
-    set_var("+", make_function([](int argc) {
-        int accum = 0;
-        for (int i = 0; i < argc; ++i) {
-            L_EXPECT_OP(i, integer);
-            accum += get_op(i)->integer_.value_;
-        }
-        return make_integer(accum);
-    }));
-
-    set_var("-", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(1, integer);
-        L_EXPECT_OP(0, integer);
-        return make_integer(get_op(1)->integer_.value_ -
-                            get_op(0)->integer_.value_);
-    }));
-
-    set_var("*", make_function([](int argc) {
-        int accum = 1;
-        for (int i = 0; i < argc; ++i) {
-            L_EXPECT_OP(i, integer);
-            accum *= get_op(i)->integer_.value_;
-        }
-        return make_integer(accum);
-    }));
-
-    set_var("/", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(1, integer);
-        L_EXPECT_OP(0, integer);
-        return make_integer(get_op(1)->integer_.value_ /
-                            get_op(0)->integer_.value_);
-    }));
-
-    set_var("interp-stat", make_function([](int argc) {
-        auto lat = make_list(3);
-        auto& ctx = bound_context;
-        int values_remaining = 0;
-        for (auto& pl : ctx->value_pools_) {
-            values_remaining += pl.obj_->remaining();
-        }
-        set_list(lat, 0, make_integer(values_remaining));
-        set_list(lat, 1, make_integer(ctx->string_intern_pos_));
-        set_list(lat, 2, make_integer(ctx->operand_stack_.obj_->size()));
-
-        return lat;
-    }));
 }
 
 
@@ -662,6 +589,168 @@ StringBuffer<28> format(Value* value)
     StringBuffer<28> result;
     format_impl(value, result);
     return result;
+}
+
+
+// Garbage Collection:
+//
+// Each object already contains a mark bit. We will need to trace the global
+// variable table and the operand stack, and deal with all of the gc
+// roots. Then, we'll need to scan through the raw slab of memory allocated
+// toward each memory pool used for lisp::Value instances (not the
+// freelist!). For any cell in the pool with an unset mark bit, we'll add that
+// node back to the pool.
+
+
+static void gc_mark_value(Value* value)
+{
+    switch (value->type_) {
+    case Value::Type::cons:
+        // FIXME: Avoid recursion!
+        gc_mark_value(value->cons_.car_);
+        gc_mark_value(value->cons_.cdr_);
+        break;
+
+    default:
+        break;
+    }
+
+    value->mark_bit_ = true;
+}
+
+
+static void gc_mark()
+{
+    auto& ctx = bound_context;
+
+    for (auto elem : *ctx->operand_stack_.obj_) {
+        gc_mark_value(elem);
+    }
+
+    for (auto& var : *ctx->globals_.obj_) {
+        gc_mark_value(var.value_);
+    }
+}
+
+
+static void gc_sweep()
+{
+    for (auto& pl : bound_context->value_pools_) {
+        pl.obj_->scan_cells([&pl](Value* val) {
+            if (val->alive_) {
+                if (val->mark_bit_) {
+                    val->mark_bit_ = false;
+                } else {
+                    // This value should be unreachable, let's collect it.
+                    val->alive_ = false;
+                    pl.obj_->post(val);
+                }
+            }
+        });
+    }
+}
+
+
+static void run_gc()
+{
+    gc_mark();
+    gc_sweep();
+}
+
+
+void init(Platform& pfrm)
+{
+    oom.error_.code_ = Error::Code::out_of_memory;
+
+    bound_context.emplace(pfrm);
+
+    // We cannot be sure that the memory will be zero-initialized, so make sure
+    // that all of the alive bits in the value pool entries are zero. This needs
+    // to be done at least once, otherwise, gc will not work correctly.
+    for (auto& pl : bound_context->value_pools_) {
+        pl.obj_->scan_cells([&pl](Value* val) {
+            val->alive_ = false;
+            val->mark_bit_ = false;
+        });
+    }
+
+    set_var("cons", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        return make_cons(get_op(1), get_op(0));
+    }));
+
+    set_var("car", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, cons);
+        return get_op(0)->cons_.car_;
+    }));
+
+    set_var("cdr", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, cons);
+        return get_op(0)->cons_.cdr_;
+    }));
+
+    set_var("list", make_function([](int argc) {
+        auto lat = make_list(argc);
+        for (int i = 0; i < argc; ++i) {
+            set_list(lat, i, get_op((argc - 1) - i));
+        }
+        return lat;
+    }));
+
+    set_var("+", make_function([](int argc) {
+        int accum = 0;
+        for (int i = 0; i < argc; ++i) {
+            L_EXPECT_OP(i, integer);
+            accum += get_op(i)->integer_.value_;
+        }
+        return make_integer(accum);
+    }));
+
+    set_var("-", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(1, integer);
+        L_EXPECT_OP(0, integer);
+        return make_integer(get_op(1)->integer_.value_ -
+                            get_op(0)->integer_.value_);
+    }));
+
+    set_var("*", make_function([](int argc) {
+        int accum = 1;
+        for (int i = 0; i < argc; ++i) {
+            L_EXPECT_OP(i, integer);
+            accum *= get_op(i)->integer_.value_;
+        }
+        return make_integer(accum);
+    }));
+
+    set_var("/", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(1, integer);
+        L_EXPECT_OP(0, integer);
+        return make_integer(get_op(1)->integer_.value_ /
+                            get_op(0)->integer_.value_);
+    }));
+
+    set_var("interp-stat", make_function([](int argc) {
+        auto lat = make_list(3);
+        auto& ctx = bound_context;
+        int values_remaining = 0;
+        for (auto& pl : ctx->value_pools_) {
+            values_remaining += pl.obj_->remaining();
+        }
+        set_list(lat, 0, make_integer(values_remaining));
+        set_list(lat, 1, make_integer(ctx->string_intern_pos_));
+        set_list(lat, 2, make_integer(ctx->operand_stack_.obj_->size()));
+
+        return lat;
+    }));
+
+    set_var("gc", make_function([](int argc) {
+        run_gc();
+        return NIL;
+    }));
 }
 
 

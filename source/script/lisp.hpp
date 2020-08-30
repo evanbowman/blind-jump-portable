@@ -46,6 +46,7 @@ struct Error {
         symbol_table_exhausted,
         undefined_variable_access,
         invalid_argument_type,
+        out_of_memory,
     } code_;
 
     static const char* get_string(Code c)
@@ -56,6 +57,7 @@ struct Error {
         case Code::symbol_table_exhausted: return "No more room in symbol table";
         case Code::undefined_variable_access: return "Access to undefined variable";
         case Code::invalid_argument_type: return "Invalid argument type";
+        case Code::out_of_memory: return "Out of memory";
         }
         return "Unknown error";
     }
@@ -70,8 +72,9 @@ struct UserData {
 struct Value {
     enum class Type : u8 {
         nil, integer, cons, function, error, symbol, user_data,
-    } type_ : 7;
+    } type_ : 6;
 
+    bool alive_ : 1;
     bool mark_bit_ : 1;
 
     union {
