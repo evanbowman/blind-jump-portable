@@ -32,9 +32,32 @@ struct Function {
 };
 
 
+struct Error {
+    enum class Code {
+        value_not_callable,
+        too_few_arguments,
+        symbol_table_exhausted,
+        undefined_variable_access,
+        invalid_argument_type,
+    } code_;
+
+    static const char* get_string(Code c)
+    {
+        switch (c) {
+        case Code::value_not_callable: return "Value not callable";
+        case Code::too_few_arguments: return "Too few arguments for function";
+        case Code::symbol_table_exhausted: return "No more room in symbol table";
+        case Code::undefined_variable_access: return "Access to undefined variable";
+        case Code::invalid_argument_type: return "Invalid argument type";
+        }
+        return "Unknown error";
+    }
+};
+
+
 struct Value {
     enum class Type : u8 {
-        nil, integer, cons, function
+        nil, integer, cons, function, error
     } type_ : 7;
 
     bool mark_bit_ : 1;
@@ -43,6 +66,7 @@ struct Value {
         Integer integer_;
         Cons cons_;
         Function function_;
+        Error error_;
     };
 };
 
@@ -55,6 +79,7 @@ Value* make_function(u8 argc, Function::Impl impl);
 Value* make_cons(Value* car, Value* cdr);
 Value* make_integer(s32 value);
 Value* make_list(u32 length);
+Value* make_error(Error::Code error_code);
 
 
 void set_list(Value* list, u32 position, Value* value);
@@ -78,7 +103,7 @@ void funcall(Value* obj);
 
 // For named variables. Currently, the interpreter does not support function
 // definitions in lisp yet, so all variables are globally scoped.
-void set_var(const char* name, Value* value);
+Value* set_var(const char* name, Value* value);
 Value* get_var(const char* name);
 
 

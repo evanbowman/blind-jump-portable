@@ -58,6 +58,17 @@ public:
         return cells_;
     }
 
+    u32 remaining() const
+    {
+        const Cell* current = freelist_;
+        int n = 0;
+        while (current) {
+            current = current->next_;
+            ++n;
+        }
+        return n;
+    }
+
 private:
     Memory cells_;
     Cell* freelist_;
@@ -81,6 +92,11 @@ public:
     {
         obj->~T();
         pool_.post((byte*)obj);
+    }
+
+    u32 remaining() const
+    {
+        return pool_.remaining();
     }
 
 private:

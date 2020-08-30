@@ -42,7 +42,7 @@ namespace lisp {
 #define NIL L_NIL
 
 
-Value nil { lisp::Value::Type::nil };
+Value nil { lisp::Value::Type::nil, true };
 
 
 struct Variable {
@@ -52,7 +52,7 @@ struct Variable {
 
 
 struct Context {
-    ObjectPool<Value, 32> memory_;
+    ObjectPool<Value, 128> memory_;
     Buffer<Value*, 64> operand_stack_;
     Variable globals_[64];
 } __context;
@@ -107,6 +107,18 @@ Value* make_list(u32 length)
         head = cell;
     }
     return head;
+}
+
+
+Value* make_error(Error::Code error_code)
+{
+    if (auto val = bound_context->memory_.get()) {
+        val->type_ = Value::Type::error;
+        val->mark_bit_ = false;
+        val->error_.code_ = error_code;
+        return val;
+    }
+    return NIL;
 }
 
 
@@ -174,8 +186,15 @@ Value* get_op(u32 offset)
 
 
 #define EXPECT_OP(OFFSET, TYPE)                                           \
-    if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE)  \
-        while (true) ;
+    if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) { \
+        if (lisp::get_op((OFFSET)) == L_NIL) { \
+            return lisp::get_op((OFFSET)); \
+        } else { \
+            return lisp::make_error(lisp::Error::Code::invalid_argument_type); \
+        } \
+    }
+
+
 
 
 // The function arguments should be sitting at the top of the operand stack
@@ -184,15 +203,13 @@ Value* get_op(u32 offset)
 void funcall(Value* obj)
 {
     if (obj->type_ not_eq Value::Type::function) {
-        std::cout << "obj not callable" << std::endl;
-        while (true) ;
-        return; // TODO: raise error
+        push_op(make_error(Error::Code::value_not_callable));
+        return;
     }
 
     if (bound_context->operand_stack_.size() < obj->function_.argc_) {
-        std::cout << "too few arguments" << std::endl;
-        while (true) ;
-        return; // TODO: raise error
+        push_op(make_error(Error::Code::too_few_arguments));
+        return;
     }
 
     auto result = obj->function_.impl_();
@@ -204,13 +221,13 @@ void funcall(Value* obj)
 }
 
 
-void set_var(const char* name, Value* value)
+Value* set_var(const char* name, Value* value)
 {
     for (auto& var : bound_context->globals_) {
         if (strcmp(name, var.name_) == 0) {
             var.name_ = name;
             var.value_ = value;
-            return;
+            return NIL;
         }
     }
 
@@ -218,13 +235,11 @@ void set_var(const char* name, Value* value)
         if (strcmp(var.name_, "") == 0) {
             var.name_ = name;
             var.value_ = value;
-            return;
+            return NIL;
         }
     }
 
-    // TODO: raise error: variable table exhausted
-    std::cout << "variable table exhausted" << std::endl;
-    while (true) ;
+    return make_error(Error::Code::symbol_table_exhausted);
 }
 
 
@@ -236,7 +251,7 @@ Value* get_var(const char* name)
         }
     }
 
-    return NIL;
+    return make_error(Error::Code::undefined_variable_access);
 }
 
 
@@ -292,6 +307,41 @@ static bool is_whitespace(char c)
 }
 
 
+// static u32 eval_set(const char* expr, u32 len)
+// {
+//     std::cout << "here" << std::endl;
+//     // (set <NAME> <VALUE>)
+
+//     static const u32 max_var_name = 31;
+//     char variable_name[max_var_name];
+
+//     int i = 0;
+
+//     // parse name
+//     while (is_whitespace(expr[i])) {
+//         ++i;
+//     }
+
+//     int start = i;
+//     while (i < len and i < max_var_name and not is_whitespace(expr[i])) {
+//         variable_name[i - start] = expr[i];
+//         ++i;
+//     }
+//     variable_name[i - start] = '\0';
+
+//     while (is_whitespace(expr[i])) {
+//         ++i;
+//     }
+
+//     // parse value
+//     i += eval(expr + i);
+
+//     set_var(variable_name, get_op(0));
+
+//     return i;
+// }
+
+
 static u32 eval_expr(const char* expr, u32 len)
 {
     int i = 0;
@@ -312,6 +362,11 @@ static u32 eval_expr(const char* expr, u32 len)
         fn_name[i - start] = '\0';
         break;
     }
+
+    // FIXME: This code doesn't work correctly yet...
+    // if (strcmp("set", fn_name) == 0) {
+    //     return eval_set(expr + i, len - i) + 2;
+    // }
 
     while (expr[i] not_eq ')') {
         while (is_whitespace(expr[i])) {
@@ -380,9 +435,15 @@ static u32 eval_variable(const char* code, u32 len)
         if (is_whitespace(code[i]) or code[i] == ')') {
             variable_name[i] = '\0';
             if (strcmp(variable_name, "nil") == 0) {
-                lisp::push_op(NIL);
+                push_op(NIL);
             } else {
-                lisp::push_op(lisp::get_var(variable_name));
+                std::cout << variable_name << std::endl;
+                auto var = lisp::get_var(variable_name);
+                if (var == L_NIL) {
+                    push_op(make_error(Error::Code::undefined_variable_access));
+                } else {
+                    push_op(var);
+                }
             }
             return i;
         } else {
@@ -451,6 +512,12 @@ void print_impl(lisp::Value* value)
     case lisp::Value::Type::function:
         std::cout << "fn<" << (int)value->function_.argc_ << '>';
         break;
+
+    case lisp::Value::Type::error:
+        std::cout << "ERROR: "
+                  << lisp::Error::get_string(value->error_.code_)
+                  << std::endl;
+        break;
     }
 }
 
@@ -462,7 +529,7 @@ void print(lisp::Value* value)
 }
 
 
-static void function_test()
+static lisp::Value* function_test()
 {
     using namespace lisp;
 
@@ -479,21 +546,23 @@ static void function_test()
 
     if (get_op(0)->integer_.value_ not_eq 48 * 2) {
         std::cout << "funcall test result check failed!" << std::endl;
-        return;
+        return L_NIL;
     }
 
     if (bound_context->operand_stack_.size() not_eq 1) {
         std::cout << "operand stack size check failed!" << std::endl;
-        return;
+        return L_NIL;
     }
 
     bound_context->operand_stack_.pop_back();
 
     std::cout << "funcall test passed!" << std::endl;
+
+    return L_NIL;
 }
 
 
-static void arithmetic_test()
+static lisp::Value* arithmetic_test()
 {
     using namespace lisp;
 
@@ -505,10 +574,12 @@ static void arithmetic_test()
 
     if (get_op(0)->integer_.value_ not_eq 48 - 96) {
         std::cout << "bad arithmetic!" << std::endl;
-        return;
+        return L_NIL;;
     }
 
     std::cout << "arithmetic test passed!" << std::endl;
+
+    return L_NIL;
 }
 
 
@@ -551,6 +622,11 @@ int main(int argc, char** argv)
         lisp::eval(line.c_str());
         print(lisp::get_op(0));
         lisp::pop_op();
+        std::cout << "stack size: "
+                  << lisp::bound_context->operand_stack_.size()
+                  << ", object pool: "
+                  << lisp::bound_context->memory_.remaining()
+                  << std::endl;
         std::cout << ">> ";
     }
 }
