@@ -61,13 +61,12 @@ struct Context {
 Context* bound_context = &__context;
 
 
-Value* make_function(u8 argc, Function::Impl impl)
+Value* make_function(Function::Impl impl)
 {
     if (auto val = bound_context->memory_.get()) {
         val->type_ = Value::Type::function;
         val->mark_bit_ = false;
         val->function_.impl_ = impl;
-        val->function_.argc_ = argc;
         return val;
     }
     return NIL;
@@ -195,25 +194,27 @@ Value* get_op(u32 offset)
     }
 
 
+#define EXPECT_ARGC(ARGC, EXPECTED) if (ARGC not_eq EXPECTED) \
+        return lisp::make_error(lisp::Error::Code::invalid_argc);
 
 
 // The function arguments should be sitting at the top of the operand stack
 // prior to calling funcall. The arguments will be consumed, and replaced with
 // the result of the function call.
-void funcall(Value* obj)
+void funcall(Value* obj, u8 argc)
 {
     if (obj->type_ not_eq Value::Type::function) {
         push_op(make_error(Error::Code::value_not_callable));
         return;
     }
 
-    if (bound_context->operand_stack_.size() < obj->function_.argc_) {
-        push_op(make_error(Error::Code::too_few_arguments));
+    if (bound_context->operand_stack_.size() < argc) {
+        push_op(make_error(Error::Code::invalid_argc));
         return;
     }
 
-    auto result = obj->function_.impl_();
-    for (int i = 0; i < obj->function_.argc_; ++i) {
+    auto result = obj->function_.impl_(argc);
+    for (int i = 0; i < argc; ++i) {
         bound_context->operand_stack_.pop_back();
     }
 
@@ -257,42 +258,51 @@ Value* get_var(const char* name)
 
 void init()
 {
-    set_var("cons", make_function(2, [] {
+    set_var("cons", make_function([](int argc) {
+        EXPECT_ARGC(argc, 2);
         return make_cons(get_op(1), get_op(0));
     }));
 
-    set_var("car", make_function(1, [] {
+    set_var("car", make_function([](int argc) {
+        EXPECT_ARGC(argc, 1);
         EXPECT_OP(0, cons);
         return get_op(0)->cons_.car_;
     }));
 
-    set_var("cdr", make_function(1, [] {
+    set_var("cdr", make_function([](int argc) {
+        EXPECT_ARGC(argc, 1);
         EXPECT_OP(0, cons);
         return get_op(0)->cons_.cdr_;
     }));
 
-    set_var("+", make_function(2, [] {
-        EXPECT_OP(1, integer);
-        EXPECT_OP(0, integer);
-        return make_integer(get_op(1)->integer_.value_ +
-                            get_op(0)->integer_.value_);
+    set_var("+", make_function([](int argc) {
+        int accum = 0;
+        for (int i = 0; i < argc; ++i) {
+            EXPECT_OP(i, integer);
+            accum += get_op(i)->integer_.value_;
+        }
+        return make_integer(accum);
     }));
 
-    set_var("-", make_function(2, [] {
+    set_var("-", make_function([](int argc) {
+        EXPECT_ARGC(argc, 2);
         EXPECT_OP(1, integer);
         EXPECT_OP(0, integer);
         return make_integer(get_op(1)->integer_.value_ -
                             get_op(0)->integer_.value_);
     }));
 
-    set_var("*", make_function(2, [] {
-        EXPECT_OP(1, integer);
-        EXPECT_OP(0, integer);
-        return make_integer(get_op(1)->integer_.value_ *
-                            get_op(0)->integer_.value_);
+    set_var("*", make_function([](int argc) {
+        int accum = 1;
+        for (int i = 0; i < argc; ++i) {
+            EXPECT_OP(i, integer);
+            accum *= get_op(i)->integer_.value_;
+        }
+        return make_integer(accum);
     }));
 
-    set_var("/", make_function(2, [] {
+    set_var("/", make_function([](int argc) {
+        EXPECT_ARGC(argc, 2);
         EXPECT_OP(1, integer);
         EXPECT_OP(0, integer);
         return make_integer(get_op(1)->integer_.value_ /
@@ -368,12 +378,16 @@ static u32 eval_expr(const char* expr, u32 len)
     //     return eval_set(expr + i, len - i) + 2;
     // }
 
+    int param_count = 0;
+
     while (expr[i] not_eq ')') {
         while (is_whitespace(expr[i])) {
             ++i;
         }
 
         i += eval(expr + i);
+
+        ++param_count;
 
         while (is_whitespace(expr[i])) {
             ++i;
@@ -387,7 +401,7 @@ static u32 eval_expr(const char* expr, u32 len)
         while (true) ;
     }
 
-    funcall(fn);
+    funcall(fn, param_count);
 
     return i;
 }
@@ -510,7 +524,7 @@ void print_impl(lisp::Value* value)
         break;
 
     case lisp::Value::Type::function:
-        std::cout << "fn<" << (int)value->function_.argc_ << '>';
+        std::cout << "lambda:" << value->function_.impl_ << '>';
         break;
 
     case lisp::Value::Type::error:
@@ -533,14 +547,15 @@ static lisp::Value* function_test()
 {
     using namespace lisp;
 
-    set_var("double", make_function(1, []() {
+    set_var("double", make_function([](int argc) {
+        EXPECT_ARGC(argc, 1);
         EXPECT_OP(0, integer);
 
         return make_integer(get_op(0)->integer_.value_ * 2);
     }));
 
     push_op(make_integer(48));
-    funcall(get_var("double"));
+    funcall(get_var("double"), 1);
 
     EXPECT_OP(0, integer);
 
@@ -568,7 +583,7 @@ static lisp::Value* arithmetic_test()
 
     push_op(make_integer(48));
     push_op(make_integer(96));
-    funcall(get_var("-"));
+    funcall(get_var("-"), 2);
 
     EXPECT_OP(0, integer);
 

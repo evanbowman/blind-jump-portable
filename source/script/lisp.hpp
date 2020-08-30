@@ -25,17 +25,16 @@ struct Cons {
 
 
 struct Function {
-    using Impl = Value*(*)(void);
+    using Impl = Value*(*)(int);
 
     Impl impl_;
-    u8 argc_;
 };
 
 
 struct Error {
     enum class Code {
         value_not_callable,
-        too_few_arguments,
+        invalid_argc,
         symbol_table_exhausted,
         undefined_variable_access,
         invalid_argument_type,
@@ -45,7 +44,7 @@ struct Error {
     {
         switch (c) {
         case Code::value_not_callable: return "Value not callable";
-        case Code::too_few_arguments: return "Too few arguments for function";
+        case Code::invalid_argc: return "Wrong number of arguments passed to function";
         case Code::symbol_table_exhausted: return "No more room in symbol table";
         case Code::undefined_variable_access: return "Access to undefined variable";
         case Code::invalid_argument_type: return "Invalid argument type";
@@ -75,7 +74,7 @@ extern Value nil;
 #define L_NIL &lisp::nil
 
 
-Value* make_function(u8 argc, Function::Impl impl);
+Value* make_function(Function::Impl impl);
 Value* make_cons(Value* car, Value* cdr);
 Value* make_integer(s32 value);
 Value* make_list(u32 length);
@@ -98,7 +97,10 @@ void pop_op();
 // of the operand stack. i.e., use get_op(0) to read the result. Remember to
 // call pop_op() when you are done with the result, otherwise, the result will
 // remain on the operand stack, and possibly break the interpreter.
-void funcall(Value* obj);
+//
+// You also need to indicate, in the argc parameter, the number of arguments
+// that you pushed onto the operand stack.
+void funcall(Value* fn, u8 argc);
 
 
 // For named variables. Currently, the interpreter does not support function
