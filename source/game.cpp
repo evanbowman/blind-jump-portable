@@ -262,6 +262,49 @@ void Game::init_script(Platform& pfrm)
         return lisp::make_cons(lisp::make_integer(entity->get_position().x),
                                lisp::make_integer(entity->get_position().y));
     }));
+
+    lisp::set_var("enemies", lisp::make_function([](int argc) {
+        auto game = interp_get_game();
+        if (not game) {
+            return L_NIL;
+        }
+
+        lisp::Value* lat = L_NIL;
+
+        game->enemies().transform([&](auto& buf) {
+            for (auto& enemy : buf) {
+                lisp::push_op(lat); // To keep it from being collected
+                lat = lisp::make_cons(L_NIL, lat);
+                lisp::pop_op(); // lat
+
+                lisp::push_op(lat);
+                lat->cons_.car_ = lisp::make_integer(enemy->id());
+                lisp::pop_op(); // lat
+            }
+        });
+
+        return lat;
+    }));
+
+    lisp::set_var("log-severity", lisp::make_function([](int argc) {
+        auto game = interp_get_game();
+        if (not game) {
+            return L_NIL;
+        }
+
+        if (argc == 0) {
+            const auto sv = game->persistent_data().settings_.log_severity_;
+            return lisp::make_integer(static_cast<int>(sv));
+        } else {
+            L_EXPECT_ARGC(argc, 1);
+            L_EXPECT_OP(0, integer);
+
+            auto val = static_cast<Severity>(lisp::get_op(0)->integer_.value_);
+            game->persistent_data().settings_.log_severity_ = val;
+        }
+
+        return L_NIL;
+    }));
 }
 
 
@@ -806,6 +849,11 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     }
 
     Entity::reset_ids();
+    // These few entities are sort of a special case. All other entities are
+    // erased during level transition, but the player and transporter are
+    // persistent, and therefore, should be excluded from the id reset.
+    player_.override_id(player_.id());
+    transporter_.override_id(transporter_.id());
 
     persistent_data_.score_ = score_;
     persistent_data_.player_health_ = player_.get_health();

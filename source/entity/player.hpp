@@ -54,8 +54,6 @@ class Player : public Entity {
 public:
     Player(Platform& pfrm);
 
-    static constexpr const Entity::Id player_id = 99999;
-
     void on_collision(Platform& pf, Game& game, WandererBigLaser&);
     void on_collision(Platform& pf, Game& game, Wanderer&);
     void on_collision(Platform& pf, Game& game, SnakeHead&);

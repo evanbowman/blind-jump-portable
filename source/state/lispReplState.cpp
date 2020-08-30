@@ -13,7 +13,7 @@ static const char* keyboard[7][6] = {
     {"w", "a", "o", "e", "u", "k"},
     {"p", "h", "t", "n", "s", "r"},
     {"x", "c", "(", ")", "-", "*"},
-    {" ", " ", "0", "1", "2", "3"},
+    {" ", "+", "0", "1", "2", "3"},
     {"4", "5", "6", "7", "8", "9"}
 };
 
@@ -22,8 +22,11 @@ void LispReplState::repaint_entry(Platform& pfrm)
 {
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    entry_->assign(":", Text::OptColors{{ColorConstant::med_blue_gray,
-                                         ColorConstant::rich_black}});
+    const auto darker_clr =
+        Text::OptColors{{ColorConstant::med_blue_gray,
+                         ColorConstant::rich_black}};
+
+    entry_->assign(":", darker_clr);
 
     for (int i = 1; i < 32; ++i) {
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 1, 112);
@@ -43,8 +46,18 @@ void LispReplState::repaint_entry(Platform& pfrm)
     entry_->append(command_.c_str(), colors);
 
     keyboard_.clear();
+
+    keyboard_top_.emplace(pfrm, OverlayCoord{1, 0});
+    keyboard_bottom_.emplace(pfrm, OverlayCoord{1, 8});
+
+    for (int x = 0; x < 6; ++x) {
+        keyboard_top_->append(::keyboard[6][x], darker_clr);
+        keyboard_bottom_->append(::keyboard[0][x], darker_clr);
+    }
+
     for (int i = 0; i < 7; ++i) {
-        keyboard_.emplace_back(pfrm, OverlayCoord{1, u8(1 + i)});
+        keyboard_.emplace_back(pfrm, OverlayCoord{0, u8(1 + i)});
+        keyboard_.back().append(::keyboard[i][5], darker_clr);
 
         for (int j = 0; j < 6; ++j) {
             if (j == keyboard_cursor_.x and keyboard_cursor_.y == i) {
@@ -57,6 +70,7 @@ void LispReplState::repaint_entry(Platform& pfrm)
                 keyboard_.back().append(::keyboard[i][j]);
             }
         }
+        keyboard_.back().append(::keyboard[i][0], darker_clr);
 
     }
 }
@@ -140,6 +154,7 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
         } else {
             keyboard_cursor_.x -= 1;
         }
+        pfrm.speaker().play_sound("scroll", 1);
         repaint_entry(pfrm);
     } else if (pfrm.keyboard().down_transition<Key::right>()) {
         if (keyboard_cursor_.x == 5) {
@@ -147,6 +162,7 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
         } else {
             keyboard_cursor_.x += 1;
         }
+        pfrm.speaker().play_sound("scroll", 1);
         repaint_entry(pfrm);
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
         if (keyboard_cursor_.y == 0) {
@@ -154,6 +170,7 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
         } else {
             keyboard_cursor_.y -= 1;
         }
+        pfrm.speaker().play_sound("scroll", 1);
         repaint_entry(pfrm);
     } else if (pfrm.keyboard().down_transition<Key::down>()) {
         if (keyboard_cursor_.y == 6) {
@@ -161,6 +178,7 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
         } else {
             keyboard_cursor_.y += 1;
         }
+        pfrm.speaker().play_sound("scroll", 1);
         repaint_entry(pfrm);
     }
     return null_state();

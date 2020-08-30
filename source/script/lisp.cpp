@@ -179,7 +179,11 @@ Value* make_list(u32 length)
     }
     auto head = make_cons(NIL, NIL);
     while (--length) {
+        push_op(head); // To keep head from being collected, in case make_cons()
+                       // triggers the gc.
         auto cell = make_cons(NIL, head);
+        pop_op(); // head
+
         head = cell;
     }
     return head;
@@ -699,6 +703,33 @@ void init(Platform& pfrm)
         return lat;
     }));
 
+    set_var("apply", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(0, cons);
+        L_EXPECT_OP(1, function);
+
+        auto lat = get_op(0);
+        auto fn = get_op(1);
+
+        int apply_argc = 0;
+        while (lat not_eq NIL) {
+            if (lat->type_ not_eq Value::Type::cons) {
+                return make_error(Error::Code::invalid_argument_type);
+            }
+            ++apply_argc;
+            push_op(lat->cons_.car_);
+
+            lat = lat->cons_.cdr_;
+        }
+
+        funcall(fn, apply_argc);
+
+        auto result = get_op(0);
+        pop_op();
+
+        return result;
+    }));
+
     set_var("+", make_function([](int argc) {
         int accum = 0;
         for (int i = 0; i < argc; ++i) {
@@ -725,7 +756,7 @@ void init(Platform& pfrm)
         return make_integer(accum);
     }));
 
-    set_var("/", make_function([](int argc) {
+    set_var("div", make_function([](int argc) {
         L_EXPECT_ARGC(argc, 2);
         L_EXPECT_OP(1, integer);
         L_EXPECT_OP(0, integer);
@@ -740,9 +771,11 @@ void init(Platform& pfrm)
         for (auto& pl : ctx->value_pools_) {
             values_remaining += pl.obj_->remaining();
         }
+        push_op(lat); // for the gc
         set_list(lat, 0, make_integer(values_remaining));
         set_list(lat, 1, make_integer(ctx->string_intern_pos_));
         set_list(lat, 2, make_integer(ctx->operand_stack_.obj_->size()));
+        pop_op(); // lat
 
         return lat;
     }));

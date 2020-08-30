@@ -71,6 +71,7 @@ public:
     // of an id collision, the receiver should not spawn the new entity, and
     // send its own event back to the sender, if appropriate.
     static void reset_ids();
+
     static Id max_id();
     // Be careful with this function! Before calling, you should make sure that
     // no similar extant entities share the same id.

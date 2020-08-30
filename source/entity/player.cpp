@@ -34,8 +34,6 @@ Player::Player(Platform& pfrm)
     shadow_.set_texture_index(TextureMap::drop_shadow);
     shadow_.set_size(Sprite::Size::w16_h32);
     shadow_.set_alpha(Sprite::Alpha::translucent);
-
-    override_id(player_id);
 }
 
 
