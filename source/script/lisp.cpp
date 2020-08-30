@@ -51,14 +51,40 @@ struct Variable {
 };
 
 
+static const int string_intern_table_size = 1000;
+
+
 struct Context {
     ObjectPool<Value, 128> memory_;
     Buffer<Value*, 64> operand_stack_;
     Variable globals_[64];
+    char string_intern_table_[string_intern_table_size];
+    int string_intern_pos_ = 0;
 } __context;
 
 
 Context* bound_context = &__context;
+
+
+static const char* intern(const char* string)
+{
+    const auto len = str_len(string);
+
+    if (len + 1 > string_intern_table_size - bound_context->string_intern_pos_) {
+        while (true) ; // TODO: raise error, table full...
+    }
+
+    auto ctx = bound_context;
+
+    auto result = ctx->string_intern_table_ + ctx->string_intern_pos_;
+
+    for (int i = 0; i < len; ++i) {
+        ctx->string_intern_table_[ctx->string_intern_pos_++] = string[i];
+    }
+    ctx->string_intern_table_[ctx->string_intern_pos_++] = '\0';
+
+    return result;
+}
 
 
 Value* make_function(Function::Impl impl)
@@ -226,7 +252,6 @@ Value* set_var(const char* name, Value* value)
 {
     for (auto& var : bound_context->globals_) {
         if (strcmp(name, var.name_) == 0) {
-            var.name_ = name;
             var.value_ = value;
             return NIL;
         }
@@ -234,7 +259,7 @@ Value* set_var(const char* name, Value* value)
 
     for (auto& var : bound_context->globals_) {
         if (strcmp(var.name_, "") == 0) {
-            var.name_ = name;
+            var.name_ = intern(name);
             var.value_ = value;
             return NIL;
         }
@@ -317,39 +342,42 @@ static bool is_whitespace(char c)
 }
 
 
-// static u32 eval_set(const char* expr, u32 len)
-// {
-//     std::cout << "here" << std::endl;
-//     // (set <NAME> <VALUE>)
+static u32 eval_set(const char* expr, u32 len)
+{
+    // (set <NAME> <VALUE>)
 
-//     static const u32 max_var_name = 31;
-//     char variable_name[max_var_name];
+    static const u32 max_var_name = 31;
+    char variable_name[max_var_name];
 
-//     int i = 0;
+    int i = 0;
 
-//     // parse name
-//     while (is_whitespace(expr[i])) {
-//         ++i;
-//     }
+    // parse name
+    while (is_whitespace(expr[i])) {
+        ++i;
+    }
 
-//     int start = i;
-//     while (i < len and i < max_var_name and not is_whitespace(expr[i])) {
-//         variable_name[i - start] = expr[i];
-//         ++i;
-//     }
-//     variable_name[i - start] = '\0';
+    int start = i;
+    while (i < len and i < max_var_name and not is_whitespace(expr[i])) {
+        variable_name[i - start] = expr[i];
+        ++i;
+    }
+    variable_name[i - start] = '\0';
 
-//     while (is_whitespace(expr[i])) {
-//         ++i;
-//     }
+    while (is_whitespace(expr[i])) {
+        ++i;
+    }
 
-//     // parse value
-//     i += eval(expr + i);
+    // parse value
+    i += eval(expr + i);
 
-//     set_var(variable_name, get_op(0));
+    set_var(variable_name, get_op(0));
 
-//     return i;
-// }
+    pop_op();
+
+    push_op(NIL);
+
+    return i;
+}
 
 
 static u32 eval_expr(const char* expr, u32 len)
@@ -378,9 +406,9 @@ static u32 eval_expr(const char* expr, u32 len)
     }
 
     // FIXME: This code doesn't work correctly yet...
-    // if (strcmp("set", fn_name) == 0) {
-    //     return eval_set(expr + i, len - i) + 2;
-    // }
+    if (strcmp("set", fn_name) == 0) {
+        return eval_set(expr + i, len - i) + 2;
+    }
 
 
     while (is_whitespace(expr[i])) {
@@ -454,27 +482,28 @@ static u32 eval_variable(const char* code, u32 len)
     static const u32 max_var_name = 31;
     char variable_name[max_var_name];
 
-    for (int i = 0; i < len; ++i) {
+    int i = 0;
+
+    for (; i < len; ++i) {
         if (is_whitespace(code[i]) or code[i] == ')') {
-            variable_name[i] = '\0';
-            if (strcmp(variable_name, "nil") == 0) {
-                push_op(NIL);
-            } else {
-                std::cout << variable_name << std::endl;
-                auto var = lisp::get_var(variable_name);
-                if (var == L_NIL) {
-                    push_op(make_error(Error::Code::undefined_variable_access));
-                } else {
-                    push_op(var);
-                }
-            }
-            return i;
+            break;
         } else {
             variable_name[i] = code[i];
         }
     }
 
-    return max_var_name;
+    variable_name[i] = '\0';
+    if (strcmp(variable_name, "nil") == 0) {
+        push_op(NIL);
+    } else {
+        auto var = lisp::get_var(variable_name);
+        if (var == NIL) {
+            push_op(make_error(Error::Code::undefined_variable_access));
+        } else {
+            push_op(var);
+        }
+    }
+    return i;
 }
 
 
@@ -533,7 +562,7 @@ void print_impl(lisp::Value* value)
         break;
 
     case lisp::Value::Type::function:
-        std::cout << "lambda:" << value->function_.impl_ << '>';
+        std::cout << "lambda:" << (void*)value->function_.impl_;
         break;
 
     case lisp::Value::Type::error:
@@ -570,19 +599,19 @@ static lisp::Value* function_test()
 
     if (get_op(0)->integer_.value_ not_eq 48 * 2) {
         std::cout << "funcall test result check failed!" << std::endl;
-        return L_NIL;
+        return NIL;
     }
 
     if (bound_context->operand_stack_.size() not_eq 1) {
         std::cout << "operand stack size check failed!" << std::endl;
-        return L_NIL;
+        return NIL;
     }
 
     bound_context->operand_stack_.pop_back();
 
     std::cout << "funcall test passed!" << std::endl;
 
-    return L_NIL;
+    return NIL;
 }
 
 
@@ -598,12 +627,12 @@ static lisp::Value* arithmetic_test()
 
     if (get_op(0)->integer_.value_ not_eq 48 - 96) {
         std::cout << "bad arithmetic!" << std::endl;
-        return L_NIL;;
+        return NIL;
     }
 
     std::cout << "arithmetic test passed!" << std::endl;
 
-    return L_NIL;
+    return NIL;
 }
 
 
@@ -650,6 +679,8 @@ int main(int argc, char** argv)
                   << lisp::bound_context->operand_stack_.size()
                   << ", object pool: "
                   << lisp::bound_context->memory_.remaining()
+                  << ", intern mem: "
+                  << lisp::bound_context->string_intern_pos_
                   << std::endl;
         std::cout << ">> ";
     }
