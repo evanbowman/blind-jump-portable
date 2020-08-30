@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	charset_en_spn_fr, 824x8@4,
+@	charset_en_spn_fr, 840x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
-@	+ 103 tiles not compressed
-@	Total size: 512 + 3296 = 3808
+@	+ 105 tiles not compressed
+@	Total size: 512 + 3360 = 3872
 @
-@	Time-stamp: 2020-08-08, 09:49:49
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-08-30, 11:13:59
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global charset_en_spn_frTiles		@ 3296 bytes
+	.align	2
+	.global charset_en_spn_frTiles		@ 3360 unsigned chars
+	.hidden charset_en_spn_frTiles
 charset_en_spn_frTiles:
 	.word 0x00000002,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x22222222,0x22222222,0x22211222,0x22122122,0x22122122,0x22122122,0x22211222,0x22222222
@@ -134,11 +135,14 @@ charset_en_spn_frTiles:
 	.word 0x22122222,0x22212222,0x22212222,0x22221222,0x22221222,0x22222122,0x22222122,0x22222222
 	.word 0x22222222,0x22221222,0x22121212,0x22211122,0x22121212,0x22221222,0x22222222,0x22222222
 	.word 0x22222222,0x22222222,0x22222222,0x22111112,0x22222222,0x22111112,0x22222222,0x22222222
-	.size	charset_en_spn_frTiles, .-charset_en_spn_frTiles
+	.word 0x22222222,0x22222222,0x22212222,0x22221222,0x22222122,0x22221222,0x22212222,0x22222222
+
+	.word 0x22222222,0x22222222,0x22222122,0x22221222,0x22212222,0x22221222,0x22222122,0x22222222
 
 	.section .rodata
-	.align	4
-	.global charset_en_spn_frPal		@ 512 bytes
+	.align	2
+	.global charset_en_spn_frPal		@ 512 unsigned chars
+	.hidden charset_en_spn_frPal
 charset_en_spn_frPal:
 	.hword 0x7C1F,0x7719,0x0800,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -175,6 +179,5 @@ charset_en_spn_frPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	charset_en_spn_frPal, .-charset_en_spn_frPal
 
 @}}BLOCK(charset_en_spn_fr)

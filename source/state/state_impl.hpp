@@ -637,7 +637,31 @@ private:
     std::optional<Text> connect_peer_text_;
     std::optional<Text> settings_text_;
     std::optional<Text> save_and_quit_text_;
+    std::optional<Text> console_text_;
     Float y_offset_ = 0;
+};
+
+
+class LispReplState : public State {
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    enum class DisplayMode {
+        entry, show_result
+    } display_mode_ = DisplayMode::entry;
+
+    Vec2<int> keyboard_cursor_;
+
+    void repaint_entry(Platform& pfrm);
+
+    StringBuffer<28> command_;
+
+    Buffer<Text, 7> keyboard_;
+
+    std::optional<Text> entry_;
 };
 
 
@@ -1062,6 +1086,7 @@ using StatePoolInst = StatePool<ActiveState,
                                 NewLevelState,
                                 CommandCodeState,
                                 PauseScreenState,
+                                LispReplState,
                                 QuickMapState,
                                 MapSystemState,
                                 NewLevelIdleState,

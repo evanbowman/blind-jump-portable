@@ -172,6 +172,10 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
             return 101;
         case '=':
             return 102;
+        case '<':
+            return 103;
+        case '>':
+            return 104;
         default:
             if (cp == utf8::getc(u8"ñ")) {
                 return 73;
@@ -371,6 +375,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::punctuation_period: return ".";
         case LocaleString::menu_resume: return "Resume";
         case LocaleString::menu_connect_peer: return "Connect Peer";
+        case LocaleString::menu_console: return "Terminal";
         case LocaleString::menu_settings: return "Settings";
         case LocaleString::menu_save_and_quit: return "Save and Quit";
         case LocaleString::goodbye_text: return "See you later...";

@@ -4,6 +4,9 @@
 #include "bulkAllocator.hpp"
 
 
+void english__to_string(int num, char* buffer, int base);
+
+
 // TODO: GARBAGE COLLECTION!
 //
 // Each object already contains a mark bit. We will need to trace the global
@@ -595,6 +598,56 @@ u32 eval(const char* code)
     }
     push_op(NIL);
     return code_len;
+}
+
+
+void format_impl(Value* value, StringBuffer<28>& buffer)
+{
+    switch (value->type_) {
+    case lisp::Value::Type::nil:
+        buffer += "nil";
+        break;
+
+    case lisp::Value::Type::symbol:
+        buffer += value->symbol_.name_;
+        break;
+
+    case lisp::Value::Type::integer: {
+        char str[32];
+        english__to_string(value->integer_.value_, str, 10);
+        buffer += str;
+        break;
+    }
+
+    case lisp::Value::Type::cons:
+        buffer.push_back('(');
+        format_impl(value->cons_.car_, buffer);
+        buffer += " . ";
+        format_impl(value->cons_.cdr_, buffer);
+        buffer.push_back(')');
+        break;
+
+    case lisp::Value::Type::function:
+        buffer += "<lambda>";
+        break;
+
+    case lisp::Value::Type::user_data:
+        buffer += "<ud>";
+        break;
+
+    case lisp::Value::Type::error:
+        buffer += "ERR: ";
+        buffer += lisp::Error::get_string(value->error_.code_);;
+        break;
+    }
+}
+
+
+StringBuffer<28> format(Value* value)
+{
+    StringBuffer<28> result;
+    format_impl(value, result);
+    return result;
 }
 
 

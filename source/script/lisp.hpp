@@ -1,4 +1,5 @@
 #include "number/numeric.hpp"
+#include "string.hpp"
 
 
 class Platform;
@@ -145,6 +146,9 @@ u32 eval(const char* code);
 
 #define L_EXPECT_ARGC(ARGC, EXPECTED) if (ARGC not_eq EXPECTED) \
         return lisp::make_error(lisp::Error::Code::invalid_argc);
+
+
+StringBuffer<28> format(Value* value);
 
 
 } // namespace lisp

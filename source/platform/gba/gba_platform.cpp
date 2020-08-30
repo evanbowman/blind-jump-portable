@@ -921,6 +921,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "data/launch_flattened.h"
 #include "data/old_poster_flattened.h"
 #include "data/overlay.h"
+#include "data/repl.h"
 #include "data/overlay_cutscene.h"
 #include "data/overlay_journal.h"
 #include "data/overlay_network_flattened.h"
@@ -983,6 +984,7 @@ static const TextureData tile_textures[] = {
 
 static const TextureData overlay_textures[] = {
     TEXTURE_INFO(charset_en_spn_fr),
+    TEXTURE_INFO(repl),
     TEXTURE_INFO(overlay),
     TEXTURE_INFO(overlay_cutscene),
     TEXTURE_INFO(overlay_journal),
