@@ -245,6 +245,31 @@ void Game::init_script(Platform& pfrm)
         return L_NIL;
     }));
 
+    lisp::set_var("kill", lisp::make_function([](int argc) {
+        auto game = interp_get_game();
+        if (not game) {
+            return L_NIL;
+        }
+
+        for (int i = 0; i < argc; ++i) {
+
+            if (lisp::get_op(i)->type_ not_eq lisp::Value::Type::integer) {
+                const auto err = lisp::Error::Code::invalid_argument_type;
+                return lisp::make_error(err);
+            }
+
+            auto entity =
+                get_entity_by_id(*game, lisp::get_op(i)->integer_.value_);
+
+            if (entity) {
+                entity->set_health(0);
+            }
+        }
+
+        return L_NIL;
+
+    }));
+
     lisp::set_var("get-pos", lisp::make_function([](int argc) {
         L_EXPECT_ARGC(argc, 1);
         L_EXPECT_OP(0, integer);

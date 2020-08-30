@@ -4,9 +4,7 @@
 
 // Inspired by the dvorak keyboard layout, redesigned for use with a gameboy
 // dpad. Optimized for the smallest horizontal _and_ vertical travel between key
-// presses. I've never understood why some devices, like the playstation or the
-// kindle fire, don't at least give you the option of a keyboard better
-// optimized for low travel when using a joystick or dpad.
+// presses.
 static const char* keyboard[7][6] = {
     {"z", "y", "g", "f", "v", "q"},
     {"m", "b", "i", "d", "l", "j"},
@@ -47,8 +45,8 @@ void LispReplState::repaint_entry(Platform& pfrm)
 
     keyboard_.clear();
 
-    keyboard_top_.emplace(pfrm, OverlayCoord{1, 0});
-    keyboard_bottom_.emplace(pfrm, OverlayCoord{1, 8});
+    keyboard_top_.emplace(pfrm, OverlayCoord{2, 1});
+    keyboard_bottom_.emplace(pfrm, OverlayCoord{2, 9});
 
     for (int x = 0; x < 6; ++x) {
         keyboard_top_->append(::keyboard[6][x], darker_clr);
@@ -56,7 +54,7 @@ void LispReplState::repaint_entry(Platform& pfrm)
     }
 
     for (int i = 0; i < 7; ++i) {
-        keyboard_.emplace_back(pfrm, OverlayCoord{0, u8(1 + i)});
+        keyboard_.emplace_back(pfrm, OverlayCoord{1, u8(2 + i)});
         keyboard_.back().append(::keyboard[i][5], darker_clr);
 
         for (int j = 0; j < 6; ++j) {
@@ -80,7 +78,6 @@ void LispReplState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     // pfrm.load_overlay_texture("repl");
 
-    pfrm.screen().fade(0.34f);
     locale_set_language(LocaleLanguage::english);
 
     keyboard_cursor_ = {2, 4}; // For convenience, place cursor at left paren
@@ -103,6 +100,23 @@ void LispReplState::exit(Platform& pfrm, Game& game, State& next_state)
 
 StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    constexpr auto fade_duration = milliseconds(500);
+    if (timer_ < fade_duration) {
+        if (timer_ + delta > fade_duration) {
+            pfrm.screen().fade(0.34f);
+        }
+        timer_ += delta;
+
+        const auto amount =
+            (1.f - (1.f - 0.34f) * smoothstep(0.f, fade_duration, timer_));
+
+        if (timer_ < fade_duration) {
+            pfrm.screen().fade(amount);
+        }
+    }
+
+
+
     switch (display_mode_) {
     case DisplayMode::entry:
         break;
