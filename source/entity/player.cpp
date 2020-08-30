@@ -1,5 +1,4 @@
 #include "player.hpp"
-#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
@@ -17,7 +16,7 @@ static const Vec2<s32> h_origin{16, 16};
 
 Entity::Health Player::initial_health(Platform& pfrm) const
 {
-    return Conf(pfrm).expect<Conf::Integer>("player", "init_health");
+    return 3;
 }
 
 
@@ -160,7 +159,7 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
 
     case Item::Type::coin:
         sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
-        game.score() += Conf(pf).expect<Conf::Integer>("scoring", "coin");
+        game.score() += 10;
         pf.speaker().play_sound("coin", 1);
         break;
 

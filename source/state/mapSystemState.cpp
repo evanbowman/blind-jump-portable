@@ -1,4 +1,3 @@
-#include "conf.hpp"
 #include "state_impl.hpp"
 
 
@@ -7,8 +6,7 @@ void MapSystemState::enter(Platform& pfrm, Game& game, State&)
     pfrm.screen().fade(1.f);
 
     const auto dname = pfrm.device_name();
-    map_enter_duration_ = milliseconds(
-        Conf(pfrm).expect<Conf::Integer>(dname.c_str(), "minimap_enter_time"));
+    map_enter_duration_ = milliseconds(280);
 }
 
 

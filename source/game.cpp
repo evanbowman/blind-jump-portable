@@ -1,6 +1,5 @@
 #include "game.hpp"
 #include "bulkAllocator.hpp"
-#include "conf.hpp"
 #include "function.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
@@ -72,15 +71,17 @@ Game::Game(Platform& pfrm)
     if (persistent_data_.settings_.language_ not_eq LocaleLanguage::null) {
         locale_set_language(persistent_data_.settings_.language_);
     } else {
-        const auto lang =
-            Conf(pfrm).expect<Conf::String>("locale", "default_language");
+        const auto lang = lisp::get_var("default-lang");
+
+        if (lang->type_ not_eq lisp::Value::Type::symbol) {
+            while (true) ; // TODO: fatal error
+        }
 
         const auto lang_enum = [&] {
-            if (lang == "english") {
+            if (strcmp(lang->symbol_.name_, "english") == 0) {
                 return LocaleLanguage::english;
-            } else {
-                return LocaleLanguage::null;
             }
+            return LocaleLanguage::null;
         }();
 
         if (lang_enum not_eq LocaleLanguage::null) {
@@ -89,7 +90,7 @@ Game::Game(Platform& pfrm)
 
             StringBuffer<64> buf;
             buf += "saved default language as ";
-            buf += lang;
+            buf += lang->symbol_.name_;
 
             info(pfrm, buf.c_str());
         }
@@ -118,20 +119,20 @@ Game::Game(Platform& pfrm)
     // own parent.
     state_->enter(pfrm, *this, *state_);
 
-    const auto controllers_head =
-        Conf(pfrm).expect<Conf::String>("wireless-controllers", "__next");
+    // const auto controllers_head =
+    //     Conf(pfrm).expect<Conf::String>("wireless-controllers", "__next");
 
-    Conf(pfrm).scan_list(controllers_head.c_str(), [&](const Conf::String& sn) {
-        auto vid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "vendor_id");
-        auto pid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "product_id");
-        auto a1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_1");
-        auto a2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_2");
-        auto start = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "start");
-        auto alt_1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_1");
-        auto alt_2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_2");
-        pfrm.keyboard().register_controller(
-            {vid, pid, a1, a2, start, alt_1, alt_2});
-    });
+    // Conf(pfrm).scan_list(controllers_head.c_str(), [&](const Conf::String& sn) {
+    //     auto vid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "vendor_id");
+    //     auto pid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "product_id");
+    //     auto a1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_1");
+    //     auto a2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_2");
+    //     auto start = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "start");
+    //     auto alt_1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_1");
+    //     auto alt_2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_2");
+    //     pfrm.keyboard().register_controller(
+    //         {vid, pid, a1, a2, start, alt_1, alt_2});
+    // });
 
     pfrm.on_watchdog_timeout([this](Platform& pfrm) {
         error(pfrm,
@@ -330,6 +331,19 @@ void Game::init_script(Platform& pfrm)
 
         return L_NIL;
     }));
+
+    lisp::set_var("register-controller", lisp::make_function([](int argc) {
+        auto game = interp_get_game();
+        if (not game) {
+            return L_NIL;
+        }
+
+        // TODO...
+
+        return L_NIL;
+    }));
+
+    lisp::dostring(pfrm.config_data());
 }
 
 
@@ -1467,24 +1481,18 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     // Some other enemies require a lot of map space to fight effectively, so
     // they are banned from tiny maps.
 
-    const char* setup = "level-setup";
+    const auto max_density = 160;
 
-    const auto max_density =
-        Conf(pfrm).expect<Conf::Integer>(setup, "max_enemy_density");
+    const auto min_density = 70;
 
-    const auto min_density =
-        Conf(pfrm).expect<Conf::Integer>(setup, "min_enemy_density");
-
-    const auto density_incr =
-        Conf(pfrm).expect<Conf::Integer>(setup, "enemy_density_incr");
+    const auto density_incr = 4;
 
 
     const auto density = std::min(
         Float(max_density) / 1000,
         Float(min_density) / 1000 + game.level() * Float(density_incr) / 1000);
 
-    const auto max_enemies =
-        Conf(pfrm).expect<Conf::Integer>(setup, "max_enemies");
+    const auto max_enemies = 6;
 
     const int spawn_count =
         std::max(std::min(max_enemies, int(free_spots.size() * density)), 1);
@@ -1811,8 +1819,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             break;
         }
 
-        int heart_count =
-            Conf(pfrm).expect<Conf::Integer>("level-setup", "max_hearts");
+        int heart_count = 2;
 
         if (difficulty() == Settings::Difficulty::hard) {
             heart_count = 0;
@@ -1844,9 +1851,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     // Sometimes for small maps, and always for large maps, place an item chest
     if (rng::choice<2>(rng::critical_state) or
-        (int) initial_free_spaces >
-            Conf(pfrm).expect<Conf::Integer>("level-setup",
-                                             "item_chest_spawn_threshold")) {
+        (int) initial_free_spaces > 25) {
         spawn_item_chest(pfrm, *this, free_spots);
     }
 

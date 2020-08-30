@@ -1608,7 +1608,7 @@ static std::string config_data;
 const char* Platform::config_data() const
 {
     if (::config_data.empty()) {
-        std::fstream file("../config.ini");
+        std::fstream file("../config.lisp");
         std::stringstream buffer;
         buffer << file.rdbuf();
         ::config_data = buffer.str();

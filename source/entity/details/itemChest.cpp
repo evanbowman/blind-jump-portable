@@ -1,5 +1,4 @@
 #include "itemChest.hpp"
-#include "conf.hpp"
 #include "game.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"

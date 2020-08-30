@@ -503,6 +503,13 @@ static u32 eval_variable(const char* code, u32 len)
     }
 
     variable_name[i] = '\0';
+
+    // FIXME: actually support quoted stuff...
+    if (variable_name[0] == '\'') {
+        push_op(make_symbol(variable_name + 1));
+        return i;
+    }
+
     if (strcmp(variable_name, "nil") == 0) {
         push_op(NIL);
     } else {
@@ -543,6 +550,53 @@ u32 eval(const char* code)
     }
     push_op(NIL);
     return code_len;
+}
+
+
+void dostring(const char* code)
+{
+    const auto script_len = str_len(code);
+
+    // I designed the eval function to read a single expression. Find where each
+    // expression begins and ends, and skip ahead to the next expression in the
+    // file after reading the current one. Ideally, I would simply fix whatever
+    // bug in the eval function causes incorrect result offsets...x
+    const auto expr_len = [&](const char* str) {
+        int paren_count = 0;
+        u32 i = 0;
+        for (; i < script_len; ++i) {
+            if (str[i] == '(') {
+                paren_count = 1;
+                ++i;
+                break;
+            }
+        }
+        for (; i < script_len; ++i) {
+            if (str[i] == '(') {
+                ++paren_count;
+            }
+            if (str[i] == ')') {
+                --paren_count;
+            }
+            if (paren_count == 0) {
+                return i + 1;
+            }
+        }
+        return i;
+    };
+
+    u32 i = 0;
+    while (i < script_len) {
+        lisp::eval(code + i);
+
+        auto len = expr_len(code + i);
+
+        // TODO: check for errors!
+
+        i += len;
+
+        lisp::pop_op();
+    }
 }
 
 

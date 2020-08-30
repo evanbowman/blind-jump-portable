@@ -137,6 +137,11 @@ Value* get_var(const char* name);
 u32 eval(const char* code);
 
 
+// Use this function for reading lisp code contianing multiple
+// expressions. eval() is only designed for single expressions.
+void dostring(const char* code);
+
+
 #define L_EXPECT_OP(OFFSET, TYPE)                                           \
     if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) { \
         if (lisp::get_op((OFFSET)) == L_NIL) { \

@@ -1,6 +1,5 @@
 #include "state_impl.hpp"
 #include "bitvector.hpp"
-#include "conf.hpp"
 #include "number/random.hpp"
 
 

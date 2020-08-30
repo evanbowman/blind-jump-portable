@@ -1,6 +1,5 @@
 #include "turret.hpp"
 #include "common.hpp"
-#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 #include <algorithm>
@@ -210,8 +209,7 @@ void Turret::injured(Platform& pf, Game& game, Health amount)
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);
     } else {
-        const auto add_score =
-            Conf(pf).expect<Conf::Integer>("scoring", "turret");
+        const auto add_score = 12;
 
         switch (game.difficulty()) {
         case Settings::Difficulty::count:

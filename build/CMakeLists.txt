@@ -88,8 +88,7 @@ set(SOURCES
   ${SOURCE_DIR}/string.cpp
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/path.cpp
-  ${SOURCE_DIR}/game.cpp
-  ${SOURCE_DIR}/conf.cpp)
+  ${SOURCE_DIR}/game.cpp)
 
 
 set(SOURCES
@@ -133,7 +132,7 @@ set(SOURCES
 
 
 if(GAMEBOY_ADVANCE)
-  set(CONF_INI "${SOURCE_DIR}/../config.ini")
+  set(CONF_INI "${SOURCE_DIR}/../config.lisp")
   set(CONF_SRC "${SOURCE_DIR}/config.cpp")
 
   add_custom_command(OUTPUT ${CONF_SRC}

@@ -1,5 +1,4 @@
 #include "boss.hpp"
-#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 
@@ -8,7 +7,7 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
 {
     hide_boss_health(game);
 
-    const auto score = Conf(pf).expect<Conf::Integer>("scoring", "boss");
+    static const auto score = 1000;
 
     switch (game.difficulty()) {
     case Settings::Difficulty::count:
