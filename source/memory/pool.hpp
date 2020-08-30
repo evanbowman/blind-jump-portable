@@ -69,6 +69,11 @@ public:
         return n;
     }
 
+    bool empty() const
+    {
+        return freelist_ == nullptr;
+    }
+
 private:
     Memory cells_;
     Cell* freelist_;
@@ -97,6 +102,11 @@ public:
     u32 remaining() const
     {
         return pool_.remaining();
+    }
+
+    bool empty() const
+    {
+        return pool_.empty();
     }
 
 private:

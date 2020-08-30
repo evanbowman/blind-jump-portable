@@ -1,39 +1,17 @@
 #include "lisp.hpp"
 #include "memory/pool.hpp"
 #include "memory/buffer.hpp"
-#include <iostream>
+#include "bulkAllocator.hpp"
 
 
-inline u32 str_len(const char* str)
-{
-    const char* s;
-
-    for (s = str; *s; ++s)
-        ;
-    return (s - str);
-}
-
-
-inline int strcmp(const char* p1, const char* p2)
-{
-    const unsigned char* s1 = (const unsigned char*)p1;
-    const unsigned char* s2 = (const unsigned char*)p2;
-
-    unsigned char c1, c2;
-
-    do {
-        c1 = (unsigned char)*s1++;
-        c2 = (unsigned char)*s2++;
-
-        if (c1 == '\0') {
-            return c1 - c2;
-        }
-
-    } while (c1 == c2);
-
-    return c1 - c2;
-}
-
+// TODO: GARBAGE COLLECTION!
+//
+// Each object already contains a mark bit. We will need to trace the global
+// variable table and the operand stack, and deal with all of the gc
+// roots. Then, we'll need to scan through the raw slab of memory allocated
+// toward each memory pool used for lisp::Value instances (not the
+// freelist!). For any cell in the pool with an unset mark bit, we'll add that
+// node back to the pool.
 
 
 namespace lisp {
@@ -51,19 +29,54 @@ struct Variable {
 };
 
 
-static const int string_intern_table_size = 1000;
+static const u32 string_intern_table_size = 1000;
 
 
 struct Context {
-    ObjectPool<Value, 128> memory_;
-    Buffer<Value*, 64> operand_stack_;
-    Variable globals_[64];
-    char string_intern_table_[string_intern_table_size];
+    using ValuePool = ObjectPool<Value, 74>;
+    using OperandStack = Buffer<Value*, 297>;
+    using Globals = std::array<Variable, 149>;
+    using Interns = char[string_intern_table_size];
+
     int string_intern_pos_ = 0;
-} __context;
+
+    Context(Platform& pfrm) :
+        value_pools_{
+            allocate_dynamic<ValuePool>(pfrm),
+            allocate_dynamic<ValuePool>(pfrm),
+            allocate_dynamic<ValuePool>(pfrm),
+            allocate_dynamic<ValuePool>(pfrm)
+        },
+        operand_stack_(allocate_dynamic<OperandStack>(pfrm)),
+        globals_(allocate_dynamic<Globals>(pfrm)),
+        interns_(allocate_dynamic<Interns>(pfrm))
+    {
+        for (auto& pl : value_pools_) {
+            if (not pl.obj_) {
+                while (true) ; // FIXME: raise error
+            }
+        }
+
+        if (not operand_stack_.obj_ or
+            not globals_.obj_ or
+            not interns_.obj_) {
+
+            while (true) ; // FIXME: raise error
+        }
+    }
+
+    // We're allocating 4k bytes toward lisp values. Because our simplistic
+    // allocation strategy cannot support sizes other than 1k, we need to split
+    // our memory for lisp values into regions.
+    DynamicMemory<ValuePool> value_pools_[4];
+
+    DynamicMemory<OperandStack> operand_stack_;
+    DynamicMemory<Globals> globals_;
+    DynamicMemory<Interns> interns_;
+};
 
 
-Context* bound_context = &__context;
+static std::optional<Context> bound_context;
 
 
 static const char* intern(const char* string)
@@ -74,22 +87,45 @@ static const char* intern(const char* string)
         while (true) ; // TODO: raise error, table full...
     }
 
-    auto ctx = bound_context;
+    auto& ctx = bound_context;
 
-    auto result = ctx->string_intern_table_ + ctx->string_intern_pos_;
-
-    for (int i = 0; i < len; ++i) {
-        ctx->string_intern_table_[ctx->string_intern_pos_++] = string[i];
+    const char* search = *ctx->interns_.obj_;
+    for (int i = 0; i < ctx->string_intern_pos_;) {
+        if (strcmp(search + i, string) == 0) {
+            return search + i;
+        } else {
+            while (search[i] not_eq '\0') {
+                ++i;
+            }
+            ++i;
+        }
     }
-    ctx->string_intern_table_[ctx->string_intern_pos_++] = '\0';
+
+    auto result = *ctx->interns_.obj_ + ctx->string_intern_pos_;
+
+    for (u32 i = 0; i < len; ++i) {
+        (*ctx->interns_.obj_)[ctx->string_intern_pos_++] = string[i];
+    }
+    (*ctx->interns_.obj_)[ctx->string_intern_pos_++] = '\0';
 
     return result;
 }
 
 
+static Value* alloc_value()
+{
+    for (auto& pl : bound_context->value_pools_) {
+        if (not pl.obj_->empty()) {
+            return pl.obj_->get();
+        }
+    }
+    return nullptr;
+}
+
+
 Value* make_function(Function::Impl impl)
 {
-    if (auto val = bound_context->memory_.get()) {
+    if (auto val = alloc_value()) {
         val->type_ = Value::Type::function;
         val->mark_bit_ = false;
         val->function_.impl_ = impl;
@@ -101,7 +137,7 @@ Value* make_function(Function::Impl impl)
 
 Value* make_cons(Value* car, Value* cdr)
 {
-    if (auto val = bound_context->memory_.get()) {
+    if (auto val = alloc_value()) {
         val->type_ = Value::Type::cons;
         val->mark_bit_ = false;
         val->cons_.car_ = car;
@@ -114,7 +150,7 @@ Value* make_cons(Value* car, Value* cdr)
 
 Value* make_integer(s32 value)
 {
-    if (auto val = bound_context->memory_.get()) {
+    if (auto val = alloc_value()) {
         val->type_ = Value::Type::integer;
         val->mark_bit_ = false;
         val->integer_.value_ = value;
@@ -126,8 +162,11 @@ Value* make_integer(s32 value)
 
 Value* make_list(u32 length)
 {
+    if (length == 0) {
+        return NIL;
+    }
     auto head = make_cons(NIL, NIL);
-    while (length--) {
+    while (--length) {
         auto cell = make_cons(NIL, head);
         head = cell;
     }
@@ -137,10 +176,34 @@ Value* make_list(u32 length)
 
 Value* make_error(Error::Code error_code)
 {
-    if (auto val = bound_context->memory_.get()) {
+    if (auto val = alloc_value()) {
         val->type_ = Value::Type::error;
         val->mark_bit_ = false;
         val->error_.code_ = error_code;
+        return val;
+    }
+    return NIL;
+}
+
+
+Value* make_symbol(const char* name)
+{
+    if (auto val = alloc_value()) {
+        val->type_ = Value::Type::symbol;
+        val->mark_bit_ = false;
+        val->symbol_.name_ = intern(name);
+        return val;
+    }
+    return NIL;
+}
+
+
+Value* make_userdata(void* obj)
+{
+    if (auto val = alloc_value()) {
+        val->type_ = Value::Type::user_data;
+        val->mark_bit_ = false;
+        val->user_data_.obj_ = obj;
         return val;
     }
     return NIL;
@@ -187,13 +250,13 @@ Value* get_list(Value* list, u32 position)
 
 void pop_op()
 {
-    bound_context->operand_stack_.pop_back();
+    bound_context->operand_stack_.obj_->pop_back();
 }
 
 
 void push_op(Value* operand)
 {
-    if (not bound_context->operand_stack_.push_back(operand)) {
+    if (not bound_context->operand_stack_.obj_->push_back(operand)) {
         while (true) ; // TODO: raise error
     }
 }
@@ -202,26 +265,12 @@ void push_op(Value* operand)
 Value* get_op(u32 offset)
 {
     auto& stack = bound_context->operand_stack_;
-    if (offset >= stack.size()) {
+    if (offset >= stack.obj_->size()) {
         return NIL; // TODO: raise error
     }
 
-    return stack[(stack.size() - 1) - offset];
+    return (*stack.obj_)[(stack.obj_->size() - 1) - offset];
 }
-
-
-#define EXPECT_OP(OFFSET, TYPE)                                           \
-    if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) { \
-        if (lisp::get_op((OFFSET)) == L_NIL) { \
-            return lisp::get_op((OFFSET)); \
-        } else { \
-            return lisp::make_error(lisp::Error::Code::invalid_argument_type); \
-        } \
-    }
-
-
-#define EXPECT_ARGC(ARGC, EXPECTED) if (ARGC not_eq EXPECTED) \
-        return lisp::make_error(lisp::Error::Code::invalid_argc);
 
 
 // The function arguments should be sitting at the top of the operand stack
@@ -234,14 +283,14 @@ void funcall(Value* obj, u8 argc)
         return;
     }
 
-    if (bound_context->operand_stack_.size() < argc) {
+    if (bound_context->operand_stack_.obj_->size() < argc) {
         push_op(make_error(Error::Code::invalid_argc));
         return;
     }
 
     auto result = obj->function_.impl_(argc);
     for (int i = 0; i < argc; ++i) {
-        bound_context->operand_stack_.pop_back();
+        bound_context->operand_stack_.obj_->pop_back();
     }
 
     push_op(result);
@@ -250,14 +299,14 @@ void funcall(Value* obj, u8 argc)
 
 Value* set_var(const char* name, Value* value)
 {
-    for (auto& var : bound_context->globals_) {
+    for (auto& var : *bound_context->globals_.obj_) {
         if (strcmp(name, var.name_) == 0) {
             var.value_ = value;
             return NIL;
         }
     }
 
-    for (auto& var : bound_context->globals_) {
+    for (auto& var : *bound_context->globals_.obj_) {
         if (strcmp(var.name_, "") == 0) {
             var.name_ = intern(name);
             var.value_ = value;
@@ -271,7 +320,7 @@ Value* set_var(const char* name, Value* value)
 
 Value* get_var(const char* name)
 {
-    for (auto& var : bound_context->globals_) {
+    for (auto& var : *bound_context->globals_.obj_) {
         if (strcmp(name, var.name_) == 0) {
             return var.value_;
         }
@@ -281,38 +330,48 @@ Value* get_var(const char* name)
 }
 
 
-void init()
+void init(Platform& pfrm)
 {
+    bound_context.emplace(pfrm);
+
     set_var("cons", make_function([](int argc) {
-        EXPECT_ARGC(argc, 2);
+        L_EXPECT_ARGC(argc, 2);
         return make_cons(get_op(1), get_op(0));
     }));
 
     set_var("car", make_function([](int argc) {
-        EXPECT_ARGC(argc, 1);
-        EXPECT_OP(0, cons);
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, cons);
         return get_op(0)->cons_.car_;
     }));
 
     set_var("cdr", make_function([](int argc) {
-        EXPECT_ARGC(argc, 1);
-        EXPECT_OP(0, cons);
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, cons);
         return get_op(0)->cons_.cdr_;
+    }));
+
+    set_var("list", make_function([](int argc) {
+        auto lat = make_list(argc);
+        for (int i = 0; i < argc; ++i) {
+            set_list(lat, i, get_op((argc - 1) - i));
+        }
+        return lat;
     }));
 
     set_var("+", make_function([](int argc) {
         int accum = 0;
         for (int i = 0; i < argc; ++i) {
-            EXPECT_OP(i, integer);
+            L_EXPECT_OP(i, integer);
             accum += get_op(i)->integer_.value_;
         }
         return make_integer(accum);
     }));
 
     set_var("-", make_function([](int argc) {
-        EXPECT_ARGC(argc, 2);
-        EXPECT_OP(1, integer);
-        EXPECT_OP(0, integer);
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(1, integer);
+        L_EXPECT_OP(0, integer);
         return make_integer(get_op(1)->integer_.value_ -
                             get_op(0)->integer_.value_);
     }));
@@ -320,16 +379,16 @@ void init()
     set_var("*", make_function([](int argc) {
         int accum = 1;
         for (int i = 0; i < argc; ++i) {
-            EXPECT_OP(i, integer);
+            L_EXPECT_OP(i, integer);
             accum *= get_op(i)->integer_.value_;
         }
         return make_integer(accum);
     }));
 
     set_var("/", make_function([](int argc) {
-        EXPECT_ARGC(argc, 2);
-        EXPECT_OP(1, integer);
-        EXPECT_OP(0, integer);
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(1, integer);
+        L_EXPECT_OP(0, integer);
         return make_integer(get_op(1)->integer_.value_ /
                             get_op(0)->integer_.value_);
     }));
@@ -349,7 +408,7 @@ static u32 eval_set(const char* expr, u32 len)
     static const u32 max_var_name = 31;
     char variable_name[max_var_name];
 
-    int i = 0;
+    u32 i = 0;
 
     // parse name
     while (is_whitespace(expr[i])) {
@@ -382,7 +441,7 @@ static u32 eval_set(const char* expr, u32 len)
 
 static u32 eval_expr(const char* expr, u32 len)
 {
-    int i = 0;
+    u32 i = 0;
 
     static const int max_fn_name = 31;
     char fn_name[max_fn_name + 1];
@@ -432,10 +491,13 @@ static u32 eval_expr(const char* expr, u32 len)
     }
     i += 2;
 
-    const auto fn = lisp::get_var(fn_name);
+    const auto fn = get_var(fn_name);
     if (fn == NIL) {
-        std::cout << "function " << fn_name << " dne" << std::endl;
-        while (true) ;
+        for (int i = 0; i < param_count; ++i) {
+            pop_op();
+        }
+        push_op(make_error(Error::Code::undefined_variable_access));
+        return i;
     }
 
     funcall(fn, param_count);
@@ -463,7 +525,7 @@ static u32 eval_number(const char* code, u32 len)
 {
     u32 result = 0;
 
-    int i = 0;
+    u32 i = 0;
     for (; i < len; ++i) {
         if (is_whitespace(code[i]) or code[i] == ')') {
             break;
@@ -482,7 +544,7 @@ static u32 eval_variable(const char* code, u32 len)
     static const u32 max_var_name = 31;
     char variable_name[max_var_name];
 
-    int i = 0;
+    u32 i = 0;
 
     for (; i < len; ++i) {
         if (is_whitespace(code[i]) or code[i] == ')') {
@@ -521,7 +583,7 @@ u32 eval(const char* code)
 {
     const auto code_len = str_len(code);
 
-    for (int i = 0; i < code_len; ++i) {
+    for (u32 i = 0; i < code_len; ++i) {
         if (is_whitespace(code[i])) {
             continue;
         }
@@ -537,153 +599,3 @@ u32 eval(const char* code)
 
 
 }
-
-
-#ifndef __GBA__
-
-
-void print_impl(lisp::Value* value)
-{
-    switch (value->type_) {
-    case lisp::Value::Type::nil:
-        std::cout << "nil";
-        break;
-
-    case lisp::Value::Type::integer:
-        std::cout << value->integer_.value_;
-        break;
-
-    case lisp::Value::Type::cons:
-        std::cout << '(';
-        print_impl(value->cons_.car_);
-        std::cout << " . ";
-        print_impl(value->cons_.cdr_);
-        std::cout << ')';
-        break;
-
-    case lisp::Value::Type::function:
-        std::cout << "lambda:" << (void*)value->function_.impl_;
-        break;
-
-    case lisp::Value::Type::error:
-        std::cout << "ERROR: "
-                  << lisp::Error::get_string(value->error_.code_)
-                  << std::endl;
-        break;
-    }
-}
-
-
-void print(lisp::Value* value)
-{
-    print_impl(value);
-    std::cout << std::endl;
-}
-
-
-static lisp::Value* function_test()
-{
-    using namespace lisp;
-
-    set_var("double", make_function([](int argc) {
-        EXPECT_ARGC(argc, 1);
-        EXPECT_OP(0, integer);
-
-        return make_integer(get_op(0)->integer_.value_ * 2);
-    }));
-
-    push_op(make_integer(48));
-    funcall(get_var("double"), 1);
-
-    EXPECT_OP(0, integer);
-
-    if (get_op(0)->integer_.value_ not_eq 48 * 2) {
-        std::cout << "funcall test result check failed!" << std::endl;
-        return NIL;
-    }
-
-    if (bound_context->operand_stack_.size() not_eq 1) {
-        std::cout << "operand stack size check failed!" << std::endl;
-        return NIL;
-    }
-
-    bound_context->operand_stack_.pop_back();
-
-    std::cout << "funcall test passed!" << std::endl;
-
-    return NIL;
-}
-
-
-static lisp::Value* arithmetic_test()
-{
-    using namespace lisp;
-
-    push_op(make_integer(48));
-    push_op(make_integer(96));
-    funcall(get_var("-"), 2);
-
-    EXPECT_OP(0, integer);
-
-    if (get_op(0)->integer_.value_ not_eq 48 - 96) {
-        std::cout << "bad arithmetic!" << std::endl;
-        return NIL;
-    }
-
-    std::cout << "arithmetic test passed!" << std::endl;
-
-    return NIL;
-}
-
-
-void do_tests()
-{
-    auto lat = lisp::make_list(9);
-
-    lisp::set_var("L", lat);
-    lisp::set_list(lat, 4, lisp::make_integer(12));
-
-    print(lisp::get_list(lisp::get_var("L"), 4));
-
-    function_test();
-    arithmetic_test();
-}
-
-
-int main(int argc, char** argv)
-{
-    lisp::init();
-
-    if (argc == 1) {
-        auto lat = lisp::make_list(9);
-
-        lisp::set_var("L", lat);
-        lisp::set_list(lat, 4, lisp::make_integer(12));
-
-        print(lisp::get_list(lisp::get_var("L"), 4));
-
-        function_test();
-        arithmetic_test();
-
-        return 0;
-    }
-    // TODO: real argument parsing...
-
-    std::string line;
-    std::cout << ">> ";
-    while (std::getline(std::cin, line)) {
-        lisp::eval(line.c_str());
-        print(lisp::get_op(0));
-        lisp::pop_op();
-        std::cout << "stack size: "
-                  << lisp::bound_context->operand_stack_.size()
-                  << ", object pool: "
-                  << lisp::bound_context->memory_.remaining()
-                  << ", intern mem: "
-                  << lisp::bound_context->string_intern_pos_
-                  << std::endl;
-        std::cout << ">> ";
-    }
-}
-
-#endif // __GBA__

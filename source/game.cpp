@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
+#include "script/lisp.hpp"
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -41,6 +42,8 @@ bool Game::load_save_data(Platform& pfrm)
 Game::Game(Platform& pfrm)
     : player_(pfrm), score_(0), next_state_(null_state()), state_(null_state())
 {
+    init_script(pfrm);
+
     if (not this->load_save_data(pfrm)) {
         persistent_data_.reset(pfrm);
         info(pfrm, "no save file found");
@@ -139,6 +142,29 @@ Game::Game(Platform& pfrm)
         // off...
         pfrm.write_save_data((byte*)&persistent_data_, sizeof persistent_data_);
     });
+}
+
+
+void Game::init_script(Platform& pfrm)
+{
+    lisp::init(pfrm);
+
+    lisp::set_var("*game*", lisp::make_userdata(this));
+
+    lisp::set_var("set-level", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, integer);
+
+        auto game = lisp::get_var("*game*");
+        if (game->type_ not_eq lisp::Value::Type::user_data) {
+            return L_NIL;
+        }
+
+        ((Game*)game->user_data_.obj_)->persistent_data().level_ =
+            lisp::get_op(0)->integer_.value_;
+
+        return L_NIL;
+    }));
 }
 
 

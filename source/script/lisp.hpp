@@ -1,16 +1,23 @@
 #include "number/numeric.hpp"
 
 
+class Platform;
+
 
 namespace lisp {
 
 
 // Call this function prior to initialize the interpreter, must be done at
 // startup, prior to calling any of the library routines below.
-void init();
+void init(Platform& pfrm);
 
 
 struct Value;
+
+
+struct Symbol {
+    const char* name_;
+};
 
 
 struct Integer {
@@ -54,9 +61,14 @@ struct Error {
 };
 
 
+struct UserData {
+    void* obj_;
+};
+
+
 struct Value {
     enum class Type : u8 {
-        nil, integer, cons, function, error
+        nil, integer, cons, function, error, symbol, user_data,
     } type_ : 7;
 
     bool mark_bit_ : 1;
@@ -66,6 +78,8 @@ struct Value {
         Cons cons_;
         Function function_;
         Error error_;
+        Symbol symbol_;
+        UserData user_data_;
     };
 };
 
@@ -79,6 +93,8 @@ Value* make_cons(Value* car, Value* cdr);
 Value* make_integer(s32 value);
 Value* make_list(u32 length);
 Value* make_error(Error::Code error_code);
+Value* make_symbol(const char* name);
+Value* make_userdata(void* obj);
 
 
 void set_list(Value* list, u32 position, Value* value);
@@ -115,6 +131,20 @@ Value* get_var(const char* name);
 // code, not a higher level s-expression (due to memory constraints, we do not
 // parse lisp code into lisp data before evaluating).
 u32 eval(const char* code);
+
+
+#define L_EXPECT_OP(OFFSET, TYPE)                                           \
+    if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) { \
+        if (lisp::get_op((OFFSET)) == L_NIL) { \
+            return lisp::get_op((OFFSET)); \
+        } else { \
+            return lisp::make_error(lisp::Error::Code::invalid_argument_type); \
+        } \
+    }
+
+
+#define L_EXPECT_ARGC(ARGC, EXPECTED) if (ARGC not_eq EXPECTED) \
+        return lisp::make_error(lisp::Error::Code::invalid_argc);
 
 
 } // namespace lisp
