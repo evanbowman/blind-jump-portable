@@ -145,23 +145,57 @@ Game::Game(Platform& pfrm)
 }
 
 
+// We're storing a pointer to the C++ game class instance in a userdata object,
+// so that routines registered with the lisp interpreter can change game state.
+static Game* interp_get_game()
+{
+    auto game = lisp::get_var("*game*");
+    if (game->type_ not_eq lisp::Value::Type::user_data) {
+        return nullptr;
+    }
+    return (Game*)game->user_data_.obj_;
+}
+
+
+static Platform* interp_get_pfrm()
+{
+    auto pfrm = lisp::get_var("*pfrm*");
+    if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+        return nullptr;
+    }
+    return (Platform*)pfrm->user_data_.obj_;
+}
+
+
 void Game::init_script(Platform& pfrm)
 {
     lisp::init(pfrm);
 
     lisp::set_var("*game*", lisp::make_userdata(this));
+    lisp::set_var("*pfrm*", lisp::make_userdata(&pfrm));
 
     lisp::set_var("set-level", lisp::make_function([](int argc) {
         L_EXPECT_ARGC(argc, 1);
         L_EXPECT_OP(0, integer);
 
-        auto game = lisp::get_var("*game*");
-        if (game->type_ not_eq lisp::Value::Type::user_data) {
-            return L_NIL;
+        if (auto game = interp_get_game()) {
+            game->persistent_data().level_ = lisp::get_op(0)->integer_.value_;
         }
 
-        ((Game*)game->user_data_.obj_)->persistent_data().level_ =
-            lisp::get_op(0)->integer_.value_;
+        return L_NIL;
+    }));
+
+    lisp::set_var("add-items", lisp::make_function([](int argc) {
+        if (auto game = interp_get_game()) {
+            for (int i = 0; i < argc; ++i) {
+                const auto item =
+                    static_cast<Item::Type>(lisp::get_op(i)->integer_.value_);
+
+                if (auto pfrm = interp_get_pfrm()) {
+                    game->inventory().push_item(*pfrm, *game, item);
+                }
+            }
+        }
 
         return L_NIL;
     }));

@@ -50,11 +50,6 @@ StatePtr IntroLegalMessage::next_state(Platform& pfrm, Game& game)
 
 StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
 {
-    // backdoor for debugging purposes.
-    if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
-        return state_pool().create<CommandCodeState>();
-    }
-
     if (pfrm.keyboard().pressed<Key::start>()) {
         return state_pool().create<EndingCreditsState>();
     }

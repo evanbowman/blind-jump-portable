@@ -395,6 +395,20 @@ void init(Platform& pfrm)
         return make_integer(get_op(1)->integer_.value_ /
                             get_op(0)->integer_.value_);
     }));
+
+    set_var("interp-stat", make_function([](int argc) {
+        auto lat = make_list(3);
+        auto& ctx = bound_context;
+        int values_remaining = 0;
+        for (auto& pl : ctx->value_pools_) {
+            values_remaining += pl.obj_->remaining();
+        }
+        set_list(lat, 0, make_integer(values_remaining));
+        set_list(lat, 1, make_integer(ctx->string_intern_pos_));
+        set_list(lat, 2, make_integer(ctx->operand_stack_.obj_->size()));
+
+        return lat;
+    }));
 }
 
 
