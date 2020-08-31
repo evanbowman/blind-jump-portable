@@ -46,6 +46,7 @@ public:
     class NetworkPeer;
     class DeltaClock;
     class SystemClock;
+    class RemoteConsole;
 
     using DeviceName = StringBuffer<23>;
     DeviceName device_name() const;
@@ -77,6 +78,11 @@ public:
     inline NetworkPeer& network_peer()
     {
         return network_peer_;
+    }
+
+    inline RemoteConsole& remote_console()
+    {
+        return console_;
     }
 
     inline DeltaClock& delta_clock()
@@ -556,6 +562,25 @@ public:
 
 
     ////////////////////////////////////////////////////////////////////////////
+    // RemoteConsole
+    //
+    // Some platforms, like desktop computers, support a remote console, whereby
+    // the user can enter text;
+    //
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    class RemoteConsole {
+    public:
+        bool supported_by_device();
+
+        bool readline(void (*callback)(Platform&, const char*));
+
+        void print(const char* text);
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
     // Task
     ////////////////////////////////////////////////////////////////////////////
 
@@ -618,6 +643,7 @@ private:
     SystemClock system_clock_;
     NetworkPeer network_peer_;
     DeltaClock delta_clock_;
+    RemoteConsole console_;
     Screen screen_;
     Keyboard keyboard_;
     Speaker speaker_;

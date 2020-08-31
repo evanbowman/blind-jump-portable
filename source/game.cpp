@@ -350,6 +350,14 @@ void Game::init_script(Platform& pfrm)
                       return L_NIL;
                   }));
 
+    lisp::set_var("platform", lisp::make_function([](int argc) {
+        auto pfrm = interp_get_pfrm();
+        if (not pfrm) {
+            return L_NIL;
+        }
+        return lisp::make_symbol(pfrm->device_name().c_str());
+    }));
+
     lisp::dostring(pfrm.config_data());
 }
 
@@ -540,12 +548,14 @@ HOT void Game::render(Platform& pfrm)
 }
 
 
-static void condense(TileMap& map, TileMap& maptemp)
+static void cell_automata_advance(TileMap& map, TileMap& maptemp)
 {
-    // At the start, whether each tile is filled or unfilled is
-    // completely random. The condense function causes each tile to
-    // appear/disappear based on how many neighbors that tile has,
-    // which ultimately causes tiles to coalesce into blobs.
+    auto& thresh = lisp::loadv<lisp::Cons>("cell-thresh");
+
+    // At the start, whether each tile is filled or unfilled is completely
+    // random. The cell_automata_advance function causes each tile to
+    // appear/disappear based on how many neighbors that tile has, which
+    // ultimately causes tiles to coalesce into blobs.
     map.for_each([&](const Tile& tile, int x, int y) {
         uint8_t count = 0;
         auto collect = [&](int x, int y) {
@@ -562,13 +572,13 @@ static void condense(TileMap& map, TileMap& maptemp)
         collect(x, y - 1);
         collect(x, y + 1);
         if (tile == Tile::none) {
-            if (count < 4) {
+            if (count < thresh.cdr_->expect<lisp::Integer>().value_) {
                 maptemp.set_tile(x, y, Tile::plate);
             } else {
                 maptemp.set_tile(x, y, Tile::none);
             }
         } else {
-            if (count > 5) {
+            if (count > thresh.car_->expect<lisp::Integer>().value_) {
                 maptemp.set_tile(x, y, Tile::none);
             } else {
                 maptemp.set_tile(x, y, Tile::plate);
@@ -1037,8 +1047,11 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
             t = Tile(rng::choice<int(Tile::sand)>(rng::critical_state));
         });
 
-        for (int i = 0; i < 2; ++i) {
-            condense(tiles_, workspace);
+        const auto cell_iters =
+            lisp::get_var("cell-iters")->expect<lisp::Integer>().value_;
+
+        for (int i = 0; i < cell_iters; ++i) {
+            cell_automata_advance(tiles_, workspace);
         }
     }
 }
@@ -1245,8 +1258,10 @@ COLD void Game::regenerate_map(Platform& pfrm)
         pfrm.fatal();
     }
 
-    for (int i = 0; i < 2; ++i) {
-        condense(*grass_overlay, *temporary);
+    const auto cell_iters = lisp::loadv<lisp::Integer>("cell-iters").value_;
+
+    for (int i = 0; i < cell_iters; ++i) {
+        cell_automata_advance(*grass_overlay, *temporary);
     }
 
     // All tiles with four neighbors become sand tiles.

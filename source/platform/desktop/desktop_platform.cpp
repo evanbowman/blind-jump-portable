@@ -1,6 +1,6 @@
-#include "conf.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
+#include "script/lisp.hpp"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,10 @@
 #include <fstream>
 #include <iostream>
 #include <list>
-#include <mutex>
+// The game logic and graphics used to run on different threads. But the game is
+// efficient enough to run on a gameboy, so there isn't really any need for
+// threading.
+// #include <mutex>
 #include <queue>
 #include <sstream>
 #include <thread>
@@ -31,7 +34,7 @@
 
 Platform::DeviceName Platform::device_name() const
 {
-    return "DesktopPC";
+    return "Desktop";
 }
 
 
@@ -152,7 +155,7 @@ public:
 
     Vec2<u32> window_size_;
 
-    std::mutex audio_lock_;
+    // std::mutex audio_lock_;
     sf::Music music_;
     std::list<sf::Sound> sounds_;
     std::map<std::string, sf::SoundBuffer> sound_data_;
@@ -163,8 +166,8 @@ public:
           map_0_(&tile0_texture_, {32, 24}, 16, 20),
           map_1_(&tile1_texture_, {32, 24}, 16, 20),
           background_(&background_texture_, {8, 8}, 32, 32),
-          fullscreen_(Conf(pfrm).expect<Conf::Bool>(pfrm.device_name().c_str(),
-                                                    "fullscreen")),
+          fullscreen_(// lisp::loadv<lisp::Integer>("fullscreen").value_
+                      false),
           window_scale_([&] {
               if (fullscreen_) {
                   auto ssize = sf::VideoMode::getDesktopMode();
@@ -172,8 +175,9 @@ public:
                   auto y_scale = ssize.height / resolution.y;
                   return static_cast<int>(std::max(x_scale, y_scale));
               } else {
-                  return Conf(pfrm).expect<Conf::Integer>(
-                      pfrm.device_name().c_str(), "window_scale");
+                  return
+                      // lisp::loadv<lisp::Integer>("window-scale").value_
+                      3;
               }
           }()),
           window_(sf::VideoMode(resolution.x * window_scale_,
@@ -194,11 +198,11 @@ public:
         window_size_ = {(u32)resolution.x * window_scale_,
                         (u32)resolution.y * window_scale_};
 
-        auto sound_folder =
-            Conf(pfrm).expect<Conf::String>("paths", "sound_folder");
+        auto sound_folder = "../sounds/";
+            // lisp::loadv<lisp::Symbol>("sound-dir").name_;
 
         for (auto& dirent :
-             std::filesystem::directory_iterator(sound_folder.c_str())) {
+             std::filesystem::directory_iterator(sound_folder)) {
             const auto filename = dirent.path().stem().string();
             static const std::string prefix("sound_");
             const auto prefix_loc = filename.find(prefix);
@@ -354,7 +358,7 @@ Platform::DeltaClock::~DeltaClock()
 // Keyboard
 ////////////////////////////////////////////////////////////////////////////////
 
-std::mutex event_queue_lock;
+// std::mutex event_queue_lock;
 std::queue<sf::Event> event_queue;
 
 
@@ -384,7 +388,7 @@ void Platform::Keyboard::poll()
 
     static bool focused_ = true;
 
-    std::lock_guard<std::mutex> guard(::event_queue_lock);
+    // std::lock_guard<std::mutex> guard(::event_queue_lock);
     while (not event_queue.empty()) {
         auto event = event_queue.front();
         event_queue.pop();
@@ -551,6 +555,12 @@ Platform::Screen::Screen()
 }
 
 
+void Platform::Screen::enable_night_mode(bool)
+{
+    // TODO...
+}
+
+
 Vec2<u32> Platform::Screen::size() const
 {
     const auto data = ::platform->data();
@@ -576,19 +586,41 @@ enum class TextureSwap { spritesheet, tile0, tile1, overlay };
 // The logic thread requests a texture swap, but the swap itself needs to be
 // performed on the graphics thread.
 static std::queue<std::pair<TextureSwap, std::string>> texture_swap_requests;
-static std::mutex texture_swap_mutex;
+// static std::mutex texture_swap_mutex;
 
 
 static std::queue<std::tuple<Layer, int, int, int>> tile_swap_requests;
-static std::mutex tile_swap_mutex;
+// static std::mutex tile_swap_mutex;
 
 
 static std::queue<std::pair<TileDesc, Platform::TextureMapping>> glyph_requests;
-static std::mutex glyph_requests_mutex;
+// static std::mutex glyph_requests_mutex;
+
+
+static std::vector<Platform::Task*> task_queue;
+
+
+void Platform::push_task(Task* task)
+{
+    task->complete_ = false;
+    task->running_ = true;
+
+    task_queue.push_back(task);
+}
 
 
 void Platform::Screen::clear()
 {
+    for (auto it = task_queue.begin(); it not_eq task_queue.end();) {
+        (*it)->run();
+        if ((*it)->complete()) {
+            (*it)->running_ = false;
+            it = task_queue.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
     auto& window = ::platform->data()->window_;
     window.clear();
 
@@ -596,7 +628,7 @@ void Platform::Screen::clear()
         ::platform->data()->fade_color_);
 
     {
-        std::lock_guard<std::mutex> guard(::platform->data()->audio_lock_);
+        // std::lock_guard<std::mutex> guard(::platform->data()->audio_lock_);
         auto& sounds = ::platform->data()->sounds_;
         for (auto it = sounds.begin(); it not_eq sounds.end();) {
             if (it->getStatus() == sf::Sound::Status::Stopped) {
@@ -608,17 +640,16 @@ void Platform::Screen::clear()
     }
 
     {
-        std::lock_guard<std::mutex> guard(texture_swap_mutex);
+        // std::lock_guard<std::mutex> guard(texture_swap_mutex);
         while (not texture_swap_requests.empty()) {
             const auto request = texture_swap_requests.front();
             texture_swap_requests.pop();
 
             sf::Image image;
 
-            auto image_folder =
-                Conf(*::platform).expect<Conf::String>("paths", "image_folder");
+            auto image_folder = lisp::loadv<lisp::Symbol>("image-dir").name_;
 
-            if (not image.loadFromFile(image_folder.c_str() + request.second +
+            if (not image.loadFromFile(image_folder + request.second +
                                        ".png")) {
                 error(*::platform,
                       (std::string("failed to load texture ") + request.second)
@@ -699,16 +730,15 @@ void Platform::Screen::clear()
 
 
     {
-        std::lock_guard<std::mutex> guard(glyph_requests_mutex);
+        // std::lock_guard<std::mutex> guard(glyph_requests_mutex);
         while (not glyph_requests.empty()) {
             const auto rq = glyph_requests.front();
             glyph_requests.pop();
 
-            auto image_folder =
-                Conf(*::platform).expect<Conf::String>("paths", "image_folder");
+            auto image_folder = lisp::loadv<lisp::Symbol>("image-dir").name_;
 
             sf::Image character_source_image_;
-            const auto charset_path = std::string(image_folder.c_str()) +
+            const auto charset_path = std::string(image_folder) +
                                       rq.second.texture_name_ + ".png";
             if (not character_source_image_.loadFromFile(charset_path)) {
                 error(
@@ -769,7 +799,7 @@ void Platform::Screen::clear()
     }
 
     {
-        std::lock_guard<std::mutex> guard(::tile_swap_mutex);
+        // std::lock_guard<std::mutex> guard(::tile_swap_mutex);
         while (not tile_swap_requests.empty()) {
             const auto request = tile_swap_requests.front();
             tile_swap_requests.pop();
@@ -806,7 +836,7 @@ void Platform::Screen::clear()
     }
 
     {
-        std::lock_guard<std::mutex> guard(::event_queue_lock);
+        // std::lock_guard<std::mutex> guard(::event_queue_lock);
 
         // This is really hacky and bad. We can't check for keypresses on the
         // other thread, and the sfml window does not fire keypressed events
@@ -1125,9 +1155,7 @@ Platform::Speaker::Speaker()
 
 void Platform::Speaker::play_music(const char* name, Microseconds offset)
 {
-    auto dest = Conf(*::platform).expect<Conf::String>("paths", "sound_folder");
-
-    std::string path = dest.c_str();
+    std::string path = lisp::loadv<lisp::Symbol>("sound-dir").name_;
 
     path += "music_";
     path += name;
@@ -1162,7 +1190,7 @@ void Platform::Speaker::play_sound(const char* name,
                     // advance, where I was supporting four concurrent audio
                     // streams.
 
-    std::lock_guard<std::mutex> guard(::platform->data()->audio_lock_);
+    // std::lock_guard<std::mutex> guard(::platform->data()->audio_lock_);
     auto& data = ::platform->data()->sound_data_;
     auto found = data.find(name);
     if (found not_eq data.end()) {
@@ -1180,7 +1208,7 @@ void Platform::Speaker::play_sound(const char* name,
             sound.setAttenuation(0.f);
         }
 
-        sound.setMinDistance(80.f);
+        sound.setMinDistance(160.f);
         if (position) {
             sound.setPosition({position->x, 0, position->y});
         }
@@ -1193,6 +1221,32 @@ void Platform::Speaker::play_sound(const char* name,
 bool is_sound_playing(const char* name)
 {
     return false; // TODO...
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// RemoteConsole
+////////////////////////////////////////////////////////////////////////////////
+
+
+bool Platform::RemoteConsole::supported_by_device()
+{
+    return true;
+}
+
+
+bool Platform::RemoteConsole::readline(void (*callback)(Platform&, const char*))
+{
+    std::string line;
+    auto result = static_cast<bool>(std::getline(std::cin, line));
+    callback(*::platform, line.c_str());
+    return result;
+}
+
+
+void Platform::RemoteConsole::print(const char* text)
+{
+    std::cout << text;
 }
 
 
@@ -1274,7 +1328,7 @@ Platform::Logger::Logger()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-static std::unordered_map<std::string, sf::Keyboard::Key> key_lookup{
+static const std::unordered_map<std::string, sf::Keyboard::Key> key_lookup{
     {"Esc", sf::Keyboard::Escape},  {"Up", sf::Keyboard::Up},
     {"Down", sf::Keyboard::Down},   {"Left", sf::Keyboard::Left},
     {"Right", sf::Keyboard::Right}, {"Return", sf::Keyboard::Return},
@@ -1365,12 +1419,12 @@ Platform::Platform()
     screen_.view_.set_size(screen_.size().cast<Float>());
 
 
-    auto shader_folder =
-        Conf(*::platform).expect<Conf::String>("paths", "shader_folder");
+    auto shader_folder = "../shaders/";
+        // lisp::loadv<lisp::Symbol>("shader-dir").name_;
 
 
     if (not data_->color_shader_.loadFromFile(
-            shader_folder.c_str() + std::string("colorShader.frag"),
+            shader_folder + std::string("colorShader.frag"),
             sf::Shader::Fragment)) {
         error(*this, "Failed to load shader");
     }
@@ -1384,22 +1438,16 @@ Platform::Platform()
     data_->map_1_rt_.create(16 * 32, 20 * 24);
     data_->background_rt_.create(32 * 8, 32 * 8);
 
-#define CONF_KEY(KEY)                                                          \
-    keymap[static_cast<int>(Key::KEY)] =                                       \
-        ::key_lookup[Conf(*::platform)                                         \
-                         .expect<Conf::String>("keyboard-bindings", #KEY)      \
-                         .c_str()];
-
-    CONF_KEY(left);
-    CONF_KEY(right);
-    CONF_KEY(up);
-    CONF_KEY(down);
-    CONF_KEY(action_1);
-    CONF_KEY(action_2);
-    CONF_KEY(alt_1);
-    CONF_KEY(alt_2);
-    CONF_KEY(start);
-    CONF_KEY(select);
+    keymap[(int)Key::left] = sf::Keyboard::Left;
+    keymap[(int)Key::right] = sf::Keyboard::Right;
+    keymap[(int)Key::up] = sf::Keyboard::Up;
+    keymap[(int)Key::down] = sf::Keyboard::Down;
+    keymap[(int)Key::action_1] = sf::Keyboard::X;
+    keymap[(int)Key::action_2] = sf::Keyboard::Z;
+    keymap[(int)Key::alt_1] = sf::Keyboard::A;
+    keymap[(int)Key::alt_2] = sf::Keyboard::S;
+    keymap[(int)Key::start] = sf::Keyboard::Return;
+    keymap[(int)Key::select] = sf::Keyboard::Q;
 }
 
 
@@ -1437,19 +1485,6 @@ bool Platform::read_save_data(void* buffer, u32 data_length)
 }
 
 
-static std::vector<std::thread> worker_threads;
-
-
-void Platform::push_task(Task* task)
-{
-    worker_threads.emplace_back([task] {
-        while (not task->complete()) {
-            task->run();
-        }
-    });
-}
-
-
 bool Platform::is_running() const
 {
     return data()->window_.isOpen();
@@ -1471,21 +1506,21 @@ void Platform::sleep(u32 frames)
 
 void Platform::load_sprite_texture(const char* name)
 {
-    std::lock_guard<std::mutex> guard(texture_swap_mutex);
+    // std::lock_guard<std::mutex> guard(texture_swap_mutex);
     texture_swap_requests.push({TextureSwap::spritesheet, name});
 }
 
 
 void Platform::load_tile0_texture(const char* name)
 {
-    std::lock_guard<std::mutex> guard(texture_swap_mutex);
+    // std::lock_guard<std::mutex> guard(texture_swap_mutex);
     texture_swap_requests.push({TextureSwap::tile0, name});
 }
 
 
 void Platform::load_tile1_texture(const char* name)
 {
-    std::lock_guard<std::mutex> guard(texture_swap_mutex);
+    // std::lock_guard<std::mutex> guard(texture_swap_mutex);
     texture_swap_requests.push({TextureSwap::tile1, name});
 }
 
@@ -1493,11 +1528,11 @@ void Platform::load_tile1_texture(const char* name)
 void Platform::load_overlay_texture(const char* name)
 {
     {
-        std::lock_guard<std::mutex> guard(texture_swap_mutex);
+        // std::lock_guard<std::mutex> guard(texture_swap_mutex);
         texture_swap_requests.push({TextureSwap::overlay, name});
     }
     {
-        std::lock_guard<std::mutex> guard(glyph_requests_mutex);
+        // std::lock_guard<std::mutex> guard(glyph_requests_mutex);
         while (not glyph_requests.empty())
             glyph_requests.pop();
     }
@@ -1518,7 +1553,7 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, TileDesc val)
 {
     tile_layers_[layer][{x, y}] = val;
 
-    std::lock_guard<std::mutex> guard(::tile_swap_mutex);
+    // std::lock_guard<std::mutex> guard(::tile_swap_mutex);
     ::tile_swap_requests.push({layer, x, y, val});
 }
 
@@ -1543,7 +1578,7 @@ void Platform::fill_overlay(u16 tile_desc)
         kvp.second = tile_desc;
     }
 
-    std::lock_guard<std::mutex> guard(::tile_swap_mutex);
+    // std::lock_guard<std::mutex> guard(::tile_swap_mutex);
 
     for (int i = 0; i < ::platform->data()->overlay_.size().x; ++i) {
         for (int j = 0; j < ::platform->data()->overlay_.size().y; ++j) {
@@ -1579,7 +1614,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
             const auto loc = ::platform->data()->next_glyph_++;
             glyphs[glyph] = loc;
 
-            std::lock_guard<std::mutex> guard(glyph_requests_mutex);
+            // std::lock_guard<std::mutex> guard(glyph_requests_mutex);
             glyph_requests.push({loc, *mapping});
 
             return loc;
@@ -1625,16 +1660,12 @@ int main()
 
     Platform pf;
     start(pf);
-
-    for (auto& worker : worker_threads) {
-        worker.join();
-    }
 }
 
 
 void SynchronizedBase::init(Platform& pf)
 {
-    impl_ = new std::mutex;
+    // impl_ = new std::mutex;
     if (not impl_) {
         error(pf, "failed to allocate mutex");
     }
@@ -1643,19 +1674,19 @@ void SynchronizedBase::init(Platform& pf)
 
 void SynchronizedBase::lock()
 {
-    reinterpret_cast<std::mutex*>(impl_)->lock();
+    // reinterpret_cast<std::mutex*>(impl_)->lock();
 }
 
 
 void SynchronizedBase::unlock()
 {
-    reinterpret_cast<std::mutex*>(impl_)->unlock();
+    // reinterpret_cast<std::mutex*>(impl_)->unlock();
 }
 
 
 SynchronizedBase::~SynchronizedBase()
 {
-    delete reinterpret_cast<std::mutex*>(impl_);
+    // delete reinterpret_cast<std::mutex*>(impl_);
 }
 
 
@@ -1709,8 +1740,7 @@ void Platform::NetworkPeer::listen()
 {
     auto impl = (NetworkPeerImpl*)impl_;
 
-    auto port = Conf{*::platform}.expect<Conf::Integer>(
-        ::platform->device_name().c_str(), "network_port");
+    auto port = lisp::loadv<lisp::Integer>("network-port").value_;
 
     info(*::platform, ("listening on port " + std::to_string(port)).c_str());
 
@@ -1730,18 +1760,18 @@ void Platform::NetworkPeer::connect(const char* peer)
 
     impl->is_host_ = false;
 
-    auto port = Conf{*::platform}.expect<Conf::Integer>(
-        ::platform->device_name().c_str(), "network_port");
+    auto port = lisp::loadv<lisp::Integer>("network-port").value_;
 
-    auto addr = Conf{*::platform}.expect<Conf::String>(
-        ::platform->device_name().c_str(), "host_address");
+    auto addr = "127.0.0.1";
+    // Conf{*::platform}.expect<Conf::String>(
+    // ::platform->device_name().c_str(), "host_address");
 
     info(*::platform,
-         ("connecting to " + std::string(addr.c_str()) + ":" +
+         ("connecting to " + std::string(addr) + ":" +
           std::to_string(port))
              .c_str());
 
-    if (impl->socket_.connect(addr.c_str(), port) == sf::Socket::Status::Done) {
+    if (impl->socket_.connect(addr, port) == sf::Socket::Status::Done) {
         info(*::platform, "Peer connected!");
     } else {
         error(*::platform, "connection failed :(");

@@ -47,6 +47,7 @@ struct Error {
         undefined_variable_access,
         invalid_argument_type,
         out_of_memory,
+        set_in_expression_context,
     } code_;
 
     static const char* get_string(Code c)
@@ -64,6 +65,8 @@ struct Error {
             return "Invalid argument type";
         case Code::out_of_memory:
             return "Out of memory";
+        case Code::set_in_expression_context:
+            return "\'set\' in expr context";
         }
         return "Unknown error";
     }
@@ -98,6 +101,53 @@ struct Value {
         Symbol symbol_;
         UserData user_data_;
     };
+
+    template <typename T>
+    T& expect()
+    {
+        if constexpr (std::is_same<T, Integer>()) {
+            if (type_ == Type::integer) {
+                return integer_;
+            } else {
+                while (true) ; // TODO: fatal error...
+            }
+        } else if constexpr (std::is_same<T, Cons>()) {
+            if (type_ == Type::cons) {
+                return cons_;
+            } else {
+                while (true) ;
+            }
+        } else if constexpr (std::is_same<T, Function>()) {
+            if (type_ == Type::function) {
+                return function_;
+            } else {
+                while (true) ;
+            }
+        } else if constexpr (std::is_same<T, Error>()) {
+            if (type_ == Type::error) {
+                return error_;
+            } else {
+                while (true) ;
+            }
+        } else if constexpr (std::is_same<T, Symbol>()) {
+            if (type_ == Type::symbol) {
+                return symbol_;
+            } else {
+                while (true) ;
+            }
+        } else if constexpr (std::is_same<T, UserData>()) {
+            if (type_ == Type::user_data) {
+                return user_data_;
+            } else {
+                while (true) ;
+            }
+        } else {
+            // TODO: how to put a static assert here?
+            return nullptr;
+        }
+    }
+
+
 };
 
 
@@ -142,6 +192,13 @@ Value* set_var(const char* name, Value* value);
 Value* get_var(const char* name);
 
 
+template <typename T>
+T& loadv(const char* name)
+{
+    return get_var(name)->expect<T>();
+}
+
+
 // Interpret lisp code, leaving the result at the top of the operand stack
 // (similar to funcall). NOTE: this function does not work like a traditional
 // eval function in lisp. The input should be a string representation of lisp
@@ -153,6 +210,9 @@ u32 eval(const char* code);
 // Use this function for reading lisp code contianing multiple
 // expressions. eval() is only designed for single expressions.
 void dostring(const char* code);
+
+
+const char* intern(const char* string);
 
 
 #define L_EXPECT_OP(OFFSET, TYPE)                                              \

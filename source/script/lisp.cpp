@@ -39,6 +39,8 @@ struct Context {
 
     int string_intern_pos_ = 0;
 
+    int eval_depth_ = 0;
+
     Context(Platform& pfrm)
         : value_pools_{allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
@@ -76,7 +78,7 @@ struct Context {
 static std::optional<Context> bound_context;
 
 
-static const char* intern(const char* string)
+const char* intern(const char* string)
 {
     const auto len = str_len(string);
 
@@ -350,6 +352,115 @@ static bool is_whitespace(char c)
 }
 
 
+
+static u32 expr_len(const char* str, u32 script_len)
+{
+    int paren_count = 0;
+    u32 i = 0;
+    for (; i < script_len; ++i) {
+        if (str[i] == '(') {
+            paren_count = 1;
+            ++i;
+            break;
+        }
+    }
+    for (; i < script_len; ++i) {
+        if (str[i] == '(') {
+            ++paren_count;
+        }
+        if (str[i] == ')') {
+            --paren_count;
+        }
+        if (paren_count == 0) {
+            return i + 1;
+        }
+    }
+    return i;
+}
+
+
+static u32 eval_if(const char* expr, u32 len)
+{
+    // (if <COND> <EXPR1> <EXPR2>)
+
+    int i = 0;
+
+    i += eval(expr) + 1;
+
+    const bool branch = [&] {
+        switch (get_op(0)->type_) {
+        case Value::Type::integer:
+            return get_op(0)->integer_.value_ not_eq 0;
+
+        default:
+            break;
+        }
+
+        return get_op(0) not_eq NIL;
+    }();
+
+    pop_op();
+
+    // Now we'll need to skip over one of the branches. If the next
+    // non-whitespace character is not a '(' or a ''', then should be easy,
+    // because we can just eat chars until we hit some whitespace or a ')'. If
+    // then next non-whitespace character is a '(', we'll need to count
+    // opening/closing parens to determine where the expression ends.
+
+    while (is_whitespace(expr[i])) {
+        ++i;
+    }
+
+    if (not branch) {
+        if (expr[i] == '(') {
+            i += expr_len(expr + i, str_len(expr + i));
+        } else {
+            while (expr[i] not_eq ' ') {
+                ++i;
+                if (expr[i] == ')') {
+                    while (true) ; // TODO: support single expr if statements...
+                }
+            }
+        }
+    } else {
+        i += eval(expr + i);
+    }
+
+    while (is_whitespace(expr[i])) {
+        ++i;
+    }
+
+    if (not branch) {
+        // We've skipped the first expression, and want to eval the second one.
+        const auto consumed = eval(expr + i);
+
+        i += consumed;
+
+        while (is_whitespace(expr[i])) {
+            ++i;
+        }
+
+        return i + 4;
+    } else {
+        // We've evaulated the first expresion, and want to skip the second one.
+        if (expr[i] == '(' or expr[i] == '\'') {
+            i += expr_len(expr + i, str_len(expr + i));
+        } else {
+            while (expr[i] not_eq ' ' and expr[i] not_eq ')') {
+                ++i;
+            }
+        }
+    }
+
+
+    while (is_whitespace(expr[i])) {
+        ++i;
+    }
+
+    return i + 4;
+}
+
+
 static u32 eval_set(const char* expr, u32 len)
 {
     // (set <NAME> <VALUE>)
@@ -378,11 +489,17 @@ static u32 eval_set(const char* expr, u32 len)
     // parse value
     i += eval(expr + i);
 
-    set_var(variable_name, get_op(0));
+    if (bound_context->eval_depth_ <= 1) {
+        set_var(variable_name, get_op(0));
+    }
 
     pop_op();
 
-    push_op(NIL);
+    if (bound_context->eval_depth_ <= 1) {
+        push_op(NIL);
+    } else {
+        push_op(make_error(Error::Code::set_in_expression_context));
+    }
 
     return i;
 }
@@ -411,11 +528,11 @@ static u32 eval_expr(const char* expr, u32 len)
         break;
     }
 
-    // FIXME: This code doesn't work correctly yet...
     if (strcmp("set", fn_name) == 0) {
         return eval_set(expr + i, len - i) + 2;
+    } else if (strcmp("if", fn_name) == 0) {
+        return eval_if(expr + i, len - i);
     }
-
 
     while (is_whitespace(expr[i])) {
         ++i;
@@ -534,7 +651,10 @@ u32 eval(const char* code)
             continue;
         }
         if (code[i] == '(') {
-            return eval_expr(code + i + 1, code_len - (i + 1));
+            bound_context->eval_depth_ += 1;
+            auto result = eval_expr(code + i + 1, code_len - (i + 1));
+            bound_context->eval_depth_ -= 1;
+            return result;
         } else {
             return eval_value(code + i, code_len - i);
         }
@@ -551,36 +671,13 @@ void dostring(const char* code)
     // I designed the eval function to read a single expression. Find where each
     // expression begins and ends, and skip ahead to the next expression in the
     // file after reading the current one. Ideally, I would simply fix whatever
-    // bug in the eval function causes incorrect result offsets...x
-    const auto expr_len = [&](const char* str) {
-        int paren_count = 0;
-        u32 i = 0;
-        for (; i < script_len; ++i) {
-            if (str[i] == '(') {
-                paren_count = 1;
-                ++i;
-                break;
-            }
-        }
-        for (; i < script_len; ++i) {
-            if (str[i] == '(') {
-                ++paren_count;
-            }
-            if (str[i] == ')') {
-                --paren_count;
-            }
-            if (paren_count == 0) {
-                return i + 1;
-            }
-        }
-        return i;
-    };
+    // bug in the eval function causes incorrect result offsets...
 
     u32 i = 0;
     while (i < script_len) {
         lisp::eval(code + i);
 
-        auto len = expr_len(code + i);
+        auto len = expr_len(code + i, script_len);
 
         // TODO: check for errors!
 
@@ -779,6 +876,49 @@ void init(Platform& pfrm)
                 return lat;
             }));
 
+    set_var("progn", make_function([](int argc) {
+        // I could have defined progn at the language level, but because all of
+        // the expressions are evaluated anyway, much easier to define progn as
+        // a function.
+        //
+        // Drawbacks: (1) Defining progn takes up a small amount of memory for
+        // the function object. (2) Extra use of the operand stack.
+        return get_op(0);
+    }));
+
+    set_var("equal", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+
+        if (get_op(0)->type_ not_eq get_op(1)->type_) {
+            return make_integer(0);
+        }
+
+        return make_integer([] {
+            switch (get_op(0)->type_) {
+            case Value::Type::integer:
+                return get_op(0)->integer_.value_ == get_op(1)->integer_.value_;
+
+            case Value::Type::cons:
+                // TODO!
+                // This comparison needs to be done as efficiently as possible...
+                break;
+
+            case Value::Type::function:
+                return get_op(0) == get_op(1);
+
+            case Value::Type::error:
+                break;
+
+            case Value::Type::symbol:
+                return get_op(0)->symbol_.name_ == get_op(1)->symbol_.name_;
+
+            case Value::Type::user_data:
+                return get_op(0)->user_data_.obj_ == get_op(1)->user_data_.obj_;
+            }
+            return false;
+        }());
+    }));
+
     set_var("apply", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
                 L_EXPECT_OP(0, cons);
@@ -856,6 +996,27 @@ void init(Platform& pfrm)
 
                 return lat;
             }));
+
+    set_var("range", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 3);
+        L_EXPECT_OP(2, integer);
+        L_EXPECT_OP(1, integer);
+        L_EXPECT_OP(0, integer);
+
+        const auto start = get_op(2)->integer_.value_;
+        const auto end = get_op(1)->integer_.value_;
+        const auto incr = get_op(0)->integer_.value_;
+
+        auto lat = make_list((end - start) / incr);
+
+        for (int i = start; i < end; i += incr) {
+            push_op(lat);
+            set_list(lat, i, make_integer(i));
+            pop_op();
+        }
+
+        return lat;
+    }));
 
     set_var("gc", make_function([](int argc) {
                 run_gc();
