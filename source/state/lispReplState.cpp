@@ -34,7 +34,7 @@ void LispReplState::repaint_entry(Platform& pfrm)
         switch (display_mode_) {
         default:
         case DisplayMode::entry:
-            return {};
+            return std::nullopt;
 
         case DisplayMode::show_result:
             return {{ColorConstant::med_blue_gray,
@@ -45,8 +45,8 @@ void LispReplState::repaint_entry(Platform& pfrm)
 
     keyboard_.clear();
 
-    keyboard_top_.emplace(pfrm, OverlayCoord{2, 1});
-    keyboard_bottom_.emplace(pfrm, OverlayCoord{2, 9});
+    keyboard_top_.emplace(pfrm, OverlayCoord{2, 2});
+    keyboard_bottom_.emplace(pfrm, OverlayCoord{2, 10});
 
     for (int x = 0; x < 6; ++x) {
         keyboard_top_->append(::keyboard[6][x], darker_clr);
@@ -54,7 +54,7 @@ void LispReplState::repaint_entry(Platform& pfrm)
     }
 
     for (int i = 0; i < 7; ++i) {
-        keyboard_.emplace_back(pfrm, OverlayCoord{1, u8(2 + i)});
+        keyboard_.emplace_back(pfrm, OverlayCoord{1, u8(3 + i)});
         keyboard_.back().append(::keyboard[i][5], darker_clr);
 
         for (int j = 0; j < 6; ++j) {
@@ -86,6 +86,21 @@ void LispReplState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     entry_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
 
+    const char* version_text = "BlindJump LISP v01";
+
+    for (int i = 0; i < 31; ++i) {
+        pfrm.set_tile(Layer::overlay, i, 0, 112);
+    }
+
+    const auto vrsn_coord = OverlayCoord{
+        u8((screen_tiles.x - 1) - str_len(version_text)),
+        0
+    };
+
+    version_text_.emplace(pfrm, vrsn_coord);
+
+    version_text_->assign(version_text);
+
     repaint_entry(pfrm);
 }
 
@@ -95,6 +110,10 @@ void LispReplState::exit(Platform& pfrm, Game& game, State& next_state)
     locale_set_language(game.persistent_data().settings_.language_);
 
     entry_.reset();
+    keyboard_.clear();
+    version_text_.reset();
+    keyboard_top_.reset();
+    keyboard_bottom_.reset();
 }
 
 

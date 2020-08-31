@@ -375,7 +375,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::punctuation_period: return ".";
         case LocaleString::menu_resume: return "Resume";
         case LocaleString::menu_connect_peer: return "Connect Peer";
-        case LocaleString::menu_console: return "Terminal";
+        case LocaleString::menu_console: return "Script Console";
         case LocaleString::menu_settings: return "Settings";
         case LocaleString::menu_save_and_quit: return "Save and Quit";
         case LocaleString::goodbye_text: return "See you later...";

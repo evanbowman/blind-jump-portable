@@ -663,6 +663,8 @@ private:
     std::optional<Text> keyboard_bottom_;
     Buffer<Text, 7> keyboard_;
 
+    std::optional<Text> version_text_;
+
     Microseconds timer_ = 0;
 
     std::optional<Text> entry_;

@@ -44,7 +44,7 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
         draw_cursor(&(*console_text_), 0, 0);
         break;
 
-    case 2:
+    case 3:
         draw_cursor(&(*resume_text_), 0, 0);
         draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), 0, 0);
@@ -52,7 +52,7 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
         draw_cursor(&(*console_text_), left, right);
         break;
 
-    case 3:
+    case 2:
         draw_cursor(&(*resume_text_), 0, 0);
         draw_cursor(&(*connect_peer_text_), left, right);
         draw_cursor(&(*settings_text_), 0, 0);
@@ -136,9 +136,9 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 5)});
             settings_text_.emplace(pfrm,
                                    OverlayCoord{settings_x_loc, u8(y - 3)});
+            connect_peer_text_.emplace(pfrm, OverlayCoord{cp_x_loc, u8(y - 1)});
             console_text_.emplace(pfrm,
-                                  OverlayCoord{console_x_loc, u8(y - 1)});
-            connect_peer_text_.emplace(pfrm, OverlayCoord{cp_x_loc, u8(y + 1)});
+                                  OverlayCoord{console_x_loc, u8(y + 1)});
             save_and_quit_text_.emplace(pfrm,
                                         OverlayCoord{snq_x_loc, u8(y + 3)});
 
@@ -173,9 +173,9 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 return *resume_text_;
             case 1:
                 return *settings_text_;
-            case 2:
-                return *console_text_;
             case 3:
+                return *console_text_;
+            case 2:
                 return *connect_peer_text_;
             case 4:
                 return *save_and_quit_text_;
@@ -216,9 +216,9 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 1:
                 return state_pool().create<EditSettingsState>(
                     make_deferred_state<PauseScreenState>(false));
-            case 2:
-                return state_pool().create<LispReplState>();
             case 3:
+                return state_pool().create<LispReplState>();
+            case 2:
                 if (connect_peer_option_available(game)) {
                     return state_pool().create<NetworkConnectSetupState>();
                 }
