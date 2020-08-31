@@ -216,7 +216,11 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 return state_pool().create<EditSettingsState>(
                     make_deferred_state<PauseScreenState>(false));
             case 3:
-                return state_pool().create<LispReplState>();
+                if (pfrm.remote_console().supported_by_device()) {
+                    return state_pool().create<RemoteReplState>();
+                } else {
+                    return state_pool().create<LispReplState>();
+                }
             case 2:
                 if (connect_peer_option_available(game)) {
                     return state_pool().create<NetworkConnectSetupState>();

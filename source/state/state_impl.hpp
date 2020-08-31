@@ -672,6 +672,14 @@ private:
 };
 
 
+class RemoteReplState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+};
+
+
 // This is a hidden game state intended for debugging. The user can enter
 // various numeric codes, which trigger state changes within the game
 // (e.g. jumping to a boss fight/level, spawing specific enemies, setting the
@@ -1060,6 +1068,7 @@ using StatePoolInst = StatePool<ActiveState,
                                 CommandCodeState,
                                 PauseScreenState,
                                 LispReplState,
+                                RemoteReplState,
                                 QuickMapState,
                                 MapSystemState,
                                 NewLevelIdleState,

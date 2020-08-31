@@ -1239,7 +1239,9 @@ bool Platform::RemoteConsole::readline(void (*callback)(Platform&, const char*))
 {
     std::string line;
     auto result = static_cast<bool>(std::getline(std::cin, line));
-    callback(*::platform, line.c_str());
+    if (result) {
+        callback(*::platform, line.c_str());
+    }
     return result;
 }
 

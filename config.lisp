@@ -11,10 +11,6 @@
 (set cell-thresh (cons 4 5))
 (set cell-iters 2)
 
-(set fullscreen 0)
-(set window-scale 4)
-
 (set sound-dir '../sounds/)
-(set shader-dir '../shaders/)
 (set image-dir '../images/)
 (set network-port 50001)
