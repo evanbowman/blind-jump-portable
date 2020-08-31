@@ -119,21 +119,6 @@ Game::Game(Platform& pfrm)
     // own parent.
     state_->enter(pfrm, *this, *state_);
 
-    // const auto controllers_head =
-    //     Conf(pfrm).expect<Conf::String>("wireless-controllers", "__next");
-
-    // Conf(pfrm).scan_list(controllers_head.c_str(), [&](const Conf::String& sn) {
-    //     auto vid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "vendor_id");
-    //     auto pid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "product_id");
-    //     auto a1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_1");
-    //     auto a2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_2");
-    //     auto start = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "start");
-    //     auto alt_1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_1");
-    //     auto alt_2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_2");
-    //     pfrm.keyboard().register_controller(
-    //         {vid, pid, a1, a2, start, alt_1, alt_2});
-    // });
-
     pfrm.on_watchdog_timeout([this](Platform& pfrm) {
         error(pfrm,
               "update loop stuck for unknown reason, system reset by watchdog");
@@ -333,12 +318,26 @@ void Game::init_script(Platform& pfrm)
     }));
 
     lisp::set_var("register-controller", lisp::make_function([](int argc) {
-        auto game = interp_get_game();
-        if (not game) {
+        L_EXPECT_ARGC(argc, 7);
+
+        for (int i = 0; i < 7; ++i) {
+            L_EXPECT_OP(i, integer);
+        }
+
+        auto pfrm = interp_get_pfrm();
+        if (not pfrm) {
             return L_NIL;
         }
 
-        // TODO...
+        pfrm->keyboard().register_controller({
+                lisp::get_op(6)->integer_.value_,
+                lisp::get_op(5)->integer_.value_,
+                lisp::get_op(4)->integer_.value_,
+                lisp::get_op(3)->integer_.value_,
+                lisp::get_op(2)->integer_.value_,
+                lisp::get_op(1)->integer_.value_,
+                lisp::get_op(0)->integer_.value_
+            });
 
         return L_NIL;
     }));
