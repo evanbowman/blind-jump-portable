@@ -32,8 +32,7 @@ void print_impl(lisp::Value* value)
         break;
 
     case lisp::Value::Type::error:
-        std::cout << "ERROR: "
-                  << lisp::Error::get_string(value->error_.code_)
+        std::cout << "ERROR: " << lisp::Error::get_string(value->error_.code_)
                   << std::endl;
         break;
     }
@@ -52,11 +51,11 @@ static lisp::Value* function_test()
     using namespace lisp;
 
     set_var("double", make_function([](int argc) {
-        EXPECT_ARGC(argc, 1);
-        EXPECT_OP(0, integer);
+                EXPECT_ARGC(argc, 1);
+                EXPECT_OP(0, integer);
 
-        return make_integer(get_op(0)->integer_.value_ * 2);
-    }));
+                return make_integer(get_op(0)->integer_.value_ * 2);
+            }));
 
     push_op(make_integer(48));
     funcall(get_var("double"), 1);
@@ -172,8 +171,7 @@ int main(int argc, char** argv)
                   << lisp::bound_context->operand_stack_.size()
                   << ", object pool: "
                   << lisp::bound_context->memory_.remaining()
-                  << ", intern mem: "
-                  << lisp::bound_context->string_intern_pos_
+                  << ", intern mem: " << lisp::bound_context->string_intern_pos_
                   << std::endl;
         std::cout << ">> ";
     }

@@ -650,7 +650,8 @@ class LispReplState : public State {
 
 private:
     enum class DisplayMode {
-        entry, show_result
+        entry,
+        show_result
     } display_mode_ = DisplayMode::entry;
 
     Vec2<int> keyboard_cursor_;

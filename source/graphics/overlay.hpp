@@ -168,6 +168,7 @@ public:
     ~LoadingBar();
 
     void set_progress(Float percentage);
+
 private:
     Platform& pfrm_;
     OverlayCoord position_;

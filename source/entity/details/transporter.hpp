@@ -9,7 +9,6 @@ class Platform;
 
 class Transporter : public Entity {
 public:
-
     Transporter()
     {
         sprite_.set_texture_index(TextureMap::transporter);

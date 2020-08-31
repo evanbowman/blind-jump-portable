@@ -1,28 +1,25 @@
-#include "state_impl.hpp"
 #include "script/lisp.hpp"
+#include "state_impl.hpp"
 
 
 // Inspired by the dvorak keyboard layout, redesigned for use with a gameboy
 // dpad. Optimized for the smallest horizontal _and_ vertical travel between key
 // presses.
-static const char* keyboard[7][6] = {
-    {"z", "y", "g", "f", "v", "q"},
-    {"m", "b", "i", "d", "l", "j"},
-    {"w", "a", "o", "e", "u", "k"},
-    {"p", "h", "t", "n", "s", "r"},
-    {"x", "c", "(", ")", "-", "*"},
-    {" ", "+", "0", "1", "2", "3"},
-    {"4", "5", "6", "7", "8", "9"}
-};
+static const char* keyboard[7][6] = {{"z", "y", "g", "f", "v", "q"},
+                                     {"m", "b", "i", "d", "l", "j"},
+                                     {"w", "a", "o", "e", "u", "k"},
+                                     {"p", "h", "t", "n", "s", "r"},
+                                     {"x", "c", "(", ")", "-", "*"},
+                                     {" ", "+", "0", "1", "2", "3"},
+                                     {"4", "5", "6", "7", "8", "9"}};
 
 
 void LispReplState::repaint_entry(Platform& pfrm)
 {
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    const auto darker_clr =
-        Text::OptColors{{ColorConstant::med_blue_gray,
-                         ColorConstant::rich_black}};
+    const auto darker_clr = Text::OptColors{
+        {ColorConstant::med_blue_gray, ColorConstant::rich_black}};
 
     entry_->assign(":", darker_clr);
 
@@ -37,8 +34,7 @@ void LispReplState::repaint_entry(Platform& pfrm)
             return std::nullopt;
 
         case DisplayMode::show_result:
-            return {{ColorConstant::med_blue_gray,
-                     ColorConstant::rich_black}};
+            return {{ColorConstant::med_blue_gray, ColorConstant::rich_black}};
         }
     }();
     entry_->append(command_.c_str(), colors);
@@ -60,16 +56,14 @@ void LispReplState::repaint_entry(Platform& pfrm)
         for (int j = 0; j < 6; ++j) {
             if (j == keyboard_cursor_.x and keyboard_cursor_.y == i) {
                 const auto colors =
-                    Text::OptColors{{
-                        ColorConstant::rich_black,
-                        ColorConstant::aerospace_orange}};
+                    Text::OptColors{{ColorConstant::rich_black,
+                                     ColorConstant::aerospace_orange}};
                 keyboard_.back().append(::keyboard[i][j], colors);
             } else {
                 keyboard_.back().append(::keyboard[i][j]);
             }
         }
         keyboard_.back().append(::keyboard[i][0], darker_clr);
-
     }
 }
 
@@ -92,10 +86,8 @@ void LispReplState::enter(Platform& pfrm, Game& game, State& prev_state)
         pfrm.set_tile(Layer::overlay, i, 0, 112);
     }
 
-    const auto vrsn_coord = OverlayCoord{
-        u8((screen_tiles.x - 1) - str_len(version_text)),
-        0
-    };
+    const auto vrsn_coord =
+        OverlayCoord{u8((screen_tiles.x - 1) - str_len(version_text)), 0};
 
     version_text_.emplace(pfrm, vrsn_coord);
 
@@ -135,19 +127,19 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
 
-
     switch (display_mode_) {
     case DisplayMode::entry:
         break;
 
     case DisplayMode::show_result:
-        if (pfrm.keyboard().down_transition<Key::action_1,
-                                            Key::action_2,
-                                            Key::start,
-                                            Key::left,
-                                            Key::right,
-                                            Key::up,
-                                            Key::down>()) {
+        if (pfrm.keyboard()
+                .down_transition<Key::action_1,
+                                 Key::action_2,
+                                 Key::start,
+                                 Key::left,
+                                 Key::right,
+                                 Key::up,
+                                 Key::down>()) {
 
             display_mode_ = DisplayMode::entry;
             command_.clear();

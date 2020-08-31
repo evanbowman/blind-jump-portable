@@ -109,8 +109,7 @@ public:
         return pool_.empty();
     }
 
-    template <typename F>
-    void scan_cells(F&& callback)
+    template <typename F> void scan_cells(F&& callback)
     {
         auto& mem = pool_.cells();
         for (auto& cell : mem) {

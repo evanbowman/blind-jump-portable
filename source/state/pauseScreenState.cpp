@@ -137,8 +137,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             settings_text_.emplace(pfrm,
                                    OverlayCoord{settings_x_loc, u8(y - 3)});
             connect_peer_text_.emplace(pfrm, OverlayCoord{cp_x_loc, u8(y - 1)});
-            console_text_.emplace(pfrm,
-                                  OverlayCoord{console_x_loc, u8(y + 1)});
+            console_text_.emplace(pfrm, OverlayCoord{console_x_loc, u8(y + 1)});
             save_and_quit_text_.emplace(pfrm,
                                         OverlayCoord{snq_x_loc, u8(y + 3)});
 

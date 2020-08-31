@@ -33,7 +33,7 @@ struct Cons {
 
 
 struct Function {
-    using Impl = Value*(*)(int);
+    using Impl = Value* (*)(int);
 
     Impl impl_;
 };
@@ -52,12 +52,18 @@ struct Error {
     static const char* get_string(Code c)
     {
         switch (c) {
-        case Code::value_not_callable: return "Value not callable";
-        case Code::invalid_argc: return "Wrong number of arguments passed to function";
-        case Code::symbol_table_exhausted: return "No more room in symbol table";
-        case Code::undefined_variable_access: return "Access to undefined variable";
-        case Code::invalid_argument_type: return "Invalid argument type";
-        case Code::out_of_memory: return "Out of memory";
+        case Code::value_not_callable:
+            return "Value not callable";
+        case Code::invalid_argc:
+            return "Wrong number of arguments passed to function";
+        case Code::symbol_table_exhausted:
+            return "No more room in symbol table";
+        case Code::undefined_variable_access:
+            return "Access to undefined variable";
+        case Code::invalid_argument_type:
+            return "Invalid argument type";
+        case Code::out_of_memory:
+            return "Out of memory";
         }
         return "Unknown error";
     }
@@ -71,7 +77,13 @@ struct UserData {
 
 struct Value {
     enum class Type : u8 {
-        nil, integer, cons, function, error, symbol, user_data,
+        nil,
+        integer,
+        cons,
+        function,
+        error,
+        symbol,
+        user_data,
     } type_ : 6;
 
     bool alive_ : 1;
@@ -142,17 +154,18 @@ u32 eval(const char* code);
 void dostring(const char* code);
 
 
-#define L_EXPECT_OP(OFFSET, TYPE)                                           \
-    if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) { \
-        if (lisp::get_op((OFFSET)) == L_NIL) { \
-            return lisp::get_op((OFFSET)); \
-        } else { \
+#define L_EXPECT_OP(OFFSET, TYPE)                                              \
+    if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) {        \
+        if (lisp::get_op((OFFSET)) == L_NIL) {                                 \
+            return lisp::get_op((OFFSET));                                     \
+        } else {                                                               \
             return lisp::make_error(lisp::Error::Code::invalid_argument_type); \
-        } \
+        }                                                                      \
     }
 
 
-#define L_EXPECT_ARGC(ARGC, EXPECTED) if (ARGC not_eq EXPECTED) \
+#define L_EXPECT_ARGC(ARGC, EXPECTED)                                          \
+    if (ARGC not_eq EXPECTED)                                                  \
         return lisp::make_error(lisp::Error::Code::invalid_argc);
 
 

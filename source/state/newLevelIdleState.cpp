@@ -22,8 +22,10 @@ void NewLevelIdleState::receive(const net_event::NewLevelSyncSeed& sync_seed,
 
             auto st = calc_screen_tiles(pfrm);
 
-            loading_bar_.emplace(pfrm, 6, OverlayCoord{u8(-1 + (st.x - 6) / 2),
-                                                       (u8)(st.y / 2 + 2)});
+            loading_bar_.emplace(
+                pfrm,
+                6,
+                OverlayCoord{u8(-1 + (st.x - 6) / 2), (u8)(st.y / 2 + 2)});
         }
 
         matching_syncs_received_ += 1;

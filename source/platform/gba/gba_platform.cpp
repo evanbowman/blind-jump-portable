@@ -921,11 +921,11 @@ Vec2<u32> Platform::Screen::size() const
 #include "data/launch_flattened.h"
 #include "data/old_poster_flattened.h"
 #include "data/overlay.h"
-#include "data/repl.h"
 #include "data/overlay_cutscene.h"
 #include "data/overlay_journal.h"
 #include "data/overlay_network_flattened.h"
 #include "data/postal_advert_flattened.h"
+#include "data/repl.h"
 #include "data/seed_packet_flattened.h"
 #include "data/spritesheet.h"
 #include "data/spritesheet2.h"
@@ -1863,12 +1863,12 @@ static const AudioTrack* find_music(const char* name)
 #include "data/sound_heart.hpp"
 #include "data/sound_laser1.hpp"
 #include "data/sound_open_book.hpp"
-#include "data/sound_typewriter.hpp"
-#include "data/sound_tw_bell.hpp"
 #include "data/sound_openbag.hpp"
 #include "data/sound_pop.hpp"
 #include "data/sound_scroll.hpp"
 #include "data/sound_select.hpp"
+#include "data/sound_tw_bell.hpp"
+#include "data/sound_typewriter.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),

@@ -3,12 +3,12 @@
 #include "function.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
+#include "script/lisp.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
-#include "script/lisp.hpp"
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -74,7 +74,8 @@ Game::Game(Platform& pfrm)
         const auto lang = lisp::get_var("default-lang");
 
         if (lang->type_ not_eq lisp::Value::Type::symbol) {
-            while (true) ; // TODO: fatal error
+            while (true)
+                ; // TODO: fatal error
         }
 
         const auto lang_enum = [&] {
@@ -188,159 +189,166 @@ void Game::init_script(Platform& pfrm)
     lisp::set_var("*pfrm*", lisp::make_userdata(&pfrm));
 
     lisp::set_var("set-level", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
 
-        if (auto game = interp_get_game()) {
-            game->persistent_data().level_ = lisp::get_op(0)->integer_.value_;
-        }
+                      if (auto game = interp_get_game()) {
+                          game->persistent_data().level_ =
+                              lisp::get_op(0)->integer_.value_;
+                      }
 
-        return L_NIL;
-    }));
+                      return L_NIL;
+                  }));
 
     lisp::set_var("add-items", lisp::make_function([](int argc) {
-        if (auto game = interp_get_game()) {
-            for (int i = 0; i < argc; ++i) {
-                const auto item =
-                    static_cast<Item::Type>(lisp::get_op(i)->integer_.value_);
+                      if (auto game = interp_get_game()) {
+                          for (int i = 0; i < argc; ++i) {
+                              const auto item = static_cast<Item::Type>(
+                                  lisp::get_op(i)->integer_.value_);
 
-                if (auto pfrm = interp_get_pfrm()) {
-                    game->inventory().push_item(*pfrm, *game, item);
-                }
-            }
-        }
+                              if (auto pfrm = interp_get_pfrm()) {
+                                  game->inventory().push_item(
+                                      *pfrm, *game, item);
+                              }
+                          }
+                      }
 
-        return L_NIL;
-    }));
+                      return L_NIL;
+                  }));
 
     lisp::set_var("set-hp", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(0, integer);
-        L_EXPECT_OP(1, integer);
+                      L_EXPECT_ARGC(argc, 2);
+                      L_EXPECT_OP(0, integer);
+                      L_EXPECT_OP(1, integer);
 
-        auto game = interp_get_game();
-        if (not game) {
-            return L_NIL;
-        }
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
 
-        auto entity = get_entity_by_id(*game, lisp::get_op(1)->integer_.value_);
-        if (entity) {
-            entity->set_health(lisp::get_op(0)->integer_.value_);
-        }
+                      auto entity = get_entity_by_id(
+                          *game, lisp::get_op(1)->integer_.value_);
+                      if (entity) {
+                          entity->set_health(lisp::get_op(0)->integer_.value_);
+                      }
 
-        return L_NIL;
-    }));
+                      return L_NIL;
+                  }));
 
-    lisp::set_var("kill", lisp::make_function([](int argc) {
-        auto game = interp_get_game();
-        if (not game) {
-            return L_NIL;
-        }
-
-        for (int i = 0; i < argc; ++i) {
-
-            if (lisp::get_op(i)->type_ not_eq lisp::Value::Type::integer) {
-                const auto err = lisp::Error::Code::invalid_argument_type;
-                return lisp::make_error(err);
+    lisp::set_var(
+        "kill", lisp::make_function([](int argc) {
+            auto game = interp_get_game();
+            if (not game) {
+                return L_NIL;
             }
 
-            auto entity =
-                get_entity_by_id(*game, lisp::get_op(i)->integer_.value_);
+            for (int i = 0; i < argc; ++i) {
 
-            if (entity) {
-                entity->set_health(0);
+                if (lisp::get_op(i)->type_ not_eq lisp::Value::Type::integer) {
+                    const auto err = lisp::Error::Code::invalid_argument_type;
+                    return lisp::make_error(err);
+                }
+
+                auto entity =
+                    get_entity_by_id(*game, lisp::get_op(i)->integer_.value_);
+
+                if (entity) {
+                    entity->set_health(0);
+                }
             }
-        }
 
-        return L_NIL;
-
-    }));
+            return L_NIL;
+        }));
 
     lisp::set_var("get-pos", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
 
-        auto game = interp_get_game();
-        if (not game) {
-            return L_NIL;
-        }
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
 
-        auto entity = get_entity_by_id(*game, lisp::get_op(0)->integer_.value_);
-        if (not entity) {
-            return L_NIL;
-        }
+                      auto entity = get_entity_by_id(
+                          *game, lisp::get_op(0)->integer_.value_);
+                      if (not entity) {
+                          return L_NIL;
+                      }
 
-        return lisp::make_cons(lisp::make_integer(entity->get_position().x),
-                               lisp::make_integer(entity->get_position().y));
-    }));
+                      return lisp::make_cons(
+                          lisp::make_integer(entity->get_position().x),
+                          lisp::make_integer(entity->get_position().y));
+                  }));
 
     lisp::set_var("enemies", lisp::make_function([](int argc) {
-        auto game = interp_get_game();
-        if (not game) {
-            return L_NIL;
-        }
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
 
-        lisp::Value* lat = L_NIL;
+                      lisp::Value* lat = L_NIL;
 
-        game->enemies().transform([&](auto& buf) {
-            for (auto& enemy : buf) {
-                lisp::push_op(lat); // To keep it from being collected
-                lat = lisp::make_cons(L_NIL, lat);
-                lisp::pop_op(); // lat
+                      game->enemies().transform([&](auto& buf) {
+                          for (auto& enemy : buf) {
+                              lisp::push_op(
+                                  lat); // To keep it from being collected
+                              lat = lisp::make_cons(L_NIL, lat);
+                              lisp::pop_op(); // lat
 
-                lisp::push_op(lat);
-                lat->cons_.car_ = lisp::make_integer(enemy->id());
-                lisp::pop_op(); // lat
-            }
-        });
+                              lisp::push_op(lat);
+                              lat->cons_.car_ = lisp::make_integer(enemy->id());
+                              lisp::pop_op(); // lat
+                          }
+                      });
 
-        return lat;
-    }));
+                      return lat;
+                  }));
 
     lisp::set_var("log-severity", lisp::make_function([](int argc) {
-        auto game = interp_get_game();
-        if (not game) {
-            return L_NIL;
-        }
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
 
-        if (argc == 0) {
-            const auto sv = game->persistent_data().settings_.log_severity_;
-            return lisp::make_integer(static_cast<int>(sv));
-        } else {
-            L_EXPECT_ARGC(argc, 1);
-            L_EXPECT_OP(0, integer);
+                      if (argc == 0) {
+                          const auto sv =
+                              game->persistent_data().settings_.log_severity_;
+                          return lisp::make_integer(static_cast<int>(sv));
+                      } else {
+                          L_EXPECT_ARGC(argc, 1);
+                          L_EXPECT_OP(0, integer);
 
-            auto val = static_cast<Severity>(lisp::get_op(0)->integer_.value_);
-            game->persistent_data().settings_.log_severity_ = val;
-        }
+                          auto val = static_cast<Severity>(
+                              lisp::get_op(0)->integer_.value_);
+                          game->persistent_data().settings_.log_severity_ = val;
+                      }
 
-        return L_NIL;
-    }));
+                      return L_NIL;
+                  }));
 
     lisp::set_var("register-controller", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 7);
+                      L_EXPECT_ARGC(argc, 7);
 
-        for (int i = 0; i < 7; ++i) {
-            L_EXPECT_OP(i, integer);
-        }
+                      for (int i = 0; i < 7; ++i) {
+                          L_EXPECT_OP(i, integer);
+                      }
 
-        auto pfrm = interp_get_pfrm();
-        if (not pfrm) {
-            return L_NIL;
-        }
+                      auto pfrm = interp_get_pfrm();
+                      if (not pfrm) {
+                          return L_NIL;
+                      }
 
-        pfrm->keyboard().register_controller({
-                lisp::get_op(6)->integer_.value_,
-                lisp::get_op(5)->integer_.value_,
-                lisp::get_op(4)->integer_.value_,
-                lisp::get_op(3)->integer_.value_,
-                lisp::get_op(2)->integer_.value_,
-                lisp::get_op(1)->integer_.value_,
-                lisp::get_op(0)->integer_.value_
-            });
+                      pfrm->keyboard().register_controller(
+                          {lisp::get_op(6)->integer_.value_,
+                           lisp::get_op(5)->integer_.value_,
+                           lisp::get_op(4)->integer_.value_,
+                           lisp::get_op(3)->integer_.value_,
+                           lisp::get_op(2)->integer_.value_,
+                           lisp::get_op(1)->integer_.value_,
+                           lisp::get_op(0)->integer_.value_});
 
-        return L_NIL;
-    }));
+                      return L_NIL;
+                  }));
 
     lisp::dostring(pfrm.config_data());
 }
@@ -1849,8 +1857,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     }
 
     // Sometimes for small maps, and always for large maps, place an item chest
-    if (rng::choice<2>(rng::critical_state) or
-        (int) initial_free_spaces > 25) {
+    if (rng::choice<2>(rng::critical_state) or (int) initial_free_spaces > 25) {
         spawn_item_chest(pfrm, *this, free_spots);
     }
 
