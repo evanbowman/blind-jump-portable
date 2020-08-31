@@ -22,8 +22,10 @@ void NewLevelIdleState::receive(const net_event::NewLevelSyncSeed& sync_seed,
 
             auto st = calc_screen_tiles(pfrm);
 
-            loading_bar_.emplace(pfrm, 6, OverlayCoord{u8(-1 + (st.x - 6) / 2),
-                                                       (u8)(st.y / 2 + 2)});
+            loading_bar_.emplace(
+                pfrm,
+                6,
+                OverlayCoord{u8(-1 + (st.x - 6) / 2), (u8)(st.y / 2 + 2)});
         }
 
         matching_syncs_received_ += 1;
@@ -140,12 +142,6 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (ready_) {
         Level next_level = game.level() + 1;
-
-        // backdoor for debugging purposes.
-        if (pfrm.keyboard().all_pressed<Key::alt_1, Key::alt_2, Key::start>()) {
-            return state_pool().create<CommandCodeState>();
-        }
-
 
         // Boss levels still need a lot of work before enabling them for
         // multiplayer, in order to properly synchronize the bosses across

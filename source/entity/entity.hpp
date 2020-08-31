@@ -71,6 +71,7 @@ public:
     // of an id collision, the receiver should not spawn the new entity, and
     // send its own event back to the sender, if appropriate.
     static void reset_ids();
+
     static Id max_id();
     // Be careful with this function! Before calling, you should make sure that
     // no similar extant entities share the same id.
@@ -96,13 +97,13 @@ public:
     {
     }
 
+    void set_position(const Vec2<Float>& position);
+
 protected:
     void debit_health(Health amount = 1)
     {
         health_ = std::max(Health(0), health_ - amount);
     }
-
-    void set_position(const Vec2<Float>& position);
 
     void kill()
     {

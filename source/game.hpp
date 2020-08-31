@@ -187,6 +187,8 @@ public:
 private:
     bool load_save_data(Platform& pfrm);
 
+    void init_script(Platform& pfrm);
+
     TileMap tiles_;
     Camera camera_;
     Player player_;

@@ -88,8 +88,12 @@ set(SOURCES
   ${SOURCE_DIR}/string.cpp
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/path.cpp
-  ${SOURCE_DIR}/game.cpp
-  ${SOURCE_DIR}/conf.cpp)
+  ${SOURCE_DIR}/game.cpp)
+
+
+set(SOURCES
+  ${SOURCES}
+  ${SOURCE_DIR}/script/lisp.cpp)
 
 
 set(SOURCES
@@ -115,6 +119,7 @@ set(SOURCES
   ${SOURCE_DIR}/state/overworldState.cpp
   ${SOURCE_DIR}/state/mapSystemState.cpp
   ${SOURCE_DIR}/state/deathFadeState.cpp
+  ${SOURCE_DIR}/state/lispReplState.cpp
   ${SOURCE_DIR}/state/newLevelState.cpp
   ${SOURCE_DIR}/state/quickMapState.cpp
   ${SOURCE_DIR}/state/notebookState.cpp
@@ -127,7 +132,7 @@ set(SOURCES
 
 
 if(GAMEBOY_ADVANCE)
-  set(CONF_INI "${SOURCE_DIR}/../config.ini")
+  set(CONF_INI "${SOURCE_DIR}/../config.lisp")
   set(CONF_SRC "${SOURCE_DIR}/config.cpp")
 
   add_custom_command(OUTPUT ${CONF_SRC}
@@ -155,6 +160,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/data/scottbuckley_hiraeth.s
     ${SOURCE_DIR}/data/clair_de_lune.s
     ${SOURCE_DIR}/data/overlay.s
+    ${SOURCE_DIR}/data/repl.s
     ${SOURCE_DIR}/data/overlay_cutscene.s
     ${SOURCE_DIR}/data/charset_en_spn_fr.s
     ${SOURCE_DIR}/data/tilesheet_intro_cutscene_flattened.s
@@ -183,12 +189,14 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/data/sound_select.s
     ${SOURCE_DIR}/data/sound_openbag.s
     ${SOURCE_DIR}/data/sound_blaster.s
+    ${SOURCE_DIR}/data/sound_tw_bell.s
     ${SOURCE_DIR}/data/sound_footstep1.s
     ${SOURCE_DIR}/data/sound_footstep2.s
     ${SOURCE_DIR}/data/sound_footstep3.s
     ${SOURCE_DIR}/data/sound_footstep4.s
     ${SOURCE_DIR}/data/sound_open_book.s
     ${SOURCE_DIR}/data/sound_explosion1.s
+    ${SOURCE_DIR}/data/sound_typewriter.s
     ${SOURCE_DIR}/data/sound_explosion2.s
     ${SOURCE_DIR}/data/overlay_journal.s
     ${SOURCE_DIR}/data/spritesheet_boss0.s
@@ -319,6 +327,7 @@ if(GAMEBOY_ADVANCE)
     compile_image(tilesheet2_top 4 3 NO)
     compile_image(tilesheet3_top 4 3 NO)
     compile_image(overlay 0 0 NO)
+    compile_image(repl 0 0 NO)
     compile_image(overlay_cutscene 0 0 NO)
     compile_image(charset_en_spn_fr 0 0 NO)
     compile_image(overlay_journal 0 0 NO)

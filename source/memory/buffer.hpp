@@ -89,13 +89,13 @@ public:
     }
 
 
-    const Iterator begin() const
+    Iterator begin() const
     {
         return begin_;
     }
 
 
-    const Iterator end() const
+    Iterator end() const
     {
         return end_;
     }

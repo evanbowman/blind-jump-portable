@@ -1,6 +1,5 @@
 #include "dasher.hpp"
 #include "common.hpp"
-#include "conf.hpp"
 #include "game.hpp"
 #include "number/random.hpp"
 #include "wallCollision.hpp"
@@ -307,8 +306,7 @@ void Dasher::injured(Platform& pf, Game& game, Health amount)
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);
     } else {
-        const auto add_score =
-            Conf(pf).expect<Conf::Integer>("scoring", "dasher");
+        const auto add_score = 15;
 
         switch (game.difficulty()) {
         case Settings::Difficulty::count:

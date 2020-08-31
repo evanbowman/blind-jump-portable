@@ -33,6 +33,7 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
         draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), 0, 0);
+        draw_cursor(&(*console_text_), 0, 0);
         break;
 
     case 1:
@@ -40,6 +41,15 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
         draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), left, right);
         draw_cursor(&(*save_and_quit_text_), 0, 0);
+        draw_cursor(&(*console_text_), 0, 0);
+        break;
+
+    case 3:
+        draw_cursor(&(*resume_text_), 0, 0);
+        draw_cursor(&(*connect_peer_text_), 0, 0);
+        draw_cursor(&(*settings_text_), 0, 0);
+        draw_cursor(&(*save_and_quit_text_), 0, 0);
+        draw_cursor(&(*console_text_), left, right);
         break;
 
     case 2:
@@ -47,13 +57,15 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
         draw_cursor(&(*connect_peer_text_), left, right);
         draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), 0, 0);
+        draw_cursor(&(*console_text_), 0, 0);
         break;
 
-    case 3:
+    case 4:
         draw_cursor(&(*resume_text_), 0, 0);
         draw_cursor(&(*connect_peer_text_), 0, 0);
         draw_cursor(&(*settings_text_), 0, 0);
         draw_cursor(&(*save_and_quit_text_), left, right);
+        draw_cursor(&(*console_text_), 0, 0);
         break;
     }
 }
@@ -110,19 +122,24 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             const auto snq_text_len =
                 utf8::len(locale_string(LocaleString::menu_save_and_quit));
 
+            const auto console_text_len =
+                utf8::len(locale_string(LocaleString::menu_console));
+
             const u8 resume_x_loc = (screen_tiles.x - resume_text_len) / 2;
             const u8 cp_x_loc = (screen_tiles.x - connect_peer_text_len) / 2;
             const u8 settings_x_loc = (screen_tiles.x - settings_text_len) / 2;
             const u8 snq_x_loc = (screen_tiles.x - snq_text_len) / 2;
+            const u8 console_x_loc = (screen_tiles.x - console_text_len) / 2;
 
             const u8 y = screen_tiles.y / 2;
 
-            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 4)});
-            connect_peer_text_.emplace(pfrm, OverlayCoord{cp_x_loc, u8(y - 0)});
+            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 5)});
             settings_text_.emplace(pfrm,
-                                   OverlayCoord{settings_x_loc, u8(y - 2)});
+                                   OverlayCoord{settings_x_loc, u8(y - 3)});
+            connect_peer_text_.emplace(pfrm, OverlayCoord{cp_x_loc, u8(y - 1)});
+            console_text_.emplace(pfrm, OverlayCoord{console_x_loc, u8(y + 1)});
             save_and_quit_text_.emplace(pfrm,
-                                        OverlayCoord{snq_x_loc, u8(y + 2)});
+                                        OverlayCoord{snq_x_loc, u8(y + 3)});
 
             resume_text_->assign(locale_string(LocaleString::menu_resume));
 
@@ -137,6 +154,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                     }
                 }());
 
+            console_text_->assign(locale_string(LocaleString::menu_console));
             settings_text_->assign(locale_string(LocaleString::menu_settings));
             save_and_quit_text_->assign(
                 locale_string(LocaleString::menu_save_and_quit));
@@ -154,9 +172,11 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 return *resume_text_;
             case 1:
                 return *settings_text_;
+            case 3:
+                return *console_text_;
             case 2:
                 return *connect_peer_text_;
-            case 3:
+            case 4:
                 return *save_and_quit_text_;
             }
         }();
@@ -178,7 +198,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             draw_cursor(pfrm);
         }
 
-        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 3) {
+        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 4) {
             cursor_loc_ += 1;
             pfrm.speaker().play_sound("scroll", 1);
             draw_cursor(pfrm);
@@ -195,12 +215,14 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             case 1:
                 return state_pool().create<EditSettingsState>(
                     make_deferred_state<PauseScreenState>(false));
+            case 3:
+                return state_pool().create<LispReplState>();
             case 2:
                 if (connect_peer_option_available(game)) {
                     return state_pool().create<NetworkConnectSetupState>();
                 }
                 break;
-            case 3:
+            case 4:
                 return state_pool().create<GoodbyeState>();
             }
         } else if (pfrm.keyboard().down_transition<Key::start>()) {
@@ -230,6 +252,7 @@ void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
     connect_peer_text_.reset();
     settings_text_.reset();
     save_and_quit_text_.reset();
+    console_text_.reset();
 
     pfrm.fill_overlay(0);
 }

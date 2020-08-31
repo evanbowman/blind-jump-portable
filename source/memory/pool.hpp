@@ -6,13 +6,13 @@
 
 
 template <u32 size, u32 count, u32 align = size> class Pool {
-private:
+public:
     struct Cell {
         alignas(align) std::array<byte, size> mem_;
         Cell* next_;
     };
 
-public:
+
     Pool() : freelist_(nullptr)
     {
         for (decltype(count) i = 0; i < count; ++i) {
@@ -52,8 +52,30 @@ public:
         return align;
     }
 
+    using Cells = std::array<Cell, count>;
+    Cells& cells()
+    {
+        return cells_;
+    }
+
+    u32 remaining() const
+    {
+        const Cell* current = freelist_;
+        int n = 0;
+        while (current) {
+            current = current->next_;
+            ++n;
+        }
+        return n;
+    }
+
+    bool empty() const
+    {
+        return freelist_ == nullptr;
+    }
+
 private:
-    std::array<Cell, count> cells_;
+    Cells cells_;
     Cell* freelist_;
 };
 
@@ -75,6 +97,25 @@ public:
     {
         obj->~T();
         pool_.post((byte*)obj);
+    }
+
+    u32 remaining() const
+    {
+        return pool_.remaining();
+    }
+
+    bool empty() const
+    {
+        return pool_.empty();
+    }
+
+    template <typename F> void scan_cells(F&& callback)
+    {
+        auto& mem = pool_.cells();
+        for (auto& cell : mem) {
+            T* obj = reinterpret_cast<T*>(cell.mem_.data());
+            callback(obj);
+        }
     }
 
 private:

@@ -1,6 +1,5 @@
 #include "drone.hpp"
 #include "common.hpp"
-#include "conf.hpp"
 #include "game.hpp"
 #include "network_event.hpp"
 #include "number/random.hpp"
@@ -202,8 +201,7 @@ void Drone::injured(Platform& pf, Game& game, Health amount)
     if (alive()) {
         pf.speaker().play_sound("click", 1, position_);
     } else {
-        const auto add_score =
-            Conf(pf).expect<Conf::Integer>("scoring", "drone");
+        const auto add_score = 10;
 
         switch (game.difficulty()) {
         case Settings::Difficulty::count:

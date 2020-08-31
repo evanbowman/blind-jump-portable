@@ -1,9 +1,9 @@
 #include "game.hpp"
 #include "bulkAllocator.hpp"
-#include "conf.hpp"
 #include "function.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
+#include "script/lisp.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
@@ -41,6 +41,8 @@ bool Game::load_save_data(Platform& pfrm)
 Game::Game(Platform& pfrm)
     : player_(pfrm), score_(0), next_state_(null_state()), state_(null_state())
 {
+    init_script(pfrm);
+
     if (not this->load_save_data(pfrm)) {
         persistent_data_.reset(pfrm);
         info(pfrm, "no save file found");
@@ -69,15 +71,18 @@ Game::Game(Platform& pfrm)
     if (persistent_data_.settings_.language_ not_eq LocaleLanguage::null) {
         locale_set_language(persistent_data_.settings_.language_);
     } else {
-        const auto lang =
-            Conf(pfrm).expect<Conf::String>("locale", "default_language");
+        const auto lang = lisp::get_var("default-lang");
+
+        if (lang->type_ not_eq lisp::Value::Type::symbol) {
+            while (true)
+                ; // TODO: fatal error
+        }
 
         const auto lang_enum = [&] {
-            if (lang == "english") {
+            if (strcmp(lang->symbol_.name_, "english") == 0) {
                 return LocaleLanguage::english;
-            } else {
-                return LocaleLanguage::null;
             }
+            return LocaleLanguage::null;
         }();
 
         if (lang_enum not_eq LocaleLanguage::null) {
@@ -86,7 +91,7 @@ Game::Game(Platform& pfrm)
 
             StringBuffer<64> buf;
             buf += "saved default language as ";
-            buf += lang;
+            buf += lang->symbol_.name_;
 
             info(pfrm, buf.c_str());
         }
@@ -115,21 +120,6 @@ Game::Game(Platform& pfrm)
     // own parent.
     state_->enter(pfrm, *this, *state_);
 
-    const auto controllers_head =
-        Conf(pfrm).expect<Conf::String>("wireless-controllers", "__next");
-
-    Conf(pfrm).scan_list(controllers_head.c_str(), [&](const Conf::String& sn) {
-        auto vid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "vendor_id");
-        auto pid = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "product_id");
-        auto a1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_1");
-        auto a2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "action_2");
-        auto start = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "start");
-        auto alt_1 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_1");
-        auto alt_2 = Conf(pfrm).expect<Conf::Integer>(sn.c_str(), "alt_2");
-        pfrm.keyboard().register_controller(
-            {vid, pid, a1, a2, start, alt_1, alt_2});
-    });
-
     pfrm.on_watchdog_timeout([this](Platform& pfrm) {
         error(pfrm,
               "update loop stuck for unknown reason, system reset by watchdog");
@@ -139,6 +129,228 @@ Game::Game(Platform& pfrm)
         // off...
         pfrm.write_save_data((byte*)&persistent_data_, sizeof persistent_data_);
     });
+}
+
+
+// We're storing a pointer to the C++ game class instance in a userdata object,
+// so that routines registered with the lisp interpreter can change game state.
+static Game* interp_get_game()
+{
+    auto game = lisp::get_var("*game*");
+    if (game->type_ not_eq lisp::Value::Type::user_data) {
+        return nullptr;
+    }
+    return (Game*)game->user_data_.obj_;
+}
+
+
+static Platform* interp_get_pfrm()
+{
+    auto pfrm = lisp::get_var("*pfrm*");
+    if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+        return nullptr;
+    }
+    return (Platform*)pfrm->user_data_.obj_;
+}
+
+
+static Entity* get_entity_by_id(Game& game, Entity::Id id)
+{
+    if (id == game.player().id()) {
+        return &game.player();
+    }
+    if (id == game.transporter().id()) {
+        return &game.transporter();
+    }
+
+    Entity* result = nullptr;
+
+    auto match_id = [&](auto& buf) {
+        for (auto& entity : buf) {
+            if (entity->id() == id) {
+                result = entity.get();
+            }
+        }
+    };
+
+    game.effects().transform(match_id);
+    game.details().transform(match_id);
+    game.enemies().transform(match_id);
+
+    return result;
+}
+
+
+void Game::init_script(Platform& pfrm)
+{
+    lisp::init(pfrm);
+
+    lisp::set_var("*game*", lisp::make_userdata(this));
+    lisp::set_var("*pfrm*", lisp::make_userdata(&pfrm));
+
+    lisp::set_var("set-level", lisp::make_function([](int argc) {
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
+
+                      if (auto game = interp_get_game()) {
+                          game->persistent_data().level_ =
+                              lisp::get_op(0)->integer_.value_;
+                      }
+
+                      return L_NIL;
+                  }));
+
+    lisp::set_var("add-items", lisp::make_function([](int argc) {
+                      if (auto game = interp_get_game()) {
+                          for (int i = 0; i < argc; ++i) {
+                              const auto item = static_cast<Item::Type>(
+                                  lisp::get_op(i)->integer_.value_);
+
+                              if (auto pfrm = interp_get_pfrm()) {
+                                  game->inventory().push_item(
+                                      *pfrm, *game, item);
+                              }
+                          }
+                      }
+
+                      return L_NIL;
+                  }));
+
+    lisp::set_var("set-hp", lisp::make_function([](int argc) {
+                      L_EXPECT_ARGC(argc, 2);
+                      L_EXPECT_OP(0, integer);
+                      L_EXPECT_OP(1, integer);
+
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
+
+                      auto entity = get_entity_by_id(
+                          *game, lisp::get_op(1)->integer_.value_);
+                      if (entity) {
+                          entity->set_health(lisp::get_op(0)->integer_.value_);
+                      }
+
+                      return L_NIL;
+                  }));
+
+    lisp::set_var(
+        "kill", lisp::make_function([](int argc) {
+            auto game = interp_get_game();
+            if (not game) {
+                return L_NIL;
+            }
+
+            for (int i = 0; i < argc; ++i) {
+
+                if (lisp::get_op(i)->type_ not_eq lisp::Value::Type::integer) {
+                    const auto err = lisp::Error::Code::invalid_argument_type;
+                    return lisp::make_error(err);
+                }
+
+                auto entity =
+                    get_entity_by_id(*game, lisp::get_op(i)->integer_.value_);
+
+                if (entity) {
+                    entity->set_health(0);
+                }
+            }
+
+            return L_NIL;
+        }));
+
+    lisp::set_var("get-pos", lisp::make_function([](int argc) {
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
+
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
+
+                      auto entity = get_entity_by_id(
+                          *game, lisp::get_op(0)->integer_.value_);
+                      if (not entity) {
+                          return L_NIL;
+                      }
+
+                      return lisp::make_cons(
+                          lisp::make_integer(entity->get_position().x),
+                          lisp::make_integer(entity->get_position().y));
+                  }));
+
+    lisp::set_var("enemies", lisp::make_function([](int argc) {
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
+
+                      lisp::Value* lat = L_NIL;
+
+                      game->enemies().transform([&](auto& buf) {
+                          for (auto& enemy : buf) {
+                              lisp::push_op(
+                                  lat); // To keep it from being collected
+                              lat = lisp::make_cons(L_NIL, lat);
+                              lisp::pop_op(); // lat
+
+                              lisp::push_op(lat);
+                              lat->cons_.car_ = lisp::make_integer(enemy->id());
+                              lisp::pop_op(); // lat
+                          }
+                      });
+
+                      return lat;
+                  }));
+
+    lisp::set_var("log-severity", lisp::make_function([](int argc) {
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
+
+                      if (argc == 0) {
+                          const auto sv =
+                              game->persistent_data().settings_.log_severity_;
+                          return lisp::make_integer(static_cast<int>(sv));
+                      } else {
+                          L_EXPECT_ARGC(argc, 1);
+                          L_EXPECT_OP(0, integer);
+
+                          auto val = static_cast<Severity>(
+                              lisp::get_op(0)->integer_.value_);
+                          game->persistent_data().settings_.log_severity_ = val;
+                      }
+
+                      return L_NIL;
+                  }));
+
+    lisp::set_var("register-controller", lisp::make_function([](int argc) {
+                      L_EXPECT_ARGC(argc, 7);
+
+                      for (int i = 0; i < 7; ++i) {
+                          L_EXPECT_OP(i, integer);
+                      }
+
+                      auto pfrm = interp_get_pfrm();
+                      if (not pfrm) {
+                          return L_NIL;
+                      }
+
+                      pfrm->keyboard().register_controller(
+                          {lisp::get_op(6)->integer_.value_,
+                           lisp::get_op(5)->integer_.value_,
+                           lisp::get_op(4)->integer_.value_,
+                           lisp::get_op(3)->integer_.value_,
+                           lisp::get_op(2)->integer_.value_,
+                           lisp::get_op(1)->integer_.value_,
+                           lisp::get_op(0)->integer_.value_});
+
+                      return L_NIL;
+                  }));
+
+    lisp::dostring(pfrm.config_data());
 }
 
 
@@ -683,6 +895,11 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     }
 
     Entity::reset_ids();
+    // These few entities are sort of a special case. All other entities are
+    // erased during level transition, but the player and transporter are
+    // persistent, and therefore, should be excluded from the id reset.
+    player_.override_id(player_.id());
+    transporter_.override_id(transporter_.id());
 
     persistent_data_.score_ = score_;
     persistent_data_.player_health_ = player_.get_health();
@@ -1271,24 +1488,18 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     // Some other enemies require a lot of map space to fight effectively, so
     // they are banned from tiny maps.
 
-    const char* setup = "level-setup";
+    const auto max_density = 160;
 
-    const auto max_density =
-        Conf(pfrm).expect<Conf::Integer>(setup, "max_enemy_density");
+    const auto min_density = 70;
 
-    const auto min_density =
-        Conf(pfrm).expect<Conf::Integer>(setup, "min_enemy_density");
-
-    const auto density_incr =
-        Conf(pfrm).expect<Conf::Integer>(setup, "enemy_density_incr");
+    const auto density_incr = 4;
 
 
     const auto density = std::min(
         Float(max_density) / 1000,
         Float(min_density) / 1000 + game.level() * Float(density_incr) / 1000);
 
-    const auto max_enemies =
-        Conf(pfrm).expect<Conf::Integer>(setup, "max_enemies");
+    const auto max_enemies = 6;
 
     const int spawn_count =
         std::max(std::min(max_enemies, int(free_spots.size() * density)), 1);
@@ -1615,8 +1826,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             break;
         }
 
-        int heart_count =
-            Conf(pfrm).expect<Conf::Integer>("level-setup", "max_hearts");
+        int heart_count = 2;
 
         if (difficulty() == Settings::Difficulty::hard) {
             heart_count = 0;
@@ -1647,10 +1857,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     }
 
     // Sometimes for small maps, and always for large maps, place an item chest
-    if (rng::choice<2>(rng::critical_state) or
-        (int) initial_free_spaces >
-            Conf(pfrm).expect<Conf::Integer>("level-setup",
-                                             "item_chest_spawn_threshold")) {
+    if (rng::choice<2>(rng::critical_state) or (int) initial_free_spaces > 25) {
         spawn_item_chest(pfrm, *this, free_spots);
     }
 

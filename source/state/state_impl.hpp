@@ -637,7 +637,38 @@ private:
     std::optional<Text> connect_peer_text_;
     std::optional<Text> settings_text_;
     std::optional<Text> save_and_quit_text_;
+    std::optional<Text> console_text_;
     Float y_offset_ = 0;
+};
+
+
+class LispReplState : public State {
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    enum class DisplayMode {
+        entry,
+        show_result
+    } display_mode_ = DisplayMode::entry;
+
+    Vec2<int> keyboard_cursor_;
+
+    void repaint_entry(Platform& pfrm);
+
+    StringBuffer<28> command_;
+
+    std::optional<Text> keyboard_top_;
+    std::optional<Text> keyboard_bottom_;
+    Buffer<Text, 7> keyboard_;
+
+    std::optional<Text> version_text_;
+
+    Microseconds timer_ = 0;
+
+    std::optional<Text> entry_;
 };
 
 
@@ -913,39 +944,6 @@ private:
     } difficulty_line_updater_;
 
 
-    class LogSeverityLineUpdater : public LineUpdater {
-
-        Result update(Platform& pfrm, Game& game, int dir) override
-        {
-            Severity& severity = game.persistent_data().settings_.log_severity_;
-            if (dir not_eq 0) {
-                auto s = static_cast<int>(severity);
-                s += 1;
-                s %= static_cast<int>(Severity::count);
-                severity = static_cast<Severity>(s);
-                game.persistent_data().settings_.log_severity_ = severity;
-                pfrm.logger().set_threshold(severity);
-            }
-            switch (severity) {
-            case Severity::debug:
-                return locale_string(LocaleString::severity_debug);
-
-            case Severity::info:
-                return locale_string(LocaleString::severity_info);
-
-            case Severity::warning:
-                return locale_string(LocaleString::severity_warning);
-
-            case Severity::error:
-                return locale_string(LocaleString::severity_error);
-
-            case Severity::count:
-                break;
-            }
-            return "";
-        }
-    } log_severity_line_updater_;
-
     struct LineInfo {
         LineUpdater& updater_;
         std::optional<Text> text_ = {};
@@ -953,7 +951,7 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 7;
+    static constexpr const int line_count_ = 6;
 
     std::array<LineInfo, line_count_> lines_;
 
@@ -964,7 +962,6 @@ private:
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
         LocaleString::settings_show_stats,
-        LocaleString::settings_log_severity,
     };
 
     std::optional<Text> message_;
@@ -1062,6 +1059,7 @@ using StatePoolInst = StatePool<ActiveState,
                                 NewLevelState,
                                 CommandCodeState,
                                 PauseScreenState,
+                                LispReplState,
                                 QuickMapState,
                                 MapSystemState,
                                 NewLevelIdleState,

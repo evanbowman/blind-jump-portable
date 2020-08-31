@@ -925,6 +925,7 @@ Vec2<u32> Platform::Screen::size() const
 #include "data/overlay_journal.h"
 #include "data/overlay_network_flattened.h"
 #include "data/postal_advert_flattened.h"
+#include "data/repl.h"
 #include "data/seed_packet_flattened.h"
 #include "data/spritesheet.h"
 #include "data/spritesheet2.h"
@@ -983,6 +984,7 @@ static const TextureData tile_textures[] = {
 
 static const TextureData overlay_textures[] = {
     TEXTURE_INFO(charset_en_spn_fr),
+    TEXTURE_INFO(repl),
     TEXTURE_INFO(overlay),
     TEXTURE_INFO(overlay_cutscene),
     TEXTURE_INFO(overlay_journal),
@@ -1865,10 +1867,13 @@ static const AudioTrack* find_music(const char* name)
 #include "data/sound_pop.hpp"
 #include "data/sound_scroll.hpp"
 #include "data/sound_select.hpp"
+#include "data/sound_tw_bell.hpp"
+#include "data/sound_typewriter.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
                                     DEF_SOUND(explosion1, sound_explosion2),
+                                    DEF_SOUND(typewriter, sound_typewriter),
                                     DEF_SOUND(footstep1, sound_footstep1),
                                     DEF_SOUND(footstep2, sound_footstep2),
                                     DEF_SOUND(footstep3, sound_footstep3),
@@ -1877,6 +1882,7 @@ static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
                                     DEF_SOUND(dropitem, sound_dropitem),
                                     DEF_SOUND(openbag, sound_openbag),
                                     DEF_SOUND(blaster, sound_blaster),
+                                    DEF_SOUND(tw_bell, sound_tw_bell),
                                     DEF_SOUND(select, sound_select),
                                     DEF_SOUND(laser1, sound_laser1),
                                     DEF_SOUND(scroll, sound_scroll),
