@@ -76,7 +76,7 @@ struct UserData {
 
 
 struct Value {
-    enum class Type : u8 {
+    enum Type {
         nil,
         integer,
         cons,
@@ -84,7 +84,8 @@ struct Value {
         error,
         symbol,
         user_data,
-    } type_ : 6;
+    };
+    u8 type_ : 6;
 
     bool alive_ : 1;
     bool mark_bit_ : 1;
