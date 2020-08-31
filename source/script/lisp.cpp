@@ -681,9 +681,22 @@ static void gc_mark_value(Value* value)
 {
     switch (value->type_) {
     case Value::Type::cons:
-        // FIXME: Avoid recursion!
-        gc_mark_value(value->cons_.car_);
-        gc_mark_value(value->cons_.cdr_);
+        if (value->cons_.cdr_->type_ == Value::Type::cons) {
+            auto current = value;
+
+            current->mark_bit_ = true; // possibly redundant
+
+            while (current->cons_.cdr_->type_ == Value::Type::cons) {
+                gc_mark_value(current->cons_.car_);
+                current = current->cons_.cdr_;
+                current->mark_bit_ = true;
+            }
+            gc_mark_value(value->cons_.car_);
+            gc_mark_value(value->cons_.cdr_);
+        } else {
+            gc_mark_value(value->cons_.car_);
+            gc_mark_value(value->cons_.cdr_);
+        }
         break;
 
     default:

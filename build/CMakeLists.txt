@@ -189,12 +189,14 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/data/sound_select.s
     ${SOURCE_DIR}/data/sound_openbag.s
     ${SOURCE_DIR}/data/sound_blaster.s
+    ${SOURCE_DIR}/data/sound_tw_bell.s
     ${SOURCE_DIR}/data/sound_footstep1.s
     ${SOURCE_DIR}/data/sound_footstep2.s
     ${SOURCE_DIR}/data/sound_footstep3.s
     ${SOURCE_DIR}/data/sound_footstep4.s
     ${SOURCE_DIR}/data/sound_open_book.s
     ${SOURCE_DIR}/data/sound_explosion1.s
+    ${SOURCE_DIR}/data/sound_typewriter.s
     ${SOURCE_DIR}/data/sound_explosion2.s
     ${SOURCE_DIR}/data/overlay_journal.s
     ${SOURCE_DIR}/data/spritesheet_boss0.s

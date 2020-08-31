@@ -147,9 +147,12 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (pfrm.keyboard().down_transition(game.action2_key())) {
         command_.push_back(keyboard[keyboard_cursor_.y][keyboard_cursor_.x][0]);
         repaint_entry(pfrm);
+        pfrm.speaker().play_sound("typewriter", 2);
     }
 
     if (pfrm.keyboard().down_transition<Key::start>()) {
+
+        pfrm.speaker().play_sound("tw_bell", 2);
 
         lisp::eval(command_.c_str());
 
