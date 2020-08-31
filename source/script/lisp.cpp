@@ -621,8 +621,25 @@ void format_impl(Value* value, StringBuffer<28>& buffer)
     case lisp::Value::Type::cons:
         buffer.push_back('(');
         format_impl(value->cons_.car_, buffer);
-        buffer += " . ";
-        format_impl(value->cons_.cdr_, buffer);
+        if (value->cons_.cdr_->type_ not_eq Value::Type::cons) {
+            buffer += " . ";
+            format_impl(value->cons_.cdr_, buffer);
+        } else {
+            auto current = value;
+            while (true) {
+                if (current->cons_.cdr_->type_ == Value::Type::cons) {
+                    buffer += " ";
+                    format_impl(current->cons_.cdr_->cons_.car_, buffer);
+                    current = current->cons_.cdr_;
+                } else if (current->cons_.cdr_ not_eq NIL) {
+                    buffer += " ";
+                    format_impl(current->cons_.cdr_, buffer);
+                    break;
+                } else {
+                    break;
+                }
+            }
+        }
         buffer.push_back(')');
         break;
 
