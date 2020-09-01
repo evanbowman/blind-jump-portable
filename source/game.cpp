@@ -296,7 +296,7 @@ void Game::init_script(Platform& pfrm)
                               lisp::pop_op(); // lat
 
                               lisp::push_op(lat);
-                              lat->cons_.car_ = lisp::make_integer(enemy->id());
+                              lat->cons_.set_car(lisp::make_integer(enemy->id()));
                               lisp::pop_op(); // lat
                           }
                       });
@@ -572,13 +572,13 @@ static void cell_automata_advance(TileMap& map, TileMap& maptemp)
         collect(x, y - 1);
         collect(x, y + 1);
         if (tile == Tile::none) {
-            if (count < thresh.cdr_->expect<lisp::Integer>().value_) {
+            if (count < thresh.cdr()->expect<lisp::Integer>().value_) {
                 maptemp.set_tile(x, y, Tile::plate);
             } else {
                 maptemp.set_tile(x, y, Tile::none);
             }
         } else {
-            if (count > thresh.car_->expect<lisp::Integer>().value_) {
+            if (count > thresh.car()->expect<lisp::Integer>().value_) {
                 maptemp.set_tile(x, y, Tile::none);
             } else {
                 maptemp.set_tile(x, y, Tile::plate);

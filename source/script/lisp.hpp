@@ -26,9 +26,52 @@ struct Integer {
 };
 
 
+// NOTE: using compressed pointers significantly reduces the amount of memory
+// used for cons cells. This lisp interpreter runs with intentionally limited
+// memory, so we don't need a huge address space. We use three bits to represent
+// the pool that a value was allocated from, and thirteen bits to represent the
+// byte offset into that memory pool. This gives us eight possible memory pools,
+// and a max offset of 8191 bytes.
+struct CompressedPtr {
+    static constexpr const int source_pool_bits = 3;
+    static constexpr const int offset_bits = 13;
+
+    static_assert(source_pool_bits + offset_bits == 16);
+
+    u16 source_pool_ : source_pool_bits;
+    u16 offset_ : offset_bits;
+};
+
+
+CompressedPtr compr(Value* value);
+Value* dcompr(CompressedPtr ptr);
+
+
 struct Cons {
-    Value* car_;
-    Value* cdr_;
+
+    inline Value* car()
+    {
+        return dcompr(car_);
+    }
+
+    inline Value* cdr()
+    {
+        return dcompr(cdr_);
+    }
+
+    void set_car(Value* val)
+    {
+        car_ = compr(val);
+    }
+
+    void set_cdr(Value* val)
+    {
+        cdr_ = compr(val);
+    }
+
+private:
+    CompressedPtr car_;
+    CompressedPtr cdr_;
 };
 
 
@@ -154,10 +197,6 @@ struct Value {
 };
 
 
-extern Value nil;
-#define L_NIL &lisp::nil
-
-
 Value* make_function(Function::Impl impl);
 Value* make_cons(Value* car, Value* cdr);
 Value* make_integer(s32 value);
@@ -165,6 +204,10 @@ Value* make_list(u32 length);
 Value* make_error(Error::Code error_code);
 Value* make_symbol(const char* name);
 Value* make_userdata(void* obj);
+
+
+Value* get_nil();
+#define L_NIL lisp::get_nil()
 
 
 void set_list(Value* list, u32 position, Value* value);

@@ -10,18 +10,14 @@ void english__to_string(int num, char* buffer, int base);
 namespace lisp {
 
 
-#define NIL L_NIL
-
-
-Value nil{lisp::Value::Type::nil, true, true};
-
-
-static Value oom{lisp::Value::Type::error, true, true};
-
-
 struct Variable {
     const char* name_ = "";
-    Value* value_ = NIL;
+    Value* value_ = nullptr; // Careful! A lot of code expects value_ to contain
+                             // nil, so make sure that you set value to the nil
+                             // sentinel value after defining a variable. Some
+                             // variable tables are allocated pior to allocating
+                             // nil, otherwise, we would set nil as the default
+                             // here, rather than nullptr.
 };
 
 
@@ -32,10 +28,13 @@ static const u32 string_intern_table_size = 1000;
 
 
 struct Context {
-    using ValuePool = ObjectPool<Value, 74>;
+    using ValuePool = ObjectPool<Value, 99>;
     using OperandStack = Buffer<Value*, 297>;
     using Globals = std::array<Variable, 149>;
     using Interns = char[string_intern_table_size];
+
+    Value* nil_ = nullptr;
+    Value* oom_ = nullptr;
 
     int string_intern_pos_ = 0;
 
@@ -43,6 +42,10 @@ struct Context {
 
     Context(Platform& pfrm)
         : value_pools_{allocate_dynamic<ValuePool>(pfrm),
+                       allocate_dynamic<ValuePool>(pfrm),
+                       allocate_dynamic<ValuePool>(pfrm),
+                       allocate_dynamic<ValuePool>(pfrm),
+                       allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm)},
@@ -64,10 +67,11 @@ struct Context {
         }
     }
 
-    // We're allocating 4k bytes toward lisp values. Because our simplistic
+    // We're allocating 8k bytes toward lisp values. Because our simplistic
     // allocation strategy cannot support sizes other than 1k, we need to split
     // our memory for lisp values into regions.
-    DynamicMemory<ValuePool> value_pools_[4];
+    static constexpr const int value_pool_count = 8;
+    DynamicMemory<ValuePool> value_pools_[value_pool_count];
 
     DynamicMemory<OperandStack> operand_stack_;
     DynamicMemory<Globals> globals_;
@@ -76,6 +80,16 @@ struct Context {
 
 
 static std::optional<Context> bound_context;
+
+
+Value* get_nil()
+{
+    if (not bound_context->nil_) {
+        // Someone has likely called git_nil() before calling init().
+        while (true) ;
+    }
+    return bound_context->nil_;
+}
 
 
 const char* intern(const char* string)
@@ -113,6 +127,42 @@ const char* intern(const char* string)
 }
 
 
+CompressedPtr compr(Value* val)
+{
+    for (int pool_id = 0; pool_id < Context::value_pool_count; ++pool_id) {
+        auto& cells = bound_context->value_pools_[pool_id].obj_->cells();
+        if ((char*)val >= (char*)cells.begin() and
+            (char*)val < (char*)cells.end()) {
+
+            static_assert((1 << CompressedPtr::source_pool_bits) - 1 >=
+                          Context::value_pool_count - 1,
+                          "Source pool bits in compressed ptr insufficient "
+                          "to address all value pools");
+
+            static_assert((1 << CompressedPtr::offset_bits) - 1 >=
+                          sizeof(Context::ValuePool::Cells),
+                          "Compressed pointer offset insufficient to address "
+                          "all memory in value pool");
+
+            CompressedPtr result;
+            result.source_pool_ = pool_id;
+            result.offset_ = (char*)val - (char*)cells.begin();
+
+            return result;
+        }
+    }
+
+    while (true) ; // Attempt to compress invalid pointer
+}
+
+
+Value* dcompr(CompressedPtr ptr)
+{
+    auto& cells = bound_context->value_pools_[ptr.source_pool_].obj_->cells();
+    return (Value*)((char*)cells.begin() + ptr.offset_);
+}
+
+
 static Value* alloc_value()
 {
     auto init_val = [](Value* val) {
@@ -147,7 +197,7 @@ Value* make_function(Function::Impl impl)
         val->function_.impl_ = impl;
         return val;
     }
-    return &oom;
+    return bound_context->oom_;
 }
 
 
@@ -155,11 +205,11 @@ Value* make_cons(Value* car, Value* cdr)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::cons;
-        val->cons_.car_ = car;
-        val->cons_.cdr_ = cdr;
+        val->cons_.set_car(car);
+        val->cons_.set_cdr(cdr);
         return val;
     }
-    return &oom;
+    return bound_context->oom_;
 }
 
 
@@ -170,20 +220,20 @@ Value* make_integer(s32 value)
         val->integer_.value_ = value;
         return val;
     }
-    return &oom;
+    return bound_context->oom_;
 }
 
 
 Value* make_list(u32 length)
 {
     if (length == 0) {
-        return NIL;
+        return get_nil();
     }
-    auto head = make_cons(NIL, NIL);
+    auto head = make_cons(get_nil(), get_nil());
     while (--length) {
         push_op(head); // To keep head from being collected, in case make_cons()
                        // triggers the gc.
-        auto cell = make_cons(NIL, head);
+        auto cell = make_cons(get_nil(), head);
         pop_op(); // head
 
         head = cell;
@@ -199,7 +249,7 @@ Value* make_error(Error::Code error_code)
         val->error_.code_ = error_code;
         return val;
     }
-    return &oom;
+    return bound_context->oom_;
 }
 
 
@@ -210,7 +260,7 @@ Value* make_symbol(const char* name)
         val->symbol_.name_ = intern(name);
         return val;
     }
-    return &oom;
+    return bound_context->oom_;
 }
 
 
@@ -221,7 +271,7 @@ Value* make_userdata(void* obj)
         val->user_data_.obj_ = obj;
         return val;
     }
-    return &oom;
+    return bound_context->oom_;
 }
 
 
@@ -232,7 +282,7 @@ void set_list(Value* list, u32 position, Value* value)
             // TODO: raise error
             return;
         }
-        list = list->cons_.cdr_;
+        list = list->cons_.cdr();
     }
 
     if (list->type_ not_eq Value::Type::cons) {
@@ -240,7 +290,7 @@ void set_list(Value* list, u32 position, Value* value)
         return;
     }
 
-    list->cons_.car_ = value;
+    list->cons_.set_car(value);
 }
 
 
@@ -249,17 +299,17 @@ Value* get_list(Value* list, u32 position)
     while (position--) {
         if (list->type_ not_eq Value::Type::cons) {
             // TODO: raise error
-            return NIL;
+            return get_nil();
         }
-        list = list->cons_.cdr_;
+        list = list->cons_.cdr();
     }
 
     if (list->type_ not_eq Value::Type::cons) {
         // TODO: raise error
-        return NIL;
+        return get_nil();
     }
 
-    return list->cons_.car_;
+    return list->cons_.car();
 }
 
 
@@ -282,7 +332,7 @@ Value* get_op(u32 offset)
 {
     auto& stack = bound_context->operand_stack_;
     if (offset >= stack.obj_->size()) {
-        return NIL; // TODO: raise error
+        return get_nil(); // TODO: raise error
     }
 
     return (*stack.obj_)[(stack.obj_->size() - 1) - offset];
@@ -318,7 +368,7 @@ Value* set_var(const char* name, Value* value)
     for (auto& var : *bound_context->globals_.obj_) {
         if (strcmp(name, var.name_) == 0) {
             var.value_ = value;
-            return NIL;
+            return get_nil();
         }
     }
 
@@ -326,7 +376,7 @@ Value* set_var(const char* name, Value* value)
         if (strcmp(var.name_, "") == 0) {
             var.name_ = intern(name);
             var.value_ = value;
-            return NIL;
+            return get_nil();
         }
     }
 
@@ -395,7 +445,7 @@ static u32 eval_if(const char* expr, u32 len)
             break;
         }
 
-        return get_op(0) not_eq NIL;
+        return get_op(0) not_eq get_nil();
     }();
 
     pop_op();
@@ -496,7 +546,7 @@ static u32 eval_set(const char* expr, u32 len)
     pop_op();
 
     if (bound_context->eval_depth_ <= 1) {
-        push_op(NIL);
+        push_op(get_nil());
     } else {
         push_op(make_error(Error::Code::set_in_expression_context));
     }
@@ -556,7 +606,7 @@ static u32 eval_expr(const char* expr, u32 len)
     i += 2;
 
     const auto fn = get_var(fn_name);
-    if (fn == NIL) {
+    if (fn == get_nil()) {
         for (int i = 0; i < param_count; ++i) {
             pop_op();
         }
@@ -619,10 +669,10 @@ static u32 eval_variable(const char* code, u32 len)
     }
 
     if (strcmp(variable_name, "nil") == 0) {
-        push_op(NIL);
+        push_op(get_nil());
     } else {
         auto var = lisp::get_var(variable_name);
-        if (var == NIL) {
+        if (var == get_nil()) {
             push_op(make_error(Error::Code::undefined_variable_access));
         } else {
             push_op(var);
@@ -659,7 +709,7 @@ u32 eval(const char* code)
             return eval_value(code + i, code_len - i);
         }
     }
-    push_op(NIL);
+    push_op(get_nil());
     return code_len;
 }
 
@@ -708,20 +758,20 @@ void format_impl(Value* value, StringBuffer<28>& buffer)
 
     case lisp::Value::Type::cons:
         buffer.push_back('(');
-        format_impl(value->cons_.car_, buffer);
-        if (value->cons_.cdr_->type_ not_eq Value::Type::cons) {
+        format_impl(value->cons_.car(), buffer);
+        if (value->cons_.cdr()->type_ not_eq Value::Type::cons) {
             buffer += " . ";
-            format_impl(value->cons_.cdr_, buffer);
+            format_impl(value->cons_.cdr(), buffer);
         } else {
             auto current = value;
             while (true) {
-                if (current->cons_.cdr_->type_ == Value::Type::cons) {
+                if (current->cons_.cdr()->type_ == Value::Type::cons) {
                     buffer += " ";
-                    format_impl(current->cons_.cdr_->cons_.car_, buffer);
-                    current = current->cons_.cdr_;
-                } else if (current->cons_.cdr_ not_eq NIL) {
+                    format_impl(current->cons_.cdr()->cons_.car(), buffer);
+                    current = current->cons_.cdr();
+                } else if (current->cons_.cdr() not_eq get_nil()) {
                     buffer += " ";
-                    format_impl(current->cons_.cdr_, buffer);
+                    format_impl(current->cons_.cdr(), buffer);
                     break;
                 } else {
                     break;
@@ -770,21 +820,21 @@ static void gc_mark_value(Value* value)
 {
     switch (value->type_) {
     case Value::Type::cons:
-        if (value->cons_.cdr_->type_ == Value::Type::cons) {
+        if (value->cons_.cdr()->type_ == Value::Type::cons) {
             auto current = value;
 
             current->mark_bit_ = true; // possibly redundant
 
-            while (current->cons_.cdr_->type_ == Value::Type::cons) {
-                gc_mark_value(current->cons_.car_);
-                current = current->cons_.cdr_;
+            while (current->cons_.cdr()->type_ == Value::Type::cons) {
+                gc_mark_value(current->cons_.car());
+                current = current->cons_.cdr();
                 current->mark_bit_ = true;
             }
-            gc_mark_value(value->cons_.car_);
-            gc_mark_value(value->cons_.cdr_);
+            gc_mark_value(value->cons_.car());
+            gc_mark_value(value->cons_.cdr());
         } else {
-            gc_mark_value(value->cons_.car_);
-            gc_mark_value(value->cons_.cdr_);
+            gc_mark_value(value->cons_.car());
+            gc_mark_value(value->cons_.cdr());
         }
         break;
 
@@ -798,6 +848,9 @@ static void gc_mark_value(Value* value)
 
 static void gc_mark()
 {
+    gc_mark_value(bound_context->nil_);
+    gc_mark_value(bound_context->oom_);
+
     auto& ctx = bound_context;
 
     for (auto elem : *ctx->operand_stack_.obj_) {
@@ -837,8 +890,6 @@ static void run_gc()
 
 void init(Platform& pfrm)
 {
-    oom.error_.code_ = Error::Code::out_of_memory;
-
     bound_context.emplace(pfrm);
 
     // We cannot be sure that the memory will be zero-initialized, so make sure
@@ -851,6 +902,22 @@ void init(Platform& pfrm)
         });
     }
 
+    bound_context->nil_ = alloc_value();
+    bound_context->nil_->type_ = Value::Type::nil;
+
+    bound_context->oom_ = alloc_value();
+    bound_context->oom_->type_ = Value::Type::error;
+    bound_context->oom_->error_.code_ = Error::Code::out_of_memory;
+
+    for (auto& var : *bound_context->globals_.obj_) {
+        var.value_ = get_nil();
+    }
+
+    if (dcompr(compr(get_nil())) not_eq get_nil()) {
+        error(pfrm, "pointer compression test failed");
+        while (true) ;
+    }
+
     set_var("cons", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
                 return make_cons(get_op(1), get_op(0));
@@ -859,13 +926,13 @@ void init(Platform& pfrm)
     set_var("car", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, cons);
-                return get_op(0)->cons_.car_;
+                return get_op(0)->cons_.car();
             }));
 
     set_var("cdr", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, cons);
-                return get_op(0)->cons_.cdr_;
+                return get_op(0)->cons_.cdr();
             }));
 
     set_var("list", make_function([](int argc) {
@@ -932,14 +999,14 @@ void init(Platform& pfrm)
                 auto fn = get_op(1);
 
                 int apply_argc = 0;
-                while (lat not_eq NIL) {
+                while (lat not_eq get_nil()) {
                     if (lat->type_ not_eq Value::Type::cons) {
                         return make_error(Error::Code::invalid_argument_type);
                     }
                     ++apply_argc;
-                    push_op(lat->cons_.car_);
+                    push_op(lat->cons_.car());
 
-                    lat = lat->cons_.cdr_;
+                    lat = lat->cons_.cdr();
                 }
 
                 funcall(fn, apply_argc);
@@ -1011,11 +1078,15 @@ void init(Platform& pfrm)
                 const auto end = get_op(1)->integer_.value_;
                 const auto incr = get_op(0)->integer_.value_;
 
+                if (incr == 0) {
+                    return get_nil();
+                }
+
                 auto lat = make_list((end - start) / incr);
 
                 for (int i = start; i < end; i += incr) {
                     push_op(lat);
-                    set_list(lat, i, make_integer(i));
+                    set_list(lat, (i - start) / incr, make_integer(i));
                     pop_op();
                 }
 
@@ -1024,7 +1095,7 @@ void init(Platform& pfrm)
 
     set_var("gc", make_function([](int argc) {
                 run_gc();
-                return NIL;
+                return get_nil();
             }));
 }
 

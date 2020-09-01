@@ -109,6 +109,14 @@ public:
         return pool_.empty();
     }
 
+    using _Pool = Pool<sizeof(T), count, alignof(T)>;
+    using Cells = typename _Pool::Cells;
+
+    Cells& cells()
+    {
+        return pool_.cells();
+    }
+
     template <typename F> void scan_cells(F&& callback)
     {
         auto& mem = pool_.cells();
@@ -119,5 +127,5 @@ public:
     }
 
 private:
-    Pool<sizeof(T), count, alignof(T)> pool_;
+    _Pool pool_;
 };
