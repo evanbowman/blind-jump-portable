@@ -845,7 +845,7 @@ void init(Platform& pfrm)
     // that all of the alive bits in the value pool entries are zero. This needs
     // to be done at least once, otherwise, gc will not work correctly.
     for (auto& pl : bound_context->value_pools_) {
-        pl.obj_->scan_cells([&pl](Value* val) {
+        pl.obj_->scan_cells([](Value* val) {
             val->alive_ = false;
             val->mark_bit_ = false;
         });
