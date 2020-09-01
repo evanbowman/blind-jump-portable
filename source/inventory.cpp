@@ -13,6 +13,11 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
         return;
     }
 
+    if (static_cast<int>(insert) >= static_cast<int>(Item::Type::count)) {
+        error(pfrm, "attempt to insert invalid item");
+        return;
+    }
+
     for (auto& item : data_) {
         if (item.type_ == Item::Type::null) {
             item.type_ = insert;

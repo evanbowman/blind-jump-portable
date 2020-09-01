@@ -1234,12 +1234,12 @@ bool Platform::RemoteConsole::supported_by_device()
 }
 
 
-bool Platform::RemoteConsole::readline(void (*callback)(Platform&, const char*))
+bool Platform::RemoteConsole::readline(bool (*callback)(Platform&, const char*))
 {
     std::string line;
     auto result = static_cast<bool>(std::getline(std::cin, line));
     if (result) {
-        callback(*::platform, line.c_str());
+        return callback(*::platform, line.c_str());
     }
     return result;
 }

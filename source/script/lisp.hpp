@@ -28,13 +28,13 @@ struct Integer {
 
 // NOTE: using compressed pointers significantly reduces the amount of memory
 // used for cons cells. This lisp interpreter runs with intentionally limited
-// memory, so we don't need a huge address space. We use three bits to represent
-// the pool that a value was allocated from, and thirteen bits to represent the
-// byte offset into that memory pool. This gives us eight possible memory pools,
-// and a max offset of 8191 bytes.
+// memory, so we don't need a huge address space. We use four bits to represent
+// the pool that a value was allocated from, and twelve bits to represent the
+// byte offset into that memory pool. This gives us fifteen possible memory pools,
+// and a max offset of 4095 bytes.
 struct CompressedPtr {
-    static constexpr const int source_pool_bits = 3;
-    static constexpr const int offset_bits = 13;
+    static constexpr const int source_pool_bits = 4;
+    static constexpr const int offset_bits = 12;
 
     static_assert(source_pool_bits + offset_bits == 16);
 

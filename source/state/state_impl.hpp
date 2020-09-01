@@ -658,7 +658,7 @@ private:
 
     void repaint_entry(Platform& pfrm);
 
-    StringBuffer<28> command_;
+    StringBuffer<60> command_;
 
     std::optional<Text> keyboard_top_;
     std::optional<Text> keyboard_bottom_;

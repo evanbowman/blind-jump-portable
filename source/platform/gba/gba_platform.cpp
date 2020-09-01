@@ -3628,7 +3628,7 @@ bool Platform::RemoteConsole::supported_by_device()
     return false;
 }
 
-bool Platform::RemoteConsole::readline(void (*callback)(Platform&, const char*))
+bool Platform::RemoteConsole::readline(bool (*callback)(Platform&, const char*))
 {
     return false;
 }

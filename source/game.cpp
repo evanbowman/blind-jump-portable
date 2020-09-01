@@ -41,8 +41,6 @@ bool Game::load_save_data(Platform& pfrm)
 Game::Game(Platform& pfrm)
     : player_(pfrm), score_(0), next_state_(null_state()), state_(null_state())
 {
-    init_script(pfrm);
-
     if (not this->load_save_data(pfrm)) {
         persistent_data_.reset(pfrm);
         info(pfrm, "no save file found");
@@ -63,6 +61,18 @@ Game::Game(Platform& pfrm)
             info(pfrm, str.c_str());
         }
     }
+
+    player_.set_health(persistent_data_.player_health_);
+    score_ = persistent_data_.score_;
+    inventory_ = persistent_data_.inventory_;
+
+    for (u32 i = 0; i < persistent_data_.powerup_count_; ++i) {
+        powerups_.push_back(persistent_data_.powerups_[i]);
+    }
+
+    rng::critical_state = persistent_data_.seed_;
+
+    init_script(pfrm);
 
     pfrm.logger().set_threshold(persistent_data_.settings_.log_severity_);
 
@@ -98,16 +108,6 @@ Game::Game(Platform& pfrm)
     }
 
     state_ = State::initial();
-
-    player_.set_health(persistent_data_.player_health_);
-    score_ = persistent_data_.score_;
-    inventory_ = persistent_data_.inventory_;
-
-    for (u32 i = 0; i < persistent_data_.powerup_count_; ++i) {
-        powerups_.push_back(persistent_data_.powerups_[i]);
-    }
-
-    rng::critical_state = persistent_data_.seed_;
 
     pfrm.load_overlay_texture("overlay");
 

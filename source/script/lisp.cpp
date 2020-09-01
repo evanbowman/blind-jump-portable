@@ -29,7 +29,7 @@ static const u32 string_intern_table_size = 1000;
 
 struct Context {
     using ValuePool = ObjectPool<Value, 99>;
-    using OperandStack = Buffer<Value*, 297>;
+    using OperandStack = Buffer<CompressedPtr, 594>;
     using Globals = std::array<Variable, 149>;
     using Interns = char[string_intern_table_size];
 
@@ -321,7 +321,7 @@ void pop_op()
 
 void push_op(Value* operand)
 {
-    if (not bound_context->operand_stack_.obj_->push_back(operand)) {
+    if (not bound_context->operand_stack_.obj_->push_back(compr(operand))) {
         while (true)
             ; // TODO: raise error
     }
@@ -335,7 +335,7 @@ Value* get_op(u32 offset)
         return get_nil(); // TODO: raise error
     }
 
-    return (*stack.obj_)[(stack.obj_->size() - 1) - offset];
+    return dcompr((*stack.obj_)[(stack.obj_->size() - 1) - offset]);
 }
 
 
@@ -402,6 +402,35 @@ static bool is_whitespace(char c)
 }
 
 
+static int eat_whitespace(const char* c)
+{
+    int i = 0;
+    while (is_whitespace(c[i])) {
+        ++i;
+        if (c[i] == '\0') {
+            return i;
+        }
+    }
+
+    while (c[i] == ';') { // Skip comments
+        while (c[i] not_eq '\n') {
+            ++i;
+            if (c[i] == '\0') {
+                return i;
+            }
+        }
+        while (is_whitespace(c[i])) {
+            ++i;
+            if (c[i] == '\0') {
+                return i;
+            }
+        }
+    }
+
+    return i;
+}
+
+
 static u32 expr_len(const char* str, u32 script_len)
 {
     int paren_count = 0;
@@ -428,6 +457,57 @@ static u32 expr_len(const char* str, u32 script_len)
 }
 
 
+static bool is_boolean_true(Value* val)
+{
+    switch (val->type_) {
+    case Value::Type::integer:
+        return val->integer_.value_ not_eq 0;
+
+    default:
+        break;
+    }
+
+    return val not_eq get_nil();
+}
+
+
+static u32 eval_while(const char* expr, u32 len)
+{
+    // (while <COND> <EXPR>)
+
+    push_op(get_nil()); // The return value, will be replaced if the loop
+                        // branches into the body expression.
+
+ TOP:
+    int i = 0;
+
+    i += eval(expr) + 1;
+
+    const bool done = not is_boolean_true(get_op(0));
+    pop_op();
+
+    i += eat_whitespace(expr + i);
+
+    if (done) {
+        if (expr[i] == '(') {
+            i += expr_len(expr + i, str_len(expr + i));
+        } else {
+            while (expr[i] not_eq ' ') {
+                ++i;
+                if (expr[i] == ')') {
+                    break;
+                }
+            }
+        }
+        return i + 7;
+    } else {
+        pop_op();
+        eval(expr + i);
+        goto TOP;
+    }
+}
+
+
 static u32 eval_if(const char* expr, u32 len)
 {
     // (if <COND> <EXPR1> <EXPR2>)
@@ -436,17 +516,7 @@ static u32 eval_if(const char* expr, u32 len)
 
     i += eval(expr) + 1;
 
-    const bool branch = [&] {
-        switch (get_op(0)->type_) {
-        case Value::Type::integer:
-            return get_op(0)->integer_.value_ not_eq 0;
-
-        default:
-            break;
-        }
-
-        return get_op(0) not_eq get_nil();
-    }();
+    const bool branch = is_boolean_true(get_op(0));
 
     pop_op();
 
@@ -456,9 +526,7 @@ static u32 eval_if(const char* expr, u32 len)
     // then next non-whitespace character is a '(', we'll need to count
     // opening/closing parens to determine where the expression ends.
 
-    while (is_whitespace(expr[i])) {
-        ++i;
-    }
+    i += eat_whitespace(expr + i);
 
     if (not branch) {
         if (expr[i] == '(') {
@@ -467,8 +535,7 @@ static u32 eval_if(const char* expr, u32 len)
             while (expr[i] not_eq ' ') {
                 ++i;
                 if (expr[i] == ')') {
-                    while (true)
-                        ; // TODO: support single expr if statements...
+                    break;
                 }
             }
         }
@@ -476,8 +543,13 @@ static u32 eval_if(const char* expr, u32 len)
         i += eval(expr + i);
     }
 
-    while (is_whitespace(expr[i])) {
-        ++i;
+    i += eat_whitespace(expr + i);
+
+    if (expr[i] == ')') { // if without an else branch
+        if (not branch) {
+            push_op(get_nil());
+        }
+        return i + 4;
     }
 
     if (not branch) {
@@ -486,9 +558,7 @@ static u32 eval_if(const char* expr, u32 len)
 
         i += consumed;
 
-        while (is_whitespace(expr[i])) {
-            ++i;
-        }
+        i += eat_whitespace(expr + i);
 
         return i + 4;
     } else {
@@ -502,56 +572,9 @@ static u32 eval_if(const char* expr, u32 len)
         }
     }
 
-
-    while (is_whitespace(expr[i])) {
-        ++i;
-    }
+    i += eat_whitespace(expr + i);
 
     return i + 4;
-}
-
-
-static u32 eval_set(const char* expr, u32 len)
-{
-    // (set <NAME> <VALUE>)
-
-    static const u32 max_var_name = 31;
-    char variable_name[max_var_name];
-
-    u32 i = 0;
-
-    // parse name
-    while (is_whitespace(expr[i])) {
-        ++i;
-    }
-
-    int start = i;
-    while (i < len and i < max_var_name and not is_whitespace(expr[i])) {
-        variable_name[i - start] = expr[i];
-        ++i;
-    }
-    variable_name[i - start] = '\0';
-
-    while (is_whitespace(expr[i])) {
-        ++i;
-    }
-
-    // parse value
-    i += eval(expr + i);
-
-    if (bound_context->eval_depth_ <= 1) {
-        set_var(variable_name, get_op(0));
-    }
-
-    pop_op();
-
-    if (bound_context->eval_depth_ <= 1) {
-        push_op(get_nil());
-    } else {
-        push_op(make_error(Error::Code::set_in_expression_context));
-    }
-
-    return i;
 }
 
 
@@ -562,9 +585,7 @@ static u32 eval_expr(const char* expr, u32 len)
     static const int max_fn_name = 31;
     char fn_name[max_fn_name + 1];
 
-    while (is_whitespace(expr[i])) {
-        ++i;
-    }
+    i += eat_whitespace(expr + i);
 
     for (; i < len; ++i) {
         int start = i;
@@ -578,39 +599,33 @@ static u32 eval_expr(const char* expr, u32 len)
         break;
     }
 
-    if (strcmp("set", fn_name) == 0) {
-        return eval_set(expr + i, len - i) + 2;
-    } else if (strcmp("if", fn_name) == 0) {
+    if (strcmp("if", fn_name) == 0) {
         return eval_if(expr + i, len - i);
+    } else if (strcmp("while", fn_name) == 0) {
+        return eval_while(expr + i, len - i);
     }
 
-    while (is_whitespace(expr[i])) {
-        ++i;
-    }
+    i += eat_whitespace(expr + i);
 
     int param_count = 0;
 
     while (expr[i] not_eq ')') {
-        while (is_whitespace(expr[i])) {
-            ++i;
-        }
+        i += eat_whitespace(expr + i);
 
         i += eval(expr + i);
 
         ++param_count;
 
-        while (is_whitespace(expr[i])) {
-            ++i;
-        }
+        i += eat_whitespace(expr + i);
     }
     i += 2;
 
     const auto fn = get_var(fn_name);
-    if (fn == get_nil()) {
+    if (fn->type_ not_eq Value::Type::function) {
         for (int i = 0; i < param_count; ++i) {
             pop_op();
         }
-        push_op(make_error(Error::Code::undefined_variable_access));
+        push_op(fn);
         return i;
     }
 
@@ -672,11 +687,7 @@ static u32 eval_variable(const char* code, u32 len)
         push_op(get_nil());
     } else {
         auto var = lisp::get_var(variable_name);
-        if (var == get_nil()) {
-            push_op(make_error(Error::Code::undefined_variable_access));
-        } else {
-            push_op(var);
-        }
+        push_op(var);
     }
     return i;
 }
@@ -696,9 +707,12 @@ u32 eval(const char* code)
 {
     const auto code_len = str_len(code);
 
-    for (u32 i = 0; i < code_len; ++i) {
+    u32 i = 0;
+    i += eat_whitespace(code);
+
+    for (; i < code_len; ++i) {
         if (is_whitespace(code[i])) {
-            continue;
+            while (true) ;
         }
         if (code[i] == '(') {
             bound_context->eval_depth_ += 1;
@@ -854,7 +868,7 @@ static void gc_mark()
     auto& ctx = bound_context;
 
     for (auto elem : *ctx->operand_stack_.obj_) {
-        gc_mark_value(elem);
+        gc_mark_value(dcompr(elem));
     }
 
     for (auto& var : *ctx->globals_.obj_) {
@@ -918,6 +932,16 @@ void init(Platform& pfrm)
         while (true) ;
     }
 
+    set_var("set", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(1, symbol);
+
+        const char* name = get_op(1)->symbol_.name_;
+        lisp::set_var(name, get_op(0));
+
+        return L_NIL;
+    }));
+
     set_var("cons", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
                 return make_cons(get_op(1), get_op(0));
@@ -953,6 +977,11 @@ void init(Platform& pfrm)
             // the function object. (2) Extra use of the operand stack.
             return get_op(0);
         }));
+
+    set_var("not", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        return make_integer(not is_boolean_true(get_op(0)));
+    }));
 
     set_var(
         "equal", make_function([](int argc) {
@@ -1017,6 +1046,23 @@ void init(Platform& pfrm)
                 return result;
             }));
 
+
+    set_var("<", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(0, integer);
+        L_EXPECT_OP(1, integer);
+        return make_integer(get_op(1)->integer_.value_ <
+                            get_op(0)->integer_.value_);
+    }));
+
+    set_var(">", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(0, integer);
+        L_EXPECT_OP(1, integer);
+        return make_integer(get_op(1)->integer_.value_ >
+                            get_op(0)->integer_.value_);
+    }));
+
     set_var("+", make_function([](int argc) {
                 int accum = 0;
                 for (int i = 0; i < argc; ++i) {
@@ -1043,7 +1089,7 @@ void init(Platform& pfrm)
                 return make_integer(accum);
             }));
 
-    set_var("div", make_function([](int argc) {
+    set_var("/", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
                 L_EXPECT_OP(1, integer);
                 L_EXPECT_OP(0, integer);
@@ -1052,31 +1098,57 @@ void init(Platform& pfrm)
             }));
 
     set_var("interp-stat", make_function([](int argc) {
-                auto lat = make_list(3);
+                auto lat = make_list(4);
                 auto& ctx = bound_context;
                 int values_remaining = 0;
                 for (auto& pl : ctx->value_pools_) {
                     values_remaining += pl.obj_->remaining();
                 }
+
                 push_op(lat); // for the gc
                 set_list(lat, 0, make_integer(values_remaining));
                 set_list(lat, 1, make_integer(ctx->string_intern_pos_));
                 set_list(
                     lat, 2, make_integer(ctx->operand_stack_.obj_->size()));
+                set_list(lat, 3, make_integer([&] {
+                    int symb_tab_used = 0;
+                    for (u32 i = 0; i < ctx->globals_.obj_->size(); ++i) {
+                        if (strcmp("", (*ctx->globals_.obj_)[i].name_)) {
+                            ++symb_tab_used;
+                        }
+                    }
+                    return symb_tab_used;
+                }()));
                 pop_op(); // lat
 
                 return lat;
             }));
 
     set_var("range", make_function([](int argc) {
-                L_EXPECT_ARGC(argc, 3);
-                L_EXPECT_OP(2, integer);
-                L_EXPECT_OP(1, integer);
-                L_EXPECT_OP(0, integer);
+                int start = 0;
+                int end = 0;
+                int incr = 1;
 
-                const auto start = get_op(2)->integer_.value_;
-                const auto end = get_op(1)->integer_.value_;
-                const auto incr = get_op(0)->integer_.value_;
+                if (argc == 2) {
+
+                    L_EXPECT_OP(1, integer);
+                    L_EXPECT_OP(0, integer);
+
+                    start = get_op(1)->integer_.value_;
+                    end = get_op(0)->integer_.value_;
+
+                } else if (argc == 3) {
+
+                    L_EXPECT_OP(2, integer);
+                    L_EXPECT_OP(1, integer);
+                    L_EXPECT_OP(0, integer);
+
+                    start = get_op(2)->integer_.value_;
+                    end = get_op(1)->integer_.value_;
+                    incr = get_op(0)->integer_.value_;
+                } else {
+                    L_EXPECT_ARGC(argc, 2);
+                }
 
                 if (incr == 0) {
                     return get_nil();
@@ -1092,6 +1164,34 @@ void init(Platform& pfrm)
 
                 return lat;
             }));
+
+    set_var("unbind", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, symbol);
+
+        for (auto& var : *bound_context->globals_.obj_) {
+            if (strcmp(get_op(0)->symbol_.name_, var.name_) == 0) {
+                var.value_ = get_nil();
+                var.name_ = "";
+                return get_nil();
+            }
+        }
+
+        return get_nil();
+    }));
+
+    set_var("bound", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, symbol);
+
+        for (auto& var : *bound_context->globals_.obj_) {
+            if (strcmp(get_op(0)->symbol_.name_, var.name_) == 0) {
+                return make_integer(1);
+            }
+        }
+
+        return make_integer(0);
+    }));
 
     set_var("gc", make_function([](int argc) {
                 run_gc();

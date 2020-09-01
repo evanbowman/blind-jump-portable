@@ -574,7 +574,9 @@ public:
     public:
         bool supported_by_device();
 
-        bool readline(void (*callback)(Platform&, const char*));
+        // Return true if readline succeeds and callback is true, return false
+        // if readline fails or if callback returns false.
+        bool readline(bool (*callback)(Platform&, const char*));
 
         void print(const char* text);
     };

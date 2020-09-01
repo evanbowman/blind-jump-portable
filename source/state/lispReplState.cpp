@@ -10,7 +10,7 @@ static const char* keyboard[7][6] = {{"z", "y", "g", "f", "v", "q"},
                                      {"w", "a", "o", "e", "u", "k"},
                                      {"p", "h", "t", "n", "s", "r"},
                                      {"x", "c", "(", ")", "-", "*"},
-                                     {" ", "+", "0", "1", "2", "3"},
+                                     {" ", "'", "0", "1", "2", "3"},
                                      {"4", "5", "6", "7", "8", "9"}};
 
 
@@ -37,7 +37,10 @@ void LispReplState::repaint_entry(Platform& pfrm)
             return {{ColorConstant::med_blue_gray, ColorConstant::rich_black}};
         }
     }();
-    entry_->append(command_.c_str(), colors);
+    const int scroll =
+        std::max(0, (int)command_.length() - (screen_tiles.x - 1));
+
+    entry_->append(command_.c_str() + scroll, colors);
 
     keyboard_.clear();
 
@@ -87,7 +90,7 @@ void LispReplState::enter(Platform& pfrm, Game& game, State& prev_state)
     }
 
     const auto vrsn_coord =
-        OverlayCoord{u8((screen_tiles.x - 1) - str_len(version_text)), 0};
+        OverlayCoord{u8((screen_tiles.x - 2) - str_len(version_text)), 0};
 
     version_text_.emplace(pfrm, vrsn_coord);
 
@@ -111,7 +114,7 @@ void LispReplState::exit(Platform& pfrm, Game& game, State& next_state)
 
 StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    constexpr auto fade_duration = milliseconds(500);
+    constexpr auto fade_duration = milliseconds(700);
     if (timer_ < fade_duration) {
         if (timer_ + delta > fade_duration) {
             pfrm.screen().fade(0.34f);
