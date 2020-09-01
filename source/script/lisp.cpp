@@ -352,7 +352,6 @@ static bool is_whitespace(char c)
 }
 
 
-
 static u32 expr_len(const char* str, u32 script_len)
 {
     int paren_count = 0;
@@ -418,7 +417,8 @@ static u32 eval_if(const char* expr, u32 len)
             while (expr[i] not_eq ' ') {
                 ++i;
                 if (expr[i] == ')') {
-                    while (true) ; // TODO: support single expr if statements...
+                    while (true)
+                        ; // TODO: support single expr if statements...
                 }
             }
         }
@@ -876,48 +876,52 @@ void init(Platform& pfrm)
                 return lat;
             }));
 
-    set_var("progn", make_function([](int argc) {
-        // I could have defined progn at the language level, but because all of
-        // the expressions are evaluated anyway, much easier to define progn as
-        // a function.
-        //
-        // Drawbacks: (1) Defining progn takes up a small amount of memory for
-        // the function object. (2) Extra use of the operand stack.
-        return get_op(0);
-    }));
+    set_var(
+        "progn", make_function([](int argc) {
+            // I could have defined progn at the language level, but because all of
+            // the expressions are evaluated anyway, much easier to define progn as
+            // a function.
+            //
+            // Drawbacks: (1) Defining progn takes up a small amount of memory for
+            // the function object. (2) Extra use of the operand stack.
+            return get_op(0);
+        }));
 
-    set_var("equal", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
+    set_var(
+        "equal", make_function([](int argc) {
+            L_EXPECT_ARGC(argc, 2);
 
-        if (get_op(0)->type_ not_eq get_op(1)->type_) {
-            return make_integer(0);
-        }
-
-        return make_integer([] {
-            switch (get_op(0)->type_) {
-            case Value::Type::integer:
-                return get_op(0)->integer_.value_ == get_op(1)->integer_.value_;
-
-            case Value::Type::cons:
-                // TODO!
-                // This comparison needs to be done as efficiently as possible...
-                break;
-
-            case Value::Type::function:
-                return get_op(0) == get_op(1);
-
-            case Value::Type::error:
-                break;
-
-            case Value::Type::symbol:
-                return get_op(0)->symbol_.name_ == get_op(1)->symbol_.name_;
-
-            case Value::Type::user_data:
-                return get_op(0)->user_data_.obj_ == get_op(1)->user_data_.obj_;
+            if (get_op(0)->type_ not_eq get_op(1)->type_) {
+                return make_integer(0);
             }
-            return false;
-        }());
-    }));
+
+            return make_integer([] {
+                switch (get_op(0)->type_) {
+                case Value::Type::integer:
+                    return get_op(0)->integer_.value_ ==
+                           get_op(1)->integer_.value_;
+
+                case Value::Type::cons:
+                    // TODO!
+                    // This comparison needs to be done as efficiently as possible...
+                    break;
+
+                case Value::Type::function:
+                    return get_op(0) == get_op(1);
+
+                case Value::Type::error:
+                    break;
+
+                case Value::Type::symbol:
+                    return get_op(0)->symbol_.name_ == get_op(1)->symbol_.name_;
+
+                case Value::Type::user_data:
+                    return get_op(0)->user_data_.obj_ ==
+                           get_op(1)->user_data_.obj_;
+                }
+                return false;
+            }());
+        }));
 
     set_var("apply", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
@@ -998,25 +1002,25 @@ void init(Platform& pfrm)
             }));
 
     set_var("range", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 3);
-        L_EXPECT_OP(2, integer);
-        L_EXPECT_OP(1, integer);
-        L_EXPECT_OP(0, integer);
+                L_EXPECT_ARGC(argc, 3);
+                L_EXPECT_OP(2, integer);
+                L_EXPECT_OP(1, integer);
+                L_EXPECT_OP(0, integer);
 
-        const auto start = get_op(2)->integer_.value_;
-        const auto end = get_op(1)->integer_.value_;
-        const auto incr = get_op(0)->integer_.value_;
+                const auto start = get_op(2)->integer_.value_;
+                const auto end = get_op(1)->integer_.value_;
+                const auto incr = get_op(0)->integer_.value_;
 
-        auto lat = make_list((end - start) / incr);
+                auto lat = make_list((end - start) / incr);
 
-        for (int i = start; i < end; i += incr) {
-            push_op(lat);
-            set_list(lat, i, make_integer(i));
-            pop_op();
-        }
+                for (int i = start; i < end; i += incr) {
+                    push_op(lat);
+                    set_list(lat, i, make_integer(i));
+                    pop_op();
+                }
 
-        return lat;
-    }));
+                return lat;
+            }));
 
     set_var("gc", make_function([](int argc) {
                 run_gc();

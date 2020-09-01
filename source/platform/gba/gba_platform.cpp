@@ -3618,4 +3618,24 @@ void Platform::SystemClock::init(Platform& pfrm)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// RemoteConsole
+////////////////////////////////////////////////////////////////////////////////
+
+
+bool Platform::RemoteConsole::supported_by_device()
+{
+    return false;
+}
+
+bool Platform::RemoteConsole::readline(void (*callback)(Platform&, const char*))
+{
+    return false;
+}
+
+void Platform::RemoteConsole::print(const char* text)
+{
+}
+
+
 #endif // __GBA__

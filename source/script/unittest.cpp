@@ -10,8 +10,8 @@ static lisp::Value* function_test()
     using namespace lisp;
 
     set_var("double", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, integer);
 
                 return make_integer(get_op(0)->integer_.value_ * 2);
             }));

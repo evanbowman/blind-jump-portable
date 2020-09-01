@@ -14,16 +14,16 @@ StatePtr RemoteReplState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     pfrm.remote_console().print("lisp> ");
 
-    if (not pfrm.remote_console().readline([](Platform& pfrm, const char* line) {
-        lisp::eval(line);
+    if (not pfrm.remote_console().readline(
+            [](Platform& pfrm, const char* line) {
+                lisp::eval(line);
 
-        pfrm.remote_console().print(format(lisp::get_op(0)).c_str());
+                pfrm.remote_console().print(format(lisp::get_op(0)).c_str());
 
-        lisp::pop_op();
+                lisp::pop_op();
 
-        pfrm.remote_console().print("\n");
-
-    })) {
+                pfrm.remote_console().print("\n");
+            })) {
         return state_pool().create<PauseScreenState>(false);
     } else {
         return null_state();

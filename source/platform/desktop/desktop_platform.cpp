@@ -166,8 +166,8 @@ public:
           map_0_(&tile0_texture_, {32, 24}, 16, 20),
           map_1_(&tile1_texture_, {32, 24}, 16, 20),
           background_(&background_texture_, {8, 8}, 32, 32),
-          fullscreen_(// lisp::loadv<lisp::Integer>("fullscreen").value_
-                      false),
+          fullscreen_( // lisp::loadv<lisp::Integer>("fullscreen").value_
+              false),
           window_scale_([&] {
               if (fullscreen_) {
                   auto ssize = sf::VideoMode::getDesktopMode();
@@ -199,10 +199,9 @@ public:
                         (u32)resolution.y * window_scale_};
 
         auto sound_folder = "../sounds/";
-            // lisp::loadv<lisp::Symbol>("sound-dir").name_;
+        // lisp::loadv<lisp::Symbol>("sound-dir").name_;
 
-        for (auto& dirent :
-             std::filesystem::directory_iterator(sound_folder)) {
+        for (auto& dirent : std::filesystem::directory_iterator(sound_folder)) {
             const auto filename = dirent.path().stem().string();
             static const std::string prefix("sound_");
             const auto prefix_loc = filename.find(prefix);
@@ -738,8 +737,8 @@ void Platform::Screen::clear()
             auto image_folder = lisp::loadv<lisp::Symbol>("image-dir").name_;
 
             sf::Image character_source_image_;
-            const auto charset_path = std::string(image_folder) +
-                                      rq.second.texture_name_ + ".png";
+            const auto charset_path =
+                std::string(image_folder) + rq.second.texture_name_ + ".png";
             if (not character_source_image_.loadFromFile(charset_path)) {
                 error(
                     *::platform,
@@ -1422,7 +1421,7 @@ Platform::Platform()
 
 
     auto shader_folder = "../shaders/";
-        // lisp::loadv<lisp::Symbol>("shader-dir").name_;
+    // lisp::loadv<lisp::Symbol>("shader-dir").name_;
 
 
     if (not data_->color_shader_.loadFromFile(
@@ -1769,8 +1768,7 @@ void Platform::NetworkPeer::connect(const char* peer)
     // ::platform->device_name().c_str(), "host_address");
 
     info(*::platform,
-         ("connecting to " + std::string(addr) + ":" +
-          std::to_string(port))
+         ("connecting to " + std::string(addr) + ":" + std::to_string(port))
              .c_str());
 
     if (impl->socket_.connect(addr, port) == sf::Socket::Status::Done) {

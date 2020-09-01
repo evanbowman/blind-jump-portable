@@ -351,12 +351,12 @@ void Game::init_script(Platform& pfrm)
                   }));
 
     lisp::set_var("platform", lisp::make_function([](int argc) {
-        auto pfrm = interp_get_pfrm();
-        if (not pfrm) {
-            return L_NIL;
-        }
-        return lisp::make_symbol(pfrm->device_name().c_str());
-    }));
+                      auto pfrm = interp_get_pfrm();
+                      if (not pfrm) {
+                          return L_NIL;
+                      }
+                      return lisp::make_symbol(pfrm->device_name().c_str());
+                  }));
 
     lisp::dostring(pfrm.config_data());
 }

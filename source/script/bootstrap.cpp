@@ -8,9 +8,9 @@
 
 
 ObjectPool<RcBase<Platform::ScratchBuffer,
-                      Platform::scratch_buffer_count>::ControlBlock,
-               Platform::scratch_buffer_count>
-        scratch_buffer_pool;
+                  Platform::scratch_buffer_count>::ControlBlock,
+           Platform::scratch_buffer_count>
+    scratch_buffer_pool;
 
 
 static int scratch_buffers_in_use = 0;
@@ -34,7 +34,8 @@ Platform::ScratchBufferPtr Platform::make_scratch_buffer()
         }
         return *maybe_buffer;
     } else {
-        while (true) ;
+        while (true)
+            ;
     }
 }
 
@@ -86,47 +87,39 @@ Platform::~Platform()
 
 Platform::SystemClock::SystemClock()
 {
-
 }
 
 
 Platform::NetworkPeer::NetworkPeer()
 {
-
 }
 
 
 Platform::DeltaClock::DeltaClock()
 {
-
 }
 
 
 Platform::Screen::Screen()
 {
-
 }
 
 
 Platform::Speaker::Speaker()
 {
-
 }
 
 
 Platform::Logger::Logger()
 {
-
 }
 
 
 Platform::DeltaClock::~DeltaClock()
 {
-
 }
 
 
 Platform::NetworkPeer::~NetworkPeer()
 {
-
 }

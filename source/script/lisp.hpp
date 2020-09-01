@@ -102,52 +102,55 @@ struct Value {
         UserData user_data_;
     };
 
-    template <typename T>
-    T& expect()
+    template <typename T> T& expect()
     {
         if constexpr (std::is_same<T, Integer>()) {
             if (type_ == Type::integer) {
                 return integer_;
             } else {
-                while (true) ; // TODO: fatal error...
+                while (true)
+                    ; // TODO: fatal error...
             }
         } else if constexpr (std::is_same<T, Cons>()) {
             if (type_ == Type::cons) {
                 return cons_;
             } else {
-                while (true) ;
+                while (true)
+                    ;
             }
         } else if constexpr (std::is_same<T, Function>()) {
             if (type_ == Type::function) {
                 return function_;
             } else {
-                while (true) ;
+                while (true)
+                    ;
             }
         } else if constexpr (std::is_same<T, Error>()) {
             if (type_ == Type::error) {
                 return error_;
             } else {
-                while (true) ;
+                while (true)
+                    ;
             }
         } else if constexpr (std::is_same<T, Symbol>()) {
             if (type_ == Type::symbol) {
                 return symbol_;
             } else {
-                while (true) ;
+                while (true)
+                    ;
             }
         } else if constexpr (std::is_same<T, UserData>()) {
             if (type_ == Type::user_data) {
                 return user_data_;
             } else {
-                while (true) ;
+                while (true)
+                    ;
             }
         } else {
             // TODO: how to put a static assert here?
             return nullptr;
         }
     }
-
-
 };
 
 
@@ -192,8 +195,7 @@ Value* set_var(const char* name, Value* value);
 Value* get_var(const char* name);
 
 
-template <typename T>
-T& loadv(const char* name)
+template <typename T> T& loadv(const char* name)
 {
     return get_var(name)->expect<T>();
 }
