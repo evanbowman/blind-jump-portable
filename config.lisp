@@ -12,14 +12,6 @@
 ;;; than speed. While the language does support syntax for loops, you should
 ;;; stick to the builtin functions, which execute faster.
 ;;;
-;;; P.S. you may have noticed that the interpreter is slow. On some systems,
-;;; REALLY slow. Why? Well, if we compiled to bytecode, we would need somewhere
-;;; to put the bytecode, whereas interpreting directly from the source requires
-;;; no extra memory. On the gameboy advance, which has about 1/4 of one megabyte
-;;; of data memory, RAM is precious. Also, on the GBA, I'm using the slower
-;;; external work ram for the lisp interpreter's heap, which doesn't help
-;;; performance either.
-;;;
 
 
 ;; For our onscreen keyboard, which does not include + or /
