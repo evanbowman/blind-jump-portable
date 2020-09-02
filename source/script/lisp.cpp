@@ -1063,6 +1063,24 @@ void init(Platform& pfrm)
                 return result;
             }));
 
+    set_var("fill", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(1, integer);
+
+        auto result = make_list(get_op(1)->integer_.value_);
+        for (int i = 0; i < get_op(1)->integer_.value_; ++i) {
+            set_list(result, i, get_op(0));
+        }
+
+        return result;
+    }));
+
+    set_var("length", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, cons);
+
+        return make_integer(length(get_op(0)));
+    }));
 
     set_var("<", make_function([](int argc) {
         L_EXPECT_ARGC(argc, 2);
