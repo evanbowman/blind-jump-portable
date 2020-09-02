@@ -1211,42 +1211,62 @@ void init(Platform& pfrm)
     }));
 
     set_var("map", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(0, cons);
-        L_EXPECT_OP(1, function);
+        if (argc < 2) {
+            return get_nil();
+        }
+        L_EXPECT_OP(argc - 1, function);
 
-        auto inp_lat = get_op(0);
-        auto fn = get_op(1);
+        // I've never seen map used with so many input lists, but who knows,
+        // someone might try to call this with more than six inputs...
+        Buffer<Value*, 6> inp_lats;
+
+        if (argc < static_cast<int>(inp_lats.size())) {
+            return get_nil(); // TODO: return error
+        }
+
+        for (int i = 0; i < argc - 1; ++i) {
+            L_EXPECT_OP(i, cons);
+            inp_lats.push_back(get_op(i));
+        }
+
+        const auto len = length(inp_lats[0]);
+        if (len == 0) {
+            return get_nil();
+        }
+        for (auto& l : inp_lats) {
+            if (length(l) not_eq len) {
+                return get_nil(); // return error instead!
+            }
+        }
+
+        auto fn = get_op(argc - 1);
 
         int index = 0;
 
-        if (auto len = length(inp_lat)) {
-            Value* result = make_list(len);
-            push_op(result); // protect from the gc
+        Value* result = make_list(len);
+        push_op(result); // protect from the gc
 
-            // Because the length function returned a non-zero value, we've
-            // already succesfully scanned the list, so we don't need to do any
-            // type checking.
+        // Because the length function returned a non-zero value, we've
+        // already succesfully scanned the list, so we don't need to do any
+        // type checking.
 
-            while (index < len) {
+        while (index < len) {
 
-                push_op(inp_lat->cons_.car());
-
-                funcall(fn, 1);
-
-                set_list(result, index, get_op(0));
-                pop_op();
-
-                inp_lat = inp_lat->cons_.cdr();
-                ++index;
+            for (auto& lat : reversed(inp_lats)) {
+                push_op(lat->cons_.car());
+                lat = lat->cons_.cdr();
             }
+            funcall(fn, inp_lats.size());
 
-            pop_op(); // the protected result list
+            set_list(result, index, get_op(0));
+            pop_op();
 
-            return result;
+            ++index;
         }
 
-        return get_nil();
+        pop_op(); // the protected result list
+
+        return result;
     }));
 
     set_var("gc", make_function([](int argc) {
