@@ -275,7 +275,5 @@ const char* intern(const char* string);
         return lisp::make_error(lisp::Error::Code::invalid_argc);
 
 
-StringBuffer<28> format(Value* value);
-
-
+StringBuffer<47> format(Value* value);
 } // namespace lisp

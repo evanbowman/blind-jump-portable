@@ -9,7 +9,16 @@
 ;;; for startup configuration, and I wanted to support an in-game lisp repl for
 ;;; debugging/testing purposes. Our interpreter, which needs to run with very
 ;;; limited memory on embedded systems, is designed for low memory usage, rather
-;;; than speed.
+;;; than speed. While the language does support syntax for loops, you should
+;;; stick to the builtin functions, which execute faster.
+;;;
+;;; P.S. you may have noticed that the interpreter is slow. On some systems,
+;;; REALLY slow. Why? Well, if we compiled to bytecode, we would need somewhere
+;;; to put the bytecode, whereas interpreting directly from the source requires
+;;; no extra memory. On the gameboy advance, which has about 1/4 of one megabyte
+;;; of data memory, RAM is precious. Also, on the GBA, I'm using the slower
+;;; external work ram for the lisp interpreter's heap, which doesn't help
+;;; performance either.
 ;;;
 
 
@@ -77,7 +86,7 @@
 
 
 ;;;
-;;; Some useful scripts:
+;;; Some useful little snippets:
 ;;;
 ;;; Unlock all items:
 ;;; (apply add-items (range 0 50))

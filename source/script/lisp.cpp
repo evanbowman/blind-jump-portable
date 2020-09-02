@@ -163,6 +163,23 @@ Value* dcompr(CompressedPtr ptr)
 }
 
 
+int length(Value* lat)
+{
+    int len = 0;
+    while (true) {
+        ++len;
+        lat = lat->cons_.cdr();
+        if (lat->type_ not_eq Value::Type::cons) {
+            if (lat not_eq get_nil()) {
+                return 0; // not a well-formed list
+            }
+            break;
+        }
+    }
+    return len;
+}
+
+
 static Value* alloc_value()
 {
     auto init_val = [](Value* val) {
@@ -752,7 +769,7 @@ void dostring(const char* code)
 }
 
 
-void format_impl(Value* value, StringBuffer<28>& buffer)
+void format_impl(Value* value, StringBuffer<47>& buffer)
 {
     switch (value->type_) {
     case lisp::Value::Type::nil:
@@ -812,9 +829,9 @@ void format_impl(Value* value, StringBuffer<28>& buffer)
 }
 
 
-StringBuffer<28> format(Value* value)
+StringBuffer<47> format(Value* value)
 {
-    StringBuffer<28> result;
+    StringBuffer<47> result;
     format_impl(value, result);
     return result;
 }
@@ -1191,6 +1208,45 @@ void init(Platform& pfrm)
         }
 
         return make_integer(0);
+    }));
+
+    set_var("map", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(0, cons);
+        L_EXPECT_OP(1, function);
+
+        auto inp_lat = get_op(0);
+        auto fn = get_op(1);
+
+        int index = 0;
+
+        if (auto len = length(inp_lat)) {
+            Value* result = make_list(len);
+            push_op(result); // protect from the gc
+
+            // Because the length function returned a non-zero value, we've
+            // already succesfully scanned the list, so we don't need to do any
+            // type checking.
+
+            while (index < len) {
+
+                push_op(inp_lat->cons_.car());
+
+                funcall(fn, 1);
+
+                set_list(result, index, get_op(0));
+                pop_op();
+
+                inp_lat = inp_lat->cons_.cdr();
+                ++index;
+            }
+
+            pop_op(); // the protected result list
+
+            return result;
+        }
+
+        return get_nil();
     }));
 
     set_var("gc", make_function([](int argc) {
