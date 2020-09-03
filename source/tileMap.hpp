@@ -107,21 +107,10 @@ inline Vec2<TIdx> to_quarter_tile_coord(const Vec2<s32>& wc)
 }
 
 
-// This function is only intended to be called during map
-// generation. Afterwards, the game code simplifies the tile map by removing all
-// non-essential tiles. Unless you're writing map generation code, you should
-// call is_walkable.
-inline bool is_walkable__precise(Tile t)
+inline bool is_walkable(Tile t)
 {
-    return t not_eq Tile::none and t not_eq Tile::ledge and
-           t not_eq Tile::grass_ledge and t not_eq Tile::grass_ledge_vines and
-           t not_eq Tile::beam_ul and t not_eq Tile::beam_ur and
-           t not_eq Tile::beam_bl and t not_eq Tile::beam_br and
-           t not_eq Tile(33);
-}
-
-inline bool is_walkable__fast(Tile t)
-{
+    // After level generation, all tiles in the tilemap are replaced with
+    // boolean values.
     return static_cast<bool>(t);
 }
 

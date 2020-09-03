@@ -1,0 +1,9 @@
+
+@SCRIPT_DECLS@
+
+static const struct {
+    const char* name_;
+    const unsigned char* data_;
+} scripts[] = {
+@SCRIPTS@
+};

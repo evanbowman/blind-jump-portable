@@ -350,14 +350,14 @@ Vec2<s8> get_constrained_player_tile_coord(Game& game)
 {
     auto player_tile = to_tile_coord(game.player().get_position().cast<s32>());
     //u32 integer_text_length(int n);
-    if (not is_walkable__fast(
+    if (not is_walkable(
             game.tiles().get_tile(player_tile.x, player_tile.y))) {
         // Player movement isn't constrained to tiles exactly, and sometimes the
         // player's map icon displays as inside of a wall.
-        if (is_walkable__fast(
+        if (is_walkable(
                 game.tiles().get_tile(player_tile.x + 1, player_tile.y))) {
             player_tile.x += 1;
-        } else if (is_walkable__fast(game.tiles().get_tile(
+        } else if (is_walkable(game.tiles().get_tile(
                        player_tile.x, player_tile.y + 1))) {
             player_tile.y += 1;
         }
@@ -390,7 +390,7 @@ bool draw_minimap(Platform& pfrm,
 
     auto render_map_icon = [&](Entity& entity, s16 icon) {
         auto t = to_tile_coord(entity.get_position().cast<s32>());
-        if (is_walkable__fast(game.tiles().get_tile(t.x, t.y))) {
+        if (is_walkable(game.tiles().get_tile(t.x, t.y))) {
             set_tile(t.x, t.y, icon);
         }
     };
@@ -416,11 +416,11 @@ bool draw_minimap(Platform& pfrm,
             }
         }
         if (not visited_nearby) {
-            set_tile(x, y, is_walkable__fast(t) ? 132 : 133, false);
-        } else if (is_walkable__fast(t)) {
+            set_tile(x, y, is_walkable(t) ? 132 : 133, false);
+        } else if (is_walkable(t)) {
             set_tile(x, y, 143, false);
         } else {
-            if (is_walkable__fast(game.tiles().get_tile(x, y - 1))) {
+            if (is_walkable(game.tiles().get_tile(x, y - 1))) {
                 set_tile(x, y, 140);
             } else {
                 set_tile(x, y, 144, false);

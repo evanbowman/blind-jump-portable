@@ -1655,18 +1655,22 @@ void Platform::feed_watchdog()
 }
 
 
-static std::string config_data;
+static std::map<std::string, std::string> scripts;
 
 
-const char* Platform::config_data() const
+const char* Platform::load_script(const char* name) const
 {
-    if (::config_data.empty()) {
-        std::fstream file(resource_path() + "config.lisp");
+    const auto found = scripts.find(name);
+    if (found == scripts.end()) {
+        std::fstream file(resource_path() + ("scripts" PATH_DELIMITER) + name);
         std::stringstream buffer;
         buffer << file.rdbuf();
-        ::config_data = buffer.str();
+        scripts[name] = buffer.str();
+    } else {
+        return found->second.c_str();
     }
-    return ::config_data.c_str();
+
+    return scripts[name].c_str();
 }
 
 

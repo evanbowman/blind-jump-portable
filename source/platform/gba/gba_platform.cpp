@@ -916,83 +916,7 @@ Vec2<u32> Platform::Screen::size() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "data/blaster_info_flattened.h"
-#include "data/charset_en_spn_fr.h"
-#include "data/launch_flattened.h"
-#include "data/old_poster_flattened.h"
-#include "data/overlay.h"
-#include "data/overlay_cutscene.h"
-#include "data/overlay_journal.h"
-#include "data/overlay_network_flattened.h"
-#include "data/postal_advert_flattened.h"
-#include "data/repl.h"
-#include "data/seed_packet_flattened.h"
-#include "data/spritesheet.h"
-#include "data/spritesheet2.h"
-#include "data/spritesheet3.h"
-#include "data/spritesheet_boss0.h"
-#include "data/spritesheet_boss1.h"
-#include "data/spritesheet_intro_clouds.h"
-#include "data/spritesheet_intro_cutscene.h"
-#include "data/spritesheet_launch_anim.h"
-#include "data/tilesheet.h"
-#include "data/tilesheet2.h"
-#include "data/tilesheet2_top.h"
-#include "data/tilesheet3.h"
-#include "data/tilesheet3_top.h"
-#include "data/tilesheet_intro_cutscene_flattened.h"
-#include "data/tilesheet_top.h"
-
-
-struct TextureData {
-    const char* name_;
-    const unsigned int* tile_data_;
-    const unsigned short* palette_data_;
-    u32 tile_data_length_;
-    u32 palette_data_length_;
-};
-
-
-#define STR(X) #X
-#define TEXTURE_INFO(NAME)                                                     \
-    {                                                                          \
-        STR(NAME), NAME##Tiles, NAME##Pal, NAME##TilesLen, NAME##PalLen        \
-    }
-
-
-static const TextureData sprite_textures[] = {
-    TEXTURE_INFO(spritesheet_intro_cutscene),
-    TEXTURE_INFO(spritesheet_intro_clouds),
-    TEXTURE_INFO(spritesheet),
-    TEXTURE_INFO(spritesheet2),
-    TEXTURE_INFO(spritesheet3),
-    TEXTURE_INFO(spritesheet_boss0),
-    TEXTURE_INFO(spritesheet_boss1),
-    TEXTURE_INFO(spritesheet_launch_anim)};
-
-
-static const TextureData tile_textures[] = {
-    TEXTURE_INFO(tilesheet),
-    TEXTURE_INFO(tilesheet_top),
-    TEXTURE_INFO(tilesheet2),
-    TEXTURE_INFO(tilesheet2_top),
-    TEXTURE_INFO(tilesheet3),
-    TEXTURE_INFO(tilesheet3_top),
-    TEXTURE_INFO(tilesheet_intro_cutscene_flattened),
-    TEXTURE_INFO(launch_flattened)};
-
-
-static const TextureData overlay_textures[] = {
-    TEXTURE_INFO(charset_en_spn_fr),
-    TEXTURE_INFO(repl),
-    TEXTURE_INFO(overlay),
-    TEXTURE_INFO(overlay_cutscene),
-    TEXTURE_INFO(overlay_journal),
-    TEXTURE_INFO(old_poster_flattened),
-    TEXTURE_INFO(postal_advert_flattened),
-    TEXTURE_INFO(blaster_info_flattened),
-    TEXTURE_INFO(seed_packet_flattened),
-    TEXTURE_INFO(overlay_network_flattened)};
+#include "images.cpp"
 
 
 static const TextureData* current_spritesheet = &sprite_textures[0];
@@ -2171,12 +2095,17 @@ void Platform::on_watchdog_timeout(WatchdogCallback callback)
 }
 
 
-extern const unsigned char config_ini[];
+#include "scripts.cpp"
 
 
-const char* Platform::config_data() const
+const char* Platform::load_script(const char* name) const
 {
-    return (const char*)config_ini;
+    for (auto& script : scripts) {
+        if (strcmp(script.name_, name) == 0) {
+            return reinterpret_cast<const char*>(script.data_);
+        }
+    }
+    return nullptr;
 }
 
 

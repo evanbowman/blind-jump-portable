@@ -43,6 +43,7 @@
     ;; 1: debug boss 0
     ;; 2: debug boss 1
     ;; 3: debug zone 2
+    ;; 4: debug zone 3
     (set 'debug-mode 0))
 
 
@@ -54,20 +55,26 @@
 
       (if (equal debug-mode 1)
           (progn
-            (set-level 10)
+            (level 10)
             (apply add-items debug-items-lat)))
 
       (if (equal debug-mode 2)
           (progn
-            (set-level 21)
+            (level 21)
             (apply add-items (cons 12 debug-items-lat))))
 
       (if (equal debug-mode 3)
           (progn
-            (set-level 11)
+            (level 11)
             ;; These params should be sort of reasonable for someone who just
             ;; beat the first boss...
             (set-hp 0 7)
+            (add-items 5 9)))
+
+      (if (equal debug-mode 4)
+          (progn
+            (level 22)
+            (set-hp 0 8)
             (add-items 5 9)))
 
       (unbind 'debug-items-lat)))

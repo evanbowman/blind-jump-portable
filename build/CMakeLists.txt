@@ -132,17 +132,39 @@ set(SOURCES
   ${SOURCE_DIR}/state/warpInState.cpp)
 
 
+set(SCRIPTS_DIR ${SOURCE_DIR}/../scripts)
+set(SCRIPTS "")
+set(SCRIPT_DECLS "")
+
+
+macro(add_script script)
+
+  set(SCRIPTS ${SCRIPTS} "\n    {\"${script}.lisp\", script_${script}},\n//")
+  set(SCRIPT_DECLS ${SCRIPT_DECLS}
+    "\nextern const unsigned char script_${script}[];\n//")
+
+  if(GBA_AUTOBUILD_CONF)
+
+    set(SCRIPT_IN ${SCRIPTS_DIR}/${script}.lisp)
+    set(SCRIPT_OUT ${SOURCE_DIR}/data/script_${script}.cpp)
+
+    add_custom_command(OUTPUT ${SCRIPT_OUT}
+      COMMAND echo "extern const unsigned char script_${script}[] = {" > ${SCRIPT_OUT}
+      COMMAND cat ${SCRIPT_IN} | xxd -i | tee -a ${SCRIPT_OUT} > /dev/null
+      COMMAND echo ", 0x00}\;" | tee -a ${SCRIPT_OUT}
+      DEPENDS ${SCRIPT_IN})
+
+    add_custom_target(convert_${script}_script DEPENDS ${SCRIPT_OUT})
+
+    add_dependencies(BlindJump convert_${script}_script)
+
+  endif()
+endmacro()
+
+
 if(GAMEBOY_ADVANCE)
-  set(CONF_INI "${SOURCE_DIR}/../config.lisp")
-  set(CONF_SRC "${SOURCE_DIR}/config.cpp")
 
-  add_custom_command(OUTPUT ${CONF_SRC}
-    COMMAND echo "extern const unsigned char config_ini[] = {" > ${CONF_SRC}
-    COMMAND cat ${CONF_INI} | xxd -i | tee -a ${CONF_SRC} > /dev/null
-    COMMAND echo ", 0x00}\;" | tee -a ${CONF_SRC}
-    DEPENDS ${CONF_INI})
-
-  add_custom_target(generate_config DEPENDS ${CONF_SRC})
+  set(DATA_DIR ${SOURCE_DIR}/data/)
 
   set(SOURCES
     ${SOURCES}
@@ -155,58 +177,60 @@ if(GAMEBOY_ADVANCE)
 
     # Data files below. Because the gameboy advance does not have a filesystem,
     # all of the sounds and images need to be compiled into the ROM.
-    ${CONF_SRC}
-    ${SOURCE_DIR}/data/scottbuckley_omega.s
-    ${SOURCE_DIR}/data/scottbuckley_computations.s
-    ${SOURCE_DIR}/data/scottbuckley_hiraeth.s
-    ${SOURCE_DIR}/data/clair_de_lune.s
-    ${SOURCE_DIR}/data/overlay.s
-    ${SOURCE_DIR}/data/repl.s
-    ${SOURCE_DIR}/data/overlay_cutscene.s
-    ${SOURCE_DIR}/data/charset_en_spn_fr.s
-    ${SOURCE_DIR}/data/tilesheet_intro_cutscene_flattened.s
-    ${SOURCE_DIR}/data/tilesheet.s
-    ${SOURCE_DIR}/data/tilesheet2.s
-    ${SOURCE_DIR}/data/tilesheet3.s
-    ${SOURCE_DIR}/data/tilesheet_top.s
-    ${SOURCE_DIR}/data/tilesheet2_top.s
-    ${SOURCE_DIR}/data/tilesheet3_top.s
-    ${SOURCE_DIR}/data/spritesheet_intro_cutscene.s
-    ${SOURCE_DIR}/data/spritesheet_intro_clouds.s
-    ${SOURCE_DIR}/data/spritesheet.s
-    ${SOURCE_DIR}/data/spritesheet2.s
-    ${SOURCE_DIR}/data/spritesheet3.s
-    ${SOURCE_DIR}/data/spritesheet_launch_anim.s
-    ${SOURCE_DIR}/data/launch_flattened.s
-    ${SOURCE_DIR}/data/sound_pop.s
-    ${SOURCE_DIR}/data/sound_coin.s
-    ${SOURCE_DIR}/data/sound_bell.s
-    ${SOURCE_DIR}/data/sound_click.s
-    ${SOURCE_DIR}/data/sound_heart.s
-    ${SOURCE_DIR}/data/sound_creak.s
-    ${SOURCE_DIR}/data/sound_dropitem.s
-    ${SOURCE_DIR}/data/sound_scroll.s
-    ${SOURCE_DIR}/data/sound_laser1.s
-    ${SOURCE_DIR}/data/sound_select.s
-    ${SOURCE_DIR}/data/sound_openbag.s
-    ${SOURCE_DIR}/data/sound_blaster.s
-    ${SOURCE_DIR}/data/sound_tw_bell.s
-    ${SOURCE_DIR}/data/sound_footstep1.s
-    ${SOURCE_DIR}/data/sound_footstep2.s
-    ${SOURCE_DIR}/data/sound_footstep3.s
-    ${SOURCE_DIR}/data/sound_footstep4.s
-    ${SOURCE_DIR}/data/sound_open_book.s
-    ${SOURCE_DIR}/data/sound_explosion1.s
-    ${SOURCE_DIR}/data/sound_typewriter.s
-    ${SOURCE_DIR}/data/sound_explosion2.s
-    ${SOURCE_DIR}/data/overlay_journal.s
-    ${SOURCE_DIR}/data/spritesheet_boss0.s
-    ${SOURCE_DIR}/data/spritesheet_boss1.s
-    ${SOURCE_DIR}/data/old_poster_flattened.s
-    ${SOURCE_DIR}/data/postal_advert_flattened.s
-    ${SOURCE_DIR}/data/blaster_info_flattened.s
-    ${SOURCE_DIR}/data/seed_packet_flattened.s
-    ${SOURCE_DIR}/data/overlay_network_flattened.s)
+    ${DATA_DIR}/script_init.cpp
+    ${DATA_DIR}/script_pre_levelgen.cpp
+    ${DATA_DIR}/script_post_levelgen.cpp
+    ${DATA_DIR}/scottbuckley_omega.s
+    ${DATA_DIR}/scottbuckley_computations.s
+    ${DATA_DIR}/scottbuckley_hiraeth.s
+    ${DATA_DIR}/clair_de_lune.s
+    ${DATA_DIR}/overlay.s
+    ${DATA_DIR}/repl.s
+    ${DATA_DIR}/overlay_cutscene.s
+    ${DATA_DIR}/charset_en_spn_fr.s
+    ${DATA_DIR}/tilesheet_intro_cutscene_flattened.s
+    ${DATA_DIR}/tilesheet.s
+    ${DATA_DIR}/tilesheet2.s
+    ${DATA_DIR}/tilesheet3.s
+    ${DATA_DIR}/tilesheet_top.s
+    ${DATA_DIR}/tilesheet2_top.s
+    ${DATA_DIR}/tilesheet3_top.s
+    ${DATA_DIR}/spritesheet_intro_cutscene.s
+    ${DATA_DIR}/spritesheet_intro_clouds.s
+    ${DATA_DIR}/spritesheet.s
+    ${DATA_DIR}/spritesheet2.s
+    ${DATA_DIR}/spritesheet3.s
+    ${DATA_DIR}/spritesheet_launch_anim.s
+    ${DATA_DIR}/launch_flattened.s
+    ${DATA_DIR}/sound_pop.s
+    ${DATA_DIR}/sound_coin.s
+    ${DATA_DIR}/sound_bell.s
+    ${DATA_DIR}/sound_click.s
+    ${DATA_DIR}/sound_heart.s
+    ${DATA_DIR}/sound_creak.s
+    ${DATA_DIR}/sound_dropitem.s
+    ${DATA_DIR}/sound_scroll.s
+    ${DATA_DIR}/sound_laser1.s
+    ${DATA_DIR}/sound_select.s
+    ${DATA_DIR}/sound_openbag.s
+    ${DATA_DIR}/sound_blaster.s
+    ${DATA_DIR}/sound_tw_bell.s
+    ${DATA_DIR}/sound_footstep1.s
+    ${DATA_DIR}/sound_footstep2.s
+    ${DATA_DIR}/sound_footstep3.s
+    ${DATA_DIR}/sound_footstep4.s
+    ${DATA_DIR}/sound_open_book.s
+    ${DATA_DIR}/sound_explosion1.s
+    ${DATA_DIR}/sound_typewriter.s
+    ${DATA_DIR}/sound_explosion2.s
+    ${DATA_DIR}/overlay_journal.s
+    ${DATA_DIR}/spritesheet_boss0.s
+    ${DATA_DIR}/spritesheet_boss1.s
+    ${DATA_DIR}/old_poster_flattened.s
+    ${DATA_DIR}/postal_advert_flattened.s
+    ${DATA_DIR}/blaster_info_flattened.s
+    ${DATA_DIR}/seed_packet_flattened.s
+    ${DATA_DIR}/overlay_network_flattened.s)
 else()
   set(SOURCES
     ${SOURCES}
@@ -219,6 +243,56 @@ endif()
 add_executable(BlindJump
   ${SOURCES})
 
+
+set(IMAGE_INCLUDES "")
+set(IMAGE_SPR_STUBS "")
+set(IMAGE_TILE_STUBS "")
+set(IMAGE_OVERLAY_STUBS "")
+
+macro(add_spritesheet filename mw mh flatten)
+
+  set(IMAGE_INCLUDES ${IMAGE_INCLUDES}
+    "\n#include \"data/${filename}.h\"\n//")
+
+  set(IMAGE_SPR_STUBS ${IMAGE_SPR_STUBS}
+    "\n    TEXTURE_INFO(${filename}),\n//")
+
+  compile_image(${filename} ${mw} ${mh} ${flatten})
+endmacro()
+
+
+macro(add_tilesheet filename mw mh flatten)
+  if(${flatten} STREQUAL "YES")
+    set(FLATTENED_SUFFIX "_flattened")
+  else()
+    set(FLATTENED_SUFFIX "")
+  endif()
+
+  set(IMAGE_INCLUDES ${IMAGE_INCLUDES}
+    "\n#include \"data/${filename}${FLATTENED_SUFFIX}.h\"\n//")
+
+  set(IMAGE_TILE_STUBS ${IMAGE_TILE_STUBS}
+    "\n    TEXTURE_INFO(${filename}${FLATTENED_SUFFIX}),\n//")
+
+  compile_image(${filename} ${mw} ${mh} ${flatten})
+endmacro()
+
+
+macro(add_overlay filename mw mh flatten)
+  if(${flatten} STREQUAL "YES")
+    set(FLATTENED_SUFFIX "_flattened")
+  else()
+    set(FLATTENED_SUFFIX "")
+  endif()
+
+  set(IMAGE_INCLUDES ${IMAGE_INCLUDES}
+    "\n#include \"data/${filename}${FLATTENED_SUFFIX}.h\"\n//")
+
+  set(IMAGE_OVERLAY_STUBS ${IMAGE_OVERLAY_STUBS}
+    "\n    TEXTURE_INFO(${filename}${FLATTENED_SUFFIX}),\n//")
+
+  compile_image(${filename} ${mw} ${mh} ${flatten})
+endmacro()
 
 
 function(compile_image filename mw mh flatten)
@@ -341,43 +415,48 @@ if(GAMEBOY_ADVANCE)
     -mcpu=arm7tdmi
     -mtune=arm7tdmi)
 
+  add_script(init)
+  add_script(pre_levelgen)
+  add_script(post_levelgen)
+
+  if(GBA_AUTOBUILD_CONF)
+    configure_file(scripts.cpp.in ${SOURCE_DIR}/platform/gba/scripts.cpp)
+  endif()
 
   if(GBA_AUTOBUILD_IMG)
-    compile_image(spritesheet_intro_clouds 2 4 NO)
-    compile_image(spritesheet_intro_cutscene 2 4 NO)
-    compile_image(spritesheet 2 4 NO)
-    compile_image(spritesheet2 2 4 NO)
-    compile_image(spritesheet3 2 4 NO)
-    compile_image(spritesheet_boss0 2 4 NO)
-    compile_image(spritesheet_boss1 2 4 NO)
-    compile_image(spritesheet_launch_anim 2 4 NO)
-    compile_image(launch 0 0 YES)
-    compile_image(tilesheet_intro_cutscene 0 0 YES)
-    compile_image(tilesheet 4 3 NO)
-    compile_image(tilesheet2 4 3 NO)
-    compile_image(tilesheet3 4 3 NO)
-    compile_image(tilesheet_top 4 3 NO)
-    compile_image(tilesheet2_top 4 3 NO)
-    compile_image(tilesheet3_top 4 3 NO)
-    compile_image(overlay 0 0 NO)
-    compile_image(repl 0 0 NO)
-    compile_image(overlay_cutscene 0 0 NO)
-    compile_image(charset_en_spn_fr 0 0 NO)
-    compile_image(overlay_journal 0 0 NO)
-    compile_image(old_poster 0 0 YES)
-    compile_image(postal_advert 0 0 YES)
-    compile_image(blaster_info 0 0 YES)
-    compile_image(seed_packet 0 0 YES)
-    compile_image(overlay_network 0 0 YES)
+    add_spritesheet(spritesheet_intro_clouds 2 4 NO)
+    add_spritesheet(spritesheet_intro_cutscene 2 4 NO)
+    add_spritesheet(spritesheet 2 4 NO)
+    add_spritesheet(spritesheet2 2 4 NO)
+    add_spritesheet(spritesheet3 2 4 NO)
+    add_spritesheet(spritesheet_boss0 2 4 NO)
+    add_spritesheet(spritesheet_boss1 2 4 NO)
+    add_spritesheet(spritesheet_launch_anim 2 4 NO)
+    add_tilesheet(launch 0 0 YES)
+    add_tilesheet(tilesheet_intro_cutscene 0 0 YES)
+    add_tilesheet(tilesheet 4 3 NO)
+    add_tilesheet(tilesheet2 4 3 NO)
+    add_tilesheet(tilesheet3 4 3 NO)
+    add_tilesheet(tilesheet_top 4 3 NO)
+    add_tilesheet(tilesheet2_top 4 3 NO)
+    add_tilesheet(tilesheet3_top 4 3 NO)
+    add_overlay(overlay 0 0 NO)
+    add_overlay(repl 0 0 NO)
+    add_overlay(overlay_cutscene 0 0 NO)
+    add_overlay(charset_en_spn_fr 0 0 NO)
+    add_overlay(overlay_journal 0 0 NO)
+    add_overlay(old_poster 0 0 YES)
+    add_overlay(postal_advert 0 0 YES)
+    add_overlay(blaster_info 0 0 YES)
+    add_overlay(seed_packet 0 0 YES)
+    add_overlay(overlay_network 0 0 YES)
+
+    configure_file(images.cpp.in ${SOURCE_DIR}/platform/gba/images.cpp)
   endif()
 
   set(CMAKE_EXE_LINKER_FLAGS
     "-mthumb -mthumb-interwork -Wl,-Map,BlindJump.elf.map -specs=gba.specs"
     CACHE INTERNAL "" FORCE)
-
-  if(GBA_AUTOBUILD_CONF)
-    add_dependencies(BlindJump generate_config)
-  endif()
 
   target_link_libraries(BlindJump PRIVATE
     # ${DEVKITPRO}/libgba/lib/libgba.a

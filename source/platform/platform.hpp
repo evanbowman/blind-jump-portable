@@ -185,7 +185,7 @@ public:
     bool read_save_data(void* buffer, u32 data_length);
 
 
-    const char* config_data() const;
+    const char* load_script(const char* name) const;
 
 
 #ifdef __GBA__

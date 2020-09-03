@@ -28,7 +28,7 @@ WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
     const Vec2<TIdx> tile_coords = to_tile_coord(pos);
 
     auto check_wall = [&](TIdx x, TIdx y) {
-        if (not is_walkable__fast(tiles.get_tile(x, y))) {
+        if (not is_walkable(tiles.get_tile(x, y))) {
             adjacency_vector.push_back(to_world_coord<s32>({x, y}));
         }
     };
