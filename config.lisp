@@ -25,8 +25,6 @@
     (progn
       (register-controller 1356 616 11 14 16 4 5) ;; Sony PS3 Controller
       (register-controller 1356 1476 2 1 9 4 5)   ;; Sony PS4 Controller
-      (set 'sound-dir '../sounds/)
-      (set 'image-dir '../images/)
       (set 'network-port 50001)))
 
 

@@ -3,7 +3,8 @@
 
 #if defined(_WIN32) or defined(_WIN64)
 #include <windows.h>
-std::string resource_path() {
+std::string resource_path()
+{
     static std::string result;
     if (result.empty()) {
         HMODULE hModule = GetModuleHandleW(nullptr);
@@ -45,14 +46,22 @@ std::string resource_path() {
 //     return rpath;
 // }
 
-// #elif __LINUX__
-// std::string ResourcePath() {
-//     char buffer[PATH_MAX];
-//     [[gnu::unused]] const std::size_t bytesRead =
-//         readlink("/proc/self/exe", buffer, sizeof(buffer));
-//     const std::string path(buffer);
-//     const std::size_t lastFwdSlash = path.find_last_of("/");
-//     std::string pathWithoutBinary = path.substr(0, lastFwdSlash + 1);
-//     return pathWithoutBinary + "../res/";
-// }
+#elif __linux__
+#include <linux/limits.h>
+#include <unistd.h>
+
+std::string resource_path()
+{
+    static std::string result;
+    if (result.empty()) {
+        char buffer[PATH_MAX];
+        [[gnu::unused]] const std::size_t bytes_read =
+                            readlink("/proc/self/exe", buffer, sizeof(buffer));
+        const std::string path(buffer);
+        const std::size_t last_fwd_slash = path.find_last_of("/");
+        std::string path_without_binary = path.substr(0, last_fwd_slash + 1);
+        result = path_without_binary + "../";
+    }
+    return result;
+}
 #endif
