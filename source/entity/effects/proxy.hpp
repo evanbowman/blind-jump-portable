@@ -113,6 +113,6 @@ private:
     // FIXME: Not currently using the sprite inherited from Entity, wasteful!
     SpriteBuffer buffer_;
     Microseconds timer_ = 0;
-    enum class Mode { none, pulse } mode_;
+    enum class Mode { none, pulse } mode_ = Mode::none;
     // FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

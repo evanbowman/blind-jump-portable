@@ -12,6 +12,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+#ifdef _WIN32
+#define PATH_DELIMITER "\\"
+#else
+#define PATH_DELIMITER "/"
+#endif
+
+
 #include "SFML/Audio.hpp"
 #include "SFML/Graphics.hpp"
 #include "SFML/Network.hpp"
@@ -36,6 +43,9 @@ Platform::DeviceName Platform::device_name() const
 {
     return "Desktop";
 }
+
+
+std::string resource_path();
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +208,7 @@ public:
         window_size_ = {(u32)resolution.x * window_scale_,
                         (u32)resolution.y * window_scale_};
 
-        auto sound_folder = "../sounds/";
+        auto sound_folder = resource_path() + ("sounds" PATH_DELIMITER);
         // lisp::loadv<lisp::Symbol>("sound-dir").name_;
 
         for (auto& dirent : std::filesystem::directory_iterator(sound_folder)) {
@@ -646,7 +656,7 @@ void Platform::Screen::clear()
 
             sf::Image image;
 
-            auto image_folder = lisp::loadv<lisp::Symbol>("image-dir").name_;
+            auto image_folder = resource_path() + ("images" PATH_DELIMITER);
 
             if (not image.loadFromFile(image_folder + request.second +
                                        ".png")) {
@@ -734,7 +744,7 @@ void Platform::Screen::clear()
             const auto rq = glyph_requests.front();
             glyph_requests.pop();
 
-            auto image_folder = lisp::loadv<lisp::Symbol>("image-dir").name_;
+            auto image_folder = resource_path() + ("images" PATH_DELIMITER);
 
             sf::Image character_source_image_;
             const auto charset_path =
@@ -1154,7 +1164,7 @@ Platform::Speaker::Speaker()
 
 void Platform::Speaker::play_music(const char* name, Microseconds offset)
 {
-    std::string path = lisp::loadv<lisp::Symbol>("sound-dir").name_;
+    std::string path = resource_path() + ("sounds" PATH_DELIMITER);
 
     path += "music_";
     path += name;
@@ -1164,6 +1174,13 @@ void Platform::Speaker::play_music(const char* name, Microseconds offset)
         ::platform->data()->music_.play();
         ::platform->data()->music_.setLoop(true);
         ::platform->data()->music_.setPlayingOffset(sf::microseconds(offset));
+        // For desktop releases, we have spatialized sound enabled, such that
+        // the sound effects attenuate based on their distance from the center
+        // of the screen. The music seems too loud by comparison, so I'm
+        // playing the music more quietly than I would on the gameboy advance,
+        // where everthing is mono (there's only one speaker on the device, so
+        // stereo isn't really worth the resources on the gameboy).
+        ::platform->data()->music_.setVolume(70);
     } else {
         error(*::platform, "failed to load music file");
     }
@@ -1420,7 +1437,7 @@ Platform::Platform()
     screen_.view_.set_size(screen_.size().cast<Float>());
 
 
-    auto shader_folder = "../shaders/";
+    auto shader_folder = resource_path() + ("shaders" PATH_DELIMITER);
     // lisp::loadv<lisp::Symbol>("shader-dir").name_;
 
 
@@ -1644,7 +1661,7 @@ static std::string config_data;
 const char* Platform::config_data() const
 {
     if (::config_data.empty()) {
-        std::fstream file("../config.lisp");
+        std::fstream file(resource_path() + "config.lisp");
         std::stringstream buffer;
         buffer << file.rdbuf();
         ::config_data = buffer.str();

@@ -38,6 +38,7 @@ inline void str_reverse(char str[], int length)
 }
 
 
+#ifndef _WIN32
 inline int strcmp(const char* p1, const char* p2)
 {
     const unsigned char* s1 = (const unsigned char*)p1;
@@ -57,6 +58,7 @@ inline int strcmp(const char* p1, const char* p2)
 
     return c1 - c2;
 }
+#endif
 
 
 // A not great, but satisfactory implementation of a string class.

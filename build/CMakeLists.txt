@@ -210,7 +210,8 @@ if(GAMEBOY_ADVANCE)
 else()
   set(SOURCES
     ${SOURCES}
-    ${SOURCE_DIR}/platform/desktop/desktop_platform.cpp)
+    ${SOURCE_DIR}/platform/desktop/desktop_platform.cpp
+    ${SOURCE_DIR}/platform/desktop/resource_path.cpp)
 endif()
 
 
@@ -275,18 +276,49 @@ if(APPLE OR UNIX OR GAMEBOY_ADVANCE)
 
 elseif(WIN32)
 
-  message("WARNING: Windows support is experimental")
-  message("TODO: set up proper compiler flags for windows")
   set(SHARED_COMPILE_OPTIONS
     /W4)
 
-  message("The CMakeLists.txt for Windows is incomplete.
-Please manually copy the dependent sfml libraries into the build directory")
-  message("You should also copy the SFML directory containing the SFML headers into the source directory")
-  link_directories(${CMAKE_CURRENT_SOURCE_DIR})
+  include_directories(${ROOT_DIR}/external/SFML-2.5.1/include/)
 
-  target_link_libraries(BlindJump sfml-graphics-d sfml-window-d sfml-system-d sfml-audio-d sfml-network-d)
+  set(SFML_LIB_DIR ${ROOT_DIR}/external/SFML-2.5.1/lib/Release)
 
+  target_link_libraries(BlindJump
+    ${SFML_LIB_DIR}/sfml-graphics.lib
+    ${SFML_LIB_DIR}/sfml-window.lib
+    ${SFML_LIB_DIR}/sfml-system.lib
+    ${SFML_LIB_DIR}/sfml-audio.lib
+    ${SFML_LIB_DIR}/sfml-network.lib)
+
+  add_custom_command(TARGET BlindJump POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SFML_LIB_DIR}/sfml-graphics-2.dll"
+        $<TARGET_FILE_DIR:BlindJump>)
+
+  add_custom_command(TARGET BlindJump POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SFML_LIB_DIR}/sfml-audio-2.dll"
+        $<TARGET_FILE_DIR:BlindJump>)
+
+  add_custom_command(TARGET BlindJump POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SFML_LIB_DIR}/sfml-window-2.dll"
+        $<TARGET_FILE_DIR:BlindJump>)
+
+  add_custom_command(TARGET BlindJump POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SFML_LIB_DIR}/sfml-network-2.dll"
+        $<TARGET_FILE_DIR:BlindJump>)
+
+  add_custom_command(TARGET BlindJump POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SFML_LIB_DIR}/sfml-system-2.dll"
+        $<TARGET_FILE_DIR:BlindJump>)
+
+   add_custom_command(TARGET BlindJump POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${ROOT_DIR}/external/SFML-2.5.1/extlibs/bin/x64/openal32.dll"
+        $<TARGET_FILE_DIR:BlindJump>)
 endif()
 
 

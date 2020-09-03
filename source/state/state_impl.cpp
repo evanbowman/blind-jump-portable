@@ -410,7 +410,7 @@ bool draw_minimap(Platform& pfrm,
             for (int y2 = std::max(0, y - offset);
                  y2 < std::min((int)TileMap::height, y + offset);
                  ++y2) {
-                if (visited.get(x2, y2 + 1)) {
+                if (visited.get(x2, y2)) {
                     visited_nearby = true;
                 }
             }

@@ -482,7 +482,7 @@ private:
     int last_column_ = -1;
     std::array<std::optional<Text>, legend_strings.size()> legend_text_;
     std::optional<Border> legend_border_;
-    Microseconds map_enter_duration_;
+    Microseconds map_enter_duration_ = 0;
 
     std::optional<DynamicMemory<IncrementalPathfinder>> path_finder_;
     std::optional<DynamicMemory<PathBuffer>> path_;
