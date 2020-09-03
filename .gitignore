@@ -16,3 +16,15 @@ save.dat
 *.ase
 *.aup
 a.out
+*.pdb
+*.ilk
+*.user
+Debug
+Release
+*.dll
+*.lib
+*.exp
+.vs
+*.vcxproj
+*.vcxproj.filters
+*.sln

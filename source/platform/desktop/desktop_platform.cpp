@@ -1164,6 +1164,13 @@ void Platform::Speaker::play_music(const char* name, Microseconds offset)
         ::platform->data()->music_.play();
         ::platform->data()->music_.setLoop(true);
         ::platform->data()->music_.setPlayingOffset(sf::microseconds(offset));
+        // For desktop releases, we have spatialized sound enabled, such that
+        // the sound effects attenuate based on their distance from the center
+        // of the screen. The music seems too loud by comparison, so I'm
+        // playing the music more quietly than I would on the gameboy advance,
+        // where everthing is mono (there's only one speaker on the device, so
+        // stereo isn't really worth the resources on the gameboy).
+        ::platform->data()->music_.setVolume(70);
     } else {
         error(*::platform, "failed to load music file");
     }

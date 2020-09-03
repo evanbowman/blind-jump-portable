@@ -131,9 +131,9 @@ CompressedPtr compr(Value* val)
 {
     for (int pool_id = 0; pool_id < Context::value_pool_count; ++pool_id) {
         auto& cells = bound_context->value_pools_[pool_id].obj_->cells();
-        if ((char*)val >= (char*)cells.begin() and
-            (char*)val < (char*)cells.end()) {
-
+        if ((char*)val >= (char*)cells.data() and
+            (char*)val < (char*)(cells.data() + cells.size())) {
+            
             static_assert((1 << CompressedPtr::source_pool_bits) - 1 >=
                           Context::value_pool_count - 1,
                           "Source pool bits in compressed ptr insufficient "
@@ -146,7 +146,7 @@ CompressedPtr compr(Value* val)
 
             CompressedPtr result;
             result.source_pool_ = pool_id;
-            result.offset_ = (char*)val - (char*)cells.begin();
+            result.offset_ = (char*)val - (char*)cells.data();
 
             return result;
         }
@@ -159,7 +159,7 @@ CompressedPtr compr(Value* val)
 Value* dcompr(CompressedPtr ptr)
 {
     auto& cells = bound_context->value_pools_[ptr.source_pool_].obj_->cells();
-    return (Value*)((char*)cells.begin() + ptr.offset_);
+    return (Value*)((char*)cells.data() + ptr.offset_);
 }
 
 
@@ -601,6 +601,7 @@ static u32 eval_expr(const char* expr, u32 len)
 
     static const int max_fn_name = 31;
     char fn_name[max_fn_name + 1];
+    fn_name[0] = '\0';
 
     i += eat_whitespace(expr + i);
 
@@ -758,7 +759,7 @@ void dostring(const char* code)
     while (i < script_len) {
         lisp::eval(code + i);
 
-        auto len = expr_len(code + i, script_len);
+        auto len = expr_len(code + i, script_len - i);
 
         // TODO: check for errors!
 
