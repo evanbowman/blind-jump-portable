@@ -80,7 +80,8 @@ private:
 };
 
 
-template <typename T, u32 count> class ObjectPool {
+template <typename T, u32 count, template <u32, auto, u32> typename TPool = Pool>
+class ObjectPool {
 public:
     template <typename... Args> T* get(Args&&... args)
     {
@@ -109,7 +110,7 @@ public:
         return pool_.empty();
     }
 
-    using _Pool = Pool<sizeof(T), count, alignof(T)>;
+    using _Pool = TPool<sizeof(T), count, alignof(T)>;
     using Cells = typename _Pool::Cells;
 
     Cells& cells()

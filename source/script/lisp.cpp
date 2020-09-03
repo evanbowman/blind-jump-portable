@@ -1287,6 +1287,32 @@ void init(Platform& pfrm)
         return result;
     }));
 
+    set_var("select", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(0, cons);
+        L_EXPECT_OP(1, cons);
+
+        const auto len = length(get_op(0));
+        if (not len or len not_eq length(get_op(1))) {
+            return get_nil();
+        }
+
+        auto input_list = get_op(1);
+        auto selection_list = get_op(0);
+
+        auto result = get_nil();
+        for (int i = len - 1; i > -1; --i) {
+            if (is_boolean_true(get_list(selection_list, i))) {
+                push_op(result);
+                auto next = make_cons(get_list(input_list, i), result);
+                result = next;
+                pop_op(); // result
+            }
+        }
+
+        return result;
+    }));
+
     set_var("gc", make_function([](int argc) {
                 run_gc();
                 return get_nil();
