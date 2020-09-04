@@ -1168,7 +1168,7 @@ void Platform::Speaker::play_music(const char* name, Microseconds offset)
 
     path += "music_";
     path += name;
-    path += ".wav";
+    path += ".ogg";
 
     if (::platform->data()->music_.openFromFile(path.c_str())) {
         ::platform->data()->music_.play();
