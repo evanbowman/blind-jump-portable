@@ -375,7 +375,7 @@ static void cell_automata_advance(TileMap& map, TileMap& maptemp)
     // random. The cell_automata_advance function causes each tile to
     // appear/disappear based on how many neighbors that tile has, which
     // ultimately causes tiles to coalesce into blobs.
-    map.for_each([&](const Tile& tile, int x, int y) {
+    map.for_each([&](const u8& tile, int x, int y) {
         uint8_t count = 0;
         auto collect = [&](int x, int y) {
             if (map.get_tile(x, y) == Tile::none) {
@@ -405,7 +405,7 @@ static void cell_automata_advance(TileMap& map, TileMap& maptemp)
         }
     });
     maptemp.for_each(
-        [&](const Tile& tile, int x, int y) { map.set_tile(x, y, tile); });
+        [&](const u8& tile, int x, int y) { map.set_tile(x, y, tile); });
 }
 
 
@@ -484,10 +484,10 @@ static constexpr const BossLevelMap boss_level_2({{
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
-    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
-    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -579,8 +579,10 @@ void animate_starfield(Platform& pfrm, Microseconds delta)
 }
 
 
-static void draw_starfield(Platform& pfrm)
+void draw_starfield(Platform& pfrm)
 {
+    active_star_anims.clear();
+
     // Redraw the starfield background. Due to memory constraints, the
     // background needs to source its 8x8 pixel tiles from the tile0 texture.
     for (int x = 0; x < 32; ++x) {
@@ -1053,7 +1055,7 @@ bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
 }
 
 
-static bool contains(lisp::Value* tiles_list, Tile t)
+static bool contains(lisp::Value* tiles_list, u8 t)
 {
     while (tiles_list not_eq L_NIL) {
         if (tiles_list->type_ not_eq lisp::Value::Type::cons) {
@@ -1128,11 +1130,9 @@ RETRY:
         goto RETRY;
     }
 
-    tiles_.for_each([&](Tile t, s8 x, s8 y) {
+    tiles_.for_each([&](u8 t, s8 x, s8 y) {
         pfrm.set_tile(Layer::map_0, x, y, static_cast<s16>(t));
     });
-
-    active_star_anims.clear();
 
     current_zone(*this).generate_background_(pfrm, *this);
 
@@ -1146,7 +1146,7 @@ RETRY:
     auto wall_tiles = lisp::get_var("wall-tiles-list");
     auto edge_tiles = lisp::get_var("edge-tiles-list");
 
-    tiles_.for_each([&](Tile& tile, int, int) {
+    tiles_.for_each([&](u8& tile, int, int) {
         if (not contains(wall_tiles, tile)) {
             if (contains(edge_tiles, tile)) {
                 tile = Tile::plate;
@@ -1166,7 +1166,7 @@ RETRY:
 
 
 COLD static u32
-flood_fill(Platform& pfrm, TileMap& map, Tile replace, TIdx x, TIdx y)
+flood_fill(Platform& pfrm, TileMap& map, u8 replace, TIdx x, TIdx y)
 {
     using Coord = Vec2<s8>;
 
@@ -1179,7 +1179,7 @@ flood_fill(Platform& pfrm, TileMap& map, Tile replace, TIdx x, TIdx y)
         pfrm.fatal();
     }
 
-    const Tile target = map.get_tile(x, y);
+    const u8 target = map.get_tile(x, y);
 
     u32 count = 0;
 
@@ -1215,18 +1215,18 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
     if (auto l = get_boss_level(level())) {
         for (int x = 0; x < TileMap::width; ++x) {
             for (int y = 0; y < TileMap::height; ++y) {
-                tiles_.set_tile(x, y, static_cast<Tile>(l->map_->get(x, y)));
+                tiles_.set_tile(x, y, l->map_->get(x, y));
             }
         }
     } else if (level() == 0) {
         for (int x = 0; x < TileMap::width; ++x) {
             for (int y = 0; y < TileMap::height; ++y) {
-                tiles_.set_tile(x, y, static_cast<Tile>(level_0.get(x, y)));
+                tiles_.set_tile(x, y, level_0.get(x, y));
             }
         }
     } else {
-        tiles_.for_each([&](Tile& t, int, int) {
-            t = Tile(rng::choice<int(Tile::sand)>(rng::critical_state));
+        tiles_.for_each([&](auto& t, int, int) {
+            t = rng::choice<int(Tile::sand)>(rng::critical_state);
         });
 
         const auto cell_iters =
@@ -1241,7 +1241,7 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
 
 static bool is_center_tile(lisp::Value* wall_tiles_list,
                            lisp::Value* edge_tiles_list,
-                           Tile t)
+                           u8 t)
 {
     return not contains(wall_tiles_list, t) and
            not contains(edge_tiles_list, t);
@@ -1249,7 +1249,7 @@ static bool is_center_tile(lisp::Value* wall_tiles_list,
 
 
 static bool
-is_edge_tile(lisp::Value* wall_tiles_list, lisp::Value* edge_tiles_list, Tile t)
+is_edge_tile(lisp::Value* wall_tiles_list, lisp::Value* edge_tiles_list, u8 t)
 {
     return not contains(wall_tiles_list, t) and contains(edge_tiles_list, t);
 }
@@ -1274,8 +1274,8 @@ static void add_map_decorations(Level level,
     auto wall_tiles = lisp::get_var("wall-tiles-list");
     auto edge_tiles = lisp::get_var("edge-tiles-list");
 
-    grass_overlay.for_each([&](Tile t, s8 x, s8 y) {
-        pfrm.set_tile(Layer::map_1, x, y, static_cast<u16>(t));
+    grass_overlay.for_each([&](u8 t, s8 x, s8 y) {
+        pfrm.set_tile(Layer::map_1, x, y, t);
         if (t == Tile::none) {
             if (is_center_tile(wall_tiles, edge_tiles, map.get_tile(x, y))) {
                 if (not adjacent_decor(x, y)) {
@@ -1307,7 +1307,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     // particularly consoles, have automatic tile-wrapping, and we
     // don't want to deal with having to support wrapping in all the
     // game logic.
-    tiles_.for_each([&](Tile& tile, int x, int y) {
+    tiles_.for_each([&](u8& tile, int x, int y) {
         if (x == 0 or x == TileMap::width - 1 or y == 0 or
             y == TileMap::height - 1) {
             tile = Tile::none;
@@ -1319,11 +1319,11 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     // Create a mask of the tileset by filling the temporary tileset
     // with all walkable tiles from the tilemap.
-    tiles_.for_each([&](const Tile& tile, TIdx x, TIdx y) {
+    tiles_.for_each([&](const u8& tile, TIdx x, TIdx y) {
         if (not contains(wall_tiles, tile)) {
-            temporary->set_tile(x, y, Tile(1));
+            temporary->set_tile(x, y, 1);
         } else {
-            temporary->set_tile(x, y, Tile(0));
+            temporary->set_tile(x, y, 0);
         }
     });
 
@@ -1334,9 +1334,9 @@ COLD void Game::regenerate_map(Platform& pfrm)
             const auto x = rng::choice(TileMap::width, rng::critical_state);
             const auto y = rng::choice(TileMap::height, rng::critical_state);
             if (temporary->get_tile(x, y) not_eq Tile::none) {
-                flood_fill(pfrm, *temporary, Tile(2), x, y);
-                temporary->for_each([&](const Tile& tile, TIdx x, TIdx y) {
-                    if (tile not_eq Tile(2)) {
+                flood_fill(pfrm, *temporary, 2, x, y);
+                temporary->for_each([&](const u8& tile, TIdx x, TIdx y) {
+                    if (tile not_eq 2) {
                         tiles_.set_tile(x, y, Tile::none);
                     }
                 });
@@ -1347,7 +1347,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     }
 
-    auto grass_overlay = mem.alloc<TileMap>([&](Tile& t, int, int) {
+    auto grass_overlay = mem.alloc<TileMap>([&](u8& t, int, int) {
         if (rng::choice<3>(rng::critical_state)) {
             t = Tile::none;
         } else {
@@ -1367,7 +1367,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     }
 
     // All tiles with four neighbors become sand tiles.
-    tiles_.for_each([&](Tile& tile, int x, int y) {
+    tiles_.for_each([&](u8& tile, int x, int y) {
         if (tile == Tile::plate and
             tiles_.get_tile(x - 1, y) not_eq Tile::none and
             tiles_.get_tile(x + 1, y) not_eq Tile::none and
@@ -1378,7 +1378,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     });
 
     // Add ledge tiles to empty locations, where the y-1 tile is non-empty.
-    tiles_.for_each([&](Tile& tile, int x, int y) {
+    tiles_.for_each([&](u8& tile, int x, int y) {
         auto above = tiles_.get_tile(x, y - 1);
         if (tile == Tile::none and
             (above == Tile::plate or above == Tile::damaged_plate)) {
@@ -1387,7 +1387,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     });
 
     // Crop the grass overlay tileset to fit the target tilemap.
-    tiles_.for_each([&](Tile& tile, int x, int y) {
+    tiles_.for_each([&](u8& tile, int x, int y) {
         if (tile == Tile::none) {
             grass_overlay->set_tile(x, y, Tile::none);
         }
@@ -1407,14 +1407,14 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     }
 
-    grass_overlay->for_each([&](Tile& tile, int x, int y) {
+    grass_overlay->for_each([&](u8& tile, int x, int y) {
         if (tile == Tile::plate) {
             auto match = tiles_.get_tile(x, y);
             switch (match) {
             case Tile::plate:
             case Tile::sand:
                 grass_overlay->set_tile(
-                    x, y, Tile(int(Tile::grass_start) + bitmask[x][y]));
+                    x, y, Tile::grass_start + bitmask[x][y]);
                 break;
 
             case Tile::ledge:
@@ -1433,7 +1433,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     });
 
     if (zone_info(level()) == zone_1) {
-        tiles_.for_each([&](Tile& tile, int x, int y) {
+        tiles_.for_each([&](u8& tile, int x, int y) {
             if (tile == Tile::ledge) {
                 if (tiles_.get_tile(x + 1, y) == Tile::plate) {
                     tile = Tile::beam_br;
@@ -1452,17 +1452,17 @@ COLD void Game::regenerate_map(Platform& pfrm)
     }
 
     if (zone_info(level()) == zone_3) {
-        tiles_.for_each([&](Tile& tile, int x, int y) {
+        tiles_.for_each([&](u8& tile, int x, int y) {
             if (contains(wall_tiles, tile)) {
                 if (not contains(wall_tiles, tiles_.get_tile(x, y + 1))) {
-                    grass_overlay->set_tile(x, y, static_cast<Tile>(17));
+                    grass_overlay->set_tile(x, y, 17);
                 }
             }
         });
     }
 
     if (zone_info(level()) == zone_1) {
-        tiles_.for_each([&](Tile& tile, int x, int y) {
+        tiles_.for_each([&](u8& tile, int x, int y) {
             if (tile == Tile::plate and
                 grass_overlay->get_tile(x, y) == Tile::none) {
                 const auto up = tiles_.get_tile(x, y + 1);
@@ -1512,7 +1512,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     add_map_decorations(level(), pfrm, tiles_, *grass_overlay);
 
-    tiles_.for_each([&](Tile& tile, int x, int y) {
+    tiles_.for_each([&](u8& tile, int x, int y) {
         if (tile == Tile::plate) {
             if (rng::choice<4>(rng::critical_state) == 0) {
                 tile = Tile::damaged_plate;
@@ -1537,14 +1537,14 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 
     auto wall_tiles = lisp::get_var("wall-tiles-list");
 
-    map.for_each([&](const Tile& tile, TIdx x, TIdx y) {
+    map.for_each([&](const u8& tile, TIdx x, TIdx y) {
         if (not contains(wall_tiles, tile)) {
             output.push_back({x, y});
         }
     });
 
     for (auto it = output.begin(); it not_eq output.end();) {
-        const Tile tile = map.get_tile(it->x, it->y);
+        const u8 tile = map.get_tile(it->x, it->y);
         if (not(tile == Tile::sand or tile == Tile::sand_sprouted
                 // FIXME-TILES
                 //  or
@@ -1991,7 +1991,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     // Potentially hide some items in far crannies of the map. If
     // there's no sand nearby, and no items eiher, potentially place
     // an item.
-    tiles_.for_each([&](Tile t, s8 x, s8 y) {
+    tiles_.for_each([&](u8 t, s8 x, s8 y) {
         if (is_edge_tile(wall_tiles, edge_tiles, t)) {
             for (int i = x - 1; i < x + 2; ++i) {
                 for (int j = y - 1; j < y + 2; ++j) {
@@ -2038,7 +2038,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     // For map locations with nothing nearby, potentially place an item or
     // something
-    tiles_.for_each([&](Tile t, s8 x, s8 y) {
+    tiles_.for_each([&](u8 t, s8 x, s8 y) {
         if (is_center_tile(wall_tiles, edge_tiles, t)) {
             const auto pos = to_world_coord({x, y});
 

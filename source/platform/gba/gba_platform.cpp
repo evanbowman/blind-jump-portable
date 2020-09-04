@@ -1190,9 +1190,16 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
 }
 
 
+[[noreturn]] static void restart()
+{
+    RegisterRamReset(RESET_VRAM);
+    SoftReset(ROM_RESTART), __builtin_unreachable();
+}
+
+
 void Platform::fatal()
 {
-    SoftReset(ROM_RESTART), __builtin_unreachable();
+    restart();
 }
 
 
@@ -2078,7 +2085,7 @@ static void watchdog_update_isr()
             (*::watchdog_callback)(*platform);
         }
 
-        SoftReset(ROM_RESTART);
+        restart();
     }
 }
 

@@ -44,6 +44,7 @@
     ;; 2: debug boss 1
     ;; 3: debug zone 2
     ;; 4: debug zone 3
+    ;; 5: debug boss 2
     (set 'debug-mode 0))
 
 
@@ -76,6 +77,11 @@
             (level 22)
             (set-hp 0 8)
             (add-items 5 9)))
+
+      (if (equal debug-mode 5)
+          (progn
+            (level 32)
+            (apply add-items debug-items-lat)))
 
       (unbind 'debug-items-lat)))
 

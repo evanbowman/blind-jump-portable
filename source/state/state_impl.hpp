@@ -565,6 +565,16 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
+    enum class DisplayMode {
+        scroll,
+        scroll2,
+        draw_image,
+        fade_show_image,
+        show_image,
+        fade_out,
+        reset
+    } display_mode_ = DisplayMode::scroll;
+
     Microseconds timer_ = 0;
     Buffer<Text, 12> lines_; // IMPORTANT: If you're porting this code to a
                              // platform with a taller screen size, you may need

@@ -45,7 +45,7 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
     bool error_state = false;
 
 
-    tiles.for_each([&](Tile& t, int x, int y) {
+    tiles.for_each([&](u8& t, int x, int y) {
         if (error_state)
             return;
         if (is_walkable(t)) {

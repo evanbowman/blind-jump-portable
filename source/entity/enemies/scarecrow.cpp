@@ -215,7 +215,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
                     // cropped off of the screen;
                     selected.y += 1;
 
-                    const Tile t =
+                    const auto t =
                         game.tiles().get_tile(selected.x, selected.y);
                     if (is_walkable(t) and
                         manhattan_length(selected, target_coord) > 3 and

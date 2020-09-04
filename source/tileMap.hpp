@@ -4,34 +4,32 @@
 #include <array>
 
 
-// NOTE: if you ever change the size of a tile, make sure that you adjust the
-// code in the game class accordingly (two tilemaps may no longer fit in the
-// same scratch buffer. If not, you will receive a fatal error).
-enum class Tile : u8 {
-    none,
-    plate,
-    sand,
-    ledge,
-    damaged_plate,
-    __reserved_0, // Used for rendering the parallax scrolling starfield
-    sand_sprouted,
-    __reserved_2,
-    grass_ledge,
-    grass_ledge_vines,
-    beam_ul,
-    beam_ur,
-    beam_bl,
-    beam_br,
-    plate_left,
-    plate_top,
-    plate_right,
-    plate_bottom,
-    t0_count,
-    // Tile layer 1 is reserved for adding detail to maps, t1 renders overtop of
-    // t0 (the enumerations above)
-    grass_start = 1,
+struct Tile {
+    enum : u8 {
+        none,
+        plate,
+        sand,
+        ledge,
+        damaged_plate,
+        __reserved_0, // Used for rendering the parallax scrolling starfield
+        sand_sprouted,
+        __reserved_2,
+        grass_ledge,
+        grass_ledge_vines,
+        beam_ul,
+        beam_ur,
+        beam_bl,
+        beam_br,
+        plate_left,
+        plate_top,
+        plate_right,
+        plate_bottom,
+        t0_count,
+        // Tile layer 1 is reserved for adding detail to maps, t1 renders overtop of
+        // t0 (the enumerations above)
+        grass_start = 1,
+    };
 };
-
 
 class TileMap {
 public:
@@ -45,7 +43,7 @@ public:
 
     TileMap()
     {
-        TileMap::for_each([](Tile& tile, int, int) { tile = Tile::none; });
+        TileMap::for_each([](u8& tile, int, int) { tile = Tile::none; });
     }
 
     template <typename F> TileMap(F&& init)
@@ -71,14 +69,14 @@ public:
         }
     }
 
-    void set_tile(s32 x, s32 y, Tile tile);
+    void set_tile(s32 x, s32 y, u8 tile);
 
-    Tile get_tile(s32 x, s32 y) const;
+    u8 get_tile(s32 x, s32 y) const;
 
 private:
     u16 index(u16 x, u16 y) const;
 
-    std::array<Tile, tile_count> data_;
+    std::array<u8, tile_count> data_;
 };
 
 
@@ -107,7 +105,7 @@ inline Vec2<TIdx> to_quarter_tile_coord(const Vec2<s32>& wc)
 }
 
 
-inline bool is_walkable(Tile t)
+inline bool is_walkable(u8 t)
 {
     // After level generation, all tiles in the tilemap are replaced with
     // boolean values.
@@ -115,7 +113,7 @@ inline bool is_walkable(Tile t)
 }
 
 
-inline bool is_border(Tile t)
+inline bool is_border(u8 t)
 {
     return t == Tile::plate;
 }

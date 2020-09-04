@@ -397,7 +397,7 @@ bool draw_minimap(Platform& pfrm,
     const auto current_column = std::min(
         TileMap::width,
         interpolate(TileMap::width, (decltype(TileMap::width))0, percentage));
-    game.tiles().for_each([&](Tile t, s8 x, s8 y) {
+    game.tiles().for_each([&](u8 t, s8 x, s8 y) {
         if (x > current_column or x <= last_column) {
             return;
         }

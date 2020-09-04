@@ -7,7 +7,7 @@ u16 TileMap::index(u16 x, u16 y) const
 }
 
 
-void TileMap::set_tile(s32 x, s32 y, Tile tile)
+void TileMap::set_tile(s32 x, s32 y, u8 tile)
 {
     if (x < 0 or y < 0 or x > width - 1 or y > height - 1) {
         return;
@@ -16,7 +16,7 @@ void TileMap::set_tile(s32 x, s32 y, Tile tile)
 }
 
 
-Tile TileMap::get_tile(s32 x, s32 y) const
+u8 TileMap::get_tile(s32 x, s32 y) const
 {
     if (x < 0 or y < 0 or x > width - 1 or y > height - 1) {
         return Tile::none;
