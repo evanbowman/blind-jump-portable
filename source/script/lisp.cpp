@@ -86,7 +86,8 @@ Value* get_nil()
 {
     if (not bound_context->nil_) {
         // Someone has likely called git_nil() before calling init().
-        while (true) ;
+        while (true)
+            ;
     }
     return bound_context->nil_;
 }
@@ -135,12 +136,12 @@ CompressedPtr compr(Value* val)
             (char*)val < (char*)(cells.data() + cells.size())) {
 
             static_assert((1 << CompressedPtr::source_pool_bits) - 1 >=
-                          Context::value_pool_count - 1,
+                              Context::value_pool_count - 1,
                           "Source pool bits in compressed ptr insufficient "
                           "to address all value pools");
 
             static_assert((1 << CompressedPtr::offset_bits) - 1 >=
-                          sizeof(Context::ValuePool::Cells),
+                              sizeof(Context::ValuePool::Cells),
                           "Compressed pointer offset insufficient to address "
                           "all memory in value pool");
 
@@ -152,7 +153,8 @@ CompressedPtr compr(Value* val)
         }
     }
 
-    while (true) ; // Attempt to compress invalid pointer
+    while (true)
+        ; // Attempt to compress invalid pointer
 }
 
 
@@ -499,7 +501,7 @@ static u32 eval_while(const char* expr, u32 len)
     push_op(get_nil()); // The return value, will be replaced if the loop
                         // branches into the body expression.
 
- TOP:
+TOP:
     int i = 0;
 
     i += eval(expr) + 1;
@@ -734,7 +736,8 @@ u32 eval(const char* code)
 
     for (; i < code_len; ++i) {
         if (is_whitespace(code[i])) {
-            while (true) ;
+            while (true)
+                ;
         }
         if (code[i] == '(') {
             bound_context->eval_depth_ += 1;
@@ -951,7 +954,8 @@ void init(Platform& pfrm)
 
     if (dcompr(compr(get_nil())) not_eq get_nil()) {
         error(pfrm, "pointer compression test failed");
-        while (true) ;
+        while (true)
+            ;
     }
 
     // For optimization purposes, the commonly used loop iteration variables are
@@ -961,14 +965,14 @@ void init(Platform& pfrm)
     intern("j");
 
     set_var("set", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(1, symbol);
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(1, symbol);
 
-        const char* name = get_op(1)->symbol_.name_;
-        lisp::set_var(name, get_op(0));
+                const char* name = get_op(1)->symbol_.name_;
+                lisp::set_var(name, get_op(0));
 
-        return L_NIL;
-    }));
+                return L_NIL;
+            }));
 
     set_var("cons", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
@@ -1007,9 +1011,9 @@ void init(Platform& pfrm)
         }));
 
     set_var("not", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        return make_integer(not is_boolean_true(get_op(0)));
-    }));
+                L_EXPECT_ARGC(argc, 1);
+                return make_integer(not is_boolean_true(get_op(0)));
+            }));
 
     set_var(
         "equal", make_function([](int argc) {
@@ -1075,39 +1079,39 @@ void init(Platform& pfrm)
             }));
 
     set_var("fill", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(1, integer);
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(1, integer);
 
-        auto result = make_list(get_op(1)->integer_.value_);
-        for (int i = 0; i < get_op(1)->integer_.value_; ++i) {
-            set_list(result, i, get_op(0));
-        }
+                auto result = make_list(get_op(1)->integer_.value_);
+                for (int i = 0; i < get_op(1)->integer_.value_; ++i) {
+                    set_list(result, i, get_op(0));
+                }
 
-        return result;
-    }));
+                return result;
+            }));
 
     set_var("length", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, cons);
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, cons);
 
-        return make_integer(length(get_op(0)));
-    }));
+                return make_integer(length(get_op(0)));
+            }));
 
     set_var("<", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(0, integer);
-        L_EXPECT_OP(1, integer);
-        return make_integer(get_op(1)->integer_.value_ <
-                            get_op(0)->integer_.value_);
-    }));
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(0, integer);
+                L_EXPECT_OP(1, integer);
+                return make_integer(get_op(1)->integer_.value_ <
+                                    get_op(0)->integer_.value_);
+            }));
 
     set_var(">", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(0, integer);
-        L_EXPECT_OP(1, integer);
-        return make_integer(get_op(1)->integer_.value_ >
-                            get_op(0)->integer_.value_);
-    }));
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(0, integer);
+                L_EXPECT_OP(1, integer);
+                return make_integer(get_op(1)->integer_.value_ >
+                                    get_op(0)->integer_.value_);
+            }));
 
     set_var("+", make_function([](int argc) {
                 int accum = 0;
@@ -1143,32 +1147,32 @@ void init(Platform& pfrm)
                                     get_op(0)->integer_.value_);
             }));
 
-    set_var("interp-stat", make_function([](int argc) {
-                auto lat = make_list(4);
-                auto& ctx = bound_context;
-                int values_remaining = 0;
-                for (auto& pl : ctx->value_pools_) {
-                    values_remaining += pl.obj_->remaining();
-                }
+    set_var(
+        "interp-stat", make_function([](int argc) {
+            auto lat = make_list(4);
+            auto& ctx = bound_context;
+            int values_remaining = 0;
+            for (auto& pl : ctx->value_pools_) {
+                values_remaining += pl.obj_->remaining();
+            }
 
-                push_op(lat); // for the gc
-                set_list(lat, 0, make_integer(values_remaining));
-                set_list(lat, 1, make_integer(ctx->string_intern_pos_));
-                set_list(
-                    lat, 2, make_integer(ctx->operand_stack_.obj_->size()));
-                set_list(lat, 3, make_integer([&] {
-                    int symb_tab_used = 0;
-                    for (u32 i = 0; i < ctx->globals_.obj_->size(); ++i) {
-                        if (strcmp("", (*ctx->globals_.obj_)[i].name_)) {
-                            ++symb_tab_used;
-                        }
-                    }
-                    return symb_tab_used;
-                }()));
-                pop_op(); // lat
+            push_op(lat); // for the gc
+            set_list(lat, 0, make_integer(values_remaining));
+            set_list(lat, 1, make_integer(ctx->string_intern_pos_));
+            set_list(lat, 2, make_integer(ctx->operand_stack_.obj_->size()));
+            set_list(lat, 3, make_integer([&] {
+                         int symb_tab_used = 0;
+                         for (u32 i = 0; i < ctx->globals_.obj_->size(); ++i) {
+                             if (strcmp("", (*ctx->globals_.obj_)[i].name_)) {
+                                 ++symb_tab_used;
+                             }
+                         }
+                         return symb_tab_used;
+                     }()));
+            pop_op(); // lat
 
-                return lat;
-            }));
+            return lat;
+        }));
 
     set_var("range", make_function([](int argc) {
                 int start = 0;
@@ -1212,117 +1216,118 @@ void init(Platform& pfrm)
             }));
 
     set_var("unbind", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, symbol);
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, symbol);
 
-        for (auto& var : *bound_context->globals_.obj_) {
-            if (strcmp(get_op(0)->symbol_.name_, var.name_) == 0) {
-                var.value_ = get_nil();
-                var.name_ = "";
+                for (auto& var : *bound_context->globals_.obj_) {
+                    if (strcmp(get_op(0)->symbol_.name_, var.name_) == 0) {
+                        var.value_ = get_nil();
+                        var.name_ = "";
+                        return get_nil();
+                    }
+                }
+
                 return get_nil();
-            }
-        }
-
-        return get_nil();
-    }));
+            }));
 
     set_var("bound", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, symbol);
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, symbol);
 
-        for (auto& var : *bound_context->globals_.obj_) {
-            if (strcmp(get_op(0)->symbol_.name_, var.name_) == 0) {
-                return make_integer(1);
+                for (auto& var : *bound_context->globals_.obj_) {
+                    if (strcmp(get_op(0)->symbol_.name_, var.name_) == 0) {
+                        return make_integer(1);
+                    }
+                }
+
+                return make_integer(0);
+            }));
+
+    set_var(
+        "map", make_function([](int argc) {
+            if (argc < 2) {
+                return get_nil();
             }
-        }
+            L_EXPECT_OP(argc - 1, function);
 
-        return make_integer(0);
-    }));
+            // I've never seen map used with so many input lists, but who knows,
+            // someone might try to call this with more than six inputs...
+            Buffer<Value*, 6> inp_lats;
 
-    set_var("map", make_function([](int argc) {
-        if (argc < 2) {
-            return get_nil();
-        }
-        L_EXPECT_OP(argc - 1, function);
-
-        // I've never seen map used with so many input lists, but who knows,
-        // someone might try to call this with more than six inputs...
-        Buffer<Value*, 6> inp_lats;
-
-        if (argc < static_cast<int>(inp_lats.size())) {
-            return get_nil(); // TODO: return error
-        }
-
-        for (int i = 0; i < argc - 1; ++i) {
-            L_EXPECT_OP(i, cons);
-            inp_lats.push_back(get_op(i));
-        }
-
-        const auto len = length(inp_lats[0]);
-        if (len == 0) {
-            return get_nil();
-        }
-        for (auto& l : inp_lats) {
-            if (length(l) not_eq len) {
-                return get_nil(); // return error instead!
+            if (argc < static_cast<int>(inp_lats.size())) {
+                return get_nil(); // TODO: return error
             }
-        }
 
-        auto fn = get_op(argc - 1);
-
-        int index = 0;
-
-        Value* result = make_list(len);
-        push_op(result); // protect from the gc
-
-        // Because the length function returned a non-zero value, we've
-        // already succesfully scanned the list, so we don't need to do any
-        // type checking.
-
-        while (index < len) {
-
-            for (auto& lat : reversed(inp_lats)) {
-                push_op(lat->cons_.car());
-                lat = lat->cons_.cdr();
+            for (int i = 0; i < argc - 1; ++i) {
+                L_EXPECT_OP(i, cons);
+                inp_lats.push_back(get_op(i));
             }
-            funcall(fn, inp_lats.size());
 
-            set_list(result, index, get_op(0));
-            pop_op();
+            const auto len = length(inp_lats[0]);
+            if (len == 0) {
+                return get_nil();
+            }
+            for (auto& l : inp_lats) {
+                if (length(l) not_eq len) {
+                    return get_nil(); // return error instead!
+                }
+            }
 
-            ++index;
-        }
+            auto fn = get_op(argc - 1);
 
-        pop_op(); // the protected result list
+            int index = 0;
 
-        return result;
-    }));
+            Value* result = make_list(len);
+            push_op(result); // protect from the gc
+
+            // Because the length function returned a non-zero value, we've
+            // already succesfully scanned the list, so we don't need to do any
+            // type checking.
+
+            while (index < len) {
+
+                for (auto& lat : reversed(inp_lats)) {
+                    push_op(lat->cons_.car());
+                    lat = lat->cons_.cdr();
+                }
+                funcall(fn, inp_lats.size());
+
+                set_list(result, index, get_op(0));
+                pop_op();
+
+                ++index;
+            }
+
+            pop_op(); // the protected result list
+
+            return result;
+        }));
 
     set_var("select", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(0, cons);
-        L_EXPECT_OP(1, cons);
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(0, cons);
+                L_EXPECT_OP(1, cons);
 
-        const auto len = length(get_op(0));
-        if (not len or len not_eq length(get_op(1))) {
-            return get_nil();
-        }
+                const auto len = length(get_op(0));
+                if (not len or len not_eq length(get_op(1))) {
+                    return get_nil();
+                }
 
-        auto input_list = get_op(1);
-        auto selection_list = get_op(0);
+                auto input_list = get_op(1);
+                auto selection_list = get_op(0);
 
-        auto result = get_nil();
-        for (int i = len - 1; i > -1; --i) {
-            if (is_boolean_true(get_list(selection_list, i))) {
-                push_op(result);
-                auto next = make_cons(get_list(input_list, i), result);
-                result = next;
-                pop_op(); // result
-            }
-        }
+                auto result = get_nil();
+                for (int i = len - 1; i > -1; --i) {
+                    if (is_boolean_true(get_list(selection_list, i))) {
+                        push_op(result);
+                        auto next = make_cons(get_list(input_list, i), result);
+                        result = next;
+                        pop_op(); // result
+                    }
+                }
 
-        return result;
-    }));
+                return result;
+            }));
 
     set_var("gc", make_function([](int argc) {
                 run_gc();

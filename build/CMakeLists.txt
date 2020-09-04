@@ -239,9 +239,14 @@ else()
 endif()
 
 
+if(APPLE)
+  add_executable(BlindJump MACOSX_BUNDLE ${SOURCES})
 
-add_executable(BlindJump
-  ${SOURCES})
+
+else()
+  add_executable(BlindJump
+    ${SOURCES})
+endif()
 
 
 set(IMAGE_INCLUDES "")
@@ -478,11 +483,22 @@ if(GAMEBOY_ADVANCE)
 
 elseif(APPLE)
   target_link_libraries(BlindJump
-    "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio -framework sfml-network")
+    "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio -framework sfml-network -framework Cocoa")
   set_target_properties(BlindJump
     PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
 
   include_directories("/usr/local/include/")
+
+  add_custom_target(pkg ALL mkdir -p BlindJump.app/Contents/Resources
+    COMMAND mkdir -p BlindJump.app/Contents/Frameworks
+    COMMAND cp -r ${ROOT_DIR}/images/ BlindJump.app/Contents/images/
+    COMMAND cp -r ${ROOT_DIR}/shaders/ BlindJump.app/Contents/shaders/
+    COMMAND cp -r ${ROOT_DIR}/sounds/ BlindJump.app/Contents/sounds/
+    COMMAND cp -r ${ROOT_DIR}/scripts/ BlindJump.app/Contents/scripts/
+    # COMMAND cp macOS/icon.icns BlindJump.app/Contents/Resources
+    # COMMAND cp -r ${SFML_DIR}/lib/* BlindJump.app/Contents/Frameworks
+    # COMMAND cp -r ${SFML_DIR}/extlibs/libs-osx/Frameworks/* BlindJump.app/Contents/Frameworks
+    )
 
 elseif(UNIX)
 

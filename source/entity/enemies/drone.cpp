@@ -65,8 +65,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
 
             auto coord = to_tile_coord(position_.cast<s32>());
 
-            if (not is_walkable(
-                    game.tiles().get_tile(coord.x, coord.y))) {
+            if (not is_walkable(game.tiles().get_tile(coord.x, coord.y))) {
                 shadow_.set_alpha(Sprite::Alpha::transparent);
             } else {
                 shadow_.set_alpha(Sprite::Alpha::translucent);

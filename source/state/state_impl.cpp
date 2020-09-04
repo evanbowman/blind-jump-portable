@@ -350,15 +350,14 @@ Vec2<s8> get_constrained_player_tile_coord(Game& game)
 {
     auto player_tile = to_tile_coord(game.player().get_position().cast<s32>());
     //u32 integer_text_length(int n);
-    if (not is_walkable(
-            game.tiles().get_tile(player_tile.x, player_tile.y))) {
+    if (not is_walkable(game.tiles().get_tile(player_tile.x, player_tile.y))) {
         // Player movement isn't constrained to tiles exactly, and sometimes the
         // player's map icon displays as inside of a wall.
         if (is_walkable(
                 game.tiles().get_tile(player_tile.x + 1, player_tile.y))) {
             player_tile.x += 1;
-        } else if (is_walkable(game.tiles().get_tile(
-                       player_tile.x, player_tile.y + 1))) {
+        } else if (is_walkable(game.tiles().get_tile(player_tile.x,
+                                                     player_tile.y + 1))) {
             player_tile.y += 1;
         }
     }

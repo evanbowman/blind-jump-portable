@@ -672,8 +672,10 @@ static constexpr const ZoneInfo zone_3{
     [](int x, int y, const TileMap&) {
         if (rng::choice<13>(rng::critical_state) == 0) {
             switch (rng::choice<2>(rng::critical_state)) {
-            case 0: return 18;
-            case 1: return 19;
+            case 0:
+                return 18;
+            case 1:
+                return 19;
             }
         }
         return 0;
@@ -721,36 +723,38 @@ void Game::init_script(Platform& pfrm)
     lisp::set_var("*pfrm*", lisp::make_userdata(&pfrm));
 
     lisp::set_var("level", lisp::make_function([](int argc) {
-        if (auto game = interp_get_game()) {
-            if (argc == 1) {
-                L_EXPECT_OP(0, integer);
+                      if (auto game = interp_get_game()) {
+                          if (argc == 1) {
+                              L_EXPECT_OP(0, integer);
 
-                game->persistent_data().level_ =
-                    lisp::get_op(0)->integer_.value_;
+                              game->persistent_data().level_ =
+                                  lisp::get_op(0)->integer_.value_;
 
-            } else {
-                return lisp::make_integer(game->persistent_data().level_);
-            }
-        }
-        return L_NIL;
-    }));
+                          } else {
+                              return lisp::make_integer(
+                                  game->persistent_data().level_);
+                          }
+                      }
+                      return L_NIL;
+                  }));
 
     lisp::set_var("zone", lisp::make_function([](int argc) {
-        if (auto game = interp_get_game()) {
-            auto& zone = zone_info(game->persistent_data().level_);
-            if (zone == zone_1) {
-                return lisp::make_integer(1);
-            } else if (zone == zone_2) {
-                return lisp::make_integer(2);
-            } else if (zone == zone_3) {
-                return lisp::make_integer(3);
-            } else {
-                // Error?
-                return lisp::make_integer(3);
-            }
-        }
-        return L_NIL;
-    }));
+                      if (auto game = interp_get_game()) {
+                          auto& zone =
+                              zone_info(game->persistent_data().level_);
+                          if (zone == zone_1) {
+                              return lisp::make_integer(1);
+                          } else if (zone == zone_2) {
+                              return lisp::make_integer(2);
+                          } else if (zone == zone_3) {
+                              return lisp::make_integer(3);
+                          } else {
+                              // Error?
+                              return lisp::make_integer(3);
+                          }
+                      }
+                      return L_NIL;
+                  }));
 
     lisp::set_var("add-items", lisp::make_function([](int argc) {
                       if (auto game = interp_get_game()) {
@@ -832,29 +836,29 @@ void Game::init_script(Platform& pfrm)
                           lisp::make_integer(entity->get_position().y));
                   }));
 
-    lisp::set_var("enemies", lisp::make_function([](int argc) {
-                      auto game = interp_get_game();
-                      if (not game) {
-                          return L_NIL;
-                      }
+    lisp::set_var(
+        "enemies", lisp::make_function([](int argc) {
+            auto game = interp_get_game();
+            if (not game) {
+                return L_NIL;
+            }
 
-                      lisp::Value* lat = L_NIL;
+            lisp::Value* lat = L_NIL;
 
-                      game->enemies().transform([&](auto& buf) {
-                          for (auto& enemy : buf) {
-                              lisp::push_op(
-                                  lat); // To keep it from being collected
-                              lat = lisp::make_cons(L_NIL, lat);
-                              lisp::pop_op(); // lat
+            game->enemies().transform([&](auto& buf) {
+                for (auto& enemy : buf) {
+                    lisp::push_op(lat); // To keep it from being collected
+                    lat = lisp::make_cons(L_NIL, lat);
+                    lisp::pop_op(); // lat
 
-                              lisp::push_op(lat);
-                              lat->cons_.set_car(lisp::make_integer(enemy->id()));
-                              lisp::pop_op(); // lat
-                          }
-                      });
+                    lisp::push_op(lat);
+                    lat->cons_.set_car(lisp::make_integer(enemy->id()));
+                    lisp::pop_op(); // lat
+                }
+            });
 
-                      return lat;
-                  }));
+            return lat;
+        }));
 
     lisp::set_var("log-severity", lisp::make_function([](int argc) {
                       auto game = interp_get_game();
@@ -911,67 +915,9 @@ void Game::init_script(Platform& pfrm)
                   }));
 
     lisp::set_var("set-tile", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 4);
-        for (int i = 0; i < 4; ++i) {
-            L_EXPECT_OP(i, integer);
-        }
-
-        auto pfrm = interp_get_pfrm();
-        if (not pfrm) {
-            return L_NIL;
-        }
-
-        pfrm->set_tile((Layer)lisp::get_op(3)->integer_.value_,
-                       lisp::get_op(2)->integer_.value_,
-                       lisp::get_op(1)->integer_.value_,
-                       lisp::get_op(0)->integer_.value_);
-
-        return L_NIL;
-    }));
-
-    lisp::set_var("get-tile", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 3);
-        for (int i = 0; i < 3; ++i) {
-            L_EXPECT_OP(i, integer);
-        }
-
-        auto pfrm = interp_get_pfrm();
-        if (not pfrm) {
-            return L_NIL;
-        }
-
-        auto tile = pfrm->get_tile((Layer)lisp::get_op(2)->integer_.value_,
-                                   lisp::get_op(1)->integer_.value_,
-                                   lisp::get_op(0)->integer_.value_);
-
-        return lisp::make_integer(tile);
-    }));
-
-    lisp::set_var("pattern-replace-tile",
-                  lisp::make_function([](int argc) {
-                      L_EXPECT_ARGC(argc, 2);
-                      L_EXPECT_OP(1, integer);
-                      L_EXPECT_OP(0, cons);
-                      lisp::Value* filter[3][3];
-
-                      auto row = lisp::get_op(0);
-                      for (int y = 0; y < 3; ++y) {
-                          if (row->type_ not_eq lisp::Value::Type::cons) {
-                              while (true) ;
-                          }
-
-                          auto cell = row->cons_.car();
-                          for (int x = 0; x < 3; ++x) {
-                              if (cell->type_ not_eq lisp::Value::Type::cons) {
-                                  while (true) ;
-                              }
-
-                              filter[x][y] = cell->cons_.car();
-
-                              cell = cell->cons_.cdr();
-                          }
-
-                          row = row->cons_.cdr();
+                      L_EXPECT_ARGC(argc, 4);
+                      for (int i = 0; i < 4; ++i) {
+                          L_EXPECT_OP(i, integer);
                       }
 
                       auto pfrm = interp_get_pfrm();
@@ -979,59 +925,126 @@ void Game::init_script(Platform& pfrm)
                           return L_NIL;
                       }
 
-                      for (int x = 0; x < TileMap::width; ++x) {
-                          for (int y = 0; y < TileMap::height; ++y) {
-                              bool match = true;
-                              for (int xx = -1; xx < 2; ++xx) {
-                                  for (int yy = -1; yy < 2; ++yy) {
-                                      int filter_x = xx + 1;
-                                      int filter_y = yy + 1;
-
-                                      auto fval = filter[filter_x][filter_y];
-                                      if (fval->type_ == lisp::Value::Type::integer) {
-                                          if (fval->integer_.value_ not_eq (int)pfrm->get_tile(Layer::map_0, x + xx, y + yy)) {
-                                              match = false;
-                                              goto DONE;
-                                          }
-                                      } else if (fval->type_ == lisp::Value::Type::cons) {
-                                          bool submatch = false;
-                                          while (fval not_eq L_NIL) {
-                                              if (fval->type_ not_eq lisp::Value::Type::cons) {
-                                                  return L_NIL;
-                                              }
-
-                                              if (fval->cons_.car()->type_ not_eq lisp::Value::Type::integer) {
-                                                  return L_NIL;
-                                              }
-
-                                              if (fval->cons_.car()->integer_.value_ ==
-                                                  (int)pfrm->get_tile(Layer::map_0, x + xx, y + yy)) {
-                                                  submatch = true;
-                                              }
-
-                                              fval = fval->cons_.cdr();
-                                          }
-                                          if (not submatch) {
-                                              match = false;
-                                              goto DONE;
-                                          }
-                                      }
-                                  }
-                              }
-                          DONE:
-                              if (match) {
-                                  pfrm->set_tile(Layer::map_0, x, y,
-                                                 lisp::get_op(1)->integer_.value_);
-                              }
-                          }
-                      }
+                      pfrm->set_tile((Layer)lisp::get_op(3)->integer_.value_,
+                                     lisp::get_op(2)->integer_.value_,
+                                     lisp::get_op(1)->integer_.value_,
+                                     lisp::get_op(0)->integer_.value_);
 
                       return L_NIL;
                   }));
 
+    lisp::set_var("get-tile", lisp::make_function([](int argc) {
+                      L_EXPECT_ARGC(argc, 3);
+                      for (int i = 0; i < 3; ++i) {
+                          L_EXPECT_OP(i, integer);
+                      }
+
+                      auto pfrm = interp_get_pfrm();
+                      if (not pfrm) {
+                          return L_NIL;
+                      }
+
+                      auto tile = pfrm->get_tile(
+                          (Layer)lisp::get_op(2)->integer_.value_,
+                          lisp::get_op(1)->integer_.value_,
+                          lisp::get_op(0)->integer_.value_);
+
+                      return lisp::make_integer(tile);
+                  }));
+
+    lisp::set_var(
+        "pattern-replace-tile", lisp::make_function([](int argc) {
+            L_EXPECT_ARGC(argc, 2);
+            L_EXPECT_OP(1, integer);
+            L_EXPECT_OP(0, cons);
+            lisp::Value* filter[3][3];
+
+            auto row = lisp::get_op(0);
+            for (int y = 0; y < 3; ++y) {
+                if (row->type_ not_eq lisp::Value::Type::cons) {
+                    while (true)
+                        ;
+                }
+
+                auto cell = row->cons_.car();
+                for (int x = 0; x < 3; ++x) {
+                    if (cell->type_ not_eq lisp::Value::Type::cons) {
+                        while (true)
+                            ;
+                    }
+
+                    filter[x][y] = cell->cons_.car();
+
+                    cell = cell->cons_.cdr();
+                }
+
+                row = row->cons_.cdr();
+            }
+
+            auto pfrm = interp_get_pfrm();
+            if (not pfrm) {
+                return L_NIL;
+            }
+
+            for (int x = 0; x < TileMap::width; ++x) {
+                for (int y = 0; y < TileMap::height; ++y) {
+                    bool match = true;
+                    for (int xx = -1; xx < 2; ++xx) {
+                        for (int yy = -1; yy < 2; ++yy) {
+                            int filter_x = xx + 1;
+                            int filter_y = yy + 1;
+
+                            auto fval = filter[filter_x][filter_y];
+                            if (fval->type_ == lisp::Value::Type::integer) {
+                                if (fval->integer_.value_ not_eq
+                                    (int) pfrm->get_tile(
+                                        Layer::map_0, x + xx, y + yy)) {
+                                    match = false;
+                                    goto DONE;
+                                }
+                            } else if (fval->type_ == lisp::Value::Type::cons) {
+                                bool submatch = false;
+                                while (fval not_eq L_NIL) {
+                                    if (fval->type_ not_eq
+                                        lisp::Value::Type::cons) {
+                                        return L_NIL;
+                                    }
+
+                                    if (fval->cons_.car()->type_ not_eq
+                                        lisp::Value::Type::integer) {
+                                        return L_NIL;
+                                    }
+
+                                    if (fval->cons_.car()->integer_.value_ ==
+                                        (int)pfrm->get_tile(
+                                            Layer::map_0, x + xx, y + yy)) {
+                                        submatch = true;
+                                    }
+
+                                    fval = fval->cons_.cdr();
+                                }
+                                if (not submatch) {
+                                    match = false;
+                                    goto DONE;
+                                }
+                            }
+                        }
+                    }
+                DONE:
+                    if (match) {
+                        pfrm->set_tile(Layer::map_0,
+                                       x,
+                                       y,
+                                       lisp::get_op(1)->integer_.value_);
+                    }
+                }
+            }
+
+            return L_NIL;
+        }));
+
     lisp::dostring(pfrm.load_script("init.lisp"));
 }
-
 
 
 bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
@@ -1044,11 +1057,13 @@ static bool contains(lisp::Value* tiles_list, Tile t)
 {
     while (tiles_list not_eq L_NIL) {
         if (tiles_list->type_ not_eq lisp::Value::Type::cons) {
-            while (true) ; // TODO: raise error...
+            while (true)
+                ; // TODO: raise error...
         }
 
         if (tiles_list->cons_.car()->type_ not_eq lisp::Value::Type::integer) {
-            while (true) ; // TODO: raise error
+            while (true)
+                ; // TODO: raise error
         }
 
         if (static_cast<int>(t) == tiles_list->cons_.car()->integer_.value_) {
@@ -1233,12 +1248,10 @@ static bool is_center_tile(lisp::Value* wall_tiles_list,
 }
 
 
-static bool is_edge_tile(lisp::Value* wall_tiles_list,
-                         lisp::Value* edge_tiles_list,
-                         Tile t)
+static bool
+is_edge_tile(lisp::Value* wall_tiles_list, lisp::Value* edge_tiles_list, Tile t)
 {
-    return not contains(wall_tiles_list, t) and
-               contains(edge_tiles_list, t);
+    return not contains(wall_tiles_list, t) and contains(edge_tiles_list, t);
 }
 
 
@@ -1457,7 +1470,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
                 const auto left = tiles_.get_tile(x - 1, y);
                 const auto right = tiles_.get_tile(x + 1, y);
 
-                if (is_center_tile(wall_tiles, edge_tiles, tiles_.get_tile(x + 1, y)) and
+                if (is_center_tile(
+                        wall_tiles, edge_tiles, tiles_.get_tile(x + 1, y)) and
                     not contains(wall_tiles, up) and
                     not contains(wall_tiles, down) and
                     not(is_center_tile(wall_tiles, edge_tiles, up) and
@@ -1465,7 +1479,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
                     tiles_.set_tile(x, y, Tile::plate_left);
                 }
-                if (is_center_tile(wall_tiles, edge_tiles, tiles_.get_tile(x - 1, y)) and
+                if (is_center_tile(
+                        wall_tiles, edge_tiles, tiles_.get_tile(x - 1, y)) and
                     not contains(wall_tiles, up) and
                     not contains(wall_tiles, down) and
                     not(is_center_tile(wall_tiles, edge_tiles, up) and
@@ -1473,7 +1488,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
                     tiles_.set_tile(x, y, Tile::plate_right);
                 }
-                if (is_center_tile(wall_tiles, edge_tiles, tiles_.get_tile(x, y + 1)) and
+                if (is_center_tile(
+                        wall_tiles, edge_tiles, tiles_.get_tile(x, y + 1)) and
                     not contains(wall_tiles, right) and
                     not contains(wall_tiles, left) and
                     not(is_center_tile(wall_tiles, edge_tiles, left) and
@@ -1481,7 +1497,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
                     tiles_.set_tile(x, y, Tile::plate_top);
                 }
-                if (is_center_tile(wall_tiles, edge_tiles, tiles_.get_tile(x, y - 1)) and
+                if (is_center_tile(
+                        wall_tiles, edge_tiles, tiles_.get_tile(x, y - 1)) and
                     not contains(wall_tiles, right) and
                     not contains(wall_tiles, left) and
                     not(is_center_tile(wall_tiles, edge_tiles, left) and
@@ -2050,7 +2067,9 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 int adj_sand_tiles = 0;
                 for (int i = x - 1; i < x + 1; ++i) {
                     for (int j = y - 1; j < y + 1; ++j) {
-                        if (is_center_tile(wall_tiles, edge_tiles, tiles_.get_tile(i, j))) {
+                        if (is_center_tile(wall_tiles,
+                                           edge_tiles,
+                                           tiles_.get_tile(i, j))) {
                             adj_sand_tiles++;
                         }
                     }
