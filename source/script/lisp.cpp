@@ -133,7 +133,7 @@ CompressedPtr compr(Value* val)
         auto& cells = bound_context->value_pools_[pool_id].obj_->cells();
         if ((char*)val >= (char*)cells.data() and
             (char*)val < (char*)(cells.data() + cells.size())) {
-            
+
             static_assert((1 << CompressedPtr::source_pool_bits) - 1 >=
                           Context::value_pool_count - 1,
                           "Source pool bits in compressed ptr insufficient "
@@ -382,9 +382,11 @@ void funcall(Value* obj, u8 argc)
 
 Value* set_var(const char* name, Value* value)
 {
-    for (auto& var : *bound_context->globals_.obj_) {
-        if (strcmp(name, var.name_) == 0) {
-            var.value_ = value;
+    auto& globals = *bound_context->globals_.obj_;
+    for (u32 i = 0; i < globals.size(); ++i) {
+        if (strcmp(name, globals[i].name_) == 0) {
+            std::swap(globals[i], globals[0]);
+            globals[0].value_ = value;
             return get_nil();
         }
     }
@@ -403,9 +405,11 @@ Value* set_var(const char* name, Value* value)
 
 Value* get_var(const char* name)
 {
-    for (auto& var : *bound_context->globals_.obj_) {
-        if (strcmp(name, var.name_) == 0) {
-            return var.value_;
+    auto& globals = *bound_context->globals_.obj_;
+    for (u32 i = 0; i < globals.size(); ++i) {
+        if (strcmp(name, globals[i].name_) == 0) {
+            std::swap(globals[i], globals[0]);
+            return globals[0].value_;
         }
     }
 
@@ -949,6 +953,12 @@ void init(Platform& pfrm)
         error(pfrm, "pointer compression test failed");
         while (true) ;
     }
+
+    // For optimization purposes, the commonly used loop iteration variables are
+    // placed at the beginning of the string intern table, which makes setting
+    // the contents of variables bound to i or j faster than usual.
+    intern("i");
+    intern("j");
 
     set_var("set", make_function([](int argc) {
         L_EXPECT_ARGC(argc, 2);
