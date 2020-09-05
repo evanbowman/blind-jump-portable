@@ -5,6 +5,13 @@
 static const Entity::Health initial_health = 60;
 
 
+void Twin::set_sprite(TextureIndex index)
+{
+    sprite_.set_texture_index(index);
+    head_.set_texture_index(index + 1);
+}
+
+
 void Twin::update_sprite()
 {
     // Because we are using two adjacent horizontal sprites for this boss, we
@@ -46,8 +53,7 @@ Twin::Twin(const Vec2<Float>& position)
     shadow2_.set_texture_index(34);
     shadow2_.set_alpha(Sprite::Alpha::translucent);
 
-    sprite_.set_texture_index(6);
-    head_.set_texture_index(7);
+    set_sprite(6);
 }
 
 
@@ -73,12 +79,81 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         }
     };
 
-    face_target();
+    switch (state_) {
+    case State::inactive:
+        face_target();
+        state_ = State::idle;
+        break;
 
+    case State::idle:
+        timer_ += dt;
+        if (timer_ > seconds(2)) {
+            state_ = State::open_mouth;
+            timer_ = 0;
+        }
+        break;
+
+    case State::open_mouth:
+        timer_ += dt;
+        if (timer_ > milliseconds(100)) {
+            timer_ = 0;
+            auto index = sprite_.get_texture_index();
+            if (index < 14) {
+                set_sprite(index + 2);
+            } else {
+                state_ = State::ranged_attack_charge;
+
+                // if (rng::choice<2>(rng::critical_state)) {
+                //     timer_ = seconds(1);
+                // }
+            }
+        }
+        break;
+
+    case State::ranged_attack_charge:
+        if (timer_ < seconds(1) and timer_ + dt > seconds(1)) {
+            sprite_.set_mix({current_zone(game).energy_glow_color_, 0});
+        }
+        timer_ += dt;
+        alt_timer_ += dt;
+        if (alt_timer_ > milliseconds(80)) {
+            alt_timer_ = 0;
+            if (sprite_.get_texture_index() == 14) {
+                sprite_.set_texture_index(41);
+                alt_timer_ = -milliseconds(30);
+            } else {
+                sprite_.set_texture_index(14);
+            }
+        }
+        if (timer_ > seconds(2) - milliseconds(100)) {
+            timer_ = 0;
+            state_ = State::ranged_attack;
+            sprite_.set_texture_index(14);
+            medium_explosion(pf, game, sprite_.get_position());
+            game.camera().shake();
+        }
+        break;
+
+    case State::ranged_attack:
+        timer_ += dt;
+        if (timer_ > seconds(3)) {
+            state_ = State::ranged_attack_done;
+        }
+        break;
+
+    case State::ranged_attack_done:
+        state_ = State::idle;
+        set_sprite(6);
+        break;
+    }
 
     update_sprite();
 
-    fade_color_anim_.advance(sprite_, dt);
+    if (sprite_.get_mix().color_ == current_zone(game).energy_glow_color_) {
+        fade_color_anim_.reverse(sprite_, dt);
+    } else {
+        fade_color_anim_.advance(sprite_, dt);
+    }
     head_.set_mix(sprite_.get_mix());
 }
 

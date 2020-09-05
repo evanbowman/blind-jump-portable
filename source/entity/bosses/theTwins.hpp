@@ -50,11 +50,18 @@ public:
     void on_collision(Platform&, Game&, Laser&);
 
 private:
+    enum class State {
+        inactive, idle, open_mouth, ranged_attack_charge, ranged_attack, ranged_attack_done
+    } state_ = State::inactive;
+
     void injured(Platform&, Game&, Health amount);
 
     void update_sprite();
+    void set_sprite(TextureIndex index);
 
     Sprite head_;
     Sprite shadow2_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
+    Microseconds timer_ = 0;
+    Microseconds alt_timer_ = 0;
 };
