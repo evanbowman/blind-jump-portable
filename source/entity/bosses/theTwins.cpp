@@ -92,14 +92,22 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
 
     auto shoot_offset = [&]() -> Vec2<Float> {
         if (sprite_.get_flip().x) {
-            return {21, -6};
+            return {22, -5};
         } else {
-            return {-21, -6};
+            return {-22, -5};
         }
     };
 
+    const auto second_form = [&] { return get_health() < initial_health / 2; };
+
     constexpr Microseconds leap_duration = milliseconds(120);
-    const Float movement_rate = 0.000038f;
+    const Float movement_rate = [&] {
+        if (second_form()) {
+            return 0.000039f;
+        } else {
+            return 0.0000335f;
+        }
+    }();
 
     switch (state_) {
     case State::inactive:
@@ -211,16 +219,37 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
 
         target_ = interpolate(target.get_position(), target_, dt * 0.000016f);
 
-        if (alt_timer_ > milliseconds(180)) {
-            sprite_.set_texture_index(41);
-        } else {
-            sprite_.set_texture_index(14);
-        }
-
         if (alt_timer_ > milliseconds(250)) {
             alt_timer_ = 0;
+
+            const Float atk_mov_rate = [&] {
+                if (second_form()) {
+                    return 0.00016f;
+                } else {
+                    return 0.00013f;
+                }
+            }();
+
             game.effects().spawn<WandererSmallLaser>(
-                position_ + shoot_offset(), target_, 0.00013f);
+                position_ + shoot_offset(), target_, atk_mov_rate);
+
+            if (second_form()) {
+
+                const auto incidence =
+                    interpolate(27, 70, Float(timer_) / seconds(3));
+
+                if (game.effects().spawn<WandererSmallLaser>(
+                        position_ + shoot_offset(), target_, atk_mov_rate)) {
+                    (*game.effects().get<WandererSmallLaser>().begin())
+                        ->rotate(incidence);
+                }
+
+                if (game.effects().spawn<WandererSmallLaser>(
+                        position_ + shoot_offset(), target_, atk_mov_rate)) {
+                    (*game.effects().get<WandererSmallLaser>().begin())
+                        ->rotate(360 - incidence);
+                }
+            }
         }
 
 
@@ -404,15 +433,14 @@ void Twin::on_death(Platform& pf, Game& game)
     hide_boss_health(game);
     pf.speaker().stop_music();
 
-    auto make_scraps =
-        [&] {
-            auto pos = rng::sample<32>(position_, rng::utility_state);
-            const auto tile_coord = to_tile_coord(pos.cast<s32>());
-            const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);
-            if (is_walkable(tile)) {
-                game.details().spawn<Rubble>(pos);
-            }
-        };
+    auto make_scraps = [&] {
+        auto pos = rng::sample<32>(position_, rng::utility_state);
+        const auto tile_coord = to_tile_coord(pos.cast<s32>());
+        const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);
+        if (is_walkable(tile)) {
+            game.details().spawn<Rubble>(pos);
+        }
+    };
 
     for (int i = 0; i < 5; ++i) {
         make_scraps();
@@ -426,9 +454,10 @@ void Twin::on_death(Platform& pf, Game& game)
     }
 
     for (int i = 0; i < 2; ++i) {
-    game.details().spawn<Item>(rng::sample<32>(position_, rng::utility_state),
-                               pf,
-                               Item::Type::heart);
+        game.details().spawn<Item>(
+            rng::sample<32>(position_, rng::utility_state),
+            pf,
+            Item::Type::heart);
     }
 
     push_notification(pf, game.state(), "Twin defeated...");

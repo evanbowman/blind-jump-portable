@@ -1676,12 +1676,18 @@ const char* Platform::load_script(const char* name) const
 
 void start(Platform&);
 
-int main()
+int main(int argc, char** argv)
 {
     rng::critical_state = time(nullptr);
 
     Platform pf;
     start(pf);
+}
+
+
+const char* Platform::get_opt(char opt)
+{
+    return nullptr; // TODO...
 }
 
 

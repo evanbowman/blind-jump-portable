@@ -1046,6 +1046,10 @@ void Game::init_script(Platform& pfrm)
             return L_NIL;
         }));
 
+    if (auto eval_opt = pfrm.get_opt('e')) {
+        lisp::dostring(eval_opt);
+    }
+
     lisp::dostring(pfrm.load_script("init.lisp"));
 }
 
