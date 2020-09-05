@@ -326,7 +326,10 @@ const char* locale_string(LocaleString ls)
                 "stations. We've observed some unfortunate violent reactions from "
                 "the machines recently--this is all starting to get out of control. "
                 "We long suspected that there was something... else... out there in "
-                "hyperspace, something that we, perhaps, should never have disturbed...";
+                "hyperspace, something that we, perhaps, should never have disturbed... "
+                "It's time that we sealed up the transport gates for good. The best way, "
+                "would be to disable the transit network's central hub, on the lunar "
+                "surface...";
         case LocaleString::navigation_pamphlet: return
             "No road map? No problem! The hyperspace gate network calculates a "
             "path to your destination by routing your journey through a "
