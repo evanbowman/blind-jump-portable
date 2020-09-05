@@ -518,7 +518,8 @@ static const BossLevel* get_boss_level(Level current_level)
     }
 
     case boss_2_level: { // FIXME_ADD_BOSS2!!!
-        static constexpr const BossLevel ret{&boss_level_2, "spritesheet3"};
+        static constexpr const BossLevel ret{&boss_level_2,
+                                             "spritesheet_boss2"};
         return &ret;
     }
 
@@ -1946,8 +1947,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             break;
 
         case boss_2_level:
-            // FIXME ADD BOSS2
-            place_transporter();
+            enemies_.spawn<Twin>(rng::sample<16>(target, rng::critical_state));
+            enemies_.spawn<Twin>(rng::sample<16>(target, rng::critical_state));
             break;
         }
 

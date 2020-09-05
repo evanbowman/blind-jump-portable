@@ -12,6 +12,7 @@ class Game;
 class Platform;
 
 class Item;
+class Twin;
 class Enemy;
 class Drone;
 class Theif;
@@ -62,6 +63,7 @@ public:
     void on_collision(Platform& pf, Game& game, Drone&);
     void on_collision(Platform& pf, Game& game, Theif&);
     void on_collision(Platform& pf, Game& game, Item&);
+    void on_collision(Platform& pf, Game& game, Twin&);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
     void soft_update(Platform& pfrm, Game& game, Microseconds dt);
