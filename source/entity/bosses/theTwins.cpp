@@ -144,6 +144,7 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
     case State::ranged_attack_done:
         state_ = State::idle;
         set_sprite(6);
+        timer_ = milliseconds(rng::choice<800>(rng::critical_state));
         break;
     }
 
