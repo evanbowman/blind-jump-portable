@@ -110,6 +110,12 @@ void Player::on_collision(Platform& pf, Game& game, Enemy& e)
 }
 
 
+void Player::on_collision(Platform& pf, Game& game, Twin& t)
+{
+    Player::injured(pf, game, Health(1));
+}
+
+
 void Player::on_collision(Platform& pf, Game& game, Drone& drone)
 {
     if (not drone.is_allied()) {

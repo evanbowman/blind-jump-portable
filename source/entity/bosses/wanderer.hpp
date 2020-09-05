@@ -11,7 +11,6 @@ class AlliedOrbShot;
 class Player;
 class Laser;
 
-
 class Wanderer : public Enemy {
 public:
     Wanderer(const Vec2<Float>& position);

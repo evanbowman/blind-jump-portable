@@ -412,6 +412,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::scratch_buf_avail_stats_suffix: return " sbr";
         case LocaleString::boss0_defeated: return "The Wanderer Defeated";
         case LocaleString::boss1_defeated: return "Gatekeeper Destroyed";
+        case LocaleString::boss2_defeated: return "Vanquished the Twins";
         case LocaleString::peer_transport_waiting: return "Peer waiting in gate...";
         case LocaleString::severity_debug: return "debug";
         case LocaleString::severity_info: return "info";
