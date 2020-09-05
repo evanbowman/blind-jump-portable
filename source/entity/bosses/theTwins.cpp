@@ -3,7 +3,7 @@
 #include "game.hpp"
 
 
-static const Entity::Health initial_health = 55;
+static const Entity::Health initial_health = 50;
 
 
 void Twin::set_sprite(TextureIndex index)
@@ -46,7 +46,7 @@ void Twin::update_sprite()
 
 
 Twin::Twin(const Vec2<Float>& position)
-    : Enemy(initial_health, position, {{44, 16}, {0, 0}})
+    : Enemy(initial_health, position, {{40, 14}, {0, 0}})
 {
     head_.set_size(Sprite::Size::w32_h32);
     head_.set_origin({16, 16});
@@ -404,11 +404,31 @@ void Twin::on_death(Platform& pf, Game& game)
     hide_boss_health(game);
     pf.speaker().stop_music();
 
+    auto make_scraps =
+        [&] {
+            auto pos = rng::sample<32>(position_, rng::utility_state);
+            const auto tile_coord = to_tile_coord(pos.cast<s32>());
+            const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);
+            if (is_walkable(tile)) {
+                game.details().spawn<Rubble>(pos);
+            }
+        };
+
+    for (int i = 0; i < 5; ++i) {
+        make_scraps();
+    }
+
     if (sibling(game) == nullptr) {
         sprite_.set_alpha(Sprite::Alpha::transparent);
         head_.set_alpha(Sprite::Alpha::transparent);
         pf.load_sprite_texture("spritesheet_boss2_done");
         return;
+    }
+
+    for (int i = 0; i < 2; ++i) {
+    game.details().spawn<Item>(rng::sample<32>(position_, rng::utility_state),
+                               pf,
+                               Item::Type::heart);
     }
 
     push_notification(pf, game.state(), "Twin defeated...");
@@ -428,20 +448,6 @@ void Twin::on_death(Platform& pf, Game& game)
     game.on_timeout(pf, milliseconds(90), [this](Platform& pf, Game& game) {
         big_explosion(pf, game, {position_.x + 30, position_.y + 30});
     });
-
-    auto make_scraps =
-        [&] {
-            auto pos = rng::sample<32>(position_, rng::utility_state);
-            const auto tile_coord = to_tile_coord(pos.cast<s32>());
-            const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);
-            if (is_walkable(tile)) {
-                game.details().spawn<Rubble>(pos);
-            }
-        };
-
-    for (int i = 0; i < 5; ++i) {
-        make_scraps();
-    }
 
     game.camera().shake(16);
 }

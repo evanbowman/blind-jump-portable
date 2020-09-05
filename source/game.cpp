@@ -1733,7 +1733,7 @@ ItemRarity rarity(Item::Type item)
         return 2;
 
     case Item::Type::engineer_notebook:
-        return 2;
+        return 3;
 
     case Item::Type::postal_advert:
         return 0;

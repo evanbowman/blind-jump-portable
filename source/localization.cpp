@@ -323,12 +323,10 @@ const char* locale_string(LocaleString ls)
         case LocaleString::engineer_notebook_str: return
                 "Power surges emanating from the hyperspace gates seem to have an "
                 "unusual effect on machinery, especially the robots on the "
-                "stations. I've heard unconfirmed reports of violence that... "
-                "if true... would be extremely distressing... The gate "
-                "transit network was never really designed to be easily shut "
-                "down, so concerned were we with creating a resiliant system "
-                "that's always online. We will need to discover the sources "
-                "of the power surges... and eliminate them.";
+                "stations. We've observed some unfortunate violent reactions from "
+                "the machines recently--this is all starting to get out of control. "
+                "We long suspected that there was something... else... out there in "
+                "hyperspace, something that we, perhaps, should never have disturbed...";
         case LocaleString::navigation_pamphlet: return
             "No road map? No problem! The hyperspace gate network calculates a "
             "path to your destination by routing your journey through a "
