@@ -22,15 +22,20 @@ bool within_view_frustum(const Platform::Screen& screen,
 Bitmatrix<TileMap::width, TileMap::height> visited;
 
 
-void show_boss_health(Platform& pfrm, Game& game, Float percentage)
+void show_boss_health(Platform& pfrm, Game& game, int bar, Float percentage)
 {
+    if (bar >= ActiveState::boss_health_bar_count) {
+        return;
+    }
     if (auto state = dynamic_cast<ActiveState*>(game.state())) {
-        if (not state->boss_health_bar_) {
-            state->boss_health_bar_.emplace(
-                pfrm, 6, OverlayCoord{u8(pfrm.screen().size().x / 8 - 2), 1});
+        if (not state->boss_health_bar_[bar]) {
+            state->boss_health_bar_[bar].emplace(
+                pfrm,
+                6,
+                OverlayCoord{u8(pfrm.screen().size().x / 8 - (2 + bar)), 1});
         }
 
-        state->boss_health_bar_->set_health(percentage);
+        state->boss_health_bar_[bar]->set_health(percentage);
     }
 }
 
@@ -38,7 +43,9 @@ void show_boss_health(Platform& pfrm, Game& game, Float percentage)
 void hide_boss_health(Game& game)
 {
     if (auto state = dynamic_cast<ActiveState*>(game.state())) {
-        state->boss_health_bar_.reset();
+        for (auto& bar : state->boss_health_bar_) {
+            bar.reset();
+        }
     }
 }
 

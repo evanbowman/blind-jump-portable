@@ -24,6 +24,17 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
             game.peer()->warping() = false;
         }
 
+        if (is_boss_level(game.level())) {
+            game.on_timeout(
+                pfrm, milliseconds(100), [](Platform& pfrm, Game& game) {
+                    push_notification(
+                        pfrm,
+                        game.state(),
+                        locale_string(LocaleString::power_surge_detected));
+                });
+        }
+
+
         return state_pool().create<ActiveState>(game);
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);

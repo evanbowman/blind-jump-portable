@@ -119,7 +119,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                 pf.speaker().play_music(boss_music, 0);
 
                 show_boss_health(
-                    pf, game, Float(get_health()) / initial_health);
+                    pf, game, 0, Float(get_health()) / initial_health);
             }
         }
         break;
@@ -498,7 +498,7 @@ void Wanderer::injured(Platform& pf, Game& game, Health amount)
         head_.set_mix({c, 255});
     }
 
-    show_boss_health(pf, game, Float(get_health()) / initial_health);
+    show_boss_health(pf, game, 0, Float(get_health()) / initial_health);
 }
 
 

@@ -228,6 +228,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/spritesheet_boss0.s
     ${DATA_DIR}/spritesheet_boss1.s
     ${DATA_DIR}/spritesheet_boss2.s
+    ${DATA_DIR}/spritesheet_boss2_done.s
     ${DATA_DIR}/old_poster_flattened.s
     ${DATA_DIR}/postal_advert_flattened.s
     ${DATA_DIR}/blaster_info_flattened.s
@@ -439,6 +440,7 @@ if(GAMEBOY_ADVANCE)
     add_spritesheet(spritesheet_boss0 2 4 NO)
     add_spritesheet(spritesheet_boss1 2 4 NO)
     add_spritesheet(spritesheet_boss2 2 4 NO)
+    add_spritesheet(spritesheet_boss2_done 2 4 NO)
     add_spritesheet(spritesheet_launch_anim 2 4 NO)
     add_tilesheet(launch 0 0 YES)
     add_tilesheet(tilesheet_intro_cutscene 0 0 YES)

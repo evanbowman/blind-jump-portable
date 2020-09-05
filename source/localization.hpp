@@ -104,6 +104,7 @@ enum class LocaleString {
     severity_info,
     severity_warning,
     severity_error,
+    power_surge_detected,
     count
 };
 

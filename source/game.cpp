@@ -485,8 +485,8 @@ static constexpr const BossLevelMap boss_level_2({{
     {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
-    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0},
@@ -1240,9 +1240,8 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
 }
 
 
-static bool is_center_tile(lisp::Value* wall_tiles_list,
-                           lisp::Value* edge_tiles_list,
-                           u8 t)
+static bool
+is_center_tile(lisp::Value* wall_tiles_list, lisp::Value* edge_tiles_list, u8 t)
 {
     return not contains(wall_tiles_list, t) and
            not contains(edge_tiles_list, t);
@@ -1947,8 +1946,16 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             break;
 
         case boss_2_level:
-            spawn_entity<Twin>(pfrm, free_spots, enemies());
-            spawn_entity<Twin>(pfrm, free_spots, enemies());
+            enemies_.spawn<Twin>(target);
+            free_spots.erase(farthest);
+            farthest = free_spots.begin();
+            for (auto& elem : free_spots) {
+                if (manhattan_length(elem, *player_coord) >
+                    manhattan_length(*farthest, *player_coord)) {
+                    farthest = &elem;
+                }
+            }
+            enemies_.spawn<Twin>(target);
             break;
         }
 

@@ -362,7 +362,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     auto bosses_remaining = [&] {
         return boss_level and (length(game.enemies().get<Wanderer>()) or
-                               length(game.enemies().get<Gatekeeper>()));
+                               length(game.enemies().get<Gatekeeper>()) or
+                               length(game.enemies().get<Twin>()));
     };
 
     const auto [boss_position, boss_defeated_text] =
@@ -375,6 +376,10 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
                 lstr = elem->defeated_text();
             }
             for (auto& elem : game.enemies().get<Gatekeeper>()) {
+                result = elem->get_position();
+                lstr = elem->defeated_text();
+            }
+            for (auto& elem : game.enemies().get<Twin>()) {
                 result = elem->get_position();
                 lstr = elem->defeated_text();
             }

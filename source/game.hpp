@@ -4,8 +4,8 @@
 
 #include "camera.hpp"
 #include "entity/bosses/gatekeeper.hpp"
-#include "entity/bosses/wanderer.hpp"
 #include "entity/bosses/theTwins.hpp"
+#include "entity/bosses/wanderer.hpp"
 #include "entity/details/cutsceneBird.hpp"
 #include "entity/details/cutsceneCloud.hpp"
 #include "entity/details/item.hpp"

@@ -23,7 +23,7 @@ public:
 
     inline LocaleString defeated_text() const
     {
-        return LocaleString::boss1_defeated;
+        return LocaleString::boss2_defeated;
     }
 
     void update(Platform& pf, Game& game, Microseconds dt);
@@ -49,10 +49,24 @@ public:
     void on_collision(Platform&, Game&, Player&);
     void on_collision(Platform&, Game&, Laser&);
 
+    void on_death(Platform&, Game&);
+
 private:
     enum class State {
-        inactive, idle, open_mouth, ranged_attack_charge, ranged_attack, ranged_attack_done
+        inactive,
+        long_idle,
+        idle,
+        open_mouth,
+        ranged_attack_charge,
+        ranged_attack,
+        ranged_attack_done,
+        prep_leap,
+        crouch,
+        leaping,
+        landing,
     } state_ = State::inactive;
+
+    Twin* sibling(Game& game);
 
     void injured(Platform&, Game&, Health amount);
 
@@ -64,4 +78,7 @@ private:
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
     Microseconds timer_ = 0;
     Microseconds alt_timer_ = 0;
+    Vec2<Float> speed_;
+    Vec2<Float> target_;
+    int leaps_ = 0;
 };

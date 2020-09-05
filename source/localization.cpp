@@ -321,15 +321,14 @@ const char* locale_string(LocaleString ls)
                 "now on. The robots have been acting up ever since the last "
                 "communications blackout though, I'm afraid next time they'll go mad...";
         case LocaleString::engineer_notebook_str: return
-                "Power surges from the hyperspace gates seem to have an "
+                "Power surges emanating from the hyperspace gates seem to have an "
                 "unusual effect on machinery, especially the robots on the "
                 "stations. I've heard unconfirmed reports of violence that... "
                 "if true... would be extremely distressing... The gate "
                 "transit network was never really designed to be easily shut "
                 "down, so concerned were we with creating a resiliant system "
-                "that's always online. If you ever needed to shut down the "
-                "network, you would need to chart a course to the gateway's "
-                "central hub, on the lunar surface.";
+                "that's always online. We will need to discover the sources "
+                "of the power surges... and eliminate them.";
         case LocaleString::navigation_pamphlet: return
             "No road map? No problem! The hyperspace gate network calculates a "
             "path to your destination by routing your journey through a "
@@ -412,12 +411,13 @@ const char* locale_string(LocaleString ls)
         case LocaleString::scratch_buf_avail_stats_suffix: return " sbr";
         case LocaleString::boss0_defeated: return "The Wanderer Defeated";
         case LocaleString::boss1_defeated: return "Gatekeeper Destroyed";
-        case LocaleString::boss2_defeated: return "Vanquished the Twins";
+        case LocaleString::boss2_defeated: return "Defeated the Twins";
         case LocaleString::peer_transport_waiting: return "Peer waiting in gate...";
         case LocaleString::severity_debug: return "debug";
         case LocaleString::severity_info: return "info";
         case LocaleString::severity_warning: return "warning";
         case LocaleString::severity_error: return "error";
+        case LocaleString::power_surge_detected: return "Power Surge detected!";
         default: return empty_str;
         }
         break;
