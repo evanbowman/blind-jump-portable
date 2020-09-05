@@ -1947,8 +1947,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             break;
 
         case boss_2_level:
-            enemies_.spawn<Twin>(target);
-            enemies_.spawn<Twin>(target);
+            enemies_.spawn<Twin>(rng::sample<16>(target, rng::critical_state));
+            enemies_.spawn<Twin>(rng::sample<16>(target, rng::critical_state));
             break;
         }
 

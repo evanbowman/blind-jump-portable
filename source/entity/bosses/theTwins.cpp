@@ -11,16 +11,16 @@ void Twin::update_sprite()
     // need to transpose their positions if flipped, otherwise each constituent
     // sprite will be flipped in place
     if (head_.get_flip().x) {
-        head_.set_position({position_.x - 16, position_.y});
-        sprite_.set_position({position_.x + 16, position_.y});
-        shadow_.set_position({position_.x + 4, position_.y});
-        shadow2_.set_position({position_.x + 4, position_.y});
+        head_.set_position({position_.x - 18, position_.y});
+        sprite_.set_position({position_.x + 14, position_.y});
+        shadow_.set_position({position_.x + 2, position_.y});
+        shadow2_.set_position({position_.x + 2, position_.y});
         hitbox_.dimension_.origin_ = {16, 8};
     } else {
-        head_.set_position({position_.x + 16, position_.y});
-        sprite_.set_position({position_.x - 16, position_.y});
-        shadow_.set_position({position_.x - 4, position_.y});
-        shadow2_.set_position({position_.x - 4, position_.y});
+        head_.set_position({position_.x + 18, position_.y});
+        sprite_.set_position({position_.x - 14, position_.y});
+        shadow_.set_position({position_.x - 2, position_.y});
+        shadow2_.set_position({position_.x - 2, position_.y});
         hitbox_.dimension_.origin_ = {28, 8};
     }
 
@@ -112,7 +112,6 @@ void Twin::on_collision(Platform& pfrm, Game& game, AlliedOrbShot&)
 
 void Twin::on_collision(Platform& pfrm, Game& game, Player&)
 {
-    injured(pfrm, game, Health{1});
 }
 
 
