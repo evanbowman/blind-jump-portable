@@ -236,7 +236,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 pfrm.speaker().play_music(boss_music, 0);
 
                 show_boss_health(
-                    pfrm, game, Float(get_health()) / initial_health);
+                    pfrm, game, 0, Float(get_health()) / initial_health);
             }
         }
         break;
@@ -582,7 +582,7 @@ void Gatekeeper::injured(Platform& pfrm, Game& game, Health amount)
     sprite_.set_mix({c, 255});
     head_.set_mix({c, 255});
 
-    show_boss_health(pfrm, game, Float(get_health()) / initial_health);
+    show_boss_health(pfrm, game, 0, Float(get_health()) / initial_health);
 }
 
 

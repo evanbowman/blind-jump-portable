@@ -46,6 +46,7 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 set(SOURCES
   ${SOURCE_DIR}/entity/effects/wandererSmallLaser.cpp
   ${SOURCE_DIR}/entity/effects/wandererBigLaser.cpp
+  ${SOURCE_DIR}/entity/effects/conglomerateShot.cpp
   ${SOURCE_DIR}/entity/details/cutsceneCloud.cpp
   ${SOURCE_DIR}/entity/details/cutsceneBird.cpp
   ${SOURCE_DIR}/entity/bosses/gatekeeper.cpp
@@ -55,6 +56,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
   ${SOURCE_DIR}/entity/enemies/sinkhole.cpp
   ${SOURCE_DIR}/entity/bosses/wanderer.cpp
+  ${SOURCE_DIR}/entity/bosses/theTwins.cpp
   ${SOURCE_DIR}/entity/effects/orbshot.cpp
   ${SOURCE_DIR}/entity/details/lander.cpp
   ${SOURCE_DIR}/entity/enemies/common.cpp
@@ -226,6 +228,10 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/overlay_journal.s
     ${DATA_DIR}/spritesheet_boss0.s
     ${DATA_DIR}/spritesheet_boss1.s
+    ${DATA_DIR}/spritesheet_boss2.s
+    ${DATA_DIR}/spritesheet_boss2_done.s
+    ${DATA_DIR}/spritesheet_boss2_mutate.s
+    ${DATA_DIR}/spritesheet_boss2_final.s
     ${DATA_DIR}/old_poster_flattened.s
     ${DATA_DIR}/postal_advert_flattened.s
     ${DATA_DIR}/blaster_info_flattened.s
@@ -436,6 +442,10 @@ if(GAMEBOY_ADVANCE)
     add_spritesheet(spritesheet3 2 4 NO)
     add_spritesheet(spritesheet_boss0 2 4 NO)
     add_spritesheet(spritesheet_boss1 2 4 NO)
+    add_spritesheet(spritesheet_boss2 2 4 NO)
+    add_spritesheet(spritesheet_boss2_done 2 4 NO)
+    add_spritesheet(spritesheet_boss2_mutate 2 4 NO)
+    add_spritesheet(spritesheet_boss2_final 2 4 NO)
     add_spritesheet(spritesheet_launch_anim 2 4 NO)
     add_tilesheet(launch 0 0 YES)
     add_tilesheet(tilesheet_intro_cutscene 0 0 YES)

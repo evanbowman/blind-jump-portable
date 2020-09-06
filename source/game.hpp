@@ -4,6 +4,7 @@
 
 #include "camera.hpp"
 #include "entity/bosses/gatekeeper.hpp"
+#include "entity/bosses/theTwins.hpp"
 #include "entity/bosses/wanderer.hpp"
 #include "entity/details/cutsceneBird.hpp"
 #include "entity/details/cutsceneCloud.hpp"
@@ -13,6 +14,7 @@
 #include "entity/details/rubble.hpp"
 #include "entity/details/scavenger.hpp"
 #include "entity/details/transporter.hpp"
+#include "entity/effects/conglomerateShot.hpp"
 #include "entity/effects/explosion.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
@@ -77,8 +79,8 @@ public:
                                    Wanderer,
                                    Gatekeeper,
                                    GatekeeperShield,
-                                   Theif,
-                                   Sinkhole>;
+                                   Sinkhole,
+                                   Twin>;
 
     using DetailGroup = EntityGroup<30,
                                     ItemChest,
@@ -98,7 +100,8 @@ public:
                                     PeerLaser,
                                     Explosion,
                                     WandererBigLaser,
-                                    WandererSmallLaser>;
+                                    WandererSmallLaser,
+                                    ConglomerateShot>;
 
     inline Transporter& transporter()
     {
@@ -249,7 +252,7 @@ bool operator==(const ZoneInfo&, const ZoneInfo&);
 enum {
     boss_0_level = 10,
     boss_1_level = 21,
-    boss_2_level = 32,
+    boss_2_level = 27,
 };
 
 

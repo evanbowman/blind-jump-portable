@@ -12,6 +12,7 @@ class Game;
 class Platform;
 
 class Item;
+class Twin;
 class Enemy;
 class Drone;
 class Theif;
@@ -19,7 +20,7 @@ class OrbShot;
 class SnakeHead;
 class Wanderer;
 class WandererBigLaser;
-
+class ConglomerateShot;
 
 class Blaster : public Entity {
 public:
@@ -54,6 +55,7 @@ class Player : public Entity {
 public:
     Player(Platform& pfrm);
 
+    void on_collision(Platform& pf, Game& game, ConglomerateShot&);
     void on_collision(Platform& pf, Game& game, WandererBigLaser&);
     void on_collision(Platform& pf, Game& game, Wanderer&);
     void on_collision(Platform& pf, Game& game, SnakeHead&);
@@ -62,6 +64,7 @@ public:
     void on_collision(Platform& pf, Game& game, Drone&);
     void on_collision(Platform& pf, Game& game, Theif&);
     void on_collision(Platform& pf, Game& game, Item&);
+    void on_collision(Platform& pf, Game& game, Twin&);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
     void soft_update(Platform& pfrm, Game& game, Microseconds dt);

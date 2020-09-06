@@ -485,8 +485,8 @@ static constexpr const BossLevelMap boss_level_2({{
     {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
-    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0},
@@ -519,7 +519,8 @@ static const BossLevel* get_boss_level(Level current_level)
     }
 
     case boss_2_level: { // FIXME_ADD_BOSS2!!!
-        static constexpr const BossLevel ret{&boss_level_2, "spritesheet3"};
+        static constexpr const BossLevel ret{&boss_level_2,
+                                             "spritesheet_boss2"};
         return &ret;
     }
 
@@ -1046,6 +1047,10 @@ void Game::init_script(Platform& pfrm)
             return L_NIL;
         }));
 
+    if (auto eval_opt = pfrm.get_opt('e')) {
+        lisp::dostring(eval_opt);
+    }
+
     lisp::dostring(pfrm.load_script("init.lisp"));
 }
 
@@ -1240,9 +1245,8 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
 }
 
 
-static bool is_center_tile(lisp::Value* wall_tiles_list,
-                           lisp::Value* edge_tiles_list,
-                           u8 t)
+static bool
+is_center_tile(lisp::Value* wall_tiles_list, lisp::Value* edge_tiles_list, u8 t)
 {
     return not contains(wall_tiles_list, t) and
            not contains(edge_tiles_list, t);
@@ -1753,7 +1757,7 @@ ItemRarity rarity(Item::Type item)
         return 2;
 
     case Item::Type::engineer_notebook:
-        return 2;
+        return 3;
 
     case Item::Type::postal_advert:
         return 0;
@@ -1966,8 +1970,16 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             break;
 
         case boss_2_level:
-            // FIXME ADD BOSS2
-            place_transporter();
+            enemies_.spawn<Twin>(target);
+            free_spots.erase(farthest);
+            farthest = free_spots.begin();
+            for (auto& elem : free_spots) {
+                if (manhattan_length(elem, *player_coord) >
+                    manhattan_length(*farthest, *player_coord)) {
+                    farthest = &elem;
+                }
+            }
+            enemies_.spawn<Twin>(target);
             break;
         }
 

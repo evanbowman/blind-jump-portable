@@ -133,7 +133,7 @@ CompressedPtr compr(Value* val)
     for (int pool_id = 0; pool_id < Context::value_pool_count; ++pool_id) {
         auto& cells = bound_context->value_pools_[pool_id].obj_->cells();
         if ((char*)val >= (char*)cells.data() and
-            (char*)val < (char*)(cells.data() + cells.size())) {
+            (char*) val < (char*)(cells.data() + cells.size())) {
 
             static_assert((1 << CompressedPtr::source_pool_bits) - 1 >=
                               Context::value_pool_count - 1,

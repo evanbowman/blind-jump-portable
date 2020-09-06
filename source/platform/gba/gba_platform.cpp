@@ -102,12 +102,20 @@ static Platform* platform;
 
 
 // Thanks to Windows, main is technically platform specific (WinMain)
-int main()
+int main(int argc, char** argv)
 {
     Platform pf;
     ::platform = &pf;
 
     start(pf);
+}
+
+
+const char* Platform::get_opt(char opt)
+{
+    // Command line arguments aren't supported, seeing we are running without
+    // an operating system.
+    return nullptr;
 }
 
 

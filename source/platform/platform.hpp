@@ -98,6 +98,8 @@ public:
     // NOTE: I must admit, the platform class interface has become quite
     // bloated.
 
+    const char* get_opt(char opt);
+
     // On some platforms, fatal() will trigger a soft reset. But soft-reset is
     // mostly reserved for bare-metal platforms, where it's usually easy to
     // perform a soft reset via a simple BIOS call to reset the ROM. When
@@ -640,7 +642,7 @@ public:
 private:
     Platform();
 
-    friend int main();
+    friend int main(int argc, char** argv);
 
     SystemClock system_clock_;
     NetworkPeer network_peer_;

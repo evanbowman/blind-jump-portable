@@ -210,7 +210,8 @@ public:
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
-    std::optional<BossHealthBar> boss_health_bar_;
+    static constexpr const int boss_health_bar_count = 2;
+    std::optional<BossHealthBar> boss_health_bar_[boss_health_bar_count];
 
 private:
     std::optional<UIMetric> health_;

@@ -80,8 +80,10 @@
 
       (if (equal debug-mode 5)
           (progn
-            (level 32)
-            (apply add-items debug-items-lat)))
+            (level 27)
+            (set-hp 0 7)
+            ;; (apply add-items debug-items-lat)
+            (add-items 5 9)))
 
       (unbind 'debug-items-lat)))
 

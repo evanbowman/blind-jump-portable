@@ -98,11 +98,13 @@ enum class LocaleString {
     map_required,
     boss0_defeated,
     boss1_defeated,
+    boss2_defeated,
     peer_transport_waiting,
     severity_debug,
     severity_info,
     severity_warning,
     severity_error,
+    power_surge_detected,
     count
 };
 
