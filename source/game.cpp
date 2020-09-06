@@ -1292,6 +1292,7 @@ static void add_map_decorations(Level level,
 }
 
 
+#include <iostream>
 COLD void Game::regenerate_map(Platform& pfrm)
 {
     ScratchBufferBulkAllocator mem(pfrm);
@@ -1365,6 +1366,13 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     for (int i = 0; i < cell_iters; ++i) {
         cell_automata_advance(*grass_overlay, *temporary);
+    }
+
+    for (int i = 0; i < TileMap::width; ++i) {
+        for (int j = 0; j < TileMap::height; ++j) {
+            std::cout << grass_overlay->get_tile(i, j) << ", ";
+        }
+        std::cout << std::endl;
     }
 
     if (auto info = get_boss_level(level())) {
