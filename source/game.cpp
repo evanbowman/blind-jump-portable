@@ -499,6 +499,7 @@ static constexpr const BossLevelMap boss_level_2({{
 struct BossLevel {
     const BossLevelMap* map_;
     const char* spritesheet_;
+    const BossLevelMap* grass_pattern_ = nullptr;
 };
 
 
@@ -1364,6 +1365,17 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     for (int i = 0; i < cell_iters; ++i) {
         cell_automata_advance(*grass_overlay, *temporary);
+    }
+
+    if (auto info = get_boss_level(level())) {
+        if (info->grass_pattern_) {
+            for (int x = 0; x < TileMap::width; ++x) {
+                for (int y = 0; y < TileMap::height; ++y) {
+                    grass_overlay
+                        ->set_tile(x, y, info->grass_pattern_->get(x, y));
+                }
+            }
+        }
     }
 
     // All tiles with four neighbors become sand tiles.
