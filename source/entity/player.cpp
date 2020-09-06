@@ -76,6 +76,16 @@ void Player::injured(Platform& pf, Game& game, Health damage)
 }
 
 
+void Player::on_collision(Platform& pf, Game& game, ConglomerateShot&)
+{
+    if (not Player::is_invulnerable()) {
+        game.camera().shake();
+    }
+
+    Player::injured(pf, game, Health(2));
+}
+
+
 void Player::on_collision(Platform& pf, Game& game, OrbShot&)
 {
     if (not Player::is_invulnerable()) {

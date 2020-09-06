@@ -77,11 +77,18 @@ private:
         mode2_moving,
         mode2_stop_move,
         mode2_stop_friction,
+        mode2_open_mouth,
+        mode2_ranged_attack_charge,
+        mode2_ranged_attack,
+        mode2_ranged_attack_done,
     } state_ = State::inactive;
 
     struct Helper {
         enum class State {
-            recharge, shoot1, shoot2, shoot3
+            recharge,
+            shoot1,
+            shoot2,
+            shoot3
         } state_ = State::recharge;
         Sprite sprite_;
         Microseconds timer_ = 0;

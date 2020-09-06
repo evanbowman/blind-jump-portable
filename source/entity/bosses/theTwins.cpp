@@ -79,10 +79,10 @@ void Twin::Helper::update(Platform& pf,
 {
     const auto parent_pos = parent.get_position();
 
-    Vec2<Float> target_pos = { parent.get_sprite().get_flip().x ?
-                               parent_pos.x - 15 :
-                               parent_pos.x + 15,
-                               parent_pos.y - 34 };
+    Vec2<Float> target_pos = {parent.get_sprite().get_flip().x
+                                  ? parent_pos.x - 15
+                                  : parent_pos.x + 15,
+                              parent_pos.y - 34};
 
     Float interp_speed = 0.000006f;
     if (state_ == State::recharge) {
@@ -90,9 +90,8 @@ void Twin::Helper::update(Platform& pf,
         interp_speed = 0.0000028f;
     }
 
-    sprite_.set_position(interpolate(target_,
-                                     sprite_.get_position(),
-                                     dt * interp_speed));
+    sprite_.set_position(
+        interpolate(target_, sprite_.get_position(), dt * interp_speed));
 
     if (target.get_position().x > sprite_.get_position().x) {
         sprite_.set_flip({true, false});
@@ -117,10 +116,8 @@ void Twin::Helper::update(Platform& pf,
         if (timer_ > milliseconds(150)) {
             timer_ = 0;
             pf.speaker().play_sound("laser1", 4, sprite_.get_position());
-            if (game.effects().spawn<OrbShot>(shoot_pos,
-                                              target.get_position(),
-                                              0.00015f,
-                                              seconds(2))) {
+            if (game.effects().spawn<OrbShot>(
+                    shoot_pos, target.get_position(), 0.00015f, seconds(2))) {
             }
             auto pos = sprite_.get_position();
             pos.x -= sprite_.get_flip().x ? 2 : -2;
@@ -133,10 +130,8 @@ void Twin::Helper::update(Platform& pf,
         if (timer_ > milliseconds(150)) {
             timer_ = 0;
             pf.speaker().play_sound("laser1", 4, sprite_.get_position());
-            if (game.effects().spawn<OrbShot>(shoot_pos,
-                                              target.get_position(),
-                                              0.00015f,
-                                              seconds(2))) {
+            if (game.effects().spawn<OrbShot>(
+                    shoot_pos, target.get_position(), 0.00015f, seconds(2))) {
             }
             auto pos = sprite_.get_position();
             pos.x -= sprite_.get_flip().x ? 2 : -2;
@@ -149,10 +144,8 @@ void Twin::Helper::update(Platform& pf,
         if (timer_ > milliseconds(150)) {
             timer_ = 0;
             pf.speaker().play_sound("laser1", 4, sprite_.get_position());
-            if (game.effects().spawn<OrbShot>(shoot_pos,
-                                              target.get_position(),
-                                              0.00015f,
-                                              seconds(2))) {
+            if (game.effects().spawn<OrbShot>(
+                    shoot_pos, target.get_position(), 0.00015f, seconds(2))) {
             }
             auto pos = sprite_.get_position();
             pos.x -= sprite_.get_flip().x ? 2 : -2;
@@ -161,7 +154,6 @@ void Twin::Helper::update(Platform& pf,
         }
         break;
     }
-
 }
 
 
@@ -270,212 +262,27 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > seconds(2)) {
             timer_ = 0;
             state_ = State::mode2_idle;
+            if (rng::choice<2>(rng::critical_state) == 0) {
+
+                state_ = State::mode2_open_mouth;
+
+                set_sprite(55);
+                medium_explosion(
+                    pf, game, sprite_.get_position() + shoot_offset());
+                game.camera().shake();
+            }
         }
         break;
 
-    case State::mode2_idle:
+    case State::mode2_open_mouth:
         timer_ += dt;
         if (timer_ > milliseconds(150)) {
             timer_ = 0;
-            show_boss_health(pf, game, 0, Float(get_health()) / initial_health);
-            face_target();
-            state_ = State::mode2_prep_move;
+            state_ = State::mode2_ranged_attack_charge;
         }
         break;
 
-    case State::mode2_prep_move: {
-        Vec2<Float> dest;
-        Vec2<Float> unit;
-
-        bool target_player = true;
-
-        do {
-            s16 dir =
-                ((static_cast<float>(rng::choice<359>(rng::critical_state))) /
-                 360) *
-                INT16_MAX;
-
-            unit = {(float(cosine(dir)) / INT16_MAX),
-                    (float(sine(dir)) / INT16_MAX)};
-            speed_ = 5.f * unit;
-
-            if (target_player) {
-                target_player = false;
-                unit = direction(position_, target.get_position());
-                speed_ = 5.f * unit;
-            }
-
-            const auto tolerance = milliseconds(260);
-            dest = position_ +
-                   speed_ * ((mode2_move_duration + tolerance) *
-                             mode2_move_rate);
-
-        } while (wall_in_path(unit, position_, game, dest));
-        leaps_ += 1;
-        state_ = State::mode2_start_move;
-        set_sprite(6);
-        break;
-    }
-
-    case State::mode2_start_move:
-        timer_ += dt;
-        position_.x += speed_.x * dt * mode2_move_rate * 0.25f;
-        position_.y += speed_.y * dt * mode2_move_rate * 0.25f;
-
-        if (timer_ > milliseconds(60)) {
-            timer_ = 0;
-            auto index = sprite_.get_texture_index();
-            if (index < 14) {
-                set_sprite(index + 2);
-            } else {
-                state_ = State::mode2_moving;
-            }
-            if (index == 12) {
-                shadow_offset_ = 0;
-            } else if (index == 14) {
-                shadow_offset_ = 2;
-            }
-        }
-        break;
-
-    case State::mode2_moving:
-        timer_ += dt;
-        position_.x += speed_.x * dt * mode2_move_rate;
-        position_.y += speed_.y * dt * mode2_move_rate;
-
-        if (timer_ > mode2_move_duration) {
-            state_ = State::mode2_stop_move;
-            timer_ = 0;
-            set_sprite(41);
-            // set_sprite(49);
-        }
-        break;
-
-    case State::mode2_stop_move: {
-        timer_ += dt;
-        if (timer_ > milliseconds(60)) {
-            timer_ = 0;
-            auto index = sprite_.get_texture_index();
-            if (index < 53) {
-                if (index + 2 == 49) {
-                    set_sprite(index + 4);
-                } else {
-                    set_sprite(index + 2);
-                }
-                if (index == 41) {
-                    shadow_offset_ = 1;
-                } else if (index == 43) {
-                    shadow_offset_ = 0;
-                } else if (index == 45) {
-                    shadow_offset_ = -1;
-                } else if (index == 51) {
-                    shadow_offset_ = -2;
-                }
-            } else {
-                set_sprite(49);
-                state_ = State::mode2_stop_friction;
-            }
-        }
-        speed_ = interpolate(Vec2<Float>{0}, speed_, dt * 0.000007f);
-
-        position_.x += speed_.x * dt * movement_rate;
-        position_.y += speed_.y * dt * movement_rate;
-        break;
-    }
-
-    case State::mode2_stop_friction:
-        timer_ += dt;
-        if (timer_ > milliseconds(100)) {
-            timer_ = 0;
-            speed_ = {};
-            if (leaps_ > 4) {
-                leaps_ = 0;
-                state_ = State::mode2_long_idle;
-            } else {
-                state_ = State::mode2_idle;
-            }
-        }
-        speed_ = interpolate(Vec2<Float>{0}, speed_, dt * 0.000016f);
-
-        position_.x += speed_.x * dt * movement_rate;
-        position_.y += speed_.y * dt * movement_rate;
-        break;
-
-
-    case State::long_idle:
-        timer_ += dt;
-        if (timer_ > seconds(2)) {
-            timer_ = 0;
-            leaps_ = 0;
-            state_ = State::idle;
-        }
-        break;
-
-    case State::idle:
-        if (sibling(game) == nullptr) {
-            if (not visible()) {
-                break;
-            }
-            timer_ = 0;
-            state_ = State::prep_mutation;
-            sprite_.set_mix({ColorConstant::spanish_crimson, 255});
-            set_sprite(6);
-            break;
-        }
-        timer_ += dt;
-        if (timer_ > milliseconds(400)) {
-            auto sibling_state = [&] {
-                if (auto s = sibling(game)) {
-                    return s->state_;
-                }
-                return State::inactive;
-            }();
-
-            if (auto s = sibling(game)) {
-                show_boss_health(pf,
-                                 game,
-                                 s->id() < id(),
-                                 Float(get_health()) / initial_health);
-            } else {
-                show_boss_health(
-                    pf, game, 0, Float(get_health()) / initial_health);
-            }
-
-            if (sibling_state not_eq State::open_mouth and
-                sibling_state not_eq State::ranged_attack_charge and
-                sibling_state not_eq State::ranged_attack and
-                sibling_state not_eq State::ranged_attack_done and
-                rng::choice<3>(rng::critical_state) == 0) {
-                state_ = State::open_mouth;
-                leaps_ = 0;
-                face_target();
-            } else {
-                state_ = State::prep_leap;
-                set_sprite(42);
-            }
-            timer_ = 0;
-        }
-        break;
-
-    case State::open_mouth:
-        timer_ += dt;
-        face_target();
-        if (timer_ > milliseconds(100)) {
-            timer_ = 0;
-            auto index = sprite_.get_texture_index();
-            if (index < 14) {
-                set_sprite(index + 2);
-            } else {
-                state_ = State::ranged_attack_charge;
-
-                // if (rng::choice<2>(rng::critical_state)) {
-                //     timer_ = seconds(1);
-                // }
-            }
-        }
-        break;
-
-    case State::ranged_attack_charge:
+    case State::mode2_ranged_attack_charge:
         if (timer_ < seconds(1) and timer_ + dt > seconds(1)) {
             sprite_.set_mix({current_zone(game).energy_glow_color_, 0});
         }
@@ -483,292 +290,555 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         alt_timer_ += dt;
         if (alt_timer_ > milliseconds(80)) {
             alt_timer_ = 0;
-            if (sprite_.get_texture_index() == 14) {
-                sprite_.set_texture_index(41);
+            if (sprite_.get_texture_index() == 55) {
+                sprite_.set_texture_index(57);
                 alt_timer_ = -milliseconds(30);
             } else {
-                sprite_.set_texture_index(14);
+                sprite_.set_texture_index(55);
             }
         }
         if (timer_ > seconds(2) - milliseconds(100)) {
             timer_ = 0;
-            state_ = State::ranged_attack;
-            sprite_.set_texture_index(14);
+            alt_timer_ = 0;
+            state_ = State::mode2_ranged_attack;
+            sprite_.set_texture_index(55);
             medium_explosion(pf, game, sprite_.get_position() + shoot_offset());
             game.camera().shake();
             target_ = target.get_position();
         }
         break;
 
-    case State::ranged_attack:
+    case State::mode2_ranged_attack:
         timer_ += dt;
         alt_timer_ += dt;
 
-        target_ = interpolate(target.get_position(), target_, dt * 0.000016f);
+        target_ = interpolate(target.get_position(), target_, dt * 0.000020f);
 
-        if (alt_timer_ > milliseconds(250)) {
+        if (alt_timer_ > milliseconds(480)) {
             alt_timer_ = 0;
 
-            const Float atk_mov_rate = [&] {
-                if (second_form()) {
-                    return 0.00016f;
-                } else {
-                    return 0.00013f;
-                }
-            }();
-
-            game.effects().spawn<WandererSmallLaser>(
-                position_ + shoot_offset(), target_, atk_mov_rate);
-
-            if (second_form()) {
-
-                const auto incidence =
-                    interpolate(27, 70, Float(timer_) / seconds(3));
-
-                if (game.effects().spawn<WandererSmallLaser>(
-                        position_ + shoot_offset(), target_, atk_mov_rate)) {
-                    (*game.effects().get<WandererSmallLaser>().begin())
-                        ->rotate(incidence);
-                }
-
-                if (game.effects().spawn<WandererSmallLaser>(
-                        position_ + shoot_offset(), target_, atk_mov_rate)) {
-                    (*game.effects().get<WandererSmallLaser>().begin())
-                        ->rotate(360 - incidence);
-                }
-            }
+            game.effects().spawn<ConglomerateShot>(position_ + shoot_offset(),
+                                                   rng::sample<32>(target_, rng::critical_state),
+                                                   0.00011f);
         }
-
-
         if (timer_ > seconds(3)) {
-            state_ = State::ranged_attack_done;
+            state_ = State::mode2_ranged_attack_done;
         }
         break;
 
-    case State::ranged_attack_done:
-        state_ = State::idle;
-        set_sprite(6);
-        timer_ = milliseconds(rng::choice<800>(rng::critical_state));
-        break;
+        case State::mode2_ranged_attack_done:
+            state_ = State::mode2_idle;
+            break;
 
-    case State::prep_leap: {
-        Vec2<Float> dest;
-        Vec2<Float> unit;
+        case State::mode2_idle:
+            timer_ += dt;
+            if (timer_ > milliseconds(150)) {
+                timer_ = 0;
+                show_boss_health(
+                    pf, game, 0, Float(get_health()) / initial_health);
+                face_target();
+                state_ = State::mode2_prep_move;
+            }
+            break;
 
-        bool target_player = true;
+        case State::mode2_prep_move: {
+            Vec2<Float> dest;
+            Vec2<Float> unit;
 
-        do {
+            bool target_player = true;
 
-            s16 dir =
-                ((static_cast<float>(rng::choice<359>(rng::critical_state))) /
-                 360) *
-                INT16_MAX;
+            do {
+                s16 dir = ((static_cast<float>(
+                               rng::choice<359>(rng::critical_state))) /
+                           360) *
+                          INT16_MAX;
 
-            unit = {(float(cosine(dir)) / INT16_MAX),
-                    (float(sine(dir)) / INT16_MAX)};
-            speed_ = 5.f * unit;
-
-            if (target_player) {
-                target_player = false;
-                unit = direction(position_, target.get_position());
+                unit = {(float(cosine(dir)) / INT16_MAX),
+                        (float(sine(dir)) / INT16_MAX)};
                 speed_ = 5.f * unit;
-            }
 
-            const auto tolerance = milliseconds(260);
-            dest = position_ +
-                   speed_ * ((leap_duration + tolerance) * movement_rate);
+                if (target_player) {
+                    target_player = false;
+                    unit = direction(position_, target.get_position());
+                    speed_ = 5.f * unit;
+                }
 
-        } while (abs(speed_.x) < 1 // The dashing animation just looks
-                                   // strange when the character is moving
-                                   // vertically.
-                 and wall_in_path(unit, position_, game, dest));
-        state_ = State::crouch;
-        leaps_ += 1;
-        break;
-    }
+                const auto tolerance = milliseconds(260);
+                dest = position_ + speed_ * ((mode2_move_duration + tolerance) *
+                                             mode2_move_rate);
 
-    case State::crouch:
-        timer_ += dt;
-        if (sprite_.get_texture_index() > 44) {
-            position_.x += speed_.x * dt * (0.8f * movement_rate);
-            position_.y += speed_.y * dt * (0.8f * movement_rate);
+            } while (wall_in_path(unit, position_, game, dest));
+            leaps_ += 1;
+            state_ = State::mode2_start_move;
+            set_sprite(6);
+            break;
         }
-        if (timer_ > milliseconds(80)) {
-            timer_ = 0;
-            auto index = sprite_.get_texture_index();
-            if (index < 50) {
-                set_sprite(index + 2);
-            } else {
-                state_ = State::leaping;
-            }
-        }
-        break;
 
-    case State::leaping:
-        timer_ += dt;
-        position_.x += speed_.x * dt * movement_rate;
-        position_.y += speed_.y * dt * movement_rate;
+        case State::mode2_start_move:
+            timer_ += dt;
+            position_.x += speed_.x * dt * mode2_move_rate * 0.25f;
+            position_.y += speed_.y * dt * mode2_move_rate * 0.25f;
 
-        if (timer_ > (leap_duration * 3) / 4) {
-            set_sprite(52);
-        }
-        if (timer_ > leap_duration) {
-            state_ = State::landing;
-            timer_ = 0;
-        }
-        break;
-
-    case State::landing: {
-        timer_ += dt;
-        alt_timer_ += dt;
-        if (alt_timer_ > milliseconds(100)) {
-            alt_timer_ = 0;
-            auto index = sprite_.get_texture_index();
-            if (index not_eq 6) {
-                if (index < 56) {
+            if (timer_ > milliseconds(60)) {
+                timer_ = 0;
+                auto index = sprite_.get_texture_index();
+                if (index < 14) {
                     set_sprite(index + 2);
                 } else {
-                    set_sprite(6);
+                    state_ = State::mode2_moving;
+                }
+                if (index == 12) {
+                    shadow_offset_ = 0;
+                } else if (index == 14) {
+                    shadow_offset_ = 2;
                 }
             }
+            break;
+
+        case State::mode2_moving:
+            timer_ += dt;
+            position_.x += speed_.x * dt * mode2_move_rate;
+            position_.y += speed_.y * dt * mode2_move_rate;
+
+            if (timer_ > mode2_move_duration) {
+                state_ = State::mode2_stop_move;
+                timer_ = 0;
+                set_sprite(41);
+                // set_sprite(49);
+            }
+            break;
+
+        case State::mode2_stop_move: {
+            timer_ += dt;
+            if (timer_ > milliseconds(60)) {
+                timer_ = 0;
+                auto index = sprite_.get_texture_index();
+                if (index < 53) {
+                    if (index + 2 == 49) {
+                        set_sprite(index + 4);
+                    } else {
+                        set_sprite(index + 2);
+                    }
+                    if (index == 41) {
+                        shadow_offset_ = 1;
+                    } else if (index == 43) {
+                        shadow_offset_ = 0;
+                    } else if (index == 45) {
+                        shadow_offset_ = -1;
+                    } else if (index == 51) {
+                        shadow_offset_ = -2;
+                    }
+                } else {
+                    set_sprite(49);
+                    state_ = State::mode2_stop_friction;
+                }
+            }
+            speed_ = interpolate(Vec2<Float>{0}, speed_, dt * 0.000007f);
+
+            position_.x += speed_.x * dt * movement_rate;
+            position_.y += speed_.y * dt * movement_rate;
+            break;
         }
 
-        const auto duration = milliseconds(280);
-        if (timer_ > duration) {
-            if (leaps_ > 2) {
-                state_ = State::long_idle;
-            } else {
-                state_ = State::idle;
+        case State::mode2_stop_friction:
+            timer_ += dt;
+            if (timer_ > milliseconds(100)) {
+                timer_ = 0;
+                speed_ = {};
+                if (leaps_ > 4) {
+                    leaps_ = 0;
+                    state_ = State::mode2_long_idle;
+                } else {
+                    state_ = State::mode2_idle;
+                }
             }
-            alt_timer_ = 0;
-            timer_ = 0;
-            speed_ = {};
-        } else {
             speed_ = interpolate(Vec2<Float>{0}, speed_, dt * 0.000016f);
 
             position_.x += speed_.x * dt * movement_rate;
             position_.y += speed_.y * dt * movement_rate;
+            break;
+
+        case State::long_idle:
+            timer_ += dt;
+            if (timer_ > seconds(2)) {
+                timer_ = 0;
+                leaps_ = 0;
+                state_ = State::idle;
+            }
+            break;
+
+        case State::idle:
+            if (sibling(game) == nullptr) {
+                if (not visible()) {
+                    break;
+                }
+                timer_ = 0;
+                state_ = State::prep_mutation;
+                sprite_.set_mix({ColorConstant::spanish_crimson, 255});
+                set_sprite(6);
+                break;
+            }
+            timer_ += dt;
+            if (timer_ > milliseconds(400)) {
+                auto sibling_state = [&] {
+                    if (auto s = sibling(game)) {
+                        return s->state_;
+                    }
+                    return State::inactive;
+                }();
+
+                if (auto s = sibling(game)) {
+                    show_boss_health(pf,
+                                     game,
+                                     s->id() < id(),
+                                     Float(get_health()) / initial_health);
+                } else {
+                    show_boss_health(
+                        pf, game, 0, Float(get_health()) / initial_health);
+                }
+
+                if (sibling_state not_eq State::open_mouth and
+                    sibling_state not_eq State::ranged_attack_charge and
+                    sibling_state not_eq State::ranged_attack and
+                    sibling_state not_eq State::ranged_attack_done and
+                    rng::choice<3>(rng::critical_state) == 0) {
+                    state_ = State::open_mouth;
+                    leaps_ = 0;
+                    face_target();
+                } else {
+                    state_ = State::prep_leap;
+                    set_sprite(42);
+                }
+                timer_ = 0;
+            }
+            break;
+
+        case State::open_mouth:
+            timer_ += dt;
+            face_target();
+            if (timer_ > milliseconds(100)) {
+                timer_ = 0;
+                auto index = sprite_.get_texture_index();
+                if (index < 14) {
+                    set_sprite(index + 2);
+                } else {
+                    state_ = State::ranged_attack_charge;
+
+                    // if (rng::choice<2>(rng::critical_state)) {
+                    //     timer_ = seconds(1);
+                    // }
+                }
+            }
+            break;
+
+        case State::ranged_attack_charge:
+            if (timer_ < seconds(1) and timer_ + dt > seconds(1)) {
+                sprite_.set_mix({current_zone(game).energy_glow_color_, 0});
+            }
+            timer_ += dt;
+            alt_timer_ += dt;
+            if (alt_timer_ > milliseconds(80)) {
+                alt_timer_ = 0;
+                if (sprite_.get_texture_index() == 14) {
+                    sprite_.set_texture_index(41);
+                    alt_timer_ = -milliseconds(30);
+                } else {
+                    sprite_.set_texture_index(14);
+                }
+            }
+            if (timer_ > seconds(2) - milliseconds(100)) {
+                timer_ = 0;
+                state_ = State::ranged_attack;
+                sprite_.set_texture_index(14);
+                medium_explosion(
+                    pf, game, sprite_.get_position() + shoot_offset());
+                game.camera().shake();
+                target_ = target.get_position();
+            }
+            break;
+
+        case State::ranged_attack:
+            timer_ += dt;
+            alt_timer_ += dt;
+
+            target_ =
+                interpolate(target.get_position(), target_, dt * 0.000016f);
+
+            if (alt_timer_ > milliseconds(250)) {
+                alt_timer_ = 0;
+
+                const Float atk_mov_rate = [&] {
+                    if (second_form()) {
+                        return 0.00016f;
+                    } else {
+                        return 0.00013f;
+                    }
+                }();
+
+                game.effects().spawn<WandererSmallLaser>(
+                    position_ + shoot_offset(), target_, atk_mov_rate);
+
+                if (second_form()) {
+
+                    const auto incidence =
+                        interpolate(27, 70, Float(timer_) / seconds(3));
+
+                    if (game.effects().spawn<WandererSmallLaser>(
+                            position_ + shoot_offset(),
+                            target_,
+                            atk_mov_rate)) {
+                        (*game.effects().get<WandererSmallLaser>().begin())
+                            ->rotate(incidence);
+                    }
+
+                    if (game.effects().spawn<WandererSmallLaser>(
+                            position_ + shoot_offset(),
+                            target_,
+                            atk_mov_rate)) {
+                        (*game.effects().get<WandererSmallLaser>().begin())
+                            ->rotate(360 - incidence);
+                    }
+                }
+            }
+
+
+            if (timer_ > seconds(3)) {
+                state_ = State::ranged_attack_done;
+            }
+            break;
+
+        case State::ranged_attack_done:
+            state_ = State::idle;
+            set_sprite(6);
+            timer_ = milliseconds(rng::choice<800>(rng::critical_state));
+            break;
+
+        case State::prep_leap: {
+            Vec2<Float> dest;
+            Vec2<Float> unit;
+
+            bool target_player = true;
+
+            do {
+
+                s16 dir = ((static_cast<float>(
+                               rng::choice<359>(rng::critical_state))) /
+                           360) *
+                          INT16_MAX;
+
+                unit = {(float(cosine(dir)) / INT16_MAX),
+                        (float(sine(dir)) / INT16_MAX)};
+                speed_ = 5.f * unit;
+
+                if (target_player) {
+                    target_player = false;
+                    unit = direction(position_, target.get_position());
+                    speed_ = 5.f * unit;
+                }
+
+                const auto tolerance = milliseconds(260);
+                dest = position_ +
+                       speed_ * ((leap_duration + tolerance) * movement_rate);
+
+            } while (abs(speed_.x) < 1 // The dashing animation just looks
+                                       // strange when the character is moving
+                                       // vertically.
+                     and wall_in_path(unit, position_, game, dest));
+            state_ = State::crouch;
+            leaps_ += 1;
+            break;
         }
-        break;
-    }
-    }
 
-    if (speed_.x < 0) {
-        face_left();
-    } else if (speed_.x > 0) {
-        face_right();
-    }
+        case State::crouch:
+            timer_ += dt;
+            if (sprite_.get_texture_index() > 44) {
+                position_.x += speed_.x * dt * (0.8f * movement_rate);
+                position_.y += speed_.y * dt * (0.8f * movement_rate);
+            }
+            if (timer_ > milliseconds(80)) {
+                timer_ = 0;
+                auto index = sprite_.get_texture_index();
+                if (index < 50) {
+                    set_sprite(index + 2);
+                } else {
+                    state_ = State::leaping;
+                }
+            }
+            break;
 
+        case State::leaping:
+            timer_ += dt;
+            position_.x += speed_.x * dt * movement_rate;
+            position_.y += speed_.y * dt * movement_rate;
 
-    update_sprite();
+            if (timer_ > (leap_duration * 3) / 4) {
+                set_sprite(52);
+            }
+            if (timer_ > leap_duration) {
+                state_ = State::landing;
+                timer_ = 0;
+            }
+            break;
 
-    if (sprite_.get_mix().color_ == current_zone(game).energy_glow_color_) {
-        fade_color_anim_.reverse(sprite_, dt);
-    } else {
-        fade_color_anim_.advance(sprite_, dt);
-    }
-    head_.set_mix(sprite_.get_mix());
-}
+        case State::landing: {
+            timer_ += dt;
+            alt_timer_ += dt;
+            if (alt_timer_ > milliseconds(100)) {
+                alt_timer_ = 0;
+                auto index = sprite_.get_texture_index();
+                if (index not_eq 6) {
+                    if (index < 56) {
+                        set_sprite(index + 2);
+                    } else {
+                        set_sprite(6);
+                    }
+                }
+            }
 
+            const auto duration = milliseconds(280);
+            if (timer_ > duration) {
+                if (leaps_ > 2) {
+                    state_ = State::long_idle;
+                } else {
+                    state_ = State::idle;
+                }
+                alt_timer_ = 0;
+                timer_ = 0;
+                speed_ = {};
+            } else {
+                speed_ = interpolate(Vec2<Float>{0}, speed_, dt * 0.000016f);
 
-void Twin::injured(Platform& pfrm, Game& game, Health amount)
-{
-    if (alive()) {
-        pfrm.speaker().play_sound("click", 1, position_);
-    }
-
-    debit_health(pfrm, amount);
-
-    if (auto s = sibling(game)) {
-        show_boss_health(
-            pfrm, game, s->id() < id(), Float(get_health()) / initial_health);
-    } else {
-        show_boss_health(pfrm, game, 0, Float(get_health()) / initial_health);
-    }
-
-    if (state_ not_eq State::ranged_attack_charge and
-        state_ not_eq State::prep_mutation) {
-
-        const auto c = current_zone(game).injury_glow_color_;
-        sprite_.set_mix({c, 255});
-        head_.set_mix({c, 255});
-    }
-}
-
-
-void Twin::on_collision(Platform& pfrm, Game& game, LaserExplosion&)
-{
-    injured(pfrm, game, Health{8});
-}
-
-
-void Twin::on_collision(Platform& pfrm, Game& game, AlliedOrbShot&)
-{
-    injured(pfrm, game, Health{1});
-}
-
-
-void Twin::on_collision(Platform& pfrm, Game& game, Player&)
-{
-}
-
-
-void Twin::on_collision(Platform& pfrm, Game& game, Laser&)
-{
-    injured(pfrm, game, Health{1});
-}
-
-void Twin::on_death(Platform& pf, Game& game)
-{
-    big_explosion(pf, game, position_);
-
-    hide_boss_health(game);
-    pf.speaker().stop_music();
-
-    auto make_scraps = [&] {
-        auto pos = rng::sample<32>(position_, rng::utility_state);
-        const auto tile_coord = to_tile_coord(pos.cast<s32>());
-        const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);
-        if (is_walkable(tile)) {
-            game.details().spawn<Rubble>(pos);
+                position_.x += speed_.x * dt * movement_rate;
+                position_.y += speed_.y * dt * movement_rate;
+            }
+            break;
         }
-    };
+        }
 
-    for (int i = 0; i < 5; ++i) {
-        make_scraps();
+        if (speed_.x < 0) {
+            face_left();
+        } else if (speed_.x > 0) {
+            face_right();
+        }
+
+
+        update_sprite();
+
+        if (sprite_.get_mix().color_ == current_zone(game).energy_glow_color_) {
+            fade_color_anim_.reverse(sprite_, dt);
+        } else {
+            fade_color_anim_.advance(sprite_, dt);
+        }
+        head_.set_mix(sprite_.get_mix());
     }
 
-    if (sibling(game) == nullptr) {
-        sprite_.set_alpha(Sprite::Alpha::transparent);
-        head_.set_alpha(Sprite::Alpha::transparent);
-        pf.load_sprite_texture("spritesheet_boss2_done");
-        return;
+
+    void Twin::injured(Platform & pfrm, Game & game, Health amount)
+    {
+        if (alive()) {
+            pfrm.speaker().play_sound("click", 1, position_);
+        }
+
+        debit_health(pfrm, amount);
+
+        if (auto s = sibling(game)) {
+            show_boss_health(pfrm,
+                             game,
+                             s->id() < id(),
+                             Float(get_health()) / initial_health);
+        } else {
+            show_boss_health(
+                pfrm, game, 0, Float(get_health()) / initial_health);
+        }
+
+        if (state_ not_eq State::ranged_attack_charge and
+            state_ not_eq State::prep_mutation and
+            state_ not_eq State::mode2_ranged_attack_charge) {
+
+            const auto c = current_zone(game).injury_glow_color_;
+            sprite_.set_mix({c, 255});
+            head_.set_mix({c, 255});
+        }
     }
 
-    for (int i = 0; i < 2; ++i) {
-        game.details().spawn<Item>(
-            rng::sample<32>(position_, rng::utility_state),
-            pf,
-            Item::Type::heart);
+
+    void Twin::on_collision(Platform & pfrm, Game & game, LaserExplosion&)
+    {
+        injured(pfrm, game, Health{8});
     }
 
-    push_notification(pf, game.state(), "Twin defeated...");
 
-    game.on_timeout(pf, milliseconds(180), [this](Platform& pf, Game& game) {
-        big_explosion(pf, game, {position_.x + 30, position_.y - 30});
-    });
+    void Twin::on_collision(Platform & pfrm, Game & game, AlliedOrbShot&)
+    {
+        injured(pfrm, game, Health{1});
+    }
 
-    game.on_timeout(pf, milliseconds(180), [this](Platform& pf, Game& game) {
-        big_explosion(pf, game, {position_.x - 30, position_.y + 30});
-    });
 
-    game.on_timeout(pf, milliseconds(90), [this](Platform& pf, Game& game) {
-        big_explosion(pf, game, {position_.x - 30, position_.y - 30});
-    });
+    void Twin::on_collision(Platform & pfrm, Game & game, Player&)
+    {
+    }
 
-    game.on_timeout(pf, milliseconds(90), [this](Platform& pf, Game& game) {
-        big_explosion(pf, game, {position_.x + 30, position_.y + 30});
-    });
 
-    game.camera().shake(16);
-}
+    void Twin::on_collision(Platform & pfrm, Game & game, Laser&)
+    {
+        injured(pfrm, game, Health{1});
+    }
+
+    void Twin::on_death(Platform & pf, Game & game)
+    {
+        big_explosion(pf, game, position_);
+
+        hide_boss_health(game);
+        pf.speaker().stop_music();
+
+        auto make_scraps = [&] {
+            auto pos = rng::sample<32>(position_, rng::utility_state);
+            const auto tile_coord = to_tile_coord(pos.cast<s32>());
+            const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);
+            if (is_walkable(tile)) {
+                game.details().spawn<Rubble>(pos);
+            }
+        };
+
+        for (int i = 0; i < 5; ++i) {
+            make_scraps();
+        }
+
+        if (sibling(game) == nullptr) {
+            sprite_.set_alpha(Sprite::Alpha::transparent);
+            head_.set_alpha(Sprite::Alpha::transparent);
+            pf.load_sprite_texture("spritesheet_boss2_done");
+            return;
+        }
+
+        pf.speaker().play_sound("explosion1", 3, position_);
+
+        for (int i = 0; i < 2; ++i) {
+            game.details().spawn<Item>(
+                rng::sample<32>(position_, rng::utility_state),
+                pf,
+                Item::Type::heart);
+        }
+
+        push_notification(pf, game.state(), "Twin defeated...");
+
+        game.on_timeout(
+            pf, milliseconds(180), [this](Platform& pf, Game& game) {
+                big_explosion(pf, game, {position_.x + 30, position_.y - 30});
+            });
+
+        game.on_timeout(
+            pf, milliseconds(180), [this](Platform& pf, Game& game) {
+                big_explosion(pf, game, {position_.x - 30, position_.y + 30});
+            });
+
+        game.on_timeout(pf, milliseconds(90), [this](Platform& pf, Game& game) {
+            big_explosion(pf, game, {position_.x - 30, position_.y - 30});
+        });
+
+        game.on_timeout(pf, milliseconds(90), [this](Platform& pf, Game& game) {
+            big_explosion(pf, game, {position_.x + 30, position_.y + 30});
+        });
+
+        game.camera().shake(16);
+    }

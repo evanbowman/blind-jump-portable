@@ -14,6 +14,7 @@
 #include "entity/details/rubble.hpp"
 #include "entity/details/scavenger.hpp"
 #include "entity/details/transporter.hpp"
+#include "entity/effects/conglomerateShot.hpp"
 #include "entity/effects/explosion.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
@@ -99,7 +100,8 @@ public:
                                     PeerLaser,
                                     Explosion,
                                     WandererBigLaser,
-                                    WandererSmallLaser>;
+                                    WandererSmallLaser,
+                                    ConglomerateShot>;
 
     inline Transporter& transporter()
     {

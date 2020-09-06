@@ -534,6 +534,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm, game, player, game.effects().get<WandererBigLaser>());
         check_collisions(
             pfrm, game, player, game.effects().get<WandererSmallLaser>());
+        check_collisions(
+            pfrm, game, player, game.effects().get<ConglomerateShot>());
     }
 
     game.enemies().transform([&](auto& buf) {

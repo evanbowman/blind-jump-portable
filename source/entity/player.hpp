@@ -20,7 +20,7 @@ class OrbShot;
 class SnakeHead;
 class Wanderer;
 class WandererBigLaser;
-
+class ConglomerateShot;
 
 class Blaster : public Entity {
 public:
@@ -55,6 +55,7 @@ class Player : public Entity {
 public:
     Player(Platform& pfrm);
 
+    void on_collision(Platform& pf, Game& game, ConglomerateShot&);
     void on_collision(Platform& pf, Game& game, WandererBigLaser&);
     void on_collision(Platform& pf, Game& game, Wanderer&);
     void on_collision(Platform& pf, Game& game, SnakeHead&);
