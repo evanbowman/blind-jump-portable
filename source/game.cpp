@@ -496,6 +496,27 @@ static constexpr const BossLevelMap boss_level_2({{
 }});
 
 
+READ_ONLY_DATA
+static constexpr const BossLevelMap boss_level_2_gr({{
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, },
+{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, },
+{0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+{0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, },
+{0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, },
+{0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, },
+{0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, },
+{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, },
+{0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, },
+{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, },
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, },
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, },
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, },
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+}});
+
+
 struct BossLevel {
     const BossLevelMap* map_;
     const char* spritesheet_;
@@ -518,9 +539,11 @@ static const BossLevel* get_boss_level(Level current_level)
         return &ret;
     }
 
-    case boss_2_level: { // FIXME_ADD_BOSS2!!!
+    case boss_2_level: {
         static constexpr const BossLevel ret{&boss_level_2,
-                                             "spritesheet_boss2"};
+            "spritesheet_boss2",
+            &boss_level_2_gr
+        };
         return &ret;
     }
 
@@ -1296,7 +1319,26 @@ static void add_map_decorations(Level level,
 }
 
 
-#include <iostream>
+static void debug_log_tilemap(Platform& pfrm, TileMap& map)
+{
+    debug(pfrm, "printing map...");
+    for (int i = 0; i < TileMap::width; ++i) {
+        StringBuffer<65> buffer;
+        buffer.push_back('{');
+        for (int j = 0; j < TileMap::height; ++j) {
+            u8 tile = map.get_tile(i, j);
+            if (tile) {
+                buffer += "1, ";
+            } else {
+                buffer += "0, ";
+            }
+        }
+        buffer += "},";
+        debug(pfrm, buffer.c_str());
+    }
+}
+
+
 COLD void Game::regenerate_map(Platform& pfrm)
 {
     ScratchBufferBulkAllocator mem(pfrm);
@@ -1308,6 +1350,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     }
 
     seed_map(pfrm, *temporary);
+    debug_log_tilemap(pfrm, tiles_);
 
     // Remove tiles from edges of the map. Some platforms,
     // particularly consoles, have automatic tile-wrapping, and we
@@ -1372,12 +1415,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         cell_automata_advance(*grass_overlay, *temporary);
     }
 
-    for (int i = 0; i < TileMap::width; ++i) {
-        for (int j = 0; j < TileMap::height; ++j) {
-            std::cout << grass_overlay->get_tile(i, j) << ", ";
-        }
-        std::cout << std::endl;
-    }
+    debug_log_tilemap(pfrm, *grass_overlay);
 
     if (auto info = get_boss_level(level())) {
         if (info->grass_pattern_) {

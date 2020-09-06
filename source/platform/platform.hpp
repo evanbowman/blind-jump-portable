@@ -716,6 +716,10 @@ inline void draw_image(Platform& pfrm,
 #ifdef __GBA__
 // #pragma message "Warning: logging can wear down Flash memory, be careful using this on physical hardware!"
 #endif
+inline void debug(Platform& pf, const char* msg)
+{
+    pf.logger().log(Severity::debug, msg);
+}
 inline void info(Platform& pf, const char* msg)
 {
     pf.logger().log(Severity::info, msg);
@@ -729,6 +733,9 @@ inline void error(Platform& pf, const char* msg)
     pf.logger().log(Severity::error, msg);
 }
 #else
+inline void debug(Platform&, const char*)
+{
+}
 inline void info(Platform&, const char*)
 {
 }

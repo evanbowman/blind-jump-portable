@@ -38,6 +38,10 @@
 ;; modes to jump to a specific level, or hard-code your own parameters for
 ;; level, health, items, etc.
 ;;
+;; We only set debug-mode if unbound in the environment, in case someone passed
+;; an eval string to the application through the commandline in hosted
+;; environments, to define their own version of the variable.
+;;
 (if (not (bound 'debug-mode))
     ;; 0: normal mode
     ;; 1: debug boss 0
@@ -50,6 +54,8 @@
 
 (if (not (equal debug-mode 0))
     (progn
+      (log-severity 0)
+
       ;; let's give ourselves lots of health and powerups
       (set 'debug-items-lat (list 5 5 5 5 9 9 9 9))
       (set-hp 0 20)
