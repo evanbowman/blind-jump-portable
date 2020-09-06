@@ -13,9 +13,9 @@ static const struct {
 } scripts[] = {
 
     {"init.lisp", script_init},
-    //;
+//;
     {"pre_levelgen.lisp", script_pre_levelgen},
-    //;
+//;
     {"post_levelgen.lisp", script_post_levelgen},
-    //
+//
 };

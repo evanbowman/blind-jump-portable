@@ -31,6 +31,10 @@
 //;
 #include "data/spritesheet_boss2_done.h"
 //;
+#include "data/spritesheet_boss2_mutate.h"
+//;
+#include "data/spritesheet_boss2_final.h"
+//;
 #include "data/spritesheet_launch_anim.h"
 //;
 #include "data/launch_flattened.h"
@@ -105,6 +109,10 @@ static const TextureData sprite_textures[] = {
     TEXTURE_INFO(spritesheet_boss2),
 //;
     TEXTURE_INFO(spritesheet_boss2_done),
+//;
+    TEXTURE_INFO(spritesheet_boss2_mutate),
+//;
+    TEXTURE_INFO(spritesheet_boss2_final),
 //;
     TEXTURE_INFO(spritesheet_launch_anim),
 //

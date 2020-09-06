@@ -28,11 +28,14 @@ public:
 
     void update(Platform& pf, Game& game, Microseconds dt);
 
-    std::array<const Sprite*, 2> get_sprites() const
+    Buffer<const Sprite*, 3> get_sprites() const
     {
-        std::array<const Sprite*, 2> ret;
-        ret[0] = &sprite_;
-        ret[1] = &head_;
+        Buffer<const Sprite*, 3> ret;
+        ret.push_back(&sprite_);
+        ret.push_back(&head_);
+        if (helper_.sprite_.get_texture_index() == 65) {
+            ret.push_back(&helper_.sprite_);
+        }
         return ret;
     }
 
@@ -64,7 +67,32 @@ private:
         crouch,
         leaping,
         landing,
+        prep_mutation,
+        mutate,
+        mutate_done,
+        mode2_long_idle,
+        mode2_idle,
+        mode2_prep_move,
+        mode2_start_move,
+        mode2_moving,
+        mode2_stop_move,
+        mode2_stop_friction,
     } state_ = State::inactive;
+
+    struct Helper {
+        enum class State {
+            recharge, shoot1, shoot2, shoot3
+        } state_ = State::recharge;
+        Sprite sprite_;
+        Microseconds timer_ = 0;
+        Vec2<Float> target_;
+
+        void update(Platform& pfrm,
+                    Game& game,
+                    Microseconds dt,
+                    const Entity& parent,
+                    const Entity& target);
+    };
 
     Twin* sibling(Game& game);
 
@@ -73,6 +101,7 @@ private:
     void update_sprite();
     void set_sprite(TextureIndex index);
 
+    Helper helper_;
     Sprite head_;
     Sprite shadow2_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
@@ -80,5 +109,6 @@ private:
     Microseconds alt_timer_ = 0;
     Vec2<Float> speed_;
     Vec2<Float> target_;
-    int leaps_ = 0;
+    s8 leaps_ = 0;
+    s8 shadow_offset_ = 2;
 };

@@ -3,7 +3,7 @@
 #include "game.hpp"
 
 
-static const Entity::Health initial_health = 50;
+static const Entity::Health initial_health = 58;
 
 
 void Twin::set_sprite(TextureIndex index)
@@ -32,14 +32,14 @@ void Twin::update_sprite()
     if (head_.get_flip().x) {
         head_.set_position({position_.x - 18, position_.y});
         sprite_.set_position({position_.x + 14, position_.y});
-        shadow_.set_position({position_.x + 2, position_.y});
-        shadow2_.set_position({position_.x + 2, position_.y});
+        shadow_.set_position({position_.x + shadow_offset_, position_.y});
+        shadow2_.set_position({position_.x + shadow_offset_, position_.y});
         hitbox_.dimension_.origin_ = {16, 8};
     } else {
         head_.set_position({position_.x + 18, position_.y});
         sprite_.set_position({position_.x - 14, position_.y});
-        shadow_.set_position({position_.x - 2, position_.y});
-        shadow2_.set_position({position_.x - 2, position_.y});
+        shadow_.set_position({position_.x - shadow_offset_, position_.y});
+        shadow2_.set_position({position_.x - shadow_offset_, position_.y});
         hitbox_.dimension_.origin_ = {28, 8};
     }
 }
@@ -64,7 +64,104 @@ Twin::Twin(const Vec2<Float>& position)
     shadow2_.set_texture_index(34);
     shadow2_.set_alpha(Sprite::Alpha::translucent);
 
+    helper_.sprite_.set_size(Sprite::Size::w16_h32);
+    helper_.sprite_.set_origin({8, 0});
+
     set_sprite(6);
+}
+
+
+void Twin::Helper::update(Platform& pf,
+                          Game& game,
+                          Microseconds dt,
+                          const Entity& parent,
+                          const Entity& target)
+{
+    const auto parent_pos = parent.get_position();
+
+    Vec2<Float> target_pos = { parent.get_sprite().get_flip().x ?
+                               parent_pos.x - 15 :
+                               parent_pos.x + 15,
+                               parent_pos.y - 34 };
+
+    Float interp_speed = 0.000006f;
+    if (state_ == State::recharge) {
+        target_ = target_pos;
+        interp_speed = 0.0000028f;
+    }
+
+    sprite_.set_position(interpolate(target_,
+                                     sprite_.get_position(),
+                                     dt * interp_speed));
+
+    if (target.get_position().x > sprite_.get_position().x) {
+        sprite_.set_flip({true, false});
+    } else {
+        sprite_.set_flip({false, false});
+    }
+
+    timer_ += dt;
+
+    auto shoot_pos = sprite_.get_position();
+    shoot_pos.y += 16;
+
+    switch (state_) {
+    case Helper::State::recharge:
+        if (timer_ > seconds(1) + milliseconds(500)) {
+            timer_ = 0;
+            state_ = Helper::State::shoot1;
+        }
+        break;
+
+    case Helper::State::shoot1:
+        if (timer_ > milliseconds(150)) {
+            timer_ = 0;
+            pf.speaker().play_sound("laser1", 4, sprite_.get_position());
+            if (game.effects().spawn<OrbShot>(shoot_pos,
+                                              target.get_position(),
+                                              0.00015f,
+                                              seconds(2))) {
+            }
+            auto pos = sprite_.get_position();
+            pos.x -= sprite_.get_flip().x ? 2 : -2;
+            sprite_.set_position(pos);
+            state_ = Helper::State::shoot2;
+        }
+        break;
+
+    case Helper::State::shoot2:
+        if (timer_ > milliseconds(150)) {
+            timer_ = 0;
+            pf.speaker().play_sound("laser1", 4, sprite_.get_position());
+            if (game.effects().spawn<OrbShot>(shoot_pos,
+                                              target.get_position(),
+                                              0.00015f,
+                                              seconds(2))) {
+            }
+            auto pos = sprite_.get_position();
+            pos.x -= sprite_.get_flip().x ? 2 : -2;
+            sprite_.set_position(pos);
+            state_ = Helper::State::shoot3;
+        }
+        break;
+
+    case Helper::State::shoot3:
+        if (timer_ > milliseconds(150)) {
+            timer_ = 0;
+            pf.speaker().play_sound("laser1", 4, sprite_.get_position());
+            if (game.effects().spawn<OrbShot>(shoot_pos,
+                                              target.get_position(),
+                                              0.00015f,
+                                              seconds(2))) {
+            }
+            auto pos = sprite_.get_position();
+            pos.x -= sprite_.get_flip().x ? 2 : -2;
+            sprite_.set_position(pos);
+            state_ = Helper::State::recharge;
+        }
+        break;
+    }
+
 }
 
 
@@ -90,6 +187,10 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         }
     };
 
+    if (helper_.sprite_.get_texture_index() == 65) {
+        helper_.update(pf, game, dt, *this, target);
+    }
+
     auto shoot_offset = [&]() -> Vec2<Float> {
         if (sprite_.get_flip().x) {
             return {22, -5};
@@ -108,6 +209,8 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
             return 0.0000335f;
         }
     }();
+    constexpr Microseconds mode2_move_duration = milliseconds(140);
+    constexpr Float mode2_move_rate = 0.000044f;
 
     switch (state_) {
     case State::inactive:
@@ -125,6 +228,180 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         }
         break;
 
+    case State::prep_mutation:
+        // Just to make sure that we're a focal point onscreen for the
+        // transition animation.
+        game.camera().push_ballast(position_);
+
+        if (sprite_.get_mix().amount_ == 0) {
+            set_health(std::max(get_health(), Health(20)));
+            state_ = State::mutate;
+            pf.load_sprite_texture("spritesheet_boss2_mutate");
+        }
+        break;
+
+    case State::mutate:
+        game.camera().push_ballast(position_);
+        timer_ += dt;
+        if (timer_ > milliseconds(100)) {
+            shadow_offset_ = -2;
+            timer_ = 0;
+            auto index = sprite_.get_texture_index();
+            if (index == 6) {
+                set_sprite(41);
+            } else if (index < 49) {
+                set_sprite(index + 2);
+            } else {
+                state_ = State::mutate_done;
+                pf.load_sprite_texture("spritesheet_boss2_final");
+                helper_.sprite_.set_texture_index(65);
+            }
+        }
+        break;
+
+    case State::mutate_done:
+        pf.speaker().play_music("omega", 0);
+        state_ = State::mode2_idle;
+        break;
+
+    case State::mode2_long_idle:
+        timer_ += dt;
+        face_target();
+        if (timer_ > seconds(2)) {
+            timer_ = 0;
+            state_ = State::mode2_idle;
+        }
+        break;
+
+    case State::mode2_idle:
+        timer_ += dt;
+        if (timer_ > milliseconds(150)) {
+            timer_ = 0;
+            show_boss_health(pf, game, 0, Float(get_health()) / initial_health);
+            face_target();
+            state_ = State::mode2_prep_move;
+        }
+        break;
+
+    case State::mode2_prep_move: {
+        Vec2<Float> dest;
+        Vec2<Float> unit;
+
+        bool target_player = true;
+
+        do {
+            s16 dir =
+                ((static_cast<float>(rng::choice<359>(rng::critical_state))) /
+                 360) *
+                INT16_MAX;
+
+            unit = {(float(cosine(dir)) / INT16_MAX),
+                    (float(sine(dir)) / INT16_MAX)};
+            speed_ = 5.f * unit;
+
+            if (target_player) {
+                target_player = false;
+                unit = direction(position_, target.get_position());
+                speed_ = 5.f * unit;
+            }
+
+            const auto tolerance = milliseconds(260);
+            dest = position_ +
+                   speed_ * ((mode2_move_duration + tolerance) *
+                             mode2_move_rate);
+
+        } while (wall_in_path(unit, position_, game, dest));
+        leaps_ += 1;
+        state_ = State::mode2_start_move;
+        set_sprite(6);
+        break;
+    }
+
+    case State::mode2_start_move:
+        timer_ += dt;
+        position_.x += speed_.x * dt * mode2_move_rate * 0.25f;
+        position_.y += speed_.y * dt * mode2_move_rate * 0.25f;
+
+        if (timer_ > milliseconds(60)) {
+            timer_ = 0;
+            auto index = sprite_.get_texture_index();
+            if (index < 14) {
+                set_sprite(index + 2);
+            } else {
+                state_ = State::mode2_moving;
+            }
+            if (index == 12) {
+                shadow_offset_ = 0;
+            } else if (index == 14) {
+                shadow_offset_ = 2;
+            }
+        }
+        break;
+
+    case State::mode2_moving:
+        timer_ += dt;
+        position_.x += speed_.x * dt * mode2_move_rate;
+        position_.y += speed_.y * dt * mode2_move_rate;
+
+        if (timer_ > mode2_move_duration) {
+            state_ = State::mode2_stop_move;
+            timer_ = 0;
+            set_sprite(41);
+            // set_sprite(49);
+        }
+        break;
+
+    case State::mode2_stop_move: {
+        timer_ += dt;
+        if (timer_ > milliseconds(60)) {
+            timer_ = 0;
+            auto index = sprite_.get_texture_index();
+            if (index < 53) {
+                if (index + 2 == 49) {
+                    set_sprite(index + 4);
+                } else {
+                    set_sprite(index + 2);
+                }
+                if (index == 41) {
+                    shadow_offset_ = 1;
+                } else if (index == 43) {
+                    shadow_offset_ = 0;
+                } else if (index == 45) {
+                    shadow_offset_ = -1;
+                } else if (index == 51) {
+                    shadow_offset_ = -2;
+                }
+            } else {
+                set_sprite(49);
+                state_ = State::mode2_stop_friction;
+            }
+        }
+        speed_ = interpolate(Vec2<Float>{0}, speed_, dt * 0.000007f);
+
+        position_.x += speed_.x * dt * movement_rate;
+        position_.y += speed_.y * dt * movement_rate;
+        break;
+    }
+
+    case State::mode2_stop_friction:
+        timer_ += dt;
+        if (timer_ > milliseconds(100)) {
+            timer_ = 0;
+            speed_ = {};
+            if (leaps_ > 4) {
+                leaps_ = 0;
+                state_ = State::mode2_long_idle;
+            } else {
+                state_ = State::mode2_idle;
+            }
+        }
+        speed_ = interpolate(Vec2<Float>{0}, speed_, dt * 0.000016f);
+
+        position_.x += speed_.x * dt * movement_rate;
+        position_.y += speed_.y * dt * movement_rate;
+        break;
+
+
     case State::long_idle:
         timer_ += dt;
         if (timer_ > seconds(2)) {
@@ -135,6 +412,16 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         break;
 
     case State::idle:
+        if (sibling(game) == nullptr) {
+            if (not visible()) {
+                break;
+            }
+            timer_ = 0;
+            state_ = State::prep_mutation;
+            sprite_.set_mix({ColorConstant::spanish_crimson, 255});
+            set_sprite(6);
+            break;
+        }
         timer_ += dt;
         if (timer_ > milliseconds(400)) {
             auto sibling_state = [&] {
@@ -291,7 +578,10 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
             dest = position_ +
                    speed_ * ((leap_duration + tolerance) * movement_rate);
 
-        } while (wall_in_path(unit, position_, game, dest));
+        } while (abs(speed_.x) < 1 // The dashing animation just looks
+                                   // strange when the character is moving
+                                   // vertically.
+                 and wall_in_path(unit, position_, game, dest));
         state_ = State::crouch;
         leaps_ += 1;
         break;
@@ -396,11 +686,13 @@ void Twin::injured(Platform& pfrm, Game& game, Health amount)
         show_boss_health(pfrm, game, 0, Float(get_health()) / initial_health);
     }
 
+    if (state_ not_eq State::ranged_attack_charge and
+        state_ not_eq State::prep_mutation) {
 
-    const auto c = current_zone(game).injury_glow_color_;
-
-    sprite_.set_mix({c, 255});
-    head_.set_mix({c, 255});
+        const auto c = current_zone(game).injury_glow_color_;
+        sprite_.set_mix({c, 255});
+        head_.set_mix({c, 255});
+    }
 }
 
 
