@@ -29,8 +29,12 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
 // such that the surrounding text is aligned to either edge of the screen.
 //
 // FIXME: localize the credits? Nah...
-static const std::array<const char*, 21> credits_lines = {
+static const std::array<const char*, 32> credits_lines = {
     "Artwork and Source Code by",
+    "Evan Bowman",
+    "",
+    "",
+    "Story",
     "Evan Bowman",
     "",
     "",
@@ -44,6 +48,12 @@ static const std::array<const char*, 21> credits_lines = {
     "",
     "Playtesting",
     "Benjamin Casler",
+    "",
+    "",
+    "Translations",
+    "...",
+    "",
+    "Seeking translations...",
     "",
     "",
     "Special Thanks",

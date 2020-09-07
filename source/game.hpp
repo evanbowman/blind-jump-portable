@@ -252,7 +252,7 @@ bool operator==(const ZoneInfo&, const ZoneInfo&);
 enum {
     boss_0_level = 10,
     boss_1_level = 21,
-    boss_2_level = 27,
+    boss_2_level = 29,
 };
 
 
