@@ -78,7 +78,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case State::inactive:
-        if (manhattan_length(target.get_position(), position_) < 220) {
+        if (manhattan_length(target.get_position(), position_) < 280) {
             state_ = State::idle_wait;
         }
         break;
