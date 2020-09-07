@@ -55,7 +55,7 @@ private:
         long_airborne,
         attack,
         landing,
-    } state_ = State::idle_wait;
+    } state_ = State::sleep;
 
     Sprite leg_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
