@@ -38,8 +38,7 @@ inline void str_reverse(char str[], int length)
 }
 
 
-#ifndef _WIN32
-inline int strcmp(const char* p1, const char* p2)
+inline int str_cmp(const char* p1, const char* p2)
 {
     const unsigned char* s1 = (const unsigned char*)p1;
     const unsigned char* s2 = (const unsigned char*)p2;
@@ -58,7 +57,6 @@ inline int strcmp(const char* p1, const char* p2)
 
     return c1 - c2;
 }
-#endif
 
 
 // A not great, but satisfactory implementation of a string class.
@@ -172,7 +170,7 @@ public:
 
     bool operator==(const char* str)
     {
-        return strcmp(str, this->c_str()) == 0;
+        return str_cmp(str, this->c_str()) == 0;
     }
 
     bool full() const
@@ -209,7 +207,7 @@ private:
 template <u32 Capacity>
 bool operator==(StringBuffer<Capacity> buf, const char* str)
 {
-    return strcmp(str, buf.c_str()) == 0;
+    return str_cmp(str, buf.c_str()) == 0;
 }
 
 

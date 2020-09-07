@@ -64,7 +64,7 @@ static lisp::Value* arithmetic_test()
 static void intern_test()
 {
     auto initial = lisp::intern("blah");
-    if (strcmp("blah", initial) not_eq 0) {
+    if (str_cmp("blah", initial) not_eq 0) {
         std::cout << "interpreter intern failed" << std::endl;
         return;
     }
@@ -73,7 +73,7 @@ static void intern_test()
     // and make sure that we do not receive a non-matching pointer, which would
     // indicate that we somehow have two copies of the string in the intern
     // table.
-    if (strcmp(lisp::intern("dskjflfs"), "dskjflfs") not_eq 0) {
+    if (str_cmp(lisp::intern("dskjflfs"), "dskjflfs") not_eq 0) {
         std::cout << "intern failed" << std::endl;
     }
 

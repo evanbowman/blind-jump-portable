@@ -37,6 +37,7 @@
 #include <sstream>
 #include <thread>
 #include <unordered_map>
+#include <popl/popl.hpp>
 
 
 Platform::DeviceName Platform::device_name() const
@@ -1676,9 +1677,17 @@ const char* Platform::load_script(const char* name) const
 
 void start(Platform&);
 
+
+int argc = 0;
+char** argv = nullptr;
+
+
 int main(int argc, char** argv)
 {
     rng::critical_state = time(nullptr);
+
+    ::argc = argc;
+    ::argv = argv;
 
     Platform pf;
     start(pf);
@@ -1687,7 +1696,25 @@ int main(int argc, char** argv)
 
 const char* Platform::get_opt(char opt)
 {
-    return nullptr; // TODO...
+    try {
+        popl::OptionParser op("Allowed options");
+        auto help_option = op.add<popl::Switch>("h", "help", "produce help message");
+        auto eval_option = op.add<popl::Value<std::string>>("e", "eval", "evaluate lisp");
+
+        op.parse(::argc, ::argv);
+
+        switch (opt) {
+        case 'e':
+            if (eval_option->is_set()) {
+                static std::string eval_result = eval_option->value();
+                return eval_result.c_str();
+            }
+            break;
+        }
+    } catch (...) {
+        // ... TODO ...
+    }
+    return nullptr;
 }
 
 

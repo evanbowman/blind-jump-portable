@@ -30,6 +30,7 @@ endif()
 
 
 include_directories(${SOURCE_DIR})
+include_directories(${ROOT_DIR}/external/)
 
 
 if(APPLE)
@@ -353,11 +354,16 @@ if(APPLE OR UNIX OR GAMEBOY_ADVANCE)
     -pedantic
     -nostdlib
     -ffast-math
-    -fno-exceptions
     -fno-math-errno
     -Wdouble-promotion
     -fomit-frame-pointer
     -D__BLINDJUMP_ENABLE_LOGS)
+
+  if(GAMEBOY_ADVANCE)
+    set(SHARED_COMPILE_OPTIONS
+      ${SHARED_COMPILE_OPTIONS}
+      -fno-exceptions)
+  endif()
 
 elseif(WIN32)
 

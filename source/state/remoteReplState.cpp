@@ -21,7 +21,7 @@ StatePtr RemoteReplState::update(Platform& pfrm, Game& game, Microseconds delta)
                 pfrm.remote_console().print(format(lisp::get_op(0)).c_str());
 
                 if (lisp::get_op(0)->type_ == lisp::Value::Type::symbol) {
-                    if (strcmp(lisp::get_op(0)->symbol_.name_, "done") == 0) {
+                    if (str_cmp(lisp::get_op(0)->symbol_.name_, "done") == 0) {
                         pfrm.remote_console().print("exiting...\n");
                         lisp::pop_op();
                         return false;

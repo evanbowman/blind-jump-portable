@@ -1328,7 +1328,7 @@ void Platform::load_sprite_texture(const char* name)
 {
     for (auto& info : sprite_textures) {
 
-        if (strcmp(name, info.name_) == 0) {
+        if (str_cmp(name, info.name_) == 0) {
 
             current_spritesheet = &info;
 
@@ -1357,7 +1357,7 @@ void Platform::load_tile0_texture(const char* name)
 {
     for (auto& info : tile_textures) {
 
-        if (strcmp(name, info.name_) == 0) {
+        if (str_cmp(name, info.name_) == 0) {
 
             current_tilesheet0 = &info;
 
@@ -1394,7 +1394,7 @@ void Platform::load_tile1_texture(const char* name)
 {
     for (auto& info : tile_textures) {
 
-        if (strcmp(name, info.name_) == 0) {
+        if (str_cmp(name, info.name_) == 0) {
 
             current_tilesheet1 = &info;
 
@@ -1775,7 +1775,7 @@ static const AudioTrack* find_music(const char* name)
 {
     for (auto& track : music_tracks) {
 
-        if (strcmp(name, track.name_) == 0) {
+        if (str_cmp(name, track.name_) == 0) {
             return &track;
         }
     }
@@ -1836,7 +1836,7 @@ static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
 static const AudioTrack* get_sound(const char* name)
 {
     for (auto& sound : sounds) {
-        if (strcmp(name, sound.name_) == 0) {
+        if (str_cmp(name, sound.name_) == 0) {
             return &sound;
         }
     }
@@ -2116,7 +2116,7 @@ void Platform::on_watchdog_timeout(WatchdogCallback callback)
 const char* Platform::load_script(const char* name) const
 {
     for (auto& script : scripts) {
-        if (strcmp(script.name_, name) == 0) {
+        if (str_cmp(script.name_, name) == 0) {
             return reinterpret_cast<const char*>(script.data_);
         }
     }
@@ -2417,7 +2417,7 @@ void Platform::load_overlay_texture(const char* name)
 {
     for (auto& info : overlay_textures) {
 
-        if (strcmp(name, info.name_) == 0) {
+        if (str_cmp(name, info.name_) == 0) {
 
             current_overlay_texture = &info;
 
@@ -2508,7 +2508,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
     }
 
     for (auto& info : overlay_textures) {
-        if (strcmp(mapping_info->texture_name_, info.name_) == 0) {
+        if (str_cmp(mapping_info->texture_name_, info.name_) == 0) {
             for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
                 auto& gm = ::glyph_table->obj_->mappings_[t];
                 if (not gm.valid()) {

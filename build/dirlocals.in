@@ -1,1 +1,1 @@
-((c++-mode . ((flycheck-@EMACS_FLYCHECK_FRONTEND@-include-path . ("@SOURCE_DIR@/")))))
+((c++-mode . ((flycheck-@EMACS_FLYCHECK_FRONTEND@-include-path . ("@SOURCE_DIR@/" "@ROOT_DIR@/external/")))))

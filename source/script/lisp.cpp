@@ -107,7 +107,7 @@ const char* intern(const char* string)
 
     const char* search = *ctx->interns_.obj_;
     for (int i = 0; i < ctx->string_intern_pos_;) {
-        if (strcmp(search + i, string) == 0) {
+        if (str_cmp(search + i, string) == 0) {
             return search + i;
         } else {
             while (search[i] not_eq '\0') {
@@ -386,7 +386,7 @@ Value* set_var(const char* name, Value* value)
 {
     auto& globals = *bound_context->globals_.obj_;
     for (u32 i = 0; i < globals.size(); ++i) {
-        if (strcmp(name, globals[i].name_) == 0) {
+        if (str_cmp(name, globals[i].name_) == 0) {
             std::swap(globals[i], globals[0]);
             globals[0].value_ = value;
             return get_nil();
@@ -394,7 +394,7 @@ Value* set_var(const char* name, Value* value)
     }
 
     for (auto& var : *bound_context->globals_.obj_) {
-        if (strcmp(var.name_, "") == 0) {
+        if (str_cmp(var.name_, "") == 0) {
             var.name_ = intern(name);
             var.value_ = value;
             return get_nil();
@@ -409,7 +409,7 @@ Value* get_var(const char* name)
 {
     auto& globals = *bound_context->globals_.obj_;
     for (u32 i = 0; i < globals.size(); ++i) {
-        if (strcmp(name, globals[i].name_) == 0) {
+        if (str_cmp(name, globals[i].name_) == 0) {
             std::swap(globals[i], globals[0]);
             return globals[0].value_;
         }
@@ -623,9 +623,9 @@ static u32 eval_expr(const char* expr, u32 len)
         break;
     }
 
-    if (strcmp("if", fn_name) == 0) {
+    if (str_cmp("if", fn_name) == 0) {
         return eval_if(expr + i, len - i);
-    } else if (strcmp("while", fn_name) == 0) {
+    } else if (str_cmp("while", fn_name) == 0) {
         return eval_while(expr + i, len - i);
     }
 
@@ -707,7 +707,7 @@ static u32 eval_variable(const char* code, u32 len)
         return i;
     }
 
-    if (strcmp(variable_name, "nil") == 0) {
+    if (str_cmp(variable_name, "nil") == 0) {
         push_op(get_nil());
     } else {
         auto var = lisp::get_var(variable_name);
@@ -1163,7 +1163,7 @@ void init(Platform& pfrm)
             set_list(lat, 3, make_integer([&] {
                          int symb_tab_used = 0;
                          for (u32 i = 0; i < ctx->globals_.obj_->size(); ++i) {
-                             if (strcmp("", (*ctx->globals_.obj_)[i].name_)) {
+                             if (str_cmp("", (*ctx->globals_.obj_)[i].name_)) {
                                  ++symb_tab_used;
                              }
                          }
@@ -1220,7 +1220,7 @@ void init(Platform& pfrm)
                 L_EXPECT_OP(0, symbol);
 
                 for (auto& var : *bound_context->globals_.obj_) {
-                    if (strcmp(get_op(0)->symbol_.name_, var.name_) == 0) {
+                    if (str_cmp(get_op(0)->symbol_.name_, var.name_) == 0) {
                         var.value_ = get_nil();
                         var.name_ = "";
                         return get_nil();
@@ -1235,7 +1235,7 @@ void init(Platform& pfrm)
                 L_EXPECT_OP(0, symbol);
 
                 for (auto& var : *bound_context->globals_.obj_) {
-                    if (strcmp(get_op(0)->symbol_.name_, var.name_) == 0) {
+                    if (str_cmp(get_op(0)->symbol_.name_, var.name_) == 0) {
                         return make_integer(1);
                     }
                 }
