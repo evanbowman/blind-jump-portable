@@ -208,15 +208,17 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
     case State::inactive:
         face_target();
 
-        timer_ += dt;
-        if (timer_ > seconds(3)) {
-            if (auto s = sibling(game)) {
-                if (s->id() < id()) {
-                    pf.speaker().play_music("omega", 0);
+        if (visible()) {
+            timer_ += dt;
+            if (timer_ > seconds(2)) {
+                if (auto s = sibling(game)) {
+                    if (s->id() < id()) {
+                        pf.speaker().play_music("omega", 0);
+                    }
                 }
+                state_ = State::idle;
+                timer_ = 0;
             }
-            state_ = State::idle;
-            timer_ = 0;
         }
         break;
 

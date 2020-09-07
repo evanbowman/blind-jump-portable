@@ -102,7 +102,7 @@ void do_tests()
 }
 
 
-int main()
+int main(int argc, char** argv)
 {
     Platform pfrm;
 

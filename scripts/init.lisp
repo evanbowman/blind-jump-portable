@@ -40,7 +40,8 @@
 ;;
 ;; We only set debug-mode if unbound in the environment, in case someone passed
 ;; an eval string to the application through the commandline in hosted
-;; environments, to define their own version of the variable.
+;; environments, to define their own version of the variable:
+;; ./BlindJump -e "(set 'debug-mode 4)"
 ;;
 (if (not (bound 'debug-mode))
     ;; 0: normal mode
