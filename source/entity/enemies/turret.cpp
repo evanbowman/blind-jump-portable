@@ -12,9 +12,9 @@ static Microseconds reload(Level level)
     if (level < boss_0_level) {
         return reload_time;
     } else if (level < boss_1_level) {
-        return reload_time * 0.9;
+        return reload_time * 0.9f;
     } else {
-        return reload_time * 0.75;
+        return reload_time * 0.9f;
     }
 }
 
@@ -45,11 +45,11 @@ static Microseconds pause_after_open(Game& game, Level level)
         switch (game.difficulty()) {
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
-            return milliseconds(210);
+            return milliseconds(230);
 
         case Settings::Difficulty::survival:
         case Settings::Difficulty::hard:
-            return milliseconds(150);
+            return milliseconds(170);
         }
     }
     return milliseconds(200);
@@ -112,7 +112,7 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ -= dt;
         } else {
             if (game.level() > boss_1_level) {
-                add_health(2);
+                add_health(1);
             } else if (game.level() > boss_0_level) {
                 add_health(1);
             }

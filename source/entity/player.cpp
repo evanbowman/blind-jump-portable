@@ -82,7 +82,7 @@ void Player::on_collision(Platform& pf, Game& game, ConglomerateShot&)
         game.camera().shake();
     }
 
-    Player::injured(pf, game, Health(2));
+    Player::injured(pf, game, Health(1));
 }
 
 

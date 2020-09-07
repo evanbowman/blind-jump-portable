@@ -528,14 +528,14 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     check_collisions(pfrm, game, player, game.details().get<Item>());
     check_collisions(pfrm, game, player, game.effects().get<OrbShot>());
+    check_collisions(
+        pfrm, game, player, game.effects().get<ConglomerateShot>());
 
     if (UNLIKELY(boss_level)) {
         check_collisions(
             pfrm, game, player, game.effects().get<WandererBigLaser>());
         check_collisions(
             pfrm, game, player, game.effects().get<WandererSmallLaser>());
-        check_collisions(
-            pfrm, game, player, game.effects().get<ConglomerateShot>());
     }
 
     game.enemies().transform([&](auto& buf) {

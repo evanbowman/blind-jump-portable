@@ -23,21 +23,25 @@ void ConglomerateShot::update(Platform& pf, Game& game, Microseconds dt)
     timer_ -= dt;
     flicker_timer_ += dt;
 
-    if (flicker_timer_ > milliseconds(20)) {
-        flicker_timer_ = 0;
+    // FIXME: For the boss level, we spawn alternate-colored conglomerate shots,
+    // due to the differing base color of the effect in the spritesheets.
+    if (game.level() == boss_2_level) {
+        if (flicker_timer_ > milliseconds(20)) {
+            flicker_timer_ = 0;
 
-        switch (rng::choice<3>(rng::utility_state)) {
-        case 0:
-            sprite_.set_mix({});
-            break;
+            switch (rng::choice<3>(rng::utility_state)) {
+            case 0:
+                sprite_.set_mix({});
+                break;
 
-        case 1:
-            sprite_.set_mix({ColorConstant::picton_blue, 128});
-            break;
+            case 1:
+                sprite_.set_mix({ColorConstant::picton_blue, 128});
+                break;
 
-        case 2:
-            sprite_.set_mix({ColorConstant::picton_blue, 255});
-            break;
+            case 2:
+                sprite_.set_mix({ColorConstant::picton_blue, 255});
+                break;
+            }
         }
     }
 
@@ -55,10 +59,18 @@ void ConglomerateShot::on_collision(Platform& pf, Game&, Player&)
 
 void ConglomerateShot::on_death(Platform& pf, Game& game)
 {
-    game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
-    game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
-    game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
-    game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
+    if (game.level() == boss_2_level) {
+        game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
+        game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
+        game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
+        game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
+    } else {
+        game.effects().spawn<OrbShot>(position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
+        game.effects().spawn<OrbShot>(position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
+        game.effects().spawn<OrbShot>(position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
+        game.effects().spawn<OrbShot>(position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
+    }
+
 
     game.camera().shake();
 

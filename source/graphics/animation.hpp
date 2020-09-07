@@ -11,6 +11,10 @@ public:
     {
     }
 
+    Animation(Microseconds timer) : timer_(timer)
+    {
+    }
+
     bool done(Sprite& sprite) const
     {
         return sprite.get_texture_index() == (InitialTexture + (Length - 1));
