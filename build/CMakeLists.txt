@@ -184,6 +184,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/script_pre_levelgen.cpp
     ${DATA_DIR}/script_post_levelgen.cpp
     ${DATA_DIR}/scottbuckley_omega.s
+    ${DATA_DIR}/music_murmuration.s
     ${DATA_DIR}/scottbuckley_computations.s
     ${DATA_DIR}/scottbuckley_hiraeth.s
     ${DATA_DIR}/clair_de_lune.s

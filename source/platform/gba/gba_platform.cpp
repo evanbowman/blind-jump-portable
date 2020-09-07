@@ -1732,7 +1732,7 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #include "data/scottbuckley_computations.hpp"
 #include "data/scottbuckley_hiraeth.hpp"
 #include "data/scottbuckley_omega.hpp"
-#include "data/september.hpp"
+#include "data/music_murmuration.hpp"
 
 
 static const int null_music_len = 8;
@@ -1768,7 +1768,8 @@ static const struct AudioTrack {
 } music_tracks[] = {DEF_MUSIC(hiraeth, scottbuckley_hiraeth),
                     DEF_MUSIC(omega, scottbuckley_omega),
                     DEF_MUSIC(computations, scottbuckley_computations),
-                    DEF_MUSIC(clair_de_lune, clair_de_lune)};
+                    DEF_MUSIC(clair_de_lune, clair_de_lune),
+                    DEF_MUSIC(murmuration, music_murmuration)};
 
 
 static const AudioTrack* find_music(const char* name)

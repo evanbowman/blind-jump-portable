@@ -683,7 +683,7 @@ static constexpr const ZoneInfo zone_3{
     "spritesheet3",
     "tilesheet3",
     "tilesheet3_top",
-    "september",
+    "murmuration",
     Microseconds{0},
     ColorConstant::cerulean_blue,
     ColorConstant::picton_blue,
