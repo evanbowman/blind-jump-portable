@@ -697,7 +697,7 @@ static constexpr const ZoneInfo zone_3{
         draw_image(pfrm, 120, x, y, 9, 9, Layer::background);
     },
     [](int x, int y, const TileMap&) {
-        if (rng::choice<13>(rng::critical_state) == 0) {
+        if (rng::choice<14>(rng::critical_state) == 0) {
             switch (rng::choice<2>(rng::critical_state)) {
             case 0:
                 return 18;
@@ -1676,7 +1676,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     // Some other enemies require a lot of map space to fight effectively, so
     // they are banned from tiny maps.
 
-    const auto max_density = 160;
+    const auto max_density = 119;
 
     const auto min_density = 70;
 
@@ -1686,6 +1686,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     const auto density = std::min(
         Float(max_density) / 1000,
         Float(min_density) / 1000 + game.level() * Float(density_incr) / 1000);
+
 
     const auto max_enemies = 6;
 
