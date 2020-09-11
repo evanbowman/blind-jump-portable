@@ -144,6 +144,25 @@ public:
         return begin_[index];
     }
 
+    Iterator insert(Iterator pos, const T& elem)
+    {
+        if (full()) {
+            return pos;
+        } else if (empty()) {
+            push_back(elem);
+            return begin_;
+        }
+
+        for (auto it = end_ - 1; it not_eq pos - 1; --it) {
+            new (it + 1) T(*it);
+            it->~T();
+        }
+        ++end_;
+
+        new (pos) T(elem);
+        return pos;
+    }
+
     // FIXME: I wrote this fn in like 30 seconds and it's not great
     Iterator erase(Iterator slot)
     {

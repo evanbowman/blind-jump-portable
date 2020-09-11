@@ -10,6 +10,23 @@ void RemoteReplState::enter(Platform& pfrm, Game& game, State& prev_state)
 }
 
 
+namespace {
+class Printer : public lisp::Printer {
+public:
+    Printer(Platform& pfrm) : pfrm_(pfrm)
+    {
+    }
+
+    void put_str(const char* str) override
+    {
+        pfrm_.remote_console().print(str);
+    }
+
+    Platform& pfrm_;
+};
+}
+
+
 StatePtr RemoteReplState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     pfrm.remote_console().print("lisp> ");
@@ -18,7 +35,8 @@ StatePtr RemoteReplState::update(Platform& pfrm, Game& game, Microseconds delta)
             [](Platform& pfrm, const char* line) {
                 lisp::eval(line);
 
-                pfrm.remote_console().print(format(lisp::get_op(0)).c_str());
+                Printer p(pfrm);
+                format(lisp::get_op(0), p);
 
                 if (lisp::get_op(0)->type_ == lisp::Value::Type::symbol) {
                     if (str_cmp(lisp::get_op(0)->symbol_.name_, "done") == 0) {

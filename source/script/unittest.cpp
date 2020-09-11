@@ -85,6 +85,14 @@ static void intern_test()
     std::cout << "intern test passed!" << std::endl;
 }
 
+class Printer : public lisp::Printer {
+public:
+    void put_str(const char* str) override
+    {
+        std::cout << str;
+    }
+};
+
 
 void do_tests()
 {
@@ -93,8 +101,8 @@ void do_tests()
     lisp::set_var("L", lat);
     lisp::set_list(lat, 4, lisp::make_integer(12));
 
-    std::cout << lisp::format(lisp::get_list(lisp::get_var("L"), 4)).c_str()
-              << std::endl;
+    Printer p;
+    lisp::format(lisp::get_list(lisp::get_var("L"), 4), p);
 
     intern_test();
     function_test();
@@ -128,7 +136,8 @@ int main(int argc, char** argv)
     std::cout << ">> ";
     while (std::getline(std::cin, line)) {
         lisp::eval(line.c_str());
-        std::cout << format(lisp::get_op(0)).c_str() << std::endl;
+        Printer p;
+        format(lisp::get_op(0), p);
         lisp::pop_op();
         // std::cout << "stack size: "
         //           << lisp::bound_context->operand_stack_.size()
@@ -136,6 +145,6 @@ int main(int argc, char** argv)
         //           << lisp::bound_context->memory_.remaining()
         //           << ", intern mem: " << lisp::bound_context->string_intern_pos_
         //           << std::endl;
-        std::cout << ">> ";
+        std::cout << '\n' << ">> ";
     }
 }

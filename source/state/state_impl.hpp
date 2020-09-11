@@ -654,10 +654,13 @@ private:
 
 
 class LispReplState : public State {
+public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    using Command = StringBuffer<60>;
 
 private:
     enum class DisplayMode {
@@ -669,7 +672,7 @@ private:
 
     void repaint_entry(Platform& pfrm);
 
-    StringBuffer<60> command_;
+    Command command_;
 
     std::optional<Text> keyboard_top_;
     std::optional<Text> keyboard_bottom_;

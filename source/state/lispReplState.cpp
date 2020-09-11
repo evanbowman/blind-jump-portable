@@ -112,6 +112,24 @@ void LispReplState::exit(Platform& pfrm, Game& game, State& next_state)
 }
 
 
+namespace {
+class Printer : public lisp::Printer {
+public:
+    Printer(LispReplState::Command& cmd) : cmd_(cmd)
+    {
+    }
+
+    void put_str(const char* str) override
+    {
+        cmd_ += str;
+    }
+
+private:
+    LispReplState::Command& cmd_;
+};
+}
+
+
 StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     constexpr auto fade_duration = milliseconds(700);
@@ -170,7 +188,9 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         lisp::eval(command_.c_str());
 
-        command_ = format(lisp::get_op(0)).c_str();
+        command_.clear();
+        Printer p(command_);
+        format(lisp::get_op(0), p);
 
         lisp::pop_op();
 

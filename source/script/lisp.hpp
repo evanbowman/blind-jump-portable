@@ -252,9 +252,9 @@ template <typename T> T& loadv(const char* name)
 u32 eval(const char* code);
 
 
-// Use this function for reading lisp code contianing multiple
-// expressions. eval() is only designed for single expressions.
-void dostring(const char* code);
+// Use this function for reading lisp code containing multiple
+// expressions. eval() should only be used for single expressions.
+void dostring(const char* code, Value** result = nullptr);
 
 
 const char* intern(const char* string);
@@ -275,5 +275,14 @@ const char* intern(const char* string);
         return lisp::make_error(lisp::Error::Code::invalid_argc);
 
 
-StringBuffer<47> format(Value* value);
+class Printer {
+public:
+    virtual void put_str(const char* c) = 0;
+    virtual ~Printer() {}
+};
+
+
+void format(Value* value, Printer& p);
+
+
 } // namespace lisp

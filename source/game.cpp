@@ -747,7 +747,6 @@ void Game::init_script(Platform& pfrm)
     lisp::init(pfrm);
 
     lisp::set_var("*game*", lisp::make_userdata(this));
-    lisp::set_var("*pfrm*", lisp::make_userdata(&pfrm));
 
     lisp::set_var("level", lisp::make_function([](int argc) {
                       if (auto game = interp_get_game()) {

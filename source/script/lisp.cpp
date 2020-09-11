@@ -347,6 +347,14 @@ void push_op(Value* operand)
 }
 
 
+void insert_op(u32 offset, Value* operand)
+{
+    auto& stack = bound_context->operand_stack_;
+    auto pos = stack.obj_->end() - offset;
+    stack.obj_->insert(pos, compr(operand));
+}
+
+
 Value* get_op(u32 offset)
 {
     auto& stack = bound_context->operand_stack_;
@@ -363,22 +371,59 @@ Value* get_op(u32 offset)
 // the result of the function call.
 void funcall(Value* obj, u8 argc)
 {
-    if (obj->type_ not_eq Value::Type::function) {
+    auto pop_args = [&argc] {
+        for (int i = 0; i < argc; ++i) {
+            bound_context->operand_stack_.obj_->pop_back();
+        }
+    };
+
+    switch (obj->type_) {
+    case Value::Type::function: {
+        if (bound_context->operand_stack_.obj_->size() < argc) {
+            pop_args();
+            push_op(make_error(Error::Code::invalid_argc));
+            return;
+        }
+
+        auto result = obj->function_.impl_(argc);
+        pop_args();
+
+        push_op(result);
+        break;
+    }
+
+    case Value::Type::cons: {
+        if (not length(obj)) {
+            pop_args();
+            push_op(make_error(Error::Code::value_not_callable));
+            return;
+        }
+        auto lat = obj;
+        auto fn = lat->cons_.car();
+        if (fn->type_ not_eq Value::Type::function) {
+            pop_args();
+            push_op(make_error(Error::Code::value_not_callable));
+            return;
+        }
+        const int stack_insert_offset = argc;
+        lat = lat->cons_.cdr();
+        while (lat not_eq L_NIL) {
+            insert_op(stack_insert_offset, lat->cons_.car());
+            lat = lat->cons_.cdr();
+            ++argc;
+        }
+
+        auto result = fn->function_.impl_(argc);
+        pop_args();
+
+        push_op(result);
+        break;
+    }
+
+    default:
         push_op(make_error(Error::Code::value_not_callable));
-        return;
+        break;
     }
-
-    if (bound_context->operand_stack_.obj_->size() < argc) {
-        push_op(make_error(Error::Code::invalid_argc));
-        return;
-    }
-
-    auto result = obj->function_.impl_(argc);
-    for (int i = 0; i < argc; ++i) {
-        bound_context->operand_stack_.obj_->pop_back();
-    }
-
-    push_op(result);
 }
 
 
@@ -586,7 +631,7 @@ static u32 eval_if(const char* expr, u32 len)
         return i + 4;
     } else {
         // We've evaulated the first expresion, and want to skip the second one.
-        if (expr[i] == '(' or expr[i] == '\'') {
+        if (expr[i] == '(' or expr[i] == '#') {
             i += expr_len(expr + i, str_len(expr + i));
         } else {
             while (expr[i] not_eq ' ' and expr[i] not_eq ')') {
@@ -645,13 +690,13 @@ static u32 eval_expr(const char* expr, u32 len)
     i += 2;
 
     const auto fn = get_var(fn_name);
-    if (fn->type_ not_eq Value::Type::function) {
-        for (int i = 0; i < param_count; ++i) {
-            pop_op();
-        }
-        push_op(fn);
-        return i;
-    }
+    // if (fn->type_ not_eq Value::Type::function) {
+    //     for (int i = 0; i < param_count; ++i) {
+    //         pop_op();
+    //     }
+    //     push_op(fn);
+    //     return i;
+    // }
 
     funcall(fn, param_count);
 
@@ -666,7 +711,7 @@ static bool is_numeric(char c)
 }
 
 
-static u32 eval_number(const char* code, u32 len)
+static u32 eval_number(const char* code, u32 len, bool positive)
 {
     u32 result = 0;
 
@@ -679,7 +724,7 @@ static u32 eval_number(const char* code, u32 len)
         }
     }
 
-    lisp::push_op(lisp::make_integer(result));
+    lisp::push_op(lisp::make_integer(positive ? result : -result));
     return i;
 }
 
@@ -687,30 +732,38 @@ static u32 eval_number(const char* code, u32 len)
 static u32 eval_variable(const char* code, u32 len)
 {
     static const u32 max_var_name = 31;
-    char variable_name[max_var_name];
+    StringBuffer<max_var_name> variable_name;
+    // char variable_name[max_var_name];
 
     u32 i = 0;
+
+    bool is_symbol = false;
+
+    if (code[i] == '#') {
+        is_symbol = true;
+        i += 1;
+    }
+
+    i += eat_whitespace(code + i);
 
     for (; i < len; ++i) {
         if (is_whitespace(code[i]) or code[i] == ')') {
             break;
         } else {
-            variable_name[i] = code[i];
+            variable_name.push_back(code[i]);
         }
     }
 
-    variable_name[i] = '\0';
-
     // FIXME: actually support quoted stuff...
-    if (variable_name[0] == '\'') {
-        push_op(make_symbol(variable_name + 1));
+    if (is_symbol) {
+        push_op(make_symbol(variable_name.c_str()));
         return i;
     }
 
-    if (str_cmp(variable_name, "nil") == 0) {
+    if (str_cmp(variable_name.c_str(), "nil") == 0) {
         push_op(get_nil());
     } else {
-        auto var = lisp::get_var(variable_name);
+        auto var = lisp::get_var(variable_name.c_str());
         push_op(var);
     }
     return i;
@@ -720,7 +773,9 @@ static u32 eval_variable(const char* code, u32 len)
 static u32 eval_value(const char* code, u32 len)
 {
     if (is_numeric(code[0])) {
-        return eval_number(code, len);
+        return eval_number(code, len, true);
+    } else if (len > 1 and code[0] == '-' and is_numeric(code[1])) {
+        return eval_number(code + 1, len - 1, false);
     } else {
         return eval_variable(code, len);
     }
@@ -753,7 +808,7 @@ u32 eval(const char* code)
 }
 
 
-void dostring(const char* code)
+void dostring(const char* code, Value** result)
 {
     const auto script_len = str_len(code);
 
@@ -761,6 +816,8 @@ void dostring(const char* code)
     // expression begins and ends, and skip ahead to the next expression in the
     // file after reading the current one. Ideally, I would simply fix whatever
     // bug in the eval function causes incorrect result offsets...
+
+    Value* ret = get_nil();
 
     u32 i = 0;
     while (i < script_len) {
@@ -772,76 +829,78 @@ void dostring(const char* code)
 
         i += len;
 
+        ret = lisp::get_op(0);
         lisp::pop_op();
+    }
+
+    if (result) {
+        *result = ret;
     }
 }
 
 
-void format_impl(Value* value, StringBuffer<47>& buffer)
+void format_impl(Value* value, Printer& p)
 {
     switch (value->type_) {
     case lisp::Value::Type::nil:
-        buffer += "nil";
+        p.put_str("nil");
         break;
 
     case lisp::Value::Type::symbol:
-        buffer += value->symbol_.name_;
+        p.put_str(value->symbol_.name_);
         break;
 
     case lisp::Value::Type::integer: {
         char str[32];
         english__to_string(value->integer_.value_, str, 10);
-        buffer += str;
+        p.put_str(str);
         break;
     }
 
     case lisp::Value::Type::cons:
-        buffer.push_back('(');
-        format_impl(value->cons_.car(), buffer);
+        p.put_str("(");
+        format_impl(value->cons_.car(), p);
         if (value->cons_.cdr()->type_ not_eq Value::Type::cons) {
-            buffer += " . ";
-            format_impl(value->cons_.cdr(), buffer);
+            p.put_str(" . ");
+            format_impl(value->cons_.cdr(), p);
         } else {
             auto current = value;
             while (true) {
                 if (current->cons_.cdr()->type_ == Value::Type::cons) {
-                    buffer += " ";
-                    format_impl(current->cons_.cdr()->cons_.car(), buffer);
+                    p.put_str(" ");
+                    format_impl(current->cons_.cdr()->cons_.car(), p);
                     current = current->cons_.cdr();
                 } else if (current->cons_.cdr() not_eq get_nil()) {
-                    buffer += " ";
-                    format_impl(current->cons_.cdr(), buffer);
+                    p.put_str(" ");
+                    format_impl(current->cons_.cdr(), p);
                     break;
                 } else {
                     break;
                 }
             }
         }
-        buffer.push_back(')');
+        p.put_str(")");
         break;
 
     case lisp::Value::Type::function:
-        buffer += "<lambda>";
+        p.put_str("<lambda>");
         break;
 
     case lisp::Value::Type::user_data:
-        buffer += "<ud>";
+        p.put_str("<ud>");
         break;
 
     case lisp::Value::Type::error:
-        buffer += "ERR: ";
-        buffer += lisp::Error::get_string(value->error_.code_);
-        ;
+        p.put_str("ERR: ");
+        p.put_str(lisp::Error::get_string(value->error_.code_));
         break;
     }
 }
 
 
-StringBuffer<47> format(Value* value)
+void format(Value* value, Printer& p)
 {
-    StringBuffer<47> result;
-    format_impl(value, result);
-    return result;
+    format_impl(value, p);
 }
 
 
@@ -927,6 +986,27 @@ static void run_gc()
 }
 
 
+using EvalBuffer = StringBuffer<900>;
+
+
+namespace {
+    class EvalPrinter : public Printer {
+    public:
+        EvalPrinter(EvalBuffer& buffer) : buffer_(buffer)
+        {
+        }
+
+        void put_str(const char* str) override
+        {
+            buffer_ += str;
+        }
+
+    private:
+        EvalBuffer& buffer_;
+    };
+}
+
+
 void init(Platform& pfrm)
 {
     bound_context.emplace(pfrm);
@@ -957,6 +1037,8 @@ void init(Platform& pfrm)
         while (true)
             ;
     }
+
+    lisp::set_var("*pfrm*", lisp::make_userdata(&pfrm));
 
     // For optimization purposes, the commonly used loop iteration variables are
     // placed at the beginning of the string intern table, which makes setting
@@ -1248,7 +1330,10 @@ void init(Platform& pfrm)
             if (argc < 2) {
                 return get_nil();
             }
-            L_EXPECT_OP(argc - 1, function);
+            if (lisp::get_op(argc - 1)->type_ not_eq Value::Type::function and
+                lisp::get_op(argc - 1)->type_ not_eq Value::Type::cons) {
+                return lisp::make_error(lisp::Error::Code::invalid_argument_type);
+            }
 
             // I've never seen map used with so many input lists, but who knows,
             // someone might try to call this with more than six inputs...
@@ -1333,6 +1418,33 @@ void init(Platform& pfrm)
                 run_gc();
                 return get_nil();
             }));
+
+    set_var("eval", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        // FIXME... improve this code. Our parser operates on strings, rather
+        // than lists, for memory reasons--we just don't have enough extra
+        // memory lying around to justify converting all lisp code into data
+        // before interpreting. So our eval implementation needs to print our
+        // data to an intermediary buffer, and execute the buffer's string
+        // contents as code.
+
+        auto pfrm = lisp::get_var("*pfrm*");
+        if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+            return get_nil();
+        }
+
+        auto buffer =
+            allocate_dynamic<EvalBuffer>(*(Platform*)pfrm->user_data_.obj_);
+
+        EvalPrinter p(*buffer.obj_);
+
+        format(get_op(0), p);
+
+        Value* result = nullptr;
+        dostring(buffer.obj_->c_str(), &result);
+
+        return result;
+    }));
 }
 
 
