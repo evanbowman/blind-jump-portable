@@ -103,7 +103,7 @@
     ;; 3: debug zone 2
     ;; 4: debug zone 3
     ;; 5: debug boss 2
-    (set #debug-mode 1))
+    (set #debug-mode 0))
 
 
 (if (not (equal debug-mode 0))

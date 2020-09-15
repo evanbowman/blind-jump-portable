@@ -9,7 +9,7 @@
 static const char* boss_music = "omega";
 
 
-static const Entity::Health initial_health = 1;
+static const Entity::Health initial_health = 100;
 
 
 Wanderer::Wanderer(const Vec2<Float>& position)
