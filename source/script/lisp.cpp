@@ -711,16 +711,45 @@ static bool is_numeric(char c)
 }
 
 
+static const long hextable[] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,
+    9,  -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1};
+
+
 static u32 eval_number(const char* code, u32 len, bool positive)
 {
     u32 result = 0;
 
     u32 i = 0;
-    for (; i < len; ++i) {
-        if (is_whitespace(code[i]) or code[i] == ')') {
-            break;
-        } else {
-            result = result * 10 + (code[i] - '0');
+
+    if (code[0] == '0' and code[1] == 'x') {
+        i += 2;
+        for (; i < len; ++i) {
+            if (is_whitespace(code[i]) or code[i] == ')') {
+                break;
+            } else {
+                result = (result << 4) | hextable[(unsigned char)code[i]];
+            }
+        }
+    } else {
+        for (; i < len; ++i) {
+            if (is_whitespace(code[i]) or code[i] == ')') {
+                break;
+            } else {
+                result = result * 10 + (code[i] - '0');
+            }
         }
     }
 
@@ -811,6 +840,13 @@ u32 eval(const char* code)
 void dostring(const char* code, Value** result)
 {
     const auto script_len = str_len(code);
+
+    // if (paren_balance(code) not_eq 0) {
+    //     if (result) {
+    //         *result = lisp::make_error(Error::Code::mismatched_parentheses);
+    //     }
+    //     return;
+    // }
 
     // I designed the eval function to read a single expression. Find where each
     // expression begins and ends, and skip ahead to the next expression in the
@@ -1420,7 +1456,10 @@ void init(Platform& pfrm)
             }));
 
     set_var("eval", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
+        if (argc < 1) {
+            return lisp::make_error(lisp::Error::Code::invalid_argc);
+        }
+
         // FIXME... improve this code. Our parser operates on strings, rather
         // than lists, for memory reasons--we just don't have enough extra
         // memory lying around to justify converting all lisp code into data
@@ -1438,14 +1477,51 @@ void init(Platform& pfrm)
 
         EvalPrinter p(*buffer.obj_);
 
-        format(get_op(0), p);
+        format(get_op(argc - 1), p);
 
         Value* result = nullptr;
         dostring(buffer.obj_->c_str(), &result);
 
         return result;
     }));
+
+    set_var("mem-read", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(1, integer);
+        L_EXPECT_OP(0, integer);
+
+        u8* mem = (u8*)(size_t)get_op(1)->integer_.value_;
+
+        const int n_bytes = get_op(0)->integer_.value_;
+
+        auto lat = make_list(n_bytes);
+        push_op(lat);
+
+        for (int i = 0; i < n_bytes; ++i) {
+            set_list(lat, i, make_integer(mem[i]));
+        }
+
+        pop_op(); // lat
+
+        return lat;
+    }));
 }
+
+
+int paren_balance(const char* ptr)
+{
+    int balance = 0;
+    while (*ptr not_eq '\0') {
+        if (*ptr == '(') {
+            ++balance;
+        } else if (*ptr == ')') {
+            --balance;
+        }
+        ++ptr;
+    }
+    return balance;
+}
+
 
 
 } // namespace lisp

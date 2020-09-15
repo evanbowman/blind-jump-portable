@@ -119,6 +119,11 @@ public:
 
     const StringBuffer& operator=(StringBuffer&&) = delete;
 
+    char& operator[](int pos)
+    {
+        return mem_[pos];
+    }
+
     void push_back(char c)
     {
         if (not mem_.full()) {

@@ -91,6 +91,7 @@ struct Error {
         invalid_argument_type,
         out_of_memory,
         set_in_expression_context,
+        mismatched_parentheses,
     } code_;
 
     static const char* get_string(Code c)
@@ -110,6 +111,8 @@ struct Error {
             return "Out of memory";
         case Code::set_in_expression_context:
             return "\'set\' in expr context";
+        case Code::mismatched_parentheses:
+            return "mismatched parentheses";
         }
         return "Unknown error";
     }
@@ -255,6 +258,9 @@ u32 eval(const char* code);
 // Use this function for reading lisp code containing multiple
 // expressions. eval() should only be used for single expressions.
 void dostring(const char* code, Value** result = nullptr);
+
+
+int paren_balance(const char* ptr);
 
 
 const char* intern(const char* string);

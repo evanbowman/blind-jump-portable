@@ -135,16 +135,18 @@ int main(int argc, char** argv)
     std::string line;
     std::cout << ">> ";
     while (std::getline(std::cin, line)) {
-        lisp::eval(line.c_str());
+        lisp::Value* result = nullptr;
+        lisp::dostring(line.c_str(), &result);
         Printer p;
-        format(lisp::get_op(0), p);
-        lisp::pop_op();
+        if (result) {
+            format(result, p);
+        }
         // std::cout << "stack size: "
         //           << lisp::bound_context->operand_stack_.size()
         //           << ", object pool: "
         //           << lisp::bound_context->memory_.remaining()
         //           << ", intern mem: " << lisp::bound_context->string_intern_pos_
         //           << std::endl;
-        std::cout << '\n' << ">> ";
+        std::cout << std::endl << ">> ";
     }
 }

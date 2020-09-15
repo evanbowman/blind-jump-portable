@@ -46,6 +46,7 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
     case AnimState::init: {
         pfrm.speaker().stop_music();
 
+        pfrm.speaker().play_sound("explosion1", 3, boss_position_);
         big_explosion(pfrm, game, boss_position_);
 
         const auto off = 50.f;
@@ -61,6 +62,7 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case AnimState::explosion_wait1:
         if (counter_ > milliseconds(300)) {
+            pfrm.speaker().play_sound("explosion1", 3, boss_position_);
             big_explosion(pfrm, game, boss_position_);
             const auto off = -50.f;
 
@@ -76,9 +78,11 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
         break;
 
     case AnimState::explosion_wait2:
-        if (counter_ > milliseconds(100)) {
+        if (counter_ > milliseconds(120)) {
             counter_ = 0;
             anim_state_ = AnimState::fade;
+
+            pfrm.speaker().play_sound("explosion2", 4, boss_position_);
 
             for (int i = 0; i <
                             [&] {

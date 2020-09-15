@@ -10,8 +10,9 @@ static const char* keyboard[7][6] = {{"z", "y", "g", "f", "v", "q"},
                                      {"w", "a", "o", "e", "u", "k"},
                                      {"p", "h", "t", "n", "s", "r"},
                                      {"x", "c", "(", ")", "-", "*"},
-                                     {" ", "'", "0", "1", "2", "3"},
+                                     {" ", "#", "0", "1", "2", "3"},
                                      {"4", "5", "6", "7", "8", "9"}};
+
 
 
 void LispReplState::repaint_entry(Platform& pfrm)
@@ -40,7 +41,19 @@ void LispReplState::repaint_entry(Platform& pfrm)
     const int scroll =
         std::max(0, (int)command_.length() - (screen_tiles.x - 1));
 
-    entry_->append(command_.c_str() + scroll, colors);
+
+    const int balance = lisp::paren_balance(command_.c_str());
+    if (balance < 0 and command_.length() and command_[command_.length() - 1] == ')') {
+        // Give a hint to the user, that he/she entered too many closing parens.
+        command_.pop_back();
+        entry_->append(command_.c_str() + scroll, colors);
+        command_.push_back(')');
+
+        entry_->append(")", Text::OptColors{{ColorConstant::aerospace_orange,
+                                             ColorConstant::rich_black}});
+    } else {
+        entry_->append(command_.c_str() + scroll, colors);
+    }
 
     keyboard_.clear();
 

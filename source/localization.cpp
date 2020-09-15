@@ -176,6 +176,8 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
             return 103;
         case '>':
             return 104;
+        case '#':
+            return 105;
         default:
             if (cp == utf8::getc(u8"ñ")) {
                 return 73;

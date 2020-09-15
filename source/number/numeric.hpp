@@ -284,6 +284,3 @@ inline Float fast_atan2_approx(Float x, Float y)
     }
     return result;
 }
-
-
-long hex_to_int(unsigned const char* hex_str);
