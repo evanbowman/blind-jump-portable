@@ -2,7 +2,11 @@
 
 You should find this readme mosty up-to-date, but as the game is under active development, everything is subject to change, and sometimes edits to the readme lag significantly behind changes to the game itself.
 
-<img src="imgs_for_readme/header.gif"/>
+<details>
+  <summary>Game Preview GIF (warning: contains flashing lights and colors)</summary>
+  <img src="imgs_for_readme/header.gif"/>
+</details>
+
 
 ## Contents
 <!--ts-->
