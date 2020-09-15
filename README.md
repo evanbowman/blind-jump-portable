@@ -15,8 +15,8 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Gameplay](#gameplay)
       * [Controls](#controls)
       * [Multiplayer](#multiplayer)
-      * [Settings](#settings)
    * [Implementation](#implementation)
+      * [Scripting](#scripting)
    * [Building](#building)
 <!--te-->
 
@@ -62,23 +62,15 @@ To access all for your items, press select. Press start for more options.
 The game supports multiplayer over the gameboy advance's serial port. While certainly incomplete, you should find the multiplayer mode to be more-or-less playable.
 To enable, press the start button on both devices, and then select the "Connect Peer" option within twenty seconds. You need to be on the very first level to connect a peer, otherwise the option will be grayed-out. If running on an actual GAMBOY ADVANCE, you may need to select "Connect Peer" on the device plugged into the gray end of the link cable first, followed by the device connected to the smaller purple end of the link cable. This is a known issue, and I am still working on resolving this, at time of writing.
 
-### Settings
-
-<img src="imgs_for_readme/settings1.png"/><img src="imgs_for_readme/settings2.png"/>
-
-By opening the start menu, and selecting "Settings," you may configure a number of options while the game is running. The difficulty setting can only be changed when no enemies remain on the current level.
-
-When enabling "Show Stats," the game will print a number of metrics to the screen, such as framerate, link cable transmitted messages, link cable received messages, link transmit loss, and link receive loss.
-
-The contrast option allows you to increase/decrease the game's contrast. Early gameboy advance games, prior to frontlit/backlit screens, were especially high contrast (perhaps due to the poor quality of the screen), and if you are playing on a device without a backlight or a frontlight (such as the original AGB model), you may want to increase the contrast a bit. If you are running the game on an emulator, and your monitor has poor grayscale reproducution, and the game's colors display with excessive contrast, you may want to decrease the contrast. Or if your computer monitor is washed out, maybe you would bump up the contrast. Anyway, many days of work went into the design of the game's color palette, so if you can see the game fine, without distraction, with the default setting, you should just leave the contrast as-is.
-
-The settings screen also allows you to change the language, although the only language currently available is English. As the game is not yet complete, translations would be premature. But the game does support utf8 strings, so all you would need to do to add a new language, would be to define strings and a charset mapping in source/localization.cpp, and then add the character image file for your language. Most of the characters for Spanish and French should already be available in existing charset_en_spn_fr.png (note: if you are creating a charset, make sure that the first 8x8 tile includes one pixel in the top left corner, which matches the background color of the glyph image; this is how the game determines which color of the glyph is foreground, and which color is background).
-
 ## Implementation
 
 This repository contains a substantial re-write of the original BlindJump code. In the current iteration, the core parts of the code have no external dependencies, and target a [theoretically] platform-neutral hardware abstraction layer. The embedded version of BlindJump runs on Gameboy Advance, and has partial support for Desktop OSs via SFML. When porting the game to a new platform, one only needs to re-implement the Platform class in source/platform/.
 
-The game is written almost entirely in C++, with a small amount of C, as well as a teeny bit of ARM assembly.
+The game is written almost entirely in C++, along with a small amount of C, a custom dialect of LISP, as well as a teeny bit of ARM assembly.
+
+### Scripting
+
+BlindJump uses a custom LISP dialect for lightweight scripting. The init.lisp script offers some further usage tips, but generally, our LISP implementation supports functions as first class values, functional currying, most of the common builtins, like map, cons, list, etc., variadic functions, and many more features. Our interpreter does not support lambdas, although technically I think you could create your own lambdas via abuse of the builtin functional currying, and the eval keyword. But custom function definitions are not a goal of the script interface. BlindJump executes a number of scripts for various scenarios--you can think of the scripts as analogous to git hooks. In the settings menu, the game allows you to launch a repl while the game is running, to manipulate game state (for gameboy builds, the game will render an onscreen keyboard and console, for desktop builds, the game will pause, and read from the command line).
 
 ## Building
 
