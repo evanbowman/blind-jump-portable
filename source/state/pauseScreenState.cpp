@@ -199,7 +199,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 strs_.push_back(LocaleString::menu_resume);
                 strs_.push_back(LocaleString::menu_settings);
                 strs_.push_back(LocaleString::menu_connect_peer);
-                strs_.push_back(LocaleString::menu_console);
+                strs_.push_back(LocaleString::menu_console); // added
                 strs_.push_back(LocaleString::menu_save_and_quit);
 
                 repaint_text(pfrm, game);
