@@ -1484,27 +1484,6 @@ void init(Platform& pfrm)
 
         return result;
     }));
-
-    set_var("mem-read", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(1, integer);
-        L_EXPECT_OP(0, integer);
-
-        u8* mem = (u8*)(size_t)get_op(1)->integer_.value_;
-
-        const int n_bytes = get_op(0)->integer_.value_;
-
-        auto lat = make_list(n_bytes);
-        push_op(lat);
-
-        for (int i = 0; i < n_bytes; ++i) {
-            set_list(lat, i, make_integer(mem[i]));
-        }
-
-        pop_op(); // lat
-
-        return lat;
-    }));
 }
 
 
