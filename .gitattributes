@@ -1,3 +1,4 @@
 # prevent github from displaying the repository as ASM or HTML due to documentation and data files
 source/data/* linguist-vendored
 useful_documents/* linguist-documentation
+external/* linguist-vendored
