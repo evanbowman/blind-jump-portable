@@ -111,6 +111,12 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         position_ = position_ + Float(dt) * step_vector_;
         sprite_.set_position(position_);
         shadow_.set_position(position_);
+        if (timer_ > milliseconds(900)) {
+            step_vector_ =
+                interpolate(Vec2<Float>{0, 0},
+                            step_vector_,
+                            dt * 0.000008f);
+        }
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle2;
@@ -135,6 +141,12 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         position_ = position_ + Float(dt) * step_vector_;
         sprite_.set_position(position_);
         shadow_.set_position(position_);
+        if (timer_ > milliseconds(900)) {
+            step_vector_ =
+                interpolate(Vec2<Float>{0, 0},
+                            step_vector_,
+                            dt * 0.000008f);
+        }
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle3;
@@ -159,6 +171,12 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         position_ = position_ + Float(dt) * step_vector_;
         sprite_.set_position(position_);
         shadow_.set_position(position_);
+        if (timer_ > milliseconds(900)) {
+            step_vector_ =
+                interpolate(Vec2<Float>{0, 0},
+                            step_vector_,
+                            dt * 0.000008f);
+        }
         if (timer_ > seconds(1)) {
             timer_ = 0;
             state_ = State::idle4;
@@ -180,7 +198,13 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         position_ = position_ + Float(dt) * step_vector_;
         sprite_.set_position(position_);
         shadow_.set_position(position_);
-        if (timer_ > seconds(1)) {
+        if (timer_ > milliseconds(900)) {
+            step_vector_ =
+                interpolate(Vec2<Float>{0, 0},
+                            step_vector_,
+                            dt * 0.0000060f);
+        }
+        if (timer_ > seconds(1) + milliseconds(350)) {
             timer_ = 0;
             state_ = State::idle1;
 

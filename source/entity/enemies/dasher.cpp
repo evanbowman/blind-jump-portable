@@ -219,8 +219,16 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             state_ = State::dash_end;
             sprite_.set_texture_index(TextureMap::dasher_crouch);
         };
-        if (timer_ > milliseconds(200)) {
-            timer_ -= milliseconds(200);
+        if (timer_ > milliseconds(170)) {
+            speed_ =
+                interpolate(Vec2<Float>{0, 0},
+                            speed_,
+                            dt * 0.000016f);
+            // sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
+        }
+        if (timer_ > milliseconds(350)) {
+            // sprite_.set_mix({current_zone(game).energy_glow_color_, 0});
+            timer_ -= milliseconds(350);
             next_state();
         }
         const auto wc = check_wall_collisions(game.tiles(), *this);
@@ -248,8 +256,29 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     } break;
 
     case State::dash_end:
-        if (timer_ > milliseconds(150)) {
-            timer_ -= milliseconds(150);
+        speed_ =
+            interpolate(Vec2<Float>{0, 0},
+                        speed_,
+                        dt * 0.000016f);
+
+
+        {
+            const auto wc = check_wall_collisions(game.tiles(), *this);
+            if (wc.any()) {
+                if ((wc.left and speed_.x < 0.f) or (wc.right and speed_.x > 0.f)) {
+                    speed_.x = 0.f;
+                }
+                if ((wc.up and speed_.y < 0.f) or (wc.down and speed_.y > 0.f)) {
+                    speed_.y = 0.f;
+                }
+            }
+
+            static const float movement_rate = 0.00005f;
+            position_.x += speed_.x * dt * movement_rate;
+            position_.y += speed_.y * dt * movement_rate;
+        }
+        if (timer_ > milliseconds(130)) {
+            timer_ -= milliseconds(130);
             state_ = State::idle;
             sprite_.set_texture_index(TextureMap::dasher_idle);
 
