@@ -34,6 +34,7 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
 
             HANDLE_MESSAGE(EnemyStateSync)
             HANDLE_MESSAGE(PlayerEnteredGate)
+            HANDLE_MESSAGE(PlayerHealthChanged)
             HANDLE_MESSAGE(ItemTaken)
             HANDLE_MESSAGE(PlayerInfo)
             HANDLE_MESSAGE(EnemyHealthChanged)

@@ -403,6 +403,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::peer_connected: return "Peer connected!";
         case LocaleString::peer_connection_failed: return "Peer connection failed!";
         case LocaleString::peer_lost: return "Peer died!";
+        case LocaleString::peer_health_changed: return "Peer health changed to ";
         case LocaleString::level_transition_awaiting_peers: return "Waiting for Peers...";
         case LocaleString::level_transition_synchronizing: return "Synchronizing Games...";
         case LocaleString::fps_stats_suffix: return " fps";

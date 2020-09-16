@@ -72,7 +72,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
     const auto skip = pfrm.keyboard().down_transition(game.action2_key());
 
     if (text_) {
-        if (timer_ > seconds(2) + milliseconds(500) or skip) {
+        if (timer_ > seconds(2) + milliseconds(900) or skip) {
             text_.reset();
             timer_ = 0;
 
@@ -82,7 +82,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
 
     } else {
-        if (timer_ > milliseconds(167) + seconds(1)) {
+        if (timer_ > milliseconds(167) + seconds(2)) {
             return next_state(pfrm, game);
         }
     }

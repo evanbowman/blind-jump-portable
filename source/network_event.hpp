@@ -20,6 +20,7 @@ struct Header {
         player_info,
         player_spawn_laser,
         player_entered_gate,
+        player_health_changed,
         player_died,
         enemy_health_changed,
         enemy_state_sync,
@@ -150,6 +151,16 @@ struct PlayerInfo {
     host_s16 y_;
 
     static const auto mt = Header::MessageType::player_info;
+};
+
+
+struct PlayerHealthChanged {
+    Header header_;
+    HostInteger<Entity::Health> new_health_;
+
+    u8 unused_[7];
+
+    static const auto mt = Header::MessageType::player_health_changed;
 };
 
 
@@ -373,6 +384,9 @@ public:
     {
     }
     virtual void receive(const PlayerDied&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const PlayerHealthChanged&, Platform&, Game&)
     {
     }
     virtual void receive(const SyncSeed&, Platform&, Game&)

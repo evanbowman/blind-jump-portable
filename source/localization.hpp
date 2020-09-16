@@ -86,6 +86,7 @@ enum class LocaleString {
     peer_connected,
     peer_connection_failed,
     peer_lost,
+    peer_health_changed,
     level_transition_awaiting_peers,
     level_transition_synchronizing,
     fps_stats_suffix,

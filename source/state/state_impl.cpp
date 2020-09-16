@@ -181,6 +181,11 @@ void update_ui_metrics(Platform& pfrm,
     update_powerups(pfrm, game, health, score, powerups, align);
 
     if (last_health not_eq game.player().get_health()) {
+        net_event::PlayerHealthChanged hc;
+        hc.new_health_.set(game.player().get_health());
+
+        net_event::transmit(pfrm, hc);
+
         (*health)->set_value(game.player().get_health());
     }
 
@@ -471,7 +476,8 @@ bool draw_minimap(Platform& pfrm,
 
 StatePtr State::initial()
 {
-    return state_pool().create<IntroLegalMessage>();
+    return state_pool().create<IntroCreditsState>(
+        locale_string(LocaleString::intro_text_2));
 }
 
 

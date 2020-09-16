@@ -77,6 +77,8 @@ public:
     void receive(const net_event::PlayerInfo&, Platform&, Game&) override;
     void
     receive(const net_event::EnemyHealthChanged&, Platform&, Game&) override;
+    void
+    receive(const net_event::PlayerHealthChanged&, Platform&, Game&) override;
 
 protected:
     void hide_notifications(Platform& pfrm)

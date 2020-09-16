@@ -25,6 +25,12 @@ void NetworkConnectWaitState::exit(Platform& pfrm,
             if (pfrm.network_peer().is_connected()) {
                 push_notification(
                     pfrm, os, locale_string(LocaleString::peer_connected));
+
+                // Not really necessary. But because the gameboy advance
+                // handhelds will be in close proximity, nicer to have the music
+                // aligned.
+                auto& zone = zone_info(game.level());
+                pfrm.speaker().play_music(zone.music_name_, 0);
             } else {
                 push_notification(
                     pfrm,

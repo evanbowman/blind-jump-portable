@@ -22,6 +22,22 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
 }
 
 
+void OverworldState::receive(const net_event::PlayerHealthChanged& event,
+                             Platform& pfrm,
+                             Game& game)
+{
+    NotificationStr str;
+    str += locale_string(LocaleString::peer_health_changed);
+
+    char buffer[20];
+    locale_num2str(event.new_health_.get(), buffer, 10);
+
+    str += buffer;
+
+    push_notification(pfrm, game.state(), str);
+}
+
+
 void OverworldState::receive(const net_event::NewLevelIdle& n,
                              Platform& pfrm,
                              Game& game)
