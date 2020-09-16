@@ -639,18 +639,22 @@ public:
 private:
     void draw_cursor(Platform& pfrm);
 
+    void erase_cursor(Platform& pfrm);
+    void draw_cursor_image(Platform& pfrm, Text* target, int tile1, int tile2);
+
     bool connect_peer_option_available(Game& game) const;
+
+    void repaint_text(Platform&, Game&);
 
     Microseconds fade_timer_ = 0;
     Microseconds log_timer_ = 0;
     static int cursor_loc_;
     int anim_index_ = 0;
+    int developer_mode_activation_counter_ = 0;
     Microseconds anim_timer_ = 0;
-    std::optional<Text> resume_text_;
-    std::optional<Text> connect_peer_text_;
-    std::optional<Text> settings_text_;
-    std::optional<Text> save_and_quit_text_;
-    std::optional<Text> console_text_;
+
+    Buffer<LocaleString , 5> strs_;
+    Buffer<Text, 5> texts_;
     Float y_offset_ = 0;
 };
 

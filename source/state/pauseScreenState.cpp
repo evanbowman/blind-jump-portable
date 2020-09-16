@@ -1,20 +1,30 @@
 #include "state_impl.hpp"
 
 
+void PauseScreenState::draw_cursor_image(Platform& pfrm,
+                                         Text* target,
+                                         int tile1,
+                                         int tile2)
+{
+    const auto pos = target->coord();
+    pfrm.set_tile(Layer::overlay, pos.x - 2, pos.y, tile1);
+    pfrm.set_tile(Layer::overlay, pos.x + target->len() + 1, pos.y, tile2);
+}
+
+
+void PauseScreenState::erase_cursor(Platform& pfrm)
+{
+    for (auto& text : texts_) {
+        draw_cursor_image(pfrm, &text, 0, 0);
+    }
+}
+
+
 void PauseScreenState::draw_cursor(Platform& pfrm)
 {
-    // draw_dot_grid(pfrm);
-
-    if (not resume_text_ or not save_and_quit_text_ or not settings_text_ or
-        not connect_peer_text_) {
+    if (texts_.empty()) {
         return;
     }
-
-    auto draw_cursor = [&pfrm](Text* target, int tile1, int tile2) {
-        const auto pos = target->coord();
-        pfrm.set_tile(Layer::overlay, pos.x - 2, pos.y, tile1);
-        pfrm.set_tile(Layer::overlay, pos.x + target->len() + 1, pos.y, tile2);
-    };
 
     auto [left, right] = [&]() -> Vec2<int> {
         switch (anim_index_) {
@@ -26,47 +36,12 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
         }
     }();
 
-    switch (cursor_loc_) {
-    default:
-    case 0:
-        draw_cursor(&(*resume_text_), left, right);
-        draw_cursor(&(*connect_peer_text_), 0, 0);
-        draw_cursor(&(*settings_text_), 0, 0);
-        draw_cursor(&(*save_and_quit_text_), 0, 0);
-        draw_cursor(&(*console_text_), 0, 0);
-        break;
+    erase_cursor(pfrm);
 
-    case 1:
-        draw_cursor(&(*resume_text_), 0, 0);
-        draw_cursor(&(*connect_peer_text_), 0, 0);
-        draw_cursor(&(*settings_text_), left, right);
-        draw_cursor(&(*save_and_quit_text_), 0, 0);
-        draw_cursor(&(*console_text_), 0, 0);
-        break;
-
-    case 3:
-        draw_cursor(&(*resume_text_), 0, 0);
-        draw_cursor(&(*connect_peer_text_), 0, 0);
-        draw_cursor(&(*settings_text_), 0, 0);
-        draw_cursor(&(*save_and_quit_text_), 0, 0);
-        draw_cursor(&(*console_text_), left, right);
-        break;
-
-    case 2:
-        draw_cursor(&(*resume_text_), 0, 0);
-        draw_cursor(&(*connect_peer_text_), left, right);
-        draw_cursor(&(*settings_text_), 0, 0);
-        draw_cursor(&(*save_and_quit_text_), 0, 0);
-        draw_cursor(&(*console_text_), 0, 0);
-        break;
-
-    case 4:
-        draw_cursor(&(*resume_text_), 0, 0);
-        draw_cursor(&(*connect_peer_text_), 0, 0);
-        draw_cursor(&(*settings_text_), 0, 0);
-        draw_cursor(&(*save_and_quit_text_), left, right);
-        draw_cursor(&(*console_text_), 0, 0);
-        break;
+    if (cursor_loc_ < (int)texts_.size()) {
+        draw_cursor_image(pfrm, &texts_[cursor_loc_], left, right);
+    } else {
+        // error!
     }
 }
 
@@ -76,6 +51,11 @@ void PauseScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
     if (dynamic_cast<ActiveState*>(&prev_state)) {
         cursor_loc_ = 0;
     }
+
+    strs_.push_back(LocaleString::menu_resume);
+    strs_.push_back(LocaleString::menu_settings);
+    strs_.push_back(LocaleString::menu_connect_peer);
+    strs_.push_back(LocaleString::menu_save_and_quit);
 }
 
 
@@ -85,6 +65,36 @@ bool PauseScreenState::connect_peer_option_available(Game& game) const
     // levels.
     return game.level() == Level{0} and
            Platform::NetworkPeer::supported_by_device();
+}
+
+
+void PauseScreenState::repaint_text(Platform& pfrm, Game& game)
+{
+    const auto screen_tiles = calc_screen_tiles(pfrm);
+
+    const u8 y = screen_tiles.y / 2;
+
+    for (int i = 0; i < (int)strs_.size(); ++i) {
+        const auto len = utf8::len(locale_string(strs_[i]));
+
+        const u8 text_x_loc = (screen_tiles.x - len) / 2;
+
+        texts_.emplace_back(pfrm, OverlayCoord{text_x_loc, u8(y - strs_.size() + i * 2)});
+
+        if (strs_[i] == LocaleString::menu_connect_peer) {
+            texts_.back().assign(locale_string(strs_[i]),
+                [&]() -> Text::OptColors {
+                    if (connect_peer_option_available(game)) {
+                        return std::nullopt;
+                    } else {
+                        return FontColors{ColorConstant::med_blue_gray,
+                                          ColorConstant::rich_black};
+                    }
+                }());
+        } else {
+            texts_.back().assign(locale_string(strs_[i]));
+        }
+    }
 }
 
 
@@ -108,56 +118,8 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
         fade_timer_ += delta;
 
         if (fade_timer_ >= fade_duration) {
-            const auto screen_tiles = calc_screen_tiles(pfrm);
 
-            const auto resume_text_len =
-                utf8::len(locale_string(LocaleString::menu_resume));
-
-            const auto connect_peer_text_len =
-                utf8::len(locale_string(LocaleString::menu_connect_peer));
-
-            const auto settings_text_len =
-                utf8::len(locale_string(LocaleString::menu_settings));
-
-            const auto snq_text_len =
-                utf8::len(locale_string(LocaleString::menu_save_and_quit));
-
-            const auto console_text_len =
-                utf8::len(locale_string(LocaleString::menu_console));
-
-            const u8 resume_x_loc = (screen_tiles.x - resume_text_len) / 2;
-            const u8 cp_x_loc = (screen_tiles.x - connect_peer_text_len) / 2;
-            const u8 settings_x_loc = (screen_tiles.x - settings_text_len) / 2;
-            const u8 snq_x_loc = (screen_tiles.x - snq_text_len) / 2;
-            const u8 console_x_loc = (screen_tiles.x - console_text_len) / 2;
-
-            const u8 y = screen_tiles.y / 2;
-
-            resume_text_.emplace(pfrm, OverlayCoord{resume_x_loc, u8(y - 5)});
-            settings_text_.emplace(pfrm,
-                                   OverlayCoord{settings_x_loc, u8(y - 3)});
-            connect_peer_text_.emplace(pfrm, OverlayCoord{cp_x_loc, u8(y - 1)});
-            console_text_.emplace(pfrm, OverlayCoord{console_x_loc, u8(y + 1)});
-            save_and_quit_text_.emplace(pfrm,
-                                        OverlayCoord{snq_x_loc, u8(y + 3)});
-
-            resume_text_->assign(locale_string(LocaleString::menu_resume));
-
-            connect_peer_text_->assign(
-                locale_string(LocaleString::menu_connect_peer),
-                [&]() -> Text::OptColors {
-                    if (connect_peer_option_available(game)) {
-                        return std::nullopt;
-                    } else {
-                        return FontColors{ColorConstant::med_blue_gray,
-                                          ColorConstant::rich_black};
-                    }
-                }());
-
-            console_text_->assign(locale_string(LocaleString::menu_console));
-            settings_text_->assign(locale_string(LocaleString::menu_settings));
-            save_and_quit_text_->assign(
-                locale_string(LocaleString::menu_save_and_quit));
+            repaint_text(pfrm, game);
 
             draw_cursor(pfrm);
         }
@@ -165,21 +127,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.screen().fade(smoothstep(0.f, fade_duration, fade_timer_));
     } else {
 
-        const auto& line = [&]() -> Text& {
-            switch (cursor_loc_) {
-            default:
-            case 0:
-                return *resume_text_;
-            case 1:
-                return *settings_text_;
-            case 3:
-                return *console_text_;
-            case 2:
-                return *connect_peer_text_;
-            case 4:
-                return *save_and_quit_text_;
-            }
-        }();
+        const auto& line = texts_[cursor_loc_];
         const Float y_center = pfrm.screen().size().y / 2;
         const Float y_line = line.coord().y * 8;
         const auto y_diff = (y_line - y_center) * 0.4f;
@@ -198,10 +146,13 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             draw_cursor(pfrm);
         }
 
-        if (pfrm.keyboard().down_transition<Key::down>() and cursor_loc_ < 4) {
+        if (pfrm.keyboard().down_transition<Key::down>() and
+            cursor_loc_ < int(texts_.size() - 1)) {
+
             cursor_loc_ += 1;
             pfrm.speaker().play_sound("scroll", 1);
             draw_cursor(pfrm);
+
         } else if (pfrm.keyboard().down_transition<Key::up>() and
                    cursor_loc_ > 0) {
             cursor_loc_ -= 1;
@@ -209,29 +160,50 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             draw_cursor(pfrm);
         } else if (pfrm.keyboard().down_transition(game.action2_key())) {
             pfrm.speaker().play_sound("select", 1);
-            switch (cursor_loc_) {
-            case 0:
+            switch (strs_[cursor_loc_]) {
+            case LocaleString::menu_resume:
                 return state_pool().create<ActiveState>(game);
-            case 1:
+
+            case LocaleString::menu_settings:
                 return state_pool().create<EditSettingsState>(
                     make_deferred_state<PauseScreenState>(false));
-            case 3:
+
+            case LocaleString::menu_console:
                 if (pfrm.remote_console().supported_by_device()) {
                     return state_pool().create<RemoteReplState>();
                 } else {
                     return state_pool().create<LispReplState>();
                 }
-            case 2:
+
+            case LocaleString::menu_connect_peer:
                 if (connect_peer_option_available(game)) {
                     return state_pool().create<NetworkConnectSetupState>();
                 }
                 break;
-            case 4:
+
+            case LocaleString::menu_save_and_quit:
                 return state_pool().create<GoodbyeState>();
+
+            default:
+                // FIXME: how'd we receive an unexpected string here?
+                break;
             }
         } else if (pfrm.keyboard().down_transition<Key::start>()) {
             cursor_loc_ = 0;
             return state_pool().create<ActiveState>(game);
+        } else if (pfrm.keyboard().down_transition<Key::alt_1>()) {
+            if (++developer_mode_activation_counter_ == 15) {
+                erase_cursor(pfrm);
+                texts_.clear();
+                strs_.clear();
+                strs_.push_back(LocaleString::menu_resume);
+                strs_.push_back(LocaleString::menu_settings);
+                strs_.push_back(LocaleString::menu_connect_peer);
+                strs_.push_back(LocaleString::menu_console);
+                strs_.push_back(LocaleString::menu_save_and_quit);
+
+                repaint_text(pfrm, game);
+            }
         }
     }
 
@@ -251,12 +223,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 void PauseScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 {
     pfrm.set_overlay_origin(0, 0);
-
-    resume_text_.reset();
-    connect_peer_text_.reset();
-    settings_text_.reset();
-    save_and_quit_text_.reset();
-    console_text_.reset();
+    texts_.clear();
 
     pfrm.fill_overlay(0);
 }
