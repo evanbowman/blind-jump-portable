@@ -749,7 +749,7 @@ static constexpr const ZoneInfo zone_4{
     Microseconds{0},
     ColorConstant::turquoise_blue,
     ColorConstant::maya_blue,
-    ColorConstant::aerospace_orange,
+    ColorConstant::safety_orange,
     [](Platform& pfrm, Game&) {
         draw_starfield(pfrm);
 

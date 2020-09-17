@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	tilesheet2_top, 1184x24@4,
+@	tilesheet2_top, 1184x24@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 444 tiles Metatiled by 4x3 not compressed
 @	Total size: 512 + 14208 = 14720
 @
-@	Time-stamp: 2020-08-08, 09:49:50
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-09-16, 21:39:23
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.15
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global tilesheet2_topTiles		@ 14208 bytes
+	.align	2
+	.global tilesheet2_topTiles		@ 14208 unsigned chars
+	.hidden tilesheet2_topTiles
 tilesheet2_topTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -518,11 +519,11 @@ tilesheet2_topTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
-	.size	tilesheet2_topTiles, .-tilesheet2_topTiles
 
 	.section .rodata
-	.align	4
-	.global tilesheet2_topPal		@ 512 bytes
+	.align	2
+	.global tilesheet2_topPal		@ 512 unsigned chars
+	.hidden tilesheet2_topPal
 tilesheet2_topPal:
 	.hword 0x7C1F,0x4E24,0x5E35,0x7FFF,0x5EC7,0x3B37,0x50C7,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -559,6 +560,5 @@ tilesheet2_topPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	tilesheet2_topPal, .-tilesheet2_topPal
 
 @}}BLOCK(tilesheet2_top)
