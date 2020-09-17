@@ -159,7 +159,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             game.player().move(t_pos);
             pfrm.speaker().play_sound("bell", 5);
-            return state_pool().create<PreFadePauseState>(game);
+            const auto c = current_zone(game).energy_glow_color_;
+            return state_pool().create<PreFadePauseState>(game, c);
         }
     }
 

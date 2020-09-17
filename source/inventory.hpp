@@ -56,7 +56,15 @@ public:
         ItemInfo* item = std::begin(data_);
         for (; item not_eq std::end(data_);) {
             if (not item_is_persistent(item->type_) and
-                item->type_ not_eq Item::Type::null) {
+                item->type_ not_eq Item::Type::null and
+                // NOTE: while the long_jump items are not persistent (story)
+                // items, the whole point of the long jump items, is that you
+                // can resume at a certain point after dying, so removing the
+                // items from the inventory would defeat the purpose in this
+                // case.
+                item->type_ not_eq Item::Type::long_jump_z2 and
+                item->type_ not_eq Item::Type::long_jump_z3 and
+                item->type_ not_eq Item::Type::long_jump_z4) {
                 remove_item(item);
             } else {
                 ++item;

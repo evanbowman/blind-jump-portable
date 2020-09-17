@@ -254,10 +254,15 @@ private:
 
 class PreFadePauseState : public OverworldState {
 public:
-    PreFadePauseState(Game& game) : OverworldState(game, false)
+    PreFadePauseState(Game& game,
+                      ColorConstant fade_color) : OverworldState(game, false),
+                                                  fade_color_(fade_color)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    ColorConstant fade_color_;
 };
 
 

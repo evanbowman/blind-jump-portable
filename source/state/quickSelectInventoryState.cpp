@@ -39,7 +39,11 @@ void QuickSelectInventoryState::exit(Platform& pfrm,
 static bool item_is_quickselect(Item::Type item)
 {
     if (auto handler = inventory_item_handler(item)) {
-        return handler->single_use_ and item not_eq Item::Type::signal_jammer;
+        return handler->single_use_
+            and item not_eq Item::Type::signal_jammer
+            and item not_eq Item::Type::long_jump_z2
+            and item not_eq Item::Type::long_jump_z3
+            and item not_eq Item::Type::long_jump_z4;
     } else {
         return false;
     }

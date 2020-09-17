@@ -14,8 +14,7 @@ PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
                              pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {
         game.camera().set_speed(1.f);
-        return state_pool().create<GlowFadeState>(
-            game, current_zone(game).energy_glow_color_);
+        return state_pool().create<GlowFadeState>(game, fade_color_);
     } else {
         return null_state();
     }

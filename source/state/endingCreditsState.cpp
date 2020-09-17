@@ -5,6 +5,12 @@ void EndingCreditsState::enter(Platform& pfrm, Game& game, State&)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
+    pfrm.load_tile0_texture("tilesheet3");
+    game.transporter().set_position({10000, 10000});
+    game.enemies().clear();
+    game.details().clear();
+    game.effects().clear();
+
     next_y_ = screen_tiles.y + 2;
 
     game.on_timeout(pfrm, milliseconds(500), [](Platform& pfrm, Game&) {

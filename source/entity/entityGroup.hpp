@@ -52,6 +52,11 @@ public:
             EntityBuffer<T, Capacity>>();
     }
 
+    void clear()
+    {
+        this->template transform([](auto& buf) { buf.clear(); });
+    }
+
 private:
     using Pool_ = Pool<std::max({sizeof(Members)...}),
                        Capacity,

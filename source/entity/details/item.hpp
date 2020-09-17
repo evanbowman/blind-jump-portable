@@ -26,7 +26,14 @@ public:
         navigation_pamphlet = 13,
         orange = 14,
         orange_seeds = 15,
-        postal_advert = 16,
+        long_jump_z2 = 16,
+
+        // Items which repurpose existing item icons should be placed below this
+        // line. Other items, with original icons, should be placed above this
+        // line.
+        long_jump_z3 = 17,
+        long_jump_z4 = 18,
+        postal_advert = 19,
         count
     };
 

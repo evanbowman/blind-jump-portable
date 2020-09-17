@@ -1843,6 +1843,9 @@ ItemRarity rarity(Item::Type item)
     case Item::Type::blaster:
     case Item::Type::count:
     case Item::Type::orange_seeds:
+    case Item::Type::long_jump_z2:
+    case Item::Type::long_jump_z3:
+    case Item::Type::long_jump_z4:
         return 0;
 
     case Item::Type::null:

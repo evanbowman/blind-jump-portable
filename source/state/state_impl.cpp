@@ -270,6 +270,41 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
                                                     ColorConstant::steel_blue);
      },
      LocaleString::postal_advert_title},
+    {Item::Type::long_jump_z2,
+     item_icon(Item::Type::long_jump_z2),
+     [](Platform& pfrm, Game& game) {
+         const auto c = current_zone(game).energy_glow_color_;
+         pfrm.speaker().play_sound("bell", 5);
+         game.persistent_data().level_ = boss_0_level;
+         game.score() = 0; // Otherwise, people could exploit the jump packs to
+                           // keep replaying a zone, in order to get a really
+                           // high score.
+         return state_pool().create<PreFadePauseState>(game, c);
+     },
+     LocaleString::long_jump_z2_title,
+     InventoryItemHandler::yes},
+    {Item::Type::long_jump_z3,
+     item_icon(Item::Type::long_jump_z2),
+     [](Platform& pfrm, Game& game) {
+         const auto c = current_zone(game).energy_glow_color_;
+         pfrm.speaker().play_sound("bell", 5);
+         game.persistent_data().level_ = boss_1_level;
+         game.score() = 0;
+         return state_pool().create<PreFadePauseState>(game, c);
+     },
+     LocaleString::long_jump_z3_title,
+     InventoryItemHandler::yes},
+    {Item::Type::long_jump_z4,
+     item_icon(Item::Type::long_jump_z2),
+     [](Platform& pfrm, Game& game) {
+         const auto c = current_zone(game).energy_glow_color_;
+         pfrm.speaker().play_sound("bell", 5);
+         game.persistent_data().level_ = boss_2_level;
+         game.score() = 0;
+         return state_pool().create<PreFadePauseState>(game, c);
+     },
+     LocaleString::long_jump_z4_title,
+     InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(surveyor_logbook),
      [](Platform&, Game&) {
          return state_pool().create<NotebookState>(
