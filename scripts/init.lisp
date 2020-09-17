@@ -103,7 +103,8 @@
     ;; 3: debug zone 2
     ;; 4: debug zone 3
     ;; 5: debug boss 2
-    ;; 6: debug zon3 4
+    ;; 6: debug zone 4  NOTE: zone 4 only enabled in debug mode, see
+    ;;                        newLevelIdleState.cpp
     (set #debug-mode 0))
 
 
