@@ -23,6 +23,8 @@ enum class LocaleString {
     part_2_title,
     part_3_text,
     part_3_title,
+    part_4_text,
+    part_4_title,
     logbook_str_1,
     engineer_notebook_str,
     empty_inventory_str,

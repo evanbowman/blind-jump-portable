@@ -1729,10 +1729,10 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 
 
 #include "data/clair_de_lune.hpp"
+#include "data/music_murmuration.hpp"
 #include "data/scottbuckley_computations.hpp"
 #include "data/scottbuckley_hiraeth.hpp"
 #include "data/scottbuckley_omega.hpp"
-#include "data/music_murmuration.hpp"
 
 
 static const int null_music_len = 8;

@@ -113,9 +113,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         shadow_.set_position(position_);
         if (timer_ > milliseconds(900)) {
             step_vector_ =
-                interpolate(Vec2<Float>{0, 0},
-                            step_vector_,
-                            dt * 0.000008f);
+                interpolate(Vec2<Float>{0, 0}, step_vector_, dt * 0.000008f);
         }
         if (timer_ > seconds(1)) {
             timer_ = 0;
@@ -143,9 +141,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         shadow_.set_position(position_);
         if (timer_ > milliseconds(900)) {
             step_vector_ =
-                interpolate(Vec2<Float>{0, 0},
-                            step_vector_,
-                            dt * 0.000008f);
+                interpolate(Vec2<Float>{0, 0}, step_vector_, dt * 0.000008f);
         }
         if (timer_ > seconds(1)) {
             timer_ = 0;
@@ -173,9 +169,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         shadow_.set_position(position_);
         if (timer_ > milliseconds(900)) {
             step_vector_ =
-                interpolate(Vec2<Float>{0, 0},
-                            step_vector_,
-                            dt * 0.000008f);
+                interpolate(Vec2<Float>{0, 0}, step_vector_, dt * 0.000008f);
         }
         if (timer_ > seconds(1)) {
             timer_ = 0;
@@ -200,9 +194,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
         shadow_.set_position(position_);
         if (timer_ > milliseconds(900)) {
             step_vector_ =
-                interpolate(Vec2<Float>{0, 0},
-                            step_vector_,
-                            dt * 0.0000060f);
+                interpolate(Vec2<Float>{0, 0}, step_vector_, dt * 0.0000060f);
         }
         if (timer_ > seconds(1) + milliseconds(350)) {
             timer_ = 0;

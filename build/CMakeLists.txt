@@ -196,14 +196,17 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/tilesheet.s
     ${DATA_DIR}/tilesheet2.s
     ${DATA_DIR}/tilesheet3.s
+    ${DATA_DIR}/tilesheet4.s
     ${DATA_DIR}/tilesheet_top.s
     ${DATA_DIR}/tilesheet2_top.s
     ${DATA_DIR}/tilesheet3_top.s
+    ${DATA_DIR}/tilesheet4_top.s
     ${DATA_DIR}/spritesheet_intro_cutscene.s
     ${DATA_DIR}/spritesheet_intro_clouds.s
     ${DATA_DIR}/spritesheet.s
     ${DATA_DIR}/spritesheet2.s
     ${DATA_DIR}/spritesheet3.s
+    ${DATA_DIR}/spritesheet4.s
     ${DATA_DIR}/spritesheet_launch_anim.s
     ${DATA_DIR}/launch_flattened.s
     ${DATA_DIR}/sound_pop.s
@@ -447,6 +450,7 @@ if(GAMEBOY_ADVANCE)
     add_spritesheet(spritesheet 2 4 NO)
     add_spritesheet(spritesheet2 2 4 NO)
     add_spritesheet(spritesheet3 2 4 NO)
+    add_spritesheet(spritesheet4 2 4 NO)
     add_spritesheet(spritesheet_boss0 2 4 NO)
     add_spritesheet(spritesheet_boss1 2 4 NO)
     add_spritesheet(spritesheet_boss2 2 4 NO)
@@ -459,9 +463,11 @@ if(GAMEBOY_ADVANCE)
     add_tilesheet(tilesheet 4 3 NO)
     add_tilesheet(tilesheet2 4 3 NO)
     add_tilesheet(tilesheet3 4 3 NO)
+    add_tilesheet(tilesheet4 4 3 NO)
     add_tilesheet(tilesheet_top 4 3 NO)
     add_tilesheet(tilesheet2_top 4 3 NO)
     add_tilesheet(tilesheet3_top 4 3 NO)
+    add_tilesheet(tilesheet4_top 4 3 NO)
     add_overlay(overlay 0 0 NO)
     add_overlay(repl 0 0 NO)
     add_overlay(overlay_cutscene 0 0 NO)

@@ -284,7 +284,9 @@ const char* intern(const char* string);
 class Printer {
 public:
     virtual void put_str(const char* c) = 0;
-    virtual ~Printer() {}
+    virtual ~Printer()
+    {
+    }
 };
 
 

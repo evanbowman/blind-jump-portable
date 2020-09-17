@@ -24,7 +24,7 @@ public:
 
     Platform& pfrm_;
 };
-}
+} // namespace
 
 
 StatePtr RemoteReplState::update(Platform& pfrm, Game& game, Microseconds delta)

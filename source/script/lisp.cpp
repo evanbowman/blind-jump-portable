@@ -1026,21 +1026,21 @@ using EvalBuffer = StringBuffer<900>;
 
 
 namespace {
-    class EvalPrinter : public Printer {
-    public:
-        EvalPrinter(EvalBuffer& buffer) : buffer_(buffer)
-        {
-        }
+class EvalPrinter : public Printer {
+public:
+    EvalPrinter(EvalBuffer& buffer) : buffer_(buffer)
+    {
+    }
 
-        void put_str(const char* str) override
-        {
-            buffer_ += str;
-        }
+    void put_str(const char* str) override
+    {
+        buffer_ += str;
+    }
 
-    private:
-        EvalBuffer& buffer_;
-    };
-}
+private:
+    EvalBuffer& buffer_;
+};
+} // namespace
 
 
 void init(Platform& pfrm)
@@ -1368,7 +1368,8 @@ void init(Platform& pfrm)
             }
             if (lisp::get_op(argc - 1)->type_ not_eq Value::Type::function and
                 lisp::get_op(argc - 1)->type_ not_eq Value::Type::cons) {
-                return lisp::make_error(lisp::Error::Code::invalid_argument_type);
+                return lisp::make_error(
+                    lisp::Error::Code::invalid_argument_type);
             }
 
             // I've never seen map used with so many input lists, but who knows,
@@ -1455,35 +1456,36 @@ void init(Platform& pfrm)
                 return get_nil();
             }));
 
-    set_var("eval", make_function([](int argc) {
-        if (argc < 1) {
-            return lisp::make_error(lisp::Error::Code::invalid_argc);
-        }
+    set_var(
+        "eval", make_function([](int argc) {
+            if (argc < 1) {
+                return lisp::make_error(lisp::Error::Code::invalid_argc);
+            }
 
-        // FIXME... improve this code. Our parser operates on strings, rather
-        // than lists, for memory reasons--we just don't have enough extra
-        // memory lying around to justify converting all lisp code into data
-        // before interpreting. So our eval implementation needs to print our
-        // data to an intermediary buffer, and execute the buffer's string
-        // contents as code.
+            // FIXME... improve this code. Our parser operates on strings, rather
+            // than lists, for memory reasons--we just don't have enough extra
+            // memory lying around to justify converting all lisp code into data
+            // before interpreting. So our eval implementation needs to print our
+            // data to an intermediary buffer, and execute the buffer's string
+            // contents as code.
 
-        auto pfrm = lisp::get_var("*pfrm*");
-        if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
-            return get_nil();
-        }
+            auto pfrm = lisp::get_var("*pfrm*");
+            if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+                return get_nil();
+            }
 
-        auto buffer =
-            allocate_dynamic<EvalBuffer>(*(Platform*)pfrm->user_data_.obj_);
+            auto buffer =
+                allocate_dynamic<EvalBuffer>(*(Platform*)pfrm->user_data_.obj_);
 
-        EvalPrinter p(*buffer.obj_);
+            EvalPrinter p(*buffer.obj_);
 
-        format(get_op(argc - 1), p);
+            format(get_op(argc - 1), p);
 
-        Value* result = nullptr;
-        dostring(buffer.obj_->c_str(), &result);
+            Value* result = nullptr;
+            dostring(buffer.obj_->c_str(), &result);
 
-        return result;
-    }));
+            return result;
+        }));
 }
 
 
@@ -1500,7 +1502,6 @@ int paren_balance(const char* ptr)
     }
     return balance;
 }
-
 
 
 } // namespace lisp
