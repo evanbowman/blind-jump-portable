@@ -1822,6 +1822,9 @@ static LevelRange level_range(Item::Type item)
     case Item::Type::engineer_notebook:
         return {boss_0_level, max};
 
+    case Item::Type::seed_packet:
+        return {0, boss_2_level};
+
     default:
         return {min, max};
     }
