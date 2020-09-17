@@ -164,6 +164,14 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
         }
 
+        // FIXME: Zone 4 isn't done yet, remove me later...
+        if (next_level > boss_2_level and
+            game.persistent_data().settings_.log_severity_ not_eq
+                Severity::debug) {
+
+            bosses_remaining = false;
+        }
+
         auto zone = zone_info(next_level);
         auto last_zone = zone_info(game.level());
 

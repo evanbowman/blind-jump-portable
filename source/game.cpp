@@ -498,22 +498,54 @@ static constexpr const BossLevelMap boss_level_2({{
 
 READ_ONLY_DATA
 static constexpr const BossLevelMap boss_level_2_gr({{
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-    {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, },
-    {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, },
-    {0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-    {0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, },
-    {0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, },
-    {0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, },
-    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, },
-    {0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, },
-    {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, },
-    {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+    {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    },
+    {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    },
+    {
+        0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+    },
+    {
+        0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0,
+    },
+    {
+        0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    },
+    {
+        0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
+    },
+    {
+        0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+    },
+    {
+        0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    },
+    {
+        0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    },
+    {
+        0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+    },
+    {
+        0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+    },
+    {
+        0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+    },
+    {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0,
+    },
+    {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0,
+    },
+    {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    },
+    {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    },
 }});
 
 
@@ -540,10 +572,8 @@ static const BossLevel* get_boss_level(Level current_level)
     }
 
     case boss_2_level: {
-        static constexpr const BossLevel ret{&boss_level_2,
-            "spritesheet_boss2",
-            &boss_level_2_gr
-        };
+        static constexpr const BossLevel ret{
+            &boss_level_2, "spritesheet_boss2", &boss_level_2_gr};
         return &ret;
     }
 
@@ -709,9 +739,31 @@ static constexpr const ZoneInfo zone_3{
     }};
 
 
+static constexpr const ZoneInfo zone_4{
+    LocaleString::part_4_text,
+    LocaleString::part_4_title,
+    "spritesheet4",
+    "tilesheet4",
+    "tilesheet4_top",
+    "",
+    Microseconds{0},
+    ColorConstant::turquoise_blue,
+    ColorConstant::maya_blue,
+    ColorConstant::safety_orange,
+    [](Platform& pfrm, Game&) {
+        draw_starfield(pfrm);
+
+        const int x = 12;
+        const int y = 10;
+
+        draw_image(pfrm, 120, x, y, 13, 13, Layer::background);
+    },
+    [](int, int, const TileMap&) { return 0; }};
+
+
 const ZoneInfo& zone_info(Level level)
 {
-    if (UNLIKELY(level > boss_2_level)) {
+    if (UNLIKELY(level > boss_3_level)) {
         static const ZoneInfo null_zone{
             LocaleString::count,
             LocaleString::count,
@@ -726,6 +778,8 @@ const ZoneInfo& zone_info(Level level)
             [](Platform&, Game&) {},
             [](int, int, const TileMap&) { return 0; }};
         return null_zone;
+    } else if (level > boss_2_level) {
+        return zone_4;
     } else if (level > boss_1_level) {
         return zone_3;
     } else if (level > boss_0_level) {
@@ -1420,8 +1474,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
         if (info->grass_pattern_) {
             for (int x = 0; x < TileMap::width; ++x) {
                 for (int y = 0; y < TileMap::height; ++y) {
-                    grass_overlay
-                        ->set_tile(x, y, info->grass_pattern_->get(x, y));
+                    grass_overlay->set_tile(
+                        x, y, info->grass_pattern_->get(x, y));
                 }
             }
         }
@@ -1767,6 +1821,9 @@ static LevelRange level_range(Item::Type item)
 
     case Item::Type::engineer_notebook:
         return {boss_0_level, max};
+
+    case Item::Type::seed_packet:
+        return {0, boss_2_level};
 
     default:
         return {min, max};

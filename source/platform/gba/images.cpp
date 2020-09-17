@@ -23,6 +23,8 @@
 //;
 #include "data/spritesheet3.h"
 //;
+#include "data/spritesheet4.h"
+//;
 #include "data/spritesheet_boss0.h"
 //;
 #include "data/spritesheet_boss1.h"
@@ -47,11 +49,15 @@
 //;
 #include "data/tilesheet3.h"
 //;
+#include "data/tilesheet4.h"
+//;
 #include "data/tilesheet_top.h"
 //;
 #include "data/tilesheet2_top.h"
 //;
 #include "data/tilesheet3_top.h"
+//;
+#include "data/tilesheet4_top.h"
 //;
 #include "data/overlay.h"
 //;
@@ -102,6 +108,8 @@ static const TextureData sprite_textures[] = {
 //;
     TEXTURE_INFO(spritesheet3),
 //;
+    TEXTURE_INFO(spritesheet4),
+//;
     TEXTURE_INFO(spritesheet_boss0),
 //;
     TEXTURE_INFO(spritesheet_boss1),
@@ -131,11 +139,15 @@ static const TextureData tile_textures[] = {
 //;
     TEXTURE_INFO(tilesheet3),
 //;
+    TEXTURE_INFO(tilesheet4),
+//;
     TEXTURE_INFO(tilesheet_top),
 //;
     TEXTURE_INFO(tilesheet2_top),
 //;
     TEXTURE_INFO(tilesheet3_top),
+//;
+    TEXTURE_INFO(tilesheet4_top),
 //
 };
 

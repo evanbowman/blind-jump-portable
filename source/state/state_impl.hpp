@@ -653,7 +653,7 @@ private:
     int developer_mode_activation_counter_ = 0;
     Microseconds anim_timer_ = 0;
 
-    Buffer<LocaleString , 5> strs_;
+    Buffer<LocaleString, 5> strs_;
     Buffer<Text, 5> texts_;
     Float y_offset_ = 0;
 };

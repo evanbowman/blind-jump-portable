@@ -317,6 +317,8 @@ const char* locale_string(LocaleString ls)
         case LocaleString::part_2_title: return "the descent";
         case LocaleString::part_3_text: return "part III:";
         case LocaleString::part_3_title: return "into the waste";
+        case LocaleString::part_4_text: return "part IV:";
+        case LocaleString::part_4_title: return "by moonlight";
         case LocaleString::logbook_str_1: return
                 "[2.11.2081]  We've been experiencing strange power surges lately on the "
                 "station. The director reassured me that everthing will run smoothly from "

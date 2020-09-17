@@ -33,11 +33,11 @@
 // efficient enough to run on a gameboy, so there isn't really any need for
 // threading.
 // #include <mutex>
+#include <popl/popl.hpp>
 #include <queue>
 #include <sstream>
 #include <thread>
 #include <unordered_map>
-#include <popl/popl.hpp>
 
 
 Platform::DeviceName Platform::device_name() const
@@ -1698,8 +1698,10 @@ const char* Platform::get_opt(char opt)
 {
     try {
         popl::OptionParser op("Allowed options");
-        auto help_option = op.add<popl::Switch>("h", "help", "produce help message");
-        auto eval_option = op.add<popl::Value<std::string>>("e", "eval", "evaluate lisp");
+        auto help_option =
+            op.add<popl::Switch>("h", "help", "produce help message");
+        auto eval_option =
+            op.add<popl::Value<std::string>>("e", "eval", "evaluate lisp");
 
         op.parse(::argc, ::argv);
 

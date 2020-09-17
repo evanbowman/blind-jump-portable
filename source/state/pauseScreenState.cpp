@@ -79,11 +79,12 @@ void PauseScreenState::repaint_text(Platform& pfrm, Game& game)
 
         const u8 text_x_loc = (screen_tiles.x - len) / 2;
 
-        texts_.emplace_back(pfrm, OverlayCoord{text_x_loc, u8(y - strs_.size() + i * 2)});
+        texts_.emplace_back(
+            pfrm, OverlayCoord{text_x_loc, u8(y - strs_.size() + i * 2)});
 
         if (strs_[i] == LocaleString::menu_connect_peer) {
-            texts_.back().assign(locale_string(strs_[i]),
-                [&]() -> Text::OptColors {
+            texts_.back().assign(
+                locale_string(strs_[i]), [&]() -> Text::OptColors {
                     if (connect_peer_option_available(game)) {
                         return std::nullopt;
                     } else {

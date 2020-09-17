@@ -315,18 +315,18 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             if (visible()) {
                 pfrm.speaker().play_sound("laser1", 4, position_);
                 if (not is_allied() and game.level() > boss_1_level) {
-                    game.effects().spawn<ConglomerateShot>(position_,
-                                                           rng::sample<8>(target.get_position(),
-                                                                          rng::critical_state),
-                                                           0.00011f);
-                } else {
-                    this->shoot(
-                        pfrm,
-                        game,
+                    game.effects().spawn<ConglomerateShot>(
                         position_,
                         rng::sample<8>(target.get_position(),
                                        rng::critical_state),
-                        0.00010f);
+                        0.00011f);
+                } else {
+                    this->shoot(pfrm,
+                                game,
+                                position_,
+                                rng::sample<8>(target.get_position(),
+                                               rng::critical_state),
+                                0.00010f);
                 }
             }
             state_ = State::idle_wait;

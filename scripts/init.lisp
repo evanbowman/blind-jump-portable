@@ -103,6 +103,8 @@
     ;; 3: debug zone 2
     ;; 4: debug zone 3
     ;; 5: debug boss 2
+    ;; 6: debug zone 4  NOTE: zone 4 only enabled in debug mode, see
+    ;;                        newLevelIdleState.cpp
     (set #debug-mode 0))
 
 
@@ -143,6 +145,12 @@
             (level 29)
             (set-hp 0 7)
             (apply add-items debug-items-lat)))
+
+      (if (equal debug-mode 6)
+          (progn
+            (level 30)
+            (set-hp 0 4)
+            (apply add-items 5 9)))
 
       (unbind #debug-items-lat)))
 

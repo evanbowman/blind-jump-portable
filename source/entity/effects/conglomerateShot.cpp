@@ -1,6 +1,6 @@
 #include "conglomerateShot.hpp"
-#include "number/random.hpp"
 #include "game.hpp"
+#include "number/random.hpp"
 
 
 ConglomerateShot::ConglomerateShot(const Vec2<Float>& position,
@@ -60,15 +60,23 @@ void ConglomerateShot::on_collision(Platform& pf, Game&, Player&)
 void ConglomerateShot::on_death(Platform& pf, Game& game)
 {
     if (game.level() == boss_2_level) {
-        game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
-        game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
-        game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
-        game.effects().spawn<WandererSmallLaser>(position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
+        game.effects().spawn<WandererSmallLaser>(
+            position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
+        game.effects().spawn<WandererSmallLaser>(
+            position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
+        game.effects().spawn<WandererSmallLaser>(
+            position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
+        game.effects().spawn<WandererSmallLaser>(
+            position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
     } else {
-        game.effects().spawn<OrbShot>(position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
-        game.effects().spawn<OrbShot>(position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
-        game.effects().spawn<OrbShot>(position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
-        game.effects().spawn<OrbShot>(position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
+        game.effects().spawn<OrbShot>(
+            position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
+        game.effects().spawn<OrbShot>(
+            position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
+        game.effects().spawn<OrbShot>(
+            position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
+        game.effects().spawn<OrbShot>(
+            position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
     }
 
 
