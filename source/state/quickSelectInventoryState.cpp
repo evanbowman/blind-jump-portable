@@ -7,7 +7,8 @@ void QuickSelectInventoryState::enter(Platform& pfrm,
 {
     OverworldState::enter(pfrm, game, prev_state);
 
-    sidebar_.emplace(pfrm, 6);
+    sidebar_.emplace(pfrm, 6, calc_screen_tiles(pfrm).y,
+                     OverlayCoord{calc_screen_tiles(pfrm).x, 0});
     sidebar_->set_display_percentage(0.f);
 
     repaint_powerups(

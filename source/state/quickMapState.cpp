@@ -5,7 +5,7 @@ void QuickMapState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     OverworldState::enter(pfrm, game, prev_state);
 
-    sidebar_.emplace(pfrm, 15);
+    sidebar_.emplace(pfrm, 15, calc_screen_tiles(pfrm).y, OverlayCoord{});
     sidebar_->set_display_percentage(0.f);
 
     repaint_powerups(pfrm,

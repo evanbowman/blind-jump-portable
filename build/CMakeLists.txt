@@ -128,6 +128,7 @@ set(SOURCES
   ${SOURCE_DIR}/state/quickMapState.cpp
   ${SOURCE_DIR}/state/notebookState.cpp
   ${SOURCE_DIR}/state/glowFadeState.cpp
+  ${SOURCE_DIR}/state/itemShopState.cpp
   ${SOURCE_DIR}/state/fadeOutState.cpp
   ${SOURCE_DIR}/state/goodbyeState.cpp
   ${SOURCE_DIR}/state/activeState.cpp

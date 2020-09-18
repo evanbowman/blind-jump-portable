@@ -47,7 +47,7 @@ public:
 
 class OverworldState : public State, public CommonNetworkListener {
 public:
-    OverworldState(Game&, bool camera_tracking)
+    OverworldState(bool camera_tracking)
         : camera_tracking_(camera_tracking)
     {
     }
@@ -118,7 +118,7 @@ public:
     BossDeathSequenceState(Game& game,
                            const Vec2<Float>& boss_position,
                            LocaleString boss_defeated_text)
-        : OverworldState(game, false), boss_position_(boss_position),
+        : OverworldState(false), boss_position_(boss_position),
           defeated_text_(boss_defeated_text)
     {
     }
@@ -205,7 +205,7 @@ private:
 class ActiveState : public OverworldState {
 public:
     ActiveState(Game& game, bool camera_tracking = true)
-        : OverworldState(game, camera_tracking)
+        : OverworldState(camera_tracking)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -227,7 +227,7 @@ private:
 
 class FadeInState : public OverworldState {
 public:
-    FadeInState(Game& game) : OverworldState(game, false)
+    FadeInState(Game& game) : OverworldState(false)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -241,7 +241,7 @@ private:
 
 class WarpInState : public OverworldState {
 public:
-    WarpInState(Game& game) : OverworldState(game, true)
+    WarpInState(Game& game) : OverworldState(true)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -255,7 +255,7 @@ private:
 class PreFadePauseState : public OverworldState {
 public:
     PreFadePauseState(Game& game,
-                      ColorConstant fade_color) : OverworldState(game, false),
+                      ColorConstant fade_color) : OverworldState(false),
                                                   fade_color_(fade_color)
     {
     }
@@ -269,7 +269,7 @@ private:
 class GlowFadeState : public OverworldState {
 public:
     GlowFadeState(Game& game, ColorConstant color)
-        : OverworldState(game, false), color_(color)
+        : OverworldState(false), color_(color)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -283,7 +283,7 @@ private:
 class FadeOutState : public OverworldState {
 public:
     FadeOutState(Game& game, ColorConstant color)
-        : OverworldState(game, false), color_(color)
+        : OverworldState(false), color_(color)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -306,7 +306,7 @@ private:
 
 class DeathFadeState : public OverworldState {
 public:
-    DeathFadeState(Game& game) : OverworldState(game, false)
+    DeathFadeState(Game& game) : OverworldState(false)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -373,7 +373,7 @@ private:
 // option to select powerups, through a quick-select item sidebar.
 class QuickSelectInventoryState : public OverworldState {
 public:
-    QuickSelectInventoryState(Game& game) : OverworldState(game, true)
+    QuickSelectInventoryState(Game& game) : OverworldState(true)
     {
     }
 
@@ -499,7 +499,7 @@ private:
 
 class QuickMapState : public OverworldState {
 public:
-    QuickMapState(Game& game) : OverworldState(game, true)
+    QuickMapState(Game& game) : OverworldState(true)
     {
     }
 
@@ -1049,6 +1049,61 @@ private:
 };
 
 
+class ItemShopState : public OverworldState {
+public:
+    ItemShopState() : OverworldState(false) {}
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    struct Listing {
+        MediumIcon item_icon_;
+        Text price_text_;
+        SmallIcon price_icon_;
+    };
+
+    enum class DisplayMode {
+        animate_in_buy,
+        show_buy,
+        inflate_buy_options,
+        show_buy_options,
+        deflate_buy_options,
+        to_sell_menu,
+        show_sell,
+        inflate_sell_options,
+        show_sell_options,
+        deflate_sell_options,
+        to_buy_menu,
+        exit_left,
+        exit_right,
+    } display_mode_ = DisplayMode::animate_in_buy;
+
+    void show_sidebar(Platform& pfrm);
+
+    Microseconds timer_ = 0;
+
+    bool selector_shaded_ = false;
+
+    int selector_pos_ = 0;
+    int selector_x_ = 0;
+    std::optional<Border> selector_;
+
+    Buffer<Listing, 4> listings_;
+    std::optional<Text> item_name_;
+    std::optional<TextView> item_description_;
+
+    std::optional<LeftSidebar> buy_item_bar_;
+    std::optional<Sidebar> sell_item_bar_;
+
+    std::optional<LeftSidebar> buy_options_bar_;
+    std::optional<Sidebar> sell_options_bar_;
+
+};
+
+
 void state_deleter(State* s);
 
 
@@ -1094,6 +1149,7 @@ using StatePoolInst = StatePool<ActiveState,
                                 PauseScreenState,
                                 LispReplState,
                                 RemoteReplState,
+                                ItemShopState,
                                 QuickMapState,
                                 MapSystemState,
                                 NewLevelIdleState,

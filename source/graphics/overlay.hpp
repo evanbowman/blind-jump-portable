@@ -179,7 +179,7 @@ private:
 // Swoops in/out from the right side of the screen, based on display percentage.
 class Sidebar {
 public:
-    Sidebar(Platform& pfrm, u8 width);
+    Sidebar(Platform& pfrm, u8 width, u8 height, const OverlayCoord& pos);
     Sidebar(const Sidebar&) = delete;
     ~Sidebar();
 
@@ -188,12 +188,14 @@ public:
 private:
     Platform& pfrm_;
     const u8 width_;
+    const u8 height_;
+    OverlayCoord pos_;
 };
 
 
 class LeftSidebar {
 public:
-    LeftSidebar(Platform& pfrm, u8 width);
+    LeftSidebar(Platform& pfrm, u8 width, u8 height, const OverlayCoord& pos);
     LeftSidebar(const Sidebar&) = delete;
     ~LeftSidebar();
 
@@ -202,6 +204,8 @@ public:
 private:
     Platform& pfrm_;
     const u8 width_;
+    const u8 height_;
+    OverlayCoord pos_;
 };
 
 

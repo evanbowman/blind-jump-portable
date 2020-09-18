@@ -426,7 +426,8 @@ void LoadingBar::set_progress(Float percentage)
 }
 
 
-Sidebar::Sidebar(Platform& pfrm, u8 width) : pfrm_(pfrm), width_(width)
+Sidebar::Sidebar(Platform& pfrm, u8 width, u8 height, const OverlayCoord& pos) :
+    pfrm_(pfrm), width_(width), height_(height), pos_(pos)
 {
 }
 
@@ -438,23 +439,23 @@ void Sidebar::set_display_percentage(Float percentage)
 
     const int fractional_pixels = percentage * total_pixels;
 
-    const auto screen_tiles = calc_screen_tiles(pfrm_);
+    // const auto screen_tiles = calc_screen_tiles(pfrm_);
 
-    for (int y = 0; y < screen_tiles.y; ++y) {
+    for (int y = pos_.y; y < pos_.y + height_; ++y) {
         int pixels = fractional_pixels;
 
         int current_tile = 0;
 
         while (pixels >= 8) {
             pfrm_.set_tile(
-                Layer::overlay, screen_tiles.x - (1 + current_tile), y, 121);
+                Layer::overlay, pos_.x - (1 + current_tile), y, 121);
             pixels -= 8;
             ++current_tile;
         }
 
         if (current_tile < width_ and pixels % 8 not_eq 0) {
             pfrm_.set_tile(Layer::overlay,
-                           screen_tiles.x - (1 + current_tile),
+                           pos_.x - (1 + current_tile),
                            y,
                            128 - pixels % 8);
             ++current_tile;
@@ -462,7 +463,7 @@ void Sidebar::set_display_percentage(Float percentage)
 
         while (current_tile < width_) {
             pfrm_.set_tile(
-                Layer::overlay, screen_tiles.x - (1 + current_tile), y, 0);
+                Layer::overlay, pos_.x - (1 + current_tile), y, 0);
             ++current_tile;
         }
     }
@@ -475,7 +476,8 @@ Sidebar::~Sidebar()
 }
 
 
-LeftSidebar::LeftSidebar(Platform& pfrm, u8 width) : pfrm_(pfrm), width_(width)
+LeftSidebar::LeftSidebar(Platform& pfrm, u8 width, u8 height, const OverlayCoord& pos)
+    : pfrm_(pfrm), width_(width), height_(height), pos_(pos)
 {
 }
 
@@ -487,26 +489,26 @@ void LeftSidebar::set_display_percentage(Float percentage)
 
     const int fractional_pixels = percentage * total_pixels;
 
-    const auto screen_tiles = calc_screen_tiles(pfrm_);
+    // const auto screen_tiles = calc_screen_tiles(pfrm_);
 
-    for (int y = 0; y < screen_tiles.y; ++y) {
+    for (int y = pos_.y; y < pos_.y + height_; ++y) {
         int pixels = fractional_pixels;
 
         int current_tile = 0;
 
         while (pixels >= 8) {
-            pfrm_.set_tile(Layer::overlay, current_tile, y, 121);
+            pfrm_.set_tile(Layer::overlay, current_tile + pos_.x, y, 121);
             pixels -= 8;
             ++current_tile;
         }
 
         if (current_tile < width_ and pixels % 8 not_eq 0) {
-            pfrm_.set_tile(Layer::overlay, current_tile, y, 433 - pixels % 8);
+            pfrm_.set_tile(Layer::overlay, current_tile + pos_.x, y, 433 - pixels % 8);
             ++current_tile;
         }
 
         while (current_tile < width_) {
-            pfrm_.set_tile(Layer::overlay, current_tile, y, 0);
+            pfrm_.set_tile(Layer::overlay, current_tile + pos_.x, y, 0);
             ++current_tile;
         }
     }

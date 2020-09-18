@@ -90,6 +90,9 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (pfrm.keyboard().down_transition<inventory_key>()) {
 
+        // Remove me: just for debugging...
+        return state_pool().create<ItemShopState>();
+
         // Menu states disabled in multiplayer mode. You can still use the
         // quickselect inventory though.
         if (not pfrm.network_peer().is_connected()) {

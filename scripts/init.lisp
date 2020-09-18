@@ -107,6 +107,7 @@
     ;;                        newLevelIdleState.cpp
     (set #debug-mode 0))
 
+(add-items 8)
 
 (if (not (equal debug-mode 0))
     (progn
