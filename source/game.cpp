@@ -2336,8 +2336,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         }
     } else if (rng::choice<2>(rng::critical_state) == 0) {
         while (auto coord = select_coord(free_spots)) {
-            auto wc = to_world_coord({coord->x,
-                                      coord->y});
+            auto wc = to_world_coord({coord->x, coord->y});
 
             wc.x += 16;
             wc.y += 12;
@@ -2345,11 +2344,11 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             bool enemy_nearby = false;
 
             enemies_.transform([&enemy_nearby, &wc](auto& buf) {
-               for (auto& enemy : buf) {
-                   if (distance(enemy->get_position(), wc) < 150) {
-                       enemy_nearby = true;
-                   }
-               }
+                for (auto& enemy : buf) {
+                    if (distance(enemy->get_position(), wc) < 150) {
+                        enemy_nearby = true;
+                    }
+                }
             });
 
             if (not enemy_nearby) {
@@ -2363,11 +2362,12 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         auto& sc_inventory = scavenger_->inventory_;
         const u32 item_count = rng::choice<7>(rng::critical_state);
         while (sc_inventory.size() < item_count) {
-            auto item = static_cast<Item::Type>(rng::choice<static_cast<int>(Item::Type::count)>(rng::critical_state));
+            auto item = static_cast<Item::Type>(
+                rng::choice<static_cast<int>(Item::Type::count)>(
+                    rng::critical_state));
 
             if ((int)item < (int)Item::Type::inventory_item_start or
-                item_is_persistent(item) or
-                item == Item::Type::long_jump_z2 or
+                item_is_persistent(item) or item == Item::Type::long_jump_z2 or
                 item == Item::Type::long_jump_z3 or
                 item == Item::Type::long_jump_z4) {
 
@@ -2382,6 +2382,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         if (rng::choice<2>(rng::critical_state)) {
             sc_inventory.push_back(Item::Type::orange);
         }
+
+        rng::shuffle(sc_inventory, rng::critical_state);
     }
 
     return true;

@@ -47,8 +47,7 @@ public:
 
 class OverworldState : public State, public CommonNetworkListener {
 public:
-    OverworldState(bool camera_tracking)
-        : camera_tracking_(camera_tracking)
+    OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -254,9 +253,8 @@ private:
 
 class PreFadePauseState : public OverworldState {
 public:
-    PreFadePauseState(Game& game,
-                      ColorConstant fade_color) : OverworldState(false),
-                                                  fade_color_(fade_color)
+    PreFadePauseState(Game& game, ColorConstant fade_color)
+        : OverworldState(false), fade_color_(fade_color)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -1051,7 +1049,9 @@ private:
 
 class ItemShopState : public OverworldState {
 public:
-    ItemShopState() : OverworldState(false) {}
+    ItemShopState() : OverworldState(false)
+    {
+    }
 
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
@@ -1090,9 +1090,7 @@ private:
 
     void hide_label(Platform& pfrm);
 
-    void show_score(Platform& pfrm,
-                    Game& game,
-                    UIMetric::Align align);
+    void show_score(Platform& pfrm, Game& game, UIMetric::Align align);
 
     void show_sell_option_label(Platform& pfrm, Game& game);
     void show_buy_option_label(Platform& pfrm, Game& game);

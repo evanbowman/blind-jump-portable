@@ -219,15 +219,17 @@ void Drone::injured(Platform& pf, Game& game, Health amount)
         const auto add_score = 10;
 
         switch (game.difficulty()) {
+        case Settings::Difficulty::hard:
+        case Settings::Difficulty::survival:
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             game.score() += add_score;
             break;
 
-        case Settings::Difficulty::hard:
-        case Settings::Difficulty::survival:
-            game.score() += add_score * 1.5f;
-            break;
+            // case Settings::Difficulty::hard:
+            // case Settings::Difficulty::survival:
+            //     game.score() += add_score * 1.5f;
+            //     break;
         }
     }
 }

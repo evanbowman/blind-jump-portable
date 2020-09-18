@@ -214,13 +214,15 @@ void Turret::injured(Platform& pf, Game& game, Health amount)
         switch (game.difficulty()) {
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
+        case Settings::Difficulty::hard:
+        case Settings::Difficulty::survival:
             game.score() += add_score;
             break;
 
-        case Settings::Difficulty::hard:
-        case Settings::Difficulty::survival:
-            game.score() += add_score * 1.5f;
-            break;
+            // case Settings::Difficulty::hard:
+            // case Settings::Difficulty::survival:
+            //     game.score() += add_score * 1.5f;
+            //     break;
         }
     }
 }

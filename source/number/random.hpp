@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "memory/buffer.hpp"
 #include "numeric.hpp"
 
 
@@ -56,5 +57,17 @@ Vec2<Float> sample(const Vec2<Float>& position, Generator& gen)
 
     return result;
 }
+
+
+template <typename T, u32 size>
+void shuffle(Buffer<T, size>& buffer, Generator& gen)
+{
+    int i;
+    const int n = buffer.size();
+    for (i = n - 1; i > 0; --i) {
+        std::swap(buffer[i], buffer[get(gen) % (i + 1)]);
+    }
+}
+
 
 } // namespace rng

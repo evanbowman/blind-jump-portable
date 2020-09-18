@@ -165,19 +165,16 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (game.scavenger() and game.scavenger()->visible()) {
         auto sc_pos = game.scavenger()->get_position();
-        sc_pos.y += 24;
+        sc_pos.y += 16;
 
         const auto action_key = game.persistent_data().settings_.action2_key_;
 
-        if (pfrm.keyboard().down_transition(action_key) and not
-            pfrm.keyboard().any_pressed<Key::left,
-                                        Key::right,
-                                        Key::up,
-                                        Key::down>()) {
+        if (pfrm.keyboard().down_transition(action_key) and
+            not pfrm.keyboard()
+                    .any_pressed<Key::left, Key::right, Key::up, Key::down>()) {
 
-            const auto dist = distance(game.player().get_position(),
-                                       sc_pos);
-            if (dist < 16) {
+            const auto dist = distance(game.player().get_position(), sc_pos);
+            if (dist < 24) {
                 return state_pool().create<ItemShopState>();
             }
         }

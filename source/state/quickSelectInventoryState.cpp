@@ -7,7 +7,9 @@ void QuickSelectInventoryState::enter(Platform& pfrm,
 {
     OverworldState::enter(pfrm, game, prev_state);
 
-    sidebar_.emplace(pfrm, 6, calc_screen_tiles(pfrm).y,
+    sidebar_.emplace(pfrm,
+                     6,
+                     calc_screen_tiles(pfrm).y,
                      OverlayCoord{calc_screen_tiles(pfrm).x, 0});
     sidebar_->set_display_percentage(0.f);
 
@@ -40,11 +42,11 @@ void QuickSelectInventoryState::exit(Platform& pfrm,
 static bool item_is_quickselect(Item::Type item)
 {
     if (auto handler = inventory_item_handler(item)) {
-        return handler->single_use_
-            and item not_eq Item::Type::signal_jammer
-            and item not_eq Item::Type::long_jump_z2
-            and item not_eq Item::Type::long_jump_z3
-            and item not_eq Item::Type::long_jump_z4;
+        return handler->single_use_ and
+               item not_eq Item::Type::signal_jammer and
+               item not_eq Item::Type::long_jump_z2 and
+               item not_eq Item::Type::long_jump_z3 and
+               item not_eq Item::Type::long_jump_z4;
     } else {
         return false;
     }
