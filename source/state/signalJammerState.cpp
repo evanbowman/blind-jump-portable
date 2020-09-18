@@ -3,7 +3,7 @@
 
 void SignalJammerSelectorState::print(Platform& pfrm, const char* str)
 {
-    const auto margin = centered_text_margins(pfrm, str_len(str));
+    const auto margin = centered_text_margins(pfrm, utf8::len(str));
 
     // const auto s_tiles = calc_screen_tiles(pfrm);
 

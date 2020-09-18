@@ -1059,14 +1059,10 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    struct Listing {
-        MediumIcon item_icon_;
-        Text price_text_;
-        SmallIcon price_icon_;
-    };
-
     enum class DisplayMode {
+        wait,
         animate_in_buy,
+        animate_in_sell,
         show_buy,
         inflate_buy_options,
         show_buy_options,
@@ -1079,9 +1075,27 @@ private:
         to_buy_menu,
         exit_left,
         exit_right,
-    } display_mode_ = DisplayMode::animate_in_buy;
+    } display_mode_ = DisplayMode::wait;
 
     void show_sidebar(Platform& pfrm);
+
+    void show_sell_icons(Platform& pfrm, Game& game);
+    void show_buy_icons(Platform& pfrm, Game& game);
+
+    void show_label(Platform& pfrm,
+                    Game& game,
+                    const char* str,
+                    bool anchor_right,
+                    bool append_coin_icon = false);
+
+    void hide_label(Platform& pfrm);
+
+    void show_score(Platform& pfrm,
+                    Game& game,
+                    UIMetric::Align align);
+
+    void show_sell_option_label(Platform& pfrm, Game& game);
+    void show_buy_option_label(Platform& pfrm, Game& game);
 
     Microseconds timer_ = 0;
 
@@ -1091,9 +1105,13 @@ private:
     int selector_x_ = 0;
     std::optional<Border> selector_;
 
-    Buffer<Listing, 4> listings_;
-    std::optional<Text> item_name_;
-    std::optional<TextView> item_description_;
+    std::optional<UIMetric> score_;
+
+    int buy_page_num_ = 0;
+    int sell_page_num_ = 0;
+
+    bool sell_items_remaining_ = false;
+    bool buy_items_remaining_ = false;
 
     std::optional<LeftSidebar> buy_item_bar_;
     std::optional<Sidebar> sell_item_bar_;
@@ -1101,6 +1119,18 @@ private:
     std::optional<LeftSidebar> buy_options_bar_;
     std::optional<Sidebar> sell_options_bar_;
 
+    std::optional<Text> buy_sell_text_;
+
+    std::optional<Text> heading_text_;
+
+    std::optional<SmallIcon> coin_icon_;
+
+    static constexpr const int item_display_count_ = 3;
+    Buffer<MediumIcon, item_display_count_> buy_item_icons_;
+    Buffer<MediumIcon, item_display_count_> sell_item_icons_;
+
+    std::optional<MediumIcon> buy_sell_icon_;
+    std::optional<MediumIcon> info_icon_;
 };
 
 

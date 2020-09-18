@@ -111,6 +111,14 @@ enum class LocaleString {
     severity_warning,
     severity_error,
     power_surge_detected,
+    store_buy_items,
+    store_sell_items,
+    store_buy,
+    store_sell,
+    store_info,
+    scavenger_store,
+    buy,
+    sell,
     count
 };
 

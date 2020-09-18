@@ -89,10 +89,6 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (pfrm.keyboard().down_transition<inventory_key>()) {
-
-        // Remove me: just for debugging...
-        return state_pool().create<ItemShopState>();
-
         // Menu states disabled in multiplayer mode. You can still use the
         // quickselect inventory though.
         if (not pfrm.network_peer().is_connected()) {
@@ -164,6 +160,26 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.speaker().play_sound("bell", 5);
             const auto c = current_zone(game).energy_glow_color_;
             return state_pool().create<PreFadePauseState>(game, c);
+        }
+    }
+
+    if (game.scavenger() and game.scavenger()->visible()) {
+        auto sc_pos = game.scavenger()->get_position();
+        sc_pos.y += 24;
+
+        const auto action_key = game.persistent_data().settings_.action2_key_;
+
+        if (pfrm.keyboard().down_transition(action_key) and not
+            pfrm.keyboard().any_pressed<Key::left,
+                                        Key::right,
+                                        Key::up,
+                                        Key::down>()) {
+
+            const auto dist = distance(game.player().get_position(),
+                                       sc_pos);
+            if (dist < 16) {
+                return state_pool().create<ItemShopState>();
+            }
         }
     }
 

@@ -6,7 +6,10 @@
 #include "string.hpp"
 
 
-void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
+void Inventory::push_item(Platform& pfrm,
+                          Game& game,
+                          Item::Type insert,
+                          bool notify)
 {
     if (item_is_persistent(insert) and item_count(insert) > 0) {
         error(pfrm, "attempt to add duplicate persistent item to inventory");
@@ -42,7 +45,9 @@ void Inventory::push_item(Platform& pfrm, Game& game, Item::Type insert)
                 str += description;
                 str += locale_string(LocaleString::got_item_after);
 
-                push_notification(pfrm, game.state(), str);
+                if (notify) {
+                    push_notification(pfrm, game.state(), str);
+                }
             }
 
             return;

@@ -63,6 +63,11 @@ public:
         return peer_player_;
     }
 
+    inline std::optional<Scavenger>& scavenger()
+    {
+        return scavenger_;
+    }
+
     inline TileMap& tiles()
     {
         return tiles_;
@@ -86,7 +91,6 @@ public:
                                     ItemChest,
                                     Item,
                                     Rubble,
-                                    Scavenger,
                                     Lander,
                                     CutsceneCloud,
                                     CutsceneBird>;
@@ -207,6 +211,7 @@ private:
     Powerups powerups_;
 
     std::optional<PeerPlayer> peer_player_;
+    std::optional<Scavenger> scavenger_;
 
     Buffer<std::pair<DeferredCallback, Microseconds>, 10> deferred_callbacks_;
 
@@ -370,3 +375,6 @@ bool share_item(Platform& pfrm,
                 Game& game,
                 const Vec2<Float>& position,
                 Item::Type item);
+
+
+int base_price(Item::Type item);

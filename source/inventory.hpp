@@ -19,7 +19,10 @@ public:
         Item::Type type_;
     };
 
-    void push_item(Platform& pfrm, Game& game, Item::Type insert);
+    void push_item(Platform& pfrm,
+                   Game& game,
+                   Item::Type insert,
+                   bool notify = true);
 
     inline Item::Type get_item(u16 page, u16 column, u16 row) const
     {

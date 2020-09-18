@@ -174,9 +174,7 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
         break;
 
     case Item::Type::coin:
-        sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
-        game.score() += 10;
-        pf.speaker().play_sound("coin", 1);
+        get_score(pf, game, 10);
         break;
 
     case Item::Type::null:
@@ -186,6 +184,14 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
         // TODO
         break;
     }
+}
+
+
+void Player::get_score(Platform& pf, Game& game, u32 score)
+{
+    sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
+    game.score() += score;
+    pf.speaker().play_sound("coin", 1);
 }
 
 

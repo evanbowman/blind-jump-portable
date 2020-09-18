@@ -427,6 +427,14 @@ const char* locale_string(LocaleString ls)
         case LocaleString::severity_warning: return "warning";
         case LocaleString::severity_error: return "error";
         case LocaleString::power_surge_detected: return "Power Surge detected!";
+        case LocaleString::store_buy_items: return "Buy items";
+        case LocaleString::store_sell_items: return "Sell items";
+        case LocaleString::store_buy: return "Buy, price: ";
+        case LocaleString::store_sell: return "Sell, price: ";
+        case LocaleString::store_info: return "Item info";
+        case LocaleString::scavenger_store: return "Scavenger's shop";
+        case LocaleString::buy: return "buy";
+        case LocaleString::sell: return "sell";
         default: return empty_str;
         }
         break;

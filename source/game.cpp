@@ -341,6 +341,10 @@ HOT void Game::render(Platform& pfrm)
     enemies_.transform(show_sprites);
     details_.transform(show_sprites);
 
+    if (scavenger_) {
+        show_sprite(*scavenger_);
+    }
+
     std::sort(display_buffer.begin(),
               display_buffer.end(),
               [](const auto& l, const auto& r) {
@@ -1834,6 +1838,50 @@ static LevelRange level_range(Item::Type item)
 using ItemRarity = int;
 
 
+// Base price of an item, for use with in-game shops. The base price will
+// generally represent what the shopkeeper is willing to buy the item for, and
+// when buying an item from the shopkeeper, a markup will be applied to the base
+// price. Prices should generally be configured such that items are expensive,
+// and you actually need to play the game in order to buy stuff.
+int base_price(Item::Type item)
+{
+    switch (item) {
+    case Item::Type::count:
+    case Item::Type::null:
+        return 0;
+
+    case Item::Type::lethargy:
+        return 340;
+
+    case Item::Type::explosive_rounds_2:
+        return 300;
+
+    case Item::Type::accelerator:
+        return 270;
+
+    case Item::Type::orange_seeds:
+        return 5;
+
+    case Item::Type::orange:
+        return 230;
+
+    case Item::Type::signal_jammer:
+        return 300;
+
+    case Item::Type::long_jump_z2:
+    case Item::Type::long_jump_z3:
+    case Item::Type::long_jump_z4:
+        return 1150;
+
+    case Item::Type::map_system:
+        return 100;
+
+    default:
+        return 1;
+    }
+}
+
+
 // Higher rarity value makes an item more common
 ItemRarity rarity(Item::Type item)
 {
@@ -1970,6 +2018,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     details_.transform(clear_entities);
     effects_.transform(clear_entities);
 
+    scavenger_.reset();
+
     if (level() == 0) {
         details().spawn<Lander>(Vec2<Float>{409.f, 112.f});
         details().spawn<ItemChest>(Vec2<Float>{348, 154},
@@ -2039,7 +2089,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             return false;
         }
     };
-
 
     // When the current level is one of the pre-generated boss levels, we do not
     // want to spawn all of the other stuff in the level, just the player.
@@ -2258,6 +2307,80 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                     --heart_count;
                 }
             }
+        }
+    }
+
+    // NOTE: the algorithm for placing a scavenger potentially consumes all of
+    // the empty map coordinates, so do not try to create any enemies below this
+    // line.
+    if (is_boss_level(level() - 1)) {
+        const auto c = select_coord(free_spots);
+        if (c) {
+            auto wc = to_world_coord({c->x, c->y});
+            wc.x += 16;
+            wc.y += 12;
+            scavenger_.emplace(wc);
+            switch (level() - 1) {
+            case boss_0_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z2);
+                break;
+
+            case boss_1_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z3);
+                break;
+
+            case boss_2_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z4);
+                break;
+            }
+        }
+    } else if (rng::choice<2>(rng::critical_state) == 0) {
+        while (auto coord = select_coord(free_spots)) {
+            auto wc = to_world_coord({coord->x,
+                                      coord->y});
+
+            wc.x += 16;
+            wc.y += 12;
+
+            bool enemy_nearby = false;
+
+            enemies_.transform([&enemy_nearby, &wc](auto& buf) {
+               for (auto& enemy : buf) {
+                   if (distance(enemy->get_position(), wc) < 150) {
+                       enemy_nearby = true;
+                   }
+               }
+            });
+
+            if (not enemy_nearby) {
+                scavenger_.emplace(wc);
+                break;
+            }
+        }
+    }
+
+    if (scavenger_) {
+        auto& sc_inventory = scavenger_->inventory_;
+        const u32 item_count = rng::choice<7>(rng::critical_state);
+        while (sc_inventory.size() < item_count) {
+            auto item = static_cast<Item::Type>(rng::choice<static_cast<int>(Item::Type::count)>(rng::critical_state));
+
+            if ((int)item < (int)Item::Type::inventory_item_start or
+                item_is_persistent(item) or
+                item == Item::Type::long_jump_z2 or
+                item == Item::Type::long_jump_z3 or
+                item == Item::Type::long_jump_z4) {
+
+                continue;
+            }
+
+            sc_inventory.push_back(item);
+        }
+
+        sc_inventory.push_back(Item::Type::orange);
+
+        if (rng::choice<2>(rng::critical_state)) {
+            sc_inventory.push_back(Item::Type::orange);
         }
     }
 

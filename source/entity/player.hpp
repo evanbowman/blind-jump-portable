@@ -66,6 +66,8 @@ public:
     void on_collision(Platform& pf, Game& game, Item&);
     void on_collision(Platform& pf, Game& game, Twin&);
 
+    void get_score(Platform& pf, Game& game, u32 score);
+
     void update(Platform& pfrm, Game& game, Microseconds dt);
     void soft_update(Platform& pfrm, Game& game, Microseconds dt);
 
