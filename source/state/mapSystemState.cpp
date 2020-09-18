@@ -76,19 +76,20 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             anim_state_ = AnimState::path_wait;
 
-            set_tile(TileMap::width + 2, 11, 137, false); // you
-            set_tile(TileMap::width + 2, 13, 135, false); // enemy
-            set_tile(TileMap::width + 2, 15, 136, false); // transporter
-            set_tile(TileMap::width + 2, 17, 134, false); // item
+            set_tile(TileMap::width + 2, 9, 137, false); // you
+            set_tile(TileMap::width + 2, 11, 135, false); // enemy
+            set_tile(TileMap::width + 2, 13, 136, false); // transporter
+            set_tile(TileMap::width + 2, 15, 134, false); // item
+            set_tile(TileMap::width + 2, 17, 393, false); // shop
 
             legend_border_.emplace(pfrm,
-                                   OverlayCoord{11, 9},
-                                   OverlayCoord{TileMap::width + 2, 10},
+                                   OverlayCoord{11, 11},
+                                   OverlayCoord{TileMap::width + 2, 8},
                                    false,
                                    8);
 
             for (size_t i = 0; i < legend_strings.size(); ++i) {
-                const u8 y = 11 + (i * 2);
+                const u8 y = 9 + (i * 2);
                 legend_text_[i].emplace(pfrm,
                                         locale_string(legend_strings[i]),
                                         OverlayCoord{TileMap::width + 5, y});

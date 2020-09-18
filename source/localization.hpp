@@ -16,6 +16,7 @@ enum class LocaleString {
     map_legend_2,
     map_legend_3,
     map_legend_4,
+    map_legend_5,
     waypoint_text,
     part_1_text,
     part_1_title,

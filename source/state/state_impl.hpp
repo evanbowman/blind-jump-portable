@@ -470,11 +470,12 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    static constexpr const std::array<LocaleString, 4> legend_strings = {
+    static constexpr const std::array<LocaleString, 5> legend_strings = {
         LocaleString::map_legend_1,
         LocaleString::map_legend_2,
         LocaleString::map_legend_3,
-        LocaleString::map_legend_4};
+        LocaleString::map_legend_4,
+        LocaleString::map_legend_5};
 
     Microseconds timer_ = 0;
     enum class AnimState {

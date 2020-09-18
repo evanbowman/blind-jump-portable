@@ -7,7 +7,7 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
 {
     hide_boss_health(game);
 
-    static const auto score = 1000;
+    static const auto score = 900;
 
     switch (game.difficulty()) {
     case Settings::Difficulty::hard:

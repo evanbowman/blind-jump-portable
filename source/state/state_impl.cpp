@@ -498,6 +498,10 @@ bool draw_minimap(Platform& pfrm,
             }
         }
 
+        if (game.scavenger()) {
+            render_map_icon(*game.scavenger(), 392);
+        }
+
         const auto player_tile = get_constrained_player_tile_coord(game);
 
         set_tile(player_tile.x, player_tile.y, 142);

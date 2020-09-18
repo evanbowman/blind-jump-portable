@@ -310,6 +310,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::map_legend_2: return "enemy";
         case LocaleString::map_legend_3: return "exit";
         case LocaleString::map_legend_4: return "item";
+        case LocaleString::map_legend_5: return "shop";
         case LocaleString::waypoint_text: return "waypoint ";
         case LocaleString::part_1_text: return "part I:";
         case LocaleString::part_1_title: return "the arrival ";

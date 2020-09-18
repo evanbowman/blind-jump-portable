@@ -1,4 +1,5 @@
 #include "scavenger.hpp"
+#include "number/random.hpp"
 
 
 Scavenger::Scavenger(const Vec2<Float>& pos)
@@ -17,4 +18,9 @@ Scavenger::Scavenger(const Vec2<Float>& pos)
     shadow_.set_origin({16, 14});
     shadow_.set_texture_index(56);
     shadow_.set_alpha(Sprite::Alpha::translucent);
+
+    if (rng::choice<2>(rng::utility_state)) {
+        sprite_.set_flip({true, false});
+        shadow_.set_flip({true, false});
+    }
 }
