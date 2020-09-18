@@ -1851,13 +1851,13 @@ int base_price(Item::Type item)
         return 0;
 
     case Item::Type::lethargy:
-        return 340;
+        return 400;
 
     case Item::Type::explosive_rounds_2:
-        return 300;
+        return 310;
 
     case Item::Type::accelerator:
-        return 270;
+        return 280;
 
     case Item::Type::orange_seeds:
         return 5;
@@ -1866,7 +1866,7 @@ int base_price(Item::Type item)
         return 230;
 
     case Item::Type::signal_jammer:
-        return 300;
+        return 320;
 
     case Item::Type::long_jump_z2:
     case Item::Type::long_jump_z3:
