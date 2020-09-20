@@ -1311,16 +1311,43 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
             }
         }
     } else {
-        tiles_.for_each([&](auto& t, int, int) {
-            t = rng::choice<int(Tile::sand)>(rng::critical_state);
-        });
+        // Just for the sake of variety, intentionally generate
+        // smaller maps sometimes.
+        const bool small_map =
+            rng::choice<100>(rng::critical_state) < 20 or
+            is_boss_level(level() - 1) or
+            is_boss_level(level() - 2) or
+            level() < 4;
+
+        int count;
 
         const auto cell_iters =
             lisp::get_var("cell-iters")->expect<lisp::Integer>().value_;
 
-        for (int i = 0; i < cell_iters; ++i) {
-            cell_automata_advance(tiles_, workspace);
-        }
+        do {
+            count = 0;
+            tiles_.for_each([small_map](auto& t, int x, int y) {
+                if (small_map and
+                    (x < 2 or x > TileMap::width - 2 or
+                     y < 3 or y > TileMap::height - 3)) {
+                    t = 0;
+                } else {
+                    t = rng::choice<int(Tile::sand)>(rng::critical_state);
+                }
+            });
+
+            for (int i = 0; i < cell_iters; ++i) {
+                cell_automata_advance(tiles_, workspace);
+            }
+
+            tiles_.for_each([&count](u8 t, int, int) {
+                if (t) {
+                    ++count;
+                }
+            });
+
+        } while (count == 0);
+
     }
 }
 
@@ -1396,6 +1423,10 @@ static void debug_log_tilemap(Platform& pfrm, TileMap& map)
 }
 
 
+using MapCoord = Vec2<TIdx>;
+using MapCoordBuf = Buffer<MapCoord, TileMap::tile_count>;
+
+
 COLD void Game::regenerate_map(Platform& pfrm)
 {
     ScratchBufferBulkAllocator mem(pfrm);
@@ -1450,6 +1481,119 @@ COLD void Game::regenerate_map(Platform& pfrm)
             } else {
                 continue;
             }
+        }
+    }
+
+    scavenger_.reset();
+
+    const bool place_scavenger =
+        level() > 3 and // at low levels, players will have low score anyway.
+        (rng::choice<6>(rng::critical_state) > 1
+         or is_boss_level(level() - 1));
+
+    // Now we want to generate a map region for our scavenger character. We want
+    // to place a 3x3 block of tiles in some open location, and then connect
+    // that location to the rest of the map.
+    int tries = 0;
+    while (place_scavenger and tries < 1000) {
+        const auto x = rng::choice(TileMap::width, rng::critical_state);
+        const auto y = rng::choice(TileMap::height, rng::critical_state);
+
+        if (not (x > 2 and x < TileMap::width - 3 and
+                 y > 2 and y < TileMap::height - 3)) {
+            continue;
+        }
+
+        bool free = true;
+        for (int xx = x - 2; xx < x + 3; ++xx) {
+            for (int yy = y - 2; yy < y + 3; ++yy) {
+                const auto t = tiles_.get_tile(xx, yy);
+                if (t) {
+                    free = false;
+                }
+            }
+        }
+
+        if (free) {
+            MapCoordBuf floor_tiles;
+            tiles_.for_each([&floor_tiles](u8 tile, TIdx x, TIdx y) {
+                if (tile) {
+                    floor_tiles.push_back({x, y});
+                }
+            });
+
+            if (floor_tiles.empty()) {
+                break;
+            }
+
+            const Vec2<Float> seek{Float(x), Float(y)};
+            std::sort(floor_tiles.begin(), floor_tiles.end(),
+                      [&](const MapCoord& lhs, const MapCoord& rhs) {
+                          return
+                              distance(lhs.cast<Float>(), seek) <
+                              distance(rhs.cast<Float>(), seek);
+                      });
+
+            const auto nearest = *floor_tiles.begin();
+
+            auto next_x = [&](int x) {
+                if (seek.x < nearest.x) {
+                    return x - 1;
+                } else {
+                    return x + 1;
+                }
+            };
+
+            auto next_y = [&](int y) {
+                if (seek.y < nearest.y) {
+                    return y - 1;
+                } else {
+                    return y + 1;
+                }
+            };
+
+            // Ok, so we could do fancy rasterization for a straight-line path,
+            // but that would take some extra work, and the result, in some
+            // cases, would look choppy, so let's use a sort of manhattan path.
+            int write_y = nearest.y;
+            int write_x = nearest.x;
+
+            const bool x_first = rng::choice<2>(rng::critical_state);
+
+            // Randomly flip the ordering of the x/y path rendering, so that the
+            // path doesn't always connect to the generated region from the same
+            // side.
+            if (x_first) {
+                for (; write_x not_eq seek.x; write_x = next_x(write_x)) {
+                    tiles_.set_tile(write_x, write_y, 1);
+                }
+            }
+
+            for (; write_y not_eq seek.y; write_y = next_y(write_y)) {
+                tiles_.set_tile(write_x, write_y, 1);
+            }
+
+            if (not x_first) {
+                for (; write_x not_eq seek.x; write_x = next_x(write_x)) {
+                    tiles_.set_tile(write_x, write_y, 1);
+                }
+            }
+
+            for (int xx = x - 1; xx < x + 2; ++xx) {
+                for (int yy = y - 1; yy < y + 2; ++yy) {
+                    tiles_.set_tile(xx, yy, 1);
+                }
+            }
+
+            auto scavenger_wc = to_world_coord({s8(x), s8(y)});
+            scavenger_wc.x += 16;
+            scavenger_wc.y += 12;
+
+            scavenger_.emplace(scavenger_wc);
+
+            break;
+        } else {
+            ++tries;
         }
     }
 
@@ -1646,10 +1790,6 @@ COLD void Game::regenerate_map(Platform& pfrm)
 }
 
 
-using MapCoord = Vec2<TIdx>;
-using MapCoordBuf = Buffer<MapCoord, TileMap::tile_count>;
-
-
 COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 {
     MapCoordBuf output;
@@ -1664,12 +1804,7 @@ COLD static MapCoordBuf get_free_map_slots(const TileMap& map)
 
     for (auto it = output.begin(); it not_eq output.end();) {
         const u8 tile = map.get_tile(it->x, it->y);
-        if (not(tile == Tile::sand or tile == Tile::sand_sprouted
-                // FIXME-TILES
-                //  or
-                // (u8(tile) >= u8(Tile::grass_sand) and
-                //  u8(tile) < u8(Tile::grass_plate))
-                )) {
+        if (not(tile == Tile::sand or tile == Tile::sand_sprouted)) {
             output.erase(it);
         } else {
             ++it;
@@ -2018,8 +2153,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     details_.transform(clear_entities);
     effects_.transform(clear_entities);
 
-    scavenger_.reset();
-
     if (level() == 0) {
         details().spawn<Lander>(Vec2<Float>{409.f, 112.f});
         details().spawn<ItemChest>(Vec2<Float>{348, 154},
@@ -2037,6 +2170,20 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     }
 
     auto free_spots = get_free_map_slots(tiles_);
+
+    // Because the scavenger sits in a specially generated secluded part of the
+    // map, Game::respawn_entities() is not responsible for creating the
+    // scavenger entity. But we do not want to spawn any entities on top of him,
+    // so consume nearby free map slots.
+    if (scavenger_) {
+        for (auto it = free_spots.begin(); it not_eq free_spots.end();) {
+            if (distance(to_world_coord(*it), scavenger_->get_position()) < 40) {
+                it = free_spots.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
 
     const size_t initial_free_spaces = free_spots.size();
 
@@ -2310,16 +2457,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         }
     }
 
-    // NOTE: the algorithm for placing a scavenger potentially consumes all of
-    // the empty map coordinates, so do not try to create any enemies below this
-    // line.
-    if (is_boss_level(level() - 1)) {
-        const auto c = select_coord(free_spots);
-        if (c) {
-            auto wc = to_world_coord({c->x, c->y});
-            wc.x += 16;
-            wc.y += 12;
-            scavenger_.emplace(wc);
+    if (scavenger_) {
+        if (is_boss_level(level() - 1)) {
             switch (level() - 1) {
             case boss_0_level:
                 scavenger_->inventory_.push_back(Item::Type::long_jump_z2);
@@ -2334,31 +2473,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 break;
             }
         }
-    } else if (rng::choice<2>(rng::critical_state) == 0) {
-        while (auto coord = select_coord(free_spots)) {
-            auto wc = to_world_coord({coord->x, coord->y});
 
-            wc.x += 16;
-            wc.y += 12;
-
-            bool enemy_nearby = false;
-
-            enemies_.transform([&enemy_nearby, &wc](auto& buf) {
-                for (auto& enemy : buf) {
-                    if (distance(enemy->get_position(), wc) < 150) {
-                        enemy_nearby = true;
-                    }
-                }
-            });
-
-            if (not enemy_nearby) {
-                scavenger_.emplace(wc);
-                break;
-            }
-        }
-    }
-
-    if (scavenger_) {
         auto& sc_inventory = scavenger_->inventory_;
         const u32 item_count = rng::choice<7>(rng::critical_state);
         while (sc_inventory.size() < item_count) {
