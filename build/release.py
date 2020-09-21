@@ -28,11 +28,10 @@ today = datetime.date.today()
 
 version_path = base_dir / "version.hpp"
 
-
-if major != today.year or minor != today.month or subminor != today.day:
+if int(major) != today.year or int(minor) != today.month or int(subminor) != today.day:
     revision = 0
 else:
-    revision = revision + 1
+    revision = int(revision) + 1
 
 
 with open(version_path, "w") as version_file:
