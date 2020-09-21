@@ -77,7 +77,7 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
             pfrm.screen().fade(
                 1.f - target_fade, ColorConstant::rich_black, {}, false);
             timer_ = 0;
-            if ((target_ = make_selector_target(game))) {
+            if ((target_ = make_selector_target(pfrm, game))) {
                 mode_ = Mode::update_selector;
                 selector_start_pos_ = game.player().get_position();
                 game.effects().spawn<Reticule>(selector_start_pos_);
@@ -141,7 +141,7 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
             pfrm.keyboard().down_transition<Key::left>()) {
             selector_index_ += 1;
             timer_ = 0;
-            if ((target_ = make_selector_target(game))) {
+            if ((target_ = make_selector_target(pfrm, game))) {
                 mode_ = Mode::update_selector;
                 selector_start_pos_ = [&] {
                     for (auto& sel : game.effects().get<Reticule>()) {
@@ -185,9 +185,9 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-Enemy* SignalJammerSelectorState::make_selector_target(Game& game)
+Enemy* SignalJammerSelectorState::make_selector_target(Platform& pfrm, Game& game)
 {
-    constexpr u32 count = 15;
+    constexpr u32 count = 8;
 
     // I wish it wasn't necessary to hold a proxy buffer locally, oh well...
     Buffer<Proxy, count> proxies;

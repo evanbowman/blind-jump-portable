@@ -1488,6 +1488,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     const bool place_scavenger =
         level() > 3 and // at low levels, players will have low score anyway.
+        not is_boss_level(level()) and
         (rng::choice<6>(rng::critical_state) > 1
          or is_boss_level(level() - 1));
 

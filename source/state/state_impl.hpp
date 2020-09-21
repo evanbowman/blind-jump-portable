@@ -754,7 +754,7 @@ public:
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
-    Enemy* make_selector_target(Game& game);
+    Enemy* make_selector_target(Platform&, Game& game);
 
     void print(Platform& pfrm, const char* text);
 
@@ -766,9 +766,9 @@ private:
         selected
     } mode_ = Mode::fade_in;
     int selector_index_ = 0;
-    Microseconds timer_;
+    Microseconds timer_ = 0;
     Vec2<Float> selector_start_pos_;
-    Enemy* target_;
+    Enemy* target_ = nullptr;
     Camera cached_camera_;
     std::optional<Text> text_;
     int flicker_anim_index_ = 0;
