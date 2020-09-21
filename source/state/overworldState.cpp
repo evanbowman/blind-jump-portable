@@ -26,11 +26,19 @@ void OverworldState::receive(const net_event::PlayerHealthChanged& event,
                              Platform& pfrm,
                              Game& game)
 {
+    const auto health = event.new_health_.get();
+
+    if (health > 3) {
+        // No need to annoy the player with notifications when the multiplayer
+        // peer's health is not yet critically low.
+        return;
+    }
+
     NotificationStr str;
     str += locale_string(LocaleString::peer_health_changed);
 
     char buffer[20];
-    locale_num2str(event.new_health_.get(), buffer, 10);
+    locale_num2str(health, buffer, 10);
 
     str += buffer;
 

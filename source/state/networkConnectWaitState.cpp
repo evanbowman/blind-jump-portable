@@ -31,6 +31,8 @@ void NetworkConnectWaitState::exit(Platform& pfrm,
                 // aligned.
                 auto& zone = zone_info(game.level());
                 pfrm.speaker().play_music(zone.music_name_, 0);
+
+
             } else {
                 push_notification(
                     pfrm,

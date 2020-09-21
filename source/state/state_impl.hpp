@@ -42,6 +42,11 @@ public:
     {
         pfrm.network_peer().disconnect();
     }
+
+    void receive(const net_event::ProgramVersion&, Platform&, Game&) override
+    {
+        // ...
+    }
 };
 
 

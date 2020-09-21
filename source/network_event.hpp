@@ -17,6 +17,7 @@ struct Header {
         null, // Important! The platform does not guarantee transmission of
               // messages full of zero bytes, so the 0th enumeration must not be
               // used (may not be received).
+        program_version,
         player_info,
         player_spawn_laser,
         player_entered_gate,
@@ -42,6 +43,21 @@ static_assert(sizeof(Header) == 1);
 
 #define NET_EVENT_SIZE_CHECK(TYPE)                                             \
     static_assert(sizeof(TYPE) == Platform::NetworkPeer::max_message_size);
+
+
+struct ProgramVersion {
+    Header header_;
+
+    struct VersionInfo {
+        host_u16 major_;
+        host_u16 minor_;
+        host_u16 subminor_;
+    } info_;
+
+    u8 unused_[5];
+
+    static const auto mt = Header::MessageType::program_version;
+};
 
 
 struct PlayerInfo {
@@ -429,6 +445,9 @@ public:
     {
     }
     virtual void receive(const PlayerSpawnLaser&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const ProgramVersion&, Platform&, Game&)
     {
     }
 };
