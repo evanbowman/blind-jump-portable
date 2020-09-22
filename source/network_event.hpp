@@ -52,9 +52,10 @@ struct ProgramVersion {
         host_u16 major_;
         host_u16 minor_;
         host_u16 subminor_;
+        host_u16 revision_;
     } info_;
 
-    u8 unused_[5];
+    u8 unused_[3];
 
     static const auto mt = Header::MessageType::program_version;
 };

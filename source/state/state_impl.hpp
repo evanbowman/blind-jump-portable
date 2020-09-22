@@ -6,6 +6,7 @@
 #include "network_event.hpp"
 #include "path.hpp"
 #include "state.hpp"
+#include "version.hpp"
 
 
 using DeferredState = Function<16, StatePtr()>;
@@ -43,9 +44,20 @@ public:
         pfrm.network_peer().disconnect();
     }
 
-    void receive(const net_event::ProgramVersion&, Platform&, Game&) override
+    void receive(const net_event::ProgramVersion& vn,
+                 Platform& pfrm,
+                 Game&) override
     {
-        // ...
+        if (vn.info_.major_.get() not_eq PROGRAM_MAJOR_VERSION or
+            vn.info_.minor_.get() not_eq PROGRAM_MINOR_VERSION or
+            vn.info_.subminor_.get() not_eq PROGRAM_SUBMINOR_VERSION or
+            vn.info_.revision_.get() not_eq PROGRAM_VERSION_REVISION) {
+
+            pfrm.network_peer().disconnect();
+
+        } else {
+            info(pfrm, "received valid program version");
+        }
     }
 };
 

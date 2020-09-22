@@ -1,4 +1,5 @@
 #include "state_impl.hpp"
+#include "version.hpp"
 
 
 void NetworkConnectWaitState::enter(Platform& pfrm,
@@ -32,6 +33,13 @@ void NetworkConnectWaitState::exit(Platform& pfrm,
                 auto& zone = zone_info(game.level());
                 pfrm.speaker().play_music(zone.music_name_, 0);
 
+                net_event::ProgramVersion vn;
+                vn.info_.major_.set(PROGRAM_MAJOR_VERSION);
+                vn.info_.minor_.set(PROGRAM_MINOR_VERSION);
+                vn.info_.subminor_.set(PROGRAM_SUBMINOR_VERSION);
+                vn.info_.revision_.set(PROGRAM_VERSION_REVISION);
+
+                net_event::transmit(pfrm, vn);
 
             } else {
                 push_notification(
