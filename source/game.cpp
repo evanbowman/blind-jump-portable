@@ -1946,10 +1946,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 }
 
 
-using LevelRange = std::array<Level, 2>;
-
-
-static LevelRange level_range(Item::Type item)
+LevelRange level_range(Item::Type item)
 {
     static const auto max = std::numeric_limits<Level>::max();
     static const auto min = std::numeric_limits<Level>::min();
@@ -2075,7 +2072,7 @@ ItemRarity rarity(Item::Type item)
 }
 
 
-static bool level_in_range(Level level, LevelRange range)
+bool level_in_range(Level level, LevelRange range)
 {
     return level >= range[0] and level < range[1];
 }

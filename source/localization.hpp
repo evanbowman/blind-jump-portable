@@ -60,8 +60,10 @@ enum class LocaleString {
     you_died,
     score,
     high_score,
+    high_scores,
     items_collected_prefix,
     items_collected_suffix,
+    items_collected_heading,
     waypoints,
     punctuation_period,
     menu_resume,
@@ -120,6 +122,9 @@ enum class LocaleString {
     scavenger_store,
     buy,
     sell,
+    update_required,
+    peer_requires_update,
+    overall_heading,
     count
 };
 

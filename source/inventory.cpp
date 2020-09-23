@@ -61,13 +61,30 @@ void Inventory::push_item(Platform& pfrm,
 }
 
 
-Float items_collected_percentage(const Inventory& inventory)
+Float items_collected_percentage(const Inventory& inventory,
+                                 std::optional<int> zone)
 {
     int total_persistent_items = 0;
     int collected_persistent_items = 0;
 
     for (Item::Type item = Item::Type::null; item < Item::Type::count;
          item = (Item::Type)((int)item + 1)) {
+        if (zone) {
+            const int level = [&] {
+                switch (*zone) {
+                case 0: return boss_0_level - 1;
+                case 1: return boss_1_level - 1;
+                case 2: return boss_2_level - 1;
+                case 3: return boss_3_level - 1;
+                default: return 0;
+                }
+            }();
+
+            auto range = level_range(item);
+            if (not level_in_range(level, range)) {
+                continue;
+            }
+        }
         if (item_is_persistent(item)) {
             total_persistent_items += 1;
             if (inventory.item_count(item) > 0) {

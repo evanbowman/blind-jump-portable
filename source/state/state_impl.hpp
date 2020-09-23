@@ -46,12 +46,35 @@ public:
 
     void receive(const net_event::ProgramVersion& vn,
                  Platform& pfrm,
-                 Game&) override
+                 Game& game) override
     {
-        if (vn.info_.major_.get() not_eq PROGRAM_MAJOR_VERSION or
-            vn.info_.minor_.get() not_eq PROGRAM_MINOR_VERSION or
-            vn.info_.subminor_.get() not_eq PROGRAM_SUBMINOR_VERSION or
-            vn.info_.revision_.get() not_eq PROGRAM_VERSION_REVISION) {
+        const auto major = vn.info_.major_.get();
+        const auto minor = vn.info_.minor_.get();
+        const auto subminor = vn.info_.subminor_.get();
+        const auto revision = vn.info_.revision_.get();
+
+        auto local_vn = std::make_tuple(PROGRAM_MAJOR_VERSION,
+                                        PROGRAM_MINOR_VERSION,
+                                        PROGRAM_SUBMINOR_VERSION,
+                                        PROGRAM_VERSION_REVISION);
+
+        auto peer_vn = std::tie(major, minor, subminor, revision);
+
+        if (peer_vn not_eq local_vn) {
+
+            game.peer().reset();
+
+            if (peer_vn > local_vn) {
+
+                push_notification(pfrm,
+                                  game.state(),
+                                  locale_string(LocaleString::update_required));
+            } else {
+                auto str = locale_string(LocaleString::peer_requires_update);
+                push_notification(pfrm,
+                                  game.state(),
+                                  str);
+            }
 
             pfrm.network_peer().disconnect();
 
@@ -341,10 +364,13 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    std::optional<Text> score_;
-    std::optional<Text> highscore_;
-    std::optional<Text> level_;
-    std::optional<Text> items_collected_;
+    Buffer<Text, 5> lines_;
+
+    void repaint_stats(Platform&, Game&);
+
+    int page_ = 0;
+    bool locked_ = false;
+
     Microseconds counter_ = 0;
     Microseconds counter2_ = 0;
 };
@@ -564,20 +590,12 @@ public:
 private:
     void center(Platform& pfrm);
 
+    void show_version(Platform& pfrm, Game& game);
+
     const char* str_;
     std::optional<Text> text_;
+    std::optional<Text> version_;
     Microseconds timer_ = 0;
-};
-
-
-class IntroLegalMessage : public IntroCreditsState {
-public:
-    IntroLegalMessage()
-        : IntroCreditsState(locale_string(LocaleString::intro_text_1))
-    {
-    }
-
-    StatePtr next_state(Platform& pfrm, Game& game) override;
 };
 
 
@@ -1201,7 +1219,6 @@ using StatePoolInst = StatePool<ActiveState,
                                 NewLevelIdleState,
                                 EditSettingsState,
                                 IntroCreditsState,
-                                IntroLegalMessage,
                                 DeathContinueState,
                                 RespawnWaitState,
                                 LogfileViewerState,

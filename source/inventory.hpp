@@ -90,4 +90,5 @@ private:
 };
 
 
-Float items_collected_percentage(const Inventory& inventory);
+Float items_collected_percentage(const Inventory& inventory,
+                                 std::optional<int> zone = {});

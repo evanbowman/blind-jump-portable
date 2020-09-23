@@ -378,3 +378,9 @@ bool share_item(Platform& pfrm,
 
 
 int base_price(Item::Type item);
+
+
+using LevelRange = std::array<Level, 2>;
+LevelRange level_range(Item::Type item);
+
+bool level_in_range(Level level, LevelRange range);

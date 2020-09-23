@@ -378,7 +378,9 @@ const char* locale_string(LocaleString ls)
         case LocaleString::score: return "score ";
         case LocaleString::items_collected_prefix: return "items collected % ";
         case LocaleString::items_collected_suffix: return "";
-        case LocaleString::high_score: return "high score ";
+        case LocaleString::items_collected_heading: return "items collected %";
+        case LocaleString::high_score: return "highscore ";
+        case LocaleString::high_scores: return "highscores";
         case LocaleString::waypoints: return "waypoints ";
         case LocaleString::punctuation_period: return ".";
         case LocaleString::menu_resume: return "Resume";
@@ -436,6 +438,9 @@ const char* locale_string(LocaleString ls)
         case LocaleString::scavenger_store: return "Scavenger's shop";
         case LocaleString::buy: return "buy";
         case LocaleString::sell: return "sell";
+        case LocaleString::update_required: return "Update required!";
+        case LocaleString::peer_requires_update: return "Peer requires update!";
+        case LocaleString::overall_heading: return "overall";
         default: return empty_str;
         }
         break;
