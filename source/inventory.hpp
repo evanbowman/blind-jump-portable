@@ -3,6 +3,7 @@
 #include "entity/details/item.hpp"
 #include "number/numeric.hpp"
 #include "util.hpp"
+#include <optional>
 
 
 class Platform;
