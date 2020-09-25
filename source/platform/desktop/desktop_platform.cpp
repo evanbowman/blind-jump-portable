@@ -852,18 +852,18 @@ void Platform::Screen::clear()
         // other thread, and the sfml window does not fire keypressed events
         // consistently while a key is held down, so we're generating our own
         // events.
-        for (int keycode = 0; keycode < static_cast<int>(Key::count);
-             ++keycode) {
-            sf::Event event;
-            if (sf::Keyboard::isKeyPressed(keymap[keycode])) {
-                event.type = sf::Event::KeyPressed;
-                event.key.code = keymap[keycode];
-            } else {
-                event.type = sf::Event::KeyReleased;
-                event.key.code = keymap[keycode];
-            }
-            ::event_queue.push(event);
-        }
+        // for (int keycode = 0; keycode < static_cast<int>(Key::count);
+        //      ++keycode) {
+        //     sf::Event event;
+        //     if (sf::Keyboard::isKeyPressed(keymap[keycode])) {
+        //         event.type = sf::Event::KeyPressed;
+        //         event.key.code = keymap[keycode];
+        //     } else {
+        //         event.type = sf::Event::KeyReleased;
+        //         event.key.code = keymap[keycode];
+        //     }
+        //     ::event_queue.push(event);
+        // }
 
 
         sf::Event event;

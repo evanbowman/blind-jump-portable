@@ -89,6 +89,25 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
 
     bool highlighted = false;
 
+    auto show_highscores = [&](int offset) {
+        print_heading(locale_string(LocaleString::high_scores));
+        for (u32 i = 0; i < lines_.capacity(); ++i) {
+            char str[8];
+            locale_num2str(i + 1 + offset, str, 10);
+            StringBuffer<9> fmt = str;
+            fmt += " ";
+
+            const auto score = game.highscores()[i + offset];
+
+            auto highlight = score == game.score() and not highlighted;
+            if (highlight) {
+                highlighted = true;
+            }
+
+            print_metric(fmt.c_str(), score, "", highlight);
+        }
+    };
+
     switch (page_) {
     case 0:
         print_heading(locale_string(LocaleString::overall_heading));
@@ -103,41 +122,11 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
         break;
 
     case 1:
-        print_heading(locale_string(LocaleString::high_scores));
-        for (u32 i = 0; i < lines_.capacity(); ++i) {
-            char str[8];
-            locale_num2str(i + 1, str, 10);
-            StringBuffer<9> fmt = str;
-            fmt += " ";
-
-            const auto score = game.highscores()[i];
-
-            auto highlight = score == game.score() and not highlighted;
-            if (highlight) {
-                highlighted = true;
-            }
-
-            print_metric(fmt.c_str(), score, "", highlight);
-        }
-    break;
+        show_highscores(0);
+        break;
 
     case 2:
-        print_heading(locale_string(LocaleString::high_scores));
-        for (u32 i = 0; i < lines_.capacity(); ++i) {
-            char str[8];
-            locale_num2str(i + 1 + 4, str, 10);
-            StringBuffer<9> fmt = str;
-            fmt += " ";
-
-            const auto score = game.highscores()[i + 4];
-
-            auto highlight = score == game.score() and not highlighted;
-            if (highlight) {
-                highlighted = true;
-            }
-
-            print_metric(fmt.c_str(), score, "", highlight);
-        }
+        show_highscores(4);
         break;
 
     case 3: {
