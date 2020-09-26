@@ -125,6 +125,7 @@ enum class LocaleString {
     update_required,
     peer_requires_update,
     overall_heading,
+    peer_used_lethargy,
     count
 };
 

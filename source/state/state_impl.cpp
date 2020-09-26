@@ -55,9 +55,9 @@ void CommonNetworkListener::receive(const net_event::LethargyActivated&,
                                     Game& game)
 {
     add_lethargy_powerup(pfrm, game);
-
-    net_event::LethargyActivated event;
-    net_event::transmit(pfrm, event);
+    push_notification(pfrm,
+                      game.state(),
+                      locale_string(LocaleString::peer_used_lethargy));
 }
 
 
@@ -428,6 +428,8 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform& pfrm, Game& game) {
          add_lethargy_powerup(pfrm, game);
+         net_event::LethargyActivated event;
+         net_event::transmit(pfrm, event);
          return null_state();
      },
      LocaleString::lethargy_title,

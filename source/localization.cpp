@@ -441,6 +441,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::update_required: return "Update required!";
         case LocaleString::peer_requires_update: return "Peer requires update!";
         case LocaleString::overall_heading: return "overall";
+        case LocaleString::peer_used_lethargy: return "Peer used lethargy!";
         default: return empty_str;
         }
         break;
