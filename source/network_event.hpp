@@ -36,6 +36,7 @@ struct Header {
         data_stream_read_response,
         data_stream_done_reading,
         quick_chat,
+        lethargy_activated,
     } message_type_;
 };
 static_assert(sizeof(Header) == 1);
@@ -374,6 +375,15 @@ struct QuickChat {
 };
 
 
+struct LethargyActivated {
+    Header header_;
+
+    char unused_[11];
+
+    static const auto mt = Header::MessageType::lethargy_activated;
+};
+
+
 template <typename T> void transmit(Platform& pfrm, T& message)
 {
     static_assert(sizeof(T) <= Platform::NetworkPeer::max_message_size);
@@ -449,6 +459,9 @@ public:
     {
     }
     virtual void receive(const ProgramVersion&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const LethargyActivated&, Platform&, Game&)
     {
     }
 };

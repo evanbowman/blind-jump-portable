@@ -51,6 +51,7 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             HANDLE_MESSAGE(DataStreamReadRequest)
             HANDLE_MESSAGE(DataStreamDoneReading)
             HANDLE_MESSAGE(ProgramVersion)
+            HANDLE_MESSAGE(LethargyActivated)
         }
 
         error(pfrm, "garbled message!?");

@@ -16,16 +16,7 @@ class CommonNetworkListener : public net_event::Listener {
 public:
     void receive(const net_event::PlayerEnteredGate&,
                  Platform& pfrm,
-                 Game& game) override
-    {
-        if (game.peer()) {
-            game.peer()->warping() = true;
-        }
-
-        push_notification(pfrm,
-                          game.state(),
-                          locale_string(LocaleString::peer_transport_waiting));
-    }
+                 Game& game) override;
 
     void receive(const net_event::ItemChestOpened& o,
                  Platform& pfrm,
@@ -46,42 +37,11 @@ public:
 
     void receive(const net_event::ProgramVersion& vn,
                  Platform& pfrm,
-                 Game& game) override
-    {
-        const auto major = vn.info_.major_.get();
-        const auto minor = vn.info_.minor_.get();
-        const auto subminor = vn.info_.subminor_.get();
-        const auto revision = vn.info_.revision_.get();
+                 Game& game) override;
 
-        auto local_vn = std::make_tuple(PROGRAM_MAJOR_VERSION,
-                                        PROGRAM_MINOR_VERSION,
-                                        PROGRAM_SUBMINOR_VERSION,
-                                        PROGRAM_VERSION_REVISION);
-
-        auto peer_vn = std::tie(major, minor, subminor, revision);
-
-        if (peer_vn not_eq local_vn) {
-
-            game.peer().reset();
-
-            if (peer_vn > local_vn) {
-
-                push_notification(pfrm,
-                                  game.state(),
-                                  locale_string(LocaleString::update_required));
-            } else {
-                auto str = locale_string(LocaleString::peer_requires_update);
-                push_notification(pfrm,
-                                  game.state(),
-                                  str);
-            }
-
-            pfrm.network_peer().disconnect();
-
-        } else {
-            info(pfrm, "received valid program version");
-        }
-    }
+    void receive(const net_event::LethargyActivated&,
+                 Platform&,
+                 Game&) override;
 };
 
 

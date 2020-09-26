@@ -15,6 +15,108 @@ StatePtr State::update(Platform&, Game&, Microseconds)
 }
 
 
+static void lethargy_update(Platform& pfrm, Game& game)
+{
+    if (auto lethargy = get_powerup(game, Powerup::Type::lethargy)) {
+        lethargy->dirty_ = true;
+        if (lethargy->parameter_ > 0) {
+            lethargy->parameter_ -= seconds(1);
+            if (not game.on_timeout(pfrm, seconds(1), lethargy_update)) {
+                // Because, if we fail to enqueue the timeout, I believe that
+                // the powerup would get stuck.
+                lethargy->parameter_ = 0;
+            }
+        } else {
+            lethargy->parameter_ = 0;
+        }
+    }
+}
+
+
+static void add_lethargy_powerup(Platform& pfrm, Game& game)
+{
+    add_powerup(game,
+                Powerup::Type::lethargy,
+                seconds(18),
+                Powerup::DisplayMode::timestamp);
+
+    // For simplicity, I've implemented lethargy with timeouts. Easier to keep
+    // behavior consistent across multiplayer games this way. Otherwise, each
+    // game state would need to remember to update the powerup countdown timer
+    // on each update step.
+    game.on_timeout(pfrm, seconds(1), [](Platform& pfrm, Game& game) {
+        lethargy_update(pfrm, game);
+    });
+}
+
+
+void CommonNetworkListener::receive(const net_event::LethargyActivated&,
+                                    Platform& pfrm,
+                                    Game& game)
+{
+    add_lethargy_powerup(pfrm, game);
+
+    net_event::LethargyActivated event;
+    net_event::transmit(pfrm, event);
+}
+
+
+
+void CommonNetworkListener::receive(const net_event::ProgramVersion& vn,
+             Platform& pfrm,
+             Game& game)
+{
+    const auto major = vn.info_.major_.get();
+    const auto minor = vn.info_.minor_.get();
+    const auto subminor = vn.info_.subminor_.get();
+    const auto revision = vn.info_.revision_.get();
+
+    auto local_vn = std::make_tuple(PROGRAM_MAJOR_VERSION,
+                                    PROGRAM_MINOR_VERSION,
+                                    PROGRAM_SUBMINOR_VERSION,
+                                    PROGRAM_VERSION_REVISION);
+
+    auto peer_vn = std::tie(major, minor, subminor, revision);
+
+    if (peer_vn not_eq local_vn) {
+
+        game.peer().reset();
+
+        if (peer_vn > local_vn) {
+
+            push_notification(pfrm,
+                              game.state(),
+                              locale_string(LocaleString::update_required));
+        } else {
+            auto str = locale_string(LocaleString::peer_requires_update);
+            push_notification(pfrm,
+                              game.state(),
+                              str);
+        }
+
+        pfrm.network_peer().disconnect();
+
+    } else {
+        info(pfrm, "received valid program version");
+    }
+}
+
+
+void CommonNetworkListener::receive(const net_event::PlayerEnteredGate&,
+                                    Platform& pfrm,
+                                    Game& game)
+{
+    if (game.peer()) {
+        game.peer()->warping() = true;
+    }
+
+    push_notification(pfrm,
+                      game.state(),
+                      locale_string(LocaleString::peer_transport_waiting));
+}
+
+
+
 bool within_view_frustum(const Platform::Screen& screen,
                          const Vec2<Float>& pos);
 
@@ -99,6 +201,16 @@ void repaint_powerups(Platform& pfrm,
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
+    auto get_normalized_param = [](Powerup& powerup) {
+        switch (powerup.display_mode_) {
+        case Powerup::DisplayMode::integer:
+            return powerup.parameter_;
+        case Powerup::DisplayMode::timestamp:
+            return powerup.parameter_ / 1000000;
+        }
+        return 0;
+    };
+
     if (clean) {
 
         repaint_health_score(pfrm, game, health, score, align);
@@ -112,7 +224,7 @@ void repaint_powerups(Platform& pfrm,
                 pfrm,
                 OverlayCoord{(*health)->position().x, write_pos},
                 powerup.icon_index(),
-                powerup.parameter_,
+                get_normalized_param(powerup),
                 align);
 
             powerup.dirty_ = false;
@@ -122,16 +234,8 @@ void repaint_powerups(Platform& pfrm,
     } else {
         for (u32 i = 0; i < game.powerups().size(); ++i) {
             if (game.powerups()[i].dirty_) {
-                switch (game.powerups()[i].display_mode_) {
-                case Powerup::DisplayMode::integer:
-                    (*powerups)[i].set_value(game.powerups()[i].parameter_);
-                    break;
-
-                case Powerup::DisplayMode::timestamp:
-                    (*powerups)[i].set_value(game.powerups()[i].parameter_ /
-                                             1000000);
-                    break;
-                }
+                const auto p = get_normalized_param(game.powerups()[i]);
+                (*powerups)[i].set_value(p);
                 game.powerups()[i].dirty_ = false;
             }
         }
@@ -322,11 +426,8 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::accelerator_title,
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(lethargy),
-     [](Platform&, Game& game) {
-         add_powerup(game,
-                     Powerup::Type::lethargy,
-                     seconds(18),
-                     Powerup::DisplayMode::timestamp);
+     [](Platform& pfrm, Game& game) {
+         add_lethargy_powerup(pfrm, game);
          return null_state();
      },
      LocaleString::lethargy_title,

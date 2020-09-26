@@ -358,17 +358,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     game.details().transform(update_policy);
 
     auto enemy_timestep = delta;
-    if (auto lethargy = get_powerup(game, Powerup::Type::lethargy)) {
-        if (lethargy->parameter_ > 0) {
-            // FIXME: Improve this code! Division! Yikes!
-            const auto last = lethargy->parameter_ / 1000000;
-            lethargy->parameter_ -= delta;
-            const auto current = lethargy->parameter_ / 1000000;
-            if (current not_eq last) {
-                lethargy->dirty_ = true;
-            }
-            enemy_timestep /= 2;
-        }
+    if (get_powerup(game, Powerup::Type::lethargy)) {
+        enemy_timestep /= 2;
     }
 
     if (pfrm.keyboard().up_transition(game.action1_key())) {

@@ -162,13 +162,15 @@ public:
     // NOTE: May need to increase internal storage for Function eventually... not sure...
     using DeferredCallback = Function<16, void(Platform&, Game&)>;
 
-    void on_timeout(Platform& pfrm,
+    bool on_timeout(Platform& pfrm,
                     Microseconds expire_time,
                     const DeferredCallback& callback)
     {
         if (not deferred_callbacks_.push_back({callback, expire_time})) {
             warning(pfrm, "failed to enq timeout");
+            return false;
         }
+        return true;
     }
 
     PersistentData& persistent_data()
