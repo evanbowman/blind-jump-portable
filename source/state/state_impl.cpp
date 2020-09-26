@@ -265,6 +265,11 @@ void update_powerups(Platform& pfrm,
         }
     }
 
+    if (game.powerups().size() not_eq powerups->size()) {
+        update_powerups = true;
+        update_all = true;
+    }
+
     if (update_powerups) {
         repaint_powerups(
             pfrm, game, update_all, health, score, powerups, align);
