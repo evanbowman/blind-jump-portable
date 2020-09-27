@@ -1671,6 +1671,52 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     }
 
+    if (zone_info(level()) == zone_4) {
+        tiles_.for_each([&](u8 tile, int x, int y) {
+            if (tile == Tile::ledge) {
+                if (tiles_.get_tile(x + 1, y) == Tile::plate) {
+                    grass_overlay->set_tile(x, y, 33);
+                }
+                if (tiles_.get_tile(x - 1, y) == Tile::plate) {
+                    if (grass_overlay->get_tile(x, y) == 33) {
+                        grass_overlay->set_tile(x, y, 32);
+                    } else {
+                        grass_overlay->set_tile(x, y, 34);
+                    }
+                }
+                if (tiles_.get_tile(x, y + 1) == Tile::plate) {
+                    switch (grass_overlay->get_tile(x, y)) {
+                    case 33:
+                        grass_overlay->set_tile(x, y, 30);
+                        break;
+
+                    case 34:
+                        grass_overlay->set_tile(x, y, 29);
+                        break;
+
+                    case 32:
+                        grass_overlay->set_tile(x, y, 28);
+                        break;
+                    }
+                }
+            }
+            if (tile == Tile::none) {
+                if (tiles_.get_tile(x + 1, y) == Tile::plate and
+                    tiles_.get_tile(x, y + 1) == Tile::plate) {
+                    grass_overlay->set_tile(x, y, 36);
+                }
+                if (tiles_.get_tile(x - 1, y) == Tile::plate and
+                    tiles_.get_tile(x, y + 1) == Tile::plate) {
+                    if (grass_overlay->get_tile(x, y) == 36) {
+                        grass_overlay->set_tile(x, y, 31);
+                    } else {
+                        grass_overlay->set_tile(x, y, 35);
+                    }
+                }
+            }
+        });
+    }
+
     grass_overlay->for_each([&](u8& tile, int x, int y) {
         if (tile == Tile::plate) {
             auto match = tiles_.get_tile(x, y);
