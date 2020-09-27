@@ -1714,6 +1714,54 @@ COLD void Game::regenerate_map(Platform& pfrm)
                     }
                 }
             }
+            if (tile == Tile::sand) {
+                if (tiles_.get_tile(x - 1, y) == Tile::plate and
+                    tiles_.get_tile(x, y - 1) == Tile::plate and
+                    tiles_.get_tile(x - 1, y - 1) not_eq Tile::plate) {
+
+                    grass_overlay->set_tile(x, y, 34);
+                }
+                if (tiles_.get_tile(x + 1, y) == Tile::plate and
+                    tiles_.get_tile(x, y - 1) == Tile::plate and
+                    tiles_.get_tile(x + 1, y - 1) not_eq Tile::plate) {
+
+                    if (grass_overlay->get_tile(x, y) == 34) {
+                        grass_overlay->set_tile(x, y, 32);
+                    } else {
+                        grass_overlay->set_tile(x, y, 33);
+                    }
+                }
+                if (tiles_.get_tile(x - 1, y) == Tile::plate and
+                    tiles_.get_tile(x, y + 1) == Tile::plate and
+                    tiles_.get_tile(x - 1, y + 1) not_eq Tile::plate) {
+
+                    if (grass_overlay->get_tile(x, y) == 34) {
+                        grass_overlay->set_tile(x, y, 29);
+                    } else if (grass_overlay->get_tile(x, y) == 32) {
+                        grass_overlay->set_tile(x, y, 28);
+                    } else {
+                        grass_overlay->set_tile(x, y, 35);
+                    }
+                }
+                if (tiles_.get_tile(x + 1, y) == Tile::plate and
+                    tiles_.get_tile(x, y + 1) == Tile::plate and
+                    tiles_.get_tile(x + 1, y + 1) not_eq Tile::plate) {
+
+                    if (grass_overlay->get_tile(x, y) == 33) {
+                        grass_overlay->set_tile(x, y, 30);
+                    } else if (grass_overlay->get_tile(x, y) == 35) {
+                        grass_overlay->set_tile(x, y, 31);
+                    } else if (grass_overlay->get_tile(x, y) == 29 or
+                               grass_overlay->get_tile(x, y) == 28 or
+                               grass_overlay->get_tile(x, y) == 32 or
+                               grass_overlay->get_tile(x, y) == 31) {
+                        grass_overlay->set_tile(x, y, 28);
+                    } else {
+                        grass_overlay->set_tile(x, y, 36);
+                    }
+                }
+            }
+
         });
     }
 
