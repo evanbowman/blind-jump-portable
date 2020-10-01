@@ -46,9 +46,14 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
 
 
     tiles.for_each([&](u8& t, int x, int y) {
-        if (error_state)
+        if (error_state) {
             return;
-        if (is_walkable(t)) {
+        }
+
+        if (is_walkable(t) and
+            x < TileMap::width - 1 and
+            y < TileMap::height - 1) {
+
             if (auto obj = memory_.alloc<PathVertexData>(pfrm)) {
                 obj->coord_ = PathCoord{u8(x), u8(y)};
                 static_assert(std::is_trivially_destructible<PathVertexData>());

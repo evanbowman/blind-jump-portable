@@ -75,8 +75,6 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
     head_.set_mix(sprite_.get_mix());
     blaster_.set_mix(sprite_.get_mix());
 
-    anim_timer_ = milliseconds(100);
-
     sprite_.set_texture_index(info.get_texture_index());
 
     // Sorry about this switch statement. Basically, we want to render a

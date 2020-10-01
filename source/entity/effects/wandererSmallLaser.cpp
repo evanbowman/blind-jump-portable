@@ -5,7 +5,8 @@
 WandererSmallLaser::WandererSmallLaser(const Vec2<Float>& position,
                                        const Vec2<Float>& target,
                                        Float speed)
-    : OrbShot(position, target, speed)
+    : OrbShot(position, target, speed),
+      flicker_timer_(rng::choice<milliseconds(40)>(rng::utility_state))
 {
 }
 

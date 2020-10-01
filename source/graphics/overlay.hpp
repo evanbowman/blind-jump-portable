@@ -216,7 +216,7 @@ public:
     {
     }
 
-    HorizontalFlashAnimation(HorizontalFlashAnimation&) = delete;
+    HorizontalFlashAnimation(const HorizontalFlashAnimation&) = delete;
 
     ~HorizontalFlashAnimation()
     {

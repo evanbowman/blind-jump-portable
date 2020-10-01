@@ -49,11 +49,6 @@ public:
         return shield_radius_;
     }
 
-    int shield_radius2() const
-    {
-        return shield_radius2_;
-    }
-
     bool second_form() const
     {
         return not third_form() and get_health() < 80;
@@ -91,7 +86,6 @@ private:
     Microseconds charge_timer_;
     Vec2<Float> move_vec_;
     int shield_radius_;
-    int shield_radius2_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };
 

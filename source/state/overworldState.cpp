@@ -162,6 +162,8 @@ void OverworldState::receive(const net_event::EnemyHealthChanged& hc,
 static void transmit_player_info(Platform& pfrm, Game& game)
 {
     net_event::PlayerInfo info;
+    info.opt1_ = 0;
+    info.opt2_ = 0;
     info.header_.message_type_ = net_event::Header::player_info;
     info.x_.set(game.player().get_position().cast<s16>().x);
     info.y_.set(game.player().get_position().cast<s16>().y);

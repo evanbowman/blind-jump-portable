@@ -26,7 +26,6 @@ CutsceneCloud::CutsceneCloud(const Vec2<Float>& position)
         case 1:
         case 6:
             return 0.00009f;
-            return 0.00009f;
         case 5:
         case 2:
             return 0.00008f;

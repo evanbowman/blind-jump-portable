@@ -53,10 +53,12 @@ void on_enemy_destroyed(Platform& pfrm,
                 ++count;
             }
 
-            game.details().spawn<Item>(
-                position,
-                pfrm,
-                allowed_item_drop[rng::choice(count, rng::critical_state)]);
+            if (count > 0) {
+                game.details().spawn<Item>(
+                    position,
+                    pfrm,
+                    allowed_item_drop[rng::choice(count, rng::critical_state)]);
+            }
         }
     }
 }

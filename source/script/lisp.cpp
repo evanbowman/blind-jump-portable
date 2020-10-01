@@ -656,7 +656,7 @@ static u32 eval_expr(const char* expr, u32 len)
 
     i += eat_whitespace(expr + i);
 
-    for (; i < len; ++i) {
+    if (i < len) {
         int start = i;
         while (i < len and i < max_fn_name and (not is_whitespace(expr[i])) and
                expr[i] not_eq ')') {
@@ -665,7 +665,6 @@ static u32 eval_expr(const char* expr, u32 len)
             ++i;
         }
         fn_name[i - start] = '\0';
-        break;
     }
 
     if (str_cmp("if", fn_name) == 0) {
@@ -818,7 +817,7 @@ u32 eval(const char* code)
     u32 i = 0;
     i += eat_whitespace(code);
 
-    for (; i < code_len; ++i) {
+    if (i < code_len) {
         if (is_whitespace(code[i])) {
             while (true)
                 ;
@@ -1315,7 +1314,7 @@ void init(Platform& pfrm)
                     end = get_op(1)->integer_.value_;
                     incr = get_op(0)->integer_.value_;
                 } else {
-                    L_EXPECT_ARGC(argc, 2);
+                    return lisp::make_error(lisp::Error::Code::invalid_argc);
                 }
 
                 if (incr == 0) {

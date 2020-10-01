@@ -144,8 +144,9 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
             if ((target_ = make_selector_target(pfrm, game))) {
                 mode_ = Mode::update_selector;
                 selector_start_pos_ = [&] {
-                    for (auto& sel : game.effects().get<Reticule>()) {
-                        return sel->get_position();
+                    if (length(game.effects().get<Reticule>())) {
+                        return (*game.effects().get<Reticule>().begin())
+                            ->get_position();
                     }
                     return game.player().get_position();
                 }();

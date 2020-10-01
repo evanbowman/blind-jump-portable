@@ -55,6 +55,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/details/scavenger.cpp
   ${SOURCE_DIR}/entity/effects/explosion.cpp
   ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
+  ${SOURCE_DIR}/entity/details/terminal.cpp
   ${SOURCE_DIR}/entity/enemies/sinkhole.cpp
   ${SOURCE_DIR}/entity/bosses/wanderer.cpp
   ${SOURCE_DIR}/entity/bosses/theTwins.cpp

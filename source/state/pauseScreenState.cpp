@@ -129,7 +129,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
     } else {
 
         const auto& line = texts_[cursor_loc_];
-        const Float y_center = pfrm.screen().size().y / 2;
+        const auto y_center = pfrm.screen().size().y / 2;
         const Float y_line = line.coord().y * 8;
         const auto y_diff = (y_line - y_center) * 0.4f;
 

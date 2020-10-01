@@ -54,7 +54,7 @@ public:
     template <typename F> void for_each(F&& proc)
     {
         for (Index i = 0; i < width; ++i) {
-            for (Index j = 0; j < height; ++j) {
+             for (Index j = 0; j < height; ++j) {
                 proc(data_[TileMap::index(i, j)], i, j);
             }
         }

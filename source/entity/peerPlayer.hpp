@@ -54,7 +54,6 @@ private:
     Sprite shadow_;
     Sprite head_;
     Vec2<Float> interp_offset_;
-    Microseconds anim_timer_;
     Sprite blaster_;
     bool warping_ = false;
 };

@@ -347,8 +347,8 @@ const char* locale_string(LocaleString ls)
             "sometimes referred to as a blind jump.";
         case LocaleString::empty_inventory_str: return "Empty";
         case LocaleString::old_poster_title: return "Old poster (1)";
-        case LocaleString::surveyor_logbook_title: return "Surveyor's logbook";
-        case LocaleString::engineer_notebook_title: return "Engineer's notebook";
+        case LocaleString::surveyor_logbook_title: return "Notebook (1/2)";
+        case LocaleString::engineer_notebook_title: return "Notebook (2/2)";
         case LocaleString::blaster_title: return "Blaster";
         case LocaleString::accelerator_title: return "Accelerator (60 shots)";
         case LocaleString::postal_advert_title: return "Low Orbit Postal Advert";

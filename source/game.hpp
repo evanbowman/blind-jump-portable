@@ -13,6 +13,7 @@
 #include "entity/details/lander.hpp"
 #include "entity/details/rubble.hpp"
 #include "entity/details/scavenger.hpp"
+#include "entity/details/terminal.hpp"
 #include "entity/details/transporter.hpp"
 #include "entity/effects/conglomerateShot.hpp"
 #include "entity/effects/explosion.hpp"
@@ -93,7 +94,8 @@ public:
                                     Rubble,
                                     Lander,
                                     CutsceneCloud,
-                                    CutsceneBird>;
+                                    CutsceneBird,
+                                    Terminal>;
 
     using EffectGroup = EntityGroup<20,
                                     Reticule,

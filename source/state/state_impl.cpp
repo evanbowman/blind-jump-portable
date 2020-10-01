@@ -465,7 +465,6 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {STANDARD_ITEM_HANDLER(signal_jammer),
      [](Platform&, Game&) {
          return state_pool().create<SignalJammerSelectorState>();
-         return null_state();
      },
      LocaleString::signal_jammer_title,
      InventoryItemHandler::custom},

@@ -93,5 +93,9 @@ Float items_collected_percentage(const Inventory& inventory,
         }
     }
 
-    return Float(collected_persistent_items) / total_persistent_items;
+    if (total_persistent_items not_eq 0) {
+        return Float(collected_persistent_items) / total_persistent_items;
+    } else {
+        return 1.f;
+    }
 }

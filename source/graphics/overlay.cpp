@@ -158,7 +158,7 @@ MediumIcon::~MediumIcon()
 }
 
 
-TextView::TextView(Platform& pfrm) : pfrm_(pfrm)
+TextView::TextView(Platform& pfrm) : pfrm_(pfrm), parsed_(0)
 {
 }
 
