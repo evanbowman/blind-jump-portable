@@ -3,8 +3,9 @@
 <a href="https://scan.coverity.com/projects/evanbowman-blind-jump-portable">
   <img alt="Coverity Scan Build Status"
        src="https://scan.coverity.com/projects/21790/badge.svg"/>
-</a>
-<br>
+</a>  
+<br/><br/>
+
 
 You should find this readme mosty up-to-date, but as the game is under active development, everything is subject to change, and sometimes edits to the readme lag significantly behind changes to the game itself.
 
