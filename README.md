@@ -24,6 +24,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Implementation](#implementation)
       * [Scripting](#scripting)
    * [Building](#building)
+   * [Security](#security)
 <!--te-->
 
 ## Introduction
@@ -95,3 +96,8 @@ make
 NOTE: you can also get a containerized build environment from the link below, although you'll have to remember to run `git pull` when entering the container, because I built the container with a frozen version of the repository. If this is inconvenient for you, feel free to build the container yourself using the steps above.
 
 https://hub.docker.com/r/evanbowman/blind_jump_build
+
+
+## Security
+
+I periodically submit all of this project's source code to the Coverity static analyzer, which checks for buffer overruns, memory corruption, etc. Currently, BlindJump is 100% defect free. Let's keep it that way.
