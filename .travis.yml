@@ -1,8 +1,12 @@
+language: cpp
+dist: bionic
+compiler: gcc
+
 env:
   global:
     # COVERITY_SCAN_TOKEN
     # ** specific to your project **
-    - secure: "R2SCZ__O6VlqXx9ubxr3tA"
+    - secure: "f4zkWlhnY+ENTguhNwqVXOzo63WWqq3X7rvNIIJNLf8pwDmRG7p/pQyNnevI6lrkYBBySNK2QJ48qmQLbd4BGr6yHCxsM3UCftuaLMUYBWzkDycnTAETy3rwN2RvVFUPdq4hUC/GYdR8X2otLiVQnFkh9Ckq6hj+eVHLgG+ejLEeb+Vjjxg1cAUX3HOsbF6RpRUje2wdgOkyjwq4F5t2B/6X7dEmxceLum8ENUlVrza4xhBWEzCNSKQq53lCzJHksDwEtFso5UarBl+1V9JWrZ6vY1qz0YUC+tzmN6lFKWtUpcZ/1yyUzjVFgywJ2P6l2+/LRGzu3SewEAiP/FGlrNN2Rs9FqpNfwRpBLBoG0Uh5GvjDFvjFBPzQFVWTnbuVcFe4nTYImnEKK2jPuXe5YYZBxLW9qiu4BHR6WgYUbFHuiBfZWHVBGGPbzLckThE1cBAEtR9wx5MvsKugKy3UT4RBubSLauhqRdwwDeMecWy5XmUs+rfHjnNG5jxjqFhrcKLHMBbYXgAI/2IvMer/UJgZjGrM1dGNC9hHgDzNrzECRTQ9EV9J498s8W6S6MlpkewkmacCfyADnQii0h5yM41dQxztOdGU6exPDAbMIrJNizu1LqbulYYp/pY+clZEQIpYeX/GzBqxWBAPyy4lWL1MNWcol66RFC0eU97LsEc="
 
 addons:
   apt:
