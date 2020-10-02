@@ -19,5 +19,12 @@ addons:
         description: ""
       notification_email: evan.a.bowman@gmail.com
       build_command_prepend: "cd build && ./set-desktop-toolchain.sh"
-      build_command:   "make"
+      build_command: "make"
       branch_pattern: coverity-scan
+
+script:
+  - cd external/SFML-2.5.1/
+  - cmake . && make
+  - cd ../../build
+  - ./set-desktop-platform.sh
+  - make
