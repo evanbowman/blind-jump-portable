@@ -239,8 +239,11 @@ static void show_offscreen_player_icon(Platform& pfrm, Game& game)
 
     const auto slope = Float(dy) / dx;
 
-    if (-view_size.y / 2 <= slope * (view_size.x / 2) and
-        slope * (view_size.x / 2) <= view_size.y / 2) {
+    const int center_y = view_size.y / 2;
+    const int center_x = view_size.x / 2;
+
+    if (-center_y <= slope * center_x and
+        slope * center_x <= center_y) {
         if (view_center.x < peer_pos.x) {
             const auto y =
                 clamp(peer_pos.y, view_tl.y, view_tl.y + view_size.y - 32);
@@ -255,8 +258,8 @@ static void show_offscreen_player_icon(Platform& pfrm, Game& game)
             // left edge
             arrow_spr.set_rotation((std::numeric_limits<s16>::max() * 1) / 4);
         }
-    } else if (-view_size.x / 2 <= (view_size.y / 2) / slope and
-               (view_size.y / 2) / slope <= view_size.x / 2) {
+    } else if (-center_x <= center_y / slope and
+               center_y / slope <= center_x) {
         if (view_center.y < peer_pos.y) {
             const auto x =
                 clamp(peer_pos.x, view_tl.x, view_tl.x + view_size.x - 32);

@@ -612,7 +612,7 @@ void Player::move(const Vec2<Float>& pos)
 }
 
 
-Blaster::Blaster() : dir_(Cardinal::south)
+Blaster::Blaster() : dir_(Cardinal::south), visible_(false)
 {
     sprite_.set_size(Sprite::Size::w16_h32);
     sprite_.set_origin({8, 8});
