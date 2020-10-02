@@ -1,6 +1,8 @@
-language: cpp
-dist: bionic
-compiler: gcc
+env:
+  global:
+    # COVERITY_SCAN_TOKEN
+    # ** specific to your project **
+    - secure: "R2SCZ__O6VlqXx9ubxr3tA"
 
 addons:
   apt:
@@ -12,6 +14,6 @@ addons:
         name: "evanbowman/blind-jump-portable"
         description: ""
       notification_email: evan.a.bowman@gmail.com
-      build_command_prepend: "cmake build"
-      build_command:   "make -C build"
+      build_command_prepend: "cd build && ./set-desktop-toolchain.sh"
+      build_command:   "make"
       branch_pattern: coverity-scan
