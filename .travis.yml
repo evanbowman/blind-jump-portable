@@ -1,0 +1,17 @@
+language: cpp
+dist: bionic
+compiler: gcc
+
+addons:
+  apt:
+    packages:
+      - cmake
+
+    coverity_scan:
+      project:
+        name: "evanbowman/blind-jump-portable"
+        description: ""
+      notification_email: evan.a.bowman@gmail.com
+      build_command_prepend: "cmake build"
+      build_command:   "make -C build"
+      branch_pattern: coverity-scan
