@@ -8,7 +8,7 @@
 // there is very little texture memory available for displaying glyphs. You may
 // only be able to display 80 or so unique characters on the screen at a time.
 std::optional<Platform::TextureMapping>
-english_spanish_french_texture_map(const utf8::Codepoint& cp)
+standard_texture_map(const utf8::Codepoint& cp)
 {
     auto mapping = [&]() -> std::optional<u16> {
         switch (cp) {
@@ -179,6 +179,7 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
         case '#':
             return 105;
         default:
+            // extended spanish and french characters
             if (cp == utf8::getc(u8"ñ")) {
                 return 73;
             } else if (cp == utf8::getc(u8"á")) {
@@ -224,6 +225,166 @@ english_spanish_french_texture_map(const utf8::Codepoint& cp)
             } else if (cp == utf8::getc(u8"¿")) {
                 return 97;
             }
+            // katakana
+            else if (cp == utf8::getc(u8"ア")) {
+                return 106;
+            } else if (cp == utf8::getc(u8"イ")) {
+                return 107;
+            } else if (cp == utf8::getc(u8"ウ")) {
+                return 108;
+            } else if (cp == utf8::getc(u8"エ")) {
+                return 109;
+            } else if (cp == utf8::getc(u8"オ")) {
+                return 110;
+            } else if (cp == utf8::getc(u8"カ")) {
+                return 111;
+            } else if (cp == utf8::getc(u8"キ")) {
+                return 112;
+            } else if (cp == utf8::getc(u8"ク")) {
+                return 113;
+            } else if (cp == utf8::getc(u8"ケ")) {
+                return 114;
+            } else if (cp == utf8::getc(u8"コ")) {
+                return 115;
+            } else if (cp == utf8::getc(u8"サ")) {
+                return 116;
+            } else if (cp == utf8::getc(u8"シ")) {
+                return 117;
+            } else if (cp == utf8::getc(u8"ス")) {
+                return 118;
+            } else if (cp == utf8::getc(u8"セ")) {
+                return 119;
+            } else if (cp == utf8::getc(u8"ソ")) {
+                return 120;
+            } else if (cp == utf8::getc(u8"タ")) {
+                return 121;
+            } else if (cp == utf8::getc(u8"チ")) {
+                return 122;
+            } else if (cp == utf8::getc(u8"ツ")) {
+                return 123;
+            } else if (cp == utf8::getc(u8"テ")) {
+                return 124;
+            } else if (cp == utf8::getc(u8"ト")) {
+                return 125;
+            } else if (cp == utf8::getc(u8"ナ")) {
+                return 126;
+            } else if (cp == utf8::getc(u8"ニ")) {
+                return 127;
+            } else if (cp == utf8::getc(u8"ヌ")) {
+                return 128;
+            } else if (cp == utf8::getc(u8"ネ")) {
+                return 129;
+            } else if (cp == utf8::getc(u8"ノ")) {
+                return 130;
+            } else if (cp == utf8::getc(u8"ハ")) {
+                return 131;
+            } else if (cp == utf8::getc(u8"ヒ")) {
+                return 132;
+            } else if (cp == utf8::getc(u8"フ")) {
+                return 133;
+            } else if (cp == utf8::getc(u8"ヘ")) {
+                return 134;
+            } else if (cp == utf8::getc(u8"ホ")) {
+                return 135;
+            } else if (cp == utf8::getc(u8"マ")) {
+                return 136;
+            } else if (cp == utf8::getc(u8"ミ")) {
+                return 137;
+            } else if (cp == utf8::getc(u8"ム")) {
+                return 138;
+            } else if (cp == utf8::getc(u8"メ")) {
+                return 139;
+            } else if (cp == utf8::getc(u8"モ")) {
+                return 140;
+            } else if (cp == utf8::getc(u8"ヤ")) {
+                return 141;
+            } else if (cp == utf8::getc(u8"ユ")) {
+                return 142;
+            } else if (cp == utf8::getc(u8"ヨ")) {
+                return 143;
+            } else if (cp == utf8::getc(u8"ラ")) {
+                return 144;
+            } else if (cp == utf8::getc(u8"リ")) {
+                return 145;
+            } else if (cp == utf8::getc(u8"ル")) {
+                return 146;
+            } else if (cp == utf8::getc(u8"レ")) {
+                return 147;
+            } else if (cp == utf8::getc(u8"ロ")) {
+                return 148;
+            } else if (cp == utf8::getc(u8"ワ")) {
+                return 149;
+            } else if (cp == utf8::getc(u8"ヲ")) {
+                return 150;
+            } else if (cp == utf8::getc(u8"ン")) {
+                return 151;
+            } else if (cp == utf8::getc(u8"ガ")) {
+                return 152;
+            } else if (cp == utf8::getc(u8"ギ")) {
+                return 153;
+            } else if (cp == utf8::getc(u8"グ")) {
+                return 154;
+            } else if (cp == utf8::getc(u8"ゲ")) {
+                return 155;
+            } else if (cp == utf8::getc(u8"ゴ")) {
+                return 156;
+            } else if (cp == utf8::getc(u8"ゲ")) {
+                return 157;
+            } else if (cp == utf8::getc(u8"ジ")) {
+                return 158;
+            } else if (cp == utf8::getc(u8"ズ")) {
+                return 159;
+            } else if (cp == utf8::getc(u8"ゼ")) {
+                return 160;
+            } else if (cp == utf8::getc(u8"ゾ")) {
+                return 161;
+            } else if (cp == utf8::getc(u8"ダ")) {
+                return 162;
+            } else if (cp == utf8::getc(u8"ヂ")) {
+                return 163;
+            } else if (cp == utf8::getc(u8"ヅ")) {
+                return 164;
+            } else if (cp == utf8::getc(u8"デ")) {
+                return 165;
+            } else if (cp == utf8::getc(u8"ド")) {
+                return 166;
+            } else if (cp == utf8::getc(u8"バ")) {
+                return 167;
+            } else if (cp == utf8::getc(u8"パ")) {
+                return 168;
+            } else if (cp == utf8::getc(u8"ビ")) {
+                return 169;
+            } else if (cp == utf8::getc(u8"ピ")) {
+                return 170;
+            } else if (cp == utf8::getc(u8"ブ")) {
+                return 171;
+            } else if (cp == utf8::getc(u8"プ")) {
+                return 172;
+            } else if (cp == utf8::getc(u8"ベ")) {
+                return 173;
+            } else if (cp == utf8::getc(u8"ペ")) {
+                return 174;
+            } else if (cp == utf8::getc(u8"ボ")) {
+                return 175;
+            } else if (cp == utf8::getc(u8"ポ")) {
+                return 176;
+            } else if (cp == utf8::getc(u8"ー")) {
+                return 177;
+            } else if (cp == utf8::getc(u8"ヴ")) {
+                return 178;
+            } else if (cp == utf8::getc(u8"ァ")) {
+                return 179;
+            } else if (cp == utf8::getc(u8"ィ")) {
+                return 180;
+            } else if (cp == utf8::getc(u8"ゥ")) {
+                return 181;
+            } else if (cp == utf8::getc(u8"ェ")) {
+                return 182;
+            } else if (cp == utf8::getc(u8"ォ")) {
+                return 183;
+            } else if (cp == utf8::getc(u8"・")) {
+                return 184;
+            }
             return std::nullopt;
         }
     }();
@@ -244,7 +405,8 @@ std::optional<Platform::TextureMapping> null_texture_map(const utf8::Codepoint&)
 static const Platform::TextureCpMapper
     texture_codepoint_mappers[static_cast<int>(LocaleLanguage::count)] = {
         null_texture_map,
-        english_spanish_french_texture_map};
+        standard_texture_map,
+        standard_texture_map};
 
 
 static LocaleLanguage language = LocaleLanguage::null;
@@ -273,10 +435,25 @@ StringBuffer<31> locale_language_name(LocaleLanguage ll)
     switch (language) {
     case LocaleLanguage::english:
         switch (ll) {
+        case LocaleLanguage::spanish:
+            return "spanish";
         case LocaleLanguage::english:
             return "english";
         case LocaleLanguage::null:
             return "none";
+        case LocaleLanguage::count:
+            return "error";
+        }
+        break;
+
+    case LocaleLanguage::spanish:
+        switch (ll) {
+        case LocaleLanguage::spanish:
+            return "español";
+        case LocaleLanguage::english:
+            return "inglés";
+        case LocaleLanguage::null:
+            return "nada";
         case LocaleLanguage::count:
             return "error";
         }
@@ -301,10 +478,51 @@ const char* locale_string(LocaleString ls)
     // clang-format off
 
     switch (language) {
+    case LocaleLanguage::spanish:
+        switch (ls) {
+        case LocaleString::empty: return "";
+        case LocaleString::intro_text_2: return "Evan Bowman presenta";
+        case LocaleString::map_legend_1: return "tú";
+        case LocaleString::map_legend_2: return "enemigo";
+        case LocaleString::map_legend_3: return "salida";
+        case LocaleString::map_legend_4: return "artículo";
+        case LocaleString::waypoint_text: return "waypoint ";
+        case LocaleString::part_1_text: return "parte I:";
+        case LocaleString::part_1_title: return "el arribo ";
+        case LocaleString::part_2_text: return "parte II:";
+        case LocaleString::part_2_title: return "el descenso";
+        case LocaleString::part_3_text: return "parte III:";
+        case LocaleString::part_3_title: return "Hacia el Páramo";
+        case LocaleString::part_4_text: return "parte IV:";
+        case LocaleString::part_4_title: return "en la luz de la luna";
+        case LocaleString::settings_show_stats: return "Mostrar estadísticas: ";
+        case LocaleString::settings_language: return "Idioma: ";
+        case LocaleString::settings_contrast: return "Contraste: ";
+        case LocaleString::settings_difficulty: return "Dificultad: ";
+        case LocaleString::settings_difficulty_normal: return "normal";
+        case LocaleString::settings_difficulty_hard: return "difícil";
+        case LocaleString::settings_difficulty_survival: return "sobrevivencia";
+        case LocaleString::settings_night_mode: return "Modo Nocturno: ";
+        case LocaleString::settings_swap_action_keys: return "Transponer A/B: ";
+        case LocaleString::settings_default: return "por defecto";
+        case LocaleString::settings_difficulty_err: return "level must be clear!";
+        case LocaleString::yes: return "sí";
+        case LocaleString::no: return "no";
+        case LocaleString::menu_resume: return "Reanudar";
+        case LocaleString::menu_connect_peer: return "Connectar el Par";
+        case LocaleString::menu_console: return "Script Console";
+        case LocaleString::menu_settings: return "Configuración";
+        case LocaleString::menu_save_and_quit: return "Guardar y Abandonar";
+        case LocaleString::distance_units_feet: return " ft";
+        default:
+            return empty_str;
+        }
+        break;
+
     case LocaleLanguage::english:
         switch (ls) {
         case LocaleString::empty: return "";
-        case LocaleString::intro_text_1: return "Unlicensed by Nintendo";
+        case LocaleString::intro_text_1: return "";
         case LocaleString::intro_text_2: return "Evan Bowman presents";
         case LocaleString::map_legend_1: return "you";
         case LocaleString::map_legend_2: return "enemy";
@@ -492,6 +710,7 @@ void english__to_string(int num, char* buffer, int base)
 void locale_num2str(int num, char* buffer, int base)
 {
     switch (language) {
+    case LocaleLanguage::spanish:
     case LocaleLanguage::english:
         english__to_string(num, buffer, base);
         break;

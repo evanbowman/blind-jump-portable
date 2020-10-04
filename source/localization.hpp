@@ -5,7 +5,7 @@
 #include "string.hpp"
 
 
-enum class LocaleLanguage { null, english, count };
+enum class LocaleLanguage { null, english, spanish, count };
 
 
 enum class LocaleString {

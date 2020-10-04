@@ -91,6 +91,8 @@ Game::Game(Platform& pfrm)
         const auto lang_enum = [&] {
             if (str_cmp(lang->symbol_.name_, "english") == 0) {
                 return LocaleLanguage::english;
+            } else if (str_cmp(lang->symbol_.name_, "spanish") == 0) {
+                return LocaleLanguage::spanish;
             }
             return LocaleLanguage::null;
         }();

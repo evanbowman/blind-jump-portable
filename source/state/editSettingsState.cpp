@@ -149,8 +149,8 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (not message_ and not message_anim_) {
         const auto& line = lines_[select_row_];
-        const auto y_center = pfrm.screen().size().y / 2;
-        const auto y_line = line.text_->coord().y * 8;
+        const Float y_center = pfrm.screen().size().y / 2;
+        const Float y_line = line.text_->coord().y * 8;
         const auto y_diff = (y_line - y_center) * 0.3f;
 
         y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
