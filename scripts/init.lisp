@@ -110,7 +110,7 @@
     ;; 5: debug boss 2
     ;; 6: debug zone 4  NOTE: zone 4 only enabled in debug mode, see
     ;;                        newLevelIdleState.cpp
-    (set #debug-mode 3))
+    (set #debug-mode 0))
 
 
 (if (not (equal debug-mode 0))

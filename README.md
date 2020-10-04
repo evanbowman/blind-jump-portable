@@ -100,7 +100,15 @@ https://hub.docker.com/r/evanbowman/blind_jump_build
 
 ## Localization
 
-The BlindJump text engine supports localized character sets via a utf-8 encoding. The game will open a charset image file (see images/), and select glyphs based on a codepoint mapping defined in source/localization.cpp. The localization C++ source file also defines all of the strings used by the game. Currently, BlindJump supports English, and also includes an incomplete Spanish translation, contributed by Evan Bowman, who, admittedly, is not a native Spanish speaker. The charset and codepoint mapper include support for extended French language characters, as well as Japanese Katakana, although no one has contributed additional translations at this time. As the game is in development, extensive translation work would be premature.
+The BlindJump text engine supports localized character sets via utf-8 encoding; however, the game does not include every possible unicode glyph in its character map (see the charset image in images/). BlindJump currently supports alpha-numeric glyphs for English, some extended glyphs for Spanish and French, and a minimal Japanese Katakana charset (including accent marks). To add a new language to the game, you would need make a couple of changes:
+1) Create a new file, <language_name>.txt, in the strings/ directory. For the sake of simplicity, you may want to just make a copy of one of the existing files in the strings/ folder.
+2) Define a translation, by translating each string in the newly created file to the desired language. Make sure you test the translation thoroughly by actually playing the game, to verify that you are not accidentally using strings that are too long, which may cause graphical glitches. Remember that the Gameboy Advance can display 30 characters horizontally, so for any strings that the game's UI does not reflow onto the next line, your translated text may be either truncated, or in some cases, the game will write an error to the logs indicating that the program was unable to display the excessively long text, and halt execution (freeze).
+3) Next, find the definition of the `languages` list variable in scripts/init.lisp, and add a symbol corresponding to the name of the newly added language file (minus the .txt extension, see init.lisp for examples).
+4) Lastly, you will need to explicitly link your strings file to the build system in CMakeLists.txt. Because the Gameboy Advance version of the game does not run in hosted environments, there is no filesystem, so the build system needs to know about your file, in order to copy its contents into the ROM.
+
+Please note that displaying unicode text is a fairly complex operation for a Gameboy game, so the text engine for the GBA has a number of limitations:
+1) The text formatting system will not display more than 80 unique glyphs at a time onscreen. In practice, this should not be a huge issue for most languages, as even for fullscreen TextView UI elements, the lines of text are double-spaced, and the GBA screen resolution is only 30 x 20 tiles in size. Even the Japanese Katakana character set should nearly fit within an 80 character limit.
+2) Each line in a localized strings data file can be no longer than 1187 bytes. Remember that each glyph in a utf-8 string may take up more than one byte!
 
 
 ## Security
