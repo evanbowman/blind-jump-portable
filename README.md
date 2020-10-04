@@ -24,6 +24,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Implementation](#implementation)
       * [Scripting](#scripting)
    * [Building](#building)
+   * [Localization](#localization)
    * [Security](#security)
 <!--te-->
 
@@ -96,6 +97,10 @@ make
 NOTE: you can also get a containerized build environment from the link below, although you'll have to remember to run `git pull` when entering the container, because I built the container with a frozen version of the repository. If this is inconvenient for you, feel free to build the container yourself using the steps above.
 
 https://hub.docker.com/r/evanbowman/blind_jump_build
+
+## Localization
+
+The BlindJump text engine supports localized character sets via a utf-8 encoding. The game will open a charset image file (see images/), and select glyphs based on a codepoint mapping defined in source/localization.cpp. The localization C++ source file also defines all of the strings used by the game. Currently, BlindJump supports English, and also includes an incomplete Spanish translation, contributed by Evan Bowman, who, admittedly, is not a native Spanish speaker. The charset and codepoint mapper include support for extended French language characters, as well as Japanese Katakana, although no one has contributed additional translations at this time. As the game is in development, extensive translation work would be premature.
 
 
 ## Security
