@@ -110,6 +110,8 @@ Please note that displaying unicode text is a fairly complex operation for a Gam
 1) The text formatting system will not display more than 80 unique glyphs at a time onscreen. In practice, this should not be a huge issue for most languages, as even for fullscreen TextView UI elements, the lines of text are double-spaced, and the GBA screen resolution is only 30 x 20 tiles in size. Even the Japanese Katakana character set should nearly fit within an 80 character limit.
 2) Each line in a localized strings data file can be no longer than 1187 bytes. Remember that each glyph in a utf-8 string may take up more than one byte!
 
+Currently, BlindJump includes an English edition (default), and an incompete Spanish transltion. Evan Bowman contributed the partial Spanish translation, and he is, admittedly, not a native speaker. Any translations for the game are welcome, and you will be added to the game's ending credits if you contribute a translation. If any required glyphs are missing from the charset image in the images/ folder, contact Evan Bowman, and he will add the codepoint mappings to the text engine. As the game is still in development, you may want to wait until the game is finished to add a translation.
+
 
 ## Security
 
