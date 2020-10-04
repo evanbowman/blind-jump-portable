@@ -25,39 +25,41 @@ void Inventory::push_item(Platform& pfrm,
         if (item.type_ == Item::Type::null) {
             item.type_ = insert;
 
-            auto description = [&] {
-                if (insert == Item::Type::null) {
-                    // Technically, the description for null is Empty, but that
-                    // doesn't make sense contextually, so lets use this text
-                    // instead.
-                    return locale_string(LocaleString::nothing);
+            if (notify) {
 
-                } else {
-                    return item_description(insert);
-                }
-            }();
+                auto description = [&]() -> StringBuffer<32> {
+                    if (insert == Item::Type::null) {
+                        // Technically, the description for null is Empty, but that
+                        // doesn't make sense contextually, so lets use this text
+                        // instead.
+                        return locale_string(pfrm, LocaleString::nothing).obj_->c_str();
 
-            if (description) {
+                    } else {
+                        return item_description(pfrm, insert).obj_->c_str();
+                    }
+                }();
 
-                NotificationStr str;
+                if (not description.empty()) {
 
-                str += locale_string(LocaleString::got_item_before);
-                str += description;
-                str += locale_string(LocaleString::got_item_after);
+                    NotificationStr str;
 
-                if (notify) {
+                    str += locale_string(pfrm, LocaleString::got_item_before).obj_->c_str();
+                    str += description;
+                    str += locale_string(pfrm, LocaleString::got_item_after).obj_->c_str();
+                    
                     push_notification(pfrm, game.state(), str);
                 }
             }
-
             return;
         }
     }
 
-    NotificationStr str;
-    str += locale_string(LocaleString::inventory_full);
+    if (notify) {
+        NotificationStr str;
+        str += locale_string(pfrm, LocaleString::inventory_full).obj_->c_str();
 
-    push_notification(pfrm, game.state(), str);
+        push_notification(pfrm, game.state(), str);
+    }
 }
 
 

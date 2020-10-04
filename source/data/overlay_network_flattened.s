@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	overlay_network_flattened, 3816x8@4,
+@	overlay_network_flattened, 3816x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 477 tiles not compressed
 @	Total size: 512 + 15264 = 15776
 @
-@	Time-stamp: 2020-08-08, 09:49:50
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:06
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global overlay_network_flattenedTiles		@ 15264 bytes
+	.align	2
+	.global overlay_network_flattenedTiles		@ 15264 unsigned chars
+	.hidden overlay_network_flattenedTiles
 overlay_network_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333
@@ -555,11 +556,11 @@ overlay_network_flattenedTiles:
 	.word 0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333
 	.word 0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333
 	.word 0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333
-	.size	overlay_network_flattenedTiles, .-overlay_network_flattenedTiles
 
 	.section .rodata
-	.align	4
-	.global overlay_network_flattenedPal		@ 512 bytes
+	.align	2
+	.global overlay_network_flattenedPal		@ 512 unsigned chars
+	.hidden overlay_network_flattenedPal
 overlay_network_flattenedPal:
 	.hword 0x7C1F,0x5AD5,0x3D64,0x4164,0x77BE,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -596,6 +597,5 @@ overlay_network_flattenedPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	overlay_network_flattenedPal, .-overlay_network_flattenedPal
 
 @}}BLOCK(overlay_network_flattened)

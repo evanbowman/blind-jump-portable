@@ -57,15 +57,15 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             anim_state_ = AnimState::legend;
 
-            const char* level_str = locale_string(LocaleString::waypoint_text);
+            auto level_str = locale_string(pfrm, LocaleString::waypoint_text);
 
             level_text_.emplace(
                 pfrm,
                 OverlayCoord{
-                    u8(screen_tiles.x - (1 + utf8::len(level_str) +
+                    u8(screen_tiles.x - (1 + utf8::len(level_str.obj_->c_str()) +
                                          integer_text_length(game.level()))),
                     1});
-            level_text_->assign(level_str);
+            level_text_->assign(level_str.obj_->c_str());
             level_text_->append(game.level());
         }
         break;
@@ -91,7 +91,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             for (size_t i = 0; i < legend_strings.size(); ++i) {
                 const u8 y = 9 + (i * 2);
                 legend_text_[i].emplace(pfrm,
-                                        locale_string(legend_strings[i]),
+                                        locale_string(pfrm, legend_strings[i]).obj_->c_str(),
                                         OverlayCoord{TileMap::width + 5, y});
             }
 

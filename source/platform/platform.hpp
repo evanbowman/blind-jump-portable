@@ -187,7 +187,8 @@ public:
     bool read_save_data(void* buffer, u32 data_length);
 
 
-    const char* load_script(const char* name) const;
+    const char* load_file_contents(const char* folder,
+                                   const char* filename) const;
 
 
 #ifdef __GBA__

@@ -127,9 +127,9 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             altitude_update_ = 30;
 
-            const auto units = locale_string(LocaleString::distance_units_feet);
+            const auto units = locale_string(pfrm, LocaleString::distance_units_feet);
 
-            auto len = integer_text_length(altitude_) + utf8::len(units);
+            auto len = integer_text_length(altitude_) + utf8::len(units.obj_->c_str());
 
             if (not altitude_text_ or
                 (altitude_text_ and altitude_text_->len() not_eq len)) {
@@ -139,7 +139,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
                                  u8(screen_tiles.y - 2)});
             }
             altitude_text_->assign(altitude_);
-            altitude_text_->append(units);
+            altitude_text_->append(units.obj_->c_str());
         }
     }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "graphics/contrast.hpp"
-#include "localization.hpp"
 #include "platform/key.hpp"
 #include "severity.hpp"
 
@@ -9,7 +8,7 @@
 struct Settings {
     enum Difficulty { normal, hard, survival, count };
 
-    LocaleLanguage language_ = LocaleLanguage::null;
+    int language_ = 0;
     bool show_stats_ = false;
     bool night_mode_ = false;
     Contrast contrast_ = 0;

@@ -71,7 +71,12 @@
 (set #div /)
 
 
-(set #default-lang #english)
+(set #languages
+     (list #null
+           #english ;; The engine uses index 1 of the list as the default
+                    ;; language, when a save file does not yet exist. To change
+                    ;; the default, move another language above this line.
+           #spanish))
 
 
 (if (equal (platform) #Desktop)
@@ -105,7 +110,7 @@
     ;; 5: debug boss 2
     ;; 6: debug zone 4  NOTE: zone 4 only enabled in debug mode, see
     ;;                        newLevelIdleState.cpp
-    (set #debug-mode 0))
+    (set #debug-mode 3))
 
 
 (if (not (equal debug-mode 0))

@@ -1,0 +1,117 @@
+
+
+Evan Bowman presents
+you
+enemy
+exit
+item
+shop
+waypoint 
+part I:
+the arrival 
+part II:
+the descent 
+part III:
+into the waste
+part IV:
+by moonlight
+[2.11.2081]  We've been experiencing strange power surges lately on the station. The director reassured me that everthing will run smoothly from now on. The robots have been acting up ever since the last communications blackout though, I'm afraid next time they'll go mad...
+Power surges emanating from the hyperspace gates seem to have an unusual effect on machinery, especially the robots on the stations. We've observed some unfortunate violent reactions from the machines recently--this is all starting to get out of control. We long suspected that there was something... else... out there in hyperspace, something that we, perhaps, should never have disturbed... It's time that we sealed up the transport gates for good. The best way, would be to disable the transit network's central hub, on the lunar surface...
+Empty
+Old poster (1)
+Notebook (1/2)
+Notebook (2/2)
+Blaster
+Accelerator (60 shots)
+Lethargy (18 sec)
+Map system
+Explosive rounds (2)
+Signal jammer
+Seed packet
+Navigation pamphlet
+Orange (+1 hp)
+Orange seeds
+
+Long jump drive (pt. II)
+Long jump drive (pt. III)
+Long jump drive (pt. IV)
+(SINGLE USE)
+locked, 
+blocked, Peer is in the way!
+ enemy left
+ enemies left
+Nothing
+got "
+"
+Inventory full
+items
+waypoint clear
+score 
+highscore 
+highscores
+items collected % 
+
+items collected %
+waypoints 
+.
+Resume
+Connect Peer
+Settings
+Script Console
+Save and Quit
+See you later...
+Choose a target:
+No road map? No problem! The hyperspace gate network calculates a path to your destination by routing your journey through a sequence of waypoints. Tens of thousands of waypoints were contructed in orbit around Earth and its moon. Because the waypoints are constantly in motion during orbit, the gate network continually recalculates the path to your destination. You'll never visit the same waypoints twice! Due to the unpredictable nature of the hyperspace gates, passing through a gate is sometimes referred to as a blind jump.
+Show Stats: 
+Language: 
+Contrast: 
+Night Mode: 
+Swap A/B: 
+default
+Difficulty: 
+normal
+hard
+survival
+level must be clear!
+Log Severity: 
+yes
+no
+menu disabled
+ ft
+launch: 
+Peer connected!
+Peer connection failed!
+Peer died!
+Peer health changed to 
+Waiting for Peers...
+Synchronizing Games...
+ fps
+ tx
+ rx
+ tl
+ rl
+ sbr
+ lnsat
+required: Map system
+The Wanderer Defeated
+Gatekeeper Destroyed
+Defeated the Twins
+Peer waiting in gate...
+debug
+info
+warning
+error
+Power Surge detected!
+Buy items
+Sell items
+Buy, price: 
+Sell, price: 
+Item info
+Scavenger's shop
+buy
+sell
+Update required!
+Peer requires update!
+overall
+Peer used lethargy!
+english

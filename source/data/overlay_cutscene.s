@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	overlay_cutscene, 904x8@4,
+@	overlay_cutscene, 904x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 113 tiles not compressed
 @	Total size: 512 + 3616 = 4128
 @
-@	Time-stamp: 2020-08-08, 09:49:51
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:07
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global overlay_cutsceneTiles		@ 3616 bytes
+	.align	2
+	.global overlay_cutsceneTiles		@ 3616 unsigned chars
+	.hidden overlay_cutsceneTiles
 overlay_cutsceneTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x11111111,0x11111111,0x11111111,0x11111111,0x11111111,0x11111111,0x11111111,0x11111111
@@ -146,11 +147,11 @@ overlay_cutsceneTiles:
 	.word 0x11111111,0x12222211,0x12222121,0x12221221,0x12212221,0x12122221,0x11222221,0x11111111
 
 	.word 0x22222222,0x22222222,0x22222222,0x22222222,0x22222222,0x22222222,0x22222222,0x22222222
-	.size	overlay_cutsceneTiles, .-overlay_cutsceneTiles
 
 	.section .rodata
-	.align	4
-	.global overlay_cutscenePal		@ 512 bytes
+	.align	2
+	.global overlay_cutscenePal		@ 512 unsigned chars
+	.hidden overlay_cutscenePal
 overlay_cutscenePal:
 	.hword 0x7C1F,0x2C7D,0x0800,0x55CE,0x72D8,0x7FFF,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -187,6 +188,5 @@ overlay_cutscenePal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	overlay_cutscenePal, .-overlay_cutscenePal
 
 @}}BLOCK(overlay_cutscene)

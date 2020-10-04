@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	spritesheet_launch_anim, 1392x32@4,
+@	spritesheet_launch_anim, 1392x32@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 696 tiles Metatiled by 2x4 not compressed
 @	Total size: 512 + 22272 = 22784
 @
-@	Time-stamp: 2020-08-08, 09:49:50
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:06
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global spritesheet_launch_animTiles		@ 22272 bytes
+	.align	2
+	.global spritesheet_launch_animTiles		@ 22272 unsigned chars
+	.hidden spritesheet_launch_animTiles
 spritesheet_launch_animTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -801,11 +802,11 @@ spritesheet_launch_animTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x11111111,0x11111111,0x11111111,0x11111111,0x11111100,0x11100000,0x11000000,0x00000000
 	.word 0x00001111,0x00111111,0x00111111,0x01111111,0x11111111,0x11111111,0x11111111,0x11111100
-	.size	spritesheet_launch_animTiles, .-spritesheet_launch_animTiles
 
 	.section .rodata
-	.align	4
-	.global spritesheet_launch_animPal		@ 512 bytes
+	.align	2
+	.global spritesheet_launch_animPal		@ 512 unsigned chars
+	.hidden spritesheet_launch_animPal
 spritesheet_launch_animPal:
 	.hword 0x5A23,0x6AB4,0x35BF,0x6FF3,0x6FBC,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -842,6 +843,5 @@ spritesheet_launch_animPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	spritesheet_launch_animPal, .-spritesheet_launch_animPal
 
 @}}BLOCK(spritesheet_launch_anim)

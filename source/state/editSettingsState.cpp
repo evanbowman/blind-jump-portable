@@ -1,4 +1,5 @@
 #include "state_impl.hpp"
+#include "script/lisp.hpp"
 
 
 void EditSettingsState::message(Platform& pfrm, const char* str)
@@ -28,15 +29,17 @@ EditSettingsState::EditSettingsState(DeferredState exit_state)
 
 void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
 {
+    auto str = locale_string(pfrm, strings[row]);
+
     const int value_len = utf8::len(value);
-    const int field_len = utf8::len(locale_string(strings[row]));
+    const int field_len = utf8::len(str.obj_->c_str());
 
     const auto margin = centered_text_margins(pfrm, value_len + field_len + 2);
 
     lines_[row].text_.emplace(pfrm, OverlayCoord{0, u8(4 + row * 2)});
 
     left_text_margin(*lines_[row].text_, margin);
-    lines_[row].text_->append(locale_string(strings[row]));
+    lines_[row].text_->append(str.obj_->c_str());
     lines_[row].text_->append("  ");
     lines_[row].text_->append(value);
 
@@ -186,4 +189,37 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     return null_state();
+}
+
+
+EditSettingsState::LineUpdater::Result
+EditSettingsState::LanguageLineUpdater::update(Platform& pfrm,
+                                               Game& game,
+                                               int dir)
+{
+    
+    
+    auto& language = game.persistent_data().settings_.language_;
+    int l = static_cast<int>(language);
+
+    const auto lang_count = lisp::length(lisp::get_var("languages"));
+
+    if (dir > 0) {
+        l += 1;
+        l %= static_cast<int>(lang_count);
+        if (l == 0) {
+            l = 1;
+        }
+    } else if (dir < 0) {
+        if (l > 1) {
+            l -= 1;
+        } else if (l == 1) {
+            l = static_cast<int>(lang_count) - 1;
+        }
+    }
+
+    language = l;
+    locale_set_language(language);
+
+    return locale_string(pfrm, LocaleString::language_name).obj_->c_str();
 }

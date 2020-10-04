@@ -89,7 +89,7 @@ void LispReplState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     // pfrm.load_overlay_texture("repl");
 
-    locale_set_language(LocaleLanguage::english);
+    locale_set_language(1);
 
     keyboard_cursor_ = {2, 4}; // For convenience, place cursor at left paren
 

@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	blaster_info_flattened, 3816x8@4,
+@	blaster_info_flattened, 3816x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 477 tiles not compressed
 @	Total size: 512 + 15264 = 15776
 @
-@	Time-stamp: 2020-08-08, 09:49:49
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:05
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global blaster_info_flattenedTiles		@ 15264 bytes
+	.align	2
+	.global blaster_info_flattenedTiles		@ 15264 unsigned chars
+	.hidden blaster_info_flattenedTiles
 blaster_info_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x33333330,0x33333333,0x55555333,0x55555533,0x33335533,0x33335533,0x13335533,0x11335533
@@ -555,11 +556,11 @@ blaster_info_flattenedTiles:
 	.word 0x55555555,0x55555555,0x55555555,0x55555555,0x33333333,0x33333333,0x44444444,0x44444444
 	.word 0x44333335,0x33333335,0x33333335,0x33333333,0x33333333,0x33333333,0x44444444,0x44444444
 	.word 0x33333334,0x33333333,0x33333333,0x33333333,0x33333333,0x43333333,0x44444444,0x04444444
-	.size	blaster_info_flattenedTiles, .-blaster_info_flattenedTiles
 
 	.section .rodata
-	.align	4
-	.global blaster_info_flattenedPal		@ 512 bytes
+	.align	2
+	.global blaster_info_flattenedPal		@ 512 unsigned chars
+	.hidden blaster_info_flattenedPal
 blaster_info_flattenedPal:
 	.hword 0x7C1F,0x7719,0x255E,0x4567,0x20A2,0x571A,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -596,6 +597,5 @@ blaster_info_flattenedPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	blaster_info_flattenedPal, .-blaster_info_flattenedPal
 
 @}}BLOCK(blaster_info_flattened)

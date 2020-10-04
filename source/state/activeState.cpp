@@ -105,7 +105,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         } else {
             push_notification(
-                pfrm, game.state(), locale_string(LocaleString::menu_disabled));
+                              pfrm, game.state(), locale_string(pfrm, LocaleString::menu_disabled).obj_->c_str());
         }
     }
 
@@ -124,7 +124,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             return state_pool().create<QuickMapState>(game);
         } else {
             push_notification(
-                pfrm, game.state(), locale_string(LocaleString::map_required));
+                              pfrm, game.state(), locale_string(pfrm, LocaleString::map_required).obj_->c_str());
         }
     }
 
@@ -138,7 +138,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             return state_pool().create<PauseScreenState>();
         } else {
             push_notification(
-                pfrm, game.state(), locale_string(LocaleString::menu_disabled));
+                              pfrm, game.state(), locale_string(pfrm, LocaleString::menu_disabled).obj_->c_str());
         }
     }
 

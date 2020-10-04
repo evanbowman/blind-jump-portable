@@ -3,9 +3,7 @@
 
 #include "dateTime.hpp"
 #include "string.hpp"
-
-
-enum class LocaleLanguage { null, english, spanish, count };
+#include "bulkAllocator.hpp"
 
 
 enum class LocaleString {
@@ -57,7 +55,6 @@ enum class LocaleString {
     inventory_full,
     items,
     level_clear,
-    you_died,
     score,
     high_score,
     high_scores,
@@ -126,18 +123,18 @@ enum class LocaleString {
     peer_requires_update,
     overall_heading,
     peer_used_lethargy,
+    language_name,
     count
 };
 
 
-void locale_set_language(LocaleLanguage ll);
-LocaleLanguage locale_get_language();
+void locale_set_language(int language_id);
+int locale_get_language();
 
 
-StringBuffer<31> locale_language_name(LocaleLanguage ll);
-
-
-const char* locale_string(LocaleString ls);
+using LocalizedStrBuffer = StringBuffer<1100>;
+using LocalizedText = DynamicMemory<LocalizedStrBuffer>;
+LocalizedText locale_string(Platform& pfrm, LocaleString ls);
 
 
 // In most cases, you do not want to call this function directly, better to call
@@ -183,7 +180,7 @@ template <u32 buffer_size>
 void log_format_time(StringBuffer<buffer_size>& str, const DateTime& dt)
 {
     const auto saved_language = locale_get_language();
-    locale_set_language(LocaleLanguage::english);
+    locale_set_language(1);
 
     format_time(str, dt);
 

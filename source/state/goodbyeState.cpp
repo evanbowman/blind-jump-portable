@@ -13,7 +13,7 @@ void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     const auto s_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
-    text_->append(locale_string(LocaleString::goodbye_text));
+    text_->append(locale_string(pfrm, LocaleString::goodbye_text).obj_->c_str());
 }
 
 

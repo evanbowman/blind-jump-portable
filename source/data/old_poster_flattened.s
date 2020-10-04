@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	old_poster_flattened, 3816x8@4,
+@	old_poster_flattened, 3816x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 477 tiles not compressed
 @	Total size: 512 + 15264 = 15776
 @
-@	Time-stamp: 2020-08-08, 09:49:51
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:06
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global old_poster_flattenedTiles		@ 15264 bytes
+	.align	2
+	.global old_poster_flattenedTiles		@ 15264 unsigned chars
+	.hidden old_poster_flattenedTiles
 old_poster_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x44444444,0x44444444,0x44444444,0x22222244,0x44444244,0x44444244,0x44444244,0x34444244
@@ -555,11 +556,11 @@ old_poster_flattenedTiles:
 	.word 0x44444444,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444
 	.word 0x44444444,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444
 	.word 0x44444434,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444,0x44444444
-	.size	old_poster_flattenedTiles, .-old_poster_flattenedTiles
 
 	.section .rodata
-	.align	4
-	.global old_poster_flattenedPal		@ 512 bytes
+	.align	2
+	.global old_poster_flattenedPal		@ 512 unsigned chars
+	.hidden old_poster_flattenedPal
 old_poster_flattenedPal:
 	.hword 0x7C1F,0x0D7F,0x4AFA,0x0800,0x4146,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -596,6 +597,5 @@ old_poster_flattenedPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	old_poster_flattenedPal, .-old_poster_flattenedPal
 
 @}}BLOCK(old_poster_flattened)

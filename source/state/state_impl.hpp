@@ -420,9 +420,7 @@ private:
 
 class NotebookState : public MenuState {
 public:
-    // NOTE: The NotebookState class does not store a local copy of the text
-    // string! Do not pass in pointers to a local buffer, only static strings!
-    NotebookState(const char* text);
+    NotebookState(LocalizedText&& str);
 
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
@@ -445,7 +443,7 @@ private:
 
     std::optional<TextView> text_;
     std::optional<Text> page_number_;
-    const char* str_;
+    LocalizedText str_;
     int page_;
 };
 
@@ -536,7 +534,7 @@ private:
 
 class IntroCreditsState : public State {
 public:
-    IntroCreditsState(const char* str) : str_(str)
+    IntroCreditsState(LocalizedText&& str) : str_(std::move(str))
     {
     }
 
@@ -552,7 +550,7 @@ private:
 
     void show_version(Platform& pfrm, Game& game);
 
-    const char* str_;
+    LocalizedText str_;
     std::optional<Text> text_;
     std::optional<Text> version_;
     Microseconds timer_ = 0;
@@ -805,16 +803,16 @@ private:
     };
 
     class ShowStatsLineUpdater : public LineUpdater {
-        Result update(Platform&, Game& game, int dir) override
+        Result update(Platform& pfrm, Game& game, int dir) override
         {
             bool& show = game.persistent_data().settings_.show_stats_;
             if (dir not_eq 0) {
                 show = not show;
             }
             if (show) {
-                return locale_string(LocaleString::yes);
+                return locale_string(pfrm, LocaleString::yes).obj_->c_str();
             } else {
-                return locale_string(LocaleString::no);
+                return locale_string(pfrm, LocaleString::no).obj_->c_str();
             }
         }
     } show_stats_line_updater_;
@@ -828,15 +826,15 @@ private:
                 pfrm.screen().enable_night_mode(enabled);
             }
             if (enabled) {
-                return locale_string(LocaleString::yes);
+                return locale_string(pfrm, LocaleString::yes).obj_->c_str();
             } else {
-                return locale_string(LocaleString::no);
+                return locale_string(pfrm, LocaleString::no).obj_->c_str();
             }
         }
     } night_mode_line_updater_;
 
     class SwapActionKeysLineUpdater : public LineUpdater {
-        Result update(Platform&, Game& game, int dir) override
+        Result update(Platform& pfrm, Game& game, int dir) override
         {
             if (dir not_eq 0) {
                 std::swap(game.persistent_data().settings_.action1_key_,
@@ -844,39 +842,15 @@ private:
             }
             if (game.persistent_data().settings_.action1_key_ ==
                 Settings::default_action1_key) {
-                return locale_string(LocaleString::no);
+                return locale_string(pfrm, LocaleString::no).obj_->c_str();
             } else {
-                return locale_string(LocaleString::yes);
+                return locale_string(pfrm, LocaleString::yes).obj_->c_str();
             }
         }
     } swap_action_keys_line_updater_;
 
     class LanguageLineUpdater : public LineUpdater {
-        Result update(Platform&, Game& game, int dir) override
-        {
-            auto& language = game.persistent_data().settings_.language_;
-            int l = static_cast<int>(language);
-
-            if (dir > 0) {
-                l += 1;
-                l %= static_cast<int>(LocaleLanguage::count);
-                if (l == 0) {
-                    l = 1;
-                }
-            } else if (dir < 0) {
-                if (l > 1) {
-                    l -= 1;
-                } else if (l == 1) {
-                    l = static_cast<int>(LocaleLanguage::count) - 1;
-                }
-            }
-
-            language = static_cast<LocaleLanguage>(l);
-
-            locale_set_language(language);
-
-            return locale_language_name(language);
-        }
+        Result update(Platform& pfrm, Game& game, int dir) override;
 
         void complete(Platform& pfrm, Game& game, EditSettingsState& s) override
         {
@@ -911,14 +885,14 @@ private:
                     return buffer;
                 }
             } else {
-                return locale_string(LocaleString::settings_default);
+                return locale_string(pfrm, LocaleString::settings_default).obj_->c_str();
             }
         }
     } contrast_line_updater_;
 
     class DifficultyLineUpdater : public LineUpdater {
 
-        Result update(Platform&, Game& game, int dir) override
+        Result update(Platform& pfrm, Game& game, int dir) override
         {
             auto difficulty =
                 static_cast<int>(game.persistent_data().settings_.difficulty_);
@@ -946,14 +920,14 @@ private:
 
             switch (static_cast<Settings::Difficulty>(difficulty)) {
             case Settings::Difficulty::normal:
-                return locale_string(LocaleString::settings_difficulty_normal);
+                return locale_string(pfrm, LocaleString::settings_difficulty_normal).obj_->c_str();
 
             case Settings::Difficulty::hard:
-                return locale_string(LocaleString::settings_difficulty_hard);
+                return locale_string(pfrm, LocaleString::settings_difficulty_hard).obj_->c_str();
 
             case Settings::Difficulty::survival:
-                return locale_string(
-                    LocaleString::settings_difficulty_survival);
+                return locale_string(pfrm,
+                                     LocaleString::settings_difficulty_survival).obj_->c_str();
 
             case Settings::Difficulty::count:
                 break;
@@ -965,7 +939,8 @@ private:
         {
             if (game.level() not_eq 0 and enemies_remaining(game)) {
                 s.message(pfrm,
-                          locale_string(LocaleString::settings_difficulty_err));
+                          locale_string(pfrm,
+                                        LocaleString::settings_difficulty_err).obj_->c_str());
             }
         }
     } difficulty_line_updater_;

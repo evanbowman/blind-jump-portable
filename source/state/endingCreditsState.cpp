@@ -17,7 +17,7 @@ void EndingCreditsState::enter(Platform& pfrm, Game& game, State&)
         pfrm.speaker().play_music("clair_de_lune", 0);
     });
 
-    locale_set_language(LocaleLanguage::english);
+    locale_set_language(1);
 }
 
 

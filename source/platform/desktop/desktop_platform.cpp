@@ -1659,11 +1659,13 @@ void Platform::feed_watchdog()
 static std::map<std::string, std::string> scripts;
 
 
-const char* Platform::load_script(const char* name) const
+const char* Platform::load_file_contents(const char* folder,
+                                         const char* filename) const
 {
+    const auto name = std::string(folder) + PATH_DELIMITER + filename;
     const auto found = scripts.find(name);
     if (found == scripts.end()) {
-        std::fstream file(resource_path() + ("scripts" PATH_DELIMITER) + name);
+        std::fstream file(resource_path() + name);
         std::stringstream buffer;
         buffer << file.rdbuf();
         scripts[name] = buffer.str();

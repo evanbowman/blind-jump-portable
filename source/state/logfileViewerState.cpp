@@ -3,9 +3,9 @@
 
 void LogfileViewerState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
-    repaint(pfrm, 0);
+    repaint(pfrm, 1);
     // The game's logfile is not localized, not worth the trouble.
-    locale_set_language(LocaleLanguage::english);
+    locale_set_language(0);
 }
 
 

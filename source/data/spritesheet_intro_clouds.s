@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	spritesheet_intro_clouds, 2016x32@4,
+@	spritesheet_intro_clouds, 2016x32@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 1008 tiles Metatiled by 2x4 not compressed
 @	Total size: 512 + 32256 = 32768
 @
-@	Time-stamp: 2020-08-08, 09:49:51
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:07
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global spritesheet_intro_cloudsTiles		@ 32256 bytes
+	.align	2
+	.global spritesheet_intro_cloudsTiles		@ 32256 unsigned chars
+	.hidden spritesheet_intro_cloudsTiles
 spritesheet_intro_cloudsTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -1152,11 +1153,11 @@ spritesheet_intro_cloudsTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
-	.size	spritesheet_intro_cloudsTiles, .-spritesheet_intro_cloudsTiles
 
 	.section .rodata
-	.align	4
-	.global spritesheet_intro_cloudsPal		@ 512 bytes
+	.align	2
+	.global spritesheet_intro_cloudsPal		@ 512 unsigned chars
+	.hidden spritesheet_intro_cloudsPal
 spritesheet_intro_cloudsPal:
 	.hword 0x7C1F,0x25B5,0x679F,0x5A97,0x77DF,0x56BC,0x2E17,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -1193,6 +1194,5 @@ spritesheet_intro_cloudsPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	spritesheet_intro_cloudsPal, .-spritesheet_intro_cloudsPal
 
 @}}BLOCK(spritesheet_intro_clouds)

@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	tilesheet_intro_cutscene_flattened, 3368x8@4,
+@	tilesheet_intro_cutscene_flattened, 3368x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 421 tiles not compressed
 @	Total size: 512 + 13472 = 13984
 @
-@	Time-stamp: 2020-08-08, 09:49:50
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:08
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global tilesheet_intro_cutscene_flattenedTiles		@ 13472 bytes
+	.align	2
+	.global tilesheet_intro_cutscene_flattenedTiles		@ 13472 unsigned chars
+	.hidden tilesheet_intro_cutscene_flattenedTiles
 tilesheet_intro_cutscene_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x77777777,0x77777777,0x77777777,0x77777777,0x77777777,0x77777777,0x77777777,0x77777777
@@ -492,11 +493,11 @@ tilesheet_intro_cutscene_flattenedTiles:
 	.word 0x33333888,0x88888888,0x88888888,0x88888888,0x88888888,0x88888888,0x88888888,0x88888888
 	.word 0x33333333,0x33338888,0x33888888,0x38888888,0x88888888,0x88888888,0x88888888,0x88888888
 	.word 0x33333333,0x33333333,0x33333333,0x33333333,0x33333338,0x33333388,0x33333888,0x33338888
-	.size	tilesheet_intro_cutscene_flattenedTiles, .-tilesheet_intro_cutscene_flattenedTiles
 
 	.section .rodata
-	.align	4
-	.global tilesheet_intro_cutscene_flattenedPal		@ 512 bytes
+	.align	2
+	.global tilesheet_intro_cutscene_flattenedPal		@ 512 unsigned chars
+	.hidden tilesheet_intro_cutscene_flattenedPal
 tilesheet_intro_cutscene_flattenedPal:
 	.hword 0x7C1F,0x49E9,0x0800,0x6AB4,0x6FBC,0x55E1,0x25B5,0x28A2
 	.hword 0x666B,0x2E17,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -533,6 +534,5 @@ tilesheet_intro_cutscene_flattenedPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	tilesheet_intro_cutscene_flattenedPal, .-tilesheet_intro_cutscene_flattenedPal
 
 @}}BLOCK(tilesheet_intro_cutscene_flattened)

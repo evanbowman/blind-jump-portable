@@ -57,7 +57,7 @@ void CommonNetworkListener::receive(const net_event::LethargyActivated&,
     add_lethargy_powerup(pfrm, game);
     push_notification(pfrm,
                       game.state(),
-                      locale_string(LocaleString::peer_used_lethargy));
+                      locale_string(pfrm, LocaleString::peer_used_lethargy).obj_->c_str());
 }
 
 
@@ -86,12 +86,12 @@ void CommonNetworkListener::receive(const net_event::ProgramVersion& vn,
 
             push_notification(pfrm,
                               game.state(),
-                              locale_string(LocaleString::update_required));
+                              locale_string(pfrm, LocaleString::update_required).obj_->c_str());
         } else {
-            auto str = locale_string(LocaleString::peer_requires_update);
+            auto str = locale_string(pfrm, LocaleString::peer_requires_update);
             push_notification(pfrm,
                               game.state(),
-                              str);
+                              str.obj_->c_str());
         }
 
         pfrm.network_peer().disconnect();
@@ -112,7 +112,7 @@ void CommonNetworkListener::receive(const net_event::PlayerEnteredGate&,
 
     push_notification(pfrm,
                       game.state(),
-                      locale_string(LocaleString::peer_transport_waiting));
+                      locale_string(pfrm, LocaleString::peer_transport_waiting).obj_->c_str());
 }
 
 
@@ -415,9 +415,8 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::long_jump_z4_title,
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(surveyor_logbook),
-     [](Platform&, Game&) {
-         return state_pool().create<NotebookState>(
-             locale_string(LocaleString::logbook_str_1));
+     [](Platform& pfrm, Game&) {
+         return state_pool().create<NotebookState>(locale_string(pfrm, LocaleString::logbook_str_1));
      },
      LocaleString::surveyor_logbook_title},
     {STANDARD_ITEM_HANDLER(blaster),
@@ -457,9 +456,9 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      },
      LocaleString::seed_packet_title},
     {STANDARD_ITEM_HANDLER(engineer_notebook),
-     [](Platform&, Game&) {
+     [](Platform& pfrm, Game&) {
          return state_pool().create<NotebookState>(
-             locale_string(LocaleString::engineer_notebook_str));
+             locale_string(pfrm, LocaleString::engineer_notebook_str));
      },
      LocaleString::engineer_notebook_title},
     {STANDARD_ITEM_HANDLER(signal_jammer),
@@ -469,9 +468,9 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::signal_jammer_title,
      InventoryItemHandler::custom},
     {STANDARD_ITEM_HANDLER(navigation_pamphlet),
-     [](Platform&, Game&) {
+     [](Platform& pfrm, Game&) {
          return state_pool().create<NotebookState>(
-             locale_string(LocaleString::navigation_pamphlet));
+             locale_string(pfrm, LocaleString::navigation_pamphlet));
      },
      LocaleString::navigation_pamphlet_title},
     {STANDARD_ITEM_HANDLER(orange),
@@ -620,10 +619,9 @@ bool draw_minimap(Platform& pfrm,
 }
 
 
-StatePtr State::initial()
+StatePtr State::initial(Platform& pfrm)
 {
-    return state_pool().create<IntroCreditsState>(
-        locale_string(LocaleString::intro_text_2));
+    return state_pool().create<IntroCreditsState>(locale_string(pfrm, LocaleString::intro_text_2));
 }
 
 

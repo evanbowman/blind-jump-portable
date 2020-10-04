@@ -2,6 +2,7 @@
 
 #include "collision.hpp"
 #include "entity/entity.hpp"
+#include "localization.hpp"
 
 
 class Player;
@@ -89,4 +90,4 @@ inline bool item_is_persistent(Item::Type type)
 // state.cpp, so that the implementation can pull the data from an existing
 // readonly table containing a variety of Item metadata used by the inventory
 // state.
-const char* item_description(Item::Type type);
+LocalizedText item_description(Platform&, Item::Type type);

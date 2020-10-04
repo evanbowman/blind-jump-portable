@@ -2111,14 +2111,16 @@ void Platform::on_watchdog_timeout(WatchdogCallback callback)
 }
 
 
-#include "scripts.cpp"
+#include "files.cpp"
 
 
-const char* Platform::load_script(const char* name) const
+const char* Platform::load_file_contents(const char* folder,
+                                         const char* filename) const
 {
-    for (auto& script : scripts) {
-        if (str_cmp(script.name_, name) == 0) {
-            return reinterpret_cast<const char*>(script.data_);
+    for (auto& file : files) {
+        if (str_cmp(file.name_, filename) == 0 and
+            str_cmp(file.root_, folder) == 0) {
+            return reinterpret_cast<const char*>(file.data_);
         }
     }
     return nullptr;

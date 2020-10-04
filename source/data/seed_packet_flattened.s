@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	seed_packet_flattened, 3816x8@4,
+@	seed_packet_flattened, 3816x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 477 tiles not compressed
 @	Total size: 512 + 15264 = 15776
 @
-@	Time-stamp: 2020-08-08, 09:49:51
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:05
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global seed_packet_flattenedTiles		@ 15264 bytes
+	.align	2
+	.global seed_packet_flattenedTiles		@ 15264 unsigned chars
+	.hidden seed_packet_flattenedTiles
 seed_packet_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x55555555,0x55555555,0x33333355,0x55555355,0x55555355,0x55555355,0x55555355,0x55555355
@@ -555,11 +556,11 @@ seed_packet_flattenedTiles:
 	.word 0x33333333,0x33333333,0x33333333,0x33333333,0x22222222,0x33333333,0x33333333,0x33333333
 	.word 0x33333333,0x33333333,0x33333333,0x33333333,0x22222222,0x33333333,0x33333333,0x33333333
 	.word 0x33233333,0x33233333,0x33233333,0x33233333,0x33222222,0x33333333,0x33333333,0x33333333
-	.size	seed_packet_flattenedTiles, .-seed_packet_flattenedTiles
 
 	.section .rodata
-	.align	4
-	.global seed_packet_flattenedPal		@ 512 bytes
+	.align	2
+	.global seed_packet_flattenedPal		@ 512 unsigned chars
+	.hidden seed_packet_flattenedPal
 seed_packet_flattenedPal:
 	.hword 0x7C1F,0x5F3B,0x2DB4,0x737B,0x00DF,0x3269,0x0D9F,0x1A5A
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -596,6 +597,5 @@ seed_packet_flattenedPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	seed_packet_flattenedPal, .-seed_packet_flattenedPal
 
 @}}BLOCK(seed_packet_flattened)

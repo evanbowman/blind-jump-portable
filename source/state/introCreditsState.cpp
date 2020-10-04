@@ -45,7 +45,7 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
     // Center horizontally, and place text vertically in top third of screen
-    const auto len = utf8::len(str_);
+    const auto len = utf8::len(str_.obj_->c_str());
     pos.x -= len + 1;
     pos.x /= 2;
     pos.y *= 0.35f;
@@ -53,7 +53,7 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     if (len % 2 == 0) {
         pfrm.set_overlay_origin(-4, 0);
     }
-    text_.emplace(pfrm, str_, pos);
+    text_.emplace(pfrm, str_.obj_->c_str(), pos);
 
     center(pfrm);
 

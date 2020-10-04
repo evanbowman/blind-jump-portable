@@ -137,31 +137,31 @@ set(SOURCES
   ${SOURCE_DIR}/state/warpInState.cpp)
 
 
-set(SCRIPTS_DIR ${SOURCE_DIR}/../scripts)
-set(SCRIPTS "")
-set(SCRIPT_DECLS "")
+set(FILES_DIR ${SOURCE_DIR}/../)
+set(FILES "")
+set(FILE_DECLS "")
 
 
-macro(add_script script)
+macro(add_file prefix file suffix)
 
-  set(SCRIPTS ${SCRIPTS} "\n    {\"${script}.lisp\", script_${script}},\n//")
-  set(SCRIPT_DECLS ${SCRIPT_DECLS}
-    "\nextern const unsigned char script_${script}[];\n//")
+  set(FILES ${FILES} "\n    {\"${prefix}\", \"${file}.${suffix}\", file_${file}},\n//")
+  set(FILE_DECLS ${FILE_DECLS}
+    "\nextern const unsigned char file_${file}[];\n//")
 
   if(GBA_AUTOBUILD_CONF)
 
-    set(SCRIPT_IN ${SCRIPTS_DIR}/${script}.lisp)
-    set(SCRIPT_OUT ${SOURCE_DIR}/data/script_${script}.cpp)
+    set(FILE_IN ${FILES_DIR}/${prefix}/${file}.${suffix})
+    set(FILE_OUT ${SOURCE_DIR}/data/file_${file}.cpp)
 
-    add_custom_command(OUTPUT ${SCRIPT_OUT}
-      COMMAND echo "extern const unsigned char script_${script}[] = {" > ${SCRIPT_OUT}
-      COMMAND cat ${SCRIPT_IN} | xxd -i | tee -a ${SCRIPT_OUT} > /dev/null
-      COMMAND echo ", 0x00}\;" | tee -a ${SCRIPT_OUT}
-      DEPENDS ${SCRIPT_IN})
+    add_custom_command(OUTPUT ${FILE_OUT}
+      COMMAND echo "extern const unsigned char file_${file}[] = {" > ${FILE_OUT}
+      COMMAND cat ${FILE_IN} | xxd -i | tee -a ${FILE_OUT} > /dev/null
+      COMMAND echo ", 0x00}\;" | tee -a ${FILE_OUT}
+      DEPENDS ${FILE_IN})
 
-    add_custom_target(convert_${script}_script DEPENDS ${SCRIPT_OUT})
+    add_custom_target(convert_${file}_file DEPENDS ${FILE_OUT})
 
-    add_dependencies(BlindJump convert_${script}_script)
+    add_dependencies(BlindJump convert_${file}_file)
 
   endif()
 endmacro()
@@ -182,9 +182,11 @@ if(GAMEBOY_ADVANCE)
 
     # Data files below. Because the gameboy advance does not have a filesystem,
     # all of the sounds and images need to be compiled into the ROM.
-    ${DATA_DIR}/script_init.cpp
-    ${DATA_DIR}/script_pre_levelgen.cpp
-    ${DATA_DIR}/script_post_levelgen.cpp
+    ${DATA_DIR}/file_init.cpp
+    ${DATA_DIR}/file_pre_levelgen.cpp
+    ${DATA_DIR}/file_post_levelgen.cpp
+    ${DATA_DIR}/file_english.cpp
+    ${DATA_DIR}/file_spanish.cpp
     ${DATA_DIR}/scottbuckley_omega.s
     ${DATA_DIR}/music_murmuration.s
     ${DATA_DIR}/scottbuckley_computations.s
@@ -438,12 +440,15 @@ if(GAMEBOY_ADVANCE)
     -mcpu=arm7tdmi
     -mtune=arm7tdmi)
 
-  add_script(init)
-  add_script(pre_levelgen)
-  add_script(post_levelgen)
+  add_file(scripts init lisp)
+  add_file(scripts pre_levelgen lisp)
+  add_file(scripts post_levelgen lisp)
+
+  add_file(strings english txt)
+  add_file(strings spanish txt)
 
   if(GBA_AUTOBUILD_CONF)
-    configure_file(scripts.cpp.in ${SOURCE_DIR}/platform/gba/scripts.cpp)
+    configure_file(files.cpp.in ${SOURCE_DIR}/platform/gba/files.cpp)
   endif()
 
   if(GBA_AUTOBUILD_IMG)

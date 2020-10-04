@@ -3,21 +3,22 @@
 
 @=======================================================================
 @
-@	launch_flattened, 3368x8@4,
+@	launch_flattened, 3368x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
 @	+ 421 tiles not compressed
 @	Total size: 512 + 13472 = 13984
 @
-@	Time-stamp: 2020-08-08, 09:49:50
-@	Exported by Cearn's GBA Image Transmogrifier, v
+@	Time-stamp: 2020-10-04, 11:23:08
+@	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
 @=======================================================================
 
 	.section .rodata
-	.align	4
-	.global launch_flattenedTiles		@ 13472 bytes
+	.align	2
+	.global launch_flattenedTiles		@ 13472 unsigned chars
+	.hidden launch_flattenedTiles
 launch_flattenedTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333,0x33333333
@@ -492,11 +493,11 @@ launch_flattenedTiles:
 	.word 0x55555557,0x55555557,0x55555557,0x55555577,0x55555577,0x55555777,0x55555777,0x55555777
 	.word 0x55555555,0x55555555,0x55555555,0x55555555,0x55555555,0x55555555,0x55555555,0x55555555
 	.word 0x11111111,0x11111111,0x11111111,0x11111111,0x11111115,0x11111115,0x11111155,0x11111555
-	.size	launch_flattenedTiles, .-launch_flattenedTiles
 
 	.section .rodata
-	.align	4
-	.global launch_flattenedPal		@ 512 bytes
+	.align	2
+	.global launch_flattenedPal		@ 512 unsigned chars
+	.hidden launch_flattenedPal
 launch_flattenedPal:
 	.hword 0x7C1F,0x1D05,0x664C,0x5A23,0x6A72,0x5E45,0x6AB4,0x6AB2
 	.hword 0x6E72,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -533,6 +534,5 @@ launch_flattenedPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
-	.size	launch_flattenedPal, .-launch_flattenedPal
 
 @}}BLOCK(launch_flattened)

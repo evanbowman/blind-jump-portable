@@ -215,6 +215,7 @@ Value* get_nil();
 
 void set_list(Value* list, u32 position, Value* value);
 Value* get_list(Value* list, u32 position);
+int length(Value* lat);
 
 
 // For passing parameter to functions. Operands should be pushed in forward

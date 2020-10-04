@@ -78,38 +78,14 @@ Game::Game(Platform& pfrm)
 
     pfrm.screen().enable_night_mode(persistent_data_.settings_.night_mode_);
 
-    if (persistent_data_.settings_.language_ not_eq LocaleLanguage::null) {
+    if (persistent_data_.settings_.language_ not_eq 0) {
         locale_set_language(persistent_data_.settings_.language_);
     } else {
-        const auto lang = lisp::get_var("default-lang");
-
-        if (lang->type_ not_eq lisp::Value::Type::symbol) {
-            while (true)
-                ; // TODO: fatal error
-        }
-
-        const auto lang_enum = [&] {
-            if (str_cmp(lang->symbol_.name_, "english") == 0) {
-                return LocaleLanguage::english;
-            } else if (str_cmp(lang->symbol_.name_, "spanish") == 0) {
-                return LocaleLanguage::spanish;
-            }
-            return LocaleLanguage::null;
-        }();
-
-        if (lang_enum not_eq LocaleLanguage::null) {
-            locale_set_language(lang_enum);
-            persistent_data_.settings_.language_ = lang_enum;
-
-            StringBuffer<64> buf;
-            buf += "saved default language as ";
-            buf += lang->symbol_.name_;
-
-            info(pfrm, buf.c_str());
-        }
+        locale_set_language(1);
+        persistent_data_.settings_.language_ = 1;
     }
 
-    state_ = State::initial();
+    state_ = State::initial(pfrm);
 
     pfrm.load_overlay_texture("overlay");
 
@@ -852,8 +828,7 @@ void Game::init_script(Platform& pfrm)
                                   lisp::get_op(i)->integer_.value_);
 
                               if (auto pfrm = interp_get_pfrm()) {
-                                  game->inventory().push_item(
-                                      *pfrm, *game, item);
+                                  game->inventory().push_item(*pfrm, *game, item, false);
                               }
                           }
                       }
@@ -1136,7 +1111,7 @@ void Game::init_script(Platform& pfrm)
         lisp::dostring(eval_opt);
     }
 
-    lisp::dostring(pfrm.load_script("init.lisp"));
+    lisp::dostring(pfrm.load_file_contents("scripts", "init.lisp"));
 }
 
 
@@ -1198,7 +1173,7 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     pfrm.load_tile0_texture(current_zone(*this).tileset0_name_);
     pfrm.load_tile1_texture(current_zone(*this).tileset1_name_);
 
-    lisp::dostring(pfrm.load_script("pre_levelgen.lisp"));
+    lisp::dostring(pfrm.load_file_contents("scripts", "pre_levelgen.lisp"));
 
     auto boss_level = get_boss_level(level());
     if (boss_level) {
@@ -1227,7 +1202,7 @@ RETRY:
 
     current_zone(*this).generate_background_(pfrm, *this);
 
-    lisp::dostring(pfrm.load_script("post_levelgen.lisp"));
+    lisp::dostring(pfrm.load_file_contents("scripts", "post_levelgen.lisp"));
 
     // We're doing this to speed up collision checking with walls. While it
     // might be nice to have more info about the tilemap, it's costly to check
