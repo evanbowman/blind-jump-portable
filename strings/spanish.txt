@@ -67,7 +67,7 @@ Idioma:
 Contraste: 
 Modo Nocturno: 
 Transponer A/B: 
-default
+por defecto
 Dificultad: 
 normal
 difícil
@@ -78,7 +78,7 @@ sí
 no
 menu disabled
  ft
-launch: 
+lanzar: 
 Peer connected!
 Peer connection failed!
 Peer died!
@@ -115,3 +115,5 @@ Peer requires update!
 overall
 Peer used lethargy!
 español
+HEALTH AND SAFETY NOTICE:
+This software features flashing lights and colors, and may not be suitable for players with photosensitive epilepsy.

@@ -102,6 +102,7 @@ set(SOURCES
 
 set(SOURCES
   ${SOURCES}
+  ${SOURCE_DIR}/state/healthAndSafetyWarningState.cpp
   ${SOURCE_DIR}/state/quickSelectInventoryState.cpp
   ${SOURCE_DIR}/state/networkConnectSetupState.cpp
   ${SOURCE_DIR}/state/networkConnectWaitState.cpp

@@ -532,6 +532,28 @@ private:
 };
 
 
+class HealthAndSafetyWarningState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    enum class DisplayMode {
+        wait,
+        fade_out,
+        swap_texture,
+        exit,
+    } display_mode_ = DisplayMode::wait;
+
+    Microseconds timer_ = 0;
+
+    std::optional<Text> text_;
+    std::optional<TextView> tv_;
+};
+
+
 class IntroCreditsState : public State {
 public:
     IntroCreditsState(LocalizedText&& str) : str_(std::move(str))
@@ -1163,7 +1185,8 @@ using StatePoolInst = StatePool<ActiveState,
                                 LaunchCutsceneState,
                                 BossDeathSequenceState,
                                 QuickSelectInventoryState,
-                                SignalJammerSelectorState>;
+                                SignalJammerSelectorState,
+                                HealthAndSafetyWarningState>;
 
 
 StatePoolInst& state_pool();

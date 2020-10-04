@@ -124,6 +124,8 @@ enum class LocaleString {
     overall_heading,
     peer_used_lethargy,
     language_name,
+    health_safety_notice,
+    health_safety_text,
     count
 };
 

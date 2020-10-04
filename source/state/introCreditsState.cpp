@@ -56,7 +56,7 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     text_.emplace(pfrm, str_.obj_->c_str(), pos);
 
     center(pfrm);
-
+    // pfrm.screen().fade(0.f);
     pfrm.screen().fade(1.f);
 }
 

@@ -621,7 +621,7 @@ bool draw_minimap(Platform& pfrm,
 
 StatePtr State::initial(Platform& pfrm)
 {
-    return state_pool().create<IntroCreditsState>(locale_string(pfrm, LocaleString::intro_text_2));
+    return state_pool().create<HealthAndSafetyWarningState>();
 }
 
 
