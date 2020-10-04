@@ -44,6 +44,8 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
                   11,
                   page_ == 0 ? 175 : 173);
 
+    const auto dot = locale_string(pfrm, LocaleString::punctuation_period);
+
     auto print_metric = [&](const char* str,
                             int num,
                             const char* suffix = "",
@@ -67,9 +69,10 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
             screen_tiles.x -
             (utf8::len(str) + 6 + integer_text_length(num) +
              utf8::len(suffix));
+
+
         for (u32 i = 0; i < iters; ++i) {
-            lines_.back().append(
-                                 locale_string(pfrm, LocaleString::punctuation_period).obj_->c_str(),
+            lines_.back().append(dot.obj_->c_str(),
                 colors);
         }
 
