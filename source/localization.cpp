@@ -514,6 +514,84 @@ const char* locale_string(LocaleString ls)
         case LocaleString::menu_settings: return "Configuración";
         case LocaleString::menu_save_and_quit: return "Guardar y Abandonar";
         case LocaleString::distance_units_feet: return " ft";
+        case LocaleString::empty_inventory_str: return "Vacía";
+        case LocaleString::old_poster_title: return "Póster viejo (1)";
+        case LocaleString::surveyor_logbook_title: return "Cuaderno (1/2)";
+        case LocaleString::engineer_notebook_title: return "Cuaderno (2/2)";
+        case LocaleString::blaster_title: return "Pistola";
+        case LocaleString::accelerator_title: return "Acelerador (60 balas)";
+        case LocaleString::postal_advert_title: return "...";
+        case LocaleString::long_jump_z2_title: return "Long jump drive (pt. II)";
+        case LocaleString::long_jump_z3_title: return "Long jump drive (pt. III)";
+        case LocaleString::long_jump_z4_title: return "Long jump drive (pt. IV)";
+        case LocaleString::lethargy_title: return "Letargo (18 seg)";
+        case LocaleString::map_system_title: return "Sistema de mapa";
+        case LocaleString::map_required: return "necesario: Sistema de mapa";
+        case LocaleString::explosive_rounds_title: return "Balas explosivos (2)";
+        case LocaleString::seed_packet_title: return "Paquete de semillas";
+        case LocaleString::navigation_pamphlet_title: return "Folleto de navegación";
+        case LocaleString::orange_title: return "Naranja (+1 hp)";
+        case LocaleString::orange_seeds_title: return "Semillas de naranja";
+        case LocaleString::single_use_warning: return "(DE UN SOLO USO)";
+        case LocaleString::locked: return "cerrado, ";
+        case LocaleString::enemies_remaining_singular: return " enemigo restante";
+        case LocaleString::enemies_remaining_plural: return " enemigos restantes";
+        case LocaleString::nothing: return "Nada";
+        case LocaleString::got_item_before: return "hallas \"";
+        case LocaleString::got_item_after: return "\"";
+        case LocaleString::level_clear: return "waypoint completado";
+        case LocaleString::inventory_full:
+        case LocaleString::peer_too_close_to_item:;
+        case LocaleString::items:
+        case LocaleString::you_died:
+        case LocaleString::score:
+        case LocaleString::items_collected_prefix:
+        case LocaleString::items_collected_suffix:
+        case LocaleString::items_collected_heading:
+        case LocaleString::high_score:
+        case LocaleString::high_scores:
+        case LocaleString::waypoints:
+        case LocaleString::punctuation_period:
+        case LocaleString::goodbye_text:
+        case LocaleString::signal_jammer_title:
+        case LocaleString::select_target_text:
+        case LocaleString::settings_log_severity:
+        case LocaleString::menu_disabled:
+        case LocaleString::launch:
+        case LocaleString::peer_connected:
+        case LocaleString::peer_connection_failed:
+        case LocaleString::peer_lost:
+        case LocaleString::peer_health_changed:
+        case LocaleString::level_transition_awaiting_peers:
+        case LocaleString::level_transition_synchronizing:
+        case LocaleString::fps_stats_suffix:
+        case LocaleString::network_tx_stats_suffix:
+        case LocaleString::network_rx_stats_suffix:
+        case LocaleString::network_tx_loss_stats_suffix:
+        case LocaleString::network_rx_loss_stats_suffix:
+        case LocaleString::link_saturation_stats_suffix:
+        case LocaleString::scratch_buf_avail_stats_suffix:
+        case LocaleString::boss0_defeated:
+        case LocaleString::boss1_defeated:
+        case LocaleString::boss2_defeated:
+        case LocaleString::peer_transport_waiting:
+        case LocaleString::severity_debug:
+        case LocaleString::severity_info:
+        case LocaleString::severity_warning:
+        case LocaleString::severity_error:
+        case LocaleString::power_surge_detected:
+        case LocaleString::store_buy_items:
+        case LocaleString::store_sell_items:
+        case LocaleString::store_buy:
+        case LocaleString::store_sell:
+        case LocaleString::store_info:
+        case LocaleString::scavenger_store:
+        case LocaleString::buy:
+        case LocaleString::sell:
+        case LocaleString::update_required:
+        case LocaleString::peer_requires_update:
+        case LocaleString::overall_heading:
+        case LocaleString::peer_used_lethargy:
         default:
             return empty_str;
         }
@@ -591,7 +669,7 @@ const char* locale_string(LocaleString ls)
         case LocaleString::got_item_after: return "\"";
         case LocaleString::inventory_full: return "Inventory full";
         case LocaleString::items: return "items";
-        case LocaleString::level_clear: return "level clear";
+        case LocaleString::level_clear: return "waypoint clear";
         case LocaleString::you_died: return "you died";
         case LocaleString::score: return "score ";
         case LocaleString::items_collected_prefix: return "items collected % ";
