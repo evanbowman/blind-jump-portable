@@ -1538,6 +1538,17 @@ static void flash_load(void* dest, u32 flash_offset, u32 length)
 static bool save_using_flash = false;
 
 
+// NOTE: Some cartridge manufacturers back in the day searched ROMS for a
+// word-aligned string, to determine what type of save memory to put on the
+// chip. I designed the code to use either SRAM or FLASH, but let's include the
+// backup ID string anyway, because we'd really prefer to have SRAM. Unlikely
+// that anyone would ever agree to make me a GBA cartridge, but hey, you never
+// know...
+READ_ONLY_DATA alignas(4) [[gnu::used]] static const char backup_type[] = {
+    'S', 'R', 'A', 'M', '_', 'V', 'n', 'n', 'n'
+};
+
+
 void sram_save(const void* data, u32 offset, u32 length)
 {
     u8* save_mem = (u8*)cartridge_ram + offset;
