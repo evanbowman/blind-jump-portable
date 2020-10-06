@@ -1,7 +1,7 @@
 #pragma once
 
-#include "number/numeric.hpp"
 #include "graphics/color.hpp"
+#include "number/numeric.hpp"
 
 
 class Color {

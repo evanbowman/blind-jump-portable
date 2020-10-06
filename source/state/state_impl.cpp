@@ -55,16 +55,16 @@ void CommonNetworkListener::receive(const net_event::LethargyActivated&,
                                     Game& game)
 {
     add_lethargy_powerup(pfrm, game);
-    push_notification(pfrm,
-                      game.state(),
-                      locale_string(pfrm, LocaleString::peer_used_lethargy)->c_str());
+    push_notification(
+        pfrm,
+        game.state(),
+        locale_string(pfrm, LocaleString::peer_used_lethargy)->c_str());
 }
 
 
-
 void CommonNetworkListener::receive(const net_event::ProgramVersion& vn,
-             Platform& pfrm,
-             Game& game)
+                                    Platform& pfrm,
+                                    Game& game)
 {
     const auto major = vn.info_.major_.get();
     const auto minor = vn.info_.minor_.get();
@@ -84,14 +84,13 @@ void CommonNetworkListener::receive(const net_event::ProgramVersion& vn,
 
         if (peer_vn > local_vn) {
 
-            push_notification(pfrm,
-                              game.state(),
-                              locale_string(pfrm, LocaleString::update_required)->c_str());
+            push_notification(
+                pfrm,
+                game.state(),
+                locale_string(pfrm, LocaleString::update_required)->c_str());
         } else {
             auto str = locale_string(pfrm, LocaleString::peer_requires_update);
-            push_notification(pfrm,
-                              game.state(),
-                              str->c_str());
+            push_notification(pfrm, game.state(), str->c_str());
         }
 
         pfrm.network_peer().disconnect();
@@ -110,11 +109,11 @@ void CommonNetworkListener::receive(const net_event::PlayerEnteredGate&,
         game.peer()->warping() = true;
     }
 
-    push_notification(pfrm,
-                      game.state(),
-                      locale_string(pfrm, LocaleString::peer_transport_waiting)->c_str());
+    push_notification(
+        pfrm,
+        game.state(),
+        locale_string(pfrm, LocaleString::peer_transport_waiting)->c_str());
 }
-
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -416,7 +415,8 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(surveyor_logbook),
      [](Platform& pfrm, Game&) {
-         return state_pool().create<NotebookState>(locale_string(pfrm, LocaleString::logbook_str_1));
+         return state_pool().create<NotebookState>(
+             locale_string(pfrm, LocaleString::logbook_str_1));
      },
      LocaleString::surveyor_logbook_title},
     {STANDARD_ITEM_HANDLER(blaster),

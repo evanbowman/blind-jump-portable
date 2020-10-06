@@ -127,9 +127,11 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             altitude_update_ = 30;
 
-            const auto units = locale_string(pfrm, LocaleString::distance_units_feet);
+            const auto units =
+                locale_string(pfrm, LocaleString::distance_units_feet);
 
-            auto len = integer_text_length(altitude_) + utf8::len(units->c_str());
+            auto len =
+                integer_text_length(altitude_) + utf8::len(units->c_str());
 
             if (not altitude_text_ or
                 (altitude_text_ and altitude_text_->len() not_eq len)) {

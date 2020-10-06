@@ -187,7 +187,8 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-Enemy* SignalJammerSelectorState::make_selector_target(Platform& pfrm, Game& game)
+Enemy* SignalJammerSelectorState::make_selector_target(Platform& pfrm,
+                                                       Game& game)
 {
     constexpr u32 count = 8;
 

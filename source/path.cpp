@@ -50,8 +50,7 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
             return;
         }
 
-        if (is_walkable(t) and
-            x < TileMap::width - 1 and
+        if (is_walkable(t) and x < TileMap::width - 1 and
             y < TileMap::height - 1) {
 
             if (auto obj = memory_.alloc<PathVertexData>(pfrm)) {

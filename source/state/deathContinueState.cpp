@@ -15,9 +15,7 @@ void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
 }
 
 
-enum {
-    max_page = 3
-};
+enum { max_page = 3 };
 
 
 void DeathContinueState::exit(Platform& pfrm, Game& game, State&)
@@ -34,15 +32,10 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    pfrm.set_tile(Layer::overlay,
-                  screen_tiles.x - 2,
-                  11,
-                  page_ == max_page ? 174 : 172);
+    pfrm.set_tile(
+        Layer::overlay, screen_tiles.x - 2, 11, page_ == max_page ? 174 : 172);
 
-    pfrm.set_tile(Layer::overlay,
-                  1,
-                  11,
-                  page_ == 0 ? 175 : 173);
+    pfrm.set_tile(Layer::overlay, 1, 11, page_ == 0 ? 175 : 173);
 
     const auto dot = locale_string(pfrm, LocaleString::punctuation_period);
 
@@ -50,30 +43,28 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
                             int num,
                             const char* suffix = "",
                             bool highlight = false) {
-
         if (lines_.full()) {
             return;
         }
 
         lines_.emplace_back(pfrm, Vec2<u8>{3, u8(8 + 2 * lines_.size())});
 
-        const auto colors = highlight ?
-            Text::OptColors{FontColors{ColorConstant::rich_black,
-                                       ColorConstant::aerospace_orange}}
-            : std::nullopt;
+        const auto colors =
+            highlight
+                ? Text::OptColors{FontColors{ColorConstant::rich_black,
+                                             ColorConstant::aerospace_orange}}
+                : std::nullopt;
 
 
         lines_.back().append(str, colors);
 
         const auto iters =
             screen_tiles.x -
-            (utf8::len(str) + 6 + integer_text_length(num) +
-             utf8::len(suffix));
+            (utf8::len(str) + 6 + integer_text_length(num) + utf8::len(suffix));
 
 
         for (u32 i = 0; i < iters; ++i) {
-            lines_.back().append(dot->c_str(),
-                colors);
+            lines_.back().append(dot->c_str(), colors);
         }
 
         lines_.back().append(num, colors);
@@ -85,8 +76,8 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
             return;
         }
         const auto margin = centered_text_margins(pfrm, str_len(str));
-        lines_.emplace_back(pfrm, Vec2<u8>{u8(margin),
-                                           u8(8 + 2 * lines_.size())});
+        lines_.emplace_back(pfrm,
+                            Vec2<u8>{u8(margin), u8(8 + 2 * lines_.size())});
         lines_.back().assign(str);
     };
 
@@ -113,15 +104,18 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
 
     switch (page_) {
     case 0:
-        print_heading(locale_string(pfrm, LocaleString::overall_heading)->c_str());
-        print_metric(locale_string(pfrm, LocaleString::score)->c_str(), game.score());
+        print_heading(
+            locale_string(pfrm, LocaleString::overall_heading)->c_str());
+        print_metric(locale_string(pfrm, LocaleString::score)->c_str(),
+                     game.score());
         print_metric(locale_string(pfrm, LocaleString::high_score)->c_str(),
                      game.highscores()[0]);
         print_metric(locale_string(pfrm, LocaleString::waypoints)->c_str(),
                      game.level());
-        print_metric(locale_string(pfrm, LocaleString::items_collected_prefix)->c_str(),
-                     100 * items_collected_percentage(game.inventory()),
-                     locale_string(pfrm, LocaleString::items_collected_suffix)->c_str());
+        print_metric(
+            locale_string(pfrm, LocaleString::items_collected_prefix)->c_str(),
+            100 * items_collected_percentage(game.inventory()),
+            locale_string(pfrm, LocaleString::items_collected_suffix)->c_str());
         break;
 
     case 1:
@@ -133,15 +127,16 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
         break;
 
     case 3: {
-        print_heading(locale_string(pfrm, LocaleString::items_collected_heading)->c_str());
+        print_heading(locale_string(pfrm, LocaleString::items_collected_heading)
+                          ->c_str());
 
         auto write_percentage = [&](LocaleString str, int zone) {
             StringBuffer<31> fmt = locale_string(pfrm, str)->c_str();
             fmt.pop_back();
             fmt += " ";
-            print_metric(fmt.c_str(),
-                         100 * items_collected_percentage(game.inventory(),
-                                                          zone));
+            print_metric(
+                fmt.c_str(),
+                100 * items_collected_percentage(game.inventory(), zone));
         };
 
         write_percentage(LocaleString::part_1_text, 0);
@@ -150,7 +145,6 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
         write_percentage(LocaleString::part_4_text, 3);
 
     } break;
-
     }
 }
 
@@ -163,12 +157,12 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto refresh = [&] {
         lines_.clear();
         locked_ = true;
-        game.on_timeout(pfrm, milliseconds(100),
-                        [this](Platform& pfrm, Game& game) {
-                            repaint_stats(pfrm, game);
-                            locked_ = false;
-                            pfrm.speaker().play_sound("scroll", 1);
-                        });
+        game.on_timeout(
+            pfrm, milliseconds(100), [this](Platform& pfrm, Game& game) {
+                repaint_stats(pfrm, game);
+                locked_ = false;
+                pfrm.speaker().play_sound("scroll", 1);
+            });
     };
 
     constexpr auto fade_duration = seconds(1);

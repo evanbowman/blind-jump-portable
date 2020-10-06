@@ -14,8 +14,7 @@ static const Entity::Health initial_health = 100;
 
 Wanderer::Wanderer(const Vec2<Float>& position)
     : Enemy(initial_health, position, {{16, 38}, {8, 24}}), timer_(0),
-      timer2_(0), chase_player_(0), dashes_remaining_(0),
-      bullet_spread_gap_(0)
+      timer2_(0), chase_player_(0), dashes_remaining_(0), bullet_spread_gap_(0)
 {
     sprite_.set_texture_index(12);
     sprite_.set_size(Sprite::Size::w16_h32);

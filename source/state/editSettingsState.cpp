@@ -1,5 +1,5 @@
-#include "state_impl.hpp"
 #include "script/lisp.hpp"
+#include "state_impl.hpp"
 
 
 void EditSettingsState::message(Platform& pfrm, const char* str)
@@ -197,8 +197,8 @@ EditSettingsState::LanguageLineUpdater::update(Platform& pfrm,
                                                Game& game,
                                                int dir)
 {
-    
-    
+
+
     auto& language = game.persistent_data().settings_.language_;
     int l = static_cast<int>(language);
 

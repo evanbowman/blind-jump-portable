@@ -1264,32 +1264,31 @@ void init(Platform& pfrm)
                                     get_op(0)->integer_.value_);
             }));
 
-    set_var(
-        "interp-stat", make_function([](int argc) {
-            auto lat = make_list(4);
-            auto& ctx = bound_context;
-            int values_remaining = 0;
-            for (auto& pl : ctx->value_pools_) {
-                values_remaining += pl->remaining();
-            }
+    set_var("interp-stat", make_function([](int argc) {
+                auto lat = make_list(4);
+                auto& ctx = bound_context;
+                int values_remaining = 0;
+                for (auto& pl : ctx->value_pools_) {
+                    values_remaining += pl->remaining();
+                }
 
-            push_op(lat); // for the gc
-            set_list(lat, 0, make_integer(values_remaining));
-            set_list(lat, 1, make_integer(ctx->string_intern_pos_));
-            set_list(lat, 2, make_integer(ctx->operand_stack_->size()));
-            set_list(lat, 3, make_integer([&] {
-                         int symb_tab_used = 0;
-                         for (u32 i = 0; i < ctx->globals_->size(); ++i) {
-                             if (str_cmp("", (*ctx->globals_)[i].name_)) {
-                                 ++symb_tab_used;
+                push_op(lat); // for the gc
+                set_list(lat, 0, make_integer(values_remaining));
+                set_list(lat, 1, make_integer(ctx->string_intern_pos_));
+                set_list(lat, 2, make_integer(ctx->operand_stack_->size()));
+                set_list(lat, 3, make_integer([&] {
+                             int symb_tab_used = 0;
+                             for (u32 i = 0; i < ctx->globals_->size(); ++i) {
+                                 if (str_cmp("", (*ctx->globals_)[i].name_)) {
+                                     ++symb_tab_used;
+                                 }
                              }
-                         }
-                         return symb_tab_used;
-                     }()));
-            pop_op(); // lat
+                             return symb_tab_used;
+                         }()));
+                pop_op(); // lat
 
-            return lat;
-        }));
+                return lat;
+            }));
 
     set_var("range", make_function([](int argc) {
                 int start = 0;

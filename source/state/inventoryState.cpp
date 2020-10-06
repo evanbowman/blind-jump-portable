@@ -22,7 +22,8 @@ LocalizedText item_description(Platform& pfrm, Item::Type type)
         return locale_string(pfrm, handler->description_);
 
     } else {
-        while (true) ;
+        while (true)
+            ;
     }
 }
 
@@ -231,7 +232,9 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
 
     if (auto handler = inventory_item_handler(item)) {
         item_description_.emplace(
-                                  pfrm, locale_string(pfrm, handler->description_)->c_str(), text_loc);
+            pfrm,
+            locale_string(pfrm, handler->description_)->c_str(),
+            text_loc);
         item_description_->append(".");
 
         if (handler->single_use_) {
@@ -239,7 +242,7 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
                 pfrm, OverlayCoord{text_loc.x, text_loc.y + 2});
 
             item_description2_->assign(
-                                       locale_string(pfrm, LocaleString::single_use_warning)->c_str(),
+                locale_string(pfrm, LocaleString::single_use_warning)->c_str(),
                 FontColors{ColorConstant::med_blue_gray,
                            ColorConstant::rich_black});
         } else {
@@ -267,7 +270,9 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
 
     auto label_str = locale_string(pfrm, LocaleString::items);
     label_.emplace(
-        pfrm, OverlayCoord{u8(screen_tiles.x - (utf8::len(label_str->c_str()) + 1)), 1});
+        pfrm,
+        OverlayCoord{u8(screen_tiles.x - (utf8::len(label_str->c_str()) + 1)),
+                     1});
     label_->assign(label_str->c_str());
 
     for (int i = 0; i < 5; ++i) {

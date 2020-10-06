@@ -3,13 +3,13 @@
 #include "function.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
+#include "path.hpp"
 #include "script/lisp.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
-#include "path.hpp"
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -221,8 +221,7 @@ static void show_offscreen_player_icon(Platform& pfrm, Game& game)
     const int center_y = view_size.y / 2;
     const int center_x = view_size.x / 2;
 
-    if (-center_y <= slope * center_x and
-        slope * center_x <= center_y) {
+    if (-center_y <= slope * center_x and slope * center_x <= center_y) {
         if (view_center.x < peer_pos.x) {
             const auto y =
                 clamp(peer_pos.y, view_tl.y, view_tl.y + view_size.y - 32);
@@ -237,8 +236,7 @@ static void show_offscreen_player_icon(Platform& pfrm, Game& game)
             // left edge
             arrow_spr.set_rotation((std::numeric_limits<s16>::max() * 1) / 4);
         }
-    } else if (-center_x <= center_y / slope and
-               center_y / slope <= center_x) {
+    } else if (-center_x <= center_y / slope and center_y / slope <= center_x) {
         if (view_center.y < peer_pos.y) {
             const auto x =
                 clamp(peer_pos.x, view_tl.x, view_tl.x + view_size.x - 32);
@@ -829,7 +827,8 @@ void Game::init_script(Platform& pfrm)
                                   lisp::get_op(i)->integer_.value_);
 
                               if (auto pfrm = interp_get_pfrm()) {
-                                  game->inventory().push_item(*pfrm, *game, item, false);
+                                  game->inventory().push_item(
+                                      *pfrm, *game, item, false);
                               }
                           }
                       }
@@ -1294,11 +1293,9 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
     } else {
         // Just for the sake of variety, intentionally generate
         // smaller maps sometimes.
-        const bool small_map =
-            rng::choice<100>(rng::critical_state) < 20 or
-            is_boss_level(level() - 1) or
-            is_boss_level(level() - 2) or
-            level() < 4;
+        const bool small_map = rng::choice<100>(rng::critical_state) < 20 or
+                               is_boss_level(level() - 1) or
+                               is_boss_level(level() - 2) or level() < 4;
 
         int count;
 
@@ -1308,9 +1305,8 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
         do {
             count = 0;
             tiles_.for_each([small_map](auto& t, int x, int y) {
-                if (small_map and
-                    (x < 2 or x > TileMap::width - 2 or
-                     y < 3 or y > TileMap::height - 3)) {
+                if (small_map and (x < 2 or x > TileMap::width - 2 or y < 3 or
+                                   y > TileMap::height - 3)) {
                     t = 0;
                 } else {
                     t = rng::choice<int(Tile::sand)>(rng::critical_state);
@@ -1328,7 +1324,6 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
             });
 
         } while (count == 0);
-
     }
 }
 
@@ -1470,8 +1465,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     const bool place_scavenger =
         level() > 3 and // at low levels, players will have low score anyway.
         not is_boss_level(level()) and
-        (rng::choice<6>(rng::critical_state) > 1
-         or is_boss_level(level() - 1));
+        (rng::choice<6>(rng::critical_state) > 1 or is_boss_level(level() - 1));
 
     // Now we want to generate a map region for our scavenger character. We want
     // to place a 3x3 block of tiles in some open location, and then connect
@@ -1481,8 +1475,8 @@ COLD void Game::regenerate_map(Platform& pfrm)
         const auto x = rng::choice(TileMap::width, rng::critical_state);
         const auto y = rng::choice(TileMap::height, rng::critical_state);
 
-        if (not (x > 2 and x < TileMap::width - 3 and
-                 y > 2 and y < TileMap::height - 3)) {
+        if (not(x > 2 and x < TileMap::width - 3 and y > 2 and
+                y < TileMap::height - 3)) {
             continue;
         }
 
@@ -1509,11 +1503,11 @@ COLD void Game::regenerate_map(Platform& pfrm)
             }
 
             const Vec2<Float> seek{Float(x), Float(y)};
-            std::sort(floor_tiles.begin(), floor_tiles.end(),
+            std::sort(floor_tiles.begin(),
+                      floor_tiles.end(),
                       [&](const MapCoord& lhs, const MapCoord& rhs) {
-                          return
-                              distance(lhs.cast<Float>(), seek) <
-                              distance(rhs.cast<Float>(), seek);
+                          return distance(lhs.cast<Float>(), seek) <
+                                 distance(rhs.cast<Float>(), seek);
                       });
 
             const auto nearest = *floor_tiles.begin();
@@ -1742,7 +1736,6 @@ COLD void Game::regenerate_map(Platform& pfrm)
                     }
                 }
             }
-
         });
     }
 
@@ -2244,7 +2237,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     // so consume nearby free map slots.
     if (scavenger_) {
         for (auto it = free_spots.begin(); it not_eq free_spots.end();) {
-            if (distance(to_world_coord(*it), scavenger_->get_position()) < 40) {
+            if (distance(to_world_coord(*it), scavenger_->get_position()) <
+                40) {
                 it = free_spots.erase(it);
             } else {
                 ++it;
@@ -2374,11 +2368,12 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
-    if (auto path = find_path(pfrm,
-                              tiles_,
-                              to_tile_coord(player_.get_position().cast<s32>()).cast<u8>(),
-                              to_tile_coord(transporter_.get_position().cast<s32>())
-                              .cast<u8>())) {
+    if (auto path = find_path(
+            pfrm,
+            tiles_,
+            to_tile_coord(player_.get_position().cast<s32>()).cast<u8>(),
+            to_tile_coord(transporter_.get_position().cast<s32>())
+                .cast<u8>())) {
         // ...
     }
 

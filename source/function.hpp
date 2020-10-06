@@ -31,8 +31,7 @@ public:
           move_policy_(reinterpret_cast<MovePolicy>(moveImpl<Functor>)),
           destroy_policy_(
               reinterpret_cast<DestroyPolicy>(destroyImpl<Functor>)),
-          data_(nullptr),
-          data_size_(sizeof(Functor))
+          data_(nullptr), data_size_(sizeof(Functor))
     {
         static_assert(storage >= sizeof(Functor));
 
@@ -51,8 +50,7 @@ public:
         : invoke_policy_(rhs.invoke_policy_),
           construct_policy_(rhs.construct_policy_),
           move_policy_(rhs.move_policy_), destroy_policy_(rhs.destroy_policy_),
-          data_(nullptr),
-          data_size_(rhs.data_size_)
+          data_(nullptr), data_size_(rhs.data_size_)
     {
         if (invoke_policy_) {
             data_ = internal_storage_.data();
@@ -65,8 +63,7 @@ public:
         : invoke_policy_(rhs.invoke_policy_),
           construct_policy_(rhs.construct_policy_),
           move_policy_(rhs.move_policy_), destroy_policy_(rhs.destroy_policy_),
-          data_(nullptr),
-          data_size_(rhs.data_size_)
+          data_(nullptr), data_size_(rhs.data_size_)
     {
         rhs.invoke_policy_ = nullptr;
         rhs.construct_policy_ = nullptr;

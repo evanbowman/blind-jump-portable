@@ -30,7 +30,8 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
                     push_notification(
                         pfrm,
                         game.state(),
-                        locale_string(pfrm, LocaleString::power_surge_detected)->c_str());
+                        locale_string(pfrm, LocaleString::power_surge_detected)
+                            ->c_str());
                 });
         }
 

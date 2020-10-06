@@ -112,7 +112,8 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (counter_ > seconds(1) + milliseconds(700) and
             not pushed_notification_) {
             pushed_notification_ = true;
-            push_notification(pfrm, this, locale_string(pfrm, defeated_text_)->c_str());
+            push_notification(
+                pfrm, this, locale_string(pfrm, defeated_text_)->c_str());
         }
         if (counter_ > fade_duration) {
             pfrm.screen().fade(0.f);

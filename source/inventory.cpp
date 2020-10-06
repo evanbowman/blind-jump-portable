@@ -32,7 +32,8 @@ void Inventory::push_item(Platform& pfrm,
                         // Technically, the description for null is Empty, but that
                         // doesn't make sense contextually, so lets use this text
                         // instead.
-                        return locale_string(pfrm, LocaleString::nothing)->c_str();
+                        return locale_string(pfrm, LocaleString::nothing)
+                            ->c_str();
 
                     } else {
                         return item_description(pfrm, insert)->c_str();
@@ -43,10 +44,12 @@ void Inventory::push_item(Platform& pfrm,
 
                     NotificationStr str;
 
-                    str += locale_string(pfrm, LocaleString::got_item_before)->c_str();
+                    str += locale_string(pfrm, LocaleString::got_item_before)
+                               ->c_str();
                     str += description;
-                    str += locale_string(pfrm, LocaleString::got_item_after)->c_str();
-                    
+                    str += locale_string(pfrm, LocaleString::got_item_after)
+                               ->c_str();
+
                     push_notification(pfrm, game.state(), str);
                 }
             }
@@ -74,11 +77,16 @@ Float items_collected_percentage(const Inventory& inventory,
         if (zone) {
             const int level = [&] {
                 switch (*zone) {
-                case 0: return boss_0_level - 1;
-                case 1: return boss_1_level - 1;
-                case 2: return boss_2_level - 1;
-                case 3: return boss_3_level - 1;
-                default: return 0;
+                case 0:
+                    return boss_0_level - 1;
+                case 1:
+                    return boss_1_level - 1;
+                case 2:
+                    return boss_2_level - 1;
+                case 3:
+                    return boss_3_level - 1;
+                default:
+                    return 0;
                 }
             }();
 

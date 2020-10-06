@@ -43,8 +43,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                 {
                     const auto l1str = locale_string(pfrm, zone.title_line_1);
                     const auto margin =
-                        centered_text_margins(pfrm,
-                                              utf8::len(l1str->c_str()));
+                        centered_text_margins(pfrm, utf8::len(l1str->c_str()));
                     left_text_margin(*text_[0], std::max(0, int{margin} - 1));
 
                     text_[0]->append(l1str->c_str());
@@ -53,8 +52,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                 {
                     const auto l2str = locale_string(pfrm, zone.title_line_2);
                     const auto margin2 =
-                        centered_text_margins(pfrm,
-                                              utf8::len(l2str->c_str()));
+                        centered_text_margins(pfrm, utf8::len(l2str->c_str()));
                     left_text_margin(*text_[1], std::max(0, int{margin2} - 1));
 
                     text_[1]->append(l2str->c_str());
@@ -64,7 +62,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             } else {
                 text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
-                text_[0]->append(locale_string(pfrm, LocaleString::waypoint_text)->c_str());
+                text_[0]->append(
+                    locale_string(pfrm, LocaleString::waypoint_text)->c_str());
                 text_[0]->append(next_level_);
             }
         }
@@ -77,7 +76,10 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ += delta;
 
             const auto max_j =
-                (int)utf8::len(locale_string(pfrm, zone.title_line_2)->c_str()) / 2 + 1;
+                (int)utf8::len(
+                    locale_string(pfrm, zone.title_line_2)->c_str()) /
+                    2 +
+                1;
             const auto max_i = max_j * 8;
 
             const int i = ease_out(timer_, 0, max_i, seconds(1));

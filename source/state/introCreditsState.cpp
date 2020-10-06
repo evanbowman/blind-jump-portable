@@ -32,9 +32,9 @@ void IntroCreditsState::show_version(Platform& pfrm, Game& game)
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
     version_.emplace(pfrm, OverlayCoord{u8(margin), u8(screen_tiles.y - 2)});
-    version_->assign(version_str.c_str(),
-                     FontColors{ColorConstant::med_blue_gray,
-                                ColorConstant::rich_black});
+    version_->assign(
+        version_str.c_str(),
+        FontColors{ColorConstant::med_blue_gray, ColorConstant::rich_black});
 }
 
 
@@ -86,14 +86,15 @@ StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
 StatePtr
 IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (pfrm.keyboard().down_transition<Key::left,
-        Key::right,
-        Key::up,
-        Key::down,
-        Key::start,
-        Key::select,
-        Key::alt_1,
-        Key::alt_2>()) {
+    if (pfrm.keyboard()
+            .down_transition<Key::left,
+                             Key::right,
+                             Key::up,
+                             Key::down,
+                             Key::start,
+                             Key::select,
+                             Key::alt_1,
+                             Key::alt_2>()) {
 
         show_version(pfrm, game);
     }

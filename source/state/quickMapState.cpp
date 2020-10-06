@@ -83,8 +83,8 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             sidebar_->set_display_percentage(0.96f);
 
             auto level_str = locale_string(pfrm, LocaleString::waypoint_text);
-            const auto text_len =
-                utf8::len(level_str->c_str()) + integer_text_length(game.level());
+            const auto text_len = utf8::len(level_str->c_str()) +
+                                  integer_text_length(game.level());
 
             level_text_.emplace(pfrm, OverlayCoord{u8((15 - text_len) / 2), 0});
             level_text_->assign(level_str->c_str());

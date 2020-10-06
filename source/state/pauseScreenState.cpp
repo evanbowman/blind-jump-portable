@@ -83,16 +83,16 @@ void PauseScreenState::repaint_text(Platform& pfrm, Game& game)
             pfrm, OverlayCoord{text_x_loc, u8(y - strs_.size() + i * 2)});
 
         if (strs_[i] == LocaleString::menu_connect_peer) {
-            texts_.back().assign(
-                locale_string(pfrm, strs_[i])->c_str(), [&]()
-                -> Text::OptColors {
-                    if (connect_peer_option_available(game)) {
-                        return std::nullopt;
-                    } else {
-                        return FontColors{ColorConstant::med_blue_gray,
-                                          ColorConstant::rich_black};
-                    }
-                }());
+            texts_.back().assign(locale_string(pfrm, strs_[i])->c_str(),
+                                 [&]() -> Text::OptColors {
+                                     if (connect_peer_option_available(game)) {
+                                         return std::nullopt;
+                                     } else {
+                                         return FontColors{
+                                             ColorConstant::med_blue_gray,
+                                             ColorConstant::rich_black};
+                                     }
+                                 }());
         } else {
             texts_.back().assign(locale_string(pfrm, strs_[i])->c_str());
         }

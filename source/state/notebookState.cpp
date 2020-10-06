@@ -3,7 +3,8 @@
 
 constexpr u16 notebook_margin_tile = 82;
 
-NotebookState::NotebookState(LocalizedText&& str) : str_(std::move(str)), page_(0)
+NotebookState::NotebookState(LocalizedText&& str)
+    : str_(std::move(str)), page_(0)
 {
 }
 

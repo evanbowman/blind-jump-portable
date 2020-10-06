@@ -39,9 +39,8 @@ public:
                  Platform& pfrm,
                  Game& game) override;
 
-    void receive(const net_event::LethargyActivated&,
-                 Platform&,
-                 Game&) override;
+    void
+    receive(const net_event::LethargyActivated&, Platform&, Game&) override;
 };
 
 
@@ -907,7 +906,8 @@ private:
                     return buffer;
                 }
             } else {
-                return locale_string(pfrm, LocaleString::settings_default)->c_str();
+                return locale_string(pfrm, LocaleString::settings_default)
+                    ->c_str();
             }
         }
     } contrast_line_updater_;
@@ -942,14 +942,19 @@ private:
 
             switch (static_cast<Settings::Difficulty>(difficulty)) {
             case Settings::Difficulty::normal:
-                return locale_string(pfrm, LocaleString::settings_difficulty_normal)->c_str();
+                return locale_string(pfrm,
+                                     LocaleString::settings_difficulty_normal)
+                    ->c_str();
 
             case Settings::Difficulty::hard:
-                return locale_string(pfrm, LocaleString::settings_difficulty_hard)->c_str();
+                return locale_string(pfrm,
+                                     LocaleString::settings_difficulty_hard)
+                    ->c_str();
 
             case Settings::Difficulty::survival:
                 return locale_string(pfrm,
-                                     LocaleString::settings_difficulty_survival)->c_str();
+                                     LocaleString::settings_difficulty_survival)
+                    ->c_str();
 
             case Settings::Difficulty::count:
                 break;
@@ -960,9 +965,10 @@ private:
         void complete(Platform& pfrm, Game& game, EditSettingsState& s) override
         {
             if (game.level() not_eq 0 and enemies_remaining(game)) {
-                s.message(pfrm,
-                          locale_string(pfrm,
-                                        LocaleString::settings_difficulty_err)->c_str());
+                s.message(
+                    pfrm,
+                    locale_string(pfrm, LocaleString::settings_difficulty_err)
+                        ->c_str());
             }
         }
     } difficulty_line_updater_;

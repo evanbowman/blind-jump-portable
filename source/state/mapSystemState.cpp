@@ -76,7 +76,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             anim_state_ = AnimState::path_wait;
 
-            set_tile(TileMap::width + 2, 9, 137, false); // you
+            set_tile(TileMap::width + 2, 9, 137, false);  // you
             set_tile(TileMap::width + 2, 11, 135, false); // enemy
             set_tile(TileMap::width + 2, 13, 136, false); // transporter
             set_tile(TileMap::width + 2, 15, 134, false); // item
@@ -90,9 +90,10 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             for (size_t i = 0; i < legend_strings.size(); ++i) {
                 const u8 y = 9 + (i * 2);
-                legend_text_[i].emplace(pfrm,
-                                        locale_string(pfrm, legend_strings[i])->c_str(),
-                                        OverlayCoord{TileMap::width + 5, y});
+                legend_text_[i].emplace(
+                    pfrm,
+                    locale_string(pfrm, legend_strings[i])->c_str(),
+                    OverlayCoord{TileMap::width + 5, y});
             }
 
             path_finder_.emplace(allocate_dynamic<IncrementalPathfinder>(

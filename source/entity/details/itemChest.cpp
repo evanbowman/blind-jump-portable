@@ -49,24 +49,31 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                             pfrm,
                             game.state(),
                             locale_string(pfrm,
-                                          LocaleString::peer_too_close_to_item)->c_str());
+                                          LocaleString::peer_too_close_to_item)
+                                ->c_str());
                     } else if (state_ == State::closed_locked and remaining) {
 
                         NotificationStr str;
 
-                        str += locale_string(pfrm, LocaleString::locked)->c_str();
+                        str +=
+                            locale_string(pfrm, LocaleString::locked)->c_str();
 
                         std::array<char, 40> buffer;
                         locale_num2str(remaining, buffer.data(), 10);
 
                         str += buffer.data();
-                        str += locale_string(pfrm, [&] {
-                            if (remaining == 1) {
-                                return LocaleString::enemies_remaining_singular;
-                            } else {
-                                return LocaleString::enemies_remaining_plural;
-                            }
-                        }())->c_str();
+                        str += locale_string(
+                                   pfrm,
+                                   [&] {
+                                       if (remaining == 1) {
+                                           return LocaleString::
+                                               enemies_remaining_singular;
+                                       } else {
+                                           return LocaleString::
+                                               enemies_remaining_plural;
+                                       }
+                                   }())
+                                   ->c_str();
 
                         push_notification(pfrm, game.state(), str);
 

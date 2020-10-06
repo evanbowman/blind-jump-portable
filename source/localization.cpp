@@ -403,7 +403,6 @@ std::optional<Platform::TextureMapping> null_texture_map(const utf8::Codepoint&)
 }
 
 
-
 static int language_id = 0;
 
 
@@ -443,8 +442,7 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls)
 
     auto lang = lisp::get_list(languages, ::language_id);
 
-    StringBuffer<31> fname = lang->expect<lisp::Symbol>().name_
-        ;
+    StringBuffer<31> fname = lang->expect<lisp::Symbol>().name_;
     fname += ".txt";
 
     if (auto data = pfrm.load_file_contents("strings", fname.c_str())) {
@@ -455,7 +453,8 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls)
             while (*data not_eq '\n') {
                 if (*data == '\0') {
                     error(pfrm, "blah");
-                    while (true) ; // FIXME: raise error...
+                    while (true)
+                        ; // FIXME: raise error...
                 }
                 ++data;
             }
@@ -472,7 +471,8 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls)
         return result;
     } else {
         error(pfrm, "strings file for language does not exist");
-        while (true) ;
+        while (true)
+            ;
     }
 }
 
@@ -519,12 +519,12 @@ void locale_num2str(int num, char* buffer, int base)
     // switch (language) {
     // case LocaleLanguage::spanish:
     // case LocaleLanguage::english:
-        english__to_string(num, buffer, base);
+    english__to_string(num, buffer, base);
     //     break;
 
     // default:
     // case LocaleLanguage::null:
-        // buffer[0] = '\0';
+    // buffer[0] = '\0';
     //     break;
     // }
 }

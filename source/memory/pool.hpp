@@ -80,8 +80,7 @@ private:
 };
 
 
-template <typename T, u32 count>
-class ObjectPool {
+template <typename T, u32 count> class ObjectPool {
 public:
     template <typename... Args> T* get(Args&&... args)
     {
