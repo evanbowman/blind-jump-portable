@@ -26,13 +26,14 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Building](#building)
    * [Localization](#localization)
    * [Security](#security)
+   * [Downloads](#downloads)
 <!--te-->
 
 ## Introduction
 
 Blind Jump is a simple action/adventure game. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a several year long hiatus, during which he was teaching himself oil painting. The game is designed to run on a wide variety of platforms, from macOS to the Nintendo Gameboy Advance.
 
-The game uses procedural algorithms to generate the levels, so the level designs change each time you play. While the game is designed to be difficult, it will also be possible to beat the whole game in under an hour. At time of writing, the game has two bosses after each of the first ten levels, with twenty more levels currently in development. Enemies and environments change after each boss fight.
+The game uses procedural algorithms to generate the levels, so the level designs change each time you play. While the game is designed to be difficult, it will also be possible to beat the whole game in under an hour. At time of writing, the game has three bosses after each of the first ten levels, with ten more levels currently in development. Enemies and environments change after each boss fight.
 
 <p align="center">
   <img src="imgs_for_readme/s1.png"/>
@@ -53,6 +54,8 @@ The game uses procedural algorithms to generate the levels, so the level designs
 <p align="center">
   <img src="imgs_for_readme/s4.png"/>
 </p>
+
+[Contents↑](#contents)
 
 ## Gameplay
 
@@ -84,6 +87,8 @@ The game is written almost entirely in C++, along with a small amount of C, a cu
 
 BlindJump uses a custom LISP dialect for lightweight scripting. The init.lisp script offers some further usage tips, but generally, our LISP implementation supports functions as first class values, functional currying, most of the common builtins, like map, cons, list, etc., variadic functions, and many more features. Our interpreter does not support lambdas, although technically I think you could create your own lambdas via abuse of the builtin functional currying, and the eval keyword. But custom function definitions are not a goal of the script interface. BlindJump executes a number of scripts for various scenarios--you can think of the scripts as analogous to git hooks. In the settings menu, the game allows you to launch a repl while the game is running, to manipulate game state (for gameboy builds, the game will render an onscreen keyboard and console, for desktop builds, the game will pause, and read from the command line).
 
+[Contents↑](#contents)
+
 ## Building
 
 The project should be pretty easy to compile, but if you have trouble, please try using the attached docker container before emailing me with operating system questions.
@@ -97,6 +102,8 @@ make
 NOTE: you can also get a containerized build environment from the link below, although you'll have to remember to run `git pull` when entering the container, because I built the container with a frozen version of the repository. If this is inconvenient for you, feel free to build the container yourself using the steps above.
 
 https://hub.docker.com/r/evanbowman/blind_jump_build
+
+[Contents↑](#contents)
 
 ## Localization
 
@@ -112,7 +119,16 @@ Please note that displaying unicode text is a fairly complex operation for a Gam
 
 Currently, BlindJump includes an English edition (default), and an incompete Spanish translation. Evan Bowman contributed the partial Spanish translation, and he is, admittedly, not a native speaker, although he took Spanish lessons in school between ages 6-18. Any translations for the game are welcome, and you will be added to the game's ending credits if you contribute a translation. You should ideally have natural bilingual proficiency in the language that you plan to add to the project. If any required glyphs are missing from the charset image in the images/ folder, contact Evan Bowman, and he will add the codepoint mappings to the text engine. As the game is still in development, you may want to wait until the game is finished to add a translation.
 
+[Contents↑](#contents)
 
 ## Security
 
 I periodically submit all of this project's source code to the Coverity static analyzer, which checks for buffer overruns, memory corruption, etc. Currently, BlindJump is 100% defect free. Let's keep it that way.
+
+[Contents↑](#contents)
+
+## Downloads
+
+See the [releases section](https://github.com/evanbowman/blind-jump-portable/releases) of this github remote repo, where you may download the Gameboy Advance ROM directly (files with a .gba extension), and play the game with a flash cartridge (e.g. Everdrive). You could also use an emulator, although I personally prefer to play gameboy advance games on the actual device. You will find ROMs attached to each release, going all the way back to 2019, so you could also download earlier ROMs to see how the project changed as new code was introduced. If you want to play the Windows or the Linux version of the game, you will need to clone this repository and build the executable yourself, as we do not have an automated build pipeline yet for these platforms. You would not notices any major differences between the GBA and the Desktop versions of the game, except that the Desktop version of the game renders to a larger resolution render target, so the view scrolling will appear less choppy than if you were to play the GBA game in an emulator in fullscreen mode.
+
+[Contents↑](#contents)
