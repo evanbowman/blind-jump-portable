@@ -32,7 +32,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
 
 Blind Jump is a simple action/adventure game. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a several year long hiatus, during which he was teaching himself oil painting. The game is designed to run on a wide variety of platforms, from macOS to the Nintendo Gameboy Advance.
 
-The game uses procedural algorithms to generate the levels, so the level designs change each time you play. While the game is designed to be difficult, it will also be possible to beat the whole game in under an hour. At time of writing, the game has two bosses after each of the first ten levels, with twenty more levels currently in development. Enemies and environments change after each boss fight.
+The game uses procedural algorithms to generate the levels, so the level designs change each time you play. While the game is designed to be difficult, it will also be possible to beat the whole game in under an hour. At time of writing, the game has three bosses after each of the first ten levels, with ten more levels currently in development. Enemies and environments change after each boss fight.
 
 <p align="center">
   <img src="imgs_for_readme/s1.png"/>
