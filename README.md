@@ -26,6 +26,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Building](#building)
    * [Localization](#localization)
    * [Security](#security)
+   * [Downloads](#downloads)
 <!--te-->
 
 ## Introduction
@@ -125,3 +126,7 @@ Currently, BlindJump includes an English edition (default), and an incompete Spa
 I periodically submit all of this project's source code to the Coverity static analyzer, which checks for buffer overruns, memory corruption, etc. Currently, BlindJump is 100% defect free. Let's keep it that way.
 
 [Contents↑](#contents)
+
+## Downloads
+
+See the releases section of this github remote repo. You may download the Gameboy Advance ROM directly (files with a .gba extension), and play the game with a flash cartridge (e.g. Everdrive). You could also use an emulator, although I personally prefer to play gameboy advance games on the actual device. You will find ROMs attached to each release, going all the way back to 2019, so you could also download earlier ROMs to see how the project changed as new code was introduced. If you want to play the Windows or the Linux version of the game, you will need to clone this repository and build the executable yourself, as we do not have an automated build pipeline yet for these platforms. You would not notices any major differences between the GBA and the Desktop versions of the game, except that the Desktop version of the game renders to a larger resolution render target, so the view scrolling will appear less choppy than if you were to play the GBA game in an emulator in fullscreen mode.
