@@ -54,6 +54,8 @@ The game uses procedural algorithms to generate the levels, so the level designs
   <img src="imgs_for_readme/s4.png"/>
 </p>
 
+[Contents↑](#contents)
+
 ## Gameplay
 
 ### Controls
@@ -80,9 +82,13 @@ This repository contains a substantial re-write of the original BlindJump code. 
 
 The game is written almost entirely in C++, along with a small amount of C, a custom dialect of LISP, as well as a teeny bit of ARM assembly.
 
+[Contents↑](#contents)
+
 ### Scripting
 
 BlindJump uses a custom LISP dialect for lightweight scripting. The init.lisp script offers some further usage tips, but generally, our LISP implementation supports functions as first class values, functional currying, most of the common builtins, like map, cons, list, etc., variadic functions, and many more features. Our interpreter does not support lambdas, although technically I think you could create your own lambdas via abuse of the builtin functional currying, and the eval keyword. But custom function definitions are not a goal of the script interface. BlindJump executes a number of scripts for various scenarios--you can think of the scripts as analogous to git hooks. In the settings menu, the game allows you to launch a repl while the game is running, to manipulate game state (for gameboy builds, the game will render an onscreen keyboard and console, for desktop builds, the game will pause, and read from the command line).
+
+[Contents↑](#contents)
 
 ## Building
 
@@ -98,6 +104,8 @@ NOTE: you can also get a containerized build environment from the link below, al
 
 https://hub.docker.com/r/evanbowman/blind_jump_build
 
+[Contents↑](#contents)
+
 ## Localization
 
 The BlindJump text engine supports localized character sets via utf-8 encoding; however, the game does not include every possible unicode glyph in its character map (see the charset image in images/). BlindJump currently supports alpha-numeric glyphs for English, some extended glyphs for Spanish and French, and a minimal Japanese Katakana charset (including accent marks). To add a new language to the game, you would need make a couple of changes:
@@ -112,7 +120,10 @@ Please note that displaying unicode text is a fairly complex operation for a Gam
 
 Currently, BlindJump includes an English edition (default), and an incompete Spanish translation. Evan Bowman contributed the partial Spanish translation, and he is, admittedly, not a native speaker, although he took Spanish lessons in school between ages 6-18. Any translations for the game are welcome, and you will be added to the game's ending credits if you contribute a translation. You should ideally have natural bilingual proficiency in the language that you plan to add to the project. If any required glyphs are missing from the charset image in the images/ folder, contact Evan Bowman, and he will add the codepoint mappings to the text engine. As the game is still in development, you may want to wait until the game is finished to add a translation.
 
+[Contents↑](#contents)
 
 ## Security
 
 I periodically submit all of this project's source code to the Coverity static analyzer, which checks for buffer overruns, memory corruption, etc. Currently, BlindJump is 100% defect free. Let's keep it that way.
+
+[Contents↑](#contents)
