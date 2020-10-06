@@ -59,7 +59,9 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     // pfrm.screen().fade(0.f);
     pfrm.screen().fade(1.f);
 
-    pfrm.speaker().play_music("rocketlaunch", 0);
+    if (game.level() == 0) {
+        pfrm.speaker().play_music("rocketlaunch", 0);
+    }
 }
 
 
@@ -124,7 +126,9 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
 
             if (skip) {
-                pfrm.speaker().play_music("rocketlaunch", music_offset());
+                if (game.level() == 0) {
+                    pfrm.speaker().play_music("rocketlaunch", music_offset());
+                }
 
                 return next_state(pfrm, game);
             }
