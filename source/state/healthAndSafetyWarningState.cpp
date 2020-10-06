@@ -20,6 +20,12 @@ void HealthAndSafetyWarningState::enter(Platform& pfrm, Game& game, State& prev_
                 .obj_->c_str(),
                 {1, 4},
                 OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
+
+    for (int x = 1; x < screen_tiles.x - 1; ++x) {
+        pfrm.set_tile(Layer::overlay, x, 2, 84);
+    }
+    pfrm.set_tile(Layer::overlay, 0, 2, 83);
+    pfrm.set_tile(Layer::overlay, screen_tiles.x - 1, 2, 85);
 }
 
 

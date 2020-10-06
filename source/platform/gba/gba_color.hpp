@@ -1,10 +1,24 @@
 #pragma once
 
 #include "number/numeric.hpp"
+#include "graphics/color.hpp"
 
 
 class Color {
 public:
+    Color(ColorConstant k)
+    {
+        const auto val = static_cast<int>(k);
+        r_ = (val & 0xFF0000) >> 16;
+        g_ = (val & 0x00FF00) >> 8;
+        b_ = (val & 0x0000FF);
+
+        // The gba uses 5-bit color.
+        r_ >>= 3;
+        g_ >>= 3;
+        b_ >>= 3;
+    }
+
     Color(u8 r, u8 g, u8 b) : r_(r), g_(g), b_(b)
     {
     }

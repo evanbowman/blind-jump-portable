@@ -406,13 +406,9 @@ static u32 last_oam_write_index = 0;
 static u32 oam_write_index = 0;
 
 
-const Color& real_color(ColorConstant k)
+Color real_color(ColorConstant k)
 {
     switch (k) {
-    case ColorConstant::spanish_crimson:
-        static const Color spn_crimson(29, 3, 11);
-        return spn_crimson;
-
     case ColorConstant::electric_blue:
         static const Color el_blue(0, 31, 31);
         return el_blue;
@@ -433,47 +429,20 @@ const Color& real_color(ColorConstant k)
         static const Color maya_blue(10, 23, 31);
         return maya_blue;
 
-    case ColorConstant::aerospace_orange:
-        static const Color aerospace_orange(31, 10, 0);
-        return aerospace_orange;
-
-    case ColorConstant::safety_orange:
-        static const Color safety_orange(31, 14, 0);
-        return safety_orange;
-
-    case ColorConstant::stil_de_grain:
-        static const Color stil_de_grain(30, 27, 11);
-        return stil_de_grain;
-
-    case ColorConstant::steel_blue:
-        static const Color steel_blue(6, 10, 16);
-        return steel_blue;
-
     case ColorConstant::aged_paper:
         static const Color aged_paper(27, 24, 18);
         return aged_paper;
-
-    case ColorConstant::green:
-        static const Color green(5, 24, 21);
-        return green;
-
-    case ColorConstant::med_blue_gray:
-        static const Color med_blue_gray(14, 14, 21);
-        return med_blue_gray;
 
     case ColorConstant::silver_white:
         static const Color silver_white(29, 29, 30);
         return silver_white;
 
-    case ColorConstant::indigo_tint:
-        static const Color indigo_tint(4, 12, 16);
-        return indigo_tint;
-
-    default:
-    case ColorConstant::null:
     case ColorConstant::rich_black:
         static const Color rich_black(0, 0, 2);
         return rich_black;
+
+    default:
+        return Color(k);
     }
 }
 
@@ -3158,6 +3127,7 @@ Platform::NetworkPeer::poll_message()
         // it's a potential problem. There _IS_ a bug, but I've masked it pretty
         // well (I hope). No issues detectable in an emulator, but we'll see
         // about the real hardware... once my link cable arrives in the mail.
+        // P.S.: Tested on actual hardware, works fine.
         return {};
     }
     if (auto msg = rx_ring_pop()) {

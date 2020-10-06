@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
+#include "path.hpp"
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -2372,6 +2373,15 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     if (not place_transporter()) {
         return false;
     }
+
+    if (auto path = find_path(pfrm,
+                              tiles_,
+                              to_tile_coord(player_.get_position().cast<s32>()).cast<u8>(),
+                              to_tile_coord(transporter_.get_position().cast<s32>())
+                              .cast<u8>())) {
+        // ...
+    }
+
 
     // Sometimes for small maps, and always for large maps, place an item chest
     if (rng::choice<2>(rng::critical_state) or (int) initial_free_spaces > 25) {
