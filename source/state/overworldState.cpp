@@ -35,7 +35,7 @@ void OverworldState::receive(const net_event::PlayerHealthChanged& event,
     }
 
     NotificationStr str;
-    str += locale_string(pfrm, LocaleString::peer_health_changed).obj_->c_str();
+    str += locale_string(pfrm, LocaleString::peer_health_changed)->c_str();
 
     char buffer[20];
     locale_num2str(health, buffer, 10);
@@ -56,7 +56,7 @@ void OverworldState::receive(const net_event::NewLevelIdle& n,
         push_notification(pfrm,
                           game.state(),
                           locale_string(pfrm,
-                                        LocaleString::peer_transport_waiting).obj_->c_str());
+                                        LocaleString::peer_transport_waiting)->c_str());
     }
 }
 
@@ -291,24 +291,24 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
 
         network_tx_msg_text_->append(net_stats.transmit_count_);
         network_tx_msg_text_->append(
-                                     locale_string(pfrm, LocaleString::network_tx_stats_suffix).obj_->c_str());
+                                     locale_string(pfrm, LocaleString::network_tx_stats_suffix)->c_str());
         network_rx_msg_text_->append(net_stats.receive_count_);
         network_rx_msg_text_->append(
-                                     locale_string(pfrm, LocaleString::network_rx_stats_suffix).obj_->c_str());
+                                     locale_string(pfrm, LocaleString::network_rx_stats_suffix)->c_str());
         network_tx_loss_text_->append(net_stats.transmit_loss_, tx_loss_colors);
         network_tx_loss_text_->append(
-                                      locale_string(pfrm, LocaleString::network_tx_loss_stats_suffix).obj_->c_str(),
+                                      locale_string(pfrm, LocaleString::network_tx_loss_stats_suffix)->c_str(),
             tx_loss_colors);
         network_rx_loss_text_->append(net_stats.receive_loss_, rx_loss_colors);
         network_rx_loss_text_->append(
-                                      locale_string(pfrm, LocaleString::network_rx_loss_stats_suffix).obj_->c_str(),
+                                      locale_string(pfrm, LocaleString::network_rx_loss_stats_suffix)->c_str(),
             rx_loss_colors);
         link_saturation_text_->append(net_stats.link_saturation_);
         link_saturation_text_->append(
-                                      locale_string(pfrm, LocaleString::link_saturation_stats_suffix).obj_->c_str());
+                                      locale_string(pfrm, LocaleString::link_saturation_stats_suffix)->c_str());
         scratch_buf_avail_text_->append(pfrm.scratch_buffers_remaining());
         scratch_buf_avail_text_->append(
-                                        locale_string(pfrm, LocaleString::scratch_buf_avail_stats_suffix).obj_->c_str());
+                                        locale_string(pfrm, LocaleString::scratch_buf_avail_stats_suffix)->c_str());
     }
 }
 
@@ -323,7 +323,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         player_death(pfrm, game, game.peer()->get_position());
         game.peer().reset();
         push_notification(
-                          pfrm, game.state(), locale_string(pfrm, LocaleString::peer_lost).obj_->c_str());
+                          pfrm, game.state(), locale_string(pfrm, LocaleString::peer_lost)->c_str());
     } else {
         // In multiplayer mode, we need to synchronize the random number
         // engine. In single-player mode, let's advance the rng for each step,
@@ -455,7 +455,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (not enemies_remaining and enemies_destroyed) {
 
         NotificationStr str;
-        str += locale_string(pfrm, LocaleString::level_clear).obj_->c_str();
+        str += locale_string(pfrm, LocaleString::level_clear)->c_str();
 
         push_notification(pfrm, game.state(), str);
     }

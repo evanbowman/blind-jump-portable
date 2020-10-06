@@ -83,7 +83,7 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
                 game.effects().spawn<Reticule>(selector_start_pos_);
 
                 static const auto lstr = LocaleString::select_target_text;
-                print(pfrm, locale_string(pfrm, lstr).obj_->c_str());
+                print(pfrm, locale_string(pfrm, lstr)->c_str());
 
             } else {
                 return state_pool().create<InventoryState>(true);

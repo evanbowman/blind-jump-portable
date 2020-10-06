@@ -32,14 +32,14 @@ void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
     auto str = locale_string(pfrm, strings[row]);
 
     const int value_len = utf8::len(value);
-    const int field_len = utf8::len(str.obj_->c_str());
+    const int field_len = utf8::len(str->c_str());
 
     const auto margin = centered_text_margins(pfrm, value_len + field_len + 2);
 
     lines_[row].text_.emplace(pfrm, OverlayCoord{0, u8(4 + row * 2)});
 
     left_text_margin(*lines_[row].text_, margin);
-    lines_[row].text_->append(str.obj_->c_str());
+    lines_[row].text_->append(str->c_str());
     lines_[row].text_->append("  ");
     lines_[row].text_->append(value);
 
@@ -221,5 +221,5 @@ EditSettingsState::LanguageLineUpdater::update(Platform& pfrm,
     language = l;
     locale_set_language(language);
 
-    return locale_string(pfrm, LocaleString::language_name).obj_->c_str();
+    return locale_string(pfrm, LocaleString::language_name)->c_str();
 }

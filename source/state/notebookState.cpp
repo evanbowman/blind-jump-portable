@@ -26,7 +26,7 @@ void NotebookState::enter(Platform& pfrm, Game&, State&)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm);
-    text_->assign(str_.obj_->c_str(),
+    text_->assign(str_->c_str(),
                   {1, 2},
                   OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
     page_number_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
@@ -57,7 +57,7 @@ void NotebookState::repaint_page(Platform& pfrm)
     page_number_->erase();
     repaint_margin(pfrm);
     page_number_->assign(page_ + 1);
-    text_->assign(str_.obj_->c_str(), {1, 2}, size, page_ * (size.y / 2));
+    text_->assign(str_->c_str(), {1, 2}, size, page_ * (size.y / 2));
 }
 
 
@@ -120,7 +120,7 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case DisplayMode::show:
         if (pfrm.keyboard().down_transition<Key::down>()) {
-            if (text_->parsed() not_eq utf8::len(str_.obj_->c_str())) {
+            if (text_->parsed() not_eq utf8::len(str_->c_str())) {
                 page_ += 1;
                 timer_ = 0;
                 display_mode_ = DisplayMode::fade_out;

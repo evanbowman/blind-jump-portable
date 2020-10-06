@@ -16,21 +16,21 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
                   "What computer are you running this on?");
 
 
-    if (not priority_q_.obj_) {
+    if (not priority_q_) {
         error(pfrm,
               "failed to alloc priority q (does not fit in scratch buffer");
         while (true)
             ;
     }
 
-    if (not map_matrix_.obj_) {
+    if (not map_matrix_) {
         error(pfrm, "failed to alloc map matrix");
         while (true)
             ;
     } else {
         for (int x = 0; x < TileMap::width - 1; ++x) {
             for (int y = 0; y < TileMap::height - 1; ++y) {
-                (*map_matrix_.obj_)[x][y] = nullptr;
+                (*map_matrix_)[x][y] = nullptr;
             }
         }
     }
@@ -57,11 +57,11 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
             if (auto obj = memory_.alloc<PathVertexData>(pfrm)) {
                 obj->coord_ = PathCoord{u8(x), u8(y)};
                 static_assert(std::is_trivially_destructible<PathVertexData>());
-                if (not priority_q_.obj_->push_back(obj.release())) {
+                if (not priority_q_->push_back(obj.release())) {
                     error(pfrm, "not enough space in path node buffer");
                     error_state = true;
                 } else {
-                    (*map_matrix_.obj_)[x][y] = priority_q_.obj_->back();
+                    (*map_matrix_)[x][y] = priority_q_->back();
                 }
             } else {
                 error_state = true;
@@ -75,7 +75,7 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
     }
 
     auto start_v = [&]() -> PathVertexData* {
-        for (auto& data : *priority_q_.obj_) {
+        for (auto& data : *priority_q_) {
             if (data->coord_ == start) {
                 data->dist_ = 0;
                 return data;
@@ -98,8 +98,8 @@ std::optional<DynamicMemory<PathBuffer>>
 IncrementalPathfinder::compute(Platform& pfrm, int max_iters, bool* incomplete)
 {
     for (int i = 0; i < max_iters; ++i) {
-        if (not priority_q_.obj_->empty()) {
-            auto min = priority_q_.obj_->back();
+        if (not priority_q_->empty()) {
+            auto min = priority_q_->back();
             // If the top remaining node in the priority queue is inf, then there
             // must be disconnected regions in the graph (right?).
             if (min->dist_ == std::numeric_limits<u16>::max()) {
@@ -107,19 +107,19 @@ IncrementalPathfinder::compute(Platform& pfrm, int max_iters, bool* incomplete)
             }
             if (min->coord_ == end_) {
                 auto path_mem = allocate_dynamic<PathBuffer>(pfrm);
-                if (not path_mem.obj_) {
+                if (not path_mem) {
                     return {};
                 }
 
-                auto current_v = priority_q_.obj_->back();
+                auto current_v = priority_q_->back();
                 while (current_v) {
-                    path_mem.obj_->push_back(current_v->coord_);
+                    path_mem->push_back(current_v->coord_);
                     current_v = current_v->prev_;
                 }
                 *incomplete = false;
                 return path_mem;
             }
-            priority_q_.obj_->pop_back();
+            priority_q_->pop_back();
 
             for (auto& neighbor : neighbors(min)) {
                 auto alt = min->dist_ +
@@ -145,26 +145,26 @@ IncrementalPathfinder::neighbors(PathVertexData* data) const
 {
     Buffer<PathVertexData*, 4> result;
     if (data->coord_.x > 0) {
-        auto n = (*map_matrix_.obj_)[data->coord_.x - 1][data->coord_.y];
+        auto n = (*map_matrix_)[data->coord_.x - 1][data->coord_.y];
         if (n) {
             result.push_back(n);
         }
     }
     if (data->coord_.x <
         TileMap::width - 2) { // -2 b/c we don't include the last column
-        auto n = (*map_matrix_.obj_)[data->coord_.x + 1][data->coord_.y];
+        auto n = (*map_matrix_)[data->coord_.x + 1][data->coord_.y];
         if (n) {
             result.push_back(n);
         }
     }
     if (data->coord_.y > 0) {
-        auto n = (*map_matrix_.obj_)[data->coord_.x][data->coord_.y - 1];
+        auto n = (*map_matrix_)[data->coord_.x][data->coord_.y - 1];
         if (n) {
             result.push_back(n);
         }
     }
     if (data->coord_.y < TileMap::height - 2) {
-        auto n = (*map_matrix_.obj_)[data->coord_.x][data->coord_.y + 1];
+        auto n = (*map_matrix_)[data->coord_.x][data->coord_.y + 1];
         if (n) {
             result.push_back(n);
         }
@@ -175,8 +175,8 @@ IncrementalPathfinder::neighbors(PathVertexData* data) const
 
 void IncrementalPathfinder::sort_q()
 {
-    std::sort(priority_q_.obj_->begin(),
-              priority_q_.obj_->end(),
+    std::sort(priority_q_->begin(),
+              priority_q_->end(),
               [](auto& lhs, auto& rhs) { return lhs->dist_ > rhs->dist_; });
 }
 

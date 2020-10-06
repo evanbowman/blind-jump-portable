@@ -832,9 +832,9 @@ private:
                 show = not show;
             }
             if (show) {
-                return locale_string(pfrm, LocaleString::yes).obj_->c_str();
+                return locale_string(pfrm, LocaleString::yes)->c_str();
             } else {
-                return locale_string(pfrm, LocaleString::no).obj_->c_str();
+                return locale_string(pfrm, LocaleString::no)->c_str();
             }
         }
     } show_stats_line_updater_;
@@ -848,9 +848,9 @@ private:
                 pfrm.screen().enable_night_mode(enabled);
             }
             if (enabled) {
-                return locale_string(pfrm, LocaleString::yes).obj_->c_str();
+                return locale_string(pfrm, LocaleString::yes)->c_str();
             } else {
-                return locale_string(pfrm, LocaleString::no).obj_->c_str();
+                return locale_string(pfrm, LocaleString::no)->c_str();
             }
         }
     } night_mode_line_updater_;
@@ -864,9 +864,9 @@ private:
             }
             if (game.persistent_data().settings_.action1_key_ ==
                 Settings::default_action1_key) {
-                return locale_string(pfrm, LocaleString::no).obj_->c_str();
+                return locale_string(pfrm, LocaleString::no)->c_str();
             } else {
-                return locale_string(pfrm, LocaleString::yes).obj_->c_str();
+                return locale_string(pfrm, LocaleString::yes)->c_str();
             }
         }
     } swap_action_keys_line_updater_;
@@ -907,7 +907,7 @@ private:
                     return buffer;
                 }
             } else {
-                return locale_string(pfrm, LocaleString::settings_default).obj_->c_str();
+                return locale_string(pfrm, LocaleString::settings_default)->c_str();
             }
         }
     } contrast_line_updater_;
@@ -942,14 +942,14 @@ private:
 
             switch (static_cast<Settings::Difficulty>(difficulty)) {
             case Settings::Difficulty::normal:
-                return locale_string(pfrm, LocaleString::settings_difficulty_normal).obj_->c_str();
+                return locale_string(pfrm, LocaleString::settings_difficulty_normal)->c_str();
 
             case Settings::Difficulty::hard:
-                return locale_string(pfrm, LocaleString::settings_difficulty_hard).obj_->c_str();
+                return locale_string(pfrm, LocaleString::settings_difficulty_hard)->c_str();
 
             case Settings::Difficulty::survival:
                 return locale_string(pfrm,
-                                     LocaleString::settings_difficulty_survival).obj_->c_str();
+                                     LocaleString::settings_difficulty_survival)->c_str();
 
             case Settings::Difficulty::count:
                 break;
@@ -962,7 +962,7 @@ private:
             if (game.level() not_eq 0 and enemies_remaining(game)) {
                 s.message(pfrm,
                           locale_string(pfrm,
-                                        LocaleString::settings_difficulty_err).obj_->c_str());
+                                        LocaleString::settings_difficulty_err)->c_str());
             }
         }
     } difficulty_line_updater_;

@@ -14,10 +14,10 @@ void HealthAndSafetyWarningState::enter(Platform& pfrm, Game& game, State& prev_
 
     text_.emplace(pfrm,
                   locale_string(pfrm, LocaleString::health_safety_notice)
-                  .obj_->c_str(),
+                  ->c_str(),
                   OverlayCoord{1, 1});
     tv_->assign(locale_string(pfrm, LocaleString::health_safety_text)
-                .obj_->c_str(),
+                ->c_str(),
                 {1, 4},
                 OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
 

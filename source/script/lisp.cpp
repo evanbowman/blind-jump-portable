@@ -54,13 +54,13 @@ struct Context {
           interns_(allocate_dynamic<Interns>(pfrm))
     {
         for (auto& pl : value_pools_) {
-            if (not pl.obj_) {
+            if (not pl) {
                 while (true)
                     ; // FIXME: raise error
             }
         }
 
-        if (not operand_stack_.obj_ or not globals_.obj_ or not interns_.obj_) {
+        if (not operand_stack_ or not globals_ or not interns_) {
 
             while (true)
                 ; // FIXME: raise error
@@ -105,7 +105,7 @@ const char* intern(const char* string)
 
     auto& ctx = bound_context;
 
-    const char* search = *ctx->interns_.obj_;
+    const char* search = *ctx->interns_;
     for (int i = 0; i < ctx->string_intern_pos_;) {
         if (str_cmp(search + i, string) == 0) {
             return search + i;
@@ -117,12 +117,12 @@ const char* intern(const char* string)
         }
     }
 
-    auto result = *ctx->interns_.obj_ + ctx->string_intern_pos_;
+    auto result = *ctx->interns_ + ctx->string_intern_pos_;
 
     for (u32 i = 0; i < len; ++i) {
-        (*ctx->interns_.obj_)[ctx->string_intern_pos_++] = string[i];
+        (*ctx->interns_)[ctx->string_intern_pos_++] = string[i];
     }
-    (*ctx->interns_.obj_)[ctx->string_intern_pos_++] = '\0';
+    (*ctx->interns_)[ctx->string_intern_pos_++] = '\0';
 
     return result;
 }
@@ -131,7 +131,7 @@ const char* intern(const char* string)
 CompressedPtr compr(Value* val)
 {
     for (int pool_id = 0; pool_id < Context::value_pool_count; ++pool_id) {
-        auto& cells = bound_context->value_pools_[pool_id].obj_->cells();
+        auto& cells = bound_context->value_pools_[pool_id]->cells();
         if ((char*)val >= (char*)cells.data() and
             (char*) val < (char*)(cells.data() + cells.size())) {
 
@@ -160,7 +160,7 @@ CompressedPtr compr(Value* val)
 
 Value* dcompr(CompressedPtr ptr)
 {
-    auto& cells = bound_context->value_pools_[ptr.source_pool_].obj_->cells();
+    auto& cells = bound_context->value_pools_[ptr.source_pool_]->cells();
     return (Value*)((char*)cells.data() + ptr.offset_);
 }
 
@@ -191,8 +191,8 @@ static Value* alloc_value()
     };
 
     for (auto& pl : bound_context->value_pools_) {
-        if (not pl.obj_->empty()) {
-            return init_val(pl.obj_->get());
+        if (not pl->empty()) {
+            return init_val(pl->get());
         }
     }
 
@@ -200,8 +200,8 @@ static Value* alloc_value()
 
     // Hopefully, we've freed up enough memory...
     for (auto& pl : bound_context->value_pools_) {
-        if (not pl.obj_->empty()) {
-            return init_val(pl.obj_->get());
+        if (not pl->empty()) {
+            return init_val(pl->get());
         }
     }
 
@@ -334,13 +334,13 @@ Value* get_list(Value* list, u32 position)
 
 void pop_op()
 {
-    bound_context->operand_stack_.obj_->pop_back();
+    bound_context->operand_stack_->pop_back();
 }
 
 
 void push_op(Value* operand)
 {
-    if (not bound_context->operand_stack_.obj_->push_back(compr(operand))) {
+    if (not bound_context->operand_stack_->push_back(compr(operand))) {
         while (true)
             ; // TODO: raise error
     }
@@ -350,19 +350,19 @@ void push_op(Value* operand)
 void insert_op(u32 offset, Value* operand)
 {
     auto& stack = bound_context->operand_stack_;
-    auto pos = stack.obj_->end() - offset;
-    stack.obj_->insert(pos, compr(operand));
+    auto pos = stack->end() - offset;
+    stack->insert(pos, compr(operand));
 }
 
 
 Value* get_op(u32 offset)
 {
     auto& stack = bound_context->operand_stack_;
-    if (offset >= stack.obj_->size()) {
+    if (offset >= stack->size()) {
         return get_nil(); // TODO: raise error
     }
 
-    return dcompr((*stack.obj_)[(stack.obj_->size() - 1) - offset]);
+    return dcompr((*stack)[(stack.obj_->size() - 1) - offset]);
 }
 
 
@@ -373,13 +373,13 @@ void funcall(Value* obj, u8 argc)
 {
     auto pop_args = [&argc] {
         for (int i = 0; i < argc; ++i) {
-            bound_context->operand_stack_.obj_->pop_back();
+            bound_context->operand_stack_->pop_back();
         }
     };
 
     switch (obj->type_) {
     case Value::Type::function: {
-        if (bound_context->operand_stack_.obj_->size() < argc) {
+        if (bound_context->operand_stack_->size() < argc) {
             pop_args();
             push_op(make_error(Error::Code::invalid_argc));
             return;
@@ -429,7 +429,7 @@ void funcall(Value* obj, u8 argc)
 
 Value* set_var(const char* name, Value* value)
 {
-    auto& globals = *bound_context->globals_.obj_;
+    auto& globals = *bound_context->globals_;
     for (u32 i = 0; i < globals.size(); ++i) {
         if (str_cmp(name, globals[i].name_) == 0) {
             std::swap(globals[i], globals[0]);
@@ -438,7 +438,7 @@ Value* set_var(const char* name, Value* value)
         }
     }
 
-    for (auto& var : *bound_context->globals_.obj_) {
+    for (auto& var : *bound_context->globals_) {
         if (str_cmp(var.name_, "") == 0) {
             var.name_ = intern(name);
             var.value_ = value;
@@ -452,7 +452,7 @@ Value* set_var(const char* name, Value* value)
 
 Value* get_var(const char* name)
 {
-    auto& globals = *bound_context->globals_.obj_;
+    auto& globals = *bound_context->globals_;
     for (u32 i = 0; i < globals.size(); ++i) {
         if (str_cmp(name, globals[i].name_) == 0) {
             std::swap(globals[i], globals[0]);
@@ -986,11 +986,11 @@ static void gc_mark()
 
     auto& ctx = bound_context;
 
-    for (auto elem : *ctx->operand_stack_.obj_) {
+    for (auto elem : *ctx->operand_stack_) {
         gc_mark_value(dcompr(elem));
     }
 
-    for (auto& var : *ctx->globals_.obj_) {
+    for (auto& var : *ctx->globals_) {
         gc_mark_value(var.value_);
     }
 }
@@ -999,14 +999,14 @@ static void gc_mark()
 static void gc_sweep()
 {
     for (auto& pl : bound_context->value_pools_) {
-        pl.obj_->scan_cells([&pl](Value* val) {
+        pl->scan_cells([&pl](Value* val) {
             if (val->alive_) {
                 if (val->mark_bit_) {
                     val->mark_bit_ = false;
                 } else {
                     // This value should be unreachable, let's collect it.
                     val->alive_ = false;
-                    pl.obj_->post(val);
+                    pl->post(val);
                 }
             }
         });
@@ -1050,7 +1050,7 @@ void init(Platform& pfrm)
     // that all of the alive bits in the value pool entries are zero. This needs
     // to be done at least once, otherwise, gc will not work correctly.
     for (auto& pl : bound_context->value_pools_) {
-        pl.obj_->scan_cells([](Value* val) {
+        pl->scan_cells([](Value* val) {
             val->alive_ = false;
             val->mark_bit_ = false;
         });
@@ -1063,7 +1063,7 @@ void init(Platform& pfrm)
     bound_context->oom_->type_ = Value::Type::error;
     bound_context->oom_->error_.code_ = Error::Code::out_of_memory;
 
-    for (auto& var : *bound_context->globals_.obj_) {
+    for (auto& var : *bound_context->globals_) {
         var.value_ = get_nil();
     }
 
@@ -1270,17 +1270,17 @@ void init(Platform& pfrm)
             auto& ctx = bound_context;
             int values_remaining = 0;
             for (auto& pl : ctx->value_pools_) {
-                values_remaining += pl.obj_->remaining();
+                values_remaining += pl->remaining();
             }
 
             push_op(lat); // for the gc
             set_list(lat, 0, make_integer(values_remaining));
             set_list(lat, 1, make_integer(ctx->string_intern_pos_));
-            set_list(lat, 2, make_integer(ctx->operand_stack_.obj_->size()));
+            set_list(lat, 2, make_integer(ctx->operand_stack_->size()));
             set_list(lat, 3, make_integer([&] {
                          int symb_tab_used = 0;
-                         for (u32 i = 0; i < ctx->globals_.obj_->size(); ++i) {
-                             if (str_cmp("", (*ctx->globals_.obj_)[i].name_)) {
+                         for (u32 i = 0; i < ctx->globals_->size(); ++i) {
+                             if (str_cmp("", (*ctx->globals_)[i].name_)) {
                                  ++symb_tab_used;
                              }
                          }
@@ -1336,7 +1336,7 @@ void init(Platform& pfrm)
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, symbol);
 
-                for (auto& var : *bound_context->globals_.obj_) {
+                for (auto& var : *bound_context->globals_) {
                     if (str_cmp(get_op(0)->symbol_.name_, var.name_) == 0) {
                         var.value_ = get_nil();
                         var.name_ = "";
@@ -1351,7 +1351,7 @@ void init(Platform& pfrm)
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, symbol);
 
-                for (auto& var : *bound_context->globals_.obj_) {
+                for (auto& var : *bound_context->globals_) {
                     if (str_cmp(get_op(0)->symbol_.name_, var.name_) == 0) {
                         return make_integer(1);
                     }
@@ -1476,12 +1476,12 @@ void init(Platform& pfrm)
             auto buffer =
                 allocate_dynamic<EvalBuffer>(*(Platform*)pfrm->user_data_.obj_);
 
-            EvalPrinter p(*buffer.obj_);
+            EvalPrinter p(*buffer);
 
             format(get_op(argc - 1), p);
 
             Value* result = nullptr;
-            dostring(buffer.obj_->c_str(), &result);
+            dostring(buffer->c_str(), &result);
 
             return result;
         }));

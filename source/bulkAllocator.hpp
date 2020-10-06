@@ -30,6 +30,21 @@ template <typename T> struct DynamicMemory {
                   sizeof Platform::ScratchBuffer::data_);
     Platform::ScratchBufferPtr memory_;
     std::unique_ptr<T, void (*)(T*)> obj_;
+
+    T& operator*() const
+    {
+        return *obj_.get();
+    }
+
+    T* operator->() const
+    {
+        return obj_.get();
+    }
+
+    operator bool() const
+    {
+        return obj_ not_eq nullptr;
+    }
 };
 
 

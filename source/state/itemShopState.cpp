@@ -34,28 +34,28 @@ void ItemShopState::enter(Platform& pfrm, Game& game, State& prev_state)
     // }
 
     const auto str = locale_string(pfrm, LocaleString::scavenger_store);
-    const auto heading_str_len = utf8::len(str.obj_->c_str());
+    const auto heading_str_len = utf8::len(str->c_str());
 
     const auto margin = centered_text_margins(pfrm, heading_str_len);
 
     heading_text_.emplace(pfrm, OverlayCoord{0, u8(st.y - 2)});
 
     left_text_margin(*heading_text_, margin);
-    heading_text_->append(str.obj_->c_str());
+    heading_text_->append(str->c_str());
     right_text_margin(*heading_text_, margin);
 
     buy_sell_text_.emplace(pfrm, OverlayCoord{1, u8(st.y - 1)});
-    buy_sell_text_->assign(locale_string(pfrm, LocaleString::buy).obj_->c_str());
+    buy_sell_text_->assign(locale_string(pfrm, LocaleString::buy)->c_str());
 
     const auto fill_len =
-        st.x - (2 + utf8::len(locale_string(pfrm, LocaleString::buy).obj_->c_str()) +
-                utf8::len(locale_string(pfrm, LocaleString::sell).obj_->c_str()));
+        st.x - (2 + utf8::len(locale_string(pfrm, LocaleString::buy)->c_str()) +
+                utf8::len(locale_string(pfrm, LocaleString::sell)->c_str()));
 
     for (u32 i = 0; i < fill_len; ++i) {
         buy_sell_text_->append(" ");
     }
 
-    buy_sell_text_->append(locale_string(pfrm, LocaleString::sell).obj_->c_str());
+    buy_sell_text_->append(locale_string(pfrm, LocaleString::sell)->c_str());
 
     pfrm.set_tile(Layer::overlay, 0, st.y - 1, 421);
     pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 1, 420);
@@ -283,7 +283,7 @@ void ItemShopState::show_sell_option_label(Platform& pfrm, Game& game)
 {
     if (selector_x_ == 1) {
         StringBuffer<32> format;
-        format += locale_string(pfrm, LocaleString::store_sell).obj_->c_str();
+        format += locale_string(pfrm, LocaleString::store_sell)->c_str();
 
         char int_str[32];
         locale_num2str(
@@ -295,7 +295,7 @@ void ItemShopState::show_sell_option_label(Platform& pfrm, Game& game)
 
         show_label(pfrm, game, format.c_str(), false, true);
     } else if (selector_x_ == 2) {
-        show_label(pfrm, game, locale_string(pfrm, LocaleString::store_info).obj_->c_str(), false);
+        show_label(pfrm, game, locale_string(pfrm, LocaleString::store_info)->c_str(), false);
     }
 }
 
@@ -323,7 +323,7 @@ void ItemShopState::show_buy_option_label(Platform& pfrm, Game& game)
 {
     if (selector_x_ == 1) {
         StringBuffer<32> format;
-        format += locale_string(pfrm, LocaleString::store_buy).obj_->c_str();
+        format += locale_string(pfrm, LocaleString::store_buy)->c_str();
 
         char int_str[32];
         locale_num2str(scavenger_markup_price(
@@ -335,7 +335,7 @@ void ItemShopState::show_buy_option_label(Platform& pfrm, Game& game)
 
         show_label(pfrm, game, format.c_str(), true, true);
     } else if (selector_x_ == 2) {
-        show_label(pfrm, game, locale_string(pfrm, LocaleString::store_info).obj_->c_str(), true);
+        show_label(pfrm, game, locale_string(pfrm, LocaleString::store_info)->c_str(), true);
     }
 }
 
@@ -435,7 +435,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             show_label(pfrm,
                        game,
-                       locale_string(pfrm, LocaleString::store_sell_items).obj_->c_str(),
+                       locale_string(pfrm, LocaleString::store_sell_items)->c_str(),
                        false);
 
             show_sell_icons(pfrm, game);
@@ -465,7 +465,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
             display_mode_ = DisplayMode::show_buy;
 
             show_label(
-                       pfrm, game, locale_string(pfrm, LocaleString::store_buy_items).obj_->c_str(), true);
+                       pfrm, game, locale_string(pfrm, LocaleString::store_buy_items)->c_str(), true);
 
             show_buy_icons(pfrm, game);
         }
@@ -578,7 +578,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
             display_mode_ = DisplayMode::show_buy;
 
             show_label(
-                       pfrm, game, locale_string(pfrm, LocaleString::store_buy_items).obj_->c_str(), true);
+                       pfrm, game, locale_string(pfrm, LocaleString::store_buy_items)->c_str(), true);
 
             show_buy_icons(pfrm, game);
 
@@ -663,7 +663,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             show_label(pfrm,
                        game,
-                       locale_string(pfrm, LocaleString::store_sell_items).obj_->c_str(),
+                       locale_string(pfrm, LocaleString::store_sell_items)->c_str(),
                        false);
 
             show_score(pfrm, game, UIMetric::Align::left);
@@ -798,7 +798,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             show_label(pfrm,
                        game,
-                       locale_string(pfrm, LocaleString::store_sell_items).obj_->c_str(),
+                       locale_string(pfrm, LocaleString::store_sell_items)->c_str(),
                        false);
 
             show_sell_icons(pfrm, game);
@@ -893,7 +893,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
             show_score(pfrm, game, UIMetric::Align::right);
 
             show_label(
-                       pfrm, game, locale_string(pfrm, LocaleString::store_buy_items).obj_->c_str(), true);
+                       pfrm, game, locale_string(pfrm, LocaleString::store_buy_items)->c_str(), true);
 
             show_buy_icons(pfrm, game);
         }

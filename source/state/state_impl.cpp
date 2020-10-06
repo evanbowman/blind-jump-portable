@@ -57,7 +57,7 @@ void CommonNetworkListener::receive(const net_event::LethargyActivated&,
     add_lethargy_powerup(pfrm, game);
     push_notification(pfrm,
                       game.state(),
-                      locale_string(pfrm, LocaleString::peer_used_lethargy).obj_->c_str());
+                      locale_string(pfrm, LocaleString::peer_used_lethargy)->c_str());
 }
 
 
@@ -86,12 +86,12 @@ void CommonNetworkListener::receive(const net_event::ProgramVersion& vn,
 
             push_notification(pfrm,
                               game.state(),
-                              locale_string(pfrm, LocaleString::update_required).obj_->c_str());
+                              locale_string(pfrm, LocaleString::update_required)->c_str());
         } else {
             auto str = locale_string(pfrm, LocaleString::peer_requires_update);
             push_notification(pfrm,
                               game.state(),
-                              str.obj_->c_str());
+                              str->c_str());
         }
 
         pfrm.network_peer().disconnect();
@@ -112,7 +112,7 @@ void CommonNetworkListener::receive(const net_event::PlayerEnteredGate&,
 
     push_notification(pfrm,
                       game.state(),
-                      locale_string(pfrm, LocaleString::peer_transport_waiting).obj_->c_str());
+                      locale_string(pfrm, LocaleString::peer_transport_waiting)->c_str());
 }
 
 

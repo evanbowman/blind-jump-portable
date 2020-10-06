@@ -131,6 +131,7 @@ enum class LocaleString {
 
 
 void locale_set_language(int language_id);
+void locale_set_language_english();
 int locale_get_language();
 
 

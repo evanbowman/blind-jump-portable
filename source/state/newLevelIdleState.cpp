@@ -68,13 +68,13 @@ void NewLevelIdleState::display_text(Platform& pfrm, LocaleString ls)
 {
     const auto str = locale_string(pfrm, ls);
 
-    const auto margin = centered_text_margins(pfrm, utf8::len(str.obj_->c_str()));
+    const auto margin = centered_text_margins(pfrm, utf8::len(str->c_str()));
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     text_.emplace(pfrm, OverlayCoord{(u8)margin, (u8)(screen_tiles.y / 2 - 1)});
 
-    text_->assign(str.obj_->c_str());
+    text_->assign(str->c_str());
 }
 
 

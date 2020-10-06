@@ -75,7 +75,7 @@ void PauseScreenState::repaint_text(Platform& pfrm, Game& game)
     const u8 y = screen_tiles.y / 2;
 
     for (int i = 0; i < (int)strs_.size(); ++i) {
-        const auto len = utf8::len(locale_string(pfrm, strs_[i]).obj_->c_str());
+        const auto len = utf8::len(locale_string(pfrm, strs_[i])->c_str());
 
         const u8 text_x_loc = (screen_tiles.x - len) / 2;
 
@@ -84,7 +84,7 @@ void PauseScreenState::repaint_text(Platform& pfrm, Game& game)
 
         if (strs_[i] == LocaleString::menu_connect_peer) {
             texts_.back().assign(
-                locale_string(pfrm, strs_[i]).obj_->c_str(), [&]()
+                locale_string(pfrm, strs_[i])->c_str(), [&]()
                 -> Text::OptColors {
                     if (connect_peer_option_available(game)) {
                         return std::nullopt;
@@ -94,7 +94,7 @@ void PauseScreenState::repaint_text(Platform& pfrm, Game& game)
                     }
                 }());
         } else {
-            texts_.back().assign(locale_string(pfrm, strs_[i]).obj_->c_str());
+            texts_.back().assign(locale_string(pfrm, strs_[i])->c_str());
         }
     }
 }

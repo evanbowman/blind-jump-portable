@@ -25,7 +25,7 @@ void NetworkConnectWaitState::exit(Platform& pfrm,
         if (auto os = dynamic_cast<OverworldState*>(&next_state)) {
             if (pfrm.network_peer().is_connected()) {
                 push_notification(
-                                  pfrm, os, locale_string(pfrm, LocaleString::peer_connected).obj_->c_str());
+                                  pfrm, os, locale_string(pfrm, LocaleString::peer_connected)->c_str());
 
                 // Not really necessary. But because the gameboy advance
                 // handhelds will be in close proximity, nicer to have the music
@@ -45,7 +45,7 @@ void NetworkConnectWaitState::exit(Platform& pfrm,
                 push_notification(
                     pfrm,
                     os,
-                    locale_string(pfrm, LocaleString::peer_connection_failed).obj_->c_str());
+                    locale_string(pfrm, LocaleString::peer_connection_failed)->c_str());
             }
         }
     }

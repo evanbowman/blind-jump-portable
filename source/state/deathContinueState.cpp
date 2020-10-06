@@ -72,7 +72,7 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
 
 
         for (u32 i = 0; i < iters; ++i) {
-            lines_.back().append(dot.obj_->c_str(),
+            lines_.back().append(dot->c_str(),
                 colors);
         }
 
@@ -93,7 +93,7 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
     bool highlighted = false;
 
     auto show_highscores = [&](int offset) {
-        print_heading(locale_string(pfrm, LocaleString::high_scores).obj_->c_str());
+        print_heading(locale_string(pfrm, LocaleString::high_scores)->c_str());
         for (u32 i = 0; i < lines_.capacity(); ++i) {
             char str[8];
             locale_num2str(i + 1 + offset, str, 10);
@@ -113,15 +113,15 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
 
     switch (page_) {
     case 0:
-        print_heading(locale_string(pfrm, LocaleString::overall_heading).obj_->c_str());
-        print_metric(locale_string(pfrm, LocaleString::score).obj_->c_str(), game.score());
-        print_metric(locale_string(pfrm, LocaleString::high_score).obj_->c_str(),
+        print_heading(locale_string(pfrm, LocaleString::overall_heading)->c_str());
+        print_metric(locale_string(pfrm, LocaleString::score)->c_str(), game.score());
+        print_metric(locale_string(pfrm, LocaleString::high_score)->c_str(),
                      game.highscores()[0]);
-        print_metric(locale_string(pfrm, LocaleString::waypoints).obj_->c_str(),
+        print_metric(locale_string(pfrm, LocaleString::waypoints)->c_str(),
                      game.level());
-        print_metric(locale_string(pfrm, LocaleString::items_collected_prefix).obj_->c_str(),
+        print_metric(locale_string(pfrm, LocaleString::items_collected_prefix)->c_str(),
                      100 * items_collected_percentage(game.inventory()),
-                     locale_string(pfrm, LocaleString::items_collected_suffix).obj_->c_str());
+                     locale_string(pfrm, LocaleString::items_collected_suffix)->c_str());
         break;
 
     case 1:
@@ -133,10 +133,10 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
         break;
 
     case 3: {
-        print_heading(locale_string(pfrm, LocaleString::items_collected_heading).obj_->c_str());
+        print_heading(locale_string(pfrm, LocaleString::items_collected_heading)->c_str());
 
         auto write_percentage = [&](LocaleString str, int zone) {
-            StringBuffer<31> fmt = locale_string(pfrm, str).obj_->c_str();
+            StringBuffer<31> fmt = locale_string(pfrm, str)->c_str();
             fmt.pop_back();
             fmt += " ";
             print_metric(fmt.c_str(),

@@ -32,10 +32,10 @@ void Inventory::push_item(Platform& pfrm,
                         // Technically, the description for null is Empty, but that
                         // doesn't make sense contextually, so lets use this text
                         // instead.
-                        return locale_string(pfrm, LocaleString::nothing).obj_->c_str();
+                        return locale_string(pfrm, LocaleString::nothing)->c_str();
 
                     } else {
-                        return item_description(pfrm, insert).obj_->c_str();
+                        return item_description(pfrm, insert)->c_str();
                     }
                 }();
 
@@ -43,9 +43,9 @@ void Inventory::push_item(Platform& pfrm,
 
                     NotificationStr str;
 
-                    str += locale_string(pfrm, LocaleString::got_item_before).obj_->c_str();
+                    str += locale_string(pfrm, LocaleString::got_item_before)->c_str();
                     str += description;
-                    str += locale_string(pfrm, LocaleString::got_item_after).obj_->c_str();
+                    str += locale_string(pfrm, LocaleString::got_item_after)->c_str();
                     
                     push_notification(pfrm, game.state(), str);
                 }
@@ -56,7 +56,7 @@ void Inventory::push_item(Platform& pfrm,
 
     if (notify) {
         NotificationStr str;
-        str += locale_string(pfrm, LocaleString::inventory_full).obj_->c_str();
+        str += locale_string(pfrm, LocaleString::inventory_full)->c_str();
 
         push_notification(pfrm, game.state(), str);
     }
