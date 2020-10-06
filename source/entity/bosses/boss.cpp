@@ -9,19 +9,7 @@ void boss_explosion(Platform& pf, Game& game, const Vec2<Float>& position)
 
     static const auto score = 900;
 
-    switch (game.difficulty()) {
-    case Settings::Difficulty::hard:
-    case Settings::Difficulty::survival:
-    case Settings::Difficulty::count:
-    case Settings::Difficulty::normal:
-        game.score() += score;
-        break;
-
-        // case Settings::Difficulty::hard:
-        // case Settings::Difficulty::survival:
-        //     game.score() += score * 1.15f;
-        //     break;
-    }
+    game.score() += score;
 }
 
 

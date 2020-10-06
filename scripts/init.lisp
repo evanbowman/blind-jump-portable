@@ -161,7 +161,6 @@
 
 (unbind #debug-mode)
 
-
 ;;;
 ;;; Some useful little snippets:
 ;;;

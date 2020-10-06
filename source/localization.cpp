@@ -180,8 +180,11 @@ standard_texture_map(const utf8::Codepoint& cp)
         case '#':
             return 105;
         default:
+            if (cp == utf8::getc(u8"©")) {
+                return 185;
+            }
             // extended spanish and french characters
-            if (cp == utf8::getc(u8"ñ")) {
+            else if (cp == utf8::getc(u8"ñ")) {
                 return 73;
             } else if (cp == utf8::getc(u8"á")) {
                 return 74;

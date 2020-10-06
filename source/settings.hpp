@@ -6,7 +6,7 @@
 
 
 struct Settings {
-    enum Difficulty { normal, hard, survival, count };
+    enum Difficulty { easy, normal, hard, survival, count };
 
     int language_ = 0;
     bool show_stats_ = false;

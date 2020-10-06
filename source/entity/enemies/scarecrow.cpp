@@ -73,6 +73,8 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
             if (game.difficulty() == Settings::Difficulty::hard) {
                 add_health(1);
+            } else if (game.difficulty() == Settings::Difficulty::easy) {
+                set_health(get_health() - 1);
             }
         }
         break;
@@ -310,7 +312,13 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::attack: {
         timer_ += dt;
-        if (timer_ > milliseconds(200)) {
+        if (timer_ > [&] {
+            if (game.difficulty() == Settings::Difficulty::easy) {
+                return milliseconds(250);
+            } else {
+                return milliseconds(200);
+            }
+        }()) {
             timer_ = 0;
             if (visible()) {
                 pfrm.speaker().play_sound("laser1", 4, position_);
@@ -369,19 +377,7 @@ void Scarecrow::injured(Platform& pf, Game& game, Health amount)
     } else {
         const auto add_score = 15;
 
-        switch (game.difficulty()) {
-        case Settings::Difficulty::hard:
-        case Settings::Difficulty::survival:
-        case Settings::Difficulty::count:
-        case Settings::Difficulty::normal:
-            game.score() += add_score;
-            break;
-
-            // case Settings::Difficulty::hard:
-            // case Settings::Difficulty::survival:
-            //     game.score() += add_score * 1.5f;
-            //     break;
-        }
+        game.score() += add_score;
     }
 
     hit_ = true;

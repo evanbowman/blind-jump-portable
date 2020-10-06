@@ -413,12 +413,19 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      },
      LocaleString::long_jump_z4_title,
      InventoryItemHandler::yes},
-    {STANDARD_ITEM_HANDLER(surveyor_logbook),
+    {STANDARD_ITEM_HANDLER(worker_notebook_1),
      [](Platform& pfrm, Game&) {
          return state_pool().create<NotebookState>(
-             locale_string(pfrm, LocaleString::logbook_str_1));
+             locale_string(pfrm, LocaleString::worker_notebook_1_str));
      },
-     LocaleString::surveyor_logbook_title},
+     LocaleString::worker_notebook_1_title},
+    {Item::Type::worker_notebook_2,
+     item_icon(Item::Type::worker_notebook_1),
+     [](Platform& pfrm, Game&) {
+         return state_pool().create<NotebookState>(
+             locale_string(pfrm, LocaleString::worker_notebook_2_str));
+     },
+     LocaleString::worker_notebook_2_title},
     {STANDARD_ITEM_HANDLER(blaster),
      [](Platform&, Game&) { return null_state(); },
      LocaleString::blaster_title},
@@ -455,12 +462,18 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
                                                     ColorConstant::steel_blue);
      },
      LocaleString::seed_packet_title},
-    {STANDARD_ITEM_HANDLER(engineer_notebook),
+    {STANDARD_ITEM_HANDLER(engineer_notebook_2),
      [](Platform& pfrm, Game&) {
          return state_pool().create<NotebookState>(
-             locale_string(pfrm, LocaleString::engineer_notebook_str));
+             locale_string(pfrm, LocaleString::engineer_notebook_2_str));
      },
-     LocaleString::engineer_notebook_title},
+     LocaleString::engineer_notebook_2_title},
+    {Item::Type::engineer_notebook_1,
+     item_icon(Item::Type::engineer_notebook_2),
+     [](Platform& pfrm, Game&) {
+         return state_pool().create<NotebookState>(locale_string(pfrm, LocaleString::engineer_notebook_1_str));
+     },
+     LocaleString::engineer_notebook_1_title},
     {STANDARD_ITEM_HANDLER(signal_jammer),
      [](Platform&, Game&) {
          return state_pool().create<SignalJammerSelectorState>();

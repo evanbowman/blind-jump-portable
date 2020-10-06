@@ -941,6 +941,11 @@ private:
                 static_cast<Settings::Difficulty>(difficulty);
 
             switch (static_cast<Settings::Difficulty>(difficulty)) {
+            case Settings::Difficulty::easy:
+                return locale_string(pfrm,
+                                     LocaleString::settings_difficulty_easy)
+                    ->c_str();
+
             case Settings::Difficulty::normal:
                 return locale_string(pfrm,
                                      LocaleString::settings_difficulty_normal)

@@ -2021,10 +2021,12 @@ LevelRange level_range(Item::Type item)
 
     switch (item) {
     case Item::Type::old_poster_1:
-    case Item::Type::surveyor_logbook:
+    case Item::Type::worker_notebook_1:
+    case Item::Type::engineer_notebook_1:
         return {min, boss_0_level};
 
-    case Item::Type::engineer_notebook:
+    case Item::Type::worker_notebook_2:
+    case Item::Type::engineer_notebook_2:
         return {boss_0_level, max};
 
     case Item::Type::seed_packet:
@@ -2103,13 +2105,15 @@ ItemRarity rarity(Item::Type item)
     case Item::Type::orange:
         return 2;
 
-    case Item::Type::engineer_notebook:
+    case Item::Type::engineer_notebook_1:
+    case Item::Type::engineer_notebook_2:
         return 3;
 
     case Item::Type::postal_advert:
         return 0;
 
-    case Item::Type::surveyor_logbook:
+    case Item::Type::worker_notebook_1:
+    case Item::Type::worker_notebook_2:
         return 3;
 
     case Item::Type::lethargy:

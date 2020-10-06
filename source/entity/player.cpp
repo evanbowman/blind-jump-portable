@@ -131,8 +131,9 @@ void Player::on_collision(Platform& pf, Game& game, Drone& drone)
     if (not drone.is_allied()) {
         Player::injured(pf,
                         game,
-                        drone.state() == Drone::State::rush ? Health(2)
-                                                            : Health(1));
+                        drone.state() == Drone::State::rush and
+                        game.difficulty() not_eq Settings::Difficulty::easy ?
+                            Health(2) : Health(1));
     }
 }
 

@@ -23,6 +23,9 @@ static Microseconds pause_after_open(Game& game, Level level)
 {
     if (level < boss_0_level) {
         switch (game.difficulty()) {
+        case Settings::Difficulty::easy:
+            return milliseconds(330);
+            
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             return milliseconds(274);
@@ -33,6 +36,9 @@ static Microseconds pause_after_open(Game& game, Level level)
         }
     } else if (level < boss_1_level) {
         switch (game.difficulty()) {
+        case Settings::Difficulty::easy:
+            return milliseconds(300);
+            
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             return milliseconds(240);
@@ -43,6 +49,9 @@ static Microseconds pause_after_open(Game& game, Level level)
         }
     } else {
         switch (game.difficulty()) {
+        case Settings::Difficulty::easy:
+            return milliseconds(290);
+            
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             return milliseconds(230);
@@ -118,6 +127,8 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
             }
             if (game.difficulty() == Settings::Difficulty::hard) {
                 add_health(1);
+            } else if (game.difficulty() == Settings::Difficulty::easy) {
+                set_health(get_health() - 1);
             }
             state_ = State::closed;
         }
@@ -153,6 +164,10 @@ void Turret::update(Platform& pfrm, Game& game, Microseconds dt)
 
             this->shoot(pfrm, game, origin(), aim(), bullet_speed);
             timer_ = reload(game.level());
+
+            if (game.difficulty() == Settings::Difficulty::easy) {
+                timer_ *= 1.25;
+            }
 
             if (game.level() > boss_1_level) {
                 state_ = State::open2;
@@ -211,19 +226,7 @@ void Turret::injured(Platform& pf, Game& game, Health amount)
     } else {
         const auto add_score = 12;
 
-        switch (game.difficulty()) {
-        case Settings::Difficulty::count:
-        case Settings::Difficulty::normal:
-        case Settings::Difficulty::hard:
-        case Settings::Difficulty::survival:
-            game.score() += add_score;
-            break;
-
-            // case Settings::Difficulty::hard:
-            // case Settings::Difficulty::survival:
-            //     game.score() += add_score * 1.5f;
-            //     break;
-        }
+        game.score() += add_score;
     }
 }
 

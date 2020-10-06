@@ -15,12 +15,12 @@ part III:
 into the waste
 part IV:
 by moonlight
-[2.11.2081]  We've been experiencing strange power surges lately on the station. The director reassured me that everthing will run smoothly from now on. The robots have been acting up ever since the last communications blackout though, I'm afraid next time they'll go mad...
-Power surges emanating from the hyperspace gates seem to have an unusual effect on machinery, especially the robots on the stations. We've observed some unfortunate violent reactions from the machines recently--this is all starting to get out of control. We long suspected that there was something... else... out there in hyperspace, something that we, perhaps, should never have disturbed... It's time that we sealed up the transport gates for good. The best way, would be to disable the transit network's central hub, on the lunar surface...
 Empty
 Old poster (1)
-Notebook (1/2)
-Notebook (2/2)
+Worker's notebook (1/2)
+Worker's notebook (2/2)
+Engineer's notebook (1/2)
+Engineer's notebook (2/2)
 Blaster
 Accelerator (60 shots)
 Lethargy (18 sec)
@@ -68,7 +68,8 @@ Contrast:
 Night Mode: 
 Swap A/B: 
 default
-Difficulty: 
+Difficulty:
+easy
 normal
 hard
 survival
@@ -117,3 +118,7 @@ Peer used lethargy!
 english
 HEALTH AND SAFETY NOTICE:
 This software features flashing lights and colors, and may not be suitable for players with photosensitive epilepsy.
+[2.11.2081]  We've been experiencing strange power surges lately on the station, but the director reassured me that everthing will run smoothly from now on. The robots have been acting up ever since the last communications blackout though, I'm afraid next time they'll go mad...
+[3.7.2081]  I was lucky to be on some of the near-earth waypoints when the robots turned on us... a lot of people aparantly weren't so fortunate. To escape the machines, I fled through the warp gates, but the carnage seems to be even worse the further I go. Some of the stations out here seem to have been more populated, unfortunately.
+Power surges emanating from the hyperspace gates seem to have an unusual effect on machinery, especially the robots on the stations. We've observed some unfortunate violent reactions from the machines recently--this is all starting to get out of control. During the last power surge, I thought that I glimpsed the sillouette of a large, cloaked figure through the veil of the jump gate. We long suspected that there was something... else... out there in hyperspace, something that we, perhaps, should never have disturbed by opening these gates...
+The power surges from the jump gates are more-or-less constant now, and we've lost control of everything. I sent word back to Earth, that someone needs to be sent out here, to deal the causes of these fluctuations... they're dealing with their own mechanized revolt, though, so I'm not sure how soon they'll send a  soldier. In the meantime, I've invented a signal jamming device, which seems to render the machines immune to the power surges...

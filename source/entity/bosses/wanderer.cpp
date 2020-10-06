@@ -218,20 +218,32 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
 
         if (timer_ > [&] {
                 switch (game.difficulty()) {
+                case Settings::Difficulty::easy:
+                    if (second_form()) {
+                        return milliseconds(100);
+                    } else {
+                        return milliseconds(130);
+                    }
+                    break;
+                    
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::normal:
+                    if (second_form()) {
+                        return milliseconds(82);
+                    } else {
+                        return milliseconds(90);
+                    }
                     break;
 
                 case Settings::Difficulty::survival:
                 case Settings::Difficulty::hard:
-                    return milliseconds(70);
+                    if (second_form()) {
+                        return milliseconds(66);
+                    } else {
+                        return milliseconds(70);
+                    }
                 }
-
-                if (second_form()) {
-                    return milliseconds(82);
-                } else {
-                    return milliseconds(90);
-                }
+                return milliseconds(90);
             }()) {
             game.effects().spawn<WandererSmallLaser>(
                 position_ + shoot_offset(), scattershot_target_, 0.00013f);
@@ -275,6 +287,9 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
         timer_ += dt;
         if (timer_ > [&]() {
                 switch (game.difficulty()) {
+                case Settings::Difficulty::easy:
+                    return milliseconds(720);
+                    
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::normal:
                     break;

@@ -15,7 +15,7 @@ public:
         heart = 1,
         coin = 2,
         inventory_item_start = 3,
-        surveyor_logbook = inventory_item_start,
+        worker_notebook_1 = inventory_item_start,
         blaster = 4,
         accelerator = 5,
         lethargy = 6,
@@ -23,7 +23,7 @@ public:
         map_system = 8,
         explosive_rounds_2 = 9,
         seed_packet = 10,
-        engineer_notebook = 11,
+        engineer_notebook_2 = 11,
         signal_jammer = 12,
         navigation_pamphlet = 13,
         orange = 14,
@@ -36,6 +36,8 @@ public:
         long_jump_z3 = 17,
         long_jump_z4 = 18,
         postal_advert = 19,
+        engineer_notebook_1 = 20,
+        worker_notebook_2 = 21,
         count
     };
 
@@ -76,10 +78,12 @@ private:
 inline bool item_is_persistent(Item::Type type)
 {
     return type == Item::Type::blaster or
-           type == Item::Type::surveyor_logbook or
+           type == Item::Type::worker_notebook_1 or
+           type == Item::Type::worker_notebook_2 or
            type == Item::Type::old_poster_1 or type == Item::Type::map_system or
            type == Item::Type::seed_packet or
-           type == Item::Type::engineer_notebook or
+           type == Item::Type::engineer_notebook_1 or
+           type == Item::Type::engineer_notebook_2 or
            type == Item::Type::navigation_pamphlet or
            type == Item::Type::orange_seeds or
            type == Item::Type::postal_advert;

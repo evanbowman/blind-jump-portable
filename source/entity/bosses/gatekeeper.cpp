@@ -11,6 +11,10 @@ public:
         : reload_(delay), shot_count_(0)
     {
         switch (game.difficulty()) {
+        case Settings::Difficulty::easy:
+            reload_ += milliseconds(550);
+            break;
+            
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             reload_ += milliseconds(300);
@@ -46,6 +50,10 @@ public:
             if (++shot_count_ == [&] { return 3; }()) {
                 shot_count_ = 0;
                 switch (game.difficulty()) {
+                case Settings::Difficulty::easy:
+                    reload_ = milliseconds(1800);
+                    break;
+                    
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::normal:
                     reload_ = milliseconds(1300);

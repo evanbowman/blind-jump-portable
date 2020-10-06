@@ -27,6 +27,9 @@ Dasher::Dasher(const Vec2<Float>& position)
 static Float shot_speed(Game& game)
 {
     switch (game.difficulty()) {
+    case Settings::Difficulty::easy:
+        return 0.000122f;
+        
     case Settings::Difficulty::count:
     case Settings::Difficulty::normal:
         break;
@@ -99,6 +102,8 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             }
             if (game.difficulty() == Settings::Difficulty::hard) {
                 add_health(1);
+            } else if (game.difficulty() == Settings::Difficulty::easy) {
+                set_health(get_health() - 1);
             }
         }
         break;
@@ -333,19 +338,7 @@ void Dasher::injured(Platform& pf, Game& game, Health amount)
     } else {
         const auto add_score = 15;
 
-        switch (game.difficulty()) {
-        case Settings::Difficulty::hard:
-        case Settings::Difficulty::survival:
-        case Settings::Difficulty::count:
-        case Settings::Difficulty::normal:
-            game.score() += add_score;
-            break;
-
-            // case Settings::Difficulty::hard:
-            // case Settings::Difficulty::survival:
-            //     game.score() += add_score * 1.5f;
-            //     break;
-        }
+        game.score() += add_score;
     }
 
     sprite_.set_mix({c, 255});

@@ -81,6 +81,8 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
 
             if (game.difficulty() == Settings::Difficulty::hard) {
                 add_health(1);
+            } else if (game.difficulty() == Settings::Difficulty::easy) {
+                set_health(get_health() - 1);
             }
         }
         break;
@@ -184,7 +186,9 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             state_ = State::rush;
             const auto player_pos = target.get_position();
-            step_vector_ = direction(position_, player_pos) * 0.00015f;
+            step_vector_ = direction(position_, player_pos) *
+                (game.difficulty() not_eq
+                 Settings::Difficulty::easy ? 0.00015f : 0.000128f);
         }
         break;
 
@@ -218,19 +222,7 @@ void Drone::injured(Platform& pf, Game& game, Health amount)
     } else {
         const auto add_score = 10;
 
-        switch (game.difficulty()) {
-        case Settings::Difficulty::hard:
-        case Settings::Difficulty::survival:
-        case Settings::Difficulty::count:
-        case Settings::Difficulty::normal:
-            game.score() += add_score;
-            break;
-
-            // case Settings::Difficulty::hard:
-            // case Settings::Difficulty::survival:
-            //     game.score() += add_score * 1.5f;
-            //     break;
-        }
+        game.score() += add_score;
     }
 }
 
@@ -257,7 +249,9 @@ void Drone::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 
 void Drone::on_collision(Platform& pf, Game& game, Player& player)
 {
-    if (state_ == State::rush) {
+    if (state_ == State::rush and
+        game.difficulty() == Settings::Difficulty::easy) {
+        
         injured(pf, game, get_health());
     }
 }
