@@ -3,6 +3,15 @@
 
 void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    if (not dynamic_cast<IntroCreditsState*>(&prev_state)) {
+        // The rocket launch sound starts playing during the intro credits. But
+        // if we're running this cutscene, and the previous state was anything
+        // other than the intro credits scene, we need to jump ahead in the
+        // audio track to the proper position.
+        pfrm.speaker().play_music("rocketlaunch",
+                                  IntroCreditsState::music_offset());
+    }
+
     for (int x = 0; x < TileMap::width; ++x) {
         for (int y = 0; y < TileMap::height; ++y) {
             pfrm.set_tile(Layer::map_0, x, y, 3);
@@ -78,6 +87,8 @@ void LaunchCutsceneState::exit(Platform& pfrm, Game& game, State& next_state)
 
     game.details().transform([](auto& buf) { buf.clear(); });
     game.effects().transform([](auto& buf) { buf.clear(); });
+
+    pfrm.speaker().stop_music();
 }
 
 

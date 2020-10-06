@@ -58,6 +58,8 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     center(pfrm);
     // pfrm.screen().fade(0.f);
     pfrm.screen().fade(1.f);
+
+    pfrm.speaker().play_music("rocketlaunch", 0);
 }
 
 
@@ -80,6 +82,16 @@ StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
     } else {
         return state_pool().create<NewLevelState>(game.level());
     }
+}
+
+
+static constexpr auto show_text_time = seconds(2) + milliseconds(900);
+static constexpr auto wait_time = milliseconds(167) + seconds(2);
+
+
+Microseconds IntroCreditsState::music_offset()
+{
+    return show_text_time + wait_time;
 }
 
 
@@ -106,18 +118,20 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
     const auto skip = pfrm.keyboard().down_transition(game.action2_key());
 
     if (text_) {
-        if (timer_ > seconds(2) + milliseconds(900) or skip) {
+        if (timer_ > show_text_time or skip) {
             text_.reset();
             version_.reset();
             timer_ = 0;
 
             if (skip) {
+                pfrm.speaker().play_music("rocketlaunch", music_offset());
+
                 return next_state(pfrm, game);
             }
         }
 
     } else {
-        if (timer_ > milliseconds(167) + seconds(2)) {
+        if (timer_ > wait_time) {
             return next_state(pfrm, game);
         }
     }

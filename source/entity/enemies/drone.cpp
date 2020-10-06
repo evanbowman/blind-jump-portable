@@ -250,7 +250,7 @@ void Drone::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 void Drone::on_collision(Platform& pf, Game& game, Player& player)
 {
     if (state_ == State::rush and
-        game.difficulty() == Settings::Difficulty::easy) {
+        game.difficulty() not_eq Settings::Difficulty::easy) {
         
         injured(pf, game, get_health());
     }

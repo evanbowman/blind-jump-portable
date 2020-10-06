@@ -566,6 +566,8 @@ public:
 
     virtual StatePtr next_state(Platform& pfrm, Game& game);
 
+    static Microseconds music_offset();
+
 private:
     void center(Platform& pfrm);
 
