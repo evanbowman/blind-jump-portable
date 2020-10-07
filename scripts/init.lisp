@@ -123,17 +123,17 @@
 
       (if (equal debug-mode 1)
           (progn
-            (level 10)
+            (level 9)
             (apply add-items debug-items-lat)))
 
       (if (equal debug-mode 2)
           (progn
-            (level 21)
+            (level 19)
             (apply add-items (cons 12 debug-items-lat))))
 
       (if (equal debug-mode 3)
           (progn
-            (level 11)
+            (level 10)
             ;; These params should be sort of reasonable for someone who just
             ;; beat the first boss...
             (set-hp 0 7)
@@ -141,19 +141,19 @@
 
       (if (equal debug-mode 4)
           (progn
-            (level 22)
+            (level 20)
             (set-hp 0 8)
             (add-items 5 9)))
 
       (if (equal debug-mode 5)
           (progn
-            (level 29)
+            (level 28)
             (set-hp 0 7)
             (apply add-items debug-items-lat)))
 
       (if (equal debug-mode 6)
           (progn
-            (level 30)
+            (level 29)
             (set-hp 0 4)
             (apply add-items 5 9)))
 

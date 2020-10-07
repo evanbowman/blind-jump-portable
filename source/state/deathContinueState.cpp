@@ -3,6 +3,9 @@
 
 void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
 {
+    playtime_seconds_ = game.persistent_data().speedrun_clock_.whole_seconds();
+    max_level_ = game.level();
+
     game.player().set_visible(false);
 
     for (auto& score : reversed(game.highscores())) {
@@ -39,10 +42,10 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
 
     const auto dot = locale_string(pfrm, LocaleString::punctuation_period);
 
-    auto print_metric = [&](const char* str,
-                            int num,
-                            const char* suffix = "",
-                            bool highlight = false) {
+    auto print_metric_impl = [&](const char* str,
+                                 const StringBuffer<32>& text,
+                                 const char* suffix = "",
+                                 bool highlight = false) {
         if (lines_.full()) {
             return;
         }
@@ -60,17 +63,27 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
 
         const auto iters =
             screen_tiles.x -
-            (utf8::len(str) + 6 + integer_text_length(num) + utf8::len(suffix));
+            (utf8::len(str) + 6 + text.length() + utf8::len(suffix));
 
 
         for (u32 i = 0; i < iters; ++i) {
             lines_.back().append(dot->c_str(), colors);
         }
 
-        lines_.back().append(num, colors);
+        lines_.back().append(text.c_str(), colors);
         lines_.back().append(suffix, colors);
     };
 
+
+    auto print_metric = [&](const char* str,
+                            int num,
+                            const char* suffix = "",
+                            bool highlight = false) {
+        char buffer[32];
+        locale_num2str(num, buffer, 10);
+        print_metric_impl(str, buffer, suffix, highlight );
+    };
+    
     auto print_heading = [&](const char* str) {
         if (lines_.full()) {
             return;
@@ -108,14 +121,14 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
             locale_string(pfrm, LocaleString::overall_heading)->c_str());
         print_metric(locale_string(pfrm, LocaleString::score)->c_str(),
                      game.score());
-        print_metric(locale_string(pfrm, LocaleString::high_score)->c_str(),
-                     game.highscores()[0]);
         print_metric(locale_string(pfrm, LocaleString::waypoints)->c_str(),
-                     game.level());
+                     max_level_);
         print_metric(
             locale_string(pfrm, LocaleString::items_collected_prefix)->c_str(),
             100 * items_collected_percentage(game.inventory()),
             locale_string(pfrm, LocaleString::items_collected_suffix)->c_str());
+        print_metric_impl(locale_string(pfrm, LocaleString::time)->c_str(),
+                          format_time(playtime_seconds_));
         break;
 
     case 1:

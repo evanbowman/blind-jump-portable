@@ -1967,7 +1967,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
                  spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              }
          },
-         10},
+         boss_0_level},
         {5,
          [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); },
          boss_2_level},

@@ -422,7 +422,8 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
     }
 
-    if (pfrm.keyboard().down_transition(game.action2_key())) {
+    if (pfrm.keyboard().down_transition(game.action2_key()) and
+        static_cast<int>(scene_) > static_cast<int>(Scene::fade_transition0)) {
         return state_pool().create<NewLevelState>(Level{0});
     }
 

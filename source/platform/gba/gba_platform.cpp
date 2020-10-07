@@ -27,9 +27,26 @@ void english__to_string(int num, char* buffer, int base);
 static int overlay_y = 0;
 
 
+struct BiosVersion {
+    enum {
+        NDS = static_cast<long unsigned int>(-1162995584),
+        GBA = static_cast<long unsigned int>(-1162995585)
+    };
+};
+
+
 Platform::DeviceName Platform::device_name() const
 {
-    return "GameboyAdvance";
+    switch (BiosCheckSum()) {
+    case BiosVersion::NDS:
+        return "NintendoDS";
+
+    case BiosVersion::GBA:
+        return "GameboyAdvance";
+
+    default:
+        return "Unknown";
+    }
 }
 
 
@@ -2295,10 +2312,10 @@ Platform::Platform()
     info(*this, "Verifying BIOS...");
 
     switch (BiosCheckSum()) {
-    case static_cast<long unsigned int>(-1162995584):
+    case BiosVersion::NDS:
         info(*this, "BIOS matches Nintendo DS");
         break;
-    case static_cast<long unsigned int>(-1162995585):
+    case BiosVersion::GBA:
         info(*this, "BIOS matches GAMEBOY Advance");
         break;
     default:

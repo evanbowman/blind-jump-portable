@@ -7,6 +7,7 @@
 #include "number/numeric.hpp"
 #include "powerup.hpp"
 #include "settings.hpp"
+#include "timeTracker.hpp"
 
 
 using Level = s32;
@@ -41,6 +42,9 @@ struct PersistentData {
     Settings settings_;
 
     DateTime timestamp_ = {{0, 0, 0}, 0, 0, 0};
+
+    TimeTracker oxygen_remaining_ = {60 * 3};
+    TimeTracker speedrun_clock_ = {0};
 
     void store_powerups(const Powerups& powerups);
 

@@ -22,6 +22,11 @@ void HealthAndSafetyWarningState::enter(Platform& pfrm,
                 {1, 4},
                 OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
 
+    // continue_text_.emplace(pfrm, OverlayCoord{1, 16});
+    // continue_text_->assign("press any button to continue",
+    //                        Text::OptColors{{custom_color(0x2F4F79),
+    //                                         ColorConstant::aged_paper}});
+
     for (int x = 1; x < screen_tiles.x - 1; ++x) {
         pfrm.set_tile(Layer::overlay, x, 2, 84);
     }
@@ -43,11 +48,16 @@ StatePtr HealthAndSafetyWarningState::update(Platform& pfrm,
 {
     switch (display_mode_) {
     case DisplayMode::wait:
-        if (pfrm.keyboard()
+        timer_ += delta;
+        if (timer_ > seconds(8) or
+            pfrm.keyboard()
                 .down_transition<Key::action_1,
                                  Key::action_2,
                                  Key::start,
-                                 Key::select>()) {
+                                 Key::select,
+                                 Key::alt_1,
+                                 Key::alt_2>()) {
+            timer_ = 0;
             display_mode_ = DisplayMode::fade_out;
         }
         break;
@@ -74,6 +84,7 @@ StatePtr HealthAndSafetyWarningState::update(Platform& pfrm,
     case DisplayMode::swap_texture:
         tv_.reset();
         text_.reset();
+        continue_text_.reset();
         pfrm.fill_overlay(0);
         pfrm.load_overlay_texture("overlay");
         display_mode_ = DisplayMode::exit;

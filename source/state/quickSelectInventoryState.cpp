@@ -1,6 +1,11 @@
 #include "state_impl.hpp"
 
 
+void QuickSelectInventoryState::display_time_remaining(Platform&, Game&)
+{
+}
+
+
 void QuickSelectInventoryState::enter(Platform& pfrm,
                                       Game& game,
                                       State& prev_state)

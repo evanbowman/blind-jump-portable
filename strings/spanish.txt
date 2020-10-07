@@ -49,6 +49,7 @@ waypoint completado
 puntuación 
 puntuación alta 
 puntuaciónes altas
+tiempo
 items collected % 
 
 items collected %
@@ -74,7 +75,8 @@ normal
 difícil
 sobrevivencia
 level must be clear!
-Log Severity: 
+Log Severity:
+Show Timer: 
 sí
 no
 menu disabled

@@ -1,6 +1,11 @@
 #include "state_impl.hpp"
 
 
+void ItemShopState::display_time_remaining(Platform&, Game&)
+{
+}
+
+
 void ItemShopState::show_sidebar(Platform& pfrm)
 {
     if (display_mode_ == DisplayMode::show_buy) {

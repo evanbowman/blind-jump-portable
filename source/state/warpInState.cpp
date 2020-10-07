@@ -18,7 +18,7 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (counter_ > fade_duration) {
         shook_ = false;
         pfrm.screen().fade(0.f, current_zone(game).energy_glow_color_);
-        pfrm.screen().pixelate(0);
+        pfrm.screen().pixelate(0, false);
 
         if (game.peer()) {
             game.peer()->warping() = false;
@@ -41,7 +41,7 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);
         if (amount > 0.5f) {
-            pfrm.screen().pixelate((amount - 0.5f) * 60);
+            pfrm.screen().pixelate((amount - 0.5f) * 60, false);
         }
         return null_state();
     }

@@ -1,6 +1,11 @@
 #include "state_impl.hpp"
 
 
+void QuickMapState::display_time_remaining(Platform&, Game&)
+{
+}
+
+
 void QuickMapState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     OverworldState::enter(pfrm, game, prev_state);

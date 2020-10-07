@@ -49,6 +49,7 @@ waypoint clear
 score 
 highscore 
 highscores
+time
 items collected % 
 
 items collected %
@@ -74,7 +75,8 @@ normal
 hard
 survival
 level must be clear!
-Log Severity: 
+Log Severity:
+Show Timer: 
 yes
 no
 menu disabled

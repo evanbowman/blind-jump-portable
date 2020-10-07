@@ -1,7 +1,7 @@
 #include "state_impl.hpp"
 
 
-void OverworldState::exit(Platform& pfrm, Game&, State&)
+void OverworldState::exit(Platform& pfrm, Game&, State& next_state)
 {
     notification_text.reset();
     fps_text_.reset();
@@ -18,7 +18,70 @@ void OverworldState::exit(Platform& pfrm, Game&, State&)
         pfrm.set_tile(Layer::overlay, i, 0, 0);
     }
 
+    time_remaining_text_.reset();
+    time_remaining_icon_.reset();
+
     notification_status = NotificationStatus::hidden;
+}
+
+
+StringBuffer<32> format_time(u32 seconds, bool include_hours)
+{
+    StringBuffer<32> result;
+    char buffer[32];
+
+    int hours = seconds / 3600;
+    int remainder = (int)seconds - hours * 3600;
+    int mins = remainder / 60;
+    remainder = remainder - mins * 60;
+    int secs = remainder;
+
+    if (include_hours) {
+        locale_num2str(hours, buffer, 10);
+        result += buffer;
+        result += ":";
+    }
+
+    locale_num2str(mins, buffer, 10);
+    result += buffer;
+    result += ":";
+
+    if (secs < 10) {
+        result += "0";
+    }
+
+    locale_num2str(secs, buffer, 10);
+    result += buffer;
+
+    return result;
+}
+
+
+void OverworldState::display_time_remaining(Platform& pfrm, Game& game)
+{
+
+    const auto current_secs =
+        (int)game.persistent_data().oxygen_remaining_.whole_seconds();
+
+    const auto fmt = format_time(current_secs, false);
+
+    const auto screen_tiles = calc_screen_tiles(pfrm);
+
+    const u8 text_x_pos =
+        (screen_tiles.x - utf8::len(fmt.c_str())) - 1;
+
+    const u8 text_y_pos = screen_tiles.y - 2;
+
+
+    time_remaining_text_.emplace(pfrm,
+                                 OverlayCoord{text_x_pos,
+                                              text_y_pos});
+
+    time_remaining_text_->assign(fmt.c_str());
+
+    time_remaining_icon_.emplace(pfrm, 422,
+                                 OverlayCoord{u8(text_x_pos - 1),
+                                              text_y_pos});
 }
 
 
@@ -322,6 +385,15 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
 StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
+
+    const auto prior_sec = game.persistent_data().oxygen_remaining_.whole_seconds();
+    game.persistent_data().oxygen_remaining_.count_down(delta);
+    game.persistent_data().speedrun_clock_.count_up(delta);
+    const auto current_sec = game.persistent_data().oxygen_remaining_.whole_seconds();
+
+    if (not time_remaining_text_ or prior_sec not_eq current_sec) {
+        display_time_remaining(pfrm, game);
+    }
 
     if (pfrm.network_peer().is_connected()) {
         multiplayer_sync(pfrm, game, delta);

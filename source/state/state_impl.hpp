@@ -52,6 +52,7 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
+    virtual void display_time_remaining(Platform&, Game&);
 
     std::optional<Text> notification_text;
     NotificationStr notification_str;
@@ -107,6 +108,8 @@ private:
     std::optional<Text> network_rx_loss_text_;
     std::optional<Text> link_saturation_text_;
     std::optional<Text> scratch_buf_avail_text_;
+    std::optional<Text> time_remaining_text_;
+    std::optional<SmallIcon> time_remaining_icon_;
     int idle_rx_count_ = 0;
 };
 
@@ -332,6 +335,9 @@ private:
 
     Microseconds counter_ = 0;
     Microseconds counter2_ = 0;
+
+    u32 playtime_seconds_ = 0;
+    Level max_level_ = 0;
 };
 
 
@@ -380,6 +386,8 @@ public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    void display_time_remaining(Platform&, Game&) override;
 
 private:
     void draw_items(Platform& pfrm, Game& game);
@@ -506,6 +514,8 @@ public:
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
+    void display_time_remaining(Platform& pfrm, Game& game) override;
+
 private:
     enum class DisplayMode {
         enter,
@@ -549,6 +559,7 @@ private:
     Microseconds timer_ = 0;
 
     std::optional<Text> text_;
+    std::optional<Text> continue_text_;
     std::optional<TextView> tv_;
 };
 
@@ -998,7 +1009,7 @@ private:
         LocaleString::settings_language,
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
-        LocaleString::settings_show_stats,
+        LocaleString::settings_show_stats
     };
 
     std::optional<Text> message_;
@@ -1063,6 +1074,8 @@ public:
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    virtual void display_time_remaining(Platform&, Game&) override;
 
 private:
     enum class DisplayMode {
@@ -1261,6 +1274,9 @@ bool draw_minimap(Platform& pfrm,
                   int y_skip_bot = 0,
                   bool force_icons = false,
                   PathBuffer* path = nullptr);
+
+
+StringBuffer<32> format_time(u32 seconds, bool include_hours = true);
 
 
 struct InventoryItemHandler {
