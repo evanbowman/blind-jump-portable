@@ -136,6 +136,6 @@ See the [releases section](https://github.com/evanbowman/blind-jump-portable/rel
 
 ## Feedback
 
-Have an opinion about the game, or suggestions for improvements? I encourage you to create an issue, or to leave a comment over [here](https://evanbowman.itch.io/blindjump)
+Have an opinion about the game, or suggestions for improvements? I encourage you to create an issue, or to leave a comment over [here](https://evanbowman.itch.io/blindjump).
 
 [Contents↑](#contents)
