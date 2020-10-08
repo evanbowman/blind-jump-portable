@@ -35,7 +35,7 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
 // such that the surrounding text is aligned to either edge of the screen.
 //
 // FIXME: localize the credits? Nah...
-static const std::array<const char*, 32> credits_lines = {
+static const std::array<const char*, 34> credits_lines = {
     "Artwork and Source Code by",
     "Evan Bowman",
     "",
@@ -45,10 +45,11 @@ static const std::array<const char*, 32> credits_lines = {
     "",
     "",
     "Music",
-    "Hiraeth%Scott Buckley",
+    "Midsommar%Scott Buckley",
     "Omega%Scott Buckley",
     "Computations%Scott Buckley",
     "Murmuration%Kai Engel",
+    "Chantiers Navals%LJ Kruzer",
     "Clair De Lune%Chad Crouch",
     "",
     "",
@@ -65,9 +66,11 @@ static const std::array<const char*, 32> credits_lines = {
     "Special Thanks",
     "My Family",
     "Jasper Vijn (Tonc)",
-    "The DevkitARM Project"
+    "The DevkitARM Project",
+    "freesound.org"
     "",
-    ""};
+    ""
+};
 
 
 void draw_starfield(Platform& pfrm);

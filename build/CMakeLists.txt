@@ -191,8 +191,9 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/scottbuckley_omega.s
     ${DATA_DIR}/music_murmuration.s
     ${DATA_DIR}/music_rocketlaunch.s
+    ${DATA_DIR}/music_midsommar.s
+    ${DATA_DIR}/music_chantiers_navals_412.s
     ${DATA_DIR}/scottbuckley_computations.s
-    ${DATA_DIR}/scottbuckley_hiraeth.s
     ${DATA_DIR}/clair_de_lune.s
     ${DATA_DIR}/overlay.s
     ${DATA_DIR}/repl.s

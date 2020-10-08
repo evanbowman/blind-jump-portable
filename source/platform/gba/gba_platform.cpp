@@ -1727,9 +1727,10 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #include "data/clair_de_lune.hpp"
 #include "data/music_murmuration.hpp"
 #include "data/scottbuckley_computations.hpp"
-#include "data/scottbuckley_hiraeth.hpp"
 #include "data/scottbuckley_omega.hpp"
 #include "data/music_rocketlaunch.hpp"
+#include "data/music_chantiers_navals_412.hpp"
+#include "data/music_midsommar.hpp"
 
 
 static const int null_music_len = 8;
@@ -1762,12 +1763,13 @@ static const struct AudioTrack {
     const AudioSample* data_;
     int length_; // NOTE: For music, this is the track length in 32 bit words,
                  // but for sounds, length_ reprepresents bytes.
-} music_tracks[] = {DEF_MUSIC(hiraeth, scottbuckley_hiraeth),
-                    DEF_MUSIC(omega, scottbuckley_omega),
+} music_tracks[] = {DEF_MUSIC(omega, scottbuckley_omega),
                     DEF_MUSIC(computations, scottbuckley_computations),
                     DEF_MUSIC(clair_de_lune, clair_de_lune),
                     DEF_MUSIC(murmuration, music_murmuration),
-                    DEF_MUSIC(rocketlaunch, music_rocketlaunch)};
+                    DEF_MUSIC(rocketlaunch, music_rocketlaunch),
+                    DEF_MUSIC(chantiers_navals_412, music_chantiers_navals_412),
+                    DEF_MUSIC(midsommar, music_midsommar)};
 
 
 static const AudioTrack* find_music(const char* name)

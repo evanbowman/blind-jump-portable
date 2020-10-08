@@ -395,7 +395,6 @@ void Platform::Keyboard::poll()
         prev_[i] = states_[i];
     }
 
-
     static bool focused_ = true;
 
     // std::lock_guard<std::mutex> guard(::event_queue_lock);
@@ -463,7 +462,7 @@ void Platform::Keyboard::poll()
         case sf::Event::JoystickButtonPressed: {
             const auto ident = sf::Joystick::getIdentification(
                 event.joystickButton.joystickId);
-            for (auto& info : joystick_info) {
+            for (auto& info : reversed(joystick_info)) {
                 if (info.vendor_id == (int)ident.vendorId and
                     info.product_id == (int)ident.productId) {
                     const int button = event.joystickButton.button;
@@ -482,6 +481,7 @@ void Platform::Keyboard::poll()
                     } else if (button == info.alt_2_key) {
                         states_[static_cast<int>(Key::alt_2)] = true;
                     }
+                    break;
                 }
             }
             break;
@@ -490,7 +490,7 @@ void Platform::Keyboard::poll()
         case sf::Event::JoystickButtonReleased: {
             const auto ident = sf::Joystick::getIdentification(
                 event.joystickButton.joystickId);
-            for (auto& info : joystick_info) {
+            for (auto& info : reversed(joystick_info)) {
                 if (info.vendor_id == (int)ident.vendorId and
                     info.product_id == (int)ident.productId) {
                     const int button = event.joystickButton.button;
@@ -505,6 +505,7 @@ void Platform::Keyboard::poll()
                     } else if (button == info.alt_2_key) {
                         states_[static_cast<int>(Key::alt_2)] = false;
                     }
+                    break;
                 }
             }
             break;
@@ -513,7 +514,7 @@ void Platform::Keyboard::poll()
         case sf::Event::JoystickMoved: {
             const auto ident = sf::Joystick::getIdentification(
                 event.joystickButton.joystickId);
-            for (auto& info : joystick_info) {
+            for (auto& info : reversed(joystick_info)) {
                 if (info.vendor_id == (int)ident.vendorId and
                     info.product_id == (int)ident.productId) {
                     static const int deadZone = 30;
@@ -543,6 +544,7 @@ void Platform::Keyboard::poll()
                             states_[static_cast<int>(Key::down)] = false;
                         }
                     }
+                    break;
                 }
             }
             break;

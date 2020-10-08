@@ -81,7 +81,17 @@
 
 (if (equal (platform) #Desktop)
     (progn
-      (register-controller 1356 616 11 14 16 4 5) ;; Sony PS3 Controller
+
+      ;; Hint:
+      ;; (register-controller <vendor-id>
+      ;;                      <product-id>
+      ;;                      <action-1>
+      ;;                      <action-2>
+      ;;                      <start>
+      ;;                      <l-trigger>
+      ;;                      <r-trigger>)
+
+      (register-controller 1356 616 1 0 9 4 5) ;; Sony PS3 Controller
       (register-controller 1356 1476 2 1 9 4 5)   ;; Sony PS4 Controller
       (set #network-port 50001)))
 
