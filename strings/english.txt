@@ -76,7 +76,7 @@ hard
 survival
 level must be clear!
 Log Severity:
-Show Timer: 
+Show Speedrun Clock:
 yes
 no
 menu disabled

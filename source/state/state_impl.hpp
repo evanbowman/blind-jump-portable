@@ -851,6 +851,21 @@ private:
         }
     } show_stats_line_updater_;
 
+    class SpeedrunClockLineUpdater : public LineUpdater {
+        Result update(Platform& pfrm, Game& game, int dir) override
+        {
+            bool& show = game.persistent_data().settings_.show_speedrun_clock_;
+            if (dir not_eq 0) {
+                show = not show;
+            }
+            if (show) {
+                return locale_string(pfrm, LocaleString::yes)->c_str();
+            } else {
+                return locale_string(pfrm, LocaleString::no)->c_str();
+            }
+        }
+    } speedrun_clock_line_updater_;
+
     class NightModeLineUpdater : public LineUpdater {
         Result update(Platform& pfrm, Game& game, int dir) override
         {
@@ -999,7 +1014,7 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 6;
+    static constexpr const int line_count_ = 7;
 
     std::array<LineInfo, line_count_> lines_;
 
@@ -1009,7 +1024,8 @@ private:
         LocaleString::settings_language,
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
-        LocaleString::settings_show_stats
+        LocaleString::settings_show_stats,
+        LocaleString::settings_speedrun_clock
     };
 
     std::optional<Text> message_;

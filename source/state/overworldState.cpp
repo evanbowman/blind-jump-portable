@@ -61,9 +61,9 @@ void OverworldState::display_time_remaining(Platform& pfrm, Game& game)
 {
 
     const auto current_secs =
-        (int)game.persistent_data().oxygen_remaining_.whole_seconds();
+        (int)game.persistent_data().speedrun_clock_.whole_seconds();
 
-    const auto fmt = format_time(current_secs, false);
+    const auto fmt = format_time(current_secs);
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
@@ -386,13 +386,14 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
 
-    const auto prior_sec = game.persistent_data().oxygen_remaining_.whole_seconds();
-    game.persistent_data().oxygen_remaining_.count_down(delta);
+    const auto prior_sec = game.persistent_data().speedrun_clock_.whole_seconds();
     game.persistent_data().speedrun_clock_.count_up(delta);
-    const auto current_sec = game.persistent_data().oxygen_remaining_.whole_seconds();
+    const auto current_sec = game.persistent_data().speedrun_clock_.whole_seconds();
 
-    if (not time_remaining_text_ or prior_sec not_eq current_sec) {
-        display_time_remaining(pfrm, game);
+    if (game.persistent_data().settings_.show_speedrun_clock_) {
+        if (not time_remaining_text_ or prior_sec not_eq current_sec) {
+            display_time_remaining(pfrm, game);
+        }        
     }
 
     if (pfrm.network_peer().is_connected()) {

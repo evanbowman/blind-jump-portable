@@ -19,4 +19,6 @@ struct Settings {
     static constexpr const auto default_action2_key = Key::action_2;
     Key action1_key_ = default_action1_key;
     Key action2_key_ = default_action2_key;
+
+    bool show_speedrun_clock_ = true;
 };

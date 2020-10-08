@@ -22,7 +22,8 @@ EditSettingsState::EditSettingsState(DeferredState exit_state)
                                        {language_line_updater_},
                                        {contrast_line_updater_},
                                        {night_mode_line_updater_},
-                                       {show_stats_line_updater_}}}
+                                       {show_stats_line_updater_},
+                                       {speedrun_clock_line_updater_}}}
 {
 }
 
