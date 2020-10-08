@@ -49,14 +49,13 @@ StatePtr HealthAndSafetyWarningState::update(Platform& pfrm,
     switch (display_mode_) {
     case DisplayMode::wait:
         timer_ += delta;
-        if (timer_ > seconds(8) or
-            pfrm.keyboard()
-                .down_transition<Key::action_1,
-                                 Key::action_2,
-                                 Key::start,
-                                 Key::select,
-                                 Key::alt_1,
-                                 Key::alt_2>()) {
+        if (timer_ > seconds(8) or pfrm.keyboard()
+                                       .down_transition<Key::action_1,
+                                                        Key::action_2,
+                                                        Key::start,
+                                                        Key::select,
+                                                        Key::alt_1,
+                                                        Key::alt_2>()) {
             timer_ = 0;
             display_mode_ = DisplayMode::fade_out;
         }

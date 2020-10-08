@@ -61,9 +61,8 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
 
         lines_.back().append(str, colors);
 
-        const auto iters =
-            screen_tiles.x -
-            (utf8::len(str) + 6 + text.length() + utf8::len(suffix));
+        const auto iters = screen_tiles.x - (utf8::len(str) + 6 +
+                                             text.length() + utf8::len(suffix));
 
 
         for (u32 i = 0; i < iters; ++i) {
@@ -81,9 +80,9 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
                             bool highlight = false) {
         char buffer[32];
         locale_num2str(num, buffer, 10);
-        print_metric_impl(str, buffer, suffix, highlight );
+        print_metric_impl(str, buffer, suffix, highlight);
     };
-    
+
     auto print_heading = [&](const char* str) {
         if (lines_.full()) {
             return;

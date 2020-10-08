@@ -2,6 +2,27 @@
 #include "platform/platform.hpp"
 
 
+void PersistentData::restore_oxygen()
+{
+    oxygen_remaining_.reset([&] {
+        switch (settings_.difficulty_) {
+        case Settings::Difficulty::easy:
+            return 60 * 4;
+
+        case Settings::Difficulty::normal:
+        case Settings::Difficulty::count:
+            break;
+
+        case Settings::Difficulty::hard:
+        case Settings::Difficulty::survival:
+            return 60 * 2 + 30;
+        }
+
+        return 60 * 3;
+    }());
+}
+
+
 PersistentData& PersistentData::reset(Platform& pfrm)
 {
     inventory_.remove_non_persistent();
@@ -10,22 +31,7 @@ PersistentData& PersistentData::reset(Platform& pfrm)
     player_health_ = 3;
     powerup_count_ = 0;
     speedrun_clock_.reset(0);
-    oxygen_remaining_.reset([&] {
-        switch (settings_.difficulty_) {
-        case Settings::Difficulty::easy:
-            return 60 * 45;
-
-        case Settings::Difficulty::normal:
-        case Settings::Difficulty::count:
-            break;
-
-        case Settings::Difficulty::hard:
-        case Settings::Difficulty::survival:
-            return 60 * 25;
-        }
-
-        return 60 * 30;
-    }());
+    restore_oxygen();
 
     return *this;
 }

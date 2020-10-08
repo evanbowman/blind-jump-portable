@@ -1009,8 +1009,7 @@ private:
         LocaleString::settings_language,
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
-        LocaleString::settings_show_stats
-    };
+        LocaleString::settings_show_stats};
 
     std::optional<Text> message_;
 

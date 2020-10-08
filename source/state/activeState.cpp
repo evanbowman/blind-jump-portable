@@ -69,7 +69,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
                       last_score,
                       UIMetric::Align::left);
 
-    if (game.player().get_health() == 0) {
+    if (game.player().get_health() == 0 or
+        game.persistent_data().oxygen_remaining_.whole_seconds() == 0) {
         pfrm.sleep(5);
         pfrm.speaker().stop_music();
         // TODO: add a unique explosion sound effect

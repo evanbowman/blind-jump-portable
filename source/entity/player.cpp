@@ -132,8 +132,10 @@ void Player::on_collision(Platform& pf, Game& game, Drone& drone)
         Player::injured(pf,
                         game,
                         drone.state() == Drone::State::rush and
-                        game.difficulty() not_eq Settings::Difficulty::easy ?
-                            Health(2) : Health(1));
+                                game.difficulty() not_eq
+                                    Settings::Difficulty::easy
+                            ? Health(2)
+                            : Health(1));
     }
 }
 

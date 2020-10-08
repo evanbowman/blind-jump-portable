@@ -35,6 +35,54 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
                 });
         }
 
+        const auto remaining =
+            game.persistent_data().oxygen_remaining_.whole_seconds();
+
+        auto oxygen_restore = [&] {
+            switch (game.difficulty()) {
+            case Settings::Difficulty::easy:
+                return 70;
+
+            case Settings::Difficulty::count:
+            case Settings::Difficulty::normal:
+                break;
+
+            case Settings::Difficulty::survival:
+            case Settings::Difficulty::hard:
+                return 45;
+            }
+            return 55;
+        }();
+
+        if (is_boss_level(game.level() - 1)) {
+            oxygen_restore *= 2;
+        }
+
+        const auto new_oxygen_val =
+            std::min(60 * 6 + 30, remaining + oxygen_restore);
+
+        game.persistent_data().oxygen_remaining_.reset(new_oxygen_val);
+
+        if (game.level() < 3) {
+            game.on_timeout(
+                pfrm,
+                milliseconds(100),
+                [oxygen_restore](Platform& pfrm, Game& game) {
+                    StringBuffer<31> msg;
+                    msg += locale_string(pfrm, LocaleString::o2_restored_before)
+                               ->c_str();
+
+                    char buffer[10];
+                    locale_num2str(oxygen_restore, buffer, 10);
+
+                    msg += buffer;
+
+                    msg += locale_string(pfrm, LocaleString::o2_restored_after)
+                               ->c_str();
+
+                    push_notification(pfrm, game.state(), msg.c_str());
+                });
+        }
 
         return state_pool().create<ActiveState>(game);
     } else {

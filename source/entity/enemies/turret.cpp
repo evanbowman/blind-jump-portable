@@ -25,7 +25,7 @@ static Microseconds pause_after_open(Game& game, Level level)
         switch (game.difficulty()) {
         case Settings::Difficulty::easy:
             return milliseconds(330);
-            
+
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             return milliseconds(274);
@@ -38,7 +38,7 @@ static Microseconds pause_after_open(Game& game, Level level)
         switch (game.difficulty()) {
         case Settings::Difficulty::easy:
             return milliseconds(300);
-            
+
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             return milliseconds(240);
@@ -51,7 +51,7 @@ static Microseconds pause_after_open(Game& game, Level level)
         switch (game.difficulty()) {
         case Settings::Difficulty::easy:
             return milliseconds(290);
-            
+
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             return milliseconds(230);

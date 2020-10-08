@@ -471,7 +471,8 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::engineer_notebook_1,
      item_icon(Item::Type::engineer_notebook_2),
      [](Platform& pfrm, Game&) {
-         return state_pool().create<NotebookState>(locale_string(pfrm, LocaleString::engineer_notebook_1_str));
+         return state_pool().create<NotebookState>(
+             locale_string(pfrm, LocaleString::engineer_notebook_1_str));
      },
      LocaleString::engineer_notebook_1_title},
     {STANDARD_ITEM_HANDLER(signal_jammer),

@@ -187,8 +187,9 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             state_ = State::rush;
             const auto player_pos = target.get_position();
             step_vector_ = direction(position_, player_pos) *
-                (game.difficulty() not_eq
-                 Settings::Difficulty::easy ? 0.00015f : 0.000128f);
+                           (game.difficulty() not_eq Settings::Difficulty::easy
+                                ? 0.00015f
+                                : 0.000128f);
         }
         break;
 
@@ -251,7 +252,7 @@ void Drone::on_collision(Platform& pf, Game& game, Player& player)
 {
     if (state_ == State::rush and
         game.difficulty() not_eq Settings::Difficulty::easy) {
-        
+
         injured(pf, game, get_health());
     }
 }

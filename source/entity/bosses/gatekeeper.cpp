@@ -14,7 +14,7 @@ public:
         case Settings::Difficulty::easy:
             reload_ += milliseconds(550);
             break;
-            
+
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
             reload_ += milliseconds(300);
@@ -53,7 +53,7 @@ public:
                 case Settings::Difficulty::easy:
                     reload_ = milliseconds(1800);
                     break;
-                    
+
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::normal:
                     reload_ = milliseconds(1300);

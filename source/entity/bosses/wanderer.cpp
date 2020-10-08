@@ -225,7 +225,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                         return milliseconds(130);
                     }
                     break;
-                    
+
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::normal:
                     if (second_form()) {
@@ -289,7 +289,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                 switch (game.difficulty()) {
                 case Settings::Difficulty::easy:
                     return milliseconds(720);
-                    
+
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::normal:
                     break;

@@ -46,6 +46,8 @@ struct PersistentData {
     TimeTracker oxygen_remaining_ = {60 * 3};
     TimeTracker speedrun_clock_ = {0};
 
+    void restore_oxygen();
+
     void store_powerups(const Powerups& powerups);
 
     // Reset level back to zero, initialize various things. Does not overwrite

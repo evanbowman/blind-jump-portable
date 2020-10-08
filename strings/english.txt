@@ -118,6 +118,8 @@ Peer requires update!
 overall
 Peer used lethargy!
 english
+jump restored 
+ sec of O2
 HEALTH AND SAFETY NOTICE:
 This software features flashing lights and colors, and may not be suitable for players with photosensitive epilepsy.
 [2.11.2081]  We've been experiencing strange power surges lately on the station, but the director reassured me that everthing will run smoothly from now on. The robots have been acting up ever since the last communications blackout though, I'm afraid next time they'll go mad...

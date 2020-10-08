@@ -127,6 +127,8 @@ enum class LocaleString {
     overall_heading,
     peer_used_lethargy,
     language_name,
+    o2_restored_before,
+    o2_restored_after,
     health_safety_notice,
     health_safety_text,
     worker_notebook_1_str,

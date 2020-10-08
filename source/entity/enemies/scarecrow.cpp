@@ -313,12 +313,12 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::attack: {
         timer_ += dt;
         if (timer_ > [&] {
-            if (game.difficulty() == Settings::Difficulty::easy) {
-                return milliseconds(250);
-            } else {
-                return milliseconds(200);
-            }
-        }()) {
+                if (game.difficulty() == Settings::Difficulty::easy) {
+                    return milliseconds(250);
+                } else {
+                    return milliseconds(200);
+                }
+            }()) {
             timer_ = 0;
             if (visible()) {
                 pfrm.speaker().play_sound("laser1", 4, position_);
