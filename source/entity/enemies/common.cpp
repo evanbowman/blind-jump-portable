@@ -66,11 +66,18 @@ void on_enemy_destroyed(Platform& pfrm,
                 ++count;
             }
 
-            if (count > 0) {
-                game.details().spawn<Item>(
+            auto make_item = [&] {
+                return game.details().spawn<Item>(
                     position,
                     pfrm,
                     allowed_item_drop[rng::choice(count, rng::critical_state)]);
+            };
+
+            if (count > 0) {
+                if (not make_item() and length(game.details().get<Debris>())) {
+                    game.details().get<Debris>().pop();
+                    make_item();
+                }
             }
         }
     }
