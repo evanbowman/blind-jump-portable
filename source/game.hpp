@@ -8,6 +8,7 @@
 #include "entity/bosses/wanderer.hpp"
 #include "entity/details/cutsceneBird.hpp"
 #include "entity/details/cutsceneCloud.hpp"
+#include "entity/details/debris.hpp"
 #include "entity/details/item.hpp"
 #include "entity/details/itemChest.hpp"
 #include "entity/details/lander.hpp"
@@ -95,7 +96,7 @@ public:
                                     Lander,
                                     CutsceneCloud,
                                     CutsceneBird,
-                                    Terminal>;
+                                    Debris>;
 
     using EffectGroup = EntityGroup<20,
                                     Reticule,

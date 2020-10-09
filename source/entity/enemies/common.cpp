@@ -39,6 +39,19 @@ void on_enemy_destroyed(Platform& pfrm,
         game.on_timeout(
             pfrm, milliseconds(200), [pos = position](Platform&, Game& game) {
                 game.details().spawn<Rubble>(pos);
+                game.details().spawn<Debris>(pos);
+                game.details().spawn<Debris>(pos);
+                game.details().spawn<Debris>(pos);
+                game.details().spawn<Debris>(pos);
+            });
+    } else {
+        game.on_timeout(
+            pfrm, milliseconds(200), [pos = position](Platform&, Game& game) {
+                game.details().spawn<Debris>(pos);
+                game.details().spawn<Debris>(pos);
+                game.details().spawn<Debris>(pos);
+                game.details().spawn<Debris>(pos);
+                game.details().spawn<Debris>(pos);
             });
     }
 

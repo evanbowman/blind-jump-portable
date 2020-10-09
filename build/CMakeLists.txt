@@ -65,6 +65,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/enemies/turret.cpp
   ${SOURCE_DIR}/entity/enemies/dasher.cpp
   ${SOURCE_DIR}/entity/details/rubble.cpp
+  ${SOURCE_DIR}/entity/details/debris.cpp
   ${SOURCE_DIR}/entity/enemies/drone.cpp
   ${SOURCE_DIR}/entity/enemies/enemy.cpp
   ${SOURCE_DIR}/entity/enemies/theif.cpp
