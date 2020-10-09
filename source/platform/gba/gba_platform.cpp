@@ -825,9 +825,12 @@ void Platform::Screen::display()
     }
 
     for (u32 i = oam_write_index; i < last_oam_write_index; ++i) {
+        // Disable affine transform for unused sprite
+        object_attribute_back_buffer[i].attribute_0 &= ~((1 << 8) | (1 << 9));
+        object_attribute_back_buffer[i].attribute_1 = 0;
+
         object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
 
-        // object_attribute_back_buffer[i].attribute_2 = ATTR2_PRIORITY(3);
     }
 
     for (u32 i = affine_transform_write_index;
@@ -849,8 +852,8 @@ void Platform::Screen::display()
              object_attribute_back_buffer,
              (sizeof object_attribute_back_buffer) / 4);
 
-    last_affine_transform_write_index = 0;
-    affine_transform_write_index = last_affine_transform_write_index;
+    last_affine_transform_write_index = affine_transform_write_index;
+    affine_transform_write_index = 0;
 
     last_oam_write_index = oam_write_index;
     oam_write_index = 0;
