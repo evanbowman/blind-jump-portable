@@ -1294,8 +1294,9 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
         // Just for the sake of variety, intentionally generate
         // smaller maps sometimes.
         const bool small_map = rng::choice<100>(rng::critical_state) < 20 or
-                               is_boss_level(level() - 1) or
-                               is_boss_level(level() - 2) or level() < 4;
+            (not pfrm.network_peer().is_connected() and
+             (is_boss_level(level() - 1) or
+              is_boss_level(level() - 2) or level() < 4));
 
         int count;
 
