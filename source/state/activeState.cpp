@@ -104,10 +104,9 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             return state_pool().create<InventoryState>(true);
 
         } else {
-            push_notification(
-                pfrm,
-                game.state(),
-                locale_string(pfrm, LocaleString::menu_disabled)->c_str());
+            // In multiplayer mode, we instead repurpose the button mapping to
+            // activate a chat window.
+            return state_pool().create<QuickChatState>();
         }
     }
 

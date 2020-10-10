@@ -85,6 +85,20 @@ void OverworldState::display_time_remaining(Platform& pfrm, Game& game)
 }
 
 
+void OverworldState::receive(const net_event::QuickChat& chat,
+                             Platform& pfrm,
+                             Game& game)
+{
+    NotificationStr str;
+    str += locale_string(pfrm, LocaleString::chat_chat)->c_str();
+
+    str += locale_string(pfrm, static_cast<LocaleString>(chat.message_.get()))
+        ->c_str();
+
+    push_notification(pfrm, game.state(), str);
+}
+
+
 void OverworldState::receive(const net_event::PlayerHealthChanged& event,
                              Platform& pfrm,
                              Game& game)

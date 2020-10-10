@@ -68,6 +68,7 @@ public:
 
     using net_event::Listener::receive;
 
+    void receive(const net_event::QuickChat&, Platform&, Game&) override;
     void receive(const net_event::NewLevelIdle&, Platform&, Game&) override;
     void receive(const net_event::PlayerSpawnLaser&, Platform&, Game&) override;
     void receive(const net_event::ItemChestShared&, Platform&, Game&) override;
@@ -422,6 +423,27 @@ private:
 
     int page_ = 0;
     bool more_pages_ = false;
+};
+
+
+class QuickChatState : public OverworldState {
+public:
+    QuickChatState() : OverworldState(true)
+    {
+    }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    void display_time_remaining(Platform&, Game&) override;
+
+private:
+
+    void update_text(Platform& pfrm, Game& game);
+
+    int msg_index_ = 0;
+    std::optional<Text> text_;
 };
 
 
@@ -1205,6 +1227,7 @@ using StatePoolInst = StatePool<ActiveState,
                                 GoodbyeState,
                                 DeathFadeState,
                                 InventoryState,
+                                QuickChatState,
                                 NotebookState,
                                 ImageViewState,
                                 NewLevelState,

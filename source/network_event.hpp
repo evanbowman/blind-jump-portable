@@ -8,6 +8,7 @@
 #include "number/random.hpp"
 #include "platform/platform.hpp"
 #include "settings.hpp"
+#include "localeString.hpp"
 
 
 namespace net_event {

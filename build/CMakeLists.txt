@@ -122,6 +122,7 @@ set(SOURCES
   ${SOURCE_DIR}/state/commandCodeState.cpp
   ${SOURCE_DIR}/state/pauseScreenState.cpp
   ${SOURCE_DIR}/state/remoteReplState.cpp
+  ${SOURCE_DIR}/state/quickChatState.cpp
   ${SOURCE_DIR}/state/imageViewState.cpp
   ${SOURCE_DIR}/state/inventoryState.cpp
   ${SOURCE_DIR}/state/overworldState.cpp

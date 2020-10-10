@@ -120,6 +120,9 @@ Peer used lethargy!
 english
 HEALTH AND SAFETY NOTICE:
 This software features flashing lights and colors, and may not be suitable for players with photosensitive epilepsy.
+chat: 
+Hello!
+Got any oranges?
 [2.11.2081]  We've been experiencing strange power surges lately on the station, but the director reassured me that everthing will run smoothly from now on. The robots have been acting up ever since the last communications blackout though, I'm afraid next time they'll go mad...
 [3.7.2081]  I was lucky to be on some of the near-earth waypoints when the robots turned on us... a lot of people aparantly weren't so fortunate. To escape the machines, I fled through the warp gates, but the carnage seems to be even worse the further I go. Some of the stations out here seem to have been more populated, unfortunately.
 Power surges emanating from the hyperspace gates seem to have an unusual effect on machinery, especially the robots on the stations. We've observed some unfortunate violent reactions from the machines recently--this is all starting to get out of control. During the last power surge, I thought that I glimpsed the sillouette of a large, cloaked figure through the veil of the jump gate. We long suspected that there was something... else... out there in hyperspace, something that we, perhaps, should never have disturbed by opening these gates...
