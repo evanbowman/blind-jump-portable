@@ -12,7 +12,7 @@
 
 class Proxy : public Entity {
 public:
-    using SpriteBuffer = Buffer<Sprite, 4>;
+    using SpriteBuffer = Buffer<Sprite, 3>;
 
     Proxy(const SpriteBuffer& buffer)
     {

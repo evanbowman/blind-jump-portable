@@ -162,6 +162,14 @@ void Player::on_collision(Platform& pf, Game& game, Theif&)
 }
 
 
+void Player::heal(Platform& pfrm, Health amount)
+{
+    sprite_.set_mix({ColorConstant::spanish_crimson, 255});
+    add_health(amount);
+    pfrm.speaker().play_sound("pop", 1);
+}
+
+
 void Player::on_collision(Platform& pf, Game& game, Item& item)
 {
     if (not item.ready()) {
@@ -169,9 +177,7 @@ void Player::on_collision(Platform& pf, Game& game, Item& item)
     }
     switch (item.get_type()) {
     case Item::Type::heart:
-        sprite_.set_mix({ColorConstant::spanish_crimson, 255});
-        add_health(1);
-        pf.speaker().play_sound("pop", 1);
+        heal(pf, 1);
         break;
 
     case Item::Type::coin:

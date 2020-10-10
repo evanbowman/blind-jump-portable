@@ -20,6 +20,7 @@
 #include "entity/effects/explosion.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
+#include "entity/effects/particle.hpp"
 #include "entity/effects/proxy.hpp"
 #include "entity/effects/reticule.hpp"
 #include "entity/effects/wandererBigLaser.hpp"
@@ -108,7 +109,8 @@ public:
                                     Explosion,
                                     WandererBigLaser,
                                     WandererSmallLaser,
-                                    ConglomerateShot>;
+                                    ConglomerateShot,
+                                    Particle>;
 
     inline Transporter& transporter()
     {

@@ -488,7 +488,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::navigation_pamphlet_title},
     {STANDARD_ITEM_HANDLER(orange),
      [](Platform& pfrm, Game& game) {
-         game.player().add_health(1);
+         game.player().heal(pfrm, 1);
          if (game.inventory().item_count(Item::Type::orange_seeds) == 0) {
              game.inventory().push_item(pfrm, game, Item::Type::orange_seeds);
          }

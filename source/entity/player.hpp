@@ -87,6 +87,8 @@ public:
 
     Vec2<Float> get_speed() const;
 
+    void heal(Platform& pfrm, Health amount);
+
 private:
     using ResourceLoc = TextureMap;
 

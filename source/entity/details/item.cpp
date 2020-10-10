@@ -17,12 +17,35 @@ Item::Item(const Vec2<Float>& pos, Platform&, Type type)
 }
 
 
-void Item::on_collision(Platform& pf, Game&, Player&)
+void Item::on_collision(Platform& pf, Game& game, Player&)
 {
     if (not ready()) {
         return;
     }
     Entity::kill();
+
+    auto pos = position_;
+    pos.x += 8;
+
+    // FIXME: Sprite scaling is broken on the desktop version of the game.
+#ifdef __GBA__
+    switch (type_) {
+    case Type::coin:
+        game.effects().spawn<Particle>(pos, current_zone(game).energy_glow_color_);
+        game.effects().spawn<Particle>(pos, current_zone(game).energy_glow_color_);
+        game.effects().spawn<Particle>(pos, current_zone(game).energy_glow_color_);
+        break;
+
+    case Type::heart:
+        game.effects().spawn<Particle>(pos, ColorConstant::spanish_crimson);
+        game.effects().spawn<Particle>(pos, ColorConstant::spanish_crimson);
+        game.effects().spawn<Particle>(pos, ColorConstant::spanish_crimson);
+        break;
+
+    default:
+        break;
+    }
+#endif // __GBA__
 
     pf.sleep(5);
 }

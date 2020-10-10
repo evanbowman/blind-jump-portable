@@ -1051,6 +1051,23 @@ void Platform::Screen::display()
 
         sf::Sprite sf_spr;
 
+        if (auto rot = spr.get_rotation()) {
+            sf_spr.setRotation((float(rot) / std::numeric_limits<s16>::max())
+                               * 360);
+        }
+
+        if (spr.get_scale().x or spr.get_scale().y) {
+            Float x_scale = 1;
+            Float y_scale = 1;
+            if (spr.get_scale().x < 0) {
+
+            }
+            if (spr.get_scale().y < 0) {
+
+            sf_spr.setScale(x_scale,
+                            y_scale);
+        }
+
         sf_spr.setPosition({pos.x, pos.y});
         sf_spr.setOrigin(
             {float(spr.get_origin().x), float(spr.get_origin().y)});
