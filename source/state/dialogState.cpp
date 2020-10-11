@@ -54,15 +54,7 @@ Platform::TextureCpMapper locale_texture_map();
 
 bool DialogState::advance_text(Platform& pfrm, Game& game, Microseconds delta)
 {
-    const auto delay = [&] {
-        if (pfrm.keyboard().pressed(game.action1_key()) or
-            pfrm.keyboard().pressed(game.action2_key())) {
-            return milliseconds(20);
-        } else {
-            return milliseconds(100);
-        }
-    }();
-
+    const auto delay = milliseconds(80);
 
     text_state_.timer_ += delta;
 
@@ -70,6 +62,8 @@ bool DialogState::advance_text(Platform& pfrm, Game& game, Microseconds delta)
 
     if (text_state_.timer_ > delay) {
         text_state_.timer_ = 0;
+
+        pfrm.speaker().play_sound("msg", 5);
 
         if (text_state_.current_word_remaining_ == 0) {
             while (*text_state_.current_word_ == ' ') {

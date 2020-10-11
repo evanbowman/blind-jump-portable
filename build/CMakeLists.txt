@@ -221,6 +221,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/spritesheet4.s
     ${DATA_DIR}/spritesheet_launch_anim.s
     ${DATA_DIR}/launch_flattened.s
+    ${DATA_DIR}/sound_msg.s
     ${DATA_DIR}/sound_pop.s
     ${DATA_DIR}/sound_coin.s
     ${DATA_DIR}/sound_bell.s
