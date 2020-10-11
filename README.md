@@ -3,6 +3,11 @@
        src="https://scan.coverity.com/projects/21790/badge.svg"/>
 </a>  
 
+<p align="center">
+  <img src="imgs_for_readme/s7.png"/>
+</p>
+
+
 # Blind Jump (portable)
 
 
