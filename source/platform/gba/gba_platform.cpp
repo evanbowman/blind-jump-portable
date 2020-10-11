@@ -2262,6 +2262,7 @@ static void audio_start()
 // up.
 static bool rtc_verify_operability(Platform& pfrm)
 {
+    return true;
     Microseconds counter = 0;
 
     const auto tm1 = pfrm.system_clock().now();

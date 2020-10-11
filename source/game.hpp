@@ -14,7 +14,7 @@
 #include "entity/details/lander.hpp"
 #include "entity/details/rubble.hpp"
 #include "entity/details/scavenger.hpp"
-#include "entity/details/terminal.hpp"
+#include "entity/details/signpost.hpp"
 #include "entity/details/transporter.hpp"
 #include "entity/effects/conglomerateShot.hpp"
 #include "entity/effects/dialogBubble.hpp"
@@ -98,7 +98,8 @@ public:
                                     Lander,
                                     CutsceneCloud,
                                     CutsceneBird,
-                                    Debris>;
+                                    Debris,
+                                    Signpost>;
 
     using EffectGroup = EntityGroup<20,
                                     Reticule,
@@ -265,9 +266,9 @@ bool operator==(const ZoneInfo&, const ZoneInfo&);
 
 enum {
     boss_0_level = 9,
-    boss_1_level = 19,
-    boss_2_level = 28,
-    boss_3_level = 39,
+    boss_1_level = 20,
+    boss_2_level = 29,
+    boss_3_level = 40,
 };
 
 

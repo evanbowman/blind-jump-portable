@@ -168,6 +168,28 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
+    const auto player_pos = game.player().get_position();
+
+    for (auto& sp : game.details().get<Signpost>()) {
+        auto pos = sp->get_position();
+
+        const auto dist_heuristic =
+            manhattan_length(player_pos, pos) < 32;
+
+        if (dist_heuristic and distance(player_pos, pos) < 24) {
+            if (length(game.effects().get<DialogBubble>()) == 0) {
+                auto dialog_pos = pos;
+                dialog_pos.y -= 6;
+                game.effects().spawn<DialogBubble>(dialog_pos, *sp);
+            }
+        } else {
+            if (length(game.effects().get<DialogBubble>())) {
+                (*game.effects().get<DialogBubble>().begin())
+                    ->try_destroy(*sp);
+            }
+        }
+    }
+
     if (game.scavenger() and game.scavenger()->visible()) {
         auto dialog_pos = game.scavenger()->get_position();
         dialog_pos.y -= 9;
@@ -176,8 +198,6 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         sc_pos.y += 16;
 
         const auto action_key = game.persistent_data().settings_.action2_key_;
-
-        const auto player_pos = game.player().get_position();
 
         const auto dist_heuristic =
             manhattan_length(player_pos, sc_pos) < 32;

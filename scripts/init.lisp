@@ -138,7 +138,7 @@
 
       (if (equal debug-mode 2)
           (progn
-            (level 19)
+            (level 20)
             (apply add-items (cons 12 debug-items-lat))))
 
       (if (equal debug-mode 3)
@@ -151,19 +151,19 @@
 
       (if (equal debug-mode 4)
           (progn
-            (level 20)
+            (level 21)
             (set-hp 0 8)
             (add-items 5 9)))
 
       (if (equal debug-mode 5)
           (progn
-            (level 28)
+            (level 29)
             (set-hp 0 7)
             (apply add-items debug-items-lat)))
 
       (if (equal debug-mode 6)
           (progn
-            (level 29)
+            (level 30)
             (set-hp 0 4)
             (apply add-items 5 9)))
 

@@ -1064,6 +1064,8 @@ void Platform::Screen::display()
             }
             if (spr.get_scale().y < 0) {
 
+            }
+
             sf_spr.setScale(x_scale,
                             y_scale);
         }

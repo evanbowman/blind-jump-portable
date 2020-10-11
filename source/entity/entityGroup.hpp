@@ -52,6 +52,12 @@ public:
             EntityBuffer<T, Capacity>>();
     }
 
+    template <int n> auto& get()
+    {
+        return TransformGroup<EntityBuffer<Members, Capacity>...>::template get<
+            n>();
+    }
+
     void clear()
     {
         this->template transform([](auto& buf) { buf.clear(); });

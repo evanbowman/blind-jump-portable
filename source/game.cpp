@@ -418,6 +418,48 @@ static constexpr const BossLevelMap level_0({{
 
 
 READ_ONLY_DATA
+static constexpr const BossLevelMap memorial_area({{
+    {},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+    {0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0},
+    {0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+    {0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0},
+    {0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0},
+}});
+
+
+READ_ONLY_DATA
+static constexpr const BossLevelMap memorial_area_gr({{
+    {},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0},
+    {0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+    {0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+}});
+
+
+READ_ONLY_DATA
 static constexpr const BossLevelMap boss_level_0({{
     {},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -785,6 +827,70 @@ void Game::init_script(Platform& pfrm)
     lisp::init(pfrm);
 
     lisp::set_var("*game*", lisp::make_userdata(this));
+
+    // Create an arbitrary enemy. Enemies with complex constructors cannot be
+    // created this way, only enemies that are simply constructible with a
+    // single cartesian coordinate as an input.
+    // lisp::set_var("enemy", lisp::make_function([] COLD (int argc) {
+    //     L_EXPECT_ARGC(argc, 3);
+    //     L_EXPECT_OP(0, integer);
+    //     L_EXPECT_OP(1, integer);
+    //     L_EXPECT_OP(2, integer);
+
+    //     const Float x = lisp::get_op(1)->integer_.value_;
+    //     const Float y = lisp::get_op(0)->integer_.value_;
+
+    //     int count = 0;
+    //     bool done = false;
+    //     const int target_id = lisp::get_op(2)->integer_.value_;
+    //     std::optional<Entity::Id> result;
+
+    //     std::cout << target_id << ", " << x << ", " << y << std::endl;
+
+    //     auto game = interp_get_game();
+    //     if (game != nullptr) {
+    //         return L_NIL;
+    //     }
+
+    //     game->enemies().transform([&](auto& buffer) {
+    //         if (done) {
+    //             return;
+    //         }
+
+    //         using T = typename std::remove_reference<decltype(buffer)>::type;
+    //         using VT = typename T::ValueType::element_type;
+
+    //         std::cout << count << std::endl;
+
+    //         if (count == target_id) {
+    //             done = true;
+    //             std::cout << "here" << std::endl;
+    //             if constexpr (not std::is_same<VT, SnakeBody>() and
+    //                 not std::is_same<VT, SnakeHead>() and
+    //                 not std::is_same<VT, SnakeTail>() and
+    //                 not std::is_same<VT, Gatekeeper>() and
+    //                 not std::is_same<VT, GatekeeperShield>()) {
+
+    //                 if (game->enemies().spawn<VT>(Vec2<Float>{x, y})) {
+    //                     result = (*game->enemies().get<VT>().begin())->id();
+    //                 }
+
+    //             }
+    //         }
+
+    //         count++;
+    //     });
+
+    //     if (result) {
+    //         return lisp::make_integer(*result);
+    //     }
+
+    //     return L_NIL;
+    // }));
+
+    lisp::set_var("detail", lisp::make_function([](int argc) {
+        return L_NIL;
+    }));
 
     lisp::set_var("level", lisp::make_function([](int argc) {
                       if (auto game = interp_get_game()) {
@@ -1290,6 +1396,12 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
                 tiles_.set_tile(x, y, level_0.get(x, y));
             }
         }
+    } else if (level() == boss_0_level + 1) {
+        for (int x = 0; x < TileMap::width; ++x) {
+            for (int y = 0; y < TileMap::height; ++y) {
+                tiles_.set_tile(x, y, memorial_area.get(x, y));
+            }
+        }
     } else {
         // Just for the sake of variety, intentionally generate
         // smaller maps sometimes.
@@ -1404,6 +1516,12 @@ using MapCoord = Vec2<TIdx>;
 using MapCoordBuf = Buffer<MapCoord, TileMap::tile_count>;
 
 
+static bool special_map(Level level)
+{
+    return level == 0 or level - 1 == boss_0_level;
+}
+
+
 COLD void Game::regenerate_map(Platform& pfrm)
 {
     ScratchBufferBulkAllocator mem(pfrm);
@@ -1441,7 +1559,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         }
     });
 
-    if (level() not_eq 0 and not is_boss_level(level())) {
+    if (not special_map(level()) and not is_boss_level(level())) {
         // Pick a random filled tile, and flood-fill around that tile in
         // the map, to produce a single connected component.
         while (true) {
@@ -1602,6 +1720,12 @@ COLD void Game::regenerate_map(Platform& pfrm)
                     grass_overlay->set_tile(
                         x, y, info->grass_pattern_->get(x, y));
                 }
+            }
+        }
+    } else if (level() - 1 == boss_0_level) {
+        for (int x = 0; x < TileMap::width; ++x) {
+            for (int y = 0; y < TileMap::height; ++y) {
+                grass_overlay->set_tile(x, y, memorial_area_gr.get(x, y));
             }
         }
     }
@@ -2231,6 +2355,16 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         tiles_.set_tile(12, 4, Tile::none);
         player_.move({409.1f, 167.2f});
         transporter_.set_position({110, 306});
+        return true;
+    } else if (level() == boss_0_level + 1) {
+
+        player_.move({380.1f, 100.2f});
+
+        details().spawn<Signpost>(Vec2<Float>{430, 100},
+                                  Signpost::Type::memorial);
+
+        transporter_.set_position({431, 277});
+
         return true;
     }
 
