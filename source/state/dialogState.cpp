@@ -6,19 +6,206 @@ void DialogState::display_time_remaining(Platform&, Game&)
 }
 
 
+void DialogState::clear_textbox(Platform& pfrm)
+{
+    const auto st = calc_screen_tiles(pfrm);
+
+    for (int x = 1; x < st.x - 1; ++x) {
+        pfrm.set_tile(Layer::overlay, x, st.y - 5, 84);
+        pfrm.set_tile(Layer::overlay, x, st.y - 4, 82);
+        pfrm.set_tile(Layer::overlay, x, st.y - 3, 82);
+        pfrm.set_tile(Layer::overlay, x, st.y - 2, 82);
+        pfrm.set_tile(Layer::overlay, x, st.y - 1, 85);
+    }
+
+    pfrm.set_tile(Layer::overlay, 0, st.y - 4, 89);
+    pfrm.set_tile(Layer::overlay, 0, st.y - 3, 89);
+    pfrm.set_tile(Layer::overlay, 0, st.y - 2, 89);
+
+    pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 4, 88);
+    pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 3, 88);
+    pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 2, 88);
+
+    pfrm.set_tile(Layer::overlay, 0, st.y - 5, 83);
+    pfrm.set_tile(Layer::overlay, 0, st.y - 1, 90);
+    pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 5, 87);
+    pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 1, 86);
+
+    text_state_.line_ = 0;
+    text_state_.pos_ = 0;
+}
+
+
+void DialogState::init_text(Platform& pfrm, LocaleString str)
+{
+    clear_textbox(pfrm);
+
+    text_state_.text_ = locale_string(pfrm, str);
+    text_state_.current_word_remaining_ = 0;
+    text_state_.current_word_ = (*text_state_.text_)->c_str();
+    text_state_.timer_ = 0;
+    text_state_.line_ = 0;
+    text_state_.pos_ = 0;
+}
+
+
+Platform::TextureCpMapper locale_texture_map();
+
+
+bool DialogState::advance_text(Platform& pfrm, Game& game, Microseconds delta)
+{
+    const auto delay = [&] {
+        if (pfrm.keyboard().pressed(game.action1_key()) or
+            pfrm.keyboard().pressed(game.action2_key())) {
+            return milliseconds(20);
+        } else {
+            return milliseconds(100);
+        }
+    }();
+
+
+    text_state_.timer_ += delta;
+
+    const auto st = calc_screen_tiles(pfrm);
+
+    if (text_state_.timer_ > delay) {
+        text_state_.timer_ = 0;
+
+        if (text_state_.current_word_remaining_ == 0) {
+            while (*text_state_.current_word_ == ' ') {
+                text_state_.current_word_++;
+                if (text_state_.pos_ < st.x - 2) {
+                    text_state_.pos_ += 1;
+                }
+            }
+            bool done = false;
+            utf8::scan([&](const utf8::Codepoint& cp, const char*, int) {
+                if (done) {
+                    return;
+                }
+                if (cp == ' ') {
+                    done = true;
+                } else {
+                    text_state_.current_word_remaining_++;
+                }
+            }, text_state_.current_word_, str_len(text_state_.current_word_));
+        }
+
+        // At this point, we know the length of the next space-delimited word in
+        // the string. Now we can print stuff...
+
+        const auto st = calc_screen_tiles(pfrm);
+        static const auto margin_sum = 2;
+        const auto text_box_width = st.x - margin_sum;
+        const auto remaining = text_box_width - text_state_.pos_;
+
+        if (remaining < text_state_.current_word_remaining_) {
+            if (text_state_.line_ == 0) {
+                text_state_.line_++;
+                text_state_.pos_ = 0;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        int bytes_consumed = 0;
+        const auto cp = utf8::getc(text_state_.current_word_, &bytes_consumed);
+
+        const auto t = pfrm.map_glyph(cp, locale_texture_map());
+        const int y_offset = text_state_.line_ == 0 ? 4 : 2;
+        const int x_offset = text_state_.pos_ + 1;
+
+        pfrm.set_tile(Layer::overlay, x_offset, st.y - y_offset, t);
+
+        text_state_.current_word_remaining_--;
+        text_state_.current_word_ += bytes_consumed;
+        text_state_.pos_++;
+
+        if (*text_state_.current_word_ == '\0') {
+            display_mode_ = DisplayMode::key_released_check2;
+        }
+    }
+
+    return true;
+}
+
+
 void DialogState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    pfrm.load_overlay_texture("overlay_dialog");
+
+    init_text(pfrm, text_[0]); // TODO: implement chains of dialog messages,
+                               // rather than just printing the first one in the
+                               // list.
 }
 
 
 void DialogState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    pfrm.load_overlay_texture("overlay");
 }
 
 
 StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     OverworldState::update(pfrm, game, delta);
+
+    switch (display_mode_) {
+    case DisplayMode::animate_in:
+        display_mode_ = DisplayMode::busy;
+        break;
+
+    case DisplayMode::busy: {
+        const bool text_busy = advance_text(pfrm, game, delta);
+        if (not text_busy) {
+            display_mode_ = DisplayMode::key_released_check1;
+        }
+    } break;
+
+    case DisplayMode::wait: {
+
+        if (pfrm.keyboard().down_transition(game.action2_key()) or
+            pfrm.keyboard().down_transition(game.action1_key())) {
+
+            clear_textbox(pfrm);
+            display_mode_ = DisplayMode::busy;
+        }
+        break;
+    }
+
+    case DisplayMode::key_released_check1:
+        if (not pfrm.keyboard().pressed(game.action2_key()) and
+            not pfrm.keyboard().pressed(game.action1_key())) {
+
+            display_mode_ = DisplayMode::wait;
+        }
+        break;
+
+    case DisplayMode::key_released_check2:
+        if (not pfrm.keyboard().down_transition(game.action2_key()) and
+            not pfrm.keyboard().down_transition(game.action1_key())) {
+
+            display_mode_ = DisplayMode::done;
+        }
+        break;
+
+    case DisplayMode::done:
+        if (pfrm.keyboard().down_transition(game.action2_key()) or
+            pfrm.keyboard().down_transition(game.action1_key())) {
+
+            display_mode_ = DisplayMode::animate_out;
+        }
+        break;
+
+    case DisplayMode::animate_out:
+        display_mode_ = DisplayMode::clear;
+        pfrm.fill_overlay(0);
+        break;
+
+    case DisplayMode::clear:
+        return state_pool().create<ActiveState>(game);
+    }
 
     return null_state();
 }

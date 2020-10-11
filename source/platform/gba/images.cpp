@@ -69,6 +69,8 @@
 //;
 #include "data/overlay_journal.h"
 //;
+#include "data/overlay_dialog.h"
+//;
 #include "data/old_poster_flattened.h"
 //;
 #include "data/postal_advert_flattened.h"
@@ -163,6 +165,8 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(charset_en_spn_fr),
 //;
     TEXTURE_INFO(overlay_journal),
+//;
+    TEXTURE_INFO(overlay_dialog),
 //;
     TEXTURE_INFO(old_poster_flattened),
 //;

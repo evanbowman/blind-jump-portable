@@ -62,13 +62,17 @@ inline bool scan(Callback&& callback, const char* data, size_t len)
 // for creating codepoint literals from strings. Unfortunately, C++ doesn't
 // offer unicode character literals... I guess I could specify them in hex, but
 // that's no fun (and not so easy for other people to read).
-inline Codepoint getc(const char* data)
+inline Codepoint getc(const char* data, int* consumed = nullptr)
 {
     std::optional<Codepoint> front;
     scan(
-        [&front](const Codepoint& cp, const char*, int) {
-            if (not front)
+        [&front, &consumed](const Codepoint& cp, const char* raw, int) {
+            if (not front) {
                 front.emplace(cp);
+                if (consumed) {
+                    *consumed = str_len(raw);
+                }
+            }
         },
         data,
         str_len(data));

@@ -182,6 +182,10 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
                 dialog_pos.y -= 6;
                 game.effects().spawn<DialogBubble>(dialog_pos, *sp);
             }
+            if (pfrm.keyboard().down_transition(game.action2_key())) {
+                game.effects().get<DialogBubble>().clear();
+                return state_pool().create<DialogState>(sp->get_dialog());
+            }
         } else {
             if (length(game.effects().get<DialogBubble>())) {
                 (*game.effects().get<DialogBubble>().begin())

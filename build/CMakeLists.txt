@@ -243,6 +243,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/sound_typewriter.s
     ${DATA_DIR}/sound_explosion2.s
     ${DATA_DIR}/overlay_journal.s
+    ${DATA_DIR}/overlay_dialog.s
     ${DATA_DIR}/spritesheet_boss0.s
     ${DATA_DIR}/spritesheet_boss1.s
     ${DATA_DIR}/spritesheet_boss2.s
@@ -488,6 +489,7 @@ if(GAMEBOY_ADVANCE)
     add_overlay(overlay_cutscene 0 0 NO)
     add_overlay(charset_en_spn_fr 0 0 NO)
     add_overlay(overlay_journal 0 0 NO)
+    add_overlay(overlay_dialog 0 0 NO)
     add_overlay(old_poster 0 0 YES)
     add_overlay(postal_advert 0 0 YES)
     add_overlay(blaster_info 0 0 YES)

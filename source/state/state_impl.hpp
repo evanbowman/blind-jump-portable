@@ -830,7 +830,11 @@ private:
 
 class DialogState : public OverworldState {
 public:
-    DialogState() : OverworldState(true) {}
+    DialogState(const LocaleString* text) :
+        OverworldState(true),
+        text_(text)
+    {
+    }
 
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
@@ -841,6 +845,36 @@ public:
 
 private:
 
+    const LocaleString* text_;
+
+    struct TextWriterState {
+        std::optional<LocalizedText> text_;
+        const char* current_word_;
+        Microseconds timer_;
+        u8 line_;
+        u8 pos_;
+        u8 current_word_remaining_;
+    };
+
+    TextWriterState text_state_;
+
+    void clear_textbox(Platform& pfrm);
+
+    // Return false when the textbox has no more room to print additional
+    // glyphs, otherwise, return true.
+    bool advance_text(Platform& pfrm, Game& game, Microseconds delta);
+    void init_text(Platform& pfrm, LocaleString str);
+
+    enum class DisplayMode {
+        animate_in,
+        busy,
+        key_released_check1,
+        key_released_check2,
+        wait,
+        done,
+        animate_out,
+        clear,
+    } display_mode_ = DisplayMode::animate_in;
 };
 
 
