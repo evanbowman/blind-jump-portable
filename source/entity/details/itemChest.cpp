@@ -37,9 +37,16 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::closed_locked:
     case State::closed_unlocked:
         if (visible()) {
-            if (pfrm.keyboard().down_transition(game.action2_key())) {
+            const auto dist_heuristic =
+                manhattan_length(player_pos, pos) < 32;
 
-                if (distance(player_pos, pos) < 24) {
+            if (dist_heuristic and distance(player_pos, pos) < 24) {
+
+                if (length(game.effects().get<DialogBubble>()) == 0) {
+                    game.effects().spawn<DialogBubble>(position_, *this);
+                }
+
+                if (pfrm.keyboard().down_transition(game.action2_key())) {
 
                     const int remaining = enemies_remaining(game);
                     if (game.peer() and
@@ -91,6 +98,10 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                         pfrm.sleep(10);
                         state_ = State::opening;
 
+                        if (length(game.effects().get<DialogBubble>())) {
+                            game.effects().get<DialogBubble>().pop();
+                        }
+
                         net_event::ItemChestOpened o;
                         o.id_.set(id());
                         net_event::transmit(pfrm, o);
@@ -98,14 +109,13 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                         pfrm.speaker().play_sound("creak", 1, position_);
                     }
                 }
+            } else {
+                if (length(game.effects().get<DialogBubble>())) {
+                    (*game.effects().get<DialogBubble>().begin())
+                        ->try_destroy(*this);
+                }
             }
         }
-
-        // fade_color_anim_.advance(sprite_, dt);
-
-        // if (sprite_.get_mix().amount_ == 0) {
-        //     sprite_.set_mix({ColorConstant::stil_de_grain, 255});
-        // }
         break;
 
     case State::opening:

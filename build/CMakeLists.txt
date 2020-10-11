@@ -50,6 +50,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/effects/conglomerateShot.cpp
   ${SOURCE_DIR}/entity/details/cutsceneCloud.cpp
   ${SOURCE_DIR}/entity/details/cutsceneBird.cpp
+  ${SOURCE_DIR}/entity/effects/dialogBubble.cpp
   ${SOURCE_DIR}/entity/bosses/gatekeeper.cpp
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/details/scavenger.cpp
@@ -136,6 +137,7 @@ set(SOURCES
   ${SOURCE_DIR}/state/itemShopState.cpp
   ${SOURCE_DIR}/state/fadeOutState.cpp
   ${SOURCE_DIR}/state/goodbyeState.cpp
+  ${SOURCE_DIR}/state/dialogState.cpp
   ${SOURCE_DIR}/state/activeState.cpp
   ${SOURCE_DIR}/state/fadeInState.cpp
   ${SOURCE_DIR}/state/warpInState.cpp)

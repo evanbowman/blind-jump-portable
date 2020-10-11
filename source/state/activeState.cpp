@@ -169,18 +169,38 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (game.scavenger() and game.scavenger()->visible()) {
+        auto dialog_pos = game.scavenger()->get_position();
+        dialog_pos.y -= 9;
+
         auto sc_pos = game.scavenger()->get_position();
         sc_pos.y += 16;
 
         const auto action_key = game.persistent_data().settings_.action2_key_;
 
-        if (pfrm.keyboard().down_transition(action_key) and
-            not pfrm.keyboard()
+        const auto player_pos = game.player().get_position();
+
+        const auto dist_heuristic =
+            manhattan_length(player_pos, sc_pos) < 32;
+
+        if (dist_heuristic and distance(player_pos, sc_pos) < 24) {
+
+            if (length(game.effects().get<DialogBubble>()) == 0) {
+                game.effects().spawn<DialogBubble>(dialog_pos,
+                                                   *game.scavenger());
+            }
+
+            if (pfrm.keyboard().down_transition(action_key) and
+                not pfrm.keyboard()
                     .any_pressed<Key::left, Key::right, Key::up, Key::down>()) {
 
-            const auto dist = distance(game.player().get_position(), sc_pos);
-            if (dist < 24) {
+                game.effects().get<DialogBubble>().pop();
+
                 return state_pool().create<ItemShopState>();
+            }
+        } else {
+            if (length(game.effects().get<DialogBubble>())) {
+                (*game.effects().get<DialogBubble>().begin())
+                    ->try_destroy(*game.scavenger());
             }
         }
     }

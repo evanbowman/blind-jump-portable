@@ -757,6 +757,10 @@ public:
 // various numeric codes, which trigger state changes within the game
 // (e.g. jumping to a boss fight/level, spawing specific enemies, setting the
 // random seed, etc.)
+//
+// Update: The game now has a lisp interpreter built in, so the command code
+// state is currently unused. A neat relic from early in the project's
+// development.
 class CommandCodeState : public State {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -821,6 +825,22 @@ private:
     Camera cached_camera_;
     std::optional<Text> text_;
     int flicker_anim_index_ = 0;
+};
+
+
+class DialogState : public OverworldState {
+public:
+    DialogState() : OverworldState(true) {}
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    void display_time_remaining(Platform& pfrm, Game& game) override;
+
+private:
+
 };
 
 
@@ -1221,6 +1241,7 @@ public:
 using StatePoolInst = StatePool<ActiveState,
                                 FadeInState,
                                 WarpInState,
+                                DialogState,
                                 PreFadePauseState,
                                 GlowFadeState,
                                 FadeOutState,
