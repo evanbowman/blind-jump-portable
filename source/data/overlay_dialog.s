@@ -3,13 +3,13 @@
 
 @=======================================================================
 @
-@	overlay_dialog, 728x8@4, 
+@	overlay_dialog, 744x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
-@	+ 91 tiles not compressed
-@	Total size: 512 + 2912 = 3424
+@	+ 93 tiles not compressed
+@	Total size: 512 + 2976 = 3488
 @
-@	Time-stamp: 2020-10-11, 14:35:59
+@	Time-stamp: 2020-10-11, 17:59:30
 @	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
@@ -17,7 +17,7 @@
 
 	.section .rodata
 	.align	2
-	.global overlay_dialogTiles		@ 2912 unsigned chars
+	.global overlay_dialogTiles		@ 2976 unsigned chars
 	.hidden overlay_dialogTiles
 overlay_dialogTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
@@ -122,13 +122,15 @@ overlay_dialogTiles:
 	.word 0x00001111,0x00001111,0x00001111,0x00001111,0x00001111,0x00001111,0x00001111,0x00001111
 	.word 0x11110000,0x11110000,0x11110000,0x11110000,0x11110000,0x11110000,0x11110000,0x11110000
 	.word 0x11110000,0x11110000,0x11100000,0x11000000,0x00000000,0x00000000,0x00000000,0x00000000
+	.word 0x11111111,0x11111111,0x11111111,0x33333331,0x13333311,0x11333111,0x11131111,0x11111111
+	.word 0x11111111,0x11111111,0x33333331,0x13333311,0x11333111,0x11131111,0x11111111,0x11111111
 
 	.section .rodata
 	.align	2
 	.global overlay_dialogPal		@ 512 unsigned chars
 	.hidden overlay_dialogPal
 overlay_dialogPal:
-	.hword 0x7C1F,0x7FFF,0x4147,0x0000,0x0000,0x0000,0x0000,0x0000
+	.hword 0x7C1F,0x7FFF,0x4147,0x2C7D,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000

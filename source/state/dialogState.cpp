@@ -97,7 +97,9 @@ bool DialogState::advance_text(Platform& pfrm, Game& game, Microseconds delta)
         const auto st = calc_screen_tiles(pfrm);
         static const auto margin_sum = 2;
         const auto text_box_width = st.x - margin_sum;
-        const auto remaining = text_box_width - text_state_.pos_;
+        const auto remaining =
+            (text_box_width - text_state_.pos_)
+            - (text_state_.line_ == 0 ? 0 : 1);
 
         if (remaining < text_state_.current_word_remaining_) {
             if (text_state_.line_ == 0) {
@@ -151,6 +153,20 @@ StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     OverworldState::update(pfrm, game, delta);
 
+    auto animate_moretext_icon = [&] {
+        static const auto duration = milliseconds(500);
+        text_state_.timer_ += delta;
+        if (text_state_.timer_ > duration) {
+            text_state_.timer_ = 0;
+            const auto st = calc_screen_tiles(pfrm);
+            if (pfrm.get_tile(Layer::overlay, st.x - 2, st.y - 2) == 91) {
+                pfrm.set_tile(Layer::overlay, st.x - 2, st.y - 2, 92);
+            } else {
+                pfrm.set_tile(Layer::overlay, st.x - 2, st.y - 2, 91);
+            }
+        }
+    };
+
     switch (display_mode_) {
     case DisplayMode::animate_in:
         display_mode_ = DisplayMode::busy;
@@ -164,9 +180,12 @@ StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
     } break;
 
     case DisplayMode::wait: {
+        animate_moretext_icon();
 
         if (pfrm.keyboard().down_transition(game.action2_key()) or
             pfrm.keyboard().down_transition(game.action1_key())) {
+
+            text_state_.timer_ = 0;
 
             clear_textbox(pfrm);
             display_mode_ = DisplayMode::busy;
@@ -178,6 +197,7 @@ StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (not pfrm.keyboard().pressed(game.action2_key()) and
             not pfrm.keyboard().pressed(game.action1_key())) {
 
+            text_state_.timer_ = seconds(1);
             display_mode_ = DisplayMode::wait;
         }
         break;
@@ -186,11 +206,13 @@ StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (not pfrm.keyboard().down_transition(game.action2_key()) and
             not pfrm.keyboard().down_transition(game.action1_key())) {
 
+            text_state_.timer_ = seconds(1);
             display_mode_ = DisplayMode::done;
         }
         break;
 
     case DisplayMode::done:
+        animate_moretext_icon();
         if (pfrm.keyboard().down_transition(game.action2_key()) or
             pfrm.keyboard().down_transition(game.action1_key())) {
 
