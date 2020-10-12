@@ -862,7 +862,11 @@ private:
 
     // Return false when the textbox has no more room to print additional
     // glyphs, otherwise, return true.
-    bool advance_text(Platform& pfrm, Game& game, Microseconds delta);
+    bool advance_text(Platform& pfrm,
+                      Game& game,
+                      Microseconds delta,
+                      bool sfx = true);
+
     void init_text(Platform& pfrm, LocaleString str);
 
     enum class DisplayMode {

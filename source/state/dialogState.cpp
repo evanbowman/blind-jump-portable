@@ -52,7 +52,10 @@ void DialogState::init_text(Platform& pfrm, LocaleString str)
 Platform::TextureCpMapper locale_texture_map();
 
 
-bool DialogState::advance_text(Platform& pfrm, Game& game, Microseconds delta)
+bool DialogState::advance_text(Platform& pfrm,
+                               Game& game,
+                               Microseconds delta,
+                               bool sfx)
 {
     const auto delay = milliseconds(80);
 
@@ -63,7 +66,9 @@ bool DialogState::advance_text(Platform& pfrm, Game& game, Microseconds delta)
     if (text_state_.timer_ > delay) {
         text_state_.timer_ = 0;
 
-        pfrm.speaker().play_sound("msg", 5);
+        if (sfx) {
+            pfrm.speaker().play_sound("msg", 5);
+        }
 
         if (text_state_.current_word_remaining_ == 0) {
             while (*text_state_.current_word_ == ' ') {
@@ -170,6 +175,20 @@ StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
         const bool text_busy = advance_text(pfrm, game, delta);
         if (not text_busy) {
             display_mode_ = DisplayMode::key_released_check1;
+        } else {
+            if (pfrm.keyboard().down_transition(game.action2_key()) or
+                pfrm.keyboard().down_transition(game.action1_key())) {
+
+                while (advance_text(pfrm, game, delta, false)) {
+                    if (display_mode_ not_eq DisplayMode::busy) {
+                        break;
+                    }
+                }
+
+                if (display_mode_ == DisplayMode::busy) {
+                    display_mode_ = DisplayMode::key_released_check1;
+                }
+            }
         }
     } break;
 
