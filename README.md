@@ -3,6 +3,15 @@
        src="https://scan.coverity.com/projects/21790/badge.svg"/>
 </a>  
 
+<p align="center">
+  <img src="imgs_for_readme/heading.png"/>
+</p>
+
+<p align="center">
+  <img src="imgs_for_readme/s7.png"/>
+</p>
+
+
 # Blind Jump (portable)
 
 
@@ -24,6 +33,8 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Implementation](#implementation)
       * [Scripting](#scripting)
    * [Building](#building)
+   * [Contributing](#contributing)
+      * [Music](#music)
    * [Localization](#localization)
    * [Security](#security)
    * [Downloads](#downloads)
@@ -103,6 +114,16 @@ make
 NOTE: you can also get a containerized build environment from the link below, although you'll have to remember to run `git pull` when entering the container, because I built the container with a frozen version of the repository. If this is inconvenient for you, feel free to build the container yourself using the steps above.
 
 https://hub.docker.com/r/evanbowman/blind_jump_build
+
+[Contents↑](#contents)
+
+## Contributing
+
+The best way to help this project along, would be to download and play the game. All suggestions for improvements are welcome.
+
+### Music
+
+Because adding new music to the GBA version of the game is tedious/complicated, we should take a moment to describe the methodology for formatting and compiling sound files. The Gameboy Advance hardware more-or-less requires digital audio data to be formatted as 8-bit signed wav files. To add new sound files to the project, the data will need to be converted to headerless 8-bit signed PCM, at 16kHz. Then, the data will need to be converted to an ASM file, and compiled into the project. Evan Bowman hacked together a tool for this, available here: https://github.com/evanbowman/raw_to_asm. The raw_to_asm tool should be run from the BlindJump project root. The music/sound file should be exported to the required raw format, with a .raw extension, and placed in the sounds/ directory. Then, you should run raw_to_asm, with the name of the sound file, minus the .raw extension (`raw_to_asm music`, where music.raw exists in sounds). The program will write header and source files containing an assembler representation of the music data to the source/data/ directory. You will need to add the new source file to CMakeLists.txt, and add some new declarations for the sound or music data to gba_platform.cpp. Also, remember that GBA cartridges should be no larger than 32mb
 
 [Contents↑](#contents)
 
