@@ -1043,7 +1043,7 @@ private:
                         difficulty += 1;
                     }
                 } else if (dir < 0) {
-                    if (difficulty > 0) {
+                    if (difficulty > 1) {
                         difficulty -= 1;
                     }
                 }
