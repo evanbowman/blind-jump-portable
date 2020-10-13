@@ -385,7 +385,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
         timer_ += delta;
         if (timer_ >= transition_duration) {
             timer_ = 0;
-            return state_pool().create<ActiveState>(game);
+            return state_pool().create<ActiveState>();
         } else {
             // if (pfrm.keyboard().pressed<quick_select_inventory_key>()) {
             //     timer_ = transition_duration - timer_;

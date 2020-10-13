@@ -66,6 +66,12 @@ void ItemShopState::enter(Platform& pfrm, Game& game, State& prev_state)
     pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 1, 420);
 
     game.camera().set_speed(2.8f);
+
+    if (display_mode_ == DisplayMode::animate_in_buy or
+        display_mode_ == DisplayMode::animate_in_sell) {
+        heading_text_.reset();
+        buy_sell_text_.reset();
+    }
 }
 
 
@@ -74,7 +80,14 @@ void ItemShopState::exit(Platform& pfrm, Game& game, State& next_state)
     OverworldState::exit(pfrm, game, next_state);
 
     buy_item_bar_.reset();
+    buy_options_bar_.reset();
     sell_item_bar_.reset();
+    sell_options_bar_.reset();
+    buy_sell_text_.reset();
+    heading_text_.reset();
+    buy_sell_icon_.reset();
+    info_icon_.reset();
+    coin_icon_.reset();
     selector_.reset();
     score_.reset();
 
@@ -558,7 +571,8 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 auto offset = buy_page_num_ * 3 + selector_pos_;
                 if (offset < (int)game.scavenger()->inventory_.size()) {
-                    if (game.score() >= (u64)price) {
+                    if (price not_eq 0 and
+                        game.score() >= (u64)price) {
                         game.score() -= price;
 
                         auto it = game.scavenger()->inventory_.begin() + offset;
@@ -566,6 +580,20 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                         game.inventory().push_item(pfrm, game, item, false);
                     }
+                }
+            } else if (selector_x_ == 2) {
+                auto resume_state =
+                    make_deferred_state<ItemShopState>(DisplayMode::animate_in_buy,
+                                                       selector_pos_,
+                                                       buy_page_num_);
+
+                const auto item =
+                    get_buy_item(game, buy_page_num_, selector_pos_);
+
+                if (auto handler = inventory_item_handler(item)) {
+                    const LocaleString* dialog = handler->scavenger_dialog_;
+                    return state_pool().create<DialogState>(resume_state,
+                                                            dialog);
                 }
             }
             display_mode_ = DisplayMode::deflate_buy_options;
@@ -765,9 +793,12 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
                 const auto sale_item =
                     get_sale_item(game, sell_page_num_, selector_pos_);
 
-                const auto price = base_price(sale_item);
-
                 int skip = sell_page_num_ * 3 + selector_pos_;
+
+                const auto price = base_price(sale_item);
+                if (price == 0) {
+                    goto DONE;
+                }
 
                 for (int page = 0; page < Inventory::pages; ++page) {
                     for (int row = 0; row < Inventory::rows; ++row) {
@@ -790,7 +821,20 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
             DONE:;
 
             } else if (selector_x_ == 2) {
-                // item info
+                const auto mode_resume = DisplayMode::animate_in_sell;
+                auto resume_state =
+                    make_deferred_state<ItemShopState>(mode_resume,
+                                                       selector_pos_,
+                                                       sell_page_num_);
+
+                const auto sale_item =
+                    get_sale_item(game, sell_page_num_, selector_pos_);
+
+                if (auto handler = inventory_item_handler(sale_item)) {
+                    const LocaleString* dialog = handler->scavenger_dialog_;
+                    return state_pool().create<DialogState>(resume_state,
+                                                            dialog);
+                }
             }
             display_mode_ = DisplayMode::deflate_sell_options;
             timer_ = 0;
@@ -937,7 +981,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             buy_item_bar_->set_display_percentage(0.f);
 
-            return state_pool().create<ActiveState>(game);
+            return state_pool().create<ActiveState>();
         }
     } break;
 
@@ -954,7 +998,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             sell_item_bar_->set_display_percentage(0.f);
 
-            return state_pool().create<ActiveState>(game);
+            return state_pool().create<ActiveState>();
         }
     } break;
 

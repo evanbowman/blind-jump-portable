@@ -184,7 +184,9 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
             if (pfrm.keyboard().down_transition(game.action2_key())) {
                 game.effects().get<DialogBubble>().clear();
-                return state_pool().create<DialogState>(sp->get_dialog());
+                auto future_state = make_deferred_state<ActiveState>();
+                return state_pool().create<DialogState>(future_state,
+                                                        sp->get_dialog());
             }
         } else {
             if (length(game.effects().get<DialogBubble>())) {
@@ -219,7 +221,13 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 game.effects().get<DialogBubble>().pop();
 
-                return state_pool().create<ItemShopState>();
+                auto future_state = make_deferred_state<ItemShopState>();
+                static const LocaleString scavenger_dialog[] = {
+                    LocaleString::scavenger_shop,
+                    LocaleString::empty
+                };
+                return state_pool().create<DialogState>(future_state,
+                                                        scavenger_dialog);
             }
         } else {
             if (length(game.effects().get<DialogBubble>())) {

@@ -120,7 +120,7 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
         if (counter_ > fade_duration) {
             pfrm.screen().fade(0.f);
-            return state_pool().create<ActiveState>(game);
+            return state_pool().create<ActiveState>();
 
         } else {
             const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);

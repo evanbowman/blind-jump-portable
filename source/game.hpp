@@ -37,7 +37,7 @@
 #include "entity/peerPlayer.hpp"
 #include "entity/player.hpp"
 #include "function.hpp"
-#include "localization.hpp"
+#include "localeString.hpp"
 #include "persistentData.hpp"
 #include "platform/platform.hpp"
 #include "powerup.hpp"

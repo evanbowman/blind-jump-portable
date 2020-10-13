@@ -25,7 +25,7 @@ LogfileViewerState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     if (pfrm.keyboard().down_transition<Key::alt_1>()) {
-        return state_pool().create<ActiveState>(game);
+        return state_pool().create<ActiveState>();
     } else if (pfrm.keyboard().down_transition<Key::down>()) {
         offset_ += screen_tiles.x;
         repaint(pfrm, offset_);

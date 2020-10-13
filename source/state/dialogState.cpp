@@ -229,7 +229,13 @@ StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (pfrm.keyboard().down_transition(game.action2_key()) or
             pfrm.keyboard().down_transition(game.action1_key())) {
 
-            display_mode_ = DisplayMode::animate_out;
+            if (text_[1] not_eq LocaleString::empty) {
+                ++text_;
+                init_text(pfrm, *text_);
+                display_mode_ = DisplayMode::animate_in;
+            } else {
+                display_mode_ = DisplayMode::animate_out;
+            }
         }
         break;
 
@@ -239,7 +245,7 @@ StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
         break;
 
     case DisplayMode::clear:
-        return state_pool().create<ActiveState>(game);
+        return exit_state_();
     }
 
     return null_state();

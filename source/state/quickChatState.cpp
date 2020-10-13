@@ -31,7 +31,7 @@ StatePtr QuickChatState::update(Platform& pfrm, Game& game, Microseconds delta)
     OverworldState::update(pfrm, game, delta);
 
     if (pfrm.keyboard().down_transition<inventory_key>()) {
-        return state_pool().create<ActiveState>(game);
+        return state_pool().create<ActiveState>();
     }
 
     if (pfrm.keyboard().down_transition<Key::up>()) {

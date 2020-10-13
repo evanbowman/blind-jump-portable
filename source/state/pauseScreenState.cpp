@@ -164,7 +164,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.speaker().play_sound("select", 1);
             switch (strs_[cursor_loc_]) {
             case LocaleString::menu_resume:
-                return state_pool().create<ActiveState>(game);
+                return state_pool().create<ActiveState>();
 
             case LocaleString::menu_settings:
                 return state_pool().create<EditSettingsState>(
@@ -192,7 +192,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
         } else if (pfrm.keyboard().down_transition<Key::start>()) {
             cursor_loc_ = 0;
-            return state_pool().create<ActiveState>(game);
+            return state_pool().create<ActiveState>();
         } else if (pfrm.keyboard().down_transition<Key::alt_1>()) {
             if (++developer_mode_activation_counter_ == 15) {
                 erase_cursor(pfrm);

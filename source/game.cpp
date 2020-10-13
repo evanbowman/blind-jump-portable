@@ -2205,7 +2205,7 @@ int base_price(Item::Type item)
         return 100;
 
     default:
-        return 1;
+        return 0;
     }
 }
 
@@ -2341,6 +2341,50 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     enemies_.transform(clear_entities);
     details_.transform(clear_entities);
     effects_.transform(clear_entities);
+
+    if (scavenger_) {
+        if (is_boss_level(level() - 1)) {
+            switch (level() - 1) {
+            case boss_0_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z2);
+                break;
+
+            case boss_1_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z3);
+                break;
+
+            case boss_2_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z4);
+                break;
+            }
+        }
+
+        auto& sc_inventory = scavenger_->inventory_;
+        const u32 item_count = rng::choice<7>(rng::critical_state);
+        while (sc_inventory.size() < item_count) {
+            auto item = static_cast<Item::Type>(
+                rng::choice<static_cast<int>(Item::Type::count)>(
+                    rng::critical_state));
+
+            if ((int)item < (int)Item::Type::inventory_item_start or
+                item_is_persistent(item) or item == Item::Type::long_jump_z2 or
+                item == Item::Type::long_jump_z3 or
+                item == Item::Type::long_jump_z4) {
+
+                continue;
+            }
+
+            sc_inventory.push_back(item);
+        }
+
+        sc_inventory.push_back(Item::Type::orange);
+
+        if (rng::choice<2>(rng::critical_state)) {
+            sc_inventory.push_back(Item::Type::orange);
+        }
+
+        rng::shuffle(sc_inventory, rng::critical_state);
+    }
 
     if (level() == 0) {
         details().spawn<Lander>(Vec2<Float>{409.f, 112.f});
@@ -2665,50 +2709,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 }
             }
         }
-    }
-
-    if (scavenger_) {
-        if (is_boss_level(level() - 1)) {
-            switch (level() - 1) {
-            case boss_0_level:
-                scavenger_->inventory_.push_back(Item::Type::long_jump_z2);
-                break;
-
-            case boss_1_level:
-                scavenger_->inventory_.push_back(Item::Type::long_jump_z3);
-                break;
-
-            case boss_2_level:
-                scavenger_->inventory_.push_back(Item::Type::long_jump_z4);
-                break;
-            }
-        }
-
-        auto& sc_inventory = scavenger_->inventory_;
-        const u32 item_count = rng::choice<7>(rng::critical_state);
-        while (sc_inventory.size() < item_count) {
-            auto item = static_cast<Item::Type>(
-                rng::choice<static_cast<int>(Item::Type::count)>(
-                    rng::critical_state));
-
-            if ((int)item < (int)Item::Type::inventory_item_start or
-                item_is_persistent(item) or item == Item::Type::long_jump_z2 or
-                item == Item::Type::long_jump_z3 or
-                item == Item::Type::long_jump_z4) {
-
-                continue;
-            }
-
-            sc_inventory.push_back(item);
-        }
-
-        sc_inventory.push_back(Item::Type::orange);
-
-        if (rng::choice<2>(rng::critical_state)) {
-            sc_inventory.push_back(Item::Type::orange);
-        }
-
-        rng::shuffle(sc_inventory, rng::critical_state);
     }
 
     return true;
