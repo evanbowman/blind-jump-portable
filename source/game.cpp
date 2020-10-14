@@ -2107,7 +2107,6 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
          boss_2_level}};
 
-
     Buffer<EnemyInfo*, 100> distribution;
 
     while (not distribution.full()) {
@@ -2135,6 +2134,23 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         ++i;
         choice->max_allowed_--;
         choice->spawn_();
+    }
+
+    // Traps:
+    // We'll spawn traps based on the number of remaining free map slots.
+    if (game.level() > boss_0_level + 4 and game.level() < boss_2_level) {
+        const int count = std::min(u32([&] {
+            if (free_spots.size() < 65) {
+                return 2;
+            } else {
+                return 3;
+            }
+        }()), free_spots.size() / 25);
+        for (int i = 0; i < count; ++i) {
+            if (rng::choice<2>(rng::critical_state)) {
+                spawn_entity<Compactor>(pfrm, free_spots, game.enemies());
+            }
+        }
     }
 }
 

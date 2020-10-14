@@ -210,6 +210,12 @@ void OverworldState::receive(const net_event::EnemyStateSync& s,
             return;
         }
     }
+    for (auto& e : game.enemies().get<Compactor>()) {
+        if (e->id() == s.id_.get()) {
+            e->sync(s);
+            return;
+        }
+    }
 }
 
 

@@ -76,6 +76,23 @@ void Player::injured(Platform& pf, Game& game, Health damage)
 }
 
 
+void Player::on_collision(Platform& pf, Game& game, Compactor& compactor)
+{
+    if (static_cast<int>(compactor.state()) <
+        static_cast<int>(Compactor::State::landing)) {
+        // If the compactor is still in its falling animation, we do not want to
+        // injure th player.
+        return;
+    }
+
+    if (not Player::is_invulnerable()) {
+        game.camera().shake();
+    }
+
+    Player::injured(pf, game, Health(2));
+}
+
+
 void Player::on_collision(Platform& pf, Game& game, ConglomerateShot&)
 {
     if (not Player::is_invulnerable()) {

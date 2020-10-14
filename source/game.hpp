@@ -33,6 +33,7 @@
 #include "entity/enemies/snake.hpp"
 #include "entity/enemies/theif.hpp"
 #include "entity/enemies/turret.hpp"
+#include "entity/enemies/compactor.hpp"
 #include "entity/entityGroup.hpp"
 #include "entity/peerPlayer.hpp"
 #include "entity/player.hpp"
@@ -89,7 +90,8 @@ public:
                                    Gatekeeper,
                                    GatekeeperShield,
                                    Sinkhole,
-                                   Twin>;
+                                   Twin,
+                                   Compactor>;
 
     using DetailGroup = EntityGroup<30,
                                     ItemChest,

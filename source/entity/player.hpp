@@ -19,6 +19,7 @@ class Theif;
 class OrbShot;
 class SnakeHead;
 class Wanderer;
+class Compactor;
 class WandererBigLaser;
 class ConglomerateShot;
 
@@ -58,6 +59,7 @@ public:
     void on_collision(Platform& pf, Game& game, ConglomerateShot&);
     void on_collision(Platform& pf, Game& game, WandererBigLaser&);
     void on_collision(Platform& pf, Game& game, Wanderer&);
+    void on_collision(Platform& pf, Game& game, Compactor&);
     void on_collision(Platform& pf, Game& game, SnakeHead&);
     void on_collision(Platform& pf, Game& game, OrbShot&);
     void on_collision(Platform& pf, Game& game, Enemy&);
