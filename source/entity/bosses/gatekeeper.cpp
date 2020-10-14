@@ -449,7 +449,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 ++shield_radius_;
 
                 if (shield_radius_ == max_shield_radius - 30) {
-                    game.camera().shake(5);
+                    game.camera().shake(6);
                     Buffer<GatekeeperShield*, 2> shields;
                     for (auto& shield :
                          game.enemies().get<GatekeeperShield>()) {

@@ -226,6 +226,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/sound_pop.s
     ${DATA_DIR}/sound_coin.s
     ${DATA_DIR}/sound_bell.s
+    ${DATA_DIR}/sound_thud.s
     ${DATA_DIR}/sound_click.s
     ${DATA_DIR}/sound_heart.s
     ${DATA_DIR}/sound_creak.s

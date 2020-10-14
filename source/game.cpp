@@ -2052,6 +2052,75 @@ void spawn_entity(Platform& pf,
 
 
 COLD static void
+spawn_compactors(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
+{
+    if (game.level() > boss_0_level + 4 and game.level() < boss_2_level) {
+        const int count = std::min(u32([&] {
+            if (free_spots.size() < 65) {
+                return 2;
+            } else {
+                return 3;
+            }
+        }()), free_spots.size() / 25);
+
+        auto wall_tiles = lisp::get_var("wall-tiles-list");
+        auto edge_tiles = lisp::get_var("edge-tiles-list");
+
+        for (int i = 0; i < count and free_spots.size() > 0; ++i) {
+            if (rng::choice<2>(rng::critical_state)) {
+                int tries = 0;
+
+                static const int max_tries = 512;
+
+                while (tries < max_tries) {
+                    auto selected = &free_spots[rng::choice(free_spots.size(),
+                                                            rng::critical_state)];
+                    const int x = selected->x;
+                    const int y = selected->y;
+
+                    tries++;
+
+                    const auto t = game.tiles().get_tile(x, y);
+                    int edge_count = 0;
+                    auto detect_edge = [&](int x, int y) {
+                        auto tile = game.tiles().get_tile(x, y);
+                        if (is_edge_tile(wall_tiles, edge_tiles, tile)) {
+                            ++edge_count;
+                        }
+                    };
+                    if (not is_edge_tile(wall_tiles, edge_tiles, t)) {
+                        detect_edge(x - 1, y);
+                        detect_edge(x + 1, y);
+                        detect_edge(x, y - 1);
+                        detect_edge(x, y + 1);
+
+                        if (edge_count > 2) {
+                            game.enemies().spawn<Compactor>(world_coord(*selected));
+                            free_spots.erase(selected);
+                            break;
+                        }
+                    }
+                }
+
+                // We tried to find a little nook to place the compactor, but
+                // failed, let's just put it on any edge tile.
+                if (tries == max_tries) {
+                    const s8 x = rng::choice<TileMap::width>(rng::critical_state);
+                    const s8 y = rng::choice<TileMap::height>(rng::critical_state);
+
+                    const auto t = game.tiles().get_tile(x, y);
+                    if (is_edge_tile(wall_tiles, edge_tiles, t)) {
+                        const auto wc = to_world_coord(Vec2<TIdx>{x, y});
+                        game.enemies().spawn<Compactor>(wc);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+COLD static void
 spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 {
     // We want to spawn enemies based on both the difficulty of level, and the
@@ -2136,22 +2205,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         choice->spawn_();
     }
 
-    // Traps:
-    // We'll spawn traps based on the number of remaining free map slots.
-    if (game.level() > boss_0_level + 4 and game.level() < boss_2_level) {
-        const int count = std::min(u32([&] {
-            if (free_spots.size() < 65) {
-                return 2;
-            } else {
-                return 3;
-            }
-        }()), free_spots.size() / 25);
-        for (int i = 0; i < count; ++i) {
-            if (rng::choice<2>(rng::critical_state)) {
-                spawn_entity<Compactor>(pfrm, free_spots, game.enemies());
-            }
-        }
-    }
+    spawn_compactors(pfrm, game, free_spots);
 }
 
 

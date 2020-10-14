@@ -111,11 +111,14 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
         } else {
             sprite_.set_position(position_);
             state_ = State::landing;
+
+            pfrm.speaker().play_sound("thud", 5);
+
             pfrm.sleep(4);
             medium_explosion(pfrm, game, position_);
             sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
             sprite_.set_texture_index(107);
-            game.camera().shake(14);
+            game.camera().shake(16);
             game.effects().spawn<Particle>(position_, current_zone(game).energy_glow_color_);
             game.effects().spawn<Particle>(position_, current_zone(game).energy_glow_color_);
             game.effects().spawn<Particle>(position_, current_zone(game).energy_glow_color_);

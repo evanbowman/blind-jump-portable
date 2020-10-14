@@ -895,5 +895,5 @@ void Twin::on_death(Platform& pf, Game& game)
         big_explosion(pf, game, {position_.x + 30, position_.y + 30});
     });
 
-    game.camera().shake(16);
+    game.camera().shake(18);
 }
