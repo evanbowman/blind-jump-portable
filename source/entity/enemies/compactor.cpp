@@ -203,6 +203,8 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
 
 void Compactor::injured(Platform& pf, Game& game, Health amount)
 {
+    pf.sleep(2);
+
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
     debit_health(pf, amount);

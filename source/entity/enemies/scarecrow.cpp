@@ -370,6 +370,10 @@ void Scarecrow::sync(const net_event::EnemyStateSync& state)
 
 void Scarecrow::injured(Platform& pf, Game& game, Health amount)
 {
+    if (sprite_.get_mix().amount_ < 180) {
+        pf.sleep(2);
+    }
+
     debit_health(pf, amount);
 
     if (alive()) {

@@ -32,6 +32,7 @@ public:
     void shoot(Platform& pf, Game& game);
 
     void set_visible(bool visible);
+    bool visible() const { return visible_; }
 
     // NOTE: (3,milliseconds(150)) works well
     void accelerate(u8 max_lasers, Microseconds reload_interval);

@@ -574,9 +574,14 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         external_force_.reset();
     }
 
+    const Vec2<Float> move_vec = {
+        (l_speed_ + -r_speed_) * MOVEMENT_RATE_CONSTANT,
+        (u_speed_ + -d_speed_) * MOVEMENT_RATE_CONSTANT
+    };
+
     Vec2<Float> new_pos{
-        position_.x - ((l_speed_ + -r_speed_) * dt * MOVEMENT_RATE_CONSTANT),
-        position_.y - ((u_speed_ + -d_speed_) * dt * MOVEMENT_RATE_CONSTANT)};
+        position_.x - (move_vec.x * dt),
+        position_.y - (move_vec.y * dt)};
     Entity::set_position(new_pos);
     sprite_.set_position(new_pos);
     shadow_.set_position(new_pos);

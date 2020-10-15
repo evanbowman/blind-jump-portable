@@ -848,7 +848,7 @@ public:
 private:
 
     DeferredState exit_state_;
-    
+
     const LocaleString* text_;
 
     struct TextWriterState {
@@ -1183,9 +1183,9 @@ private:
         exit_left,
         exit_right,
     };
-        
+
 public:
-    
+
     ItemShopState() : OverworldState(false)
     {
     }
@@ -1198,7 +1198,7 @@ public:
     {
         display_mode_ = mode;
         selector_pos_ = selector_pos;
-        
+
         if (mode == DisplayMode::animate_in_buy) {
             buy_page_num_ = page;
         } else if (mode == DisplayMode::animate_in_sell) {
@@ -1208,7 +1208,7 @@ public:
             while (true) ;
         }
     }
-    
+
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 

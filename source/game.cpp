@@ -2817,3 +2817,20 @@ bool share_item(Platform& pfrm,
     }
     return false;
 }
+
+
+SimulatedMiles distance_travelled(Level level)
+{
+    static const SimulatedMiles low_earth_orbit = 1200;
+    static const SimulatedMiles distance_to_moon = 238900;
+    static const auto total_distance = distance_to_moon - low_earth_orbit;
+
+    if (level == 0) {
+        return low_earth_orbit;
+    } else {
+        constexpr Level num_levels = boss_max_level - 1;
+        static_assert(num_levels not_eq 0);
+        const auto fraction_levels_done = level / Float(num_levels);
+        return total_distance * fraction_levels_done;
+    }
+}
