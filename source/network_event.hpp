@@ -285,7 +285,7 @@ struct EnemyStateSync {
 
 struct SyncSeed {
     Header header_;
-    HostInteger<rng::Generator> random_state_;
+    HostInteger<rng::LinearGenerator> random_state_;
 
     u8 unused_[7];
 
@@ -298,7 +298,7 @@ struct SyncSeed {
 // message, which are broadcast by the host during other game states.
 struct NewLevelSyncSeed {
     Header header_;
-    HostInteger<rng::Generator> random_state_;
+    HostInteger<rng::LinearGenerator> random_state_;
 
     // Technically, this has nothing to do with the seed value. But we have lots
     // of extra room in the message, to sync up other stuff.

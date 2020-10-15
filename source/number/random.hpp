@@ -8,35 +8,35 @@
 namespace rng {
 
 using Value = s32;
-using Generator = Value;
+using LinearGenerator = Value;
 
 // NOTE: This state should be used for level generation, and for the internal
 // state machines for enemies. This state needs to be tightly synchronized
 // between multiplayer peers, so do not use this generator for visual effects,
 // game state changes only!
-extern Generator critical_state;
+extern LinearGenerator critical_state;
 
 // NOTE: use the utility state whenever you need a random value, and you don't
 // care whether the value is synchronized across multiplayer games.
-extern Generator utility_state;
+extern LinearGenerator utility_state;
 
 
-Value get(Generator& gen);
+Value get(LinearGenerator& gen);
 
 
-template <Value N> Value choice(Generator& gen)
+template <Value N> Value choice(LinearGenerator& gen)
 {
     return get(gen) % N;
 }
 
 
-inline Value choice(Value n, Generator& gen)
+inline Value choice(Value n, LinearGenerator& gen)
 {
     return get(gen) % n;
 }
 
 
-template <u32 offset> Float sample(Float n, Generator& gen)
+template <u32 offset> Float sample(Float n, LinearGenerator& gen)
 {
     if (choice<2>(gen)) {
         return n + Float(choice<offset>(gen));
@@ -48,7 +48,7 @@ template <u32 offset> Float sample(Float n, Generator& gen)
 
 
 template <u32 offset>
-Vec2<Float> sample(const Vec2<Float>& position, Generator& gen)
+Vec2<Float> sample(const Vec2<Float>& position, LinearGenerator& gen)
 {
     auto result = position;
 
@@ -60,7 +60,7 @@ Vec2<Float> sample(const Vec2<Float>& position, Generator& gen)
 
 
 template <typename T, u32 size>
-void shuffle(Buffer<T, size>& buffer, Generator& gen)
+void shuffle(Buffer<T, size>& buffer, LinearGenerator& gen)
 {
     int i;
     const int n = buffer.size();
