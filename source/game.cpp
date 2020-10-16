@@ -1276,10 +1276,10 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     persistent_data_.inventory_ = inventory_;
     persistent_data_.store_powerups(powerups_);
 
+    lisp::dostring(pfrm.load_file_contents("scripts", "pre_levelgen.lisp"));
+
     pfrm.load_tile0_texture(current_zone(*this).tileset0_name_);
     pfrm.load_tile1_texture(current_zone(*this).tileset1_name_);
-
-    lisp::dostring(pfrm.load_file_contents("scripts", "pre_levelgen.lisp"));
 
     auto boss_level = get_boss_level(level());
     if (boss_level) {
