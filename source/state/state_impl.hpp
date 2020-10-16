@@ -206,7 +206,7 @@ private:
 
 class ActiveState : public OverworldState {
 public:
-    ActiveState(Game& game, bool camera_tracking = true)
+    ActiveState(bool camera_tracking = true)
         : OverworldState(camera_tracking)
     {
     }
@@ -830,8 +830,10 @@ private:
 
 class DialogState : public OverworldState {
 public:
-    DialogState(const LocaleString* text) :
+    DialogState(DeferredState exit_state,
+                const LocaleString* text) :
         OverworldState(true),
+        exit_state_(exit_state),
         text_(text)
     {
     }
@@ -844,6 +846,8 @@ public:
     void display_time_remaining(Platform& pfrm, Game& game) override;
 
 private:
+
+    DeferredState exit_state_;
 
     const LocaleString* text_;
 
@@ -862,7 +866,11 @@ private:
 
     // Return false when the textbox has no more room to print additional
     // glyphs, otherwise, return true.
-    bool advance_text(Platform& pfrm, Game& game, Microseconds delta);
+    bool advance_text(Platform& pfrm,
+                      Game& game,
+                      Microseconds delta,
+                      bool sfx = true);
+
     void init_text(Platform& pfrm, LocaleString str);
 
     enum class DisplayMode {
@@ -1035,7 +1043,7 @@ private:
                         difficulty += 1;
                     }
                 } else if (dir < 0) {
-                    if (difficulty > 0) {
+                    if (difficulty > 1) {
                         difficulty -= 1;
                     }
                 }
@@ -1157,18 +1165,6 @@ private:
 
 
 class ItemShopState : public OverworldState {
-public:
-    ItemShopState() : OverworldState(false)
-    {
-    }
-
-    void enter(Platform& pfrm, Game& game, State& prev_state) override;
-    void exit(Platform& pfrm, Game& game, State& next_state) override;
-
-    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
-
-    virtual void display_time_remaining(Platform&, Game&) override;
-
 private:
     enum class DisplayMode {
         wait,
@@ -1186,7 +1182,42 @@ private:
         to_buy_menu,
         exit_left,
         exit_right,
-    } display_mode_ = DisplayMode::wait;
+    };
+
+public:
+
+    ItemShopState() : OverworldState(false)
+    {
+    }
+
+    // When the users selects the item info button, the item shop state exits,
+    // and transitions to a dialog state, which holds the parameters needed to
+    // recreate the item shop state when the dialog finishes.
+    ItemShopState(DisplayMode mode, int selector_pos, int page) :
+        OverworldState(false)
+    {
+        display_mode_ = mode;
+        selector_pos_ = selector_pos;
+
+        if (mode == DisplayMode::animate_in_buy) {
+            buy_page_num_ = page;
+        } else if (mode == DisplayMode::animate_in_sell) {
+            sell_page_num_ = page;
+        } else {
+            // error in program logic.
+            while (true) ;
+        }
+    }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    virtual void display_time_remaining(Platform&, Game&) override;
+
+private:
+    DisplayMode display_mode_ = DisplayMode::wait;
 
     void show_sidebar(Platform& pfrm);
 
@@ -1378,6 +1409,10 @@ struct InventoryItemHandler {
     int icon_;
     StatePtr (*callback_)(Platform& pfrm, Game& game);
     LocaleString description_;
+    LocaleString scavenger_dialog_[2] = {
+        LocaleString::sc_dialog_skip,
+        LocaleString::empty
+    };
     enum { no = 0, yes, custom } single_use_ = no;
 };
 

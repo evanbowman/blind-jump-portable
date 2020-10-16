@@ -1,7 +1,7 @@
 #pragma once
 
 #include "entity/enemies/enemy.hpp"
-#include "localization.hpp"
+#include "localeString.hpp"
 
 
 class LaserExplosion;

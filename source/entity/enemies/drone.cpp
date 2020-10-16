@@ -213,6 +213,10 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
 
 void Drone::injured(Platform& pf, Game& game, Health amount)
 {
+    if (sprite_.get_mix().amount_ < 180) {
+        pf.sleep(2);
+    }
+
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
     debit_health(pf, amount);

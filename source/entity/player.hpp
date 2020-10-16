@@ -19,6 +19,7 @@ class Theif;
 class OrbShot;
 class SnakeHead;
 class Wanderer;
+class Compactor;
 class WandererBigLaser;
 class ConglomerateShot;
 
@@ -31,6 +32,7 @@ public:
     void shoot(Platform& pf, Game& game);
 
     void set_visible(bool visible);
+    bool visible() const { return visible_; }
 
     // NOTE: (3,milliseconds(150)) works well
     void accelerate(u8 max_lasers, Microseconds reload_interval);
@@ -58,6 +60,7 @@ public:
     void on_collision(Platform& pf, Game& game, ConglomerateShot&);
     void on_collision(Platform& pf, Game& game, WandererBigLaser&);
     void on_collision(Platform& pf, Game& game, Wanderer&);
+    void on_collision(Platform& pf, Game& game, Compactor&);
     void on_collision(Platform& pf, Game& game, SnakeHead&);
     void on_collision(Platform& pf, Game& game, OrbShot&);
     void on_collision(Platform& pf, Game& game, Enemy&);

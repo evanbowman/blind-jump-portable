@@ -33,7 +33,7 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
     MenuState::update(pfrm, game, delta);
 
     if (pfrm.keyboard().down_transition<inventory_key>()) {
-        return state_pool().create<ActiveState>(game);
+        return state_pool().create<ActiveState>();
     }
 
     if (pfrm.keyboard().down_transition<Key::start>()) {

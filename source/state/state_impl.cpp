@@ -390,6 +390,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool().create<PreFadePauseState>(game, c);
      },
      LocaleString::long_jump_z2_title,
+     {
+        LocaleString::sc_dialog_jumpdrive,
+        LocaleString::empty
+     },
      InventoryItemHandler::yes},
     {Item::Type::long_jump_z3,
      item_icon(Item::Type::long_jump_z2),
@@ -401,6 +405,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool().create<PreFadePauseState>(game, c);
      },
      LocaleString::long_jump_z3_title,
+     {
+        LocaleString::sc_dialog_jumpdrive,
+        LocaleString::empty
+     },
      InventoryItemHandler::yes},
     {Item::Type::long_jump_z4,
      item_icon(Item::Type::long_jump_z2),
@@ -412,6 +420,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool().create<PreFadePauseState>(game, c);
      },
      LocaleString::long_jump_z4_title,
+     {
+        LocaleString::sc_dialog_jumpdrive,
+        LocaleString::empty
+     },
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(worker_notebook_1),
      [](Platform& pfrm, Game&) {
@@ -435,6 +447,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return null_state();
      },
      LocaleString::accelerator_title,
+     {
+        LocaleString::sc_dialog_accelerator,
+        LocaleString::empty
+     },
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(lethargy),
      [](Platform& pfrm, Game& game) {
@@ -444,16 +460,28 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return null_state();
      },
      LocaleString::lethargy_title,
+     {
+        LocaleString::sc_dialog_lethargy,
+        LocaleString::empty
+     },
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(map_system),
      [](Platform&, Game&) { return state_pool().create<MapSystemState>(); },
-     LocaleString::map_system_title},
+     LocaleString::map_system_title,
+     {
+         LocaleString::sc_dialog_map_system,
+         LocaleString::empty
+     }},
     {STANDARD_ITEM_HANDLER(explosive_rounds_2),
      [](Platform&, Game& game) {
          add_powerup(game, Powerup::Type::explosive_rounds, 2);
          return null_state();
      },
      LocaleString::explosive_rounds_title,
+     {
+        LocaleString::sc_dialog_explosive_rounds,
+        LocaleString::empty
+     },
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(seed_packet),
      [](Platform&, Game&) {
@@ -479,6 +507,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return state_pool().create<SignalJammerSelectorState>();
      },
      LocaleString::signal_jammer_title,
+     {
+        LocaleString::sc_dialog_skip,
+        LocaleString::empty
+     },
      InventoryItemHandler::custom},
     {STANDARD_ITEM_HANDLER(navigation_pamphlet),
      [](Platform& pfrm, Game&) {
@@ -495,6 +527,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
          return null_state();
      },
      LocaleString::orange_title,
+     {
+        LocaleString::sc_dialog_orange,
+        LocaleString::empty
+     },
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(orange_seeds),
      [](Platform&, Game&) { return null_state(); },

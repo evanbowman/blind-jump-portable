@@ -205,7 +205,7 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
             switch (game.difficulty()) {
             case Settings::Difficulty::easy:
                 return 0.000037f;
-                
+
             case Settings::Difficulty::count:
             case Settings::Difficulty::normal:
                 break;
@@ -219,7 +219,7 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
             switch (game.difficulty()) {
             case Settings::Difficulty::easy:
                 return 0.0000325f;
-                
+
             case Settings::Difficulty::count:
             case Settings::Difficulty::normal:
                 break;
@@ -236,7 +236,7 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         switch (game.difficulty()) {
             case Settings::Difficulty::easy:
                 return 0.0000415f;
-                
+
             case Settings::Difficulty::count:
             case Settings::Difficulty::normal:
                 break;
@@ -652,7 +652,7 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
             switch (game.difficulty()) {
             case Settings::Difficulty::easy:
                 return seconds(3) - milliseconds(700);
-                
+
             case Settings::Difficulty::count:
             case Settings::Difficulty::normal:
                 break;
@@ -795,6 +795,10 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
 
 void Twin::injured(Platform& pfrm, Game& game, Health amount)
 {
+    if (sprite_.get_mix().amount_ < 180) {
+        pfrm.sleep(2);
+    }
+
     if (alive()) {
         pfrm.speaker().play_sound("click", 1, position_);
     }
@@ -895,5 +899,5 @@ void Twin::on_death(Platform& pf, Game& game)
         big_explosion(pf, game, {position_.x + 30, position_.y + 30});
     });
 
-    game.camera().shake(16);
+    game.camera().shake(18);
 }

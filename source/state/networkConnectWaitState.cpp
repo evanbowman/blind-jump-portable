@@ -74,7 +74,7 @@ NetworkConnectWaitState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         t.assign(str);
         pfrm.network_peer().listen();
-        return state_pool().create<ActiveState>(game);
+        return state_pool().create<ActiveState>();
     }
 
     case Platform::NetworkPeer::internet: {

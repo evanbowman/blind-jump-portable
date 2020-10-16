@@ -449,7 +449,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
                 ++shield_radius_;
 
                 if (shield_radius_ == max_shield_radius - 30) {
-                    game.camera().shake(5);
+                    game.camera().shake(6);
                     Buffer<GatekeeperShield*, 2> shields;
                     for (auto& shield :
                          game.enemies().get<GatekeeperShield>()) {
@@ -544,6 +544,10 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 
 void Gatekeeper::injured(Platform& pfrm, Game& game, Health amount)
 {
+    if (sprite_.get_mix().amount_ < 180) {
+        pfrm.sleep(2);
+    }
+
     const bool was_second_form = second_form();
     const bool was_third_form = third_form();
     debit_health(pfrm, amount);

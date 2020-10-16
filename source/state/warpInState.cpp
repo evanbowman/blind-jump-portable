@@ -36,7 +36,7 @@ StatePtr WarpInState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
 
 
-        return state_pool().create<ActiveState>(game);
+        return state_pool().create<ActiveState>();
     } else {
         const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
         pfrm.screen().fade(amount, current_zone(game).energy_glow_color_);

@@ -29,7 +29,7 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
     constexpr auto fade_duration = milliseconds(800);
     if (counter_ > fade_duration) {
         if (game.level() == 0) {
-            return state_pool().create<ActiveState>(game);
+            return state_pool().create<ActiveState>();
         } else {
             pfrm.screen().fade(1.f, current_zone(game).energy_glow_color_);
             pfrm.sleep(2);

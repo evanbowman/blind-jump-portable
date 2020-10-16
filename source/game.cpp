@@ -2052,6 +2052,75 @@ void spawn_entity(Platform& pf,
 
 
 COLD static void
+spawn_compactors(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
+{
+    if (game.level() > boss_0_level + 4 and game.level() < boss_2_level) {
+        const int count = std::min(u32([&] {
+            if (free_spots.size() < 65) {
+                return 2;
+            } else {
+                return 3;
+            }
+        }()), free_spots.size() / 25);
+
+        auto wall_tiles = lisp::get_var("wall-tiles-list");
+        auto edge_tiles = lisp::get_var("edge-tiles-list");
+
+        for (int i = 0; i < count and free_spots.size() > 0; ++i) {
+            if (rng::choice<2>(rng::critical_state)) {
+                int tries = 0;
+
+                static const int max_tries = 512;
+
+                while (tries < max_tries) {
+                    auto selected = &free_spots[rng::choice(free_spots.size(),
+                                                            rng::critical_state)];
+                    const int x = selected->x;
+                    const int y = selected->y;
+
+                    tries++;
+
+                    const auto t = game.tiles().get_tile(x, y);
+                    int edge_count = 0;
+                    auto detect_edge = [&](int x, int y) {
+                        auto tile = game.tiles().get_tile(x, y);
+                        if (is_edge_tile(wall_tiles, edge_tiles, tile)) {
+                            ++edge_count;
+                        }
+                    };
+                    if (not is_edge_tile(wall_tiles, edge_tiles, t)) {
+                        detect_edge(x - 1, y);
+                        detect_edge(x + 1, y);
+                        detect_edge(x, y - 1);
+                        detect_edge(x, y + 1);
+
+                        if (edge_count > 2) {
+                            game.enemies().spawn<Compactor>(world_coord(*selected));
+                            free_spots.erase(selected);
+                            break;
+                        }
+                    }
+                }
+
+                // We tried to find a little nook to place the compactor, but
+                // failed, let's just put it on any edge tile.
+                if (tries == max_tries) {
+                    const s8 x = rng::choice<TileMap::width>(rng::critical_state);
+                    const s8 y = rng::choice<TileMap::height>(rng::critical_state);
+
+                    const auto t = game.tiles().get_tile(x, y);
+                    if (is_edge_tile(wall_tiles, edge_tiles, t)) {
+                        const auto wc = to_world_coord(Vec2<TIdx>{x, y});
+                        game.enemies().spawn<Compactor>(wc);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+COLD static void
 spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 {
     // We want to spawn enemies based on both the difficulty of level, and the
@@ -2107,7 +2176,6 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
          boss_2_level}};
 
-
     Buffer<EnemyInfo*, 100> distribution;
 
     while (not distribution.full()) {
@@ -2136,6 +2204,8 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         choice->max_allowed_--;
         choice->spawn_();
     }
+
+    spawn_compactors(pfrm, game, free_spots);
 }
 
 
@@ -2205,7 +2275,7 @@ int base_price(Item::Type item)
         return 100;
 
     default:
-        return 1;
+        return 0;
     }
 }
 
@@ -2341,6 +2411,50 @@ COLD bool Game::respawn_entities(Platform& pfrm)
     enemies_.transform(clear_entities);
     details_.transform(clear_entities);
     effects_.transform(clear_entities);
+
+    if (scavenger_) {
+        if (is_boss_level(level() - 1)) {
+            switch (level() - 1) {
+            case boss_0_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z2);
+                break;
+
+            case boss_1_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z3);
+                break;
+
+            case boss_2_level:
+                scavenger_->inventory_.push_back(Item::Type::long_jump_z4);
+                break;
+            }
+        }
+
+        auto& sc_inventory = scavenger_->inventory_;
+        const u32 item_count = rng::choice<7>(rng::critical_state);
+        while (sc_inventory.size() < item_count) {
+            auto item = static_cast<Item::Type>(
+                rng::choice<static_cast<int>(Item::Type::count)>(
+                    rng::critical_state));
+
+            if ((int)item < (int)Item::Type::inventory_item_start or
+                item_is_persistent(item) or item == Item::Type::long_jump_z2 or
+                item == Item::Type::long_jump_z3 or
+                item == Item::Type::long_jump_z4) {
+
+                continue;
+            }
+
+            sc_inventory.push_back(item);
+        }
+
+        sc_inventory.push_back(Item::Type::orange);
+
+        if (rng::choice<2>(rng::critical_state)) {
+            sc_inventory.push_back(Item::Type::orange);
+        }
+
+        rng::shuffle(sc_inventory, rng::critical_state);
+    }
 
     if (level() == 0) {
         details().spawn<Lander>(Vec2<Float>{409.f, 112.f});
@@ -2667,50 +2781,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         }
     }
 
-    if (scavenger_) {
-        if (is_boss_level(level() - 1)) {
-            switch (level() - 1) {
-            case boss_0_level:
-                scavenger_->inventory_.push_back(Item::Type::long_jump_z2);
-                break;
-
-            case boss_1_level:
-                scavenger_->inventory_.push_back(Item::Type::long_jump_z3);
-                break;
-
-            case boss_2_level:
-                scavenger_->inventory_.push_back(Item::Type::long_jump_z4);
-                break;
-            }
-        }
-
-        auto& sc_inventory = scavenger_->inventory_;
-        const u32 item_count = rng::choice<7>(rng::critical_state);
-        while (sc_inventory.size() < item_count) {
-            auto item = static_cast<Item::Type>(
-                rng::choice<static_cast<int>(Item::Type::count)>(
-                    rng::critical_state));
-
-            if ((int)item < (int)Item::Type::inventory_item_start or
-                item_is_persistent(item) or item == Item::Type::long_jump_z2 or
-                item == Item::Type::long_jump_z3 or
-                item == Item::Type::long_jump_z4) {
-
-                continue;
-            }
-
-            sc_inventory.push_back(item);
-        }
-
-        sc_inventory.push_back(Item::Type::orange);
-
-        if (rng::choice<2>(rng::critical_state)) {
-            sc_inventory.push_back(Item::Type::orange);
-        }
-
-        rng::shuffle(sc_inventory, rng::critical_state);
-    }
-
     return true;
 }
 
@@ -2746,4 +2816,21 @@ bool share_item(Platform& pfrm,
         return true;
     }
     return false;
+}
+
+
+SimulatedMiles distance_travelled(Level level)
+{
+    static const SimulatedMiles low_earth_orbit = 1200;
+    static const SimulatedMiles distance_to_moon = 238900;
+    static const auto total_distance = distance_to_moon - low_earth_orbit;
+
+    if (level == 0) {
+        return low_earth_orbit;
+    } else {
+        constexpr Level num_levels = boss_max_level - 1;
+        static_assert(num_levels not_eq 0);
+        const auto fraction_levels_done = level / Float(num_levels);
+        return total_distance * fraction_levels_done;
+    }
 }

@@ -33,11 +33,12 @@
 #include "entity/enemies/snake.hpp"
 #include "entity/enemies/theif.hpp"
 #include "entity/enemies/turret.hpp"
+#include "entity/enemies/compactor.hpp"
 #include "entity/entityGroup.hpp"
 #include "entity/peerPlayer.hpp"
 #include "entity/player.hpp"
 #include "function.hpp"
-#include "localization.hpp"
+#include "localeString.hpp"
 #include "persistentData.hpp"
 #include "platform/platform.hpp"
 #include "powerup.hpp"
@@ -89,7 +90,8 @@ public:
                                    Gatekeeper,
                                    GatekeeperShield,
                                    Sinkhole,
-                                   Twin>;
+                                   Twin,
+                                   Compactor>;
 
     using DetailGroup = EntityGroup<30,
                                     ItemChest,
@@ -269,10 +271,15 @@ enum {
     boss_1_level = 20,
     boss_2_level = 29,
     boss_3_level = 40,
+    boss_max_level
 };
 
 
 void animate_starfield(Platform& pfrm, Microseconds delta);
+
+
+using SimulatedMiles = int;
+SimulatedMiles distance_travelled(Level level);
 
 
 template <typename T>

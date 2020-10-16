@@ -492,6 +492,10 @@ void Wanderer::injured(Platform& pf, Game& game, Health amount)
 {
     const bool was_second_form = second_form();
 
+    if (sprite_.get_mix().amount_ < 180) {
+        pf.sleep(2);
+    }
+
     debit_health(pf, amount);
 
     if (alive()) {

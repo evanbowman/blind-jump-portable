@@ -240,6 +240,13 @@ inline Vec2<Float> rotate(const Vec2<Float>& input, Float angle)
 }
 
 
+// Given an angle in degrees, return the corresponding unit vector.
+inline Vec2<Float> cartesian_angle(Float degree_angle)
+{
+    return rotate(Vec2<Float>{1, 0}, degree_angle);
+}
+
+
 inline Float distance(const Vec2<Float>& from, const Vec2<Float>& to)
 {
     const Vec2<float> vec = {abs(from.x - to.x), abs(from.y - to.y)};
