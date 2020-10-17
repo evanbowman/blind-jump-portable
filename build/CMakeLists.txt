@@ -123,6 +123,7 @@ set(SOURCES
   ${SOURCE_DIR}/state/respawnWaitState.cpp
   ${SOURCE_DIR}/state/commandCodeState.cpp
   ${SOURCE_DIR}/state/pauseScreenState.cpp
+  ${SOURCE_DIR}/state/titleScreenState.cpp
   ${SOURCE_DIR}/state/remoteReplState.cpp
   ${SOURCE_DIR}/state/quickChatState.cpp
   ${SOURCE_DIR}/state/imageViewState.cpp
@@ -222,6 +223,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/spritesheet4.s
     ${DATA_DIR}/spritesheet_launch_anim.s
     ${DATA_DIR}/launch_flattened.s
+    ${DATA_DIR}/title_1_flattened.s
     ${DATA_DIR}/sound_msg.s
     ${DATA_DIR}/sound_pop.s
     ${DATA_DIR}/sound_coin.s
@@ -477,6 +479,7 @@ if(GAMEBOY_ADVANCE)
     add_spritesheet(spritesheet_boss2_mutate 2 4 NO)
     add_spritesheet(spritesheet_boss2_final 2 4 NO)
     add_spritesheet(spritesheet_launch_anim 2 4 NO)
+    add_tilesheet(title_1 0 0 YES)
     add_tilesheet(launch 0 0 YES)
     add_tilesheet(tilesheet_intro_cutscene 0 0 YES)
     add_tilesheet(tilesheet 4 3 NO)

@@ -30,7 +30,7 @@ public:
     {
     }
 
-    static StatePtr initial(Platform&);
+    static StatePtr initial(Platform&, Game&);
 };
 
 

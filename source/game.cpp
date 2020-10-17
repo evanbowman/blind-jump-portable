@@ -26,11 +26,6 @@ bool Game::load_save_data(Platform& pfrm)
             info(pfrm, "loaded existing save file");
             persistent_data_ = *loaded;
 
-            if (level() > 0) {
-                loaded->reset(pfrm);
-                pfrm.write_save_data(save_buffer, sizeof(PersistentData));
-            }
-
             return true;
         }
     }
@@ -79,14 +74,9 @@ Game::Game(Platform& pfrm)
 
     pfrm.screen().enable_night_mode(persistent_data_.settings_.night_mode_);
 
-    if (persistent_data_.settings_.language_ not_eq 0) {
-        locale_set_language(persistent_data_.settings_.language_);
-    } else {
-        locale_set_language(1);
-        persistent_data_.settings_.language_ = 1;
-    }
+    locale_set_language(persistent_data_.settings_.language_);
 
-    state_ = State::initial(pfrm);
+    state_ = State::initial(pfrm, *this);
 
     pfrm.load_overlay_texture("overlay");
 

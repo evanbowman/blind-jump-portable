@@ -83,7 +83,7 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
         locale_num2str(num, buffer, 10);
         print_metric_impl(str, buffer, suffix, highlight );
     };
-    
+
     auto print_heading = [&](const char* str) {
         if (lines_.full()) {
             return;
@@ -204,6 +204,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
                 game.inventory().remove_non_persistent();
 
                 PersistentData& data = game.persistent_data().reset(pfrm);
+                data.clean_ = false;
                 pfrm.write_save_data(&data, sizeof data);
             }
         } else {

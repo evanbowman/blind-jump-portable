@@ -18,13 +18,11 @@ class Platform;
 
 
 struct PersistentData {
-    static constexpr u32 schema_version = 2;
-    static constexpr u32 magic_val = 0xCA55E77E + 2;
+    static constexpr u32 schema_version = 4;
+    static constexpr u32 magic_val = 0xCA55E77E + schema_version;
 
-    using Identity = u64;
     using Magic = u32;
 
-    Identity id_ = 0;
     Magic magic_ = magic_val;
     u32 seed_ = 11001;
     Level level_ = 0;
@@ -44,6 +42,11 @@ struct PersistentData {
     DateTime timestamp_ = {{0, 0, 0}, 0, 0, 0};
 
     TimeTracker speedrun_clock_ = {0};
+
+    bool displayed_health_warning_ = false;
+
+    // This save block has never been written.
+    bool clean_ = true;
 
     void store_powerups(const Powerups& powerups);
 
