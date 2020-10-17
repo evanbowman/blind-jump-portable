@@ -1,7 +1,15 @@
 #include "state_impl.hpp"
 
 
-static const auto fade_in_color = custom_color(0xaec7c1);
+
+static auto fade_in_color(const Game& game)
+{
+    if (game.level() == 0) {
+        return custom_color(0xaec7c1);
+    } else {
+        return custom_color(0x4d7493);
+    }
+}
 
 
 void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
@@ -22,7 +30,11 @@ void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
     pfrm.speaker().stop_music();
 
     pfrm.load_overlay_texture("overlay");
-    pfrm.load_tile0_texture("title_1_flattened");
+    if (game.level() == 0) {
+        pfrm.load_tile0_texture("title_1_flattened");
+    } else {
+        pfrm.load_tile0_texture("title_2_flattened");
+    }
     pfrm.load_tile1_texture("tilesheet_top");
 
     const Vec2<Float> arbitrary_offscreen_location{1000, 1000};
@@ -43,12 +55,12 @@ void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
     }
 
-    pfrm.screen().fade(1.f, fade_in_color);
+    pfrm.screen().fade(1.f, fade_in_color(game));
 
     draw_image(pfrm, 1, 0, 3, 30, 14, Layer::background);
 
     for (int i = 0; i < screen_tiles.x; ++i) {
-        pfrm.set_tile(Layer::background, i, 2, 8);
+        pfrm.set_tile(Layer::background, i, 2, 9);
     }
 
     // We need to share vram memory for the background image and the tileset
@@ -56,7 +68,7 @@ void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
     // designate part of the image as one transparent 4x3 chunk. Now, this code
     // covers up that transparent chunk with another tile.
     for (int i = 11; i < 23; ++i) {
-        pfrm.set_tile(Layer::background, i, 3, 8);
+        pfrm.set_tile(Layer::background, i, 3, 9);
     }
 }
 
@@ -65,6 +77,28 @@ void TitleScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 {
     pfrm.fill_overlay(0);
     title_.reset();
+}
+
+
+static void draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
+{
+    auto str = locale_string(pfrm, LocaleString::game_title);
+    const auto margin =
+        centered_text_margins(pfrm, utf8::len(str->c_str()));
+
+    title.emplace(pfrm, OverlayCoord{u8(margin), 3});
+
+    const auto text_bg_color = [&] {
+        if (game.level() == 0 or sel == 1) {
+            return custom_color(0x4091AD);
+        } else {
+            return custom_color(0x527597);
+        }
+    }();
+
+    title->assign(str->c_str(),
+                  Text::OptColors{{custom_color(0xFFFFFF),
+                              text_bg_color}});
 }
 
 
@@ -141,16 +175,35 @@ StatePtr TitleScreenState::update(Platform& pfrm,
         } else if (pfrm.keyboard().down_transition<Key::left>()) {
             if (cursor_index_ > 0) {
                 --cursor_index_;
-                pfrm.speaker().play_sound("scroll", 1);
                 timer_ = seconds(1);
+                title_.reset();
+                display_mode_ = DisplayMode::swap_image;
             }
         } else if (pfrm.keyboard().down_transition<Key::right>()) {
             if (cursor_index_ < 1) {
                 ++cursor_index_;
-                pfrm.speaker().play_sound("scroll", 1);
                 timer_ = seconds(1);
+                title_.reset();
+                display_mode_ = DisplayMode::swap_image;
             }
         }
+        break;
+
+    case DisplayMode::swap_image:
+        switch (cursor_index_) {
+        case 0:
+            if (game.level() not_eq 0) {
+                pfrm.load_tile0_texture("title_2_flattened");
+            }
+            break;
+
+        case 1:
+            pfrm.load_tile0_texture("title_1_flattened");
+            break;
+        }
+        display_mode_ = DisplayMode::select;
+        draw_title(pfrm, game, cursor_index_, title_);
+        pfrm.speaker().play_sound("scroll", 1);
         break;
 
     case DisplayMode::fade_in: {
@@ -165,21 +218,15 @@ StatePtr TitleScreenState::update(Platform& pfrm,
 
         } else {
             pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, timer_),
-                               fade_in_color);
+                               fade_in_color(game));
         }
     } break;
 
     case DisplayMode::wait:
         timer_ += delta;
         if (timer_ > milliseconds(300)) {
-            auto str = locale_string(pfrm, LocaleString::game_title);
-            const auto margin =
-                centered_text_margins(pfrm, utf8::len(str->c_str()));
 
-            title_.emplace(pfrm, OverlayCoord{u8(margin), 3});
-            title_->assign(str->c_str(),
-                           Text::OptColors{{custom_color(0xFFFFFF),
-                                       custom_color(0x4091AD)}});
+            draw_title(pfrm, game, cursor_index_, title_);
 
             const char* opt_1 = "continue";
             const char* opt_2 = "new game";
