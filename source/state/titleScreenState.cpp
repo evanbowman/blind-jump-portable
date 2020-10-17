@@ -119,9 +119,7 @@ StatePtr TitleScreenState::update(Platform& pfrm,
                     pfrm.write_save_data(&data, sizeof(data));
                 }
             } else {
-                game.persistent_data() = PersistentData{};
-                pfrm.write_save_data(&game.persistent_data(),
-                                     sizeof(PersistentData));
+                newgame(pfrm, game);
             }
             display_mode_ = DisplayMode::fade_out;
             timer_ = 0;

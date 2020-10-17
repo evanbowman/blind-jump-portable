@@ -34,11 +34,35 @@ bool Game::load_save_data(Platform& pfrm)
 }
 
 
+void newgame(Platform& pfrm, Game& game)
+{
+    // Except for highscores and settings, we do not want to keep anything in
+    // the old save data.
+    const auto highscores = game.persistent_data().highscores_;
+    const auto settings = game.persistent_data().settings_;
+
+    game.persistent_data() = PersistentData{};
+    game.persistent_data()
+        .inventory_.push_item(pfrm, game, Item::Type::blaster);
+
+    game.persistent_data().highscores_ = highscores;
+    game.persistent_data().settings_ = settings;
+
+    pfrm.write_save_data(&game.persistent_data(),
+                         sizeof(PersistentData));
+
+    game.player().set_health(game.persistent_data().player_health_);
+    game.score() = 0;
+    game.inventory() = game.persistent_data().inventory_;
+    game.powerups().clear();
+}
+
+
 Game::Game(Platform& pfrm)
     : player_(pfrm), score_(0), next_state_(null_state()), state_(null_state())
 {
     if (not this->load_save_data(pfrm)) {
-        persistent_data_.reset(pfrm);
+        newgame(pfrm, *this);
         info(pfrm, "no save file found");
         if (auto tm = pfrm.startup_time()) {
             persistent_data_.timestamp_ = *tm;
@@ -79,10 +103,6 @@ Game::Game(Platform& pfrm)
     state_ = State::initial(pfrm, *this);
 
     pfrm.load_overlay_texture("overlay");
-
-    if (inventory().item_count(Item::Type::blaster) == 0) {
-        inventory().push_item(pfrm, *this, Item::Type::blaster);
-    }
 
     // NOTE: Because we're the initial state, unclear what to pass as a previous
     // state to the enter function, so, paradoxically, the initial state is it's
