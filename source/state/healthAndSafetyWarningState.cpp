@@ -22,11 +22,6 @@ void HealthAndSafetyWarningState::enter(Platform& pfrm,
                 {1, 4},
                 OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
 
-    // continue_text_.emplace(pfrm, OverlayCoord{1, 16});
-    // continue_text_->assign("press any button to continue",
-    //                        Text::OptColors{{custom_color(0x2F4F79),
-    //                                         ColorConstant::aged_paper}});
-
     for (int x = 1; x < screen_tiles.x - 1; ++x) {
         pfrm.set_tile(Layer::overlay, x, 2, 84);
     }
@@ -90,10 +85,8 @@ StatePtr HealthAndSafetyWarningState::update(Platform& pfrm,
         display_mode_ = DisplayMode::exit;
         break;
 
-    case DisplayMode::exit: {
-        auto str = locale_string(pfrm, LocaleString::intro_text_2);
-        return state_pool().create<IntroCreditsState>(std::move(str));
-    } break;
+    case DisplayMode::exit:
+        return state_pool().create<TitleScreenState>();
     }
 
     return null_state();

@@ -165,6 +165,31 @@ public:
 };
 
 
+class TitleScreenState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    std::optional<Text> title_;
+    std::optional<Text> options_[2];
+
+    enum class DisplayMode {
+        sleep,
+        fade_in,
+        wait,
+        select,
+        fade_out,
+        pause,
+    } display_mode_ = DisplayMode::sleep;
+
+    Microseconds timer_ = 0;
+    u8 cursor_index_ = 0;
+    u8 cursor_anim_ = 0;
+};
+
+
 class LaunchCutsceneState : public State {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -1318,6 +1343,7 @@ using StatePoolInst = StatePool<ActiveState,
                                 ImageViewState,
                                 NewLevelState,
                                 CommandCodeState,
+                                TitleScreenState,
                                 PauseScreenState,
                                 LispReplState,
                                 RemoteReplState,

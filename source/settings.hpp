@@ -8,7 +8,7 @@
 struct Settings {
     enum Difficulty { easy, normal, hard, survival, count };
 
-    int language_ = 0;
+    int language_ = 1;
     bool show_stats_ = false;
     bool night_mode_ = false;
     Contrast contrast_ = 0;

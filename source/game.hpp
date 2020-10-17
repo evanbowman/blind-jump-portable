@@ -401,3 +401,6 @@ using LevelRange = std::array<Level, 2>;
 LevelRange level_range(Item::Type item);
 
 bool level_in_range(Level level, LevelRange range);
+
+
+void newgame(Platform& pfrm, Game& game);

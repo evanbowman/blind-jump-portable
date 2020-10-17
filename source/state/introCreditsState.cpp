@@ -79,11 +79,7 @@ StatePtr IntroCreditsState::next_state(Platform& pfrm, Game& game)
         return state_pool().create<EndingCreditsState>();
     }
 
-    if (game.level() == 0) {
-        return state_pool().create<LaunchCutsceneState>();
-    } else {
-        return state_pool().create<NewLevelState>(game.level());
-    }
+    return state_pool().create<LaunchCutsceneState>();
 }
 
 

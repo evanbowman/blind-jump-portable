@@ -668,13 +668,17 @@ bool draw_minimap(Platform& pfrm,
 }
 
 
-StatePtr State::initial(Platform& pfrm)
+StatePtr State::initial(Platform& pfrm, Game& game)
 {
-    if (str_cmp("NintendoDS", pfrm.device_name().c_str()) == 0) {
-        auto str = locale_string(pfrm, LocaleString::intro_text_2);
-        return state_pool().create<IntroCreditsState>(std::move(str));
-    }
-    return state_pool().create<HealthAndSafetyWarningState>();
+    // if (str_cmp("NintendoDS", pfrm.device_name().c_str()) == 0 or
+    //     game.persistent_data().displayed_health_warning_) {
+
+        return state_pool().create<TitleScreenState>();
+    // }
+
+    // game.persistent_data().displayed_health_warning_ = true;
+
+    // return state_pool().create<HealthAndSafetyWarningState>();
 }
 
 
