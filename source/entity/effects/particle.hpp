@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entity/entity.hpp"
+#include <optional>
 
 
 class Particle : public Entity {
