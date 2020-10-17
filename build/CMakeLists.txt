@@ -224,6 +224,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/spritesheet_launch_anim.s
     ${DATA_DIR}/launch_flattened.s
     ${DATA_DIR}/title_1_flattened.s
+    ${DATA_DIR}/title_2_flattened.s
     ${DATA_DIR}/sound_msg.s
     ${DATA_DIR}/sound_pop.s
     ${DATA_DIR}/sound_coin.s
@@ -480,6 +481,7 @@ if(GAMEBOY_ADVANCE)
     add_spritesheet(spritesheet_boss2_final 2 4 NO)
     add_spritesheet(spritesheet_launch_anim 2 4 NO)
     add_tilesheet(title_1 0 0 YES)
+    add_tilesheet(title_2 0 0 YES)
     add_tilesheet(launch 0 0 YES)
     add_tilesheet(tilesheet_intro_cutscene 0 0 YES)
     add_tilesheet(tilesheet 4 3 NO)

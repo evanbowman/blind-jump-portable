@@ -36,6 +36,8 @@ bool Game::load_save_data(Platform& pfrm)
 
 void newgame(Platform& pfrm, Game& game)
 {
+    info(pfrm, "constructing new game...");
+
     // Except for highscores and settings, we do not want to keep anything in
     // the old save data.
     const auto highscores = game.persistent_data().highscores_;
@@ -43,7 +45,7 @@ void newgame(Platform& pfrm, Game& game)
 
     game.persistent_data() = PersistentData{};
     game.persistent_data()
-        .inventory_.push_item(pfrm, game, Item::Type::blaster);
+        .inventory_.push_item(pfrm, game, Item::Type::blaster, false);
 
     game.persistent_data().highscores_ = highscores;
     game.persistent_data().settings_ = settings;
@@ -62,8 +64,8 @@ Game::Game(Platform& pfrm)
     : player_(pfrm), score_(0), next_state_(null_state()), state_(null_state())
 {
     if (not this->load_save_data(pfrm)) {
-        newgame(pfrm, *this);
         info(pfrm, "no save file found");
+        newgame(pfrm, *this);
         if (auto tm = pfrm.startup_time()) {
             persistent_data_.timestamp_ = *tm;
         }

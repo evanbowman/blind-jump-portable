@@ -180,6 +180,7 @@ private:
         fade_in,
         wait,
         select,
+        swap_image,
         fade_out,
         pause,
     } display_mode_ = DisplayMode::sleep;
