@@ -202,7 +202,7 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case DisplayMode::image_animate_out: {
         timer_ += delta;
-        constexpr auto anim_duration = milliseconds(150);
+        constexpr auto anim_duration = milliseconds(200);
         if (timer_ > anim_duration) {
             timer_ = seconds(1);
             animate_selector();
@@ -239,7 +239,7 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case DisplayMode::image_animate_in: {
         timer_ += delta;
-        constexpr auto fade_duration = milliseconds(80);
+        constexpr auto fade_duration = milliseconds(100);
         if (timer_ > fade_duration) {
             timer_ = seconds(1);
             pfrm.screen().fade(0.f);
