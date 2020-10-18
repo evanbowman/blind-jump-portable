@@ -43,9 +43,11 @@ You should find this readme mosty up-to-date, but as the game is under active de
 
 ## Introduction
 
-Blind Jump is a simple action/adventure game. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a several year long hiatus, during which he was teaching himself oil painting. The game is designed to run on a wide variety of platforms, from macOS to the Nintendo Gameboy Advance.
+<p align="center">
+  <img src="imgs_for_readme/s8.png"/>
+</p>
 
-The game uses procedural algorithms to generate the levels, so the level designs change each time you play. While the game is designed to be difficult, it will also be possible to beat the whole game in under an hour. At time of writing, the game has three bosses after each of the first ten levels, with ten more levels currently in development. Enemies and environments change after each boss fight.
+Blind Jump is a simple action/adventure game, featuring procedurally generated level maps, collectible items, fluid animation, and meticulously designed color palettes. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a several year long hiatus, during which he was teaching himself oil painting. Originally developed for macOS, the game was rebuilt from scratch during the 2020 pandemic, with a new custom engine. Blind Jump now compiles for various other platforms, including Linux, Windows and the Nintendo Gameboy Advance.
 
 <p align="center">
   <img src="imgs_for_readme/s1.png"/>
@@ -139,7 +141,7 @@ Please note that displaying unicode text is a fairly complex operation for a Gam
 1) The text formatting system will not display more than 80 unique glyphs at a time onscreen. In practice, this should not be a huge issue for most languages, as even for fullscreen TextView UI elements, the lines of text are double-spaced, and the GBA screen resolution is only 30 x 20 tiles in size. Even the Japanese Katakana character set should nearly fit within an 80 character limit.
 2) Each line in a localized strings data file can be no longer than 1187 bytes. Remember that each glyph in a utf-8 string may take up more than one byte!
 
-Currently, BlindJump includes an English edition (default), and an incompete Spanish translation. Evan Bowman contributed the partial Spanish translation, and he is, admittedly, not a native speaker, although he took Spanish lessons in school between ages 6-18. Any translations for the game are welcome, and you will be added to the game's ending credits if you contribute a translation. You should ideally have natural bilingual proficiency in the language that you plan to add to the project. If any required glyphs are missing from the charset image in the images/ folder, contact Evan Bowman, and he will add the codepoint mappings to the text engine. As the game is still in development, you may want to wait until the game is finished to add a translation.
+Currently, BlindJump includes an English edition (default), and an incompete Spanish translation. Evan Bowman contributed the partial Spanish translation, and he is, admittedly, not a native speaker. Any translations for the game are welcome, and you will be added to the game's ending credits if you contribute a translation. You should ideally have natural bilingual proficiency in the language that you plan to add to the project. If any required glyphs are missing from the charset image in the images/ folder, contact Evan Bowman, and he will add the codepoint mappings to the text engine. As the game is still in development, you may want to wait until the game is finished to add a translation.
 
 [Contents↑](#contents)
 
