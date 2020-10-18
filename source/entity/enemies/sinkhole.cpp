@@ -39,7 +39,7 @@ void Sinkhole::update(Platform& pfrm, Game& game, Microseconds dt)
         if (timer_ > milliseconds(100)) {
             const auto origin = sprite_.get_origin();
             if (origin.y < 36) {
-                sprite_.set_origin({origin.x, origin.y + 1});
+                sprite_.set_origin({origin.x, s16(origin.y + 1)});
             } else {
                 state_ = State::open;
                 sprite_.set_size(Sprite::Size::w32_h32);

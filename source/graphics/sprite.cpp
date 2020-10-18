@@ -28,7 +28,7 @@ void Sprite::set_position(const Vec2<Float>& position)
 }
 
 
-void Sprite::set_origin(const Vec2<s32>& origin)
+void Sprite::set_origin(const Vec2<s16>& origin)
 {
     origin_ = origin;
 }
@@ -83,7 +83,7 @@ const Vec2<Float>& Sprite::get_position() const
 }
 
 
-const Vec2<s32>& Sprite::get_origin() const
+const Vec2<s16>& Sprite::get_origin() const
 {
     return origin_;
 }

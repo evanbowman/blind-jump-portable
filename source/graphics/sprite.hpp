@@ -36,7 +36,7 @@ public:
     void set_position(const Vec2<Float>& position);
 
 
-    void set_origin(const Vec2<s32>& origin);
+    void set_origin(const Vec2<s16>& origin);
 
 
     void set_texture_index(TextureIndex texture_index);
@@ -57,7 +57,7 @@ public:
     const Vec2<Float>& get_position() const;
 
 
-    const Vec2<s32>& get_origin() const;
+    const Vec2<s16>& get_origin() const;
 
 
     TextureIndex get_texture_index() const;
@@ -90,9 +90,13 @@ private:
     Size size_ : 1;
     bool flip_x_ : 1;
     bool flip_y_ : 1;
-    Vec2<Float> position_;
-    Vec2<s32> origin_;
+
+    // Because sprites are only 16x32 or 32x32, 16bits for the origin field is
+    // quite generous...
+    Vec2<s16> origin_;
+
     Vec2<s16> scale_;
+    Vec2<Float> position_;
     Rotation rot_ = 0;
     TextureIndex texture_index_ = 0;
     ColorMix mix_;

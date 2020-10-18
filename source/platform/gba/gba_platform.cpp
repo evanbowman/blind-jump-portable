@@ -611,7 +611,9 @@ void Platform::Screen::draw(const Sprite& spr)
         if (UNLIKELY(oam_write_index == oam_count)) {
             return;
         }
-        const auto position = spr.get_position().cast<s32>() - spr.get_origin();
+        const auto position =
+            spr.get_position().cast<s32>() - spr.get_origin().cast<s32>();
+
         const auto view_center = view_.get_center().cast<s32>();
         auto oa = object_attribute_back_buffer + oam_write_index;
         if (spr.get_alpha() not_eq Sprite::Alpha::translucent) {
