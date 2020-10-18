@@ -8,10 +8,6 @@
 </p>
 
 <p align="center">
-  <img src="imgs_for_readme/s8.png"/>
-</p>
-
-<p align="center">
   <img src="imgs_for_readme/s7.png"/>
 </p>
 
@@ -46,6 +42,10 @@ You should find this readme mosty up-to-date, but as the game is under active de
 <!--te-->
 
 ## Introduction
+
+<p align="center">
+  <img src="imgs_for_readme/s8.png"/>
+</p>
 
 Blind Jump is a simple action/adventure game. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a several year long hiatus, during which he was teaching himself oil painting. The game is designed to run on a wide variety of platforms, from macOS to the Nintendo Gameboy Advance.
 
