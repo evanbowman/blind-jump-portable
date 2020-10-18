@@ -8,6 +8,10 @@
 </p>
 
 <p align="center">
+  <img src="imgs_for_readme/s8.png"/>
+</p>
+
+<p align="center">
   <img src="imgs_for_readme/s7.png"/>
 </p>
 
