@@ -1,8 +1,10 @@
 #include "state_impl.hpp"
 
 
-void FadeInState::enter(Platform& pfrm, Game& game, State&)
+void FadeInState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    OverworldState::enter(pfrm, game, prev_state);
+
     game.player().set_visible(game.level() == 0);
     game.camera().set_speed(0.75);
 
@@ -12,8 +14,10 @@ void FadeInState::enter(Platform& pfrm, Game& game, State&)
 }
 
 
-void FadeInState::exit(Platform& pfrm, Game& game, State&)
+void FadeInState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    OverworldState::exit(pfrm, game, next_state);
+
     game.camera().set_speed(1.f);
 }
 

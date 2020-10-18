@@ -1,8 +1,18 @@
 #include "state_impl.hpp"
 
 
+void OverworldState::enter(Platform& pfrm, Game&, State& prev_state)
+{
+    pfrm.enable_feature("vignette", true);
+}
+
+
 void OverworldState::exit(Platform& pfrm, Game&, State& next_state)
 {
+    if (not dynamic_cast<OverworldState*>(&next_state)) {
+        pfrm.enable_feature("vignette", false);
+    }
+
     notification_text.reset();
     fps_text_.reset();
     network_tx_msg_text_.reset();

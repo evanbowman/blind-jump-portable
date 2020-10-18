@@ -35,7 +35,7 @@ inline bool is_little_endian()
 extern "C" {
 using size_t = decltype(sizeof(int)); // If only I wasn't too lazy to look up
                                       // which header it's defined in
-void* memcpy(void* destination, const void* source, size_t num);
+void* memcpy(void* destination, const void* source, size_t num) noexcept;
 }
 
 

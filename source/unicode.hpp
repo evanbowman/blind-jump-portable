@@ -5,6 +5,7 @@
 #include "number/numeric.hpp"
 #include "string.hpp"
 #include <optional>
+#include "number/endian.hpp"
 
 
 namespace utf8 {
@@ -12,32 +13,46 @@ namespace utf8 {
 using Codepoint = u32;
 
 
+// This unicode handling could perhaps be improved... anyway, the scan function
+// accepts a c-style string of known length, and invokes a callback for each
+// utf8 codepoint encountered. Codepoints will be passed to the callback as
+// integers, and the integer values are guaranteed to be comparable to the base
+// ascii values, i.e.:
+//
+// scan([](Codepoint cp, const char*, int) { assert(cp == '0'); }, u8"o", 1)).
+//
 template <typename Callback>
 inline bool scan(Callback&& callback, const char* data, size_t len)
 {
     size_t index = 0;
     while (index < len) {
 
-        char raw[5] = {'\0', '\0', '\0', '\0', '\0'};
+        alignas(Codepoint) char raw[5] = {'\0', '\0', '\0', '\0', '\0'};
+        Codepoint* cp = (Codepoint*)raw;
+
+        auto do_callback = [&] {
+            if (not is_little_endian()) {
+                *cp = __bswap_constant_32(*cp);
+            }
+            callback(*cp, raw, index);
+        };
+
         const Bitvector<8> parsed(data[index]);
         if (parsed[7] == 0) {
             raw[0] = data[index];
-            callback(data[index], raw, index);
+            do_callback();
             index += 1;
         } else if (parsed[7] == 1 and parsed[6] == 1 and parsed[5] == 0) {
             raw[0] = data[index];
             raw[1] = data[index + 1];
-            callback(data[index] | (data[index + 1] << 8), raw, index);
+            do_callback();
             index += 2;
         } else if (parsed[7] == 1 and parsed[6] == 1 and parsed[5] == 1 and
                    parsed[4] == 0) {
             raw[0] = data[index];
             raw[1] = data[index + 1];
             raw[2] = data[index + 2];
-            callback(data[index] | (data[index + 1] << 8) |
-                         (data[index + 2] << 16),
-                     raw,
-                     index);
+            do_callback();
             index += 3;
         } else if (parsed[7] == 1 and parsed[6] == 1 and parsed[5] == 1 and
                    parsed[4] == 1 and parsed[3] == 0) {
@@ -45,10 +60,7 @@ inline bool scan(Callback&& callback, const char* data, size_t len)
             raw[1] = data[index + 1];
             raw[2] = data[index + 2];
             raw[3] = data[index + 3];
-            callback(data[index] | (data[index + 1] << 8) |
-                         (data[index + 2] << 16) | (data[index + 3] << 24),
-                     raw,
-                     index);
+            do_callback();
             index += 4;
         } else {
             return false;

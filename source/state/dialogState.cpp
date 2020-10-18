@@ -136,6 +136,8 @@ bool DialogState::advance_text(Platform& pfrm,
 
 void DialogState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    OverworldState::enter(pfrm, game, prev_state);
+
     pfrm.load_overlay_texture("overlay_dialog");
 
     init_text(pfrm, text_[0]); // TODO: implement chains of dialog messages,
@@ -146,6 +148,8 @@ void DialogState::enter(Platform& pfrm, Game& game, State& prev_state)
 
 void DialogState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    OverworldState::exit(pfrm, game, next_state);
+
     pfrm.load_overlay_texture("overlay");
 }
 

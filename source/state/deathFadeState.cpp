@@ -3,6 +3,7 @@
 
 void DeathFadeState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    OverworldState::enter(pfrm, game, prev_state);
 }
 
 

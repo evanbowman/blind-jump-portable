@@ -50,6 +50,12 @@ Platform::DeviceName Platform::device_name() const
 }
 
 
+void Platform::enable_feature(const char* feature_name, bool enabled)
+{
+    // ...
+}
+
+
 // These word and halfword versions of memcpy are written in assembly. They use
 // special ARM instructions to copy data faster than you could do with thumb
 // code.

@@ -1,8 +1,9 @@
 #include "state_impl.hpp"
 
 
-void ActiveState::enter(Platform& pfrm, Game& game, State&)
+void ActiveState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    OverworldState::enter(pfrm, game, prev_state);
     pfrm.screen().fade(0.f);
 
     if (restore_keystates) {

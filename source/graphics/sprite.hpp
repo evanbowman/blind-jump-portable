@@ -19,6 +19,9 @@ public:
 
     enum Size : u8 { w32_h32, w16_h32 };
 
+    enum Flags1 : u8 {};
+    enum Flags2 : u8 {};
+
 
     Sprite();
 
@@ -90,6 +93,10 @@ private:
     Size size_ : 1;
     bool flip_x_ : 1;
     bool flip_y_ : 1;
+
+    // Extra flags reserved for future use.
+    Flags1 flags1_ : 3;
+    Flags2 flags2_ : 8;
 
     // Because sprites are only 16x32 or 32x32, 16bits for the origin field is
     // quite generous...

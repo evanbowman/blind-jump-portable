@@ -172,6 +172,9 @@ public:
     sf::RenderWindow window_;
     sf::RenderTexture rt_;
 
+    sf::Texture vignette_texture_;
+    bool show_vignette_ = false;
+
     Vec2<u32> window_size_;
 
     // std::mutex audio_lock_;
@@ -218,6 +221,12 @@ public:
                         (u32)resolution.y * window_scale_};
 
         rt_.create(240, 160);
+
+        const auto vignette_path =
+            resource_path() + ("images" PATH_DELIMITER) + "vignette.png";
+        if (not vignette_texture_.loadFromFile(vignette_path)) {
+            error(pfrm, "failed to load vignette texture");
+        }
 
         auto sound_folder = resource_path() + ("sounds" PATH_DELIMITER);
         // lisp::loadv<lisp::Symbol>("sound-dir").name_;
@@ -305,6 +314,14 @@ private:
     std::atomic<Microseconds> total_;
 
 } watchdog_task;
+
+
+void Platform::enable_feature(const char* feature_name, bool enabled)
+{
+    if (str_cmp(feature_name, "vignette") == 0) {
+        ::platform->data()->show_vignette_ = enabled;
+    }
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1131,6 +1148,13 @@ void Platform::Screen::display()
         {view_.get_size().x / 2 + origin.x, view_.get_size().y / 2 + origin.y});
 
     rt.setView(view);
+
+    if (::platform->data()->show_vignette_) {
+        sf::Sprite vignette(::platform->data()->vignette_texture_);
+        vignette.setScale(240.f / 450.f, 160.f / 450.f);
+        vignette.setColor(sf::Color(255, 255, 255, 255));
+        rt.draw(vignette, sf::BlendMultiply);
+    }
 
     rt.draw(::platform->data()->overlay_);
 

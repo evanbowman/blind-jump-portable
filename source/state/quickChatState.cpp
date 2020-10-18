@@ -14,14 +14,16 @@ void QuickChatState::display_time_remaining(Platform&, Game&)
 }
 
 
-void QuickChatState::enter(Platform& pfrm, Game& game, State&)
+void QuickChatState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    OverworldState::enter(pfrm, game, prev_state);
     update_text(pfrm, game);
 }
 
 
 void QuickChatState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    OverworldState::exit(pfrm, game, next_state);
     pfrm.fill_overlay(0);
 }
 

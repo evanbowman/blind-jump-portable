@@ -50,6 +50,7 @@ public:
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     virtual void display_time_remaining(Platform&, Game&);
