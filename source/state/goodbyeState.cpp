@@ -34,11 +34,8 @@ StatePtr GoodbyeState::update(Platform& pfrm, Game&, Microseconds delta)
             const auto amount =
                 smoothstep(0.f, fade_duration, wait_timer_ - hold_time);
 
-            pfrm.screen().fade(amount,
-                               ColorConstant::rich_black,
-                               {},
-                               true,
-                               true);
+            pfrm.screen().fade(
+                amount, ColorConstant::rich_black, {}, true, true);
 
             return null_state();
         }

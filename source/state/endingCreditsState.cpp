@@ -69,8 +69,7 @@ static const std::array<const char*, 34> credits_lines = {
     "The DevkitARM Project",
     "freesound.org"
     "",
-    ""
-};
+    ""};
 
 
 void draw_starfield(Platform& pfrm);

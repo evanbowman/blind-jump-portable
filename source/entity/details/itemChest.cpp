@@ -37,8 +37,7 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::closed_locked:
     case State::closed_unlocked:
         if (visible()) {
-            const auto dist_heuristic =
-                manhattan_length(player_pos, pos) < 32;
+            const auto dist_heuristic = manhattan_length(player_pos, pos) < 32;
 
             if (dist_heuristic and distance(player_pos, pos) < 24) {
 

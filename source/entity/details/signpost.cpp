@@ -1,8 +1,7 @@
 #include "signpost.hpp"
 
 
-Signpost::Signpost(const Vec2<Float>& position, Type type) :
-    type_(type)
+Signpost::Signpost(const Vec2<Float>& position, Type type) : type_(type)
 {
     position_ = position;
 
@@ -27,11 +26,9 @@ void Signpost::update(Platform&, Game&, Microseconds dt)
 }
 
 
-static LocaleString memorial_dialog[] = {
-    LocaleString::memorial_str,
-    LocaleString::memorial_str_commentary,
-    LocaleString::empty
-};
+static LocaleString memorial_dialog[] = {LocaleString::memorial_str,
+                                         LocaleString::memorial_str_commentary,
+                                         LocaleString::empty};
 
 
 const LocaleString* Signpost::get_dialog() const

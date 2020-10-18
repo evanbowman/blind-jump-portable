@@ -107,12 +107,12 @@ void Twin::Helper::update(Platform& pf,
     switch (state_) {
     case Helper::State::recharge:
         if (timer_ > [&] {
-            if (game.difficulty() == Settings::Difficulty::easy) {
-                return seconds(2);
-            } else {
-                return seconds(1) + milliseconds(500);
-            }
-        }()) {
+                if (game.difficulty() == Settings::Difficulty::easy) {
+                    return seconds(2);
+                } else {
+                    return seconds(1) + milliseconds(500);
+                }
+            }()) {
             timer_ = 0;
             state_ = Helper::State::shoot1;
         }
@@ -234,17 +234,17 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
     constexpr Microseconds mode2_move_duration = milliseconds(140);
     const Float mode2_move_rate = [&] {
         switch (game.difficulty()) {
-            case Settings::Difficulty::easy:
-                return 0.0000415f;
+        case Settings::Difficulty::easy:
+            return 0.0000415f;
 
-            case Settings::Difficulty::count:
-            case Settings::Difficulty::normal:
-                break;
+        case Settings::Difficulty::count:
+        case Settings::Difficulty::normal:
+            break;
 
-            case Settings::Difficulty::survival:
-            case Settings::Difficulty::hard:
-                return 0.000045f;
-            }
+        case Settings::Difficulty::survival:
+        case Settings::Difficulty::hard:
+            return 0.000045f;
+        }
         return 0.000044f;
     }();
 
@@ -361,12 +361,12 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         target_ = interpolate(target.get_position(), target_, dt * 0.000020f);
 
         if (alt_timer_ > [&] {
-            if (game.difficulty() == Settings::Difficulty::easy) {
-                return milliseconds(640);
-            } else {
-                return milliseconds(520);
-            }
-        }()) {
+                if (game.difficulty() == Settings::Difficulty::easy) {
+                    return milliseconds(640);
+                } else {
+                    return milliseconds(520);
+                }
+            }()) {
             alt_timer_ = 0;
 
             game.effects().spawn<ConglomerateShot>(
@@ -649,20 +649,20 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
 
 
         if (timer_ > [&] {
-            switch (game.difficulty()) {
-            case Settings::Difficulty::easy:
-                return seconds(3) - milliseconds(700);
+                switch (game.difficulty()) {
+                case Settings::Difficulty::easy:
+                    return seconds(3) - milliseconds(700);
 
-            case Settings::Difficulty::count:
-            case Settings::Difficulty::normal:
-                break;
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::normal:
+                    break;
 
-            case Settings::Difficulty::survival:
-            case Settings::Difficulty::hard:
-                return seconds(3) + milliseconds(250);
-            }
-            return seconds(3);
-        }()) {
+                case Settings::Difficulty::survival:
+                case Settings::Difficulty::hard:
+                    return seconds(3) + milliseconds(250);
+                }
+                return seconds(3);
+            }()) {
             state_ = State::ranged_attack_done;
         }
         break;

@@ -29,7 +29,7 @@ static Float shot_speed(Game& game)
     switch (game.difficulty()) {
     case Settings::Difficulty::easy:
         return 0.000122f;
-        
+
     case Settings::Difficulty::count:
     case Settings::Difficulty::normal:
         break;

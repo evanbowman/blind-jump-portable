@@ -31,9 +31,12 @@ void Item::on_collision(Platform& pf, Game& game, Player&)
 #ifdef __GBA__
     switch (type_) {
     case Type::coin:
-        game.effects().spawn<Particle>(pos, current_zone(game).energy_glow_color_);
-        game.effects().spawn<Particle>(pos, current_zone(game).energy_glow_color_);
-        game.effects().spawn<Particle>(pos, current_zone(game).energy_glow_color_);
+        game.effects().spawn<Particle>(pos,
+                                       current_zone(game).energy_glow_color_);
+        game.effects().spawn<Particle>(pos,
+                                       current_zone(game).energy_glow_color_);
+        game.effects().spawn<Particle>(pos,
+                                       current_zone(game).energy_glow_color_);
         break;
 
     case Type::heart:

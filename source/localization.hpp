@@ -3,8 +3,8 @@
 
 #include "bulkAllocator.hpp"
 #include "dateTime.hpp"
-#include "string.hpp"
 #include "localeString.hpp"
+#include "string.hpp"
 
 
 void locale_set_language(int language_id);

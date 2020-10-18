@@ -89,7 +89,7 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
                                 switch (game.difficulty()) {
                                 case Settings::Difficulty::easy:
                                     return 4;
-                                    
+
                                 case Settings::Difficulty::count:
                                 case Settings::Difficulty::normal:
                                     break;

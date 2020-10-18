@@ -3,12 +3,12 @@
 #include "entity/details/item.hpp"
 #include "entity/entity.hpp"
 #include "graphics/sprite.hpp"
+#include "localeString.hpp"
 #include "number/endian.hpp"
 #include "number/numeric.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
 #include "settings.hpp"
-#include "localeString.hpp"
 
 
 namespace net_event {

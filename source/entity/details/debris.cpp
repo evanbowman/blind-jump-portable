@@ -26,8 +26,8 @@ Debris::Debris(const Vec2<Float>& position) : timer_(0)
     static const auto drift_speed = 0.0000138f;
 
     step_vector_ =
-        direction(position_, rng::sample<64>(position_, rng::utility_state))
-        * drift_speed;
+        direction(position_, rng::sample<64>(position_, rng::utility_state)) *
+        drift_speed;
 }
 
 

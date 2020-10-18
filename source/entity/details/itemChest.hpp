@@ -1,11 +1,11 @@
 #pragma once
 
 #include "collision.hpp"
+#include "entity/effects/dialogBubble.hpp"
 #include "entity/entity.hpp"
 #include "graphics/animation.hpp"
 #include "item.hpp"
 #include "network_event.hpp"
-#include "entity/effects/dialogBubble.hpp"
 
 
 class ItemChest : public Entity {

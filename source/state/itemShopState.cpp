@@ -571,8 +571,7 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 auto offset = buy_page_num_ * 3 + selector_pos_;
                 if (offset < (int)game.scavenger()->inventory_.size()) {
-                    if (price not_eq 0 and
-                        game.score() >= (u64)price) {
+                    if (price not_eq 0 and game.score() >= (u64)price) {
                         game.score() -= price;
 
                         auto it = game.scavenger()->inventory_.begin() + offset;
@@ -582,10 +581,8 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
                     }
                 }
             } else if (selector_x_ == 2) {
-                auto resume_state =
-                    make_deferred_state<ItemShopState>(DisplayMode::animate_in_buy,
-                                                       selector_pos_,
-                                                       buy_page_num_);
+                auto resume_state = make_deferred_state<ItemShopState>(
+                    DisplayMode::animate_in_buy, selector_pos_, buy_page_num_);
 
                 const auto item =
                     get_buy_item(game, buy_page_num_, selector_pos_);
@@ -822,10 +819,8 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             } else if (selector_x_ == 2) {
                 const auto mode_resume = DisplayMode::animate_in_sell;
-                auto resume_state =
-                    make_deferred_state<ItemShopState>(mode_resume,
-                                                       selector_pos_,
-                                                       sell_page_num_);
+                auto resume_state = make_deferred_state<ItemShopState>(
+                    mode_resume, selector_pos_, sell_page_num_);
 
                 const auto sale_item =
                     get_sale_item(game, sell_page_num_, selector_pos_);

@@ -149,8 +149,10 @@ void Player::on_collision(Platform& pf, Game& game, Drone& drone)
         Player::injured(pf,
                         game,
                         drone.state() == Drone::State::rush and
-                        game.difficulty() not_eq Settings::Difficulty::easy ?
-                            Health(2) : Health(1));
+                                game.difficulty() not_eq
+                                    Settings::Difficulty::easy
+                            ? Health(2)
+                            : Health(1));
     }
 }
 
@@ -576,12 +578,10 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
     const Vec2<Float> move_vec = {
         (l_speed_ + -r_speed_) * MOVEMENT_RATE_CONSTANT,
-        (u_speed_ + -d_speed_) * MOVEMENT_RATE_CONSTANT
-    };
+        (u_speed_ + -d_speed_) * MOVEMENT_RATE_CONSTANT};
 
-    Vec2<Float> new_pos{
-        position_.x - (move_vec.x * dt),
-        position_.y - (move_vec.y * dt)};
+    Vec2<Float> new_pos{position_.x - (move_vec.x * dt),
+                        position_.y - (move_vec.y * dt)};
     Entity::set_position(new_pos);
     sprite_.set_position(new_pos);
     shadow_.set_position(new_pos);

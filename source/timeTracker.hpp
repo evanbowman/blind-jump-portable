@@ -5,9 +5,7 @@
 
 class TimeTracker {
 public:
-
-    TimeTracker(u32 seconds) : whole_seconds_(seconds),
-                               fractional_time_(0)
+    TimeTracker(u32 seconds) : whole_seconds_(seconds), fractional_time_(0)
     {
     }
 

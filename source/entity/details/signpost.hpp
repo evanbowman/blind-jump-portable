@@ -1,15 +1,13 @@
 #pragma once
 
 #include "entity/entity.hpp"
-#include "memory/buffer.hpp"
 #include "localeString.hpp"
+#include "memory/buffer.hpp"
 
 
 class Signpost : public Entity {
 public:
-    enum class Type {
-        memorial
-    };
+    enum class Type { memorial };
 
     Signpost(const Vec2<Float>& position, Type type);
 

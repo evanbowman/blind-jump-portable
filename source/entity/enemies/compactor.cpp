@@ -1,15 +1,15 @@
-#include "common.hpp"
 #include "compactor.hpp"
-#include "game.hpp"
+#include "common.hpp"
 #include "entity/effects/explosion.hpp"
+#include "game.hpp"
 
 
 static const int fall_height = 120;
 static const Float start_speed = 0.00005f;
 
 
-Compactor::Compactor(const Vec2<Float>& position) :
-    Enemy(Entity::Health(3), position, {{16, 26}, {8, 16}}), timer_(0)
+Compactor::Compactor(const Vec2<Float>& position)
+    : Enemy(Entity::Health(3), position, {{16, 26}, {8, 16}}), timer_(0)
 {
     sprite_.set_texture_index(106);
     sprite_.set_size(Sprite::Size::w16_h32);
@@ -104,10 +104,8 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
         if (spr_y_pos < position_.y - 1) {
             const auto yoff = ease_out(timer_, 0, fall_height, duration);
 
-            sprite_.set_position({
-                    position_.x,
-                    position_.y - (fall_height - yoff)
-                });
+            sprite_.set_position(
+                {position_.x, position_.y - (fall_height - yoff)});
         } else {
             sprite_.set_position(position_);
             state_ = State::landing;
@@ -119,9 +117,12 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
             sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
             sprite_.set_texture_index(107);
             game.camera().shake(16);
-            game.effects().spawn<Particle>(position_, current_zone(game).energy_glow_color_);
-            game.effects().spawn<Particle>(position_, current_zone(game).energy_glow_color_);
-            game.effects().spawn<Particle>(position_, current_zone(game).energy_glow_color_);
+            game.effects().spawn<Particle>(
+                position_, current_zone(game).energy_glow_color_);
+            game.effects().spawn<Particle>(
+                position_, current_zone(game).energy_glow_color_);
+            game.effects().spawn<Particle>(
+                position_, current_zone(game).energy_glow_color_);
             timer_ = 0;
 
             shadow_.set_position({position_.x, position_.y + 9});
@@ -190,9 +191,8 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
             this->kill();
         }
         if (timer_ >= friction_start_time) {
-            step_vector_ = interpolate(Vec2<Float>{},
-                                       step_vector_,
-                                       dt * 0.000012f);
+            step_vector_ =
+                interpolate(Vec2<Float>{}, step_vector_, dt * 0.000012f);
         }
         break;
     }
@@ -257,7 +257,7 @@ void Compactor::on_collision(Platform& pfrm, Game& game, Laser&)
     // const auto player_pos = game.player().get_position();
     if (static_cast<int>(state_) > static_cast<int>(State::fall)) {
         injured(pfrm, game, 1);
-    }//  else if (state_ == State::await and
+    } //  else if (state_ == State::await and
     //            visible() and manhattan_length(player_pos, position_) < 150) {
     //     set_movement_vector(game.player().get_position());
     //     state_ = State::fall;

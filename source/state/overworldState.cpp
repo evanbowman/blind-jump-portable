@@ -67,21 +67,17 @@ void OverworldState::display_time_remaining(Platform& pfrm, Game& game)
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    const u8 text_x_pos =
-        (screen_tiles.x - utf8::len(fmt.c_str())) - 1;
+    const u8 text_x_pos = (screen_tiles.x - utf8::len(fmt.c_str())) - 1;
 
     const u8 text_y_pos = screen_tiles.y - 2;
 
 
-    time_remaining_text_.emplace(pfrm,
-                                 OverlayCoord{text_x_pos,
-                                              text_y_pos});
+    time_remaining_text_.emplace(pfrm, OverlayCoord{text_x_pos, text_y_pos});
 
     time_remaining_text_->assign(fmt.c_str());
 
-    time_remaining_icon_.emplace(pfrm, 422,
-                                 OverlayCoord{u8(text_x_pos - 1),
-                                              text_y_pos});
+    time_remaining_icon_.emplace(
+        pfrm, 422, OverlayCoord{u8(text_x_pos - 1), text_y_pos});
 }
 
 
@@ -93,7 +89,7 @@ void OverworldState::receive(const net_event::QuickChat& chat,
     str += locale_string(pfrm, LocaleString::chat_chat)->c_str();
 
     str += locale_string(pfrm, static_cast<LocaleString>(chat.message_.get()))
-        ->c_str();
+               ->c_str();
 
     push_notification(pfrm, game.state(), str);
 }
@@ -406,14 +402,16 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     animate_starfield(pfrm, delta);
 
-    const auto prior_sec = game.persistent_data().speedrun_clock_.whole_seconds();
+    const auto prior_sec =
+        game.persistent_data().speedrun_clock_.whole_seconds();
     game.persistent_data().speedrun_clock_.count_up(delta);
-    const auto current_sec = game.persistent_data().speedrun_clock_.whole_seconds();
+    const auto current_sec =
+        game.persistent_data().speedrun_clock_.whole_seconds();
 
     if (game.persistent_data().settings_.show_speedrun_clock_) {
         if (not time_remaining_text_ or prior_sec not_eq current_sec) {
             display_time_remaining(pfrm, game);
-        }        
+        }
     }
 
     if (pfrm.network_peer().is_connected()) {

@@ -56,7 +56,7 @@ StatePtr QuickChatState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         pfrm.sleep(20);
     }
-    
+
     return null_state();
 }
 
@@ -73,13 +73,13 @@ void QuickChatState::update_text(Platform& pfrm, Game& game)
     }
 
     auto str = locale_string(pfrm, chat_messages[msg_index_]);
-    
+
     text_.emplace(pfrm, OverlayCoord{2, u8(st.y - 1)});
     text_->assign(": ");
     text_->append(str->c_str());
 
     if (msg_index_ == 0) {
-        pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 1, 151);        
+        pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 1, 151);
     } else {
         pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 1, 153);
     }
@@ -89,6 +89,6 @@ void QuickChatState::update_text(Platform& pfrm, Game& game)
     } else {
         pfrm.set_tile(Layer::overlay, st.x - 2, st.y - 1, 154);
     }
-    
+
     pfrm.set_tile(Layer::overlay, 0, st.y - 1, 391);
 }

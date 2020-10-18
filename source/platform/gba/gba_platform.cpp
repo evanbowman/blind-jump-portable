@@ -830,7 +830,6 @@ void Platform::Screen::display()
         object_attribute_back_buffer[i].attribute_1 = 0;
 
         object_attribute_back_buffer[i].attribute_0 |= attr0_mask::disabled;
-
     }
 
     for (u32 i = affine_transform_write_index;
@@ -1728,12 +1727,12 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 
 
 #include "data/clair_de_lune.hpp"
-#include "data/music_murmuration.hpp"
-#include "data/scottbuckley_computations.hpp"
-#include "data/scottbuckley_omega.hpp"
-#include "data/music_rocketlaunch.hpp"
 #include "data/music_chantiers_navals_412.hpp"
 #include "data/music_midsommar.hpp"
+#include "data/music_murmuration.hpp"
+#include "data/music_rocketlaunch.hpp"
+#include "data/scottbuckley_computations.hpp"
+#include "data/scottbuckley_omega.hpp"
 
 
 static const int null_music_len = 8;
@@ -1805,15 +1804,15 @@ static const AudioTrack* find_music(const char* name)
 #include "data/sound_footstep4.hpp"
 #include "data/sound_heart.hpp"
 #include "data/sound_laser1.hpp"
+#include "data/sound_msg.hpp"
 #include "data/sound_open_book.hpp"
 #include "data/sound_openbag.hpp"
 #include "data/sound_pop.hpp"
 #include "data/sound_scroll.hpp"
 #include "data/sound_select.hpp"
+#include "data/sound_thud.hpp"
 #include "data/sound_tw_bell.hpp"
 #include "data/sound_typewriter.hpp"
-#include "data/sound_msg.hpp"
-#include "data/sound_thud.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),

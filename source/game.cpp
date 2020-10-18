@@ -44,14 +44,13 @@ void newgame(Platform& pfrm, Game& game)
     const auto settings = game.persistent_data().settings_;
 
     game.persistent_data() = PersistentData{};
-    game.persistent_data()
-        .inventory_.push_item(pfrm, game, Item::Type::blaster, false);
+    game.persistent_data().inventory_.push_item(
+        pfrm, game, Item::Type::blaster, false);
 
     game.persistent_data().highscores_ = highscores;
     game.persistent_data().settings_ = settings;
 
-    pfrm.write_save_data(&game.persistent_data(),
-                         sizeof(PersistentData));
+    pfrm.write_save_data(&game.persistent_data(), sizeof(PersistentData));
 
     game.player().set_health(game.persistent_data().player_health_);
     game.score() = 0;
@@ -900,9 +899,8 @@ void Game::init_script(Platform& pfrm)
     //     return L_NIL;
     // }));
 
-    lisp::set_var("detail", lisp::make_function([](int argc) {
-        return L_NIL;
-    }));
+    lisp::set_var("detail",
+                  lisp::make_function([](int argc) { return L_NIL; }));
 
     lisp::set_var("level", lisp::make_function([](int argc) {
                       if (auto game = interp_get_game()) {
@@ -1418,9 +1416,9 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
         // Just for the sake of variety, intentionally generate
         // smaller maps sometimes.
         const bool small_map = rng::choice<100>(rng::critical_state) < 20 or
-            (not pfrm.network_peer().is_connected() and
-             (is_boss_level(level() - 1) or
-              is_boss_level(level() - 2) or level() < 4));
+                               (not pfrm.network_peer().is_connected() and
+                                (is_boss_level(level() - 1) or
+                                 is_boss_level(level() - 2) or level() < 4));
 
         int count;
 
@@ -2068,12 +2066,13 @@ spawn_compactors(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 {
     if (game.level() > boss_0_level + 4 and game.level() < boss_2_level) {
         const int count = std::min(u32([&] {
-            if (free_spots.size() < 65) {
-                return 2;
-            } else {
-                return 3;
-            }
-        }()), free_spots.size() / 25);
+                                       if (free_spots.size() < 65) {
+                                           return 2;
+                                       } else {
+                                           return 3;
+                                       }
+                                   }()),
+                                   free_spots.size() / 25);
 
         auto wall_tiles = lisp::get_var("wall-tiles-list");
         auto edge_tiles = lisp::get_var("edge-tiles-list");
@@ -2085,8 +2084,8 @@ spawn_compactors(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
                 static const int max_tries = 512;
 
                 while (tries < max_tries) {
-                    auto selected = &free_spots[rng::choice(free_spots.size(),
-                                                            rng::critical_state)];
+                    auto selected = &free_spots[rng::choice(
+                        free_spots.size(), rng::critical_state)];
                     const int x = selected->x;
                     const int y = selected->y;
 
@@ -2107,7 +2106,8 @@ spawn_compactors(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
                         detect_edge(x, y + 1);
 
                         if (edge_count > 2) {
-                            game.enemies().spawn<Compactor>(world_coord(*selected));
+                            game.enemies().spawn<Compactor>(
+                                world_coord(*selected));
                             free_spots.erase(selected);
                             break;
                         }
@@ -2117,8 +2117,10 @@ spawn_compactors(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
                 // We tried to find a little nook to place the compactor, but
                 // failed, let's just put it on any edge tile.
                 if (tries == max_tries) {
-                    const s8 x = rng::choice<TileMap::width>(rng::critical_state);
-                    const s8 y = rng::choice<TileMap::height>(rng::critical_state);
+                    const s8 x =
+                        rng::choice<TileMap::width>(rng::critical_state);
+                    const s8 y =
+                        rng::choice<TileMap::height>(rng::critical_state);
 
                     const auto t = game.tiles().get_tile(x, y);
                     if (is_edge_tile(wall_tiles, edge_tiles, t)) {

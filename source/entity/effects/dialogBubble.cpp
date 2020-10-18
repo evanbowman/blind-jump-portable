@@ -1,10 +1,8 @@
 #include "dialogBubble.hpp"
 
 
-DialogBubble::DialogBubble(const Vec2<Float>& position, Entity& owner) :
-    state_(State::animate_in),
-    timer_(0),
-    owner_(&owner)
+DialogBubble::DialogBubble(const Vec2<Float>& position, Entity& owner)
+    : state_(State::animate_in), timer_(0), owner_(&owner)
 {
     set_position(position);
 

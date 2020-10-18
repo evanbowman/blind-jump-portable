@@ -1,7 +1,6 @@
 #include "state_impl.hpp"
 
 
-
 static auto fade_in_color(const Game& game)
 {
     if (game.level() == 0) {
@@ -80,11 +79,11 @@ void TitleScreenState::exit(Platform& pfrm, Game& game, State& next_state)
 }
 
 
-static void draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
+static void
+draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
 {
     auto str = locale_string(pfrm, LocaleString::game_title);
-    const auto margin =
-        centered_text_margins(pfrm, utf8::len(str->c_str()));
+    const auto margin = centered_text_margins(pfrm, utf8::len(str->c_str()));
 
     title.emplace(pfrm, OverlayCoord{u8(margin), 3});
 
@@ -97,26 +96,14 @@ static void draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>&
     }();
 
     title->assign(str->c_str(),
-                  Text::OptColors{{custom_color(0xFFFFFF),
-                              text_bg_color}});
+                  Text::OptColors{{custom_color(0xFFFFFF), text_bg_color}});
 }
 
 
-StatePtr TitleScreenState::update(Platform& pfrm,
-                                  Game& game,
-                                  Microseconds delta)
+StatePtr
+TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    switch (display_mode_) {
-    case DisplayMode::sleep:
-        timer_ += delta;
-        if (timer_ > seconds(1)) {
-            timer_ = 0;
-            display_mode_ = DisplayMode::fade_in;
-        }
-        break;
-
-    case DisplayMode::select:
-        timer_ += delta;
+    auto animate_selector = [&] {
         if (timer_ > milliseconds(75)) {
             timer_ = 0;
             const auto st = calc_screen_tiles(pfrm);
@@ -139,6 +126,20 @@ StatePtr TitleScreenState::update(Platform& pfrm,
             pfrm.set_tile(Layer::overlay, erase_coords.x, st.y - 2, 112);
             pfrm.set_tile(Layer::overlay, erase_coords.y, st.y - 2, 112);
         }
+    };
+
+    switch (display_mode_) {
+    case DisplayMode::sleep:
+        timer_ += delta;
+        if (timer_ > seconds(1)) {
+            timer_ = 0;
+            display_mode_ = DisplayMode::fade_in;
+        }
+        break;
+
+    case DisplayMode::select:
+        timer_ += delta;
+        animate_selector();
         if (pfrm.keyboard().down_transition(game.action2_key())) {
             pfrm.speaker().play_sound("select", 1);
             if (cursor_index_ == 0) {
@@ -176,20 +177,53 @@ StatePtr TitleScreenState::update(Platform& pfrm,
             if (cursor_index_ > 0) {
                 --cursor_index_;
                 timer_ = seconds(1);
-                title_.reset();
-                display_mode_ = DisplayMode::swap_image;
+                animate_selector();
+                timer_ = 0;
+                display_mode_ = DisplayMode::image_animate_out;
+                pfrm.speaker().play_sound("scroll", 1);
+                const auto st = calc_screen_tiles(pfrm);
+                sidebar_.emplace(
+                    pfrm, u8(st.x), u8(st.y - 5), OverlayCoord{u8(st.x), 2});
             }
         } else if (pfrm.keyboard().down_transition<Key::right>()) {
             if (cursor_index_ < 1) {
                 ++cursor_index_;
                 timer_ = seconds(1);
-                title_.reset();
-                display_mode_ = DisplayMode::swap_image;
+                animate_selector();
+                timer_ = 0;
+                display_mode_ = DisplayMode::image_animate_out;
+                pfrm.speaker().play_sound("scroll", 1);
+                const auto st = calc_screen_tiles(pfrm);
+                sidebar2_.emplace(
+                    pfrm, u8(st.x), u8(st.y - 5), OverlayCoord{0, 2});
             }
         }
         break;
 
+    case DisplayMode::image_animate_out: {
+        timer_ += delta;
+        constexpr auto anim_duration = milliseconds(150);
+        if (timer_ > anim_duration) {
+            timer_ = seconds(1);
+            animate_selector();
+            timer_ = 0;
+            pfrm.screen().fade(1.f);
+            sidebar_.reset();
+            sidebar2_.reset();
+            display_mode_ = DisplayMode::swap_image;
+        } else {
+            const auto amount = smoothstep(0.f, anim_duration, timer_);
+            if (sidebar_) {
+                sidebar_->set_display_percentage(amount);
+            }
+            if (sidebar2_) {
+                sidebar2_->set_display_percentage(amount);
+            }
+        }
+    } break;
+
     case DisplayMode::swap_image:
+        display_mode_ = DisplayMode::image_animate_in;
         switch (cursor_index_) {
         case 0:
             if (game.level() not_eq 0) {
@@ -201,10 +235,21 @@ StatePtr TitleScreenState::update(Platform& pfrm,
             pfrm.load_tile0_texture("title_1_flattened");
             break;
         }
-        display_mode_ = DisplayMode::select;
-        draw_title(pfrm, game, cursor_index_, title_);
-        pfrm.speaker().play_sound("scroll", 1);
         break;
+
+    case DisplayMode::image_animate_in: {
+        timer_ += delta;
+        constexpr auto fade_duration = milliseconds(80);
+        if (timer_ > fade_duration) {
+            timer_ = seconds(1);
+            pfrm.screen().fade(0.f);
+            draw_title(pfrm, game, cursor_index_, title_);
+            display_mode_ = DisplayMode::select;
+        } else {
+            pfrm.screen().fade(1.f - smoothstep(0.f, fade_duration, timer_),
+                               ColorConstant::rich_black);
+        }
+    } break;
 
     case DisplayMode::fade_in: {
         timer_ += delta;
@@ -238,17 +283,14 @@ StatePtr TitleScreenState::update(Platform& pfrm,
 
             const auto spacing = (st.x - (len_1 + len_2)) / 3;
 
-            options_[0].emplace(pfrm, OverlayCoord{
-                    u8(spacing), u8(st.y - 2)
-                });
+            options_[0].emplace(pfrm, OverlayCoord{u8(spacing), u8(st.y - 2)});
 
             options_[0]->assign(opt_1, [&]() -> Text::OptColors {
                 if (not game.persistent_data().clean_) {
                     return std::nullopt;
                 } else {
-                    return FontColors{
-                        ColorConstant::med_blue_gray,
-                        ColorConstant::rich_black};
+                    return FontColors{ColorConstant::med_blue_gray,
+                                      ColorConstant::rich_black};
                 }
             }());
 
@@ -256,9 +298,10 @@ StatePtr TitleScreenState::update(Platform& pfrm,
                 cursor_index_ = 1;
             }
 
-            options_[1].emplace(pfrm, opt_2, OverlayCoord{
-                    u8(spacing * 2 + len_1), u8(st.y - 2)
-                });
+            options_[1].emplace(
+                pfrm,
+                opt_2,
+                OverlayCoord{u8(spacing * 2 + len_1), u8(st.y - 2)});
 
 
             display_mode_ = DisplayMode::select;

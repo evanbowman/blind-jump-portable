@@ -78,16 +78,19 @@ bool DialogState::advance_text(Platform& pfrm,
                 }
             }
             bool done = false;
-            utf8::scan([&](const utf8::Codepoint& cp, const char*, int) {
-                if (done) {
-                    return;
-                }
-                if (cp == ' ') {
-                    done = true;
-                } else {
-                    text_state_.current_word_remaining_++;
-                }
-            }, text_state_.current_word_, str_len(text_state_.current_word_));
+            utf8::scan(
+                [&](const utf8::Codepoint& cp, const char*, int) {
+                    if (done) {
+                        return;
+                    }
+                    if (cp == ' ') {
+                        done = true;
+                    } else {
+                        text_state_.current_word_remaining_++;
+                    }
+                },
+                text_state_.current_word_,
+                str_len(text_state_.current_word_));
         }
 
         // At this point, we know the length of the next space-delimited word in
@@ -96,9 +99,8 @@ bool DialogState::advance_text(Platform& pfrm,
         const auto st = calc_screen_tiles(pfrm);
         static const auto margin_sum = 2;
         const auto text_box_width = st.x - margin_sum;
-        const auto remaining =
-            (text_box_width - text_state_.pos_)
-            - (text_state_.line_ == 0 ? 0 : 1);
+        const auto remaining = (text_box_width - text_state_.pos_) -
+                               (text_state_.line_ == 0 ? 0 : 1);
 
         if (remaining < text_state_.current_word_remaining_) {
             if (text_state_.line_ == 0) {

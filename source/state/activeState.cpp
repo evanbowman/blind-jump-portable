@@ -173,8 +173,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     for (auto& sp : game.details().get<Signpost>()) {
         auto pos = sp->get_position();
 
-        const auto dist_heuristic =
-            manhattan_length(player_pos, pos) < 32;
+        const auto dist_heuristic = manhattan_length(player_pos, pos) < 32;
 
         if (dist_heuristic and distance(player_pos, pos) < 24) {
             if (length(game.effects().get<DialogBubble>()) == 0) {
@@ -190,8 +189,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
         } else {
             if (length(game.effects().get<DialogBubble>())) {
-                (*game.effects().get<DialogBubble>().begin())
-                    ->try_destroy(*sp);
+                (*game.effects().get<DialogBubble>().begin())->try_destroy(*sp);
             }
         }
     }
@@ -205,8 +203,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         const auto action_key = game.persistent_data().settings_.action2_key_;
 
-        const auto dist_heuristic =
-            manhattan_length(player_pos, sc_pos) < 32;
+        const auto dist_heuristic = manhattan_length(player_pos, sc_pos) < 32;
 
         if (dist_heuristic and distance(player_pos, sc_pos) < 24) {
 
@@ -217,15 +214,16 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             if (pfrm.keyboard().down_transition(action_key) and
                 not pfrm.keyboard()
-                    .any_pressed<Key::left, Key::right, Key::up, Key::down>()) {
+                        .any_pressed<Key::left,
+                                     Key::right,
+                                     Key::up,
+                                     Key::down>()) {
 
                 game.effects().get<DialogBubble>().pop();
 
                 auto future_state = make_deferred_state<ItemShopState>();
                 static const LocaleString scavenger_dialog[] = {
-                    LocaleString::scavenger_shop,
-                    LocaleString::empty
-                };
+                    LocaleString::scavenger_shop, LocaleString::empty};
                 return state_pool().create<DialogState>(future_state,
                                                         scavenger_dialog);
             }

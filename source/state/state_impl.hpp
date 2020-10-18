@@ -175,12 +175,17 @@ private:
     std::optional<Text> title_;
     std::optional<Text> options_[2];
 
+    std::optional<Sidebar> sidebar_;
+    std::optional<LeftSidebar> sidebar2_;
+
     enum class DisplayMode {
         sleep,
         fade_in,
         wait,
         select,
+        image_animate_out,
         swap_image,
+        image_animate_in,
         fade_out,
         pause,
     } display_mode_ = DisplayMode::sleep;
@@ -232,8 +237,7 @@ private:
 
 class ActiveState : public OverworldState {
 public:
-    ActiveState(bool camera_tracking = true)
-        : OverworldState(camera_tracking)
+    ActiveState(bool camera_tracking = true) : OverworldState(camera_tracking)
     {
     }
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -465,7 +469,6 @@ public:
     void display_time_remaining(Platform&, Game&) override;
 
 private:
-
     void update_text(Platform& pfrm, Game& game);
 
     int msg_index_ = 0;
@@ -856,11 +859,8 @@ private:
 
 class DialogState : public OverworldState {
 public:
-    DialogState(DeferredState exit_state,
-                const LocaleString* text) :
-        OverworldState(true),
-        exit_state_(exit_state),
-        text_(text)
+    DialogState(DeferredState exit_state, const LocaleString* text)
+        : OverworldState(true), exit_state_(exit_state), text_(text)
     {
     }
 
@@ -872,7 +872,6 @@ public:
     void display_time_remaining(Platform& pfrm, Game& game) override;
 
 private:
-
     DeferredState exit_state_;
 
     const LocaleString* text_;
@@ -1135,8 +1134,7 @@ private:
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
         LocaleString::settings_show_stats,
-        LocaleString::settings_speedrun_clock
-    };
+        LocaleString::settings_speedrun_clock};
 
     std::optional<Text> message_;
 
@@ -1211,7 +1209,6 @@ private:
     };
 
 public:
-
     ItemShopState() : OverworldState(false)
     {
     }
@@ -1219,8 +1216,8 @@ public:
     // When the users selects the item info button, the item shop state exits,
     // and transitions to a dialog state, which holds the parameters needed to
     // recreate the item shop state when the dialog finishes.
-    ItemShopState(DisplayMode mode, int selector_pos, int page) :
-        OverworldState(false)
+    ItemShopState(DisplayMode mode, int selector_pos, int page)
+        : OverworldState(false)
     {
         display_mode_ = mode;
         selector_pos_ = selector_pos;
@@ -1231,7 +1228,8 @@ public:
             sell_page_num_ = page;
         } else {
             // error in program logic.
-            while (true) ;
+            while (true)
+                ;
         }
     }
 
@@ -1436,10 +1434,8 @@ struct InventoryItemHandler {
     int icon_;
     StatePtr (*callback_)(Platform& pfrm, Game& game);
     LocaleString description_;
-    LocaleString scavenger_dialog_[2] = {
-        LocaleString::sc_dialog_skip,
-        LocaleString::empty
-    };
+    LocaleString scavenger_dialog_[2] = {LocaleString::sc_dialog_skip,
+                                         LocaleString::empty};
     enum { no = 0, yes, custom } single_use_ = no;
 };
 

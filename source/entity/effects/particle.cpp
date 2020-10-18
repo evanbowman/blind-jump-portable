@@ -8,9 +8,8 @@ Particle::Particle(const Vec2<Float>& position,
                    Microseconds duration,
                    Microseconds offset,
                    std::optional<Float> angle,
-                   const Vec2<Float>& reference_speed) :
-    timer_(offset),
-    duration_(duration)
+                   const Vec2<Float>& reference_speed)
+    : timer_(offset), duration_(duration)
 {
     set_position(position);
 
@@ -25,8 +24,9 @@ Particle::Particle(const Vec2<Float>& position,
         step_vector_ = cartesian_angle(*angle) * drift_speed;
     } else {
         step_vector_ =
-            direction(position_, rng::sample<64>(position_, rng::utility_state))
-            * drift_speed;
+            direction(position_,
+                      rng::sample<64>(position_, rng::utility_state)) *
+            drift_speed;
     }
 
     step_vector_ = step_vector_ + reference_speed;
