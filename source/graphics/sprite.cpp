@@ -1,7 +1,11 @@
 #include "sprite.hpp"
 
 
-Sprite::Sprite(Size size) : size_(size)
+Sprite::Sprite() :
+    alpha_(Alpha::opaque),
+    size_(Size::w32_h32),
+    flip_x_(false),
+    flip_y_(false)
 {
 }
 
@@ -38,7 +42,8 @@ void Sprite::set_texture_index(TextureIndex texture_index)
 
 void Sprite::set_flip(const Vec2<bool>& flip)
 {
-    flip_ = flip;
+    flip_x_ = flip.x;
+    flip_y_ = flip.y;
 }
 
 
@@ -90,9 +95,9 @@ TextureIndex Sprite::get_texture_index() const
 }
 
 
-const Vec2<bool>& Sprite::get_flip() const
+Vec2<bool> Sprite::get_flip() const
 {
-    return flip_;
+    return {flip_x_, flip_y_};
 }
 
 

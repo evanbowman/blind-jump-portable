@@ -11,9 +11,21 @@ static auto fade_in_color(const Game& game)
 }
 
 
-void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
+static void swap_background(Platform& pfrm, const char* image)
 {
-    pfrm.screen().fade(1.f);
+    pfrm.load_tile0_texture(image);
+
+    const auto screen_tiles = calc_screen_tiles(pfrm);
+
+    draw_image(pfrm, 1, 0, 3, 30, 14, Layer::background);
+
+    for (int i = 0; i < screen_tiles.x; ++i) {
+        pfrm.set_tile(Layer::background, i, 2, 9);
+    }
+
+    for (int i = 11; i < 23; ++i) {
+        pfrm.set_tile(Layer::background, i, 3, 9);
+    }
 
     for (int x = 0; x < TileMap::width; ++x) {
         for (int y = 0; y < TileMap::height; ++y) {
@@ -21,6 +33,12 @@ void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
             pfrm.set_tile(Layer::map_1, x, y, 0);
         }
     }
+}
+
+
+void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
+{
+    pfrm.screen().fade(1.f);
 
     pfrm.set_overlay_origin(0, 0);
     game.camera() = {};
@@ -29,11 +47,6 @@ void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
     pfrm.speaker().stop_music();
 
     pfrm.load_overlay_texture("overlay");
-    if (game.level() == 0) {
-        pfrm.load_tile0_texture("title_1_flattened");
-    } else {
-        pfrm.load_tile0_texture("title_2_flattened");
-    }
     pfrm.load_tile1_texture("tilesheet_top");
 
     const Vec2<Float> arbitrary_offscreen_location{1000, 1000};
@@ -56,18 +69,10 @@ void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     pfrm.screen().fade(1.f, fade_in_color(game));
 
-    draw_image(pfrm, 1, 0, 3, 30, 14, Layer::background);
-
-    for (int i = 0; i < screen_tiles.x; ++i) {
-        pfrm.set_tile(Layer::background, i, 2, 9);
-    }
-
-    // We need to share vram memory for the background image and the tileset
-    // layer. Therefore, in order for the tilemap not to show up, we need to
-    // designate part of the image as one transparent 4x3 chunk. Now, this code
-    // covers up that transparent chunk with another tile.
-    for (int i = 11; i < 23; ++i) {
-        pfrm.set_tile(Layer::background, i, 3, 9);
+    if (game.level() == 0) {
+        swap_background(pfrm, "title_1_flattened");
+    } else {
+        swap_background(pfrm, "title_2_flattened");
     }
 }
 
@@ -227,12 +232,12 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
         switch (cursor_index_) {
         case 0:
             if (game.level() not_eq 0) {
-                pfrm.load_tile0_texture("title_2_flattened");
+                swap_background(pfrm, "title_2_flattened");
             }
             break;
 
         case 1:
-            pfrm.load_tile0_texture("title_1_flattened");
+            swap_background(pfrm, "title_1_flattened");
             break;
         }
         break;

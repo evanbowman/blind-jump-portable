@@ -10,7 +10,7 @@ using TextureIndex = u16;
 
 class Sprite {
 public:
-    enum class Alpha : u8 {
+    enum Alpha : u8 {
         opaque,
         translucent,
         transparent, // invisible
@@ -20,7 +20,7 @@ public:
     enum Size : u8 { w32_h32, w16_h32 };
 
 
-    Sprite(Size size = Size::w32_h32);
+    Sprite();
 
 
     using Rotation = s16;
@@ -63,7 +63,7 @@ public:
     TextureIndex get_texture_index() const;
 
 
-    const Vec2<bool>& get_flip() const;
+    Vec2<bool> get_flip() const;
 
 
     Alpha get_alpha() const;
@@ -82,9 +82,14 @@ public:
 
 
 private:
-    Alpha alpha_ = Alpha::opaque;
-    Size size_ = Size::w32_h32;
-    Vec2<bool> flip_;
+    // For the gameboy advance edition of the game, all the data for the engine
+    // is designed to fit within IWRAM, so we need to be careful about
+    // memory. Packing the engine into 32kB has benefits for other platforms
+    // too--this game is very cache-friendly.
+    Alpha alpha_ : 2;
+    Size size_ : 1;
+    bool flip_x_ : 1;
+    bool flip_y_ : 1;
     Vec2<Float> position_;
     Vec2<s32> origin_;
     Vec2<s16> scale_;

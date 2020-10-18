@@ -71,6 +71,12 @@ public:
             return;
         }
 
+        if (texture_->getSize().x == 0 or
+            texture_->getSize().y == 0 or
+            tile_size_.x == 0 or tile_size_.y == 0) {
+            return;
+        }
+
         // find tile position in the tileset texture
         int tu = index % (texture_->getSize().x / tile_size_.x);
         int tv = index / (texture_->getSize().x / tile_size_.x);
@@ -144,6 +150,7 @@ public:
 
     sf::RectangleShape fade_overlay_;
     bool fade_include_sprites_ = true;
+    bool fade_include_overlay_ = false;
 
     sf::Color fade_color_ = sf::Color::Transparent;
 
@@ -163,6 +170,7 @@ public:
     const bool fullscreen_;
     int window_scale_ = 2;
     sf::RenderWindow window_;
+    sf::RenderTexture rt_;
 
     Vec2<u32> window_size_;
 
@@ -208,6 +216,8 @@ public:
 
         window_size_ = {(u32)resolution.x * window_scale_,
                         (u32)resolution.y * window_scale_};
+
+        rt_.create(240, 160);
 
         auto sound_folder = resource_path() + ("sounds" PATH_DELIMITER);
         // lisp::loadv<lisp::Symbol>("sound-dir").name_;
@@ -634,7 +644,9 @@ void Platform::Screen::clear()
     }
 
     auto& window = ::platform->data()->window_;
+    auto& rt = ::platform->data()->rt_;
     window.clear();
+    rt.clear();
 
     ::platform->data()->fade_overlay_.setFillColor(
         ::platform->data()->fade_color_);
@@ -667,8 +679,12 @@ void Platform::Screen::clear()
                       (std::string("failed to load texture ") + request.second)
                           .c_str());
                 exit(EXIT_FAILURE);
+            } else {
+                info(*::platform,
+                     (std::string("loaded image ") + request.second).c_str());
             }
             image.createMaskFromColor({255, 0, 255, 255});
+            image.saveToFile("/home/evan/blind-jump-portable/build/test." + request.second + ".png");
 
             // For space savings on the gameboy advance, I used tile0 for the
             // background as well. But it was meta-tiled as 4x3, so we need to
@@ -705,6 +721,12 @@ void Platform::Screen::clear()
                         exit(EXIT_FAILURE);
                     }
 
+                    if (not platform->data()
+                              ->tile0_texture_.loadFromImage(image)) {
+                        error(*::platform,
+                              "Failed to create tile0 texture");
+                    }
+
                 } else {
                     if (not::platform->data()
                                ->background_texture_.loadFromImage(image)) {
@@ -712,17 +734,18 @@ void Platform::Screen::clear()
                               "Failed to create background texture");
                         exit(EXIT_FAILURE);
                     }
-                }
-                // meta_image.saveToFile("/Users/evanbowman/Desktop/BlindJump/build/meta-test.png");
-            }
 
-            if (not[&] {
+                    sf::Image unmeta_image;
+                    unmeta_image.create(image.getSize().x / 3, 24);
+                }
+
+            } else if (not[&] {
                     switch (request.first) {
                     case TextureSwap::spritesheet:
                         return &::platform->data()->spritesheet_texture_;
 
                     case TextureSwap::tile0:
-                        return &::platform->data()->tile0_texture_;
+                        break;
 
                     case TextureSwap::tile1:
                         return &::platform->data()->tile1_texture_;
@@ -945,11 +968,8 @@ void Platform::Screen::display()
     sf::View view;
     view.setSize(view_.get_size().x, view_.get_size().y);
 
-    view = get_letterbox_view(view,
-                              ::platform->data()->window_.getSize().x,
-                              ::platform->data()->window_.getSize().y);
-
     auto& window = ::platform->data()->window_;
+    auto& rt = ::platform->data()->rt_;
 
     if (::platform->data()->background_changed_) {
         ::platform->data()->background_changed_ = false;
@@ -962,11 +982,11 @@ void Platform::Screen::display()
     {
         view.setCenter(view_.get_center().x * 0.3f + view_.get_size().x / 2,
                        view_.get_center().y * 0.3f + view_.get_size().y / 2);
-        window.setView(view);
+        rt.setView(view);
 
         sf::Sprite bkg_spr(::platform->data()->background_rt_.getTexture());
 
-        window.draw(bkg_spr);
+        rt.draw(bkg_spr);
 
         const auto right_x_wrap_threshold = 51.f;
         const auto bottom_y_wrap_threshold = 320.f;
@@ -974,44 +994,44 @@ void Platform::Screen::display()
         // Manually wrap the background sprite
         if (view_.get_center().x > right_x_wrap_threshold) {
             bkg_spr.setPosition(256, 0);
-            window.draw(bkg_spr);
+            rt.draw(bkg_spr);
         }
 
         if (view_.get_center().x < 0.f) {
             bkg_spr.setPosition(-256, 0);
-            window.draw(bkg_spr);
+            rt.draw(bkg_spr);
         }
 
         if (view_.get_center().y < 0.f) {
             bkg_spr.setPosition(0, -256);
-            window.draw(bkg_spr);
+            rt.draw(bkg_spr);
 
             if (view_.get_center().x < 0.f) {
                 bkg_spr.setPosition(-256, -256);
-                window.draw(bkg_spr);
+                rt.draw(bkg_spr);
             } else if (view_.get_center().x > right_x_wrap_threshold) {
                 bkg_spr.setPosition(256, -256);
-                window.draw(bkg_spr);
+                rt.draw(bkg_spr);
             }
         }
 
         if (view_.get_center().y > bottom_y_wrap_threshold) {
             bkg_spr.setPosition(0, 256);
-            window.draw(bkg_spr);
+            rt.draw(bkg_spr);
 
             if (view_.get_center().x < 0.f) {
                 bkg_spr.setPosition(-256, 256);
-                window.draw(bkg_spr);
+                rt.draw(bkg_spr);
             } else if (view_.get_center().x > right_x_wrap_threshold) {
                 bkg_spr.setPosition(256, 256);
-                window.draw(bkg_spr);
+                rt.draw(bkg_spr);
             }
         }
     }
 
     view.setCenter(view_.get_center().x + view_.get_size().x / 2,
                    view_.get_center().y + view_.get_size().y / 2);
-    window.setView(view);
+    rt.setView(view);
 
     if (::platform->data()->map_0_changed_) {
         ::platform->data()->map_0_changed_ = false;
@@ -1027,19 +1047,20 @@ void Platform::Screen::display()
         ::platform->data()->map_1_rt_.display();
     }
 
-    window.draw(sf::Sprite(::platform->data()->map_0_rt_.getTexture()));
-    window.draw(sf::Sprite(::platform->data()->map_1_rt_.getTexture()));
+    rt.draw(sf::Sprite(::platform->data()->map_0_rt_.getTexture()));
+    rt.draw(sf::Sprite(::platform->data()->map_1_rt_.getTexture()));
 
     ::platform->data()->fade_overlay_.setPosition(
         {view_.get_center().x, view_.get_center().y});
 
     const bool fade_sprites = ::platform->data()->fade_include_sprites_;
+    const bool fade_overlay = ::platform->data()->fade_include_overlay_;
 
     // If we don't want the sprites to be included in the color fade, we'll want
     // to draw the fade overlay prior to drawing the sprites... or we could quit
     // being lazy and use a shader instead of a dumb rectangleshape :)
     if (not fade_sprites) {
-        window.draw(::platform->data()->fade_overlay_);
+        rt.draw(::platform->data()->fade_overlay_);
     }
 
     for (auto& spr : reversed(::draw_queue)) {
@@ -1093,14 +1114,15 @@ void Platform::Screen::display()
             sf::Shader& shader = ::platform->data()->color_shader_;
             shader.setUniform("amount", mix.amount_ / 255.f);
             shader.setUniform("targetColor", real_color(mix.color_));
-            window.draw(sf_spr, &shader);
+            rt.draw(sf_spr, &shader);
         } else {
-            window.draw(sf_spr);
+            rt.draw(sf_spr);
         }
     }
 
-    if (fade_sprites) {
-        window.draw(::platform->data()->fade_overlay_);
+    const auto cached_view = view;
+    if (fade_sprites and not fade_overlay) {
+        rt.draw(::platform->data()->fade_overlay_);
     }
 
     auto& origin = ::platform->data()->overlay_origin_;
@@ -1108,9 +1130,26 @@ void Platform::Screen::display()
     view.setCenter(
         {view_.get_size().x / 2 + origin.x, view_.get_size().y / 2 + origin.y});
 
+    rt.setView(view);
+
+    rt.draw(::platform->data()->overlay_);
+
+    if (fade_overlay) {
+        rt.setView(cached_view);
+        rt.draw(::platform->data()->fade_overlay_);
+    }
+
+    rt.display();
+
+    view.setSize(view_.get_size().x, view_.get_size().y);
+
+    view = get_letterbox_view(view,
+                              ::platform->data()->window_.getSize().x,
+                              ::platform->data()->window_.getSize().y);
+
     window.setView(view);
 
-    window.draw(::platform->data()->overlay_);
+    window.draw(sf::Sprite(rt.getTexture()));
 
     window.display();
 
@@ -1132,6 +1171,7 @@ void Platform::Screen::fade(Float amount,
                                            static_cast<uint8_t>(c.z * 255),
                                            static_cast<uint8_t>(amount * 255)};
         ::platform->data()->fade_include_sprites_ = include_sprites;
+        ::platform->data()->fade_include_overlay_ = include_overlay;
     } else {
         const auto c2 = real_color(*base);
         ::platform->data()->fade_color_ = {
