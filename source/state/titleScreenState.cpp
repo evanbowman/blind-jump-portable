@@ -104,7 +104,7 @@ draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
         if (game.level() == 0 or sel == 1) {
             return custom_color(0xFFFFFF);
         } else {
-            return custom_color(0x1B4B7A);
+            return custom_color(0x134675);
         }
     }();
 
