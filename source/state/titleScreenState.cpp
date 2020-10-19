@@ -100,8 +100,16 @@ draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
         }
     }();
 
+    const auto text_fg_color = [&] {
+        if (game.level() == 0 or sel == 1) {
+            return custom_color(0xFFFFFF);
+        } else {
+            return custom_color(0x1B4B7A);
+        }
+    }();
+
     title->assign(str->c_str(),
-                  Text::OptColors{{custom_color(0xFFFFFF), text_bg_color}});
+                  Text::OptColors{{text_fg_color, text_bg_color}});
 }
 
 
