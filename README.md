@@ -101,6 +101,10 @@ The game is written almost entirely in C++, along with a small amount of C, a cu
 
 BlindJump uses a custom LISP dialect for lightweight scripting. The init.lisp script offers some further usage tips, but generally, our LISP implementation supports functions as first class values, functional currying, most of the common builtins, like map, cons, list, etc., variadic functions, and many more features. Our interpreter does not support lambdas, although technically I think you could create your own lambdas via abuse of the builtin functional currying, and the eval keyword. But custom function definitions are not a goal of the script interface. BlindJump executes a number of scripts for various scenarios--you can think of the scripts as analogous to git hooks. In the settings menu, the game allows you to launch a repl while the game is running, to manipulate game state (for gameboy builds, the game will render an onscreen keyboard and console, for desktop builds, the game will pause, and read from the command line).
 
+#### Why not just use LUA/TCL/etc.
+
+We actually considered LUA, but the LUA interpreter uses a lot of memory (relatively), and requires an implementaion of realloc. We did not want to add non-deterministic memory dependencies to the project. Blind Jump's lisp interpreter state, operand stack, and heap all fit within 11kB, and the interpreter allocates all values from fixed memory pools within the interpreter's ~11kB memory block. At startup, without any libraries or code loaded, the Lua vm uses more memory than Blind Jump's lisp interpreter when fully saturated (~800 live objects).
+
 [Contents↑](#contents)
 
 ## Building
