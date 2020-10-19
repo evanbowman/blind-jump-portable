@@ -22,7 +22,7 @@ bool Game::load_save_data(Platform& pfrm)
 
     if (pfrm.read_save_data(save_buffer, sizeof(PersistentData))) {
         PersistentData* loaded = (PersistentData*)save_buffer;
-        if (loaded->magic_ == PersistentData::magic_val) {
+        if (loaded->magic_.get() == PersistentData::magic_val) {
             info(pfrm, "loaded existing save file");
             persistent_data_ = *loaded;
 
@@ -34,25 +34,43 @@ bool Game::load_save_data(Platform& pfrm)
 }
 
 
+class SDPrinter : public lisp::Printer {
+public:
+    void put_str(const char* str) override
+    {
+        collector_ += str;
+    }
+
+    StringBuffer<100> collector_;
+};
+
+
 void newgame(Platform& pfrm, Game& game)
 {
     info(pfrm, "constructing new game...");
 
     // Except for highscores and settings, we do not want to keep anything in
     // the old save data.
-    const auto highscores = game.persistent_data().highscores_;
+    PersistentData::HighScores highscores;
+    std::copy(std::begin(game.persistent_data().highscores_),
+              std::end(game.persistent_data().highscores_),
+              std::begin(highscores));
+
     const auto settings = game.persistent_data().settings_;
 
     game.persistent_data() = PersistentData{};
     game.persistent_data().inventory_.push_item(
         pfrm, game, Item::Type::blaster, false);
 
-    game.persistent_data().highscores_ = highscores;
+    std::copy(std::begin(highscores),
+              std::end(highscores),
+              std::begin(game.persistent_data().highscores_));
+
     game.persistent_data().settings_ = settings;
 
     pfrm.write_save_data(&game.persistent_data(), sizeof(PersistentData));
 
-    game.player().set_health(game.persistent_data().player_health_);
+    game.player().set_health(game.persistent_data().player_health_.get());
     game.score() = 0;
     game.inventory() = game.persistent_data().inventory_;
     game.powerups().clear();
@@ -83,23 +101,29 @@ Game::Game(Platform& pfrm)
         }
     }
 
-    player_.set_health(persistent_data_.player_health_);
-    score_ = persistent_data_.score_;
+    player_.set_health(persistent_data_.player_health_.get());
+    score_ = persistent_data_.score_.get();
     inventory_ = persistent_data_.inventory_;
 
-    for (u32 i = 0; i < persistent_data_.powerup_count_; ++i) {
+    for (u32 i = 0; i < persistent_data_.powerup_count_.get(); ++i) {
         powerups_.push_back(persistent_data_.powerups_[i]);
     }
 
-    rng::critical_state = persistent_data_.seed_;
+    rng::critical_state = persistent_data_.seed_.get();
 
     init_script(pfrm);
+
+    if (auto eval_opt = pfrm.get_opt('e')) {
+        lisp::dostring(eval_opt);
+    }
+
+    lisp::dostring(pfrm.load_file_contents("scripts", "init.lisp"));
 
     pfrm.logger().set_threshold(persistent_data_.settings_.log_severity_);
 
     pfrm.screen().enable_night_mode(persistent_data_.settings_.night_mode_);
 
-    locale_set_language(persistent_data_.settings_.language_);
+    locale_set_language(persistent_data_.settings_.language_.get());
 
     state_ = State::initial(pfrm, *this);
 
@@ -907,12 +931,12 @@ void Game::init_script(Platform& pfrm)
                           if (argc == 1) {
                               L_EXPECT_OP(0, integer);
 
-                              game->persistent_data().level_ =
-                                  lisp::get_op(0)->integer_.value_;
+                              game->persistent_data().level_
+                                  .set(lisp::get_op(0)->integer_.value_);
 
                           } else {
                               return lisp::make_integer(
-                                  game->persistent_data().level_);
+                                  game->persistent_data().level_.get());
                           }
                       }
                       return L_NIL;
@@ -921,7 +945,7 @@ void Game::init_script(Platform& pfrm)
     lisp::set_var("zone", lisp::make_function([](int argc) {
                       if (auto game = interp_get_game()) {
                           auto& zone =
-                              zone_info(game->persistent_data().level_);
+                              zone_info(game->persistent_data().level_.get());
                           if (zone == zone_1) {
                               return lisp::make_integer(1);
                           } else if (zone == zone_2) {
@@ -1222,12 +1246,6 @@ void Game::init_script(Platform& pfrm)
 
             return L_NIL;
         }));
-
-    if (auto eval_opt = pfrm.get_opt('e')) {
-        lisp::dostring(eval_opt);
-    }
-
-    lisp::dostring(pfrm.load_file_contents("scripts", "init.lisp"));
 }
 
 
@@ -1264,9 +1282,9 @@ static bool contains(lisp::Value* tiles_list, u8 t)
 COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
     if (set_level) {
-        persistent_data_.level_ = *set_level;
+        persistent_data_.level_.set(*set_level);
     } else {
-        persistent_data_.level_ += 1;
+        persistent_data_.level_.set(persistent_data_.level_.get() + 1);
     }
 
     if (level() == 0) {
@@ -1280,9 +1298,9 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
     player_.override_id(player_.id());
     transporter_.override_id(transporter_.id());
 
-    persistent_data_.score_ = score_;
-    persistent_data_.player_health_ = player_.get_health();
-    persistent_data_.seed_ = rng::critical_state;
+    persistent_data_.score_.set(score_);
+    persistent_data_.player_health_.set(player_.get_health());
+    persistent_data_.seed_.set(rng::critical_state);
     persistent_data_.inventory_ = inventory_;
     persistent_data_.store_powerups(powerups_);
 

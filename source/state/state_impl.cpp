@@ -19,15 +19,15 @@ static void lethargy_update(Platform& pfrm, Game& game)
 {
     if (auto lethargy = get_powerup(game, Powerup::Type::lethargy)) {
         lethargy->dirty_ = true;
-        if (lethargy->parameter_ > 0) {
-            lethargy->parameter_ -= seconds(1);
+        if (lethargy->parameter_.get() > 0) {
+            lethargy->parameter_.set(lethargy->parameter_.get() - seconds(1));
             if (not game.on_timeout(pfrm, seconds(1), lethargy_update)) {
                 // Because, if we fail to enqueue the timeout, I believe that
                 // the powerup would get stuck.
-                lethargy->parameter_ = 0;
+                lethargy->parameter_.set(0);
             }
         } else {
-            lethargy->parameter_ = 0;
+            lethargy->parameter_.set(0);
         }
     }
 }
@@ -203,11 +203,11 @@ void repaint_powerups(Platform& pfrm,
     auto get_normalized_param = [](Powerup& powerup) {
         switch (powerup.display_mode_) {
         case Powerup::DisplayMode::integer:
-            return powerup.parameter_;
+            return powerup.parameter_.get();
         case Powerup::DisplayMode::timestamp:
-            return powerup.parameter_ / 1000000;
+            return powerup.parameter_.get() / 1000000;
         }
-        return 0;
+        return s32(0);
     };
 
     if (clean) {
@@ -252,7 +252,7 @@ void update_powerups(Platform& pfrm,
     bool update_powerups = false;
     bool update_all = false;
     for (auto it = game.powerups().begin(); it not_eq game.powerups().end();) {
-        if (it->parameter_ <= 0) {
+        if (it->parameter_.get() <= 0) {
             it = game.powerups().erase(it);
             update_powerups = true;
             update_all = true;
@@ -383,7 +383,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [](Platform& pfrm, Game& game) {
          const auto c = current_zone(game).energy_glow_color_;
          pfrm.speaker().play_sound("bell", 5);
-         game.persistent_data().level_ = boss_0_level;
+         game.persistent_data().level_.set(boss_0_level);
          game.score() = 0; // Otherwise, people could exploit the jump packs to
                            // keep replaying a zone, in order to get a really
                            // high score.
@@ -397,7 +397,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [](Platform& pfrm, Game& game) {
          const auto c = current_zone(game).energy_glow_color_;
          pfrm.speaker().play_sound("bell", 5);
-         game.persistent_data().level_ = boss_1_level;
+         game.persistent_data().level_.set(boss_1_level);
          game.score() = 0;
          return state_pool().create<PreFadePauseState>(game, c);
      },
@@ -409,7 +409,7 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [](Platform& pfrm, Game& game) {
          const auto c = current_zone(game).energy_glow_color_;
          pfrm.speaker().play_sound("bell", 5);
-         game.persistent_data().level_ = boss_2_level;
+         game.persistent_data().level_.set(boss_2_level);
          game.score() = 0;
          return state_pool().create<PreFadePauseState>(game, c);
      },
@@ -659,7 +659,7 @@ StatePtr State::initial(Platform& pfrm, Game& game)
 [[noreturn]] void factory_reset(Platform& pfrm)
 {
     PersistentData data;
-    data.magic_ = 0xBAD;
+    data.magic_.set(0xBAD);
     pfrm.write_save_data(&data, sizeof data);
     pfrm.fatal();
 }

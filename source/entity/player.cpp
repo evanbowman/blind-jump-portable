@@ -728,7 +728,7 @@ void Blaster::shoot(Platform& pf, Game& game)
 
         auto undo_powerups = [&] {
             for (auto p : applied_powerups) {
-                p->parameter_ += 1;
+                p->parameter_.set(p->parameter_.get() + 1);
             }
         };
 
@@ -739,7 +739,7 @@ void Blaster::shoot(Platform& pf, Game& game)
         }
 
         if (auto p = get_powerup(game, Powerup::Type::explosive_rounds)) {
-            expl_rounds = p->parameter_;
+            expl_rounds = p->parameter_.get();
             applied_powerups.push_back(p);
         }
 
@@ -747,7 +747,7 @@ void Blaster::shoot(Platform& pf, Game& game)
         if (int(length(game.effects().get<Laser>())) < max_lasers) {
 
             for (auto p : applied_powerups) {
-                p->parameter_ -= 1;
+                p->parameter_.set(p->parameter_.get() - 1);
                 p->dirty_ = true;
             }
 

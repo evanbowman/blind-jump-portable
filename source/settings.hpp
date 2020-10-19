@@ -3,12 +3,18 @@
 #include "graphics/contrast.hpp"
 #include "platform/key.hpp"
 #include "severity.hpp"
+#include "number/endian.hpp"
 
 
 struct Settings {
-    enum Difficulty { easy, normal, hard, survival, count };
+    enum Difficulty : u8 { easy, normal, hard, survival, count };
 
-    int language_ = 1;
+    Settings()
+    {
+        language_.set(1);
+    }
+
+    HostInteger<s32> language_;
     bool show_stats_ = false;
     bool night_mode_ = false;
     Contrast contrast_ = 0;

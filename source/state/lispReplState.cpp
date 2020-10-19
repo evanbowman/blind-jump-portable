@@ -116,7 +116,7 @@ void LispReplState::enter(Platform& pfrm, Game& game, State& prev_state)
 
 void LispReplState::exit(Platform& pfrm, Game& game, State& next_state)
 {
-    locale_set_language(game.persistent_data().settings_.language_);
+    locale_set_language(game.persistent_data().settings_.language_.get());
 
     entry_.reset();
     keyboard_.clear();

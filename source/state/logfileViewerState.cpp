@@ -11,7 +11,7 @@ void LogfileViewerState::enter(Platform& pfrm, Game& game, State& prev_state)
 
 void LogfileViewerState::exit(Platform& pfrm, Game& game, State& next_state)
 {
-    locale_set_language(game.persistent_data().settings_.language_);
+    locale_set_language(game.persistent_data().settings_.language_.get());
     pfrm.screen().fade(0.f);
     pfrm.fill_overlay(0);
 }

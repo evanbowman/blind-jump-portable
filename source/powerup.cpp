@@ -10,7 +10,7 @@ void add_powerup(Game& game,
     // Collapse with existing powerup
     for (auto& powerup : game.powerups()) {
         if (powerup.type_ == t) {
-            powerup.parameter_ += param;
+            powerup.parameter_.set(powerup.parameter_.get() + param);
             powerup.dirty_ = true;
             return;
         }
@@ -20,7 +20,12 @@ void add_powerup(Game& game,
         game.powerups().erase(game.powerups().begin());
     }
 
-    game.powerups().push_back({t, param, false, mode});
+    Powerup p;
+    p.type_ = t;
+    p.parameter_.set(param);
+    p.dirty_ = false;
+    p.display_mode_ = mode;
+    game.powerups().push_back(p);
 }
 
 

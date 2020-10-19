@@ -146,7 +146,7 @@ public:
 
     Level level() const
     {
-        return persistent_data_.level_;
+        return persistent_data_.level_.get();
     }
 
     auto& highscores()

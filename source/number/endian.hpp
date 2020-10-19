@@ -18,6 +18,19 @@
     ((((x)&0xff000000) >> 24) | (((x)&0x00ff0000) >> 8) |                      \
      (((x)&0x0000ff00) << 8) | (((x)&0x000000ff) << 24))
 
+#ifdef __bswap_constant_64
+#undef __bswap_constant_64
+#endif
+#define __bswap_constant_64(x)                                                 \
+    ((((x) & 0xff00000000000000ull) >> 56)                                     \
+     | (((x) & 0x00ff000000000000ull) >> 40)                                   \
+     | (((x) & 0x0000ff0000000000ull) >> 24)                                   \
+     | (((x) & 0x000000ff00000000ull) >> 8)                                    \
+     | (((x) & 0x00000000ff000000ull) << 8)                                    \
+     | (((x) & 0x0000000000ff0000ull) << 24)                                   \
+     | (((x) & 0x000000000000ff00ull) << 40)                                   \
+     | (((x) & 0x00000000000000ffull) << 56))
+
 
 #ifdef __GBA__
 inline bool is_little_endian()
@@ -83,6 +96,24 @@ template <> inline s32 to_host_order(s32 val)
     }
 }
 
+template <> inline u64 to_host_order(u64 val)
+{
+    if (is_little_endian()) {
+        return val;
+    } else {
+        return __bswap_constant_64(val);
+    }
+}
+
+template <> inline s64 to_host_order(s64 val)
+{
+    if (is_little_endian()) {
+        return val;
+    } else {
+        return __bswap_constant_64(val);
+    }
+}
+
 
 template <typename T> class HostInteger {
 public:
@@ -90,6 +121,13 @@ public:
     // this class behave similarly to a plain integer. But then I get
     // class-memaccess errors, which I don't want to disable throughout the
     // project... calling get()/set() isn't so bad.
+
+    HostInteger() = default;
+
+    explicit HostInteger(T value)
+    {
+        set(value);
+    }
 
     void set(T value)
     {
@@ -113,3 +151,5 @@ using host_u16 = HostInteger<u16>;
 using host_u32 = HostInteger<u32>;
 using host_s16 = HostInteger<s16>;
 using host_s32 = HostInteger<s32>;
+using host_u64 = HostInteger<u64>;
+using host_s64 = HostInteger<s64>;

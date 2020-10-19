@@ -27,7 +27,7 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
     pfrm.set_overlay_origin(0, 0);
     pfrm.speaker().stop_music();
 
-    locale_set_language(game.persistent_data().settings_.language_);
+    locale_set_language(game.persistent_data().settings_.language_.get());
 }
 
 

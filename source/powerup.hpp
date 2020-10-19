@@ -2,6 +2,7 @@
 
 
 #include "memory/buffer.hpp"
+#include "number/endian.hpp"
 
 
 class Game;
@@ -13,7 +14,7 @@ public:
 
     enum class Type { accelerator, lethargy, explosive_rounds } type_;
 
-    int parameter_;
+    HostInteger<s32> parameter_;
     bool dirty_;
 
     enum class DisplayMode {

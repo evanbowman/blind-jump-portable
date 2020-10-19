@@ -9,12 +9,15 @@ void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
     game.player().set_visible(false);
 
     for (auto& score : reversed(game.highscores())) {
-        if (score < game.score()) {
-            score = game.score();
+        if (score.get() < game.score()) {
+            score.set(game.score());
             break;
         }
     }
-    std::sort(game.highscores().rbegin(), game.highscores().rend());
+    std::sort(std::begin(game.highscores()), std::end(game.highscores()),
+              [](auto& lhs, auto& rhs) {
+                  return lhs.get() > rhs.get();
+              });
 }
 
 
@@ -103,7 +106,7 @@ void DeathContinueState::repaint_stats(Platform& pfrm, Game& game)
             StringBuffer<9> fmt = str;
             fmt += " ";
 
-            const auto score = game.highscores()[i + offset];
+            const auto score = game.highscores()[i + offset].get();
 
             auto highlight = score == game.score() and not highlighted;
             if (highlight) {
@@ -199,7 +202,7 @@ DeathContinueState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 repaint_stats(pfrm, game);
 
-                game.persistent_data().seed_ = rng::critical_state;
+                game.persistent_data().seed_.set(rng::critical_state);
                 game.inventory().remove_non_persistent();
 
                 PersistentData& data = game.persistent_data().reset(pfrm);

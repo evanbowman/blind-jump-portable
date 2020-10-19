@@ -22,8 +22,8 @@ void Inventory::push_item(Platform& pfrm,
     }
 
     for (auto& item : data_) {
-        if (item.type_ == Item::Type::null) {
-            item.type_ = insert;
+        if (item == Item::Type::null) {
+            item = insert;
 
             if (notify) {
 

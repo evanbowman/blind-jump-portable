@@ -8,34 +8,56 @@
 #include "powerup.hpp"
 #include "settings.hpp"
 #include "timeTracker.hpp"
+#include "number/endian.hpp"
 
 
 using Level = s32;
-using Score = u64;
+using Score = u32;
 
 
 class Platform;
 
 
-struct PersistentData {
-    static constexpr u32 schema_version = 4;
-    static constexpr u32 magic_val = 0xCA55E77E + schema_version;
+// NOTE: Nothing but plain bytes should be stored in the PersistentData
+// structure. HostInteger stores its contents as a u8 array, which eliminates
+// structure packing headaches. The Inventory class, Settings class, powerup
+// class, etc., all store either HostIntegers, or enums derived from u8.
 
+
+struct PersistentData {
     using Magic = u32;
 
-    Magic magic_ = magic_val;
-    u32 seed_ = 11001;
-    Level level_ = 0;
-    Score score_ = 0;
-    Entity::Health player_health_ = 3;
+    static constexpr u32 schema_version = 5;
+    static constexpr Magic magic_val = 0xCA55E77E + schema_version;
 
-    using HighScores = std::array<Score, 8>;
-    HighScores highscores_ = {0};
+    PersistentData()
+    {
+        magic_.set(magic_val);
+        seed_.set(11001);
+        level_.set(0);
+        score_.set(0);
+        player_health_.set(3);
+
+        for (auto& hs : highscores_) {
+            hs.set(0);
+        }
+
+        powerup_count_.set(0);
+    }
+
+    HostInteger<Magic> magic_;
+    HostInteger<u32> seed_;
+    HostInteger<Level> level_;
+    HostInteger<Score> score_;
+    HostInteger<Entity::Health> player_health_;
+
+    using HighScores = HostInteger<Score>[8];
+    HighScores highscores_;
 
     Inventory inventory_;
 
     std::array<Powerup, Powerup::max_> powerups_;
-    u32 powerup_count_ = 0;
+    HostInteger<u32> powerup_count_;
 
     Settings settings_;
 

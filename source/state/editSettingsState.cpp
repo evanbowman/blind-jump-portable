@@ -201,7 +201,7 @@ EditSettingsState::LanguageLineUpdater::update(Platform& pfrm,
 
 
     auto& language = game.persistent_data().settings_.language_;
-    int l = static_cast<int>(language);
+    int l = static_cast<int>(language.get());
 
     const auto lang_count = lisp::length(lisp::get_var("languages"));
 
@@ -219,8 +219,8 @@ EditSettingsState::LanguageLineUpdater::update(Platform& pfrm,
         }
     }
 
-    language = l;
-    locale_set_language(language);
+    language.set(l);
+    locale_set_language(language.get());
 
     return locale_string(pfrm, LocaleString::language_name)->c_str();
 }

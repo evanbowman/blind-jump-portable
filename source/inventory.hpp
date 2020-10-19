@@ -16,9 +16,7 @@ public:
     static constexpr const u16 rows = 2;
     static constexpr const u16 cols = 5;
 
-    struct ItemInfo {
-        Item::Type type_;
-    };
+    using ItemInfo = Item::Type;
 
     void push_item(Platform& pfrm,
                    Game& game,
@@ -30,7 +28,7 @@ public:
         if (UNLIKELY(page == pages or column == cols or row == rows)) {
             return Item::Type::null;
         }
-        return data_[page * (rows * cols) + row * cols + column].type_;
+        return data_[page * (rows * cols) + row * cols + column];
     }
 
     inline int item_count(Item::Type item) const
@@ -38,7 +36,7 @@ public:
         int count = 0;
 
         for (auto& inventory_item : data_) {
-            if (inventory_item.type_ == item) {
+            if (inventory_item == item) {
                 count += 1;
             }
         }
@@ -59,16 +57,16 @@ public:
         // frequent operation.
         ItemInfo* item = std::begin(data_);
         for (; item not_eq std::end(data_);) {
-            if (not item_is_persistent(item->type_) and
-                item->type_ not_eq Item::Type::null and
+            if (not item_is_persistent(*item) and
+                *item not_eq Item::Type::null and
                 // NOTE: while the long_jump items are not persistent (story)
                 // items, the whole point of the long jump items, is that you
                 // can resume at a certain point after dying, so removing the
                 // items from the inventory would defeat the purpose in this
                 // case.
-                item->type_ not_eq Item::Type::long_jump_z2 and
-                item->type_ not_eq Item::Type::long_jump_z3 and
-                item->type_ not_eq Item::Type::long_jump_z4) {
+                *item not_eq Item::Type::long_jump_z2 and
+                *item not_eq Item::Type::long_jump_z3 and
+                *item not_eq Item::Type::long_jump_z4) {
                 remove_item(item);
             } else {
                 ++item;
