@@ -6,7 +6,7 @@ void RemoteReplState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     pfrm.screen().fade(1.f);
 
-    pfrm.remote_console().print("BlindJump LISP v01\nEnter 'done to exit.\n");
+    pfrm.remote_console().print("BlindJump LISP v01\nEnter #done to exit.\n");
 }
 
 
