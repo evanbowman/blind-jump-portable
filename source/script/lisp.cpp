@@ -659,7 +659,8 @@ static u32 eval_expr(const char* expr, u32 len)
     if (i < len) {
         int start = i;
         while (i < len and i < max_fn_name and (not is_whitespace(expr[i])) and
-               expr[i] not_eq ')') {
+               expr[i] not_eq ')' and
+               expr[i] not_eq '(') {
 
             fn_name[i - start] = expr[i];
             ++i;
