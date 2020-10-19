@@ -134,6 +134,9 @@ private:
 static constexpr Vec2<u32> resolution{240, 160};
 
 
+static const TileDesc glyph_region_start = 504;
+
+
 class Platform::Data {
 public:
     sf::Texture spritesheet_texture_;
@@ -144,7 +147,7 @@ public:
     sf::Shader color_shader_;
 
     std::map<utf8::Codepoint, TileDesc> glyph_table_;
-    TileDesc next_glyph_ = 504;
+    TileDesc next_glyph_ = glyph_region_start;
 
     Vec2<Float> overlay_origin_;
 
@@ -1235,7 +1238,7 @@ void Platform::Screen::draw(const Sprite& spr)
 
 void Platform::Speaker::set_position(const Vec2<Float>& position)
 {
-    sf::Listener::setPosition({position.x, 0, position.y});
+    // sf::Listener::setPosition({position.x, 0, position.y});
 }
 
 
@@ -1299,18 +1302,18 @@ void Platform::Speaker::play_sound(const char* name,
 
         sound.play();
 
-        sound.setRelativeToListener(static_cast<bool>(position));
+        // sound.setRelativeToListener(static_cast<bool>(position));
 
-        if (position) {
-            sound.setAttenuation(0.2f);
-        } else {
-            sound.setAttenuation(0.f);
-        }
+        // if (position) {
+        //     sound.setAttenuation(0.2f);
+        // } else {
+        //     sound.setAttenuation(0.f);
+        // }
 
-        sound.setMinDistance(160.f);
-        if (position) {
-            sound.setPosition({position->x, 0, position->y});
-        }
+        // sound.setMinDistance(160.f);
+        // if (position) {
+        //     sound.setPosition({position->x, 0, position->y});
+        // }
     } else {
         error(*::platform, (std::string("no sound data for ") + name).c_str());
     }
@@ -1638,6 +1641,7 @@ void Platform::load_overlay_texture(const char* name)
             glyph_requests.pop();
     }
     ::platform->data()->glyph_table_.clear();
+    ::platform->data()->next_glyph_ = glyph_region_start;
 }
 
 
