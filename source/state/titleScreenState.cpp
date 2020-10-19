@@ -6,7 +6,7 @@ static auto fade_in_color(const Game& game)
     if (game.level() == 0) {
         return custom_color(0xaec7c1);
     } else {
-        return custom_color(0x4d7493);
+        return custom_color(0xeaf3cd);
     }
 }
 
@@ -96,7 +96,7 @@ draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
         if (game.level() == 0 or sel == 1) {
             return custom_color(0x4091AD);
         } else {
-            return custom_color(0x527597);
+            return custom_color(0x9c9599);
         }
     }();
 

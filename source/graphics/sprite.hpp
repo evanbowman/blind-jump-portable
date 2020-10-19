@@ -89,14 +89,14 @@ private:
     // is designed to fit within IWRAM, so we need to be careful about
     // memory. Packing the engine into 32kB has benefits for other platforms
     // too--this game is very cache-friendly.
-    Alpha alpha_ : 2;
-    Size size_ : 1;
+    u8 alpha_ : 2;
+    u8 size_ : 1;
     bool flip_x_ : 1;
     bool flip_y_ : 1;
 
     // Extra flags reserved for future use.
-    Flags1 flags1_ : 3;
-    Flags2 flags2_ : 8;
+    u8 flags1_ : 3;
+    u8 flags2_ : 8;
 
     // Because sprites are only 16x32 or 32x32, 16bits for the origin field is
     // quite generous...

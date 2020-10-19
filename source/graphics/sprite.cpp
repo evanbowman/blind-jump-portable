@@ -103,7 +103,7 @@ Vec2<bool> Sprite::get_flip() const
 
 Sprite::Alpha Sprite::get_alpha() const
 {
-    return alpha_;
+    return static_cast<Sprite::Alpha>(alpha_);
 }
 
 
@@ -115,5 +115,5 @@ const ColorMix& Sprite::get_mix() const
 
 Sprite::Size Sprite::get_size() const
 {
-    return size_;
+    return static_cast<Sprite::Size>(size_);
 }
