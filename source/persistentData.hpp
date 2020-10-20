@@ -22,6 +22,20 @@ class Platform;
 // structure. HostInteger stores its contents as a u8 array, which eliminates
 // structure packing headaches. The Inventory class, Settings class, powerup
 // class, etc., all store either HostIntegers, or enums derived from u8.
+//
+// Additionally, you should be using the fixed width datatypes for everything,
+// i.e. s32 instead of a plain int.
+//
+// The game more-or-less memcpy's the contents of the PersistentData structure
+// to the save data target device (whether that be a file on disk, or GBA sram),
+// so we need to be careful about anything that might vary across different
+// compilers, processors, etc.
+//
+// Remember that we're using a binary format here! If you change the structure
+// of the PersistentData struct, the game may try to incorrectly read existing
+// save data files belonging to users who upgraded from an old version of the
+// game. So, when you make any changes whatsoever to the layout of the
+// PersistentData class, remember to increment the schema_version constant.
 
 
 struct PersistentData {
