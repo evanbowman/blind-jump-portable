@@ -171,6 +171,10 @@ static Microseconds delta_convert_tics(int tics)
     // adjustments in their implementation of DeltaClock. I believe the actual
     // refresh rate on the GBA is something like 59.59.
     //
+    // P.S.: Now, I've discovered that the screen refresh rate is actually 59.73
+    // Hz. Sorry to have created a headache for anyone in the future who may be
+    // attempting to port this game.
+    //
     return ((tics * (59.59f / 60.f)) * 60.f) / 1000.f;
 }
 
