@@ -30,6 +30,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Gameplay](#gameplay)
       * [Controls](#controls)
       * [Multiplayer](#multiplayer)
+      * [Secrets](#secrets)
    * [Implementation](#implementation)
       * [Scripting](#scripting)
    * [Building](#building)
@@ -90,6 +91,19 @@ To access all for your items, press select. Press start for more options.
 
 The game supports multiplayer over the gameboy advance's serial port. While certainly incomplete, you should find the multiplayer mode to be more-or-less playable.
 To enable, press the start button on both devices, and then select the "Connect Peer" option within twenty seconds. You need to be on the very first level to connect a peer, otherwise the option will be grayed-out. If running on an actual GAMBOY ADVANCE, you may need to select "Connect Peer" on the device plugged into the gray end of the link cable first, followed by the device connected to the smaller purple end of the link cable. This is a known issue, and I am still working on resolving this, at time of writing.
+
+### Secrets
+
+#### Boss Rush Mode
+
+With the title screen open, press select fifteen times, and the game will enter a boss-rush mode. Note that entering boss-rush mode is equivalent to starting a new game, and you will lose any items that you may have collected.
+
+#### Script Console
+
+Open the pause screen, and press the left bumper repeatedly, and a menu option for a script console will appear in the pause menu. This gives you access to the game's lisp interpreter, which allows you to manipulate certain variables, add items, jump to levels, etc. See [Scripting](#scripting) for more info.
+
+
+[Contents↑](#contents)
 
 ## Implementation
 
