@@ -9,3 +9,15 @@
 ;; The game makes a distinction between which tiles are part of the center of
 ;; the map, and which tiles are edges.
 (set #edge-tiles-list (list 1 4 14 15 16 17))
+
+
+;; Boss rush hack
+(if (equal debug-mode 7)
+    (progn
+      (add-items 5 9)
+      (if (< (level) boss-lv-0)
+          (level boss-lv-0)
+          (if (< (level) boss-lv-1)
+              (level boss-lv-1)
+               (if (< (level) boss-lv-2)
+                   (level boss-lv-2))))))

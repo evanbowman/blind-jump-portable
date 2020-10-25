@@ -179,6 +179,8 @@ private:
     std::optional<Sidebar> sidebar_;
     std::optional<LeftSidebar> sidebar2_;
 
+    int bossrush_cheat_counter_ = 0;
+
     enum class DisplayMode {
         sleep,
         fade_in,

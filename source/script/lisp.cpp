@@ -24,7 +24,7 @@ struct Variable {
 static void run_gc();
 
 
-static const u32 string_intern_table_size = 1000;
+static const u32 string_intern_table_size = 1199;
 
 
 struct Context {
@@ -99,6 +99,7 @@ const char* intern(const char* string)
 
     if (len + 1 >
         string_intern_table_size - bound_context->string_intern_pos_) {
+
         while (true)
             ; // TODO: raise error, table full...
     }
@@ -1041,6 +1042,23 @@ private:
     EvalBuffer& buffer_;
 };
 } // namespace
+
+
+template <typename F>
+void foreach_string_intern(F&& fn)
+{
+    char* const interns = *bound_context->interns_;
+    char* str = interns;
+
+    while (static_cast<u32>(str - interns) < string_intern_table_size and
+           static_cast<s32>(str - interns) < bound_context->string_intern_pos_ and
+           *str not_eq '\0') {
+
+        fn(str);
+
+        str += str_len(str) + 1;
+    }
+}
 
 
 void init(Platform& pfrm)

@@ -1246,6 +1246,10 @@ void Game::init_script(Platform& pfrm)
 
             return L_NIL;
         }));
+
+    lisp::set_var("boss-lv-0", lisp::make_integer(boss_0_level));
+    lisp::set_var("boss-lv-1", lisp::make_integer(boss_1_level));
+    lisp::set_var("boss-lv-2", lisp::make_integer(boss_2_level));
 }
 
 
@@ -2653,14 +2657,14 @@ COLD bool Game::respawn_entities(Platform& pfrm)
         return false;
     }
 
-    if (auto path = find_path(
-            pfrm,
-            tiles_,
-            to_tile_coord(player_.get_position().cast<s32>()).cast<u8>(),
-            to_tile_coord(transporter_.get_position().cast<s32>())
-                .cast<u8>())) {
-        // ...
-    }
+    // if (auto path = find_path(
+    //         pfrm,
+    //         tiles_,
+    //         to_tile_coord(player_.get_position().cast<s32>()).cast<u8>(),
+    //         to_tile_coord(transporter_.get_position().cast<s32>())
+    //             .cast<u8>())) {
+    //     // ...
+    // }
 
 
     // Sometimes for small maps, and always for large maps, place an item chest

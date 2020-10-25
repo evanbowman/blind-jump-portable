@@ -120,6 +120,7 @@
     ;; 5: debug boss 2
     ;; 6: debug zone 4  NOTE: zone 4 only enabled in debug mode, see
     ;;                        newLevelIdleState.cpp
+    ;; 7: boss rush mode
     (set #debug-mode 0))
 
 
@@ -131,45 +132,46 @@
       (set #debug-items-lat (list 5 5 5 5 9 9 9 9))
       (set-hp 0 20)
 
+      (if (equal debug-mode 7) (level boss-lv-0))
+
       (if (equal debug-mode 1)
           (progn
-            (level 9)
+            (level boss-lv-0)
             (apply add-items debug-items-lat)))
 
       (if (equal debug-mode 2)
           (progn
-            (level 20)
+            (level boss-lv-1)
             (apply add-items (cons 12 debug-items-lat))))
 
       (if (equal debug-mode 3)
           (progn
-            (level 10)
+            (level (+ 1 boss-lv-0))
             ;; These params should be sort of reasonable for someone who just
             ;; beat the first boss...
-            (set-hp 0 7)
+            (set-hp 0 5)
             (add-items 5 9)))
 
       (if (equal debug-mode 4)
           (progn
-            (level 21)
+            (level (+ 1 boss-lv_1))
             (set-hp 0 8)
             (add-items 5 9)))
 
       (if (equal debug-mode 5)
           (progn
-            (level 29)
+            (level boss-lv-2)
             (set-hp 0 7)
             (apply add-items debug-items-lat)))
 
       (if (equal debug-mode 6)
           (progn
-            (level 30)
+            (level (+ 1 boss-lv-2))
             (set-hp 0 4)
             (apply add-items 5 9)))
 
       (unbind #debug-items-lat)))
 
-(unbind #debug-mode)
 
 ;;;
 ;;; Some useful little snippets:

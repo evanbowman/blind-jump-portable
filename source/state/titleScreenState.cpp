@@ -1,4 +1,5 @@
 #include "state_impl.hpp"
+#include "script/lisp.hpp"
 
 
 static auto fade_in_color(const Game& game)
@@ -141,6 +142,25 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     };
 
+    auto prep_exit = [&] {
+        display_mode_ = DisplayMode::fade_out;
+        timer_ = 0;
+        title_.reset();
+        options_[0].reset();
+        options_[1].reset();
+
+        const auto screen_tiles = calc_screen_tiles(pfrm);
+
+        for (int i = 0; i < screen_tiles.x; ++i) {
+            pfrm.set_tile(Layer::overlay, i, 0, 112);
+            pfrm.set_tile(Layer::overlay, i, 1, 112);
+
+            pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 1, 112);
+            pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 2, 112);
+            pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
+        }
+    };
+
     switch (display_mode_) {
     case DisplayMode::sleep:
         timer_ += delta;
@@ -169,22 +189,7 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             } else {
                 newgame(pfrm, game);
             }
-            display_mode_ = DisplayMode::fade_out;
-            timer_ = 0;
-            title_.reset();
-            options_[0].reset();
-            options_[1].reset();
-
-            const auto screen_tiles = calc_screen_tiles(pfrm);
-
-            for (int i = 0; i < screen_tiles.x; ++i) {
-                pfrm.set_tile(Layer::overlay, i, 0, 112);
-                pfrm.set_tile(Layer::overlay, i, 1, 112);
-
-                pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 1, 112);
-                pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 2, 112);
-                pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
-            }
+            prep_exit();
 
         } else if (pfrm.keyboard().down_transition<Key::left>()) {
             if (cursor_index_ > 0) {
@@ -209,6 +214,13 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 const auto st = calc_screen_tiles(pfrm);
                 sidebar2_.emplace(
                     pfrm, u8(st.x), u8(st.y - 5), OverlayCoord{0, 2});
+            }
+        } else if (pfrm.keyboard().down_transition<Key::select>()) {
+            if (++bossrush_cheat_counter_ == 15) {
+                newgame(pfrm, game);
+                game.player().set_health(5);
+                lisp::set_var("debug-mode", lisp::make_integer(7));
+                prep_exit();
             }
         }
         break;
