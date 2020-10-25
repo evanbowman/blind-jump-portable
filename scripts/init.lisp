@@ -66,8 +66,9 @@
 ;;;
 
 
-;; For our onscreen keyboard, which does not include + or /
+;; For our onscreen keyboard, which does not include +, *, or /
 (set #add +)
+(set #mul *)
 (set #div /)
 
 
@@ -129,48 +130,61 @@
       (log-severity 0)
 
       ;; let's give ourselves lots of health and powerups
-      (set #debug-items-lat (list 5 5 5 5 9 9 9 9))
-      (set-hp 0 20)
+      (set #temp
+           (list
+            item-accelerator
+            item-accelerator
+            item-accelerator
+            item-accelerator
+            item-explosive_rounds_2
+            item-explosive_rounds_2
+            item-explosive_rounds_2
+            item-explosive_rounds_2)
 
-      (if (equal debug-mode 7) (level boss-lv-0))
+      (set-hp player 20)
+
+      (if (equal debug-mode 7) (level boss-0-level))
 
       (if (equal debug-mode 1)
           (progn
-            (level boss-lv-0)
-            (apply add-items debug-items-lat)))
+            (level boss-0-level)
+            (apply add-items temp)))
 
       (if (equal debug-mode 2)
           (progn
-            (level boss-lv-1)
-            (apply add-items (cons 12 debug-items-lat))))
+            (level boss-1-level)
+            (apply add-items (cons item-signal_jammer temp))))
 
       (if (equal debug-mode 3)
           (progn
-            (level (+ 1 boss-lv-0))
+            (level (+ 1 boss-0-level))
             ;; These params should be sort of reasonable for someone who just
             ;; beat the first boss...
-            (set-hp 0 5)
-            (add-items 5 9)))
+            (set-hp player 5)
+            (add-items item-accelerator
+                       item-explosive_rounds_2)))
 
       (if (equal debug-mode 4)
           (progn
-            (level (+ 1 boss-lv_1))
-            (set-hp 0 8)
-            (add-items 5 9)))
+            (level (+ 1 boss-1-level))
+            (set-hp player 8)
+            (add-items item-accelerator
+                       item-explosive_rounds_2)))
 
       (if (equal debug-mode 5)
           (progn
-            (level boss-lv-2)
-            (set-hp 0 7)
-            (apply add-items debug-items-lat)))
+            (level boss-2-level)
+            (set-hp player 7)
+            (apply add-items temp)))
 
       (if (equal debug-mode 6)
           (progn
-            (level (+ 1 boss-lv-2))
-            (set-hp 0 4)
-            (apply add-items 5 9)))
+            (level (+ 1 boss-2-level))
+            (set-hp player 4)
+            (add-items item-accelerator
+                       item-explosive_rounds_2)))
 
-      (unbind #debug-items-lat)))
+      (unbind #temp)))
 
 
 ;;;

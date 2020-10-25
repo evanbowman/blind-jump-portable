@@ -14,10 +14,13 @@
 ;; Boss rush hack
 (if (equal debug-mode 7)
     (progn
-      (add-items 5 9)
-      (if (< (level) boss-lv-0)
-          (level boss-lv-0)
-          (if (< (level) boss-lv-1)
-              (level boss-lv-1)
-               (if (< (level) boss-lv-2)
-                   (level boss-lv-2))))))
+
+      (add-items item-accelerator
+                 item-explosive_rounds)
+
+      (if (< (level) boss-0-level)
+          (level boss-0-level)
+          (if (< (level) boss-1-level)
+              (level boss-1-level)
+               (if (< (level) boss-2-level)
+                   (level boss-2-level))))))

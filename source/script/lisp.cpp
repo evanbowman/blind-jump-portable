@@ -40,6 +40,9 @@ struct Context {
 
     int eval_depth_ = 0;
 
+    const IntegralConstant* constants_ = nullptr;
+    u16 constants_count_ = 0;
+
     Context(Platform& pfrm)
         : value_pools_{allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
@@ -80,6 +83,17 @@ struct Context {
 
 
 static std::optional<Context> bound_context;
+
+
+void set_constants(const IntegralConstant* constants, u16 count)
+{
+    if (not bound_context) {
+        return;
+    }
+
+    bound_context->constants_ = constants;
+    bound_context->constants_count_ = count;
+}
 
 
 Value* get_nil()
@@ -458,6 +472,13 @@ Value* get_var(const char* name)
         if (str_cmp(name, globals[i].name_) == 0) {
             std::swap(globals[i], globals[0]);
             return globals[0].value_;
+        }
+    }
+
+    for (u16 i = 0; i < bound_context->constants_count_; ++i) {
+        const auto& k = bound_context->constants_[i];
+        if (str_cmp(k.name_, name) == 0) {
+            return lisp::make_integer(k.value_);
         }
     }
 

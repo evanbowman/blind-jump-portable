@@ -69,7 +69,7 @@
 //;
 #include "data/overlay_cutscene.h"
 //;
-#include "data/charset_en_spn_fr.h"
+#include "data/charset.h"
 //;
 #include "data/overlay_journal.h"
 //;
@@ -170,7 +170,7 @@ static const TextureData overlay_textures[] = {
 //;
     TEXTURE_INFO(overlay_cutscene),
 //;
-    TEXTURE_INFO(charset_en_spn_fr),
+    TEXTURE_INFO(charset),
 //;
     TEXTURE_INFO(overlay_journal),
 //;

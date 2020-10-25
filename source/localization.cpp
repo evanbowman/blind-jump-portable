@@ -179,6 +179,8 @@ standard_texture_map(const utf8::Codepoint& cp)
             return 104;
         case '#':
             return 105;
+        case '_':
+            return 186;
         default:
             if (cp == utf8::getc(u8"©")) {
                 return 185;
@@ -393,7 +395,7 @@ standard_texture_map(const utf8::Codepoint& cp)
         }
     }();
     if (mapping) {
-        return Platform::TextureMapping{"charset_en_spn_fr", *mapping};
+        return Platform::TextureMapping{"charset", *mapping};
     } else {
         return {};
     }

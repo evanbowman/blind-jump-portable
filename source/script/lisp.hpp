@@ -200,6 +200,15 @@ struct Value {
 };
 
 
+struct IntegralConstant {
+    const char* const name_;
+    const int value_;
+};
+
+
+void set_constants(const IntegralConstant* array, u16 count);
+
+
 Value* make_function(Function::Impl impl);
 Value* make_cons(Value* car, Value* cdr);
 Value* make_integer(s32 value);

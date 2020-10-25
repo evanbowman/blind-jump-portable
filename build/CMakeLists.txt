@@ -78,6 +78,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/bosses/boss.cpp
   ${SOURCE_DIR}/entity/peerPlayer.cpp
   ${SOURCE_DIR}/state/state_impl.cpp
+  ${SOURCE_DIR}/game_script_defs.cpp
   ${SOURCE_DIR}/graphics/overlay.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
   ${SOURCE_DIR}/persistentData.cpp
@@ -205,7 +206,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/overlay.s
     ${DATA_DIR}/repl.s
     ${DATA_DIR}/overlay_cutscene.s
-    ${DATA_DIR}/charset_en_spn_fr.s
+    ${DATA_DIR}/charset.s
     ${DATA_DIR}/tilesheet_intro_cutscene_flattened.s
     ${DATA_DIR}/tilesheet.s
     ${DATA_DIR}/tilesheet2.s
@@ -495,7 +496,7 @@ if(GAMEBOY_ADVANCE)
     add_overlay(overlay 0 0 NO)
     add_overlay(repl 0 0 NO)
     add_overlay(overlay_cutscene 0 0 NO)
-    add_overlay(charset_en_spn_fr 0 0 NO)
+    add_overlay(charset 0 0 NO)
     add_overlay(overlay_journal 0 0 NO)
     add_overlay(overlay_dialog 0 0 NO)
     add_overlay(old_poster 0 0 YES)

@@ -1,15 +1,15 @@
 
-@{{BLOCK(charset_en_spn_fr)
+@{{BLOCK(charset)
 
 @=======================================================================
 @
-@	charset_en_spn_fr, 1488x8@4, 
+@	charset, 1496x8@4, 
 @	Transparent color : FF,00,FF
 @	+ palette 256 entries, not compressed
-@	+ 186 tiles not compressed
-@	Total size: 512 + 5952 = 6464
+@	+ 187 tiles not compressed
+@	Total size: 512 + 5984 = 6496
 @
-@	Time-stamp: 2020-10-06, 14:30:15
+@	Time-stamp: 2020-10-25, 14:57:14
 @	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 @	( http://www.coranac.com/projects/#grit )
 @
@@ -17,9 +17,9 @@
 
 	.section .rodata
 	.align	2
-	.global charset_en_spn_frTiles		@ 5952 unsigned chars
-	.hidden charset_en_spn_frTiles
-charset_en_spn_frTiles:
+	.global charsetTiles		@ 5984 unsigned chars
+	.hidden charsetTiles
+charsetTiles:
 	.word 0x00000002,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x22222222,0x22222222,0x22211222,0x22122122,0x22122122,0x22122122,0x22211222,0x22222222
 	.word 0x22222222,0x22222222,0x22211222,0x22212222,0x22212222,0x22212222,0x22212222,0x22222222
@@ -229,12 +229,13 @@ charset_en_spn_frTiles:
 
 	.word 0x22222222,0x22222222,0x22222222,0x22211222,0x22211222,0x22222222,0x22222222,0x22222222
 	.word 0x22111122,0x21222212,0x12211221,0x12222121,0x12222121,0x12211221,0x21222212,0x22111122
+	.word 0x22222222,0x22222222,0x22222222,0x22222222,0x22222222,0x22222222,0x22222222,0x21111111
 
 	.section .rodata
 	.align	2
-	.global charset_en_spn_frPal		@ 512 unsigned chars
-	.hidden charset_en_spn_frPal
-charset_en_spn_frPal:
+	.global charsetPal		@ 512 unsigned chars
+	.hidden charsetPal
+charsetPal:
 	.hword 0x7C1F,0x7719,0x0800,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -271,4 +272,4 @@ charset_en_spn_frPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 
-@}}BLOCK(charset_en_spn_fr)
+@}}BLOCK(charset)
