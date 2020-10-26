@@ -136,6 +136,8 @@ enum class LocaleString {
     chat_chat,
     chat_hello,
     chat_q_got_oranges,
+    chat_lets_go,
+    chat_found_health,
     scavenger_shop,
     memorial_str,
     memorial_str_commentary,
