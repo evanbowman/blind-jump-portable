@@ -60,6 +60,10 @@ void ItemShopState::enter(Platform& pfrm, Game& game, State& prev_state)
         buy_sell_text_->append(" ");
     }
 
+    for (u32 i = 0; i < st.x; ++i) {
+        pfrm.set_tile(Layer::overlay, i, st.y - 2, 425);
+    }
+
     buy_sell_text_->append(locale_string(pfrm, LocaleString::sell)->c_str());
 
     pfrm.set_tile(Layer::overlay, 0, st.y - 1, 421);
