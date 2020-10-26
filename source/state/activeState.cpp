@@ -41,6 +41,12 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         to_tile_coord({player_int_pos.x, player_int_pos.y + 6});
     visited.set(tile_coords.x, tile_coords.y, true);
 
+    const auto t = pfrm.get_tile(Layer::map_1, tile_coords.x, tile_coords.y);
+    switch (t) {
+    default:
+        break;
+    }
+
     const auto& player_spr = game.player().get_sprite();
     if (auto amt = player_spr.get_mix().amount_) {
         if (player_spr.get_mix().color_ ==

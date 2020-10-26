@@ -113,6 +113,7 @@ private:
     std::optional<Text> time_remaining_text_;
     std::optional<SmallIcon> time_remaining_icon_;
     int idle_rx_count_ = 0;
+
 };
 
 
@@ -446,16 +447,14 @@ private:
 
     void show_sidebar(Platform& pfrm);
 
-    int used_item_anim_index_ = 0;
+    u8 used_item_anim_index_ = 0;
+    u8 selector_pos_ = 0;
+    u8 page_ = 0;
+    bool selector_shaded_ = false;
+    bool more_pages_ = false;
 
     Microseconds timer_ = 0;
 
-    u32 selector_pos_ = 0;
-
-    bool selector_shaded_ = false;
-
-    int page_ = 0;
-    bool more_pages_ = false;
 };
 
 
@@ -1310,6 +1309,14 @@ public:
     {
         static_assert(std::disjunction<std::is_same<TState, States>...>(),
                       "State missing from state pool");
+
+#ifdef __GBA__
+        static_assert(std::max({sizeof(States)...}) < 697,
+                      "Note: this is merely a warning. You are welcome to "
+                      "increase the overall size of the state pool, just be "
+                      "careful, as the state cells are already quite large, in"
+                      " number of bytes.");
+#endif // __GBA__
 
         if (auto mem = pool_.get()) {
             new (mem) TState(std::forward<Args>(args)...);
