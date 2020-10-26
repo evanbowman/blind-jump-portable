@@ -133,7 +133,7 @@ charlar:
 ¡Hola!
 ¿Tienes naranjas?
 ¡Adelante!
-¡Hallé corazones aquí!
+¡Hallé salud aquí!
 Welcome to my shop!
 "This memorial to those who perished during the calamity. The waypoints in this area were overrun by the machines, and sealed off. Date--5.3.2081."
 Wow, that was 100 years ago...

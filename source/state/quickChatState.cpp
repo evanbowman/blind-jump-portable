@@ -1,11 +1,13 @@
 #include "state_impl.hpp"
 
 
-static const std::array<LocaleString, 4> chat_messages = {
+static const std::array<LocaleString, 6> chat_messages = {
     LocaleString::chat_hello,
     LocaleString::yes,
     LocaleString::no,
     LocaleString::chat_q_got_oranges,
+    LocaleString::chat_lets_go,
+    LocaleString::chat_found_health
 };
 
 
