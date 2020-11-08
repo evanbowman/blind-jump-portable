@@ -119,10 +119,10 @@
     ;; 3: debug zone 2
     ;; 4: debug zone 3
     ;; 5: debug boss 2
-    ;; 6: debug zone 4  NOTE: zone 4 only enabled in debug mode, see
-    ;;                        newLevelIdleState.cpp
+    ;; 6: debug zone 4
     ;; 7: boss rush mode
-    (set #debug-mode 0))
+    ;; 8: debug boss 3
+    (set #debug-mode 6))
 
 
 (if (not (equal debug-mode 0))
@@ -183,6 +183,12 @@
             (set-hp player 4)
             (add-items item-accelerator
                        item-explosive_rounds_2)))
+
+      (if (equal debug-mode 8)
+          (progn
+            (level boss-3-level)
+            (set-hp player 6)
+            (apply add-items temp)))
 
       (unbind #temp)))
 

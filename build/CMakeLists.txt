@@ -51,6 +51,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/details/cutsceneCloud.cpp
   ${SOURCE_DIR}/entity/details/cutsceneBird.cpp
   ${SOURCE_DIR}/entity/effects/dialogBubble.cpp
+  ${SOURCE_DIR}/entity/bosses/infestedCore.cpp
   ${SOURCE_DIR}/entity/bosses/gatekeeper.cpp
   ${SOURCE_DIR}/entity/details/itemChest.cpp
   ${SOURCE_DIR}/entity/details/scavenger.cpp
@@ -257,6 +258,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/spritesheet_boss2_done.s
     ${DATA_DIR}/spritesheet_boss2_mutate.s
     ${DATA_DIR}/spritesheet_boss2_final.s
+    ${DATA_DIR}/spritesheet_boss3.s
     ${DATA_DIR}/old_poster_flattened.s
     ${DATA_DIR}/postal_advert_flattened.s
     ${DATA_DIR}/blaster_info_flattened.s
@@ -480,6 +482,7 @@ if(GAMEBOY_ADVANCE)
     add_spritesheet(spritesheet_boss2_done 2 4 NO)
     add_spritesheet(spritesheet_boss2_mutate 2 4 NO)
     add_spritesheet(spritesheet_boss2_final 2 4 NO)
+    add_spritesheet(spritesheet_boss3 2 4 NO)
     add_spritesheet(spritesheet_launch_anim 2 4 NO)
     add_tilesheet(title_1 0 0 YES)
     add_tilesheet(title_2 0 0 YES)

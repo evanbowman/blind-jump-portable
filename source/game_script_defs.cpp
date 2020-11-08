@@ -370,6 +370,7 @@ void Game::init_script(Platform& pfrm)
         {"boss-0-level", boss_0_level},
         {"boss-1-level", boss_1_level},
         {"boss-2-level", boss_2_level},
+        {"boss-3-level", boss_3_level},
         {"player", 0},
         L_ITEM_K(worker_notebook_1),
         L_ITEM_K(blaster),

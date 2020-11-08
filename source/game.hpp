@@ -4,6 +4,7 @@
 
 #include "camera.hpp"
 #include "entity/bosses/gatekeeper.hpp"
+#include "entity/bosses/infestedCore.hpp"
 #include "entity/bosses/theTwins.hpp"
 #include "entity/bosses/wanderer.hpp"
 #include "entity/details/cutsceneBird.hpp"
@@ -91,7 +92,8 @@ public:
                                    GatekeeperShield,
                                    Sinkhole,
                                    Twin,
-                                   Compactor>;
+                                   Compactor,
+                                   InfestedCore>;
 
     using DetailGroup = EntityGroup<30,
                                     ItemChest,
