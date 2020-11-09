@@ -121,7 +121,6 @@
     ;; 5: debug boss 2
     ;; 6: debug zone 4
     ;; 7: boss rush mode
-    ;; 8: debug boss 3
     (set #debug-mode 0))
 
 
@@ -183,13 +182,6 @@
             (set-hp player 4)
             (add-items item-accelerator
                        item-explosive_rounds_2)))
-
-      (if (equal debug-mode 8)
-          (progn
-            (level boss-3-level)
-            (set-hp player 6)
-            (apply add-items temp)
-            (add-items 5 5 5 9 9 9)))
 
       (unbind #temp)))
 
