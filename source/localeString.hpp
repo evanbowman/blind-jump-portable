@@ -40,6 +40,7 @@ enum class LocaleString {
     long_jump_z2_title,
     long_jump_z3_title,
     long_jump_z4_title,
+    long_jump_home_title,
     sc_dialog_skip,
     sc_dialog_accelerator,
     sc_dialog_lethargy,

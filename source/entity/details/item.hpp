@@ -38,6 +38,7 @@ public:
         postal_advert = 19,
         engineer_notebook_1 = 20,
         worker_notebook_2 = 21,
+        long_jump_home = 22,
         count
     };
 

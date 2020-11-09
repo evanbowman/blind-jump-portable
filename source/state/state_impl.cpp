@@ -416,6 +416,17 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::long_jump_z4_title,
      {LocaleString::sc_dialog_jumpdrive, LocaleString::empty},
      InventoryItemHandler::yes},
+    {Item::Type::long_jump_home,
+     item_icon(Item::Type::long_jump_z2),
+     [](Platform& pfrm, Game& game) {
+         const auto c = current_zone(game).energy_glow_color_;
+         pfrm.speaker().play_sound("bell", 5);
+         game.persistent_data().level_.set(boss_max_level);
+         return state_pool().create<PreFadePauseState>(game, c);
+     },
+     LocaleString::long_jump_home_title,
+     {LocaleString::sc_dialog_jumpdrive, LocaleString::empty},
+     InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(worker_notebook_1),
      [](Platform& pfrm, Game&) {
          return state_pool().create<NotebookState>(

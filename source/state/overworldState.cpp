@@ -682,7 +682,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         if constexpr (not std::is_same<Scarecrow, VT>() and
                       not std::is_same<SnakeTail, VT>() and
-                      not std::is_same<Sinkhole, VT>()) {
+                      not std::is_same<Sinkhole, VT>() and
+                      not std::is_same<InfestedCore, VT>()) {
             check_collisions(pfrm, game, player, buf);
         }
 

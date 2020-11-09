@@ -120,6 +120,11 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             if (bosses_remaining()) {
                 game.transporter().set_position(boss_position_);
+            } else {
+                create_item_chest(game,
+                                  to_world_coord(Vec2<TIdx>{8, 10}),
+                                  Item::Type::long_jump_home,
+                                  false);
             }
         }
         break;
@@ -134,12 +139,7 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
         if (counter_ > fade_duration) {
             pfrm.screen().fade(0.f);
-            if (bosses_remaining()) {
-                return state_pool().create<ActiveState>();
-            } else {
-                counter_ = 0;
-                anim_state_ = AnimState::endgame;
-            }
+            return state_pool().create<ActiveState>();
 
         } else {
             const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);

@@ -153,6 +153,22 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
             next_level += 1;
         }
 
+        // For now, to determine whether the game's complete, scan through a
+        // bunch of levels. If there are no more bosses remaining, the game is
+        // complete.
+        bool bosses_remaining = false;
+        for (Level l = next_level; l < next_level + 1000; ++l) {
+            if (is_boss_level(l)) {
+                bosses_remaining = true;
+                break;
+            }
+        }
+
+        if (not bosses_remaining) {
+            pfrm.sleep(120);
+            return state_pool().create<EndingCreditsState>();
+        }
+
         return state_pool().create<NewLevelState>(next_level);
     }
 

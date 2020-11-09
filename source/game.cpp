@@ -1912,6 +1912,7 @@ ItemRarity rarity(Item::Type item)
     case Item::Type::long_jump_z2:
     case Item::Type::long_jump_z3:
     case Item::Type::long_jump_z4:
+    case Item::Type::long_jump_home:
         return 0;
 
     case Item::Type::null:

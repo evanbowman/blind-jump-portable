@@ -121,6 +121,7 @@
     ;; 5: debug boss 2
     ;; 6: debug zone 4
     ;; 7: boss rush mode
+    ;; 8: debug boss 3
     (set #debug-mode 0))
 
 
