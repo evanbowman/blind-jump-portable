@@ -70,6 +70,8 @@ public:
     {
     }
 
+    void warped_in(Game& game);
+
 protected:
     void debit_health(Platform& pfrm, Health amount = 1);
 

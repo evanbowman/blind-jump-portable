@@ -3,7 +3,7 @@
 #include "boss.hpp"
 
 
-static const Entity::Health initial_health(3);
+static const Entity::Health initial_health(60);
 
 
 InfestedCore::InfestedCore(const Vec2<Float>& position) :
@@ -68,35 +68,34 @@ void InfestedCore::update(Platform& pfrm, Game& game, Microseconds dt)
         switch (rng::choice<4>(rng::critical_state)) {
         case 0:
             game.enemies().spawn<Drone>(coord);
+            (*game.enemies().get<Drone>().begin())->warped_in(game);
             break;
 
         case 1:
             if (length(game.enemies().get<Dasher>()) > 1) {
                 game.enemies().spawn<Drone>(coord);
+                (*game.enemies().get<Drone>().begin())->warped_in(game);
             } else {
                 game.enemies().spawn<Dasher>(coord);
+                (*game.enemies().get<Dasher>().begin())->warped_in(game);
             }
             break;
 
         case 2:
             if (length(game.enemies().get<Turret>()) > 1) {
                 game.enemies().spawn<Drone>(coord);
+                (*game.enemies().get<Drone>().begin())->warped_in(game);
             } else {
                 game.enemies().spawn<Turret>(coord);
+                (*game.enemies().get<Turret>().begin())->warped_in(game);
             }
             break;
 
         case 3:
             game.enemies().spawn<Scarecrow>(coord);
+            (*game.enemies().get<Scarecrow>().begin())->warped_in(game);
             break;
         }
-
-        game.effects().spawn<Particle>(coord,
-                                       current_zone(game).energy_glow_color_);
-        game.effects().spawn<Particle>(coord,
-                                       current_zone(game).energy_glow_color_);
-        game.effects().spawn<Particle>(coord,
-                                       current_zone(game).energy_glow_color_);
     };
 
     switch (state_) {
@@ -163,7 +162,6 @@ void InfestedCore::update(Platform& pfrm, Game& game, Microseconds dt)
         if (spawn_timer_ > seconds(1)) {
             spawn_timer_ = 0;
             spawn_enemy();
-            game.camera().shake();
             state_ = State::spawn_2;
         }
         break;
@@ -174,7 +172,6 @@ void InfestedCore::update(Platform& pfrm, Game& game, Microseconds dt)
         if (spawn_timer_ > seconds(1)) {
             spawn_timer_ = 0;
             spawn_enemy();
-            game.camera().shake();
             state_ = State::spawn_3;
         }
         break;
@@ -185,7 +182,6 @@ void InfestedCore::update(Platform& pfrm, Game& game, Microseconds dt)
         if (spawn_timer_ > seconds(1)) {
             spawn_timer_ = 0;
             spawn_enemy();
-            game.camera().shake();
             state_ = State::spawn_4;
         }
         break;
@@ -196,7 +192,6 @@ void InfestedCore::update(Platform& pfrm, Game& game, Microseconds dt)
         if (spawn_timer_ > seconds(1)) {
             spawn_timer_ = 0;
             spawn_enemy();
-            game.camera().shake();
             state_ = State::active;
         }
         break;

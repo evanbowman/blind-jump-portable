@@ -103,3 +103,19 @@ void Enemy::health_changed(const net_event::EnemyHealthChanged& hc,
 
     Entity::set_health(std::min(hc.new_health_.get(), get_health()));
 }
+
+
+void Enemy::warped_in(Game& game)
+{
+    game.effects().spawn<Particle>(position_,
+                                   current_zone(game).energy_glow_color_);
+    game.effects().spawn<Particle>(position_,
+                                   current_zone(game).energy_glow_color_);
+    game.effects().spawn<Particle>(position_,
+                                   current_zone(game).energy_glow_color_);
+
+    const auto c = current_zone(game).energy_glow_color_;
+    sprite_.set_mix({c, 255});
+
+    game.camera().shake();
+}
