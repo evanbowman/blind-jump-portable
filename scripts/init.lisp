@@ -122,7 +122,7 @@
     ;; 6: debug zone 4
     ;; 7: boss rush mode
     ;; 8: debug boss 3
-    (set #debug-mode 6))
+    (set #debug-mode 0))
 
 
 (if (not (equal debug-mode 0))
@@ -188,7 +188,8 @@
           (progn
             (level boss-3-level)
             (set-hp player 6)
-            (apply add-items temp)))
+            (apply add-items temp)
+            (add-items 5 5 5 9 9 9)))
 
       (unbind #temp)))
 

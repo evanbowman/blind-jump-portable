@@ -8,6 +8,8 @@ void BossDeathSequenceState::enter(Platform& pfrm,
     OverworldState::enter(pfrm, game, prev_state);
     repaint_powerups(
         pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
+
+    game.enemies().clear();
 }
 
 
@@ -41,6 +43,15 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
                       UIMetric::Align::left);
 
     counter_ += delta;
+
+    auto bosses_remaining = [&] {
+        for (Level l = game.level() + 1; l < game.level() + 1000; ++l) {
+            if (is_boss_level(l)) {
+                return true;
+            }
+        }
+        return false;
+    };
 
     switch (anim_state_) {
     case AnimState::init: {
@@ -106,11 +117,14 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
                     pfrm,
                     Item::Type::heart);
             }
-            game.transporter().set_position(boss_position_);
+
+            if (bosses_remaining()) {
+                game.transporter().set_position(boss_position_);
+            }
         }
         break;
 
-    case AnimState::fade:
+    case AnimState::fade: {
         constexpr auto fade_duration = seconds(4) + milliseconds(500);
         if (counter_ > seconds(1) + milliseconds(700) and
             not pushed_notification_) {
@@ -120,13 +134,31 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
         if (counter_ > fade_duration) {
             pfrm.screen().fade(0.f);
-            return state_pool().create<ActiveState>();
+            if (bosses_remaining()) {
+                return state_pool().create<ActiveState>();
+            } else {
+                counter_ = 0;
+                anim_state_ = AnimState::endgame;
+            }
 
         } else {
             const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
             pfrm.screen().fade(amount, ColorConstant::silver_white);
         }
         break;
+    }
+
+    case AnimState::endgame: {
+        constexpr auto fade_duration = seconds(8) + milliseconds(500);
+        if (counter_ > fade_duration) {
+            pfrm.screen().fade(1.f);
+            return state_pool().create<EndingCreditsState>();
+        } else {
+            const auto amount = smoothstep(0.f, fade_duration, counter_);
+            pfrm.screen().fade(amount);
+        }
+        break;
+    }
     }
 
 

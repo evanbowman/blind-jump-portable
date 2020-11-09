@@ -112,6 +112,8 @@ enum class LocaleString {
     boss0_defeated,
     boss1_defeated,
     boss2_defeated,
+    boss3_core_cleansed,
+    boss3_cores_defeated,
     peer_transport_waiting,
     severity_debug,
     severity_info,

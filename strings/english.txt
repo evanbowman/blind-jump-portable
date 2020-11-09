@@ -108,6 +108,8 @@ required: Map system
 The Wanderer Defeated
 Gatekeeper Destroyed
 Defeated the Twins
+Infested Conduit Cleansed!
+Hyperspace Network Destroyed
 Peer waiting in gate...
 debug
 info

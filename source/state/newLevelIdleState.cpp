@@ -153,33 +153,6 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
             next_level += 1;
         }
 
-        // For now, to determine whether the game's complete, scan through a
-        // bunch of levels. If there are no more bosses remaining, the game is
-        // complete.
-        bool bosses_remaining = false;
-        for (Level l = next_level; l < next_level + 1000; ++l) {
-            if (is_boss_level(l)) {
-                bosses_remaining = true;
-                break;
-            }
-        }
-
-        // FIXME: Zone 4 isn't done yet, remove me later...
-        if (next_level > boss_2_level and
-            game.persistent_data().settings_.log_severity_ not_eq
-                Severity::debug) {
-
-            bosses_remaining = false;
-        }
-
-        auto zone = zone_info(next_level);
-        auto last_zone = zone_info(game.level());
-
-        if (not bosses_remaining and not(zone == last_zone)) {
-            pfrm.sleep(120);
-            return state_pool().create<EndingCreditsState>();
-        }
-
         return state_pool().create<NewLevelState>(next_level);
     }
 

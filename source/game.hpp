@@ -210,7 +210,7 @@ private:
 
     void init_script(Platform& pfrm);
 
-    TileMap tiles_;
+   TileMap tiles_;
     Camera camera_;
     Player player_;
     EnemyGroup enemies_;
@@ -272,7 +272,7 @@ enum {
     boss_0_level = 9,
     boss_1_level = 20,
     boss_2_level = 29,
-    boss_3_level = 40,
+    boss_3_level = 35,
     boss_max_level
 };
 

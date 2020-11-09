@@ -108,6 +108,8 @@ necesario: Sistema de mapa
 The Wanderer Defeated
 Gatekeeper Destroyed
 Defeated the Twins
+Infested Conduit Cleansed!
+Power Surges Eliminated!
 Peer waiting in gate...
 debug
 info

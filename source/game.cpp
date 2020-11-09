@@ -561,6 +561,27 @@ static constexpr const BossLevelMap boss_level_2_gr({{
 }});
 
 
+READ_ONLY_DATA
+static constexpr const BossLevelMap boss_level_3({{
+    {},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0},
+    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+}});
+
+
 struct BossLevel {
     const BossLevelMap* map_;
     const char* spritesheet_;
@@ -586,6 +607,12 @@ static const BossLevel* get_boss_level(Level current_level)
     case boss_2_level: {
         static constexpr const BossLevel ret{
             &boss_level_2, "spritesheet_boss2", &boss_level_2_gr};
+        return &ret;
+    }
+
+    case boss_3_level: {
+        static constexpr const BossLevel ret{&boss_level_3,
+                                             "spritesheet_boss3"};
         return &ret;
     }
 
@@ -2182,6 +2209,16 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             }
             enemies_.spawn<Twin>(target);
             break;
+
+        case boss_3_level: {
+            enemies_.spawn<InfestedCore>(to_world_coord(Vec2<TIdx>{10, 8}));
+            enemies_.spawn<InfestedCore>(to_world_coord(Vec2<TIdx>{5, 8}));
+            enemies_.spawn<InfestedCore>(to_world_coord(Vec2<TIdx>{10, 12}));
+            enemies_.spawn<InfestedCore>(to_world_coord(Vec2<TIdx>{5, 12}));
+            const auto p = to_world_coord(Vec2<TIdx>{8, 11});
+            player_.move({p.x - 0.1f, p.y - 0.1f});
+        } break;
+
         }
 
         int heart_count = 2;

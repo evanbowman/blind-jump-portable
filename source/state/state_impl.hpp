@@ -137,7 +137,8 @@ private:
         init,
         explosion_wait1,
         explosion_wait2,
-        fade
+        fade,
+        endgame,
     } anim_state_ = AnimState::init;
 
     const Vec2<Float> boss_position_;
