@@ -3,7 +3,7 @@
 #include "boss.hpp"
 
 
-static const Entity::Health initial_health(2);
+static const Entity::Health initial_health(60);
 
 
 InfestedCore::InfestedCore(const Vec2<Float>& position) :
