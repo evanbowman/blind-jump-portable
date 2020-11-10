@@ -45,6 +45,10 @@
 //;
 #include "data/title_2_flattened.h"
 //;
+#include "data/ending_scene_flattened.h"
+//;
+#include "data/ending_scene_2_flattened.h"
+//;
 #include "data/launch_flattened.h"
 //;
 #include "data/tilesheet_intro_cutscene_flattened.h"
@@ -142,6 +146,10 @@ static const TextureData tile_textures[] = {
     TEXTURE_INFO(title_1_flattened),
 //;
     TEXTURE_INFO(title_2_flattened),
+//;
+    TEXTURE_INFO(ending_scene_flattened),
+//;
+    TEXTURE_INFO(ending_scene_2_flattened),
 //;
     TEXTURE_INFO(launch_flattened),
 //;

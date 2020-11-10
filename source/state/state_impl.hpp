@@ -524,6 +524,25 @@ private:
 };
 
 
+class EndingCutsceneState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    enum class AnimState {
+        fade_in,
+        hold,
+        fade_out,
+    } anim_state_ = AnimState::fade_in;
+
+    Microseconds counter_ = 0;
+    Microseconds anim_counter_ = 0;
+    int anim_index_ = 0;
+};
+
+
 class MapSystemState : public MenuState {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
@@ -1370,6 +1389,7 @@ using StatePoolInst = StatePool<ActiveState,
                                 NetworkConnectSetupState,
                                 NetworkConnectWaitState,
                                 LaunchCutsceneState,
+                                EndingCutsceneState,
                                 BossDeathSequenceState,
                                 QuickSelectInventoryState,
                                 SignalJammerSelectorState,

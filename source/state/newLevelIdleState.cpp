@@ -165,8 +165,10 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
 
         if (not bosses_remaining) {
-            pfrm.sleep(120);
-            return state_pool().create<EndingCreditsState>();
+            pfrm.sleep(150);
+            pfrm.speaker().play_music("waves", 0);
+            pfrm.sleep(240);
+            return state_pool().create<EndingCutsceneState>();
         }
 
         return state_pool().create<NewLevelState>(next_level);

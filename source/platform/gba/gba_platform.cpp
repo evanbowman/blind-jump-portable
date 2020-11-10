@@ -1743,6 +1743,7 @@ void Platform::Speaker::play_note(Note n, Octave o, Channel c)
 #include "data/music_midsommar.hpp"
 #include "data/music_murmuration.hpp"
 #include "data/music_rocketlaunch.hpp"
+#include "data/music_waves.hpp"
 #include "data/scottbuckley_computations.hpp"
 #include "data/scottbuckley_omega.hpp"
 
@@ -1783,7 +1784,8 @@ static const struct AudioTrack {
                     DEF_MUSIC(murmuration, music_murmuration),
                     DEF_MUSIC(rocketlaunch, music_rocketlaunch),
                     DEF_MUSIC(chantiers_navals_412, music_chantiers_navals_412),
-                    DEF_MUSIC(midsommar, music_midsommar)};
+                    DEF_MUSIC(midsommar, music_midsommar),
+                    DEF_MUSIC(waves, music_waves)};
 
 
 static const AudioTrack* find_music(const char* name)

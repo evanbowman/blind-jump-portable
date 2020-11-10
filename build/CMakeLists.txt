@@ -114,6 +114,7 @@ set(SOURCES
   ${SOURCE_DIR}/state/networkConnectWaitState.cpp
   ${SOURCE_DIR}/state/bossDeathSequenceState.cpp
   ${SOURCE_DIR}/state/launchCutsceneState.cpp
+  ${SOURCE_DIR}/state/endingCutsceneState.cpp
   ${SOURCE_DIR}/state/deathContinueState.cpp
   ${SOURCE_DIR}/state/endingCreditsState.cpp
   ${SOURCE_DIR}/state/logfileViewerState.cpp
@@ -198,6 +199,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/file_english.cpp
     ${DATA_DIR}/file_spanish.cpp
     ${DATA_DIR}/scottbuckley_omega.s
+    ${DATA_DIR}/music_waves.s
     ${DATA_DIR}/music_murmuration.s
     ${DATA_DIR}/music_rocketlaunch.s
     ${DATA_DIR}/music_midsommar.s
@@ -227,6 +229,8 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/launch_flattened.s
     ${DATA_DIR}/title_1_flattened.s
     ${DATA_DIR}/title_2_flattened.s
+    ${DATA_DIR}/ending_scene_flattened.s
+    ${DATA_DIR}/ending_scene_2_flattened.s
     ${DATA_DIR}/sound_msg.s
     ${DATA_DIR}/sound_pop.s
     ${DATA_DIR}/sound_coin.s
@@ -486,6 +490,8 @@ if(GAMEBOY_ADVANCE)
     add_spritesheet(spritesheet_launch_anim 2 4 NO)
     add_tilesheet(title_1 0 0 YES)
     add_tilesheet(title_2 0 0 YES)
+    add_tilesheet(ending_scene 0 0 YES)
+    add_tilesheet(ending_scene_2 0 0 YES)
     add_tilesheet(launch 0 0 YES)
     add_tilesheet(tilesheet_intro_cutscene 0 0 YES)
     add_tilesheet(tilesheet 4 3 NO)

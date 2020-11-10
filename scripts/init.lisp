@@ -184,7 +184,14 @@
             (add-items item-accelerator
                        item-explosive_rounds_2)))
 
-      (unbind #temp)))
+      ;; (if (equal debug-mode 8)
+      ;;     (progn
+      ;;       (level boss-3-level)
+      ;;       (set-hp player 6)
+      ;;       (apply add-items temp)
+      ;;       (add-items 5 5 5 9 9 9)))
+
+      (unbind #temp))))
 
 
 ;;;

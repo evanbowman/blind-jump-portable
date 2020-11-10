@@ -3,7 +3,7 @@
 #include "boss.hpp"
 
 
-static const Entity::Health initial_health(60);
+static const Entity::Health initial_health(2);
 
 
 InfestedCore::InfestedCore(const Vec2<Float>& position) :
@@ -100,8 +100,10 @@ void InfestedCore::update(Platform& pfrm, Game& game, Microseconds dt)
 
     switch (state_) {
     case State::sleep:
-        if (anim_timer_ > seconds(4)) {
-
+        animate();
+        spawn_timer_ += dt;
+        if (spawn_timer_ > seconds(4)) {
+            spawn_timer_ = 0;
             if (game.enemies().get<InfestedCore>().begin()->get() == this) {
                 state_ = State::spawn_2;
             } else {
@@ -263,6 +265,7 @@ void InfestedCore::injured(Platform& pfrm, Game& game, Health amount)
         if (sprite_.get_texture_index() not_eq 48) {
             game.effects().clear();
             big_explosion(pfrm, game, position_);
+            pfrm.speaker().play_sound("explosion1", 3, position_);
             sprite_.set_texture_index(48);
             push_notification(
                 pfrm,

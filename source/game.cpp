@@ -1784,7 +1784,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          boss_0_level},
         {5,
          [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); },
-         boss_2_level},
+         boss_3_level},
         {7,
          [&]() {
              spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
@@ -1794,7 +1794,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         {1, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
         {boss_0_level,
          [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
-         boss_2_level}};
+         boss_3_level}};
 
     Buffer<EnemyInfo*, 100> distribution;
 
