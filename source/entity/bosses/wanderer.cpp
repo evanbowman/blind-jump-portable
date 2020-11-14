@@ -189,13 +189,13 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                 timer_ = 0;
 
                 if (distance(position_, target.get_position()) > 80 and
-                    rng::choice<2>(rng::critical_state)) {
+                    rng::choice<2>(rng::critical_state) and
+                    get_health() < initial_health - 10) {
                     state_ = State::big_laser_shooting;
                     sprite_.set_mix({ColorConstant::electric_blue, 0});
                     head_.set_mix({ColorConstant::electric_blue, 0});
 
                 } else {
-                    // TODO...
                     state_ = State::small_laser_prep;
                 }
             }
