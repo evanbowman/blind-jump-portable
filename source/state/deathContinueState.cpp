@@ -14,10 +14,9 @@ void DeathContinueState::enter(Platform& pfrm, Game& game, State&)
             break;
         }
     }
-    std::sort(std::begin(game.highscores()), std::end(game.highscores()),
-              [](auto& lhs, auto& rhs) {
-                  return lhs.get() > rhs.get();
-              });
+    std::sort(std::begin(game.highscores()),
+              std::end(game.highscores()),
+              [](auto& lhs, auto& rhs) { return lhs.get() > rhs.get(); });
 }
 
 

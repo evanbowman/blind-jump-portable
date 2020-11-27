@@ -1,7 +1,7 @@
 #pragma once
 
-#include "number/numeric.hpp"
 #include "number/endian.hpp"
+#include "number/numeric.hpp"
 
 
 class TimeTracker {

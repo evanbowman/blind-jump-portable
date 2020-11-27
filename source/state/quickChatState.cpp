@@ -7,8 +7,7 @@ static const std::array<LocaleString, 6> chat_messages = {
     LocaleString::no,
     LocaleString::chat_q_got_oranges,
     LocaleString::chat_lets_go,
-    LocaleString::chat_found_health
-};
+    LocaleString::chat_found_health};
 
 
 void QuickChatState::display_time_remaining(Platform&, Game&)

@@ -1,5 +1,5 @@
-#include "state_impl.hpp"
 #include "script/lisp.hpp"
+#include "state_impl.hpp"
 
 
 static auto fade_in_color(const Game& game)

@@ -755,7 +755,7 @@ void Blaster::shoot(Platform& pf, Game& game)
 
             pf.speaker().play_sound("blaster", 4);
 
-            if (not[&] {
+            if (not [&] {
                     if (expl_rounds > 0) {
                         game.camera().shake();
                         medium_explosion(pf, game, position_);

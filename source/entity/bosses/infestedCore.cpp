@@ -1,16 +1,14 @@
 #include "infestedCore.hpp"
-#include "game.hpp"
 #include "boss.hpp"
+#include "game.hpp"
 
 
 static const Entity::Health initial_health(60);
 
 
-InfestedCore::InfestedCore(const Vec2<Float>& position) :
-    Enemy(initial_health, position, {{32, 40}, {16, 32}}),
-    state_(State::sleep),
-    anim_timer_(0),
-    spawn_timer_(0)
+InfestedCore::InfestedCore(const Vec2<Float>& position)
+    : Enemy(initial_health, position, {{32, 40}, {16, 32}}),
+      state_(State::sleep), anim_timer_(0), spawn_timer_(0)
 {
     set_position({position.x + 16, position.y + 4});
 
@@ -270,8 +268,8 @@ void InfestedCore::injured(Platform& pfrm, Game& game, Health amount)
             push_notification(
                 pfrm,
                 game.state(),
-                locale_string(pfrm,
-                              LocaleString::boss3_core_cleansed)->c_str());
+                locale_string(pfrm, LocaleString::boss3_core_cleansed)
+                    ->c_str());
         }
         return;
     }

@@ -12,7 +12,6 @@ class Laser;
 
 class InfestedCore : public Enemy {
 public:
-
     InfestedCore(const Vec2<Float>& position);
 
     static constexpr bool multiface_sprite = true;
@@ -32,17 +31,25 @@ public:
         return LocaleString::boss3_cores_defeated;
     }
 
-    bool is_allied() const { return false; }
+    bool is_allied() const
+    {
+        return false;
+    }
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
-    void on_collision(Platform&, Game&, LaserExplosion&) {}
-    void on_collision(Platform&, Game&, AlliedOrbShot&) {}
-    void on_collision(Platform&, Game&, Player&) {}
+    void on_collision(Platform&, Game&, LaserExplosion&)
+    {
+    }
+    void on_collision(Platform&, Game&, AlliedOrbShot&)
+    {
+    }
+    void on_collision(Platform&, Game&, Player&)
+    {
+    }
     void on_collision(Platform&, Game&, Laser&);
 
 private:
-
     void injured(Platform&, Game&, Health amount);
 
     enum class State {

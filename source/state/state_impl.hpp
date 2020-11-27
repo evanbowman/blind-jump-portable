@@ -113,7 +113,6 @@ private:
     std::optional<Text> time_remaining_text_;
     std::optional<SmallIcon> time_remaining_icon_;
     int idle_rx_count_ = 0;
-
 };
 
 
@@ -455,7 +454,6 @@ private:
     bool more_pages_ = false;
 
     Microseconds timer_ = 0;
-
 };
 
 

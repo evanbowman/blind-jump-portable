@@ -835,8 +835,6 @@ const ZoneInfo& current_zone(Game& game)
 }
 
 
-
-
 bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
 {
     return lhs.title_line_2 == rhs.title_line_2;
@@ -2219,7 +2217,6 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             const auto p = to_world_coord(Vec2<TIdx>{8, 11});
             player_.move({p.x - 0.1f, p.y - 0.1f});
         } break;
-
         }
 
         int heart_count = 2;

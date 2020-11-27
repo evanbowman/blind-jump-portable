@@ -65,8 +65,8 @@ void Game::init_script(Platform& pfrm)
                           if (argc == 1) {
                               L_EXPECT_OP(0, integer);
 
-                              game->persistent_data().level_
-                                  .set(lisp::get_op(0)->integer_.value_);
+                              game->persistent_data().level_.set(
+                                  lisp::get_op(0)->integer_.value_);
 
                           } else {
                               return lisp::make_integer(
@@ -363,8 +363,10 @@ void Game::init_script(Platform& pfrm)
             return L_NIL;
         }));
 
-#define L_ITEM_K(NAME) \
-    {"item-" #NAME, (int)Item::Type::NAME}
+#define L_ITEM_K(NAME)                                                         \
+    {                                                                          \
+        "item-" #NAME, (int)Item::Type::NAME                                   \
+    }
 
     static constexpr const lisp::IntegralConstant constant_table[] = {
         {"boss-0-level", boss_0_level},

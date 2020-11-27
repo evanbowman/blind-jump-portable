@@ -1,9 +1,9 @@
 #pragma once
 
 #include "graphics/contrast.hpp"
+#include "number/endian.hpp"
 #include "platform/key.hpp"
 #include "severity.hpp"
-#include "number/endian.hpp"
 
 
 struct Settings {

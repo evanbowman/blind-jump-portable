@@ -9,10 +9,10 @@ void EndingCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     game.camera() = Camera{};
 
-    game.camera().update(pfrm,
-                         milliseconds(100),
-                         {(float)pfrm.screen().size().x / 2,
-                          (float)pfrm.screen().size().y / 2});
+    game.camera().update(
+        pfrm,
+        milliseconds(100),
+        {(float)pfrm.screen().size().x / 2, (float)pfrm.screen().size().y / 2});
 
     pfrm.set_overlay_origin(0, 0);
 
@@ -58,7 +58,8 @@ void EndingCutsceneState::exit(Platform& pfrm, Game& game, State& prev_state)
 }
 
 
-StatePtr EndingCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+EndingCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     static const auto c = ColorConstant::rich_black;
 

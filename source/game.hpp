@@ -210,7 +210,7 @@ private:
 
     void init_script(Platform& pfrm);
 
-   TileMap tiles_;
+    TileMap tiles_;
     Camera camera_;
     Player player_;
     EnemyGroup enemies_;

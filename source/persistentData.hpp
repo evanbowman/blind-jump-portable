@@ -4,11 +4,11 @@
 #include "dateTime.hpp"
 #include "entity/entity.hpp"
 #include "inventory.hpp"
+#include "number/endian.hpp"
 #include "number/numeric.hpp"
 #include "powerup.hpp"
 #include "settings.hpp"
 #include "timeTracker.hpp"
-#include "number/endian.hpp"
 
 
 using Level = s32;

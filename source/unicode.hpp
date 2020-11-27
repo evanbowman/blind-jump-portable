@@ -2,10 +2,10 @@
 
 #include "bitvector.hpp"
 #include "function.hpp"
+#include "number/endian.hpp"
 #include "number/numeric.hpp"
 #include "string.hpp"
 #include <optional>
-#include "number/endian.hpp"
 
 
 namespace utf8 {
