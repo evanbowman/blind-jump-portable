@@ -2,9 +2,8 @@
 #include "bulkAllocator.hpp"
 #include "memory/buffer.hpp"
 #include "memory/pool.hpp"
+#include "localization.hpp"
 
-
-void english__to_string(int num, char* buffer, int base);
 
 
 namespace lisp {
@@ -909,9 +908,7 @@ void format_impl(Value* value, Printer& p)
         break;
 
     case lisp::Value::Type::integer: {
-        char str[32];
-        english__to_string(value->integer_.value_, str, 10);
-        p.put_str(str);
+        p.put_str(to_string<32>(value->integer_.value_).c_str());
         break;
     }
 

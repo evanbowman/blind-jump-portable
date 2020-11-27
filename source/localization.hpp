@@ -23,6 +23,16 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls);
 void english__to_string(int num, char* buffer, int base);
 
 
+template <u32 length>
+StringBuffer<length> to_string(int num)
+{
+    char temp[length];
+    english__to_string(num, temp, 10);
+
+    return temp;
+}
+
+
 void locale_num2str(int num, char* buffer, int base);
 
 

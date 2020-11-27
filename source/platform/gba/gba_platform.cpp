@@ -2195,10 +2195,8 @@ Platform::ScratchBufferPtr Platform::make_scratch_buffer()
             scratch_buffer_highwater = scratch_buffers_in_use;
 
             StringBuffer<60> str = "sbr highwater: ";
-            char buf[10];
-            english__to_string(scratch_buffer_highwater, buf, 10);
 
-            str += buf;
+            str += to_string<10>(scratch_buffer_highwater).c_str();
 
             info(*::platform, str.c_str());
         }

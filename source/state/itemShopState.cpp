@@ -61,7 +61,7 @@ void ItemShopState::enter(Platform& pfrm, Game& game, State& prev_state)
     }
 
     for (u32 i = 0; i < st.x; ++i) {
-        pfrm.set_tile(Layer::overlay, i, st.y - 2, 425);
+        pfrm.set_tile(Layer::overlay, i, st.y - 3, 425);
     }
 
     buy_sell_text_->append(locale_string(pfrm, LocaleString::sell)->c_str());
@@ -433,6 +433,10 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.set_tile(Layer::overlay, 0, st.y - 1, 0);
             pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 1, 0);
 
+            for (u32 i = 0; i < st.x; ++i) {
+                pfrm.set_tile(Layer::overlay, i, st.y - 3, 0);
+            }
+
         } else if (pfrm.keyboard().down_transition<Key::right>()) {
             display_mode_ = DisplayMode::animate_in_sell;
             heading_text_.reset();
@@ -441,6 +445,10 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
             const auto st = calc_screen_tiles(pfrm);
             pfrm.set_tile(Layer::overlay, 0, st.y - 1, 0);
             pfrm.set_tile(Layer::overlay, st.x - 1, st.y - 1, 0);
+
+            for (u32 i = 0; i < st.x; ++i) {
+                pfrm.set_tile(Layer::overlay, i, st.y - 3, 0);
+            }
         }
         break;
 
