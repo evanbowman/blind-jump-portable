@@ -1840,6 +1840,7 @@ LevelRange level_range(Item::Type item)
 
     case Item::Type::worker_notebook_2:
     case Item::Type::engineer_notebook_2:
+    case Item::Type::signal_jammer:
         return {boss_0_level, max};
 
     case Item::Type::seed_packet:

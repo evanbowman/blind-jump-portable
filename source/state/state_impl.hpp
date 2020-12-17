@@ -1088,7 +1088,7 @@ private:
                         difficulty += 1;
                     }
                 } else if (dir < 0) {
-                    if (difficulty > 1) {
+                    if (difficulty > 0) {
                         difficulty -= 1;
                     }
                 }
