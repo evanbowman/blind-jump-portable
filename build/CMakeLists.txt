@@ -124,6 +124,7 @@ set(SOURCES
   ${SOURCE_DIR}/state/newLevelIdleState.cpp
   ${SOURCE_DIR}/state/signalJammerState.cpp
   ${SOURCE_DIR}/state/respawnWaitState.cpp
+  ${SOURCE_DIR}/state/scoreScreenState.cpp
   ${SOURCE_DIR}/state/commandCodeState.cpp
   ${SOURCE_DIR}/state/pauseScreenState.cpp
   ${SOURCE_DIR}/state/titleScreenState.cpp

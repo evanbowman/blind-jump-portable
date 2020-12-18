@@ -351,28 +351,59 @@ public:
 };
 
 
-class DeathContinueState : public State {
+class ScoreScreenState : public State {
 public:
-    DeathContinueState()
+    ScoreScreenState(s8 metrics_y_offset = 0,
+                     const Text::OptColors& metric_font_colors = {}) :
+        metrics_y_offset_(metrics_y_offset),
+        metric_font_colors_(metric_font_colors)
     {
     }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+protected:
+
+    void repaint_stats(Platform&, Game&);
+
+    void clear_stats(Platform&);
+
+    bool locked() const
+    {
+        return locked_;
+    }
+
+    bool has_lines() const
+    {
+        return lines_.empty();
+    }
+
+private:
+
+    s8 metrics_y_offset_;
+    bool locked_ = false;
+
+    Buffer<Text, 5> lines_;
+
+    int page_ = 0;
+    u32 playtime_seconds_ = 0;
+    Level max_level_ = 0;
+
+    Text::OptColors metric_font_colors_;
+};
+
+
+class DeathContinueState : public ScoreScreenState {
+public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    Buffer<Text, 5> lines_;
-
-    void repaint_stats(Platform&, Game&);
-
-    int page_ = 0;
-    bool locked_ = false;
-
     Microseconds counter_ = 0;
     Microseconds counter2_ = 0;
-
-    u32 playtime_seconds_ = 0;
-    Level max_level_ = 0;
 };
 
 
@@ -522,8 +553,12 @@ private:
 };
 
 
-class EndingCutsceneState : public State {
+class EndingCutsceneState : public ScoreScreenState {
 public:
+    EndingCutsceneState() : ScoreScreenState(-4)
+    {
+    }
+
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -531,7 +566,9 @@ public:
 private:
     enum class AnimState {
         fade_in,
+        wait1,
         hold,
+        wait2,
         fade_out,
     } anim_state_ = AnimState::fade_in;
 
@@ -677,7 +714,7 @@ private:
         fade_show_image,
         show_image,
         fade_out,
-        reset
+        done
     } display_mode_ = DisplayMode::scroll;
 
     Microseconds timer_ = 0;

@@ -28,6 +28,9 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
     pfrm.speaker().stop_music();
 
     locale_set_language(game.persistent_data().settings_.language_.get());
+
+    pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, false, false);
+    pfrm.fill_overlay(0);
 }
 
 
@@ -267,7 +270,7 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (timer_ > fade_duration) {
             pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, true, true);
 
-            display_mode_ = DisplayMode::reset;
+            display_mode_ = DisplayMode::done;
             timer_ = 0;
         } else {
             pfrm.screen().fade(smoothstep(0.f, fade_duration, timer_),
@@ -282,9 +285,9 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
         break;
     }
 
-    case DisplayMode::reset:
+    case DisplayMode::done:
         if (timer_ > seconds(2)) {
-            factory_reset(pfrm);
+            return state_pool().create<TitleScreenState>();
         }
         break;
     }

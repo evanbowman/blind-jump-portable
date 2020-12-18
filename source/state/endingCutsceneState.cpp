@@ -3,6 +3,8 @@
 
 void EndingCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    ScoreScreenState::enter(pfrm, game, prev_state);
+
     game.details().clear();
     game.effects().clear();
     game.enemies().clear();
@@ -14,9 +16,7 @@ void EndingCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
         milliseconds(100),
         {(float)pfrm.screen().size().x / 2, (float)pfrm.screen().size().y / 2});
 
-    pfrm.set_overlay_origin(0, 0);
-
-    pfrm.enable_glyph_mode(false);
+    pfrm.enable_glyph_mode(true);
 
     pfrm.load_tile0_texture("ending_scene_flattened");
     pfrm.load_tile1_texture("tilesheet_top");
@@ -51,8 +51,10 @@ void EndingCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 }
 
 
-void EndingCutsceneState::exit(Platform& pfrm, Game& game, State& prev_state)
+void EndingCutsceneState::exit(Platform& pfrm, Game& game, State& next_state)
 {
+    ScoreScreenState::exit(pfrm, game, next_state);
+
     pfrm.fill_overlay(0);
     pfrm.enable_glyph_mode(true);
 }
@@ -84,7 +86,7 @@ EndingCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (counter_ > fade_duration) {
             counter_ = 0;
             pfrm.screen().fade(0.f, c);
-            anim_state_ = AnimState::hold;
+            anim_state_ = AnimState::wait1;
         } else {
             const auto amount = 1.f - smoothstep(0.f, fade_duration, counter_);
             pfrm.screen().fade(amount, c, {}, true, true);
@@ -93,14 +95,44 @@ EndingCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         break;
     }
 
-    case AnimState::hold: {
-        if (counter_ > seconds(10) or
-            (counter_ > seconds(4) and pfrm.keyboard().any_pressed())) {
-            counter_ = 0;
-            anim_state_ = AnimState::fade_out;
+    case AnimState::wait1: {
+        constexpr auto fade_duration = milliseconds(3400);
+
+        if (counter_ > milliseconds(2000)) {
+            const auto amount = smoothstep(0.f,
+                                           fade_duration - milliseconds(2000),
+                                           counter_ - milliseconds(2000)) - 0.6f;
+            pfrm.screen().fade(amount, c);
+        }
+
+        if (counter_ > milliseconds(3400)) {
+            anim_state_ = AnimState::hold;
+            repaint_stats(pfrm, game);
+            pfrm.screen().fade(0.4f);
         }
         break;
     }
+
+    case AnimState::hold: {
+        if (pfrm.keyboard().pressed(game.action1_key()) or
+            pfrm.keyboard().pressed(game.action2_key())) {
+
+            counter_ = 0;
+            anim_state_ = AnimState::wait2;
+            pfrm.screen().fade(0.f);
+            clear_stats(pfrm);
+        } else {
+            ScoreScreenState::update(pfrm, game, delta);
+        }
+        break;
+    }
+
+    case AnimState::wait2:
+        if (counter_ > milliseconds(400)) {
+            anim_state_ = AnimState::fade_out;
+            pfrm.screen().fade(0.4f);
+        }
+        break;
 
     case AnimState::fade_out: {
         constexpr auto fade_duration = milliseconds(3950);
