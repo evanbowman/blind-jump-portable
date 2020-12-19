@@ -101,7 +101,8 @@ EndingCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (counter_ > milliseconds(2000)) {
             const auto amount = smoothstep(0.f,
                                            fade_duration - milliseconds(2000),
-                                           counter_ - milliseconds(2000)) - 0.6f;
+                                           counter_ - milliseconds(2000)) -
+                                0.6f;
             pfrm.screen().fade(amount, c);
         }
 

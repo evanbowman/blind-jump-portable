@@ -60,10 +60,6 @@ void ItemShopState::enter(Platform& pfrm, Game& game, State& prev_state)
         buy_sell_text_->append(" ");
     }
 
-    for (u32 i = 0; i < st.x; ++i) {
-        pfrm.set_tile(Layer::overlay, i, st.y - 3, 425);
-    }
-
     buy_sell_text_->append(locale_string(pfrm, LocaleString::sell)->c_str());
 
     pfrm.set_tile(Layer::overlay, 0, st.y - 1, 421);
@@ -75,6 +71,10 @@ void ItemShopState::enter(Platform& pfrm, Game& game, State& prev_state)
         display_mode_ == DisplayMode::animate_in_sell) {
         heading_text_.reset();
         buy_sell_text_.reset();
+    } else {
+        for (u32 i = 0; i < st.x; ++i) {
+            pfrm.set_tile(Layer::overlay, i, st.y - 3, 425);
+        }
     }
 }
 

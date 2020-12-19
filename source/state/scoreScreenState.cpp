@@ -46,15 +46,14 @@ void ScoreScreenState::clear_stats(Platform& pfrm)
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    pfrm.set_tile(
-        Layer::overlay, screen_tiles.x - 2, 11, 0);
+    pfrm.set_tile(Layer::overlay, screen_tiles.x - 2, 11, 0);
 
     pfrm.set_tile(Layer::overlay, 1, 11, 0);
-
 }
 
 
-StatePtr ScoreScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
+StatePtr
+ScoreScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     auto refresh = [&] {
         lines_.clear();
@@ -104,7 +103,8 @@ void ScoreScreenState::repaint_stats(Platform& pfrm, Game& game)
             return;
         }
 
-        lines_.emplace_back(pfrm, Vec2<u8>{3, u8(metrics_y_offset_ + 8 + 2 * lines_.size())});
+        lines_.emplace_back(
+            pfrm, Vec2<u8>{3, u8(metrics_y_offset_ + 8 + 2 * lines_.size())});
 
         const auto colors =
             highlight
@@ -142,8 +142,10 @@ void ScoreScreenState::repaint_stats(Platform& pfrm, Game& game)
             return;
         }
         const auto margin = centered_text_margins(pfrm, str_len(str));
-        lines_.emplace_back(pfrm,
-                            Vec2<u8>{u8(margin), u8(metrics_y_offset_ + 8 + 2 * lines_.size())});
+        lines_.emplace_back(
+            pfrm,
+            Vec2<u8>{u8(margin),
+                     u8(metrics_y_offset_ + 8 + 2 * lines_.size())});
         lines_.back().assign(str, metric_font_colors_);
     };
 

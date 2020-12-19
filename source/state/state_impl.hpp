@@ -354,9 +354,9 @@ public:
 class ScoreScreenState : public State {
 public:
     ScoreScreenState(s8 metrics_y_offset = 0,
-                     const Text::OptColors& metric_font_colors = {}) :
-        metrics_y_offset_(metrics_y_offset),
-        metric_font_colors_(metric_font_colors)
+                     const Text::OptColors& metric_font_colors = {})
+        : metrics_y_offset_(metrics_y_offset),
+          metric_font_colors_(metric_font_colors)
     {
     }
 
@@ -365,7 +365,6 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 protected:
-
     void repaint_stats(Platform&, Game&);
 
     void clear_stats(Platform&);
@@ -381,7 +380,6 @@ protected:
     }
 
 private:
-
     s8 metrics_y_offset_;
     bool locked_ = false;
 

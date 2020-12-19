@@ -532,6 +532,7 @@ static struct PaletteInfo {
     ColorConstant color_ = ColorConstant::null;
     u8 blend_amount_ = 0;
     bool locked_ = false;
+    bool used_ = false;
 } palette_info[palette_count] = {};
 
 
@@ -555,6 +556,7 @@ static PaletteBank color_mix(ColorConstant k, u8 amount)
         auto& info = palette_info[palette];
         if (info.color_ == k and info.blend_amount_ == amount) {
             info.locked_ = true;
+            info.used_ = true;
             return palette;
         }
     }
@@ -568,7 +570,36 @@ static PaletteBank color_mix(ColorConstant k, u8 amount)
     }
 
     if (UNLIKELY(palette_counter == palette_count)) {
-        return 0; // Exhausted all the palettes that we have for effects.
+        // Ok, so in this instance, we ran out of unused palettes, but there may
+        // be a palette that was used in the last frame, and which has not yet
+        // been referenced while rendering the current frame. Unlock that
+        // palette and use it. Note that doing this could cause sprites to
+        // flicker, because there's still a sprite in the OAM front buffer using
+        // the locked-but-not-used palette bank. We would not need two booleans,
+        // locked_ and used_, in the table for keeping state if we simply used a
+        // palette back buffer, but adding a back buffer for the OAM palettes
+        // complicates the logic in other ways, uses more memory, and would
+        // require us to copy the whole sprite palette bank into VRAM on every
+        // frame. Because we typically aren't exhausting our supply of ColorMix
+        // palettes anyway, we don't do double buffering for sprite palettes,
+        // and instead, consciously avoid writing to palette banks used by
+        // sprites in the previous frame, unless we really run out of palettes
+        // (which is a rare case, so not worth the cost of double buffering,
+        // IMO).
+        if (auto salvaged_palette = [&] {
+                for (PaletteBank palette = available_palettes; palette < 16;
+                     ++palette) {
+                    auto& info = palette_info[palette];
+                    if (info.locked_ and not info.used_) {
+                        return palette;
+                    }
+                }
+                return 0;
+            }()) {
+            palette_counter = salvaged_palette;
+        } else {
+            return 0;
+        }
     }
 
     const auto c = nightmode_adjust(real_color(k));
@@ -591,7 +622,7 @@ static PaletteBank color_mix(ColorConstant k, u8 amount)
         }
     }
 
-    palette_info[palette_counter] = {k, amount, true};
+    palette_info[palette_counter] = {k, amount, true, true};
 
     return palette_counter++;
 }
@@ -871,7 +902,10 @@ void Platform::Screen::display()
     palette_counter = available_palettes;
 
     for (auto& info : palette_info) {
-        info.locked_ = false;
+        if (not info.used_) {
+            info.locked_ = false;
+        }
+        info.used_ = false;
     }
 
     auto view_offset = view_.get_center().cast<s32>();
