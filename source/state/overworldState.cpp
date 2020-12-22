@@ -379,31 +379,17 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
                 : Text::OptColors{};
 
         network_tx_msg_text_->append(net_stats.transmit_count_);
-        network_tx_msg_text_->append(
-            locale_string(pfrm, LocaleString::network_tx_stats_suffix)
-                ->c_str());
+        network_tx_msg_text_->append(" tx");
         network_rx_msg_text_->append(net_stats.receive_count_);
-        network_rx_msg_text_->append(
-            locale_string(pfrm, LocaleString::network_rx_stats_suffix)
-                ->c_str());
+        network_rx_msg_text_->append(" rx");
         network_tx_loss_text_->append(net_stats.transmit_loss_, tx_loss_colors);
-        network_tx_loss_text_->append(
-            locale_string(pfrm, LocaleString::network_tx_loss_stats_suffix)
-                ->c_str(),
-            tx_loss_colors);
+        network_tx_loss_text_->append(" tl", tx_loss_colors);
         network_rx_loss_text_->append(net_stats.receive_loss_, rx_loss_colors);
-        network_rx_loss_text_->append(
-            locale_string(pfrm, LocaleString::network_rx_loss_stats_suffix)
-                ->c_str(),
-            rx_loss_colors);
+        network_rx_loss_text_->append(" rl", rx_loss_colors);
         link_saturation_text_->append(net_stats.link_saturation_);
-        link_saturation_text_->append(
-            locale_string(pfrm, LocaleString::link_saturation_stats_suffix)
-                ->c_str());
+        link_saturation_text_->append(" lnsat");
         scratch_buf_avail_text_->append(pfrm.scratch_buffers_remaining());
-        scratch_buf_avail_text_->append(
-            locale_string(pfrm, LocaleString::scratch_buf_avail_stats_suffix)
-                ->c_str());
+        scratch_buf_avail_text_->append(" sbr");
     }
 }
 

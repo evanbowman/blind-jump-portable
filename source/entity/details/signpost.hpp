@@ -7,7 +7,7 @@
 
 class Signpost : public Entity {
 public:
-    enum class Type { memorial };
+    enum class Type { lander, memorial };
 
     Signpost(const Vec2<Float>& position, Type type);
 
@@ -31,6 +31,9 @@ public:
             result.push_back(&sprite_);
             result.push_back(&extra_);
             break;
+
+        default:
+            result.push_back(&sprite_);
         }
 
         return result;
@@ -41,6 +44,7 @@ public:
         Buffer<const Sprite*, 1> result;
 
         switch (type_) {
+        case Type::lander:
         case Type::memorial:
             break;
         }

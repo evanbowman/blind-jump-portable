@@ -2078,6 +2078,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     if (level() == 0) {
         details().spawn<Lander>(Vec2<Float>{409.f, 112.f});
+        details().spawn<Signpost>(Vec2<Float>{403.f, 112.f},
+                                  Signpost::Type::lander);
         details().spawn<ItemChest>(Vec2<Float>{348, 154},
                                    Item::Type::explosive_rounds_2);
         enemies().spawn<Drone>(Vec2<Float>{159, 275});

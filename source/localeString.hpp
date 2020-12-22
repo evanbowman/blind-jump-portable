@@ -144,6 +144,7 @@ enum class LocaleString {
     scavenger_shop,
     memorial_str,
     memorial_str_commentary,
+    lander_str,
     worker_notebook_1_str,
     worker_notebook_2_str,
     engineer_notebook_1_str,

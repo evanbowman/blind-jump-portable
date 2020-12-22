@@ -6,6 +6,11 @@ Signpost::Signpost(const Vec2<Float>& position, Type type) : type_(type)
     position_ = position;
 
     switch (type_) {
+    case Type::lander:
+        sprite_.set_alpha(Sprite::Alpha::transparent);
+        extra_.set_alpha(Sprite::Alpha::transparent);
+        break;
+
     case Type::memorial:
         position_.y -= 22;
         sprite_.set_texture_index(54);
@@ -26,6 +31,11 @@ void Signpost::update(Platform&, Game&, Microseconds dt)
 }
 
 
+static const LocaleString lander_dialog[] = {
+    LocaleString::lander_str,
+    LocaleString::empty};
+
+
 static const LocaleString memorial_dialog[] = {
     LocaleString::memorial_str,
     LocaleString::memorial_str_commentary,
@@ -36,7 +46,10 @@ const LocaleString* Signpost::get_dialog() const
 {
     switch (type_) {
     case Type::memorial:
-        break;
+        return memorial_dialog;
+
+    case Type::lander:
+        return lander_dialog;
     }
 
     return memorial_dialog;
