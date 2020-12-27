@@ -723,9 +723,9 @@ typedef enum KEYPAD_BITS {
 #define S3511A_CMD_TIME     S3511A_CMD(3)
 #define S3511A_CMD_ALARM    S3511A_CMD(4)
 
-#define S3511A_GPIO_PORT_DATA        (*(volatile u16 *)0x80000C4)
-#define S3511A_GPIO_PORT_DIRECTION   (*(volatile u16 *)0x80000C6)
-#define S3511A_GPIO_PORT_READ_ENABLE (*(volatile u16 *)0x80000C8)
+#define GPIO_PORT_DATA        (*(volatile u16 *)0x80000C4)
+#define GPIO_PORT_DIRECTION   (*(volatile u16 *)0x80000C6)
+#define GPIO_PORT_READ_ENABLE (*(volatile u16 *)0x80000C8)
 
 #define S3511A_STATUS_INTFE  0x02 // frequency interrupt enable
 #define S3511A_STATUS_INTME  0x08 // per-minute interrupt enable

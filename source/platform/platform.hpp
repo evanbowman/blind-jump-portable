@@ -341,6 +341,8 @@ public:
     public:
         void poll();
 
+        void rumble(Float amount);
+
         using RestoreState = Bitvector<KeyStates{}.size()>;
 
         template <Key... k> bool all_pressed() const

@@ -25,6 +25,7 @@ void english__to_string(int num, char* buffer, int base);
 
 
 static int overlay_y = 0;
+static bool rtc_faulty = false;
 
 
 struct BiosVersion {
@@ -244,6 +245,20 @@ void Platform::Keyboard::poll()
     states_[int(Key::up)] = ~(*keys) & KEY_UP;
     states_[int(Key::alt_1)] = ~(*keys) & KEY_L;
     states_[int(Key::alt_2)] = ~(*keys) & KEY_R;
+}
+
+
+void Platform::Keyboard::rumble(Float amount)
+{
+    We have a working RTC chip connected to the cartridge gpio, so do not
+    attempt to write rumble commands.
+    if (not rtc_faulty) {
+        return;
+    }
+
+    // // TODO...
+    // GPIO_PORT_DIRECTION = 1 << 3;
+    // GPIO_PORT_DATA = 1 << 3;
 }
 
 
@@ -2326,9 +2341,6 @@ static bool rtc_verify_operability(Platform& pfrm)
 }
 
 
-static bool rtc_faulty = false;
-
-
 static std::optional<DateTime> start_time;
 
 
@@ -3475,10 +3487,10 @@ static void rtc_gpio_write_command(u8 value)
 
     for (u8 i = 0; i < 8; i++) {
         temp = ((value >> (7 - i)) & 1);
-        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
-        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
-        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
-        S3511A_GPIO_PORT_DATA = (temp << 1) | 5;
+        GPIO_PORT_DATA = (temp << 1) | 4;
+        GPIO_PORT_DATA = (temp << 1) | 4;
+        GPIO_PORT_DATA = (temp << 1) | 4;
+        GPIO_PORT_DATA = (temp << 1) | 5;
     }
 }
 
@@ -3492,10 +3504,10 @@ rtc_gpio_write_data(u8 value)
 
     for (u8 i = 0; i < 8; i++) {
         temp = ((value >> i) & 1);
-        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
-        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
-        S3511A_GPIO_PORT_DATA = (temp << 1) | 4;
-        S3511A_GPIO_PORT_DATA = (temp << 1) | 5;
+        GPIO_PORT_DATA = (temp << 1) | 4;
+        GPIO_PORT_DATA = (temp << 1) | 4;
+        GPIO_PORT_DATA = (temp << 1) | 4;
+        GPIO_PORT_DATA = (temp << 1) | 5;
     }
 }
 
@@ -3506,14 +3518,14 @@ static u8 rtc_gpio_read_value()
     u8 value = 0;
 
     for (u8 i = 0; i < 8; i++) {
-        S3511A_GPIO_PORT_DATA = 4;
-        S3511A_GPIO_PORT_DATA = 4;
-        S3511A_GPIO_PORT_DATA = 4;
-        S3511A_GPIO_PORT_DATA = 4;
-        S3511A_GPIO_PORT_DATA = 4;
-        S3511A_GPIO_PORT_DATA = 5;
+        GPIO_PORT_DATA = 4;
+        GPIO_PORT_DATA = 4;
+        GPIO_PORT_DATA = 4;
+        GPIO_PORT_DATA = 4;
+        GPIO_PORT_DATA = 4;
+        GPIO_PORT_DATA = 5;
 
-        temp = ((S3511A_GPIO_PORT_DATA & 2) >> 1);
+        temp = ((GPIO_PORT_DATA & 2) >> 1);
         value = (value >> 1) | (temp << 7);
     }
 
@@ -3523,18 +3535,18 @@ static u8 rtc_gpio_read_value()
 
 static u8 rtc_get_status()
 {
-    S3511A_GPIO_PORT_DATA = 1;
-    S3511A_GPIO_PORT_DATA = 5;
-    S3511A_GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DIRECTION = 7;
 
     rtc_gpio_write_command(S3511A_CMD_STATUS | S3511A_RD);
 
-    S3511A_GPIO_PORT_DIRECTION = 5;
+    GPIO_PORT_DIRECTION = 5;
 
     const auto status = rtc_gpio_read_value();
 
-    S3511A_GPIO_PORT_DATA = 1;
-    S3511A_GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = 1;
 
     return status;
 }
@@ -3544,13 +3556,13 @@ static auto rtc_get_datetime()
 {
     std::array<u8, 7> result;
 
-    S3511A_GPIO_PORT_DATA = 1;
-    S3511A_GPIO_PORT_DATA = 5;
-    S3511A_GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DIRECTION = 7;
 
     rtc_gpio_write_command(S3511A_CMD_DATETIME | S3511A_RD);
 
-    S3511A_GPIO_PORT_DIRECTION = 5;
+    GPIO_PORT_DIRECTION = 5;
 
     for (auto& val : result) {
         val = rtc_gpio_read_value();
@@ -3558,8 +3570,8 @@ static auto rtc_get_datetime()
 
     result[4] &= 0x7F;
 
-    S3511A_GPIO_PORT_DATA = 1;
-    S3511A_GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = 1;
 
     return result;
 }
@@ -3610,7 +3622,7 @@ std::optional<DateTime> Platform::SystemClock::now()
 
 void Platform::SystemClock::init(Platform& pfrm)
 {
-    S3511A_GPIO_PORT_READ_ENABLE = 1;
+    GPIO_PORT_READ_ENABLE = 1;
 
     auto status = rtc_get_status();
     if (status & S3511A_STATUS_POWER) {
