@@ -245,20 +245,43 @@ void Platform::Keyboard::poll()
     states_[int(Key::up)] = ~(*keys) & KEY_UP;
     states_[int(Key::alt_1)] = ~(*keys) & KEY_L;
     states_[int(Key::alt_2)] = ~(*keys) & KEY_R;
+
+    if (states_[int(Key::right)] and states_[int(Key::left)] and
+        states_[int(Key::down)] and states_[int(Key::up)]) {
+
+        while (true) ;
+    }
+}
+
+
+u32 rumble_response(u32 gbp_code, bool rumble_on)
+{
+    // See here:
+    // https://rust-console.github.io/gbatek-gbaonly/#--gba-gameboy-player
+
+    // TODO...
+    return 0;
 }
 
 
 void Platform::Keyboard::rumble(Float amount)
 {
-    We have a working RTC chip connected to the cartridge gpio, so do not
-    attempt to write rumble commands.
+    // We have a working RTC chip connected to the cartridge gpio, so do not
+    // attempt to write rumble commands.
     if (not rtc_faulty) {
         return;
     }
 
-    // // TODO...
-    // GPIO_PORT_DIRECTION = 1 << 3;
-    // GPIO_PORT_DATA = 1 << 3;
+    static int rumble_count;
+    static bool rumble_on;
+
+    if (++rumble_count == 60) {
+        rumble_count = 0;
+        rumble_on = not rumble_on;
+    }
+
+    GPIO_PORT_DIRECTION = 1 << 3;
+    GPIO_PORT_DATA = rumble_on << 3;
 }
 
 
@@ -406,7 +429,10 @@ static volatile u16* reg_blendalpha = (volatile u16*)0x04000052;
 #include "gba_color.hpp"
 
 
-Platform::Screen::Screen() : userdata_(nullptr)
+// Most of the game uses tile-based graphics modes, but some parts of the intro
+// sequence, which display the gameboy player logo, currently use the bitmap
+// graphics modes, for simplicity.
+static void init_video(Platform::Screen& screen)
 {
     REG_DISPCNT = MODE_0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE |
                   BG2_ENABLE | BG3_ENABLE | WIN0_ENABLE;
@@ -438,9 +464,56 @@ Platform::Screen::Screen() : userdata_(nullptr)
     *bg2_control = BG_CBB(cbb_overlay_texture) | BG_SBB(sbb_overlay_tiles) |
                    BG_PRIORITY(0) | BG_MOSAIC;
 
-    view_.set_size(this->size().cast<Float>());
+    View view;
+    view.set_size(screen.size().cast<Float>());
+
+    screen.set_view(view);
 
     REG_MOSAIC = MOS_BUILD(0, 0, 1, 1);
+}
+
+
+#include "data/gbp_logo.h"
+// To unlock gameboy player features, one must display the gameboy player logo
+// for some pre-defined number of frames. For simplicity, we are currently using
+// the bitmap modes. If we want to support screen fades to smooth out the
+// transitions, we should in the future implement the higher bit-depth tile
+// modes required for displaying the ~40 color gbp logo...
+//
+// While displaying the gameboy player logo, the system will toggle some of the
+// buttons, to indicate whether the system is a gameboy player.
+static void do_gameboy_player_logo_sequence(Platform& pfrm)
+{
+    RegisterRamReset(RESET_VRAM);
+
+#define MEM_VRAM ((volatile u16*)0x06000000)
+
+    REG_DISPCNT = MODE_3 | 0x0400;
+
+    for (int i = 0; i < gbp_logoBitmapLen; ++i) {
+        // const u32 data = gbp_logoBitmap[i];
+        // const u8 p1 = data & 0xff;
+        // const u8 p2 = data & 0xff00;
+        // const u8 p3 = data & 0xff0000;
+        // const u8 p4 = data & 0xff000000;
+
+        MEM_VRAM[i] = gbp_logoPal[((u8*)gbp_logoBitmap)[i]];
+        // MEM_VRAM[i * 4 + 1] = gbp_logoPal[p2];
+        // MEM_VRAM[i * 4 + 2] = gbp_logoPal[p3];
+        // MEM_VRAM[i * 4 + 3] = gbp_logoPal[p4];
+    }
+
+    for (int i = 0; i < 240; ++i) {
+        VBlankIntrWait();
+        pfrm.screen().display();
+    }
+
+    RegisterRamReset(RESET_VRAM);
+}
+
+
+Platform::Screen::Screen() : userdata_(nullptr)
+{
 }
 
 
@@ -2436,16 +2509,20 @@ Platform::Platform()
         info(*::platform, str.c_str());
     }
 
+
     // Surprisingly, the default value of SIOCNT is not necessarily zero! The
     // source of many past serial comms headaches...
     REG_SIOCNT = 0;
 
 
-    fill_overlay(0);
-
     audio_start();
 
     enable_watchdog();
+
+    do_gameboy_player_logo_sequence(*this);
+    init_video(screen());
+
+    fill_overlay(0);
 
     irqEnable(IRQ_GAMEPAK);
     irqSet(IRQ_GAMEPAK, cartridge_interrupt_handler);

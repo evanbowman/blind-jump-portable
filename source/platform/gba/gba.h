@@ -8,6 +8,7 @@
 #define REG_DISPCNT *(u32*)0x4000000
 #define	REG_DISPSTAT	*((volatile u16 *)(REG_BASE + 0x04))
 #define MODE_0 0x0
+#define MODE_3 0x0003
 #define OBJ_MAP_1D 0x40
 #define OBJ_ENABLE 0x1000
 #define REG_WAITCNT *(u16*)0x4000204

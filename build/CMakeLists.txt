@@ -268,7 +268,8 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/postal_advert_flattened.s
     ${DATA_DIR}/blaster_info_flattened.s
     ${DATA_DIR}/seed_packet_flattened.s
-    ${DATA_DIR}/overlay_network_flattened.s)
+    ${DATA_DIR}/overlay_network_flattened.s
+    ${DATA_DIR}/gbp_logo.s)
 else()
   set(SOURCES
     ${SOURCES}
@@ -300,7 +301,7 @@ macro(add_spritesheet filename mw mh flatten)
   set(IMAGE_SPR_STUBS ${IMAGE_SPR_STUBS}
     "\n    TEXTURE_INFO(${filename}),\n//")
 
-  compile_image(${filename} ${mw} ${mh} ${flatten})
+  compile_image(${filename} ${mw} ${mh} ${flatten} 4)
 endmacro()
 
 
@@ -317,7 +318,7 @@ macro(add_tilesheet filename mw mh flatten)
   set(IMAGE_TILE_STUBS ${IMAGE_TILE_STUBS}
     "\n    TEXTURE_INFO(${filename}${FLATTENED_SUFFIX}),\n//")
 
-  compile_image(${filename} ${mw} ${mh} ${flatten})
+  compile_image(${filename} ${mw} ${mh} ${flatten} 4)
 endmacro()
 
 
@@ -334,15 +335,30 @@ macro(add_overlay filename mw mh flatten)
   set(IMAGE_OVERLAY_STUBS ${IMAGE_OVERLAY_STUBS}
     "\n    TEXTURE_INFO(${filename}${FLATTENED_SUFFIX}),\n//")
 
-  compile_image(${filename} ${mw} ${mh} ${flatten})
+  compile_image(${filename} ${mw} ${mh} ${flatten} 4)
 endmacro()
 
 
-function(compile_image filename mw mh flatten)
+function(add_bitmap filename)
+  add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
+    COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
+    COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}.png -gb -gB8
+    COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
+    COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
+    DEPENDS ${IMAGE_DIR}/${filename}.png)
+
+  add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/data/${filename}.s)
+
+  add_dependencies(BlindJump compile_image_${filename})
+
+endfunction()
+
+
+function(compile_image filename mw mh flatten bpp)
   if(${flatten} STREQUAL "YES")
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}_flattened.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png yes
-      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}_flattened.png -gB4 -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}_flattened.png -gB${bpp} -gTFF00FF
       COMMAND mv ${filename}_flattened.s ${SOURCE_DIR}/data/${filename}_flattened.s
       COMMAND mv ${filename}_flattened.h ${SOURCE_DIR}/data/${filename}_flattened.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -352,7 +368,7 @@ function(compile_image filename mw mh flatten)
   elseif(${mw} STREQUAL "0" AND ${mh} STREQUAL "0")
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
-      COMMAND ${DEVKITPRO}/tools/bin/grit  tmp/${filename}.png -gB4 -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit  tmp/${filename}.png -gB${bpp} -gTFF00FF
       COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
       COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -362,7 +378,7 @@ function(compile_image filename mw mh flatten)
   else()
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
-      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}.png -gB4 -Mw ${mw} -Mh ${mh} -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}.png -gB${bpp} -Mw ${mw} -Mh ${mh} -gTFF00FF
       COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
       COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -514,6 +530,7 @@ if(GAMEBOY_ADVANCE)
     add_overlay(blaster_info 0 0 YES)
     add_overlay(seed_packet 0 0 YES)
     add_overlay(overlay_network 0 0 YES)
+    add_bitmap(gbp_logo)
 
     configure_file(images.cpp.in ${SOURCE_DIR}/platform/gba/images.cpp)
   endif()
