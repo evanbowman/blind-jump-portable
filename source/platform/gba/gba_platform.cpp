@@ -503,7 +503,7 @@ static void do_gameboy_player_logo_sequence(Platform& pfrm)
         // MEM_VRAM[i * 4 + 3] = gbp_logoPal[p4];
     }
 
-    for (int i = 0; i < 240; ++i) {
+    for (int i = 0; i < 180; ++i) {
         VBlankIntrWait();
         pfrm.screen().display();
     }
