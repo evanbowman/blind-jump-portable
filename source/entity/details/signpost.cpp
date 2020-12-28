@@ -31,9 +31,8 @@ void Signpost::update(Platform&, Game&, Microseconds dt)
 }
 
 
-static const LocaleString lander_dialog[] = {
-    LocaleString::lander_str,
-    LocaleString::empty};
+static const LocaleString lander_dialog[] = {LocaleString::lander_str,
+                                             LocaleString::empty};
 
 
 static const LocaleString memorial_dialog[] = {
