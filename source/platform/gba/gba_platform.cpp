@@ -26,6 +26,8 @@ void english__to_string(int num, char* buffer, int base);
 
 static int overlay_y = 0;
 static bool rtc_faulty = false;
+static int rx_message_count = 0;
+static int tx_message_count = 0;
 
 
 struct BiosVersion {
@@ -255,14 +257,7 @@ void Platform::Keyboard::poll()
 }
 
 
-u32 rumble_response(u32 gbp_code, bool rumble_on)
-{
-    // See here:
-    // https://rust-console.github.io/gbatek-gbaonly/#--gba-gameboy-player
-
-    // TODO...
-    return 0;
-}
+static bool rumble_on = false;
 
 
 void Platform::Keyboard::rumble(Float amount)
@@ -273,14 +268,14 @@ void Platform::Keyboard::rumble(Float amount)
         return;
     }
 
-    static int rumble_count;
-    static bool rumble_on;
-
-    if (++rumble_count == 60) {
-        rumble_count = 0;
-        rumble_on = not rumble_on;
+    static int rumble_counter = 0;
+    if (++rumble_counter == 60) {
+        rumble_counter = 0;
+        rumble_on = !rumble_on;
     }
 
+    // FIXME: We need to set GPIO bit 3, but how frequently? Need to test on
+    // actual hardware, or inspect what some other existing games do.
     GPIO_PORT_DIRECTION = 1 << 3;
     GPIO_PORT_DATA = rumble_on << 3;
 }
@@ -1964,6 +1959,86 @@ static bool unlock_gameboy_player(Platform& pfrm)
     RegisterRamReset(RESET_VRAM);
 
     return gbp_detected;
+}
+
+
+static int rumble_countdown = 2;
+
+
+void gbp_serial_isr()
+{
+    ++tx_message_count;
+    ++rx_message_count;
+
+    // Why these particular magic numbers? Good question! Email me if you know.
+    switch (REG_SIODATA32) {
+    case 0x494e:
+        REG_SIODATA32 = 0x494eb6b1;
+        break;
+
+    case 0xb6b1494e:
+        REG_SIODATA32 = 0x544eb6b1;
+        break;
+
+    case 0xb6b1544e:
+        REG_SIODATA32 = 0x544eabb1;
+        break;
+
+    case 0xabb1544e:
+        REG_SIODATA32 = 0x4e45abb1;
+        break;
+
+    case 0xabb14e45:
+        REG_SIODATA32 = 0x4e45b1ba;
+        break;
+
+    case 0xb1ba4e45:
+        REG_SIODATA32 = 0x4f44b1ba;
+        break;
+
+    case 0xb1ba4f44:
+        REG_SIODATA32 = 0x4f44b0bb;
+        break;
+
+    case 0xb0bb4f44:
+        REG_SIODATA32 = 0x8000b0bb;
+        break;
+
+    case 0xb0bb8002:
+        REG_SIODATA32 = 0x10000010;
+        break;
+
+    case 0x10000010:
+        REG_SIODATA32 = 0x20000013;
+        break;
+
+    case 0x20000013:
+        REG_SIODATA32 = 0x40000004;
+        break;
+
+    case 0x30000003:
+        REG_SIODATA32 = 0x40000004;
+        if (--rumble_countdown == 0) {
+            rumble_countdown = 2;
+            if (rumble_on) {
+                REG_SIODATA32 = 0x40000026;
+            }
+        }
+        break;
+    }
+
+    REG_SIOCNT |= SIO_START;
+}
+
+
+void gbp_serial_start()
+{
+    REG_RCNT = R_NORMAL;
+    REG_SIOCNT = SIO_32BIT | SIO_IRQ | SIO_SO_HIGH;
+
+    REG_SIOCNT |= SIO_START;
+
+    REG_SIODATA32 = 0x494EB6B1;
 }
 
 
@@ -3943,10 +4018,12 @@ Platform::Platform()
 
     if (unlock_gameboy_player(*this)) {
         info(*::platform, "gameboy player unlocked!");
-        // irqEnable(IRQ_SERIAL);
-        // irqSet(IRQ_SERIAL, [] {
-        //     // TODO...
-        // });
+
+        irqEnable(IRQ_SERIAL);
+        irqSet(IRQ_SERIAL, gbp_serial_isr);
+
+        gbp_serial_start();
+
     } else {
         REG_SIOCNT = 0;
     }
@@ -3975,8 +4052,6 @@ Platform::Platform()
 
 
     enable_watchdog();
-
-    REG_SIOCNT = 0;
 
     audio_start();
 
@@ -4416,8 +4491,6 @@ static bool multiplayer_validate()
 }
 
 
-static int rx_message_count = 0;
-static int tx_message_count = 0;
 static int rx_loss = 0;
 static int tx_loss = 0;
 
