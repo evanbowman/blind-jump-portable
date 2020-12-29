@@ -25,9 +25,35 @@ void english__to_string(int num, char* buffer, int base);
 
 
 static int overlay_y = 0;
-static bool rtc_faulty = false;
 static int rx_message_count = 0;
 static int tx_message_count = 0;
+
+
+enum class GlobalFlag {
+    rtc_faulty,
+    rumble_on,
+    gbp_unlocked,
+    multiplayer_connected,
+    night_mode,
+    save_using_flash,
+    glyph_mode,
+    count
+};
+
+
+static Bitvector<static_cast<int>(GlobalFlag::count)> gflags;
+
+
+static void set_gflag(GlobalFlag f, bool val)
+{
+    gflags.set(static_cast<int>(f), val);
+}
+
+
+static bool get_gflag(GlobalFlag f)
+{
+    return gflags.get(static_cast<int>(f));
+}
 
 
 struct BiosVersion {
@@ -130,6 +156,8 @@ static Platform* platform;
 // Thanks to Windows, main is technically platform specific (WinMain)
 int main(int argc, char** argv)
 {
+    gflags.clear();
+
     Platform pf;
     ::platform = &pf;
 
@@ -257,27 +285,30 @@ void Platform::Keyboard::poll()
 }
 
 
-static bool rumble_on = false;
-
-
 void Platform::Keyboard::rumble(Float amount)
 {
     // We have a working RTC chip connected to the cartridge gpio, so do not
     // attempt to write rumble commands.
-    if (not rtc_faulty) {
+    if (not get_gflag(GlobalFlag::rtc_faulty)) {
         return;
     }
 
+    // Just some debugging code. Can't know how intense the rumble will be until
+    // I get my hands on an actual GameboyPlayer...
     static int rumble_counter = 0;
     if (++rumble_counter == 60) {
         rumble_counter = 0;
-        rumble_on = !rumble_on;
+        set_gflag(GlobalFlag::rumble_on, not get_gflag(GlobalFlag::rumble_on));
     }
 
-    // FIXME: We need to set GPIO bit 3, but how frequently? Need to test on
-    // actual hardware, or inspect what some other existing games do.
-    GPIO_PORT_DIRECTION = 1 << 3;
-    GPIO_PORT_DATA = rumble_on << 3;
+    // If we're using the gameboy player for rumble, don't bother with whatever
+    // rumble may be built into the cartridge.
+    if (not get_gflag(GlobalFlag::gbp_unlocked)) {
+        // FIXME: We need to set GPIO bit 3, but how frequently? Need to test on
+        // actual hardware, or inspect what some other existing games do.
+        GPIO_PORT_DIRECTION = 1 << 3;
+        GPIO_PORT_DATA = get_gflag(GlobalFlag::rumble_on) << 3;
+    }
 }
 
 
@@ -2020,7 +2051,7 @@ void gbp_serial_isr()
         REG_SIODATA32 = 0x40000004;
         if (--rumble_countdown == 0) {
             rumble_countdown = 2;
-            if (rumble_on) {
+            if (get_gflag(GlobalFlag::rumble_on)) {
                 REG_SIODATA32 = 0x40000026;
             }
         }
@@ -2128,12 +2159,9 @@ static auto blend(const Color& c1, const Color& c2, u8 amt)
 }
 
 
-static bool night_mode = false;
-
-
 static Color nightmode_adjust(const Color& c)
 {
-    if (not night_mode) {
+    if (not get_gflag(GlobalFlag::night_mode)) {
         return c;
     } else {
         return adjust_warmth(
@@ -2639,9 +2667,9 @@ init_palette(const TextureData* td, u16* palette, bool skip_contrast)
 
 void Platform::Screen::enable_night_mode(bool enabled)
 {
-    ::night_mode = enabled;
+    set_gflag(GlobalFlag::night_mode, enabled);
 
-    if (::night_mode) {
+    if (enabled) {
         ::base_contrast = -12;
     } else {
         ::base_contrast = 0;
@@ -3187,9 +3215,6 @@ static void flash_load(void* dest, u32 flash_offset, u32 length)
 }
 
 
-static bool save_using_flash = false;
-
-
 // NOTE: Some cartridge manufacturers back in the day searched ROMS for a
 // word-aligned string, to determine what type of save memory to put on the
 // chip. I designed the code to use either SRAM or FLASH, but let's include the
@@ -3223,7 +3248,7 @@ void sram_load(void* dest, u32 offset, u32 length)
 
 bool Platform::write_save_data(const void* data, u32 length)
 {
-    if (save_using_flash) {
+    if (get_gflag(GlobalFlag::save_using_flash)) {
         return flash_save(data, 0, length);
     } else {
         sram_save(data, 0, length);
@@ -3234,7 +3259,7 @@ bool Platform::write_save_data(const void* data, u32 length)
 
 bool Platform::read_save_data(void* buffer, u32 data_length)
 {
-    if (save_using_flash) {
+    if (get_gflag(GlobalFlag::save_using_flash)) {
         flash_load(buffer, 0, data_length);
     } else {
         sram_load(buffer, 0, data_length);
@@ -3303,7 +3328,7 @@ void Platform::Logger::log(Severity level, const char* msg)
 
     // We don't want to wear out the flash chip! The code below still works on
     // flash though, if you just comment out the if statement below.
-    if (save_using_flash) {
+    if (get_gflag(GlobalFlag::save_using_flash)) {
         return;
     }
 
@@ -3356,7 +3381,7 @@ void Platform::Logger::log(Severity level, const char* msg)
               // the end of the log, in the case where the log wraps
               // around.
 
-    if (save_using_flash) {
+    if (get_gflag(GlobalFlag::save_using_flash)) {
         flash_save(buffer.data(), log_write_loc, buffer.size());
     } else {
         sram_save(buffer.data(), log_write_loc, buffer.size());
@@ -3368,7 +3393,7 @@ void Platform::Logger::log(Severity level, const char* msg)
 
 void Platform::Logger::read(void* buffer, u32 start_offset, u32 num_bytes)
 {
-    if (save_using_flash) {
+    if (get_gflag(GlobalFlag::save_using_flash)) {
         flash_load(buffer, sizeof(PersistentData) + start_offset, num_bytes);
     } else {
         sram_load(buffer, sizeof(PersistentData) + start_offset, num_bytes);
@@ -3966,7 +3991,7 @@ Platform::Platform()
     sram_load(&sram_test_result, log_write_loc, sizeof sram_test_result);
 
     if (sram_test_result not_eq sram_test_const) {
-        save_using_flash = true;
+        set_gflag(GlobalFlag::save_using_flash, true);
         info(*this, "SRAM write failed, falling back to FLASH");
     }
 
@@ -4019,6 +4044,8 @@ Platform::Platform()
     if (unlock_gameboy_player(*this)) {
         info(*::platform, "gameboy player unlocked!");
 
+        set_gflag(GlobalFlag::gbp_unlocked, true);
+
         irqEnable(IRQ_SERIAL);
         irqSet(IRQ_SERIAL, gbp_serial_isr);
 
@@ -4038,7 +4065,8 @@ Platform::Platform()
         REG_TM3CNT_H = 1 << 7 | 1 << 6;
     });
 
-    if ((rtc_faulty = not rtc_verify_operability(*this))) {
+    if (not rtc_verify_operability(*this)) {
+        set_gflag(GlobalFlag::rtc_faulty, true);
         info(*this, "RTC chip appears either non-existant or non-functional");
     } else {
         ::start_time = system_clock_.now();
@@ -4074,9 +4102,6 @@ Platform::Platform()
 }
 
 
-static bool glyph_mode = false;
-
-
 void Platform::enable_glyph_mode(bool enabled)
 {
     if (enabled) {
@@ -4084,7 +4109,7 @@ void Platform::enable_glyph_mode(bool enabled)
             gm.reference_count_ = -1;
         }
     }
-    glyph_mode = enabled;
+    set_gflag(GlobalFlag::glyph_mode, enabled);
 }
 
 
@@ -4114,7 +4139,7 @@ void Platform::load_overlay_texture(const char* name)
                          info.tile_data_length_ / 2);
             }
 
-            if (glyph_mode) {
+            if (get_gflag(GlobalFlag::glyph_mode)) {
                 for (auto& gm : ::glyph_table->obj_->mappings_) {
                     gm.reference_count_ = -1;
                 }
@@ -4165,7 +4190,7 @@ static FontColorIndices font_color_indices()
 TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                              TextureCpMapper mapper)
 {
-    if (not glyph_mode) {
+    if (not get_gflag(GlobalFlag::glyph_mode)) {
         return bad_glyph;
     }
 
@@ -4260,7 +4285,7 @@ static bool is_glyph(u16 t)
 
 void Platform::fill_overlay(u16 tile)
 {
-    if (glyph_mode and is_glyph(tile)) {
+    if (get_gflag(GlobalFlag::glyph_mode) and is_glyph(tile)) {
         // This is moderately complicated to implement, better off just not
         // allowing fills for character tiles.
         return;
@@ -4276,7 +4301,7 @@ void Platform::fill_overlay(u16 tile)
         mem[i] = fill_word;
     }
 
-    if (glyph_mode) {
+    if (get_gflag(GlobalFlag::glyph_mode)) {
         for (auto& gm : ::glyph_table->obj_->mappings_) {
             gm.reference_count_ = -1;
         }
@@ -4286,7 +4311,7 @@ void Platform::fill_overlay(u16 tile)
 
 static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
 {
-    if (glyph_mode) {
+    if (get_gflag(GlobalFlag::glyph_mode)) {
         // This is where we handle the reference count for mapped glyphs. If
         // we are overwriting a glyph with different tile, then we can
         // decrement a glyph's reference count. Then, we want to increment
@@ -4350,7 +4375,7 @@ static const TextureData* custom_text_palette_source_texture = nullptr;
 
 void Platform::set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors)
 {
-    if (not glyph_mode or not is_glyph(glyph)) {
+    if (not get_gflag(GlobalFlag::glyph_mode) or not is_glyph(glyph)) {
         return;
     }
 
@@ -4858,8 +4883,6 @@ static void __attribute__((noinline)) busy_wait(unsigned max)
 }
 
 
-static bool multiplayer_connected = false;
-
 static void multiplayer_init()
 {
     Microseconds delta = 0;
@@ -4901,7 +4924,7 @@ MASTER_RETRY:
         return;
     }
 
-    multiplayer_connected = true;
+    set_gflag(GlobalFlag::multiplayer_connected, true);
 
     ::platform->network_peer().send_message(
         {(byte*)handshake, sizeof handshake});
@@ -4954,12 +4977,23 @@ MASTER_RETRY:
 
 void Platform::NetworkPeer::connect(const char* peer)
 {
+    // If the gameboy player is active, any multiplayer initialization would
+    // clobber the Normal_32 serial transfer between the gameboy player and the
+    // gameboy advance.
+    if (get_gflag(GlobalFlag::gbp_unlocked)) {
+        return;
+    }
+
     multiplayer_init();
 }
 
 
 void Platform::NetworkPeer::listen()
 {
+    if (get_gflag(GlobalFlag::gbp_unlocked)) {
+        return;
+    }
+
     multiplayer_init();
 }
 
@@ -5003,7 +5037,7 @@ bool Platform::NetworkPeer::supported_by_device()
 
 bool Platform::NetworkPeer::is_connected() const
 {
-    return multiplayer_connected; // multiplayer_validate(); // FIXME: insufficient to detect disconnects.
+    return get_gflag(GlobalFlag::multiplayer_connected);
 }
 
 
@@ -5021,7 +5055,7 @@ void Platform::NetworkPeer::disconnect()
     // sent out when you try to reconnect, instead of the handshake message);
     if (is_connected()) {
         info(*::platform, "disconnected!");
-        multiplayer_connected = false;
+        set_gflag(GlobalFlag::multiplayer_connected, false);
         irqDisable(IRQ_SERIAL);
         if (multiplayer_is_master()) {
             enable_watchdog();
@@ -5201,7 +5235,7 @@ static u32 bcd_to_binary(u8 bcd)
 
 std::optional<DateTime> Platform::SystemClock::now()
 {
-    if (rtc_faulty) {
+    if (get_gflag(GlobalFlag::rtc_faulty)) {
         return {};
     }
 
