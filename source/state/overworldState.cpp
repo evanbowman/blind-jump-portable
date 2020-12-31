@@ -465,9 +465,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (camera_snap_timer_ > 0) {
-        if (pfrm.keyboard().down_transition(game.action2_key())) {
-            camera_snap_timer_ = 0;
-        }
+    //     if (pfrm.keyboard().down_transition(game.action2_key())) {
+    //         camera_snap_timer_ = 0;
+    //     }
         camera_snap_timer_ -= delta;
     }
 

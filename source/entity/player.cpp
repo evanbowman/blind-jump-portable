@@ -414,7 +414,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool down = input.pressed<Key::down>();
     const bool left = input.pressed<Key::left>();
     const bool right = input.pressed<Key::right>();
-    const bool shoot = input.pressed(game.action1_key());
+    const bool shoot = input.pressed(game.action2_key());
 
     const auto wc = check_wall_collisions(game.tiles(), *this);
 
@@ -605,11 +605,18 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         }
     }());
 
-    if (shoot) {
+    if (input.pressed(game.action1_key())) {
         blaster_.set_visible(true);
         blaster_.shoot(pfrm, game);
-    } else {
-        blaster_.set_visible(false);
+        weapon_hide_timer_ = seconds(1);
+    }
+
+    if (weapon_hide_timer_ > 0) {
+        weapon_hide_timer_ -= dt;
+
+        if (weapon_hide_timer_ <= 0) {
+            blaster_.set_visible(false);
+        }
     }
 }
 
