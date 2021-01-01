@@ -95,6 +95,8 @@ public:
 
     void heal(Platform& pfrm, Health amount);
 
+    Cardinal facing() const;
+
 private:
     using ResourceLoc = TextureMap;
 

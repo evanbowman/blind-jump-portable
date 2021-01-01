@@ -843,7 +843,7 @@ void Platform::Screen::display()
 
     if (UNLIKELY(enter_sleep)) {
         enter_sleep = false;
-        if (not ::platform->network_peer().is_connected()) {
+        if (not::platform->network_peer().is_connected()) {
             ::platform->sleep(180);
             Stop();
         }

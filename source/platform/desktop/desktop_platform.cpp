@@ -275,7 +275,7 @@ public:
 
     void run() override
     {
-        if (::platform->data() and not ::platform->is_running()) {
+        if (::platform->data() and not::platform->is_running()) {
             Task::completed();
             return;
         }
@@ -733,9 +733,9 @@ void Platform::Screen::clear()
                         }
                     }
 
-                    if (not ::platform->data()
-                                ->background_texture_.loadFromImage(
-                                    meta_image)) {
+                    if (not::platform->data()
+                               ->background_texture_.loadFromImage(
+                                   meta_image)) {
                         error(*::platform,
                               "Failed to create background texture");
                         exit(EXIT_FAILURE);
@@ -747,8 +747,8 @@ void Platform::Screen::clear()
                     }
 
                 } else {
-                    if (not ::platform->data()
-                                ->background_texture_.loadFromImage(image)) {
+                    if (not::platform->data()
+                               ->background_texture_.loadFromImage(image)) {
                         error(*::platform,
                               "Failed to create background texture");
                         exit(EXIT_FAILURE);
@@ -758,7 +758,7 @@ void Platform::Screen::clear()
                     unmeta_image.create(image.getSize().x / 3, 24);
                 }
 
-            } else if (not [&] {
+            } else if (not[&] {
                            switch (request.first) {
                            case TextureSwap::spritesheet:
                                return &::platform->data()->spritesheet_texture_;
@@ -776,7 +776,7 @@ void Platform::Screen::clear()
                                  "invalid texture swap enumeration");
                            ::platform->fatal();
                        }()
-                               ->loadFromImage(image)) {
+                              ->loadFromImage(image)) {
                 error(*::platform, "Failed to create texture");
                 exit(EXIT_FAILURE);
             }

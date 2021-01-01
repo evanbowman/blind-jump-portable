@@ -41,7 +41,7 @@ class Platform;
 struct PersistentData {
     using Magic = u32;
 
-    static constexpr u32 schema_version = 5;
+    static constexpr u32 schema_version = 6;
     static constexpr Magic magic_val = 0xCA55E77E + schema_version;
 
     PersistentData()

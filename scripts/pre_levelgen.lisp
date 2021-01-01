@@ -23,4 +23,6 @@
           (if (< (level) boss-1-level)
               (level boss-1-level)
                (if (< (level) boss-2-level)
-                   (level boss-2-level))))))
+                   (level boss-2-level)
+                   (if (< (level) boss-3-level)
+                       (level boss-3-level)))))))

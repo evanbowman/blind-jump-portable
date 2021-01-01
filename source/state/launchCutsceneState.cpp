@@ -99,6 +99,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (static_cast<int>(scene_) < static_cast<int>(Scene::within_clouds)) {
         game.camera().update(pfrm,
+                             game.persistent_data().settings_.camera_mode_,
                              delta,
                              {(float)pfrm.screen().size().x / 2,
                               (float)pfrm.screen().size().y / 2});

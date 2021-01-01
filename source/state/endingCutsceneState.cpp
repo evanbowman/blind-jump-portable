@@ -13,6 +13,7 @@ void EndingCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     game.camera().update(
         pfrm,
+        Settings::CameraMode::tracking_strong,
         milliseconds(100),
         {(float)pfrm.screen().size().x / 2, (float)pfrm.screen().size().y / 2});
 

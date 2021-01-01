@@ -2,22 +2,10 @@
 #include "state_impl.hpp"
 
 
-void EditSettingsState::message(Platform& pfrm, const char* str)
-{
-    str_ = str;
-
-    auto screen_tiles = calc_screen_tiles(pfrm);
-
-    message_anim_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
-
-    message_anim_->init(screen_tiles.x);
-
-    pfrm.set_overlay_origin(0, 0);
-}
-
-
 EditSettingsState::EditSettingsState(DeferredState exit_state)
     : exit_state_(exit_state), lines_{{{swap_action_keys_line_updater_},
+                                       {strafe_mode_line_updater_},
+                                       {camera_mode_line_updater_},
                                        {difficulty_line_updater_},
                                        {language_line_updater_},
                                        {contrast_line_updater_},
@@ -69,8 +57,6 @@ void EditSettingsState::exit(Platform& pfrm, Game& game, State& next_state)
         l.text_.reset();
     }
 
-    message_.reset();
-
     pfrm.fill_overlay(0);
 
     pfrm.set_overlay_origin(0, 0);
@@ -87,20 +73,6 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         return exit_state_();
     }
 
-    if (message_anim_ and not message_anim_->done()) {
-        message_anim_->update(delta);
-
-        if (message_anim_->done()) {
-            message_anim_.reset();
-
-            auto screen_tiles = calc_screen_tiles(pfrm);
-            const auto len = utf8::len(str_);
-            message_.emplace(pfrm,
-                             str_,
-                             OverlayCoord{u8((screen_tiles.x - len) / 2),
-                                          u8(screen_tiles.y - 1)});
-        }
-    }
 
     auto erase_selector = [&] {
         for (u32 i = 0; i < lines_.size(); ++i) {
@@ -113,19 +85,16 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     };
 
     if (pfrm.keyboard().down_transition<Key::down>()) {
-        message_.reset();
         if (select_row_ < static_cast<int>(lines_.size() - 1)) {
             select_row_ += 1;
             pfrm.speaker().play_sound("scroll", 1);
         }
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
-        message_.reset();
         if (select_row_ > 0) {
             select_row_ -= 1;
             pfrm.speaker().play_sound("scroll", 1);
         }
     } else if (pfrm.keyboard().down_transition<Key::right>()) {
-        message_.reset();
 
         erase_selector();
 
@@ -138,7 +107,6 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.speaker().play_sound("scroll", 1);
 
     } else if (pfrm.keyboard().down_transition<Key::left>()) {
-        message_.reset();
 
         erase_selector();
 
@@ -151,16 +119,14 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.speaker().play_sound("scroll", 1);
     }
 
-    if (not message_ and not message_anim_) {
-        const auto& line = lines_[select_row_];
-        const Float y_center = pfrm.screen().size().y / 2;
-        const Float y_line = line.text_->coord().y * 8;
-        const auto y_diff = (y_line - y_center) * 0.3f;
+    const auto& line = lines_[select_row_];
+    const Float y_center = pfrm.screen().size().y / 2;
+    const Float y_line = line.text_->coord().y * 8;
+    const auto y_diff = (y_line - y_center) * 0.35f;
 
-        y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
+    y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
 
-        pfrm.set_overlay_origin(0, y_offset_);
-    }
+    pfrm.set_overlay_origin(0, y_offset_);
 
     anim_timer_ += delta;
     if (anim_timer_ > milliseconds(75)) {

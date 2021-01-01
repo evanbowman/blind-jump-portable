@@ -3,6 +3,7 @@
 
 
 void Camera::update(Platform& pfrm,
+                    Settings::CameraMode mode,
                     Microseconds dt,
                     const Vec2<Float>& seek_pos)
 {
@@ -11,27 +12,55 @@ void Camera::update(Platform& pfrm,
 
     Vec2<Float> seek;
 
-    if (ballast_.divisor_) {
-        const auto counter_weight = ballast_.center_ / float(ballast_.divisor_);
-        buffer_ = interpolate(buffer_, counter_weight, 0.000000025f * dt);
-        seek = interpolate(seek_pos, buffer_, 0.5f);
-    } else {
-        seek = seek_pos;
+    switch (mode) {
+    case Settings::CameraMode::fixed:
+        center_ = {(seek_pos.x - screen_size.x / 2),
+                   (seek_pos.y - screen_size.y / 2)};
+        break;
+
+    case Settings::CameraMode::count:
+    case Settings::CameraMode::tracking_weak: {
+
+        if (ballast_.divisor_) {
+            const auto counter_weight = ballast_.center_ / float(ballast_.divisor_);
+            buffer_ = interpolate(buffer_, counter_weight, 0.000000025f * dt);
+            seek = interpolate(seek_pos, buffer_, 0.82f);
+        } else {
+            seek = seek_pos;
+        }
+
+        Vec2<Float> target{(seek.x - screen_size.x / 2),
+                (seek.y - screen_size.y / 2)};
+
+
+        center_ = interpolate(target,
+                              center_,
+                              dt * speed_ *
+                              (ballast_.divisor_ ? 0.0000026f : 0.0000071f));
+
+        break;
     }
 
-    Vec2<Float> target{(seek.x - screen_size.x / 2),
-                       (seek.y - screen_size.y / 2)};
+    case Settings::CameraMode::tracking_strong:
+        if (ballast_.divisor_) {
+            const auto counter_weight = ballast_.center_ / float(ballast_.divisor_);
+            buffer_ = interpolate(buffer_, counter_weight, 0.000000025f * dt);
+            seek = interpolate(seek_pos, buffer_, 0.5f);
+        } else {
+            seek = seek_pos;
+        }
+
+        Vec2<Float> target{(seek.x - screen_size.x / 2),
+                (seek.y - screen_size.y / 2)};
 
 
-    // static const std::array<std::array<Float, 5>,
-    //                         static_cast<int>(ShakeMagnitude::zero)>
-    //     shake_constants = {
-    //         {{3.f, -5.f, 3.f, -2.f, 1.f}, {6.f, -10.f, 6.f, -4.f, 2.f}}};
-
-    center_ = interpolate(target,
-                          center_,
-                          dt * speed_ *
+        center_ = interpolate(target,
+                              center_,
+                              dt * speed_ *
                               (ballast_.divisor_ ? 0.0000016f : 0.0000071f));
+
+        break;
+    }
 
     ballast_.divisor_ = 0;
 
