@@ -117,6 +117,10 @@ void get_interns(::Function<16, void(const char*)> callback)
         }
         ++i;
     }
+
+    for (u16 i = 0; i < bound_context->constants_count_; ++i) {
+        callback((const char*)bound_context->constants_[i].name_);
+    }
 }
 
 
