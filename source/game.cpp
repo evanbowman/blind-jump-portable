@@ -154,7 +154,7 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
         state_ = std::move(next_state_);
     }
 
-    pfrm.keyboard().rumble(1.f);
+    // pfrm.keyboard().rumble(1.f);
 
     for (auto it = deferred_callbacks_.begin();
          it not_eq deferred_callbacks_.end();) {

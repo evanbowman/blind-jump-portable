@@ -102,9 +102,9 @@ public:
             reload_ = milliseconds(280);
 
             if (not spin_) {
-                rot_ += 18;
+                rot_ += 20;
             } else {
-                rot_ -= 18;
+                rot_ -= 20;
             }
 
             auto angle = rot_;

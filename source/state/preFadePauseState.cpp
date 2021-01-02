@@ -10,6 +10,21 @@ PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     OverworldState::update(pfrm, game, delta);
 
+    timer_ += delta;
+    if (timer_ > milliseconds(200)) {
+        // FIXME: Sprite scaling is broken on the desktop version of the game.
+#ifdef __GBA__
+        game.effects().spawn<Particle>(game.player().get_position(),
+                                       std::nullopt,
+                                       0.0001038f,
+                                       true,
+                                       seconds(1),
+                                       0,
+                                       Float(220) + rng::choice<100>(rng::utility_state));
+#endif // __GBA__
+        timer_ = 0;
+    }
+
     if (manhattan_length(pfrm.screen().get_view().get_center() +
                              pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {

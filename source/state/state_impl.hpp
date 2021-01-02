@@ -298,6 +298,7 @@ public:
 
 private:
     ColorConstant fade_color_;
+    Microseconds timer_ = 0;
 };
 
 
@@ -311,6 +312,7 @@ public:
 
 private:
     Microseconds counter_ = 0;
+    Microseconds timer_ = 0;
     ColorConstant color_;
 };
 

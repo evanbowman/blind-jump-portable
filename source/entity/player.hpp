@@ -76,6 +76,7 @@ public:
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
     void soft_update(Platform& pfrm, Game& game, Microseconds dt);
+    void warp_out(Platform& pfrm, Game& game, Microseconds dt);
 
     inline const Sprite& get_shadow() const;
     inline const HitBox& hitbox() const;

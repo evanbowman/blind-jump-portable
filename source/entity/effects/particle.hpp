@@ -7,8 +7,9 @@
 class Particle : public Entity {
 public:
     Particle(const Vec2<Float>& position,
-             ColorConstant color,
+             std::optional<ColorConstant> color,
              Float drift_speed = 0.0000338f,
+             bool x_wave_effect = false,
              Microseconds duration = seconds(1),
              Microseconds offset = 0,
              std::optional<Float> angle = {},
@@ -20,4 +21,5 @@ private:
     Microseconds timer_;
     const Microseconds duration_;
     Vec2<Float> step_vector_;
+    bool x_wave_effect_;
 };

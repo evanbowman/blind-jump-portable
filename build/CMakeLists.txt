@@ -186,6 +186,7 @@ if(GAMEBOY_ADVANCE)
   set(SOURCES
     ${SOURCES}
     ${SOURCE_DIR}/platform/gba/gba_platform.cpp
+    ${SOURCE_DIR}/platform/gba/gbp_logo.cpp
     ${SOURCE_DIR}/platform/gba/memcpy.s
     ${SOURCE_DIR}/platform/gba/interrupt.c
     ${SOURCE_DIR}/platform/gba/interrupt_dispatch.s
@@ -268,8 +269,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/postal_advert_flattened.s
     ${DATA_DIR}/blaster_info_flattened.s
     ${DATA_DIR}/seed_packet_flattened.s
-    ${DATA_DIR}/overlay_network_flattened.s
-    ${DATA_DIR}/gbp_logo.s)
+    ${DATA_DIR}/overlay_network_flattened.s)
 else()
   set(SOURCES
     ${SOURCES}
@@ -337,21 +337,6 @@ macro(add_overlay filename mw mh flatten)
 
   compile_image(${filename} ${mw} ${mh} ${flatten} 4)
 endmacro()
-
-
-function(add_bitmap filename)
-  add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
-    COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
-    COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}.png -gb -gB8
-    COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
-    COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
-    DEPENDS ${IMAGE_DIR}/${filename}.png)
-
-  add_custom_target(compile_image_${filename} DEPENDS ${SOURCE_DIR}/data/${filename}.s)
-
-  add_dependencies(BlindJump compile_image_${filename})
-
-endfunction()
 
 
 function(compile_image filename mw mh flatten bpp)
@@ -530,7 +515,6 @@ if(GAMEBOY_ADVANCE)
     add_overlay(blaster_info 0 0 YES)
     add_overlay(seed_packet 0 0 YES)
     add_overlay(overlay_network 0 0 YES)
-    add_bitmap(gbp_logo)
 
     configure_file(images.cpp.in ${SOURCE_DIR}/platform/gba/images.cpp)
   endif()
