@@ -194,7 +194,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             cursor_loc_ = 0;
             return state_pool().create<ActiveState>();
         } else if (pfrm.keyboard().down_transition<Key::alt_1>()) {
-            if (++developer_mode_activation_counter_ == 15) {
+            if (++developer_mode_activation_counter_ == 7) {
                 erase_cursor(pfrm);
                 texts_.clear();
                 strs_.clear();
