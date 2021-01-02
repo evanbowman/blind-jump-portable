@@ -96,6 +96,8 @@ public:
 
     void heal(Platform& pfrm, Health amount);
 
+    Cardinal facing() const;
+
 private:
     using ResourceLoc = TextureMap;
 
@@ -130,6 +132,7 @@ private:
     ResourceLoc frame_base_;
     Microseconds anim_timer_;
     Microseconds invulnerability_timer_;
+    Microseconds weapon_hide_timer_ = 0;
     FadeColorAnimation<Microseconds(15685)> fade_color_anim_;
     Float l_speed_;
     Float r_speed_;

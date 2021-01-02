@@ -1,7 +1,7 @@
 #include "state_impl.hpp"
 
 
-void OverworldState::enter(Platform& pfrm, Game&, State& prev_state)
+void OverworldState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     // pfrm.enable_feature("vignette", true);
 }
@@ -465,8 +465,12 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (camera_snap_timer_ > 0) {
-        if (pfrm.keyboard().down_transition(game.action2_key())) {
-            camera_snap_timer_ = 0;
+        if (game.persistent_data().settings_.button_mode_ ==
+            Settings::ButtonMode::strafe_combined) {
+
+            if (pfrm.keyboard().down_transition(game.action2_key())) {
+                camera_snap_timer_ = 0;
+            }
         }
         camera_snap_timer_ -= delta;
     }
@@ -641,7 +645,11 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
     }
 
-    game.camera().update(pfrm, delta, player.get_position());
+    game.camera().update(pfrm,
+                         camera_mode_override_ ? *camera_mode_override_ : 
+                         game.persistent_data().settings_.camera_mode_,
+                         delta,
+                         player.get_position());
 
 
     check_collisions(pfrm, game, player, game.details().get<Item>());

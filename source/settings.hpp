@@ -7,7 +7,11 @@
 
 
 struct Settings {
-    enum Difficulty : u8 { easy, normal, hard, survival, count };
+    enum class Difficulty : u8 { easy, normal, hard, survival, count };
+
+    enum class ButtonMode : u8 { strafe_separate, strafe_combined, count };
+
+    enum class CameraMode : u8 { fixed, tracking_weak, tracking_strong, count };
 
     Settings()
     {
@@ -27,4 +31,7 @@ struct Settings {
     Key action2_key_ = default_action2_key;
 
     bool show_speedrun_clock_ = true;
+
+    ButtonMode button_mode_ = ButtonMode::strafe_combined;
+    CameraMode camera_mode_ = CameraMode::tracking_weak;
 };

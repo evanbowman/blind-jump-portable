@@ -46,7 +46,10 @@ public:
 
 class OverworldState : public State, public CommonNetworkListener {
 public:
-    OverworldState(bool camera_tracking) : camera_tracking_(camera_tracking)
+    OverworldState(bool camera_tracking,
+                   std::optional<Settings::CameraMode> camera_mode_override = {}) :
+        camera_tracking_(camera_tracking),
+        camera_mode_override_(camera_mode_override)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -101,6 +104,7 @@ private:
     const bool camera_tracking_;
     Microseconds camera_snap_timer_ = 0;
 
+    std::optional<Settings::CameraMode> camera_mode_override_;
     Microseconds fps_timer_ = 0;
     int fps_frame_count_ = 0;
     std::optional<Text> fps_text_;
@@ -445,7 +449,8 @@ private:
 // option to select powerups, through a quick-select item sidebar.
 class QuickSelectInventoryState : public OverworldState {
 public:
-    QuickSelectInventoryState(Game& game) : OverworldState(true)
+    QuickSelectInventoryState(Game& game) :
+        OverworldState(true, Settings::CameraMode::tracking_strong)
     {
     }
 
@@ -614,7 +619,8 @@ private:
 
 class QuickMapState : public OverworldState {
 public:
-    QuickMapState(Game& game) : OverworldState(true)
+    QuickMapState(Game& game) :
+        OverworldState(true, Settings::CameraMode::tracking_strong)
     {
     }
 
@@ -810,12 +816,16 @@ public:
 private:
     enum class DisplayMode {
         entry,
-        show_result
+        show_result,
+        completion_list,
     } display_mode_ = DisplayMode::entry;
 
     Vec2<int> keyboard_cursor_;
 
-    void repaint_entry(Platform& pfrm);
+    void repaint_entry(Platform& pfrm, bool show_cursor = true);
+
+    void repaint_completions(Platform& pfrm);
+
 
     Command command_;
 
@@ -824,6 +834,12 @@ private:
     Buffer<Text, 7> keyboard_;
 
     std::optional<Text> version_text_;
+
+    static constexpr const int completion_count = 10;
+    Buffer<const char*, completion_count> completion_strs_;
+    Buffer<Text, completion_count> completions_;
+    u8 completion_cursor_ = 0;
+    u8 completion_prefix_len_ = 0;
 
     Microseconds timer_ = 0;
 
@@ -982,12 +998,9 @@ private:
 
     void draw_line(Platform& pfrm, int row, const char* value);
 
-    std::optional<HorizontalFlashAnimation> message_anim_;
     const char* str_ = nullptr;
 
     DeferredState exit_state_;
-
-    void message(Platform& pfrm, const char* str);
 
     class LineUpdater {
     public:
@@ -1064,6 +1077,84 @@ private:
         }
     } swap_action_keys_line_updater_;
 
+    class CameraModeLineUpdater : public LineUpdater {
+        Result update(Platform& pfrm, Game& game, int dir) override
+        {
+            auto& current = game.persistent_data().settings_.camera_mode_;
+
+            auto val = static_cast<int>(current);
+
+            if (dir > 0) {
+                val = val + 1;
+                if (val == static_cast<int>(Settings::CameraMode::count)) {
+                    val = 0;
+                }
+            } else if (dir < 0) {
+                val = std::max(0, val - 1);
+            }
+
+            current = static_cast<Settings::CameraMode>(val);
+
+            switch (current) {
+            case Settings::CameraMode::count:
+                break;
+
+            case Settings::CameraMode::fixed:
+                return locale_string(pfrm,
+                                     LocaleString::settings_camera_fixed)
+                    ->c_str();
+                break;
+
+            case Settings::CameraMode::tracking_weak:
+                return locale_string(pfrm,
+                                     LocaleString::settings_camera_tracking_weak)
+                    ->c_str();
+                break;
+
+            case Settings::CameraMode::tracking_strong:
+                return locale_string(pfrm,
+                                     LocaleString::settings_camera_tracking_strong)
+                    ->c_str();
+                break;
+            }
+
+            return "LOGIC ERR";
+        }
+    } camera_mode_line_updater_;
+
+    class StrafeModeLineUpdater : public LineUpdater {
+        Result update(Platform& pfrm, Game& game, int dir) override
+        {
+            auto& current = game.persistent_data().settings_.button_mode_;
+
+            auto val = static_cast<int>(current);
+
+            if (dir > 0) {
+                val = std::min(
+                    static_cast<int>(Settings::ButtonMode::count) - 1, val + 1);
+            } else if (dir < 0) {
+                val = std::max(0, val - 1);
+            }
+
+            current = static_cast<Settings::ButtonMode>(val);
+
+            switch (current) {
+            case Settings::ButtonMode::count:
+            case Settings::ButtonMode::strafe_separate:
+                return locale_string(pfrm,
+                                     LocaleString::settings_strafe_key_separate)
+                    ->c_str();
+
+            case Settings::ButtonMode::strafe_combined:
+                return locale_string(pfrm,
+                                     LocaleString::settings_strafe_key_combined)
+                    ->c_str();
+            }
+
+            return "";
+        }
+    } strafe_mode_line_updater_;
+
     class LanguageLineUpdater : public LineUpdater {
         Result update(Platform& pfrm, Game& game, int dir) override;
 
@@ -1113,21 +1204,14 @@ private:
             auto difficulty =
                 static_cast<int>(game.persistent_data().settings_.difficulty_);
 
-            // Normally we require all enemies to be defeated to mess with the
-            // difficulty. But we don't want the player to get stuck a situation
-            // where he/she cannot switch back to easy mode because they're
-            // unable to beat the first level on hard mode. So for level zero,
-            // allow modifying difficulty.
-            if (game.level() == 0 or enemies_remaining(game) == 0) {
-                if (dir > 0) {
-                    if (difficulty <
-                        static_cast<int>(Settings::Difficulty::count) - 1) {
-                        difficulty += 1;
-                    }
-                } else if (dir < 0) {
-                    if (difficulty > 0) {
-                        difficulty -= 1;
-                    }
+            if (dir > 0) {
+                if (difficulty <
+                    static_cast<int>(Settings::Difficulty::count) - 1) {
+                    difficulty += 1;
+                }
+            } else if (dir < 0) {
+                if (difficulty > 0) {
+                    difficulty -= 1;
                 }
             }
 
@@ -1163,12 +1247,6 @@ private:
 
         void complete(Platform& pfrm, Game& game, EditSettingsState& s) override
         {
-            if (game.level() not_eq 0 and enemies_remaining(game)) {
-                s.message(
-                    pfrm,
-                    locale_string(pfrm, LocaleString::settings_difficulty_err)
-                        ->c_str());
-            }
         }
     } difficulty_line_updater_;
 
@@ -1180,20 +1258,20 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 7;
+    static constexpr const int line_count_ = 9;
 
     std::array<LineInfo, line_count_> lines_;
 
     static constexpr const LocaleString strings[line_count_] = {
         LocaleString::settings_swap_action_keys,
+        LocaleString::settings_strafe_key,
+        LocaleString::settings_camera,
         LocaleString::settings_difficulty,
         LocaleString::settings_language,
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
         LocaleString::settings_show_stats,
         LocaleString::settings_speedrun_clock};
-
-    std::optional<Text> message_;
 
     int select_row_ = 0;
     int anim_index_ = 0;
@@ -1366,7 +1444,7 @@ public:
                       "State missing from state pool");
 
 #ifdef __GBA__
-        static_assert(std::max({sizeof(States)...}) < 697,
+        static_assert(std::max({sizeof(States)...}) < 720,
                       "Note: this is merely a warning. You are welcome to "
                       "increase the overall size of the state pool, just be "
                       "careful, as the state cells are already quite large, in"

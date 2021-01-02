@@ -2,13 +2,17 @@
 
 #include "entity/entity.hpp"
 #include "number/numeric.hpp"
+#include "settings.hpp"
 
 class Platform;
 
 
 class Camera {
 public:
-    void update(Platform& pfrm, Microseconds dt, const Vec2<Float>& seek_pos);
+    void update(Platform& pfrm,
+                Settings::CameraMode mode,
+                Microseconds dt,
+                const Vec2<Float>& seek_pos);
 
     void set_position(Platform& pfrm, const Vec2<Float>& pos);
 

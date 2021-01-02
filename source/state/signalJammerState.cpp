@@ -53,7 +53,10 @@ SignalJammerSelectorState::update(Platform& pfrm, Game& game, Microseconds dt)
 
     if (target_) {
         game.camera().push_ballast(game.player().get_position());
-        game.camera().update(pfrm, dt, target_->get_position());
+        game.camera().update(pfrm,
+                             Settings::CameraMode::tracking_strong,
+                             dt,
+                             target_->get_position());
     }
 
     for (auto& rt : game.effects().get<Reticule>()) {

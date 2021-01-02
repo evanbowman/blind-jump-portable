@@ -47,7 +47,7 @@ void NewLevelIdleState::receive(const net_event::NewLevelSyncSeed& sync_seed,
             for (int i = 0; i < required_matching_syncs; ++i) {
                 net_event::NewLevelSyncSeed sync_seed;
                 sync_seed.random_state_.set(rng::critical_state);
-                sync_seed.difficulty_ = game.difficulty();
+                sync_seed.difficulty_ = static_cast<u8>(game.difficulty());
                 net_event::transmit(pfrm, sync_seed);
                 pfrm.sleep(1);
             }
@@ -128,7 +128,7 @@ NewLevelIdleState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (peer_ready_) {
                 net_event::NewLevelSyncSeed sync_seed;
                 sync_seed.random_state_.set(rng::critical_state);
-                sync_seed.difficulty_ = game.difficulty();
+                sync_seed.difficulty_ = static_cast<u8>(game.difficulty());
                 net_event::transmit(pfrm, sync_seed);
                 info(pfrm, "sent seed to peer");
             }

@@ -79,14 +79,21 @@ Contrast:
 Night Mode: 
 Swap A/B: 
 default
-Difficulty:
+Difficulty: 
 easy
 normal
 hard
 survival
 level must be clear!
+Strafe Key: 
+separate
+combined
 Log Severity:
-Show Speedrun Clock:
+Show Speedrun Clock: 
+Camera: 
+fixed
+tracking (low)
+tracking (high)
 yes
 no
 menu disabled

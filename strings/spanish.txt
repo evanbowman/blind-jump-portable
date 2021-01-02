@@ -85,8 +85,15 @@ normal
 difícil
 sobrevivencia
 level must be clear!
+Strafe Key:
+separate
+combined
 Log Severity:
-Show Timer: 
+Show Timer:
+Camera: 
+fixed
+tracking (low)
+tracking (high)
 sí
 no
 menu disabled

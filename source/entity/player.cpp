@@ -407,6 +407,27 @@ void Player::soft_update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
+Cardinal Player::facing() const
+{
+    switch (frame_base_) {
+    case ResourceLoc::player_walk_left:
+    case ResourceLoc::player_still_left:
+        return Cardinal::west;
+    case ResourceLoc::player_walk_right:
+    case ResourceLoc::player_still_right:
+        return Cardinal::east;
+    case ResourceLoc::player_walk_up:
+    case ResourceLoc::player_still_up:
+        return Cardinal::north;
+    case ResourceLoc::player_walk_down:
+    case ResourceLoc::player_still_down:
+        return Cardinal::south;
+    default:
+        return Cardinal::south;
+    }
+}
+
+
 void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto& input = pfrm.keyboard();
@@ -414,13 +435,25 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool down = input.pressed<Key::down>();
     const bool left = input.pressed<Key::left>();
     const bool right = input.pressed<Key::right>();
-    const bool shoot = input.pressed(game.action1_key());
+    const bool strafe =
+        [&] {
+            switch (game.persistent_data().settings_.button_mode_) {
+            case Settings::ButtonMode::count:
+            case Settings::ButtonMode::strafe_separate:
+                return input.pressed(game.action2_key());
+
+            case Settings::ButtonMode::strafe_combined:
+                break;
+            }
+            return input.pressed(game.action1_key());
+        }();
+
 
     const auto wc = check_wall_collisions(game.tiles(), *this);
 
     soft_update(pfrm, game, dt);
 
-    if (not shoot) {
+    if (not strafe) {
         key_response<ResourceLoc::player_walk_up>(
             up, down, left, right, u_speed_, wc.up);
         key_response<ResourceLoc::player_walk_down>(
@@ -482,23 +515,23 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
     if (input.up_transition<Key::up>()) {
         on_key_released<ResourceLoc::player_still_up, 0>(
-            down, left, right, shoot);
+            down, left, right, strafe);
     }
     if (input.up_transition<Key::down>()) {
         on_key_released<ResourceLoc::player_still_down, 0>(
-            up, left, right, shoot);
+            up, left, right, strafe);
     }
     if (input.up_transition<Key::left>()) {
         on_key_released<ResourceLoc::player_still_left, 0>(
-            up, down, right, shoot);
+            up, down, right, strafe);
     }
     if (input.up_transition<Key::right>()) {
         on_key_released<ResourceLoc::player_still_right, 0>(
-            up, down, left, shoot);
+            up, down, left, strafe);
     }
 
     const auto frame_persist = [&] {
-        if (shoot) {
+        if (strafe) {
             return 130000;
         } else {
             return 100000;
@@ -586,37 +619,45 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     sprite_.set_position(new_pos);
     shadow_.set_position(new_pos);
 
-    blaster_.update(pfrm, game, dt, [this] {
-        switch (frame_base_) {
-        case ResourceLoc::player_walk_left:
-        case ResourceLoc::player_still_left:
-            return Cardinal::west;
-        case ResourceLoc::player_walk_right:
-        case ResourceLoc::player_still_right:
-            return Cardinal::east;
-        case ResourceLoc::player_walk_up:
-        case ResourceLoc::player_still_up:
-            return Cardinal::north;
-        case ResourceLoc::player_walk_down:
-        case ResourceLoc::player_still_down:
-            return Cardinal::south;
-        default:
-            return Cardinal::south;
-        }
-    }());
+    blaster_.update(pfrm, game, dt, facing());
 
-    if (shoot) {
-        blaster_.set_visible(true);
-        blaster_.shoot(pfrm, game);
-    } else {
-        blaster_.set_visible(false);
+    switch (game.persistent_data().settings_.button_mode_) {
+    case Settings::ButtonMode::strafe_separate:
+        if (input.pressed(game.action1_key())) {
+            blaster_.set_visible(true);
+            blaster_.shoot(pfrm, game);
+            weapon_hide_timer_ = seconds(1);
+        }
+
+        if (weapon_hide_timer_ > 0) {
+            weapon_hide_timer_ -= dt;
+
+            if (weapon_hide_timer_ <= 0) {
+                blaster_.set_visible(false);
+            }
+        }
+        break;
+
+    case Settings::ButtonMode::strafe_combined:
+        if (strafe) {
+            blaster_.set_visible(true);
+            blaster_.shoot(pfrm, game);
+        } else {
+            blaster_.set_visible(false);
+        }
+        break;
+
+    case Settings::ButtonMode::count:
+        break;
     }
 }
 
 
 void Player::set_visible(bool visible)
 {
-    blaster_.set_visible(visible);
+    if (not visible) {
+        blaster_.set_visible(false);
+    }
 
     if (visible) {
         sprite_.set_alpha(Sprite::Alpha::opaque);
@@ -755,7 +796,7 @@ void Blaster::shoot(Platform& pf, Game& game)
 
             pf.speaker().play_sound("blaster", 4);
 
-            if (not [&] {
+            if (not[&] {
                     if (expl_rounds > 0) {
                         game.camera().shake();
                         medium_explosion(pf, game, position_);

@@ -99,6 +99,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (static_cast<int>(scene_) < static_cast<int>(Scene::within_clouds)) {
         game.camera().update(pfrm,
+                             game.persistent_data().settings_.camera_mode_,
                              delta,
                              {(float)pfrm.screen().size().x / 2,
                               (float)pfrm.screen().size().y / 2});
@@ -424,6 +425,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (pfrm.keyboard().down_transition(game.action2_key()) and
         static_cast<int>(scene_) > static_cast<int>(Scene::fade_transition0)) {
+        pfrm.speaker().play_sound("select", 1);
         return state_pool().create<NewLevelState>(Level{0});
     }
 

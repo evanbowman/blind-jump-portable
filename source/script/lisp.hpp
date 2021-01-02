@@ -1,5 +1,6 @@
 #include "number/numeric.hpp"
 #include "string.hpp"
+#include "function.hpp"
 
 
 class Platform;
@@ -216,6 +217,9 @@ Value* make_list(u32 length);
 Value* make_error(Error::Code error_code);
 Value* make_symbol(const char* name);
 Value* make_userdata(void* obj);
+
+
+void get_interns(::Function<16, void(const char*)> callback);
 
 
 Value* get_nil();
