@@ -18,13 +18,13 @@ static const struct {
 } files[] = {
 
     {"scripts", "init.lisp", file_init},
-    //;
+//;
     {"scripts", "pre_levelgen.lisp", file_pre_levelgen},
-    //;
+//;
     {"scripts", "post_levelgen.lisp", file_post_levelgen},
-    //;
+//;
     {"strings", "english.txt", file_english},
-    //;
+//;
     {"strings", "spanish.txt", file_spanish},
-    //
+//
 };

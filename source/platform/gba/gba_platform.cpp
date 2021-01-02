@@ -18,6 +18,7 @@
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
+#include "rumble.h"
 
 
 void english__to_string(int num, char* buffer, int base);
@@ -33,7 +34,6 @@ static int tx_message_count = 0;
 
 enum class GlobalFlag {
     rtc_faulty,
-    rumble_on,
     gbp_unlocked,
     multiplayer_connected,
     night_mode,
@@ -297,17 +297,10 @@ void Platform::Keyboard::rumble(bool enabled)
         return;
     }
 
-    // Just some debugging code. Can't know how intense the rumble will be until
-    // I get my hands on an actual GameboyPlayer...
-    set_gflag(GlobalFlag::rumble_on, enabled);
-
-    // If we're using the gameboy player for rumble, don't bother with whatever
-    // rumble may be built into the cartridge.
-    if (not get_gflag(GlobalFlag::gbp_unlocked)) {
-        // FIXME: We need to set GPIO bit 3, but how frequently? Need to test on
-        // actual hardware, or inspect what some other existing games do.
-        GPIO_PORT_DIRECTION = 1 << 3;
-        GPIO_PORT_DATA = enabled << 3;
+    if (enabled) {
+        rumble_set_state(RumbleState::rumble_start);
+    } else {
+        rumble_set_state(RumbleState::rumble_stop);
     }
 }
 
@@ -585,119 +578,6 @@ static bool unlock_gameboy_player(Platform& pfrm)
     RegisterRamReset(RESET_VRAM);
 
     return gbp_detected;
-}
-
-
-struct GBPSession {
-    static constexpr char const data_[] = {"NINTENDO"};
-    static constexpr const u8 transfer_interval_ = 30;
-
-    u32 serial_in_ = 0;
-    u16 stage_ = 0;
-    u16 index_ = 0;
-    u16 out_0_ = 0;
-    u16 out_1_ = 0;
-    u8 transfer_countdown_ = transfer_interval_;
-};
-
-
-std::optional<DynamicMemory<GBPSession>> gbp_session;
-
-
-static void gbp_serial_isr()
-{
-    ++tx_message_count;
-    ++rx_message_count;
-
-    auto& sn = *gbp_session;
-
-    u32 out = 0;
-    u16 in_0;
-    u16 in_1;
-
-    sn->serial_in_ = REG_SIODATA32;
-    switch (sn->stage_) {
-    case 0:
-        in_0 = sn->serial_in_ >> 16;
-        in_1 = sn->serial_in_;
-        if (in_0 == sn->out_1_) {
-            if (sn->index_ <= 3) {
-                if (sn->serial_in_ ==
-                    (u32) ~(sn->out_1_ | (sn->out_0_ << 16))) {
-                    sn->index_++;
-                }
-            } else {
-                if (in_1 == 0x8002) {
-                    out = 0x10000010;
-                    sn->stage_ = 1;
-                    break;
-                }
-            }
-        } else {
-            sn->index_ = 0;
-        }
-        if (sn->index_ <= 3) {
-            sn->out_0_ = ((const u16*)sn->data_)[sn->index_];
-        } else {
-            sn->out_0_ = 0x8000;
-        }
-        sn->out_1_ = ~in_1;
-        out = sn->out_1_ | (sn->out_0_ << 16);
-        break;
-
-    case 1:
-        if (sn->serial_in_ == 0x10000010) {
-            out = 0x20000013;
-            sn->stage_ = 2;
-        } else {
-            sn->stage_ = 4;
-        }
-        break;
-
-    case 2:
-        if (sn->serial_in_ == 0x20000013) {
-            out = 0x40000004;
-            sn->stage_ = 3;
-        } else {
-            sn->stage_ = 4;
-        }
-        break;
-
-    case 3:
-        if (sn->serial_in_ == 0x30000003) {
-            if (get_gflag(GlobalFlag::rumble_on)) {
-                out = 0x40000026;
-            } else {
-                out = 0x40000004;
-            }
-        } else {
-            sn->stage_ = 4;
-        }
-        break;
-
-    case 4:
-        sn->serial_in_ = 0;
-        sn->stage_ = 0;
-        sn->index_ = 0;
-        sn->out_0_ = 0;
-        sn->out_1_ = 0;
-        return;
-    }
-
-    REG_SIODATA32 = out;
-    REG_SIOCNT |= SIO_START;
-}
-
-
-static void gbp_serial_start()
-{
-    if ((*gbp_session)->serial_in_ != 0x30000003) {
-        REG_RCNT = 0x0;
-        REG_SIOCNT = 0x1008;
-        REG_SIOCNT |= 0x4000;
-        REG_SIOCNT &= ~1;
-        REG_SIOCNT |= 0x0080;
-    }
 }
 
 
@@ -1025,13 +905,7 @@ void Platform::push_task(Task* task)
 
 void Platform::Screen::clear()
 {
-    if (get_gflag(GlobalFlag::gbp_unlocked)) {
-        if (gbp_session and --(*gbp_session)->transfer_countdown_ == 0) {
-            (*gbp_session)->transfer_countdown_ =
-                (*gbp_session)->transfer_interval_;
-            gbp_serial_start();
-        }
-    }
+    rumble_update();
 
     // On the GBA, we don't have real threads, so run tasks prior to the vsync,
     // so any updates are least likely to cause tearing.
@@ -1044,31 +918,6 @@ void Platform::Screen::clear()
             ++it;
         }
     }
-
-    // static int index;
-    // constexpr int sample_count = 32;
-    // static int buffer[32];
-    // static std::optional<Text> text;
-
-    // auto tm = platform->stopwatch().stop();
-
-    // if (index < sample_count) {
-    //     buffer[index++] = tm;
-
-    // } else {
-    //     index = 0;
-
-    //     int accum = 0;
-    //     for (int i = 0; i < sample_count; ++i) {
-    //         accum += buffer[i];
-    //     }
-
-    //     accum /= 32;
-
-    //     text.emplace(*platform, OverlayCoord{1, 1});
-    //     text->assign(((accum * 59.59f) / 16666666.66) * 100);
-    //     text->append(" percent");
-    // }
 
     // VSync
     VBlankIntrWait();
@@ -2666,13 +2515,17 @@ Platform::Platform()
 
         set_gflag(GlobalFlag::gbp_unlocked, true);
 
-        irqEnable(IRQ_SERIAL);
-        irqSet(IRQ_SERIAL, gbp_serial_isr);
+        RumbleGBPConfig conf {
+            [](void (*rumble_isr)(void)) {
+                irqEnable(IRQ_SERIAL);
+                irqSet(IRQ_SERIAL, rumble_isr);
+            }};
 
-        gbp_session = allocate_dynamic<GBPSession>(*::platform);
+        rumble_init(&conf);
 
     } else {
         REG_SIOCNT = 0;
+        rumble_init(nullptr);
     }
 
     init_video(screen());

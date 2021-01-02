@@ -192,6 +192,7 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/gba/interrupt_dispatch.s
     ${SOURCE_DIR}/platform/gba/bios_math.s
     ${SOURCE_DIR}/platform/gba/reset.s
+    ${SOURCE_DIR}/platform/gba/rumble.c
 
     # Data files below. Because the gameboy advance does not have a filesystem,
     # all of the sounds and images need to be compiled into the ROM.
