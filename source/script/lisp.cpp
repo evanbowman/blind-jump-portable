@@ -1506,49 +1506,52 @@ void init(Platform& pfrm)
 
 #ifdef __GBA__
     set_var("write-u8", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(0, integer);
-        L_EXPECT_OP(1, integer);
-        const u8 val = get_op(1)->integer_.value_;
-        *((u8*)(intptr_t)get_op(0)->integer_.value_) = val;
-        return get_nil();
-    }));
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(0, integer);
+                L_EXPECT_OP(1, integer);
+                const u8 val = get_op(1)->integer_.value_;
+                *((u8*)(intptr_t)get_op(0)->integer_.value_) = val;
+                return get_nil();
+            }));
 
     set_var("write-u16", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(0, integer);
-        L_EXPECT_OP(1, integer);
-        const u16 val = get_op(1)->integer_.value_;
-        *((u16*)(intptr_t)get_op(0)->integer_.value_) = val;
-        return get_nil();
-    }));
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(0, integer);
+                L_EXPECT_OP(1, integer);
+                const u16 val = get_op(1)->integer_.value_;
+                *((u16*)(intptr_t)get_op(0)->integer_.value_) = val;
+                return get_nil();
+            }));
 
     set_var("write-u32", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 2);
-        L_EXPECT_OP(0, integer);
-        L_EXPECT_OP(1, integer);
-        const u32 val = get_op(1)->integer_.value_;
-        *((u32*)(intptr_t)get_op(0)->integer_.value_) = val;
-        return get_nil();
-    }));
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(0, integer);
+                L_EXPECT_OP(1, integer);
+                const u32 val = get_op(1)->integer_.value_;
+                *((u32*)(intptr_t)get_op(0)->integer_.value_) = val;
+                return get_nil();
+            }));
 
     set_var("read-u8", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
-        return lisp::make_integer(*((u8*)(intptr_t)get_op(0)->integer_.value_));
-    }));
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, integer);
+                return lisp::make_integer(
+                    *((u8*)(intptr_t)get_op(0)->integer_.value_));
+            }));
 
     set_var("read-u16", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
-        return lisp::make_integer(*((u16*)(intptr_t)get_op(0)->integer_.value_));
-    }));
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, integer);
+                return lisp::make_integer(
+                    *((u16*)(intptr_t)get_op(0)->integer_.value_));
+            }));
 
     set_var("read-u32", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
-        return lisp::make_integer(*((u32*)(intptr_t)get_op(0)->integer_.value_));
-    }));
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, integer);
+                return lisp::make_integer(
+                    *((u32*)(intptr_t)get_op(0)->integer_.value_));
+            }));
 #endif // __GBA__
 
     set_var(

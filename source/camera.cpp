@@ -22,7 +22,8 @@ void Camera::update(Platform& pfrm,
     case Settings::CameraMode::tracking_weak: {
 
         if (ballast_.divisor_) {
-            const auto counter_weight = ballast_.center_ / float(ballast_.divisor_);
+            const auto counter_weight =
+                ballast_.center_ / float(ballast_.divisor_);
             buffer_ = interpolate(buffer_, counter_weight, 0.000000025f * dt);
             seek = interpolate(seek_pos, buffer_, 0.82f);
         } else {
@@ -30,20 +31,21 @@ void Camera::update(Platform& pfrm,
         }
 
         Vec2<Float> target{(seek.x - screen_size.x / 2),
-                (seek.y - screen_size.y / 2)};
+                           (seek.y - screen_size.y / 2)};
 
 
-        center_ = interpolate(target,
-                              center_,
-                              dt * speed_ *
-                              (ballast_.divisor_ ? 0.0000026f : 0.0000071f));
+        center_ = interpolate(
+            target,
+            center_,
+            dt * speed_ * (ballast_.divisor_ ? 0.0000026f : 0.0000071f));
 
         break;
     }
 
     case Settings::CameraMode::tracking_strong:
         if (ballast_.divisor_) {
-            const auto counter_weight = ballast_.center_ / float(ballast_.divisor_);
+            const auto counter_weight =
+                ballast_.center_ / float(ballast_.divisor_);
             buffer_ = interpolate(buffer_, counter_weight, 0.000000025f * dt);
             seek = interpolate(seek_pos, buffer_, 0.5f);
         } else {
@@ -51,13 +53,13 @@ void Camera::update(Platform& pfrm,
         }
 
         Vec2<Float> target{(seek.x - screen_size.x / 2),
-                (seek.y - screen_size.y / 2)};
+                           (seek.y - screen_size.y / 2)};
 
 
-        center_ = interpolate(target,
-                              center_,
-                              dt * speed_ *
-                              (ballast_.divisor_ ? 0.0000016f : 0.0000071f));
+        center_ = interpolate(
+            target,
+            center_,
+            dt * speed_ * (ballast_.divisor_ ? 0.0000016f : 0.0000071f));
 
         break;
     }

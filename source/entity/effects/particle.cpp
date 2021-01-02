@@ -48,9 +48,8 @@ void Particle::update(Platform& pfrm, Game& game, Microseconds dt)
 
     const Float offset = [&] {
         if (x_wave_effect_) {
-            return 3 *
-                float(sine(4 * 3.14f * 0.005f * timer_ + 180)) /
-                std::numeric_limits<s16>::max();
+            return 3 * float(sine(4 * 3.14f * 0.005f * timer_ + 180)) /
+                   std::numeric_limits<s16>::max();
         } else {
             return 0.f;
         }

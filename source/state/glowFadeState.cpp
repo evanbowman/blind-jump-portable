@@ -10,18 +10,19 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
     constexpr auto fade_duration = milliseconds(950);
 
     timer_ += delta;
-    if (timer_ > milliseconds(interpolate(50, 140, Float(counter_) / fade_duration))) {
+    if (timer_ >
+        milliseconds(interpolate(50, 140, Float(counter_) / fade_duration))) {
         // FIXME: Sprite scaling is broken on the desktop version of the game.
-#ifdef __GBA__
-        const int spread = 30;// interpolate(70, 20, Float(counter_) / fade_duration);
-        game.effects().spawn<Particle>(game.player().get_position(),
-                                       std::nullopt,
-                                       0.0001038f,
-                                       true,
-                                       seconds(1),
-                                       0,
-                                       Float(270 - spread / 2) + rng::choice(spread, rng::utility_state));
-#endif // __GBA__
+        // #ifdef __GBA__
+        //         const int spread = 30;// interpolate(70, 20, Float(counter_) / fade_duration);
+        //         game.effects().spawn<Particle>(game.player().get_position(),
+        //                                        std::nullopt,
+        //                                        0.0001038f,
+        //                                        true,
+        //                                        seconds(1),
+        //                                        0,
+        //                                        Float(270 - spread / 2) + rng::choice(spread, rng::utility_state));
+        // #endif // __GBA__
         timer_ = 0;
     }
 
@@ -31,7 +32,7 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.screen().fade(1.f, color_);
         pfrm.screen().pixelate(0, false);
         game.player().set_visible(false);
-        game.effects().get<Particle>().clear();
+        // game.effects().get<Particle>().clear();
         return state_pool().create<FadeOutState>(game, color_);
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);

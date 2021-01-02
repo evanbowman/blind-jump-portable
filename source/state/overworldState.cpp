@@ -646,8 +646,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     game.camera().update(pfrm,
-                         camera_mode_override_ ? *camera_mode_override_ : 
-                         game.persistent_data().settings_.camera_mode_,
+                         camera_mode_override_
+                             ? *camera_mode_override_
+                             : game.persistent_data().settings_.camera_mode_,
                          delta,
                          player.get_position());
 

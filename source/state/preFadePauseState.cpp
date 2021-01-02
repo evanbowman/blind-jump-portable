@@ -13,15 +13,15 @@ PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
     timer_ += delta;
     if (timer_ > milliseconds(200)) {
         // FIXME: Sprite scaling is broken on the desktop version of the game.
-#ifdef __GBA__
-        game.effects().spawn<Particle>(game.player().get_position(),
-                                       std::nullopt,
-                                       0.0001038f,
-                                       true,
-                                       seconds(1),
-                                       0,
-                                       Float(220) + rng::choice<100>(rng::utility_state));
-#endif // __GBA__
+        // #ifdef __GBA__
+        //         game.effects().spawn<Particle>(game.player().get_position(),
+        //                                        std::nullopt,
+        //                                        0.0001038f,
+        //                                        true,
+        //                                        seconds(1),
+        //                                        0,
+        //                                        Float(220) + rng::choice<100>(rng::utility_state));
+        // #endif // __GBA__
         timer_ = 0;
     }
 

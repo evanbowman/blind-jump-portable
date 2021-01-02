@@ -435,18 +435,17 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const bool down = input.pressed<Key::down>();
     const bool left = input.pressed<Key::left>();
     const bool right = input.pressed<Key::right>();
-    const bool strafe =
-        [&] {
-            switch (game.persistent_data().settings_.button_mode_) {
-            case Settings::ButtonMode::count:
-            case Settings::ButtonMode::strafe_separate:
-                return input.pressed(game.action2_key());
+    const bool strafe = [&] {
+        switch (game.persistent_data().settings_.button_mode_) {
+        case Settings::ButtonMode::count:
+        case Settings::ButtonMode::strafe_separate:
+            return input.pressed(game.action2_key());
 
-            case Settings::ButtonMode::strafe_combined:
-                break;
-            }
-            return input.pressed(game.action1_key());
-        }();
+        case Settings::ButtonMode::strafe_combined:
+            break;
+        }
+        return input.pressed(game.action1_key());
+    }();
 
 
     const auto wc = check_wall_collisions(game.tiles(), *this);
@@ -796,7 +795,7 @@ void Blaster::shoot(Platform& pf, Game& game)
 
             pf.speaker().play_sound("blaster", 4);
 
-            if (not[&] {
+            if (not [&] {
                     if (expl_rounds > 0) {
                         game.camera().shake();
                         medium_explosion(pf, game, position_);

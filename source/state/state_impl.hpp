@@ -46,10 +46,11 @@ public:
 
 class OverworldState : public State, public CommonNetworkListener {
 public:
-    OverworldState(bool camera_tracking,
-                   std::optional<Settings::CameraMode> camera_mode_override = {}) :
-        camera_tracking_(camera_tracking),
-        camera_mode_override_(camera_mode_override)
+    OverworldState(
+        bool camera_tracking,
+        std::optional<Settings::CameraMode> camera_mode_override = {})
+        : camera_tracking_(camera_tracking),
+          camera_mode_override_(camera_mode_override)
     {
     }
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
@@ -449,8 +450,8 @@ private:
 // option to select powerups, through a quick-select item sidebar.
 class QuickSelectInventoryState : public OverworldState {
 public:
-    QuickSelectInventoryState(Game& game) :
-        OverworldState(true, Settings::CameraMode::tracking_strong)
+    QuickSelectInventoryState(Game& game)
+        : OverworldState(true, Settings::CameraMode::tracking_strong)
     {
     }
 
@@ -619,8 +620,8 @@ private:
 
 class QuickMapState : public OverworldState {
 public:
-    QuickMapState(Game& game) :
-        OverworldState(true, Settings::CameraMode::tracking_strong)
+    QuickMapState(Game& game)
+        : OverworldState(true, Settings::CameraMode::tracking_strong)
     {
     }
 
@@ -1100,20 +1101,19 @@ private:
                 break;
 
             case Settings::CameraMode::fixed:
-                return locale_string(pfrm,
-                                     LocaleString::settings_camera_fixed)
+                return locale_string(pfrm, LocaleString::settings_camera_fixed)
                     ->c_str();
                 break;
 
             case Settings::CameraMode::tracking_weak:
-                return locale_string(pfrm,
-                                     LocaleString::settings_camera_tracking_weak)
+                return locale_string(
+                           pfrm, LocaleString::settings_camera_tracking_weak)
                     ->c_str();
                 break;
 
             case Settings::CameraMode::tracking_strong:
-                return locale_string(pfrm,
-                                     LocaleString::settings_camera_tracking_strong)
+                return locale_string(
+                           pfrm, LocaleString::settings_camera_tracking_strong)
                     ->c_str();
                 break;
             }

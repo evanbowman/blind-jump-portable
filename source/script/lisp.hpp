@@ -1,6 +1,6 @@
+#include "function.hpp"
 #include "number/numeric.hpp"
 #include "string.hpp"
-#include "function.hpp"
 
 
 class Platform;

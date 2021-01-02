@@ -71,8 +71,8 @@ void LispReplState::repaint_entry(Platform& pfrm, bool show_cursor)
         keyboard_.back().append(::keyboard[i][5], darker_clr);
 
         for (int j = 0; j < 6; ++j) {
-            if (show_cursor and
-                j == keyboard_cursor_.x and keyboard_cursor_.y == i) {
+            if (show_cursor and j == keyboard_cursor_.x and
+                keyboard_cursor_.y == i) {
                 const auto colors =
                     Text::OptColors{{ColorConstant::rich_black,
                                      ColorConstant::aerospace_orange}};
@@ -152,13 +152,11 @@ void LispReplState::repaint_completions(Platform& pfrm)
     for (u32 i = 0; i < completion_strs_.size(); ++i) {
         Text::OptColors opts;
         if (i == completion_cursor_) {
-            opts = Text::OptColors{{ColorConstant::rich_black,
-                                    ColorConstant::aerospace_orange}};
-
+            opts = Text::OptColors{
+                {ColorConstant::rich_black, ColorConstant::aerospace_orange}};
         }
 
-        completions_.emplace_back(pfrm,
-                                  OverlayCoord{10, u8(2 + i)});
+        completions_.emplace_back(pfrm, OverlayCoord{10, u8(2 + i)});
 
         completions_.back().assign(completion_strs_[i], opts);
     }
@@ -200,7 +198,8 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
             completions_.clear();
             display_mode_ = DisplayMode::entry;
         } else if (pfrm.keyboard().down_transition(game.action2_key())) {
-            command_ += (completion_strs_[completion_cursor_] + completion_prefix_len_);
+            command_ +=
+                (completion_strs_[completion_cursor_] + completion_prefix_len_);
             repaint_entry(pfrm);
             completion_strs_.clear();
             completions_.clear();
@@ -217,7 +216,8 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
             command_.pop_back();
             repaint_entry(pfrm);
         } else if (pfrm.keyboard().down_transition(game.action2_key())) {
-            command_.push_back(keyboard[keyboard_cursor_.y][keyboard_cursor_.x][0]);
+            command_.push_back(
+                keyboard[keyboard_cursor_.y][keyboard_cursor_.x][0]);
             repaint_entry(pfrm);
             pfrm.speaker().play_sound("typewriter", 2);
         } else if (pfrm.keyboard().down_transition<Key::alt_1>()) {
@@ -227,7 +227,8 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
                 return c == ' ' or c == ')' or c == '(';
             };
 
-            if (not command_.empty() and not is_delimiter(command_[command_.length() - 1])) {
+            if (not command_.empty() and
+                not is_delimiter(command_[command_.length() - 1])) {
                 std::optional<int> ident_start;
 
                 error(pfrm, "checking for ident start");
@@ -252,7 +253,8 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
                     error(pfrm, "ident is: ");
                     error(pfrm, ident.c_str());
 
-                    lisp::get_interns([&ident, this, &pfrm](const char* intern) {
+                    lisp::get_interns([&ident, this, &pfrm](
+                                          const char* intern) {
                         if (completion_strs_.full()) {
                             return;
                         }
@@ -267,7 +269,8 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
                             return;
                         }
 
-                        for (u32 i = 0; i < ident.length() and i < intern_len; ++i) {
+                        for (u32 i = 0; i < ident.length() and i < intern_len;
+                             ++i) {
                             if (ident[i] not_eq intern[i]) {
                                 return;
                             }
