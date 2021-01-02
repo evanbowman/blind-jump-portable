@@ -521,6 +521,7 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (not(*it)->alive()) {
                 (*it)->on_death(pfrm, game);
                 it = entity_buf.erase(it);
+                game.rumble().activate(pfrm, milliseconds(150));
                 enemies_destroyed = true;
             } else {
                 enemies_remaining = true;

@@ -341,7 +341,7 @@ public:
     public:
         void poll();
 
-        void rumble(Float amount);
+        void rumble(bool enabled);
 
         using RestoreState = Bitvector<KeyStates{}.size()>;
 

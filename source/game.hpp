@@ -43,6 +43,7 @@
 #include "persistentData.hpp"
 #include "platform/platform.hpp"
 #include "powerup.hpp"
+#include "rumble.hpp"
 #include "state.hpp"
 
 
@@ -144,6 +145,11 @@ public:
         return camera_;
     }
 
+    inline Rumble& rumble()
+    {
+        return rumble_;
+    }
+
     void next_level(Platform& platform, std::optional<Level> set_level = {});
 
     Level level() const
@@ -223,6 +229,7 @@ private:
     StatePtr next_state_;
     StatePtr state_;
     Powerups powerups_;
+    Rumble rumble_;
 
     std::optional<PeerPlayer> peer_player_;
     std::optional<Scavenger> scavenger_;

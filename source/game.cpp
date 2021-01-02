@@ -154,7 +154,7 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
         state_ = std::move(next_state_);
     }
 
-    // pfrm.keyboard().rumble(1.f);
+    rumble_.update(pfrm, delta);
 
     for (auto it = deferred_callbacks_.begin();
          it not_eq deferred_callbacks_.end();) {
@@ -1431,6 +1431,9 @@ COLD void Game::regenerate_map(Platform& pfrm)
                 }
             }
             if (tile == Tile::sand) {
+                if (grass_overlay->get_tile(x, y)) {
+                    return;
+                }
                 if (tiles_.get_tile(x - 1, y) == Tile::plate and
                     tiles_.get_tile(x, y - 1) == Tile::plate and
                     tiles_.get_tile(x - 1, y - 1) not_eq Tile::plate) {

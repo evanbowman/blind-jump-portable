@@ -117,6 +117,7 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
             sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
             sprite_.set_texture_index(107);
             game.camera().shake(16);
+            game.rumble().activate(pfrm, milliseconds(200));
             game.effects().spawn<Particle>(
                 position_, current_zone(game).energy_glow_color_);
             game.effects().spawn<Particle>(

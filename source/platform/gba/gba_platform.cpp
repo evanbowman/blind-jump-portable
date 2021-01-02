@@ -289,7 +289,7 @@ void Platform::Keyboard::poll()
 }
 
 
-void Platform::Keyboard::rumble(Float amount)
+void Platform::Keyboard::rumble(bool enabled)
 {
     // We have a working RTC chip connected to the cartridge gpio, so do not
     // attempt to write rumble commands.
@@ -299,11 +299,7 @@ void Platform::Keyboard::rumble(Float amount)
 
     // Just some debugging code. Can't know how intense the rumble will be until
     // I get my hands on an actual GameboyPlayer...
-    static int rumble_counter = 0;
-    if (++rumble_counter == 60) {
-        rumble_counter = 0;
-        set_gflag(GlobalFlag::rumble_on, not get_gflag(GlobalFlag::rumble_on));
-    }
+    set_gflag(GlobalFlag::rumble_on, enabled);
 
     // If we're using the gameboy player for rumble, don't bother with whatever
     // rumble may be built into the cartridge.
@@ -311,7 +307,7 @@ void Platform::Keyboard::rumble(Float amount)
         // FIXME: We need to set GPIO bit 3, but how frequently? Need to test on
         // actual hardware, or inspect what some other existing games do.
         GPIO_PORT_DIRECTION = 1 << 3;
-        GPIO_PORT_DATA = get_gflag(GlobalFlag::rumble_on) << 3;
+        GPIO_PORT_DATA = enabled << 3;
     }
 }
 
@@ -670,7 +666,6 @@ static void gbp_serial_isr()
     case 3:
         if (sn->serial_in_ == 0x30000003) {
             if (get_gflag(GlobalFlag::rumble_on)) {
-                // DoRumble--;
                 out = 0x40000026;
             } else {
                 out = 0x40000004;
@@ -682,7 +677,6 @@ static void gbp_serial_isr()
 
     case 4:
         sn->serial_in_ = 0;
-        // DoRumble = 0;
         sn->stage_ = 0;
         sn->index_ = 0;
         sn->out_0_ = 0;
