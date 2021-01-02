@@ -14,7 +14,7 @@ static const char* keyboard[7][6] = {{"z", "y", "g", "f", "v", "q"},
                                      {"4", "5", "6", "7", "8", "9"}};
 
 
-void LispReplState::repaint_entry(Platform& pfrm)
+void LispReplState::repaint_entry(Platform& pfrm, bool show_cursor)
 {
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
@@ -71,7 +71,8 @@ void LispReplState::repaint_entry(Platform& pfrm)
         keyboard_.back().append(::keyboard[i][5], darker_clr);
 
         for (int j = 0; j < 6; ++j) {
-            if (j == keyboard_cursor_.x and keyboard_cursor_.y == i) {
+            if (show_cursor and
+                j == keyboard_cursor_.x and keyboard_cursor_.y == i) {
                 const auto colors =
                     Text::OptColors{{ColorConstant::rich_black,
                                      ColorConstant::aerospace_orange}};
@@ -144,6 +145,26 @@ private:
 } // namespace
 
 
+void LispReplState::repaint_completions(Platform& pfrm)
+{
+    completions_.clear();
+
+    for (u32 i = 0; i < completion_strs_.size(); ++i) {
+        Text::OptColors opts;
+        if (i == completion_cursor_) {
+            opts = Text::OptColors{{ColorConstant::rich_black,
+                                    ColorConstant::aerospace_orange}};
+
+        }
+
+        completions_.emplace_back(pfrm,
+                                  OverlayCoord{10, u8(2 + i)});
+
+        completions_.back().assign(completion_strs_[i], opts);
+    }
+}
+
+
 StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     constexpr auto fade_duration = milliseconds(700);
@@ -161,9 +182,164 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
     }
 
-
     switch (display_mode_) {
+    case DisplayMode::completion_list:
+        if (pfrm.keyboard().down_transition<Key::down>() and
+            completion_cursor_ < completion_strs_.size() - 1) {
+            ++completion_cursor_;
+            repaint_completions(pfrm);
+            pfrm.speaker().play_sound("scroll", 1);
+        } else if (pfrm.keyboard().down_transition<Key::up>() and
+                   completion_cursor_ > 0) {
+            --completion_cursor_;
+            repaint_completions(pfrm);
+            pfrm.speaker().play_sound("scroll", 1);
+        } else if (pfrm.keyboard().down_transition(game.action1_key())) {
+            repaint_entry(pfrm);
+            completion_strs_.clear();
+            completions_.clear();
+            display_mode_ = DisplayMode::entry;
+        } else if (pfrm.keyboard().down_transition(game.action2_key())) {
+            command_ += (completion_strs_[completion_cursor_] + completion_prefix_len_);
+            repaint_entry(pfrm);
+            completion_strs_.clear();
+            completions_.clear();
+            pfrm.speaker().play_sound("typewriter", 2);
+            display_mode_ = DisplayMode::entry;
+        }
+        break;
+
     case DisplayMode::entry:
+        if (pfrm.keyboard().down_transition(game.action1_key())) {
+            if (command_.empty()) {
+                return state_pool().create<PauseScreenState>(false);
+            }
+            command_.pop_back();
+            repaint_entry(pfrm);
+        } else if (pfrm.keyboard().down_transition(game.action2_key())) {
+            command_.push_back(keyboard[keyboard_cursor_.y][keyboard_cursor_.x][0]);
+            repaint_entry(pfrm);
+            pfrm.speaker().play_sound("typewriter", 2);
+        } else if (pfrm.keyboard().down_transition<Key::alt_1>()) {
+            // Try to isolate an identifier from the command buffer, for autocomplete.
+
+            auto is_delimiter = [](char c) {
+                return c == ' ' or c == ')' or c == '(';
+            };
+
+            if (not command_.empty() and not is_delimiter(command_[command_.length() - 1])) {
+                std::optional<int> ident_start;
+
+                error(pfrm, "checking for ident start");
+
+                for (int i = command_.length() - 1; i >= 0; --i) {
+                    if (is_delimiter(command_[i])) {
+                        ident_start = i + 1;
+                        break;
+                    } else if (i == 0 and not is_delimiter(command_[i])) {
+                        ident_start = 0;
+                    }
+                }
+
+                if (ident_start) {
+                    StringBuffer<8> ident(command_.c_str() + *ident_start);
+                    // We need to store this value for later, if a user selects
+                    // a completion, we need to know how many characters of the
+                    // substitution to skip, unless we want to parse the
+                    // identifier out of the command buffer again.
+                    completion_prefix_len_ = ident.length();
+
+                    error(pfrm, "ident is: ");
+                    error(pfrm, ident.c_str());
+
+                    lisp::get_interns([&ident, this, &pfrm](const char* intern) {
+                        if (completion_strs_.full()) {
+                            return;
+                        }
+
+                        error(pfrm, "checking intern");
+                        error(pfrm, intern);
+
+                        const auto intern_len = str_len(intern);
+                        if (intern_len <= ident.length()) {
+                            // I mean, there's no reason to autocomplete
+                            // to something shorter or the same length...
+                            return;
+                        }
+
+                        for (u32 i = 0; i < ident.length() and i < intern_len; ++i) {
+                            if (ident[i] not_eq intern[i]) {
+                                return;
+                            }
+                        }
+
+                        completion_strs_.push_back(intern);
+                    });
+
+                    if (not completion_strs_.empty()) {
+                        display_mode_ = DisplayMode::completion_list;
+                        completion_cursor_ = 0;
+                        repaint_completions(pfrm);
+                        repaint_entry(pfrm, false);
+                    }
+                } else {
+                    error(pfrm, "autocomplete did not find ident start");
+                }
+            } else {
+                error(pfrm, "command empty or recent delimiter");
+            }
+        }
+
+        if (pfrm.keyboard().down_transition<Key::start>()) {
+
+            pfrm.speaker().play_sound("tw_bell", 2);
+
+            lisp::eval(command_.c_str());
+
+            command_.clear();
+            Printer p(command_);
+            format(lisp::get_op(0), p);
+
+            lisp::pop_op();
+
+            display_mode_ = DisplayMode::show_result;
+
+            repaint_entry(pfrm);
+        }
+
+        if (pfrm.keyboard().down_transition<Key::left>()) {
+            if (keyboard_cursor_.x == 0) {
+                keyboard_cursor_.x = 5;
+            } else {
+                keyboard_cursor_.x -= 1;
+            }
+            pfrm.speaker().play_sound("scroll", 1);
+            repaint_entry(pfrm);
+        } else if (pfrm.keyboard().down_transition<Key::right>()) {
+            if (keyboard_cursor_.x == 5) {
+                keyboard_cursor_.x = 0;
+            } else {
+                keyboard_cursor_.x += 1;
+            }
+            pfrm.speaker().play_sound("scroll", 1);
+            repaint_entry(pfrm);
+        } else if (pfrm.keyboard().down_transition<Key::up>()) {
+            if (keyboard_cursor_.y == 0) {
+                keyboard_cursor_.y = 6;
+            } else {
+                keyboard_cursor_.y -= 1;
+            }
+            pfrm.speaker().play_sound("scroll", 1);
+            repaint_entry(pfrm);
+        } else if (pfrm.keyboard().down_transition<Key::down>()) {
+            if (keyboard_cursor_.y == 6) {
+                keyboard_cursor_.y = 0;
+            } else {
+                keyboard_cursor_.y += 1;
+            }
+            pfrm.speaker().play_sound("scroll", 1);
+            repaint_entry(pfrm);
+        }
         break;
 
     case DisplayMode::show_result:
@@ -182,69 +358,6 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
             return null_state();
         }
         break;
-    }
-    if (pfrm.keyboard().down_transition(game.action1_key())) {
-        if (command_.empty()) {
-            return state_pool().create<PauseScreenState>(false);
-        }
-        command_.pop_back();
-        repaint_entry(pfrm);
-    }
-    if (pfrm.keyboard().down_transition(game.action2_key())) {
-        command_.push_back(keyboard[keyboard_cursor_.y][keyboard_cursor_.x][0]);
-        repaint_entry(pfrm);
-        pfrm.speaker().play_sound("typewriter", 2);
-    }
-
-    if (pfrm.keyboard().down_transition<Key::start>()) {
-
-        pfrm.speaker().play_sound("tw_bell", 2);
-
-        lisp::eval(command_.c_str());
-
-        command_.clear();
-        Printer p(command_);
-        format(lisp::get_op(0), p);
-
-        lisp::pop_op();
-
-        display_mode_ = DisplayMode::show_result;
-
-        repaint_entry(pfrm);
-    }
-
-    if (pfrm.keyboard().down_transition<Key::left>()) {
-        if (keyboard_cursor_.x == 0) {
-            keyboard_cursor_.x = 5;
-        } else {
-            keyboard_cursor_.x -= 1;
-        }
-        pfrm.speaker().play_sound("scroll", 1);
-        repaint_entry(pfrm);
-    } else if (pfrm.keyboard().down_transition<Key::right>()) {
-        if (keyboard_cursor_.x == 5) {
-            keyboard_cursor_.x = 0;
-        } else {
-            keyboard_cursor_.x += 1;
-        }
-        pfrm.speaker().play_sound("scroll", 1);
-        repaint_entry(pfrm);
-    } else if (pfrm.keyboard().down_transition<Key::up>()) {
-        if (keyboard_cursor_.y == 0) {
-            keyboard_cursor_.y = 6;
-        } else {
-            keyboard_cursor_.y -= 1;
-        }
-        pfrm.speaker().play_sound("scroll", 1);
-        repaint_entry(pfrm);
-    } else if (pfrm.keyboard().down_transition<Key::down>()) {
-        if (keyboard_cursor_.y == 6) {
-            keyboard_cursor_.y = 0;
-        } else {
-            keyboard_cursor_.y += 1;
-        }
-        pfrm.speaker().play_sound("scroll", 1);
-        repaint_entry(pfrm);
     }
     return null_state();
 }

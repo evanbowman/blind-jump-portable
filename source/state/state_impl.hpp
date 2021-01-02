@@ -814,12 +814,16 @@ public:
 private:
     enum class DisplayMode {
         entry,
-        show_result
+        show_result,
+        completion_list,
     } display_mode_ = DisplayMode::entry;
 
     Vec2<int> keyboard_cursor_;
 
-    void repaint_entry(Platform& pfrm);
+    void repaint_entry(Platform& pfrm, bool show_cursor = true);
+
+    void repaint_completions(Platform& pfrm);
+
 
     Command command_;
 
@@ -828,6 +832,12 @@ private:
     Buffer<Text, 7> keyboard_;
 
     std::optional<Text> version_text_;
+
+    static constexpr const int completion_count = 10;
+    Buffer<const char*, completion_count> completion_strs_;
+    Buffer<Text, completion_count> completions_;
+    u8 completion_cursor_ = 0;
+    u8 completion_prefix_len_ = 0;
 
     Microseconds timer_ = 0;
 
