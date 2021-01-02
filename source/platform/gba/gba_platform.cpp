@@ -15,10 +15,10 @@
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
+#include "rumble.h"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
-#include "rumble.h"
 
 
 void english__to_string(int num, char* buffer, int base);
@@ -2515,11 +2515,10 @@ Platform::Platform()
 
         set_gflag(GlobalFlag::gbp_unlocked, true);
 
-        RumbleGBPConfig conf {
-            [](void (*rumble_isr)(void)) {
-                irqEnable(IRQ_SERIAL);
-                irqSet(IRQ_SERIAL, rumble_isr);
-            }};
+        RumbleGBPConfig conf{[](void (*rumble_isr)(void)) {
+            irqEnable(IRQ_SERIAL);
+            irqSet(IRQ_SERIAL, rumble_isr);
+        }};
 
         rumble_init(&conf);
 

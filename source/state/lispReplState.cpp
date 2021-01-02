@@ -158,7 +158,30 @@ void LispReplState::repaint_completions(Platform& pfrm)
 
         completions_.emplace_back(pfrm, OverlayCoord{10, u8(2 + i)});
 
-        completions_.back().assign(completion_strs_[i], opts);
+        const auto str = completion_strs_[i];
+        int j;
+
+        char tempstr[2] = {'\0', '\0'};
+
+        for (j = 0; j < completion_prefix_len_; ++j) {
+            tempstr[0] = str[j];
+            completions_.back().append(
+                tempstr,
+                i == completion_cursor_ ? opts :
+                Text::OptColors{{custom_color(0x766df7),
+                                 ColorConstant::rich_black}});
+        }
+
+        const int len = str_len(str);
+        for (; j < len; ++j) {
+            tempstr[0] = str[j];
+            completions_.back().append(tempstr, opts);
+        }
+
+        tempstr[0] = ' ';
+        for (; j < 20; ++j) {
+            completions_.back().append(tempstr, opts);
+        }
     }
 }
 
