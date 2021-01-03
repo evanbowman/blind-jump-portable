@@ -2447,6 +2447,10 @@ std::optional<DateTime> Platform::startup_time() const
 }
 
 
+extern char __iwram_start__;
+extern char __data_end__;
+
+
 Platform::Platform()
 {
     // Not sure how else to determine whether the cartridge has sram, flash, or
@@ -2468,6 +2472,12 @@ Platform::Platform()
     if (not glyph_table) {
         error(*this, "failed to allocate glyph table");
         fatal();
+    }
+
+    {
+        StringBuffer<32> iwram_used("iwram used: ");
+        iwram_used += to_string<10>(&__data_end__ - &__iwram_start__);
+        info(*this, iwram_used.c_str());
     }
 
     // IMPORTANT: No calls to map_glyph() are allowed before reaching this

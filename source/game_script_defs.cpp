@@ -92,6 +92,24 @@ void Game::init_script(Platform& pfrm)
                       return L_NIL;
                   }));
 
+    lisp::set_var("get-hp", lisp::make_function([](int argc) {
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
+
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
+
+                      auto entity = get_entity_by_id(
+                          *game, lisp::get_op(0)->integer_.value_);
+                      if (entity) {
+                          return lisp::make_integer(entity->get_health());
+                      }
+
+                      return L_NIL;
+                  }));
+
     lisp::set_var("set-hp", lisp::make_function([](int argc) {
                       L_EXPECT_ARGC(argc, 2);
                       L_EXPECT_OP(0, integer);
@@ -154,6 +172,30 @@ void Game::init_script(Platform& pfrm)
                       return lisp::make_cons(
                           lisp::make_integer(entity->get_position().x),
                           lisp::make_integer(entity->get_position().y));
+                  }));
+
+    lisp::set_var("set-pos", lisp::make_function([](int argc) {
+                      L_EXPECT_ARGC(argc, 3);
+                      L_EXPECT_OP(0, integer);
+                      L_EXPECT_OP(1, integer);
+                      L_EXPECT_OP(2, integer);
+
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
+
+                      auto entity = get_entity_by_id(
+                          *game, lisp::get_op(2)->integer_.value_);
+
+                      if (not entity) {
+                          return L_NIL;
+                      }
+
+                      entity->set_position({Float(lisp::get_op(1)->integer_.value_),
+                                            Float(lisp::get_op(0)->integer_.value_)});
+
+                      return L_NIL;
                   }));
 
     lisp::set_var(
