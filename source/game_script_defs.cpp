@@ -60,6 +60,46 @@ void Game::init_script(Platform& pfrm)
     lisp::set_var("detail",
                   lisp::make_function([](int argc) { return L_NIL; }));
 
+    lisp::set_var("make-enemy", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 3);
+        L_EXPECT_OP(0, integer);
+        L_EXPECT_OP(1, integer);
+        L_EXPECT_OP(2, integer);
+
+        const Vec2<Float> pos {
+            Float(lisp::get_op(1)->integer_.value_),
+            Float(lisp::get_op(0)->integer_.value_)
+        };
+
+        if (auto game = interp_get_game()) {
+            int index = 0;
+            game->enemies().transform([&](auto& buf) {
+                using T = typename std::remove_reference<decltype(buf)>::type;
+                using VT = typename T::ValueType::element_type;
+
+                if (index == lisp::get_op(2)->integer_.value_) {
+                    // Sigh... Some special cases here. Some enemies have
+                    // slightly different constructors, so we need to handle a
+                    // couple enemies in specific ways.
+                    if constexpr (std::is_same<VT, SnakeHead>() or
+                                  std::is_same<VT, SnakeBody>() or
+                                  std::is_same<VT, SnakeTail>()) {
+                        game->enemies().spawn<SnakeHead>(pos, *game);
+                    } else if constexpr (std::is_same<VT, GatekeeperShield>()) {
+                        game->enemies().spawn<GatekeeperShield>(pos, rng::choice<INT16_MAX>(rng::utility_state)); // Otherwise, I'd have to add another parameter to the make-enemy function interface.
+                    } else if constexpr (std::is_same<VT, Gatekeeper>()) {
+                        game->enemies().spawn<Gatekeeper>(pos, *game);
+                    } else {
+                        game->enemies().spawn<VT>(pos);
+                    }
+                }
+                ++index;
+            });
+        }
+
+        return L_NIL;
+    }));
+
     lisp::set_var("level", lisp::make_function([](int argc) {
                       if (auto game = interp_get_game()) {
                           if (argc == 1) {

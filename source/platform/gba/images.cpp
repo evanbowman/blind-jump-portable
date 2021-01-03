@@ -83,8 +83,6 @@
 //;
 #include "data/old_poster_flattened.h"
 //;
-#include "data/postal_advert_flattened.h"
-//;
 #include "data/blaster_info_flattened.h"
 //;
 #include "data/seed_packet_flattened.h"
@@ -189,8 +187,6 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(overlay_dialog),
 //;
     TEXTURE_INFO(old_poster_flattened),
-//;
-    TEXTURE_INFO(postal_advert_flattened),
 //;
     TEXTURE_INFO(blaster_info_flattened),
 //;
