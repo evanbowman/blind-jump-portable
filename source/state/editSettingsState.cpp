@@ -11,7 +11,8 @@ EditSettingsState::EditSettingsState(DeferredState exit_state)
                                        {contrast_line_updater_},
                                        {night_mode_line_updater_},
                                        {show_stats_line_updater_},
-                                       {speedrun_clock_line_updater_}}}
+                                       {speedrun_clock_line_updater_},
+                                       {rumble_enabled_line_updater_}}}
 {
 }
 
@@ -122,7 +123,7 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     const auto& line = lines_[select_row_];
     const Float y_center = pfrm.screen().size().y / 2;
     const Float y_line = line.text_->coord().y * 8;
-    const auto y_diff = (y_line - y_center) * 0.35f;
+    const auto y_diff = (y_line - y_center) * 0.4f;
 
     y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
 

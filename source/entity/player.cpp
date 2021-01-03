@@ -90,7 +90,7 @@ void Player::on_collision(Platform& pf, Game& game, Compactor& compactor)
     }
 
     Player::injured(pf, game, Health(2));
-    game.rumble().activate(pf, milliseconds(430));
+    game.rumble(pf, milliseconds(430));
 }
 
 
@@ -101,7 +101,7 @@ void Player::on_collision(Platform& pf, Game& game, ConglomerateShot&)
     }
 
     Player::injured(pf, game, Health(1));
-    game.rumble().activate(pf, milliseconds(280));
+    game.rumble(pf, milliseconds(280));
 }
 
 
@@ -112,26 +112,26 @@ void Player::on_collision(Platform& pf, Game& game, OrbShot&)
     }
 
     Player::injured(pf, game, Health(1));
-    game.rumble().activate(pf, milliseconds(280));
+    game.rumble(pf, milliseconds(280));
 }
 
 void Player::on_collision(Platform& pf, Game& game, WandererBigLaser&)
 {
     medium_explosion(pf, game, position_);
     Player::injured(pf, game, Health(2));
-    game.rumble().activate(pf, milliseconds(390));
+    game.rumble(pf, milliseconds(390));
 }
 
 void Player::on_collision(Platform& pf, Game& game, Wanderer&)
 {
     Player::injured(pf, game, Health(1));
-    game.rumble().activate(pf, milliseconds(280));
+    game.rumble(pf, milliseconds(280));
 }
 
 void Player::on_collision(Platform& pf, Game& game, SnakeHead&)
 {
     Player::injured(pf, game, Health(2));
-    game.rumble().activate(pf, milliseconds(390));
+    game.rumble(pf, milliseconds(390));
 }
 
 
@@ -139,7 +139,7 @@ void Player::on_collision(Platform& pf, Game& game, Enemy& e)
 {
     if (not e.is_allied()) {
         Player::injured(pf, game, Health(1));
-        game.rumble().activate(pf, milliseconds(280));
+        game.rumble(pf, milliseconds(280));
     }
 }
 
@@ -147,7 +147,7 @@ void Player::on_collision(Platform& pf, Game& game, Enemy& e)
 void Player::on_collision(Platform& pf, Game& game, Twin& t)
 {
     Player::injured(pf, game, Health(1));
-    game.rumble().activate(pf, milliseconds(280));
+    game.rumble(pf, milliseconds(280));
 }
 
 
@@ -159,8 +159,8 @@ void Player::on_collision(Platform& pf, Game& game, Drone& drone)
             game,
             drone.state() == Drone::State::rush and
                     game.difficulty() not_eq Settings::Difficulty::easy
-                ? (game.rumble().activate(pf, milliseconds(390)), Health(2))
-                : (game.rumble().activate(pf, milliseconds(280)), Health(1)));
+                ? (game.rumble(pf, milliseconds(390)), Health(2))
+                : (game.rumble(pf, milliseconds(280)), Health(1)));
     }
 }
 

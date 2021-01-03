@@ -179,6 +179,14 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
 }
 
 
+void Game::rumble(Platform& pfrm, Microseconds duration)
+{
+    if (persistent_data_.settings_.rumble_enabled_) {
+        rumble_.activate(pfrm, duration);
+    }
+}
+
+
 static void show_offscreen_player_icon(Platform& pfrm, Game& game)
 {
     // Basically, this code draws an imaginary line between the center of the
@@ -869,6 +877,11 @@ static bool contains(lisp::Value* tiles_list, u8 t)
 
 COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 {
+    // Turn off rumble. Otherwise, if rumble happened to be active, the game
+    // would continue rumbling until the next update() call, which could take a
+    // moment, as we're generating a new level.
+    pfrm.keyboard().rumble(false);
+
     if (set_level) {
         persistent_data_.level_.set(*set_level);
     } else {

@@ -31,6 +31,7 @@ struct Settings {
     Key action2_key_ = default_action2_key;
 
     bool show_speedrun_clock_ = true;
+    bool rumble_enabled_ = true;
 
     ButtonMode button_mode_ = ButtonMode::strafe_combined;
     CameraMode camera_mode_ = CameraMode::tracking_weak;

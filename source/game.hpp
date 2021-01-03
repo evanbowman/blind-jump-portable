@@ -145,10 +145,7 @@ public:
         return camera_;
     }
 
-    inline Rumble& rumble()
-    {
-        return rumble_;
-    }
+    void rumble(Platform& pfrm, Microseconds duration);
 
     void next_level(Platform& platform, std::optional<Level> set_level = {});
 

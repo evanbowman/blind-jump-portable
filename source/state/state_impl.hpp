@@ -1031,6 +1031,21 @@ private:
         }
     } show_stats_line_updater_;
 
+    class RumbleEnabledLineUpdater : public LineUpdater {
+        Result update(Platform& pfrm, Game& game, int dir) override
+        {
+            bool& enabled = game.persistent_data().settings_.rumble_enabled_;
+            if (dir not_eq 0) {
+                enabled = not enabled;
+            }
+            if (enabled) {
+                return locale_string(pfrm, LocaleString::yes)->c_str();
+            } else {
+                return locale_string(pfrm, LocaleString::no)->c_str();
+            }
+        }
+    } rumble_enabled_line_updater_;
+
     class SpeedrunClockLineUpdater : public LineUpdater {
         Result update(Platform& pfrm, Game& game, int dir) override
         {
@@ -1258,7 +1273,7 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 9;
+    static constexpr const int line_count_ = 10;
 
     std::array<LineInfo, line_count_> lines_;
 
@@ -1271,7 +1286,8 @@ private:
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
         LocaleString::settings_show_stats,
-        LocaleString::settings_speedrun_clock};
+        LocaleString::settings_speedrun_clock,
+        LocaleString::settings_rumble_enabled};
 
     int select_row_ = 0;
     int anim_index_ = 0;

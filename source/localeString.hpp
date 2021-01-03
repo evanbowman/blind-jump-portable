@@ -98,6 +98,7 @@ enum class LocaleString {
     settings_camera_fixed,
     settings_camera_tracking_weak,
     settings_camera_tracking_strong,
+    settings_rumble_enabled,
     yes,
     no,
     menu_disabled,

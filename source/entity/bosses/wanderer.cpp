@@ -300,7 +300,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                 return milliseconds(640);
             }()) {
             game.camera().shake();
-            game.rumble().activate(pf, milliseconds(100));
+            game.rumble(pf, milliseconds(100));
             medium_explosion(pf, game, position_ + shoot_offset());
 
             game.effects().spawn<WandererBigLaser>(

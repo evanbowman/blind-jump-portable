@@ -94,6 +94,7 @@ Camera:
 fixed
 tracking (low)
 tracking (high)
+Rumble Enabled: 
 yes
 no
 menu disabled

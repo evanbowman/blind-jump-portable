@@ -22,7 +22,7 @@ void big_explosion(Platform& pfrm, Game& game, const Vec2<Float>& position)
 
     game.on_timeout(
         pfrm, milliseconds(90), [pos = position](Platform& pf, Game& game) {
-            game.rumble().activate(pf, milliseconds(390));
+            game.rumble(pf, milliseconds(390));
             for (int i = 0; i < 3; ++i) {
                 game.effects().spawn<Explosion>(
                     rng::sample<32>(pos, rng::utility_state));

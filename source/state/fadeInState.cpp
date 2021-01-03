@@ -39,7 +39,7 @@ StatePtr FadeInState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.sleep(2);
             game.player().set_visible(true);
 
-            game.rumble().activate(pfrm, milliseconds(250));
+            game.rumble(pfrm, milliseconds(250));
 
             return state_pool().create<WarpInState>(game);
         }
