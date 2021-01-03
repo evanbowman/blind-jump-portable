@@ -12,7 +12,7 @@ void locale_set_language_english();
 int locale_get_language();
 
 
-using LocalizedStrBuffer = StringBuffer<1187>;
+using LocalizedStrBuffer = StringBuffer<1987>;
 using LocalizedText = DynamicMemory<LocalizedStrBuffer>;
 LocalizedText locale_string(Platform& pfrm, LocaleString ls);
 

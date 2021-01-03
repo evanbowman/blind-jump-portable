@@ -194,7 +194,7 @@ public:
 
 
 #ifdef __GBA__
-#define SCRATCH_BUFFER_SIZE 1200
+#define SCRATCH_BUFFER_SIZE 2000
 #else
 #define SCRATCH_BUFFER_SIZE 4000
 #endif // __GBA__
@@ -214,7 +214,7 @@ public:
     // deallocate buffers when you're done with them. Creating a new scratch
     // buffer when the buffer pool is exhausted will cause the system to lock
     // up, so do not try to hold more than one hundred active references to
-    // scratch buffers (not sure why you would even need 100kB of temporary
+    // scratch buffers (not sure why you would even need 200kB of temporary
     // scratch space anyway...).
     ScratchBufferPtr make_scratch_buffer();
 

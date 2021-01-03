@@ -33,7 +33,7 @@ std::optional<DynamicMemory<PathBuffer>> find_path(Platform& pfrm,
                                                    const PathCoord& end);
 
 
-static constexpr const auto vertex_scratch_buffers = 3;
+static constexpr const auto vertex_scratch_buffers = 2;
 
 
 struct IncrementalPathfinder {
