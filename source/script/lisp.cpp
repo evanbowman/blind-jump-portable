@@ -22,13 +22,13 @@ struct Variable {
 static void run_gc();
 
 
-static const u32 string_intern_table_size = 1199;
+static const u32 string_intern_table_size = 1999;
 
 
 struct Context {
-    using ValuePool = ObjectPool<Value, 99>;
-    using OperandStack = Buffer<CompressedPtr, 594>;
-    using Globals = std::array<Variable, 149>;
+    using ValuePool = ObjectPool<Value, 166>;
+    using OperandStack = Buffer<CompressedPtr, 994>;
+    using Globals = std::array<Variable, 249>;
     using Interns = char[string_intern_table_size];
 
     Value* nil_ = nullptr;
@@ -43,9 +43,6 @@ struct Context {
 
     Context(Platform& pfrm)
         : value_pools_{allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
@@ -69,9 +66,9 @@ struct Context {
     }
 
     // We're allocating 8k bytes toward lisp values. Because our simplistic
-    // allocation strategy cannot support sizes other than 1k, we need to split
+    // allocation strategy cannot support sizes other than 2k, we need to split
     // our memory for lisp values into regions.
-    static constexpr const int value_pool_count = 8;
+    static constexpr const int value_pool_count = 5;
     DynamicMemory<ValuePool> value_pools_[value_pool_count];
 
     DynamicMemory<OperandStack> operand_stack_;
