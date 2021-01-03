@@ -2449,6 +2449,8 @@ std::optional<DateTime> Platform::startup_time() const
 
 extern char __iwram_start__;
 extern char __data_end__;
+extern char __ewram_start;
+extern char __eheap_start;
 
 
 Platform::Platform()
@@ -2475,9 +2477,13 @@ Platform::Platform()
     }
 
     {
-        StringBuffer<32> iwram_used("iwram used: ");
-        iwram_used += to_string<10>(&__data_end__ - &__iwram_start__);
-        info(*this, iwram_used.c_str());
+        StringBuffer<32> used("iwram used: ");
+        used += to_string<10>(&__data_end__ - &__iwram_start__);
+        info(*this, used.c_str());
+
+        used = "ewram used: ";
+        used += to_string<10>(&__eheap_start - &__ewram_start);
+        info(*this, used.c_str());
     }
 
     // IMPORTANT: No calls to map_glyph() are allowed before reaching this
