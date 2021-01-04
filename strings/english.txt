@@ -134,6 +134,7 @@ Scavenger's shop
 buy
 sell
 Update required!
+Swarm approaching!
 Peer requires update!
 overall
 Peer used lethargy!

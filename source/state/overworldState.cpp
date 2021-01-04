@@ -1,3 +1,4 @@
+#include "script/lisp.hpp"
 #include "state_impl.hpp"
 
 
@@ -563,6 +564,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         str += locale_string(pfrm, LocaleString::level_clear)->c_str();
 
         push_notification(pfrm, game.state(), str);
+
+        lisp::dostring(
+            pfrm.load_file_contents("scripts", "waypoint_clear.lisp"));
     }
 
 

@@ -199,6 +199,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/file_init.cpp
     ${DATA_DIR}/file_pre_levelgen.cpp
     ${DATA_DIR}/file_post_levelgen.cpp
+    ${DATA_DIR}/file_waypoint_clear.cpp
     ${DATA_DIR}/file_english.cpp
     ${DATA_DIR}/file_spanish.cpp
     ${DATA_DIR}/scottbuckley_omega.s
@@ -301,11 +302,11 @@ macro(add_spritesheet filename mw mh flatten)
   set(IMAGE_SPR_STUBS ${IMAGE_SPR_STUBS}
     "\n    TEXTURE_INFO(${filename}),\n//")
 
-  compile_image(${filename} ${mw} ${mh} ${flatten} 4)
+  compile_image(${filename} ${mw} ${mh} ${flatten} 4 NO)
 endmacro()
 
 
-macro(add_tilesheet filename mw mh flatten)
+macro(add_tilesheet filename mw mh flatten compr)
   if(${flatten} STREQUAL "YES")
     set(FLATTENED_SUFFIX "_flattened")
   else()
@@ -318,7 +319,7 @@ macro(add_tilesheet filename mw mh flatten)
   set(IMAGE_TILE_STUBS ${IMAGE_TILE_STUBS}
     "\n    TEXTURE_INFO(${filename}${FLATTENED_SUFFIX}),\n//")
 
-  compile_image(${filename} ${mw} ${mh} ${flatten} 4)
+  compile_image(${filename} ${mw} ${mh} ${flatten} 4 ${compr})
 endmacro()
 
 
@@ -335,15 +336,21 @@ macro(add_overlay filename mw mh flatten)
   set(IMAGE_OVERLAY_STUBS ${IMAGE_OVERLAY_STUBS}
     "\n    TEXTURE_INFO(${filename}${FLATTENED_SUFFIX}),\n//")
 
-  compile_image(${filename} ${mw} ${mh} ${flatten} 4)
+  compile_image(${filename} ${mw} ${mh} ${flatten} 4 NO)
 endmacro()
 
 
-function(compile_image filename mw mh flatten bpp)
+function(compile_image filename mw mh flatten bpp compr)
+  if(${compr} STREQUAL "YES")
+    set(COMPRESSION "-Zlz77")
+    message("${COMPRESSION}")
+  else()
+    set(${COMPRESSION} "")
+  endif()
   if(${flatten} STREQUAL "YES")
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}_flattened.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png yes
-      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}_flattened.png -gB${bpp} -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}_flattened.png -gB${bpp} -gTFF00FF ${COMPRESSION}
       COMMAND mv ${filename}_flattened.s ${SOURCE_DIR}/data/${filename}_flattened.s
       COMMAND mv ${filename}_flattened.h ${SOURCE_DIR}/data/${filename}_flattened.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -353,7 +360,7 @@ function(compile_image filename mw mh flatten bpp)
   elseif(${mw} STREQUAL "0" AND ${mh} STREQUAL "0")
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
-      COMMAND ${DEVKITPRO}/tools/bin/grit  tmp/${filename}.png -gB${bpp} -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit  tmp/${filename}.png -gB${bpp} -gTFF00FF ${COMPRESSION}
       COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
       COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -363,7 +370,7 @@ function(compile_image filename mw mh flatten bpp)
   else()
     add_custom_command(OUTPUT ${SOURCE_DIR}/data/${filename}.s
       COMMAND python3 prep_image.py ${ROOT_DIR} ${filename}.png no
-      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}.png -gB${bpp} -Mw ${mw} -Mh ${mh} -gTFF00FF
+      COMMAND ${DEVKITPRO}/tools/bin/grit tmp/${filename}.png -gB${bpp} -Mw ${mw} -Mh ${mh} -gTFF00FF ${COMPRESSION}
       COMMAND mv ${filename}.s ${SOURCE_DIR}/data/${filename}.s
       COMMAND mv ${filename}.h ${SOURCE_DIR}/data/${filename}.h
       DEPENDS ${IMAGE_DIR}/${filename}.png)
@@ -467,6 +474,7 @@ if(GAMEBOY_ADVANCE)
   add_file(scripts init lisp)
   add_file(scripts pre_levelgen lisp)
   add_file(scripts post_levelgen lisp)
+  add_file(scripts waypoint_clear lisp)
 
   add_file(strings english txt)
   add_file(strings spanish txt)
@@ -490,30 +498,30 @@ if(GAMEBOY_ADVANCE)
     add_spritesheet(spritesheet_boss2_final 2 4 NO)
     add_spritesheet(spritesheet_boss3 2 4 NO)
     add_spritesheet(spritesheet_launch_anim 2 4 NO)
-    add_tilesheet(title_1 0 0 YES)
-    add_tilesheet(title_2 0 0 YES)
-    add_tilesheet(ending_scene 0 0 YES)
-    add_tilesheet(ending_scene_2 0 0 YES)
-    add_tilesheet(launch 0 0 YES)
-    add_tilesheet(tilesheet_intro_cutscene 0 0 YES)
-    add_tilesheet(tilesheet 4 3 NO)
-    add_tilesheet(tilesheet2 4 3 NO)
-    add_tilesheet(tilesheet3 4 3 NO)
-    add_tilesheet(tilesheet4 4 3 NO)
-    add_tilesheet(tilesheet_top 4 3 NO)
-    add_tilesheet(tilesheet2_top 4 3 NO)
-    add_tilesheet(tilesheet3_top 4 3 NO)
-    add_tilesheet(tilesheet4_top 4 3 NO)
-    add_overlay(overlay 0 0 NO)
-    add_overlay(repl 0 0 NO)
-    add_overlay(overlay_cutscene 0 0 NO)
-    add_overlay(charset 0 0 NO)
-    add_overlay(overlay_journal 0 0 NO)
-    add_overlay(overlay_dialog 0 0 NO)
-    add_overlay(old_poster 0 0 YES)
-    add_overlay(blaster_info 0 0 YES)
-    add_overlay(seed_packet 0 0 YES)
-    add_overlay(overlay_network 0 0 YES)
+    add_tilesheet(title_1 0 0 YES NO)
+    add_tilesheet(title_2 0 0 YES NO)
+    add_tilesheet(ending_scene 0 0 YES NO)
+    add_tilesheet(ending_scene_2 0 0 YES NO)
+    add_tilesheet(launch 0 0 YES NO)
+    add_tilesheet(tilesheet_intro_cutscene 0 0 YES NO)
+    add_tilesheet(tilesheet 4 3 NO NO)
+    add_tilesheet(tilesheet2 4 3 NO NO)
+    add_tilesheet(tilesheet3 4 3 NO NO)
+    add_tilesheet(tilesheet4 4 3 NO NO)
+    add_tilesheet(tilesheet_top 4 3 NO NO)
+    add_tilesheet(tilesheet2_top 4 3 NO NO)
+    add_tilesheet(tilesheet3_top 4 3 NO NO)
+    add_tilesheet(tilesheet4_top 4 3 NO NO)
+    add_overlay(overlay 0 0 NO NO)
+    add_overlay(repl 0 0 NO NO)
+    add_overlay(overlay_cutscene 0 0 NO NO)
+    add_overlay(charset 0 0 NO NO)
+    add_overlay(overlay_journal 0 0 NO NO)
+    add_overlay(overlay_dialog 0 0 NO NO)
+    add_overlay(old_poster 0 0 YES NO)
+    add_overlay(blaster_info 0 0 YES NO)
+    add_overlay(seed_packet 0 0 YES NO)
+    add_overlay(overlay_network 0 0 YES NO)
 
     configure_file(images.cpp.in ${SOURCE_DIR}/platform/gba/images.cpp)
   endif()

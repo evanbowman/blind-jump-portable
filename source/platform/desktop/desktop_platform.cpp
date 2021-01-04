@@ -407,6 +407,12 @@ std::array<sf::Keyboard::Key, static_cast<int>(Key::count)> keymap;
 static std::vector<Platform::Keyboard::ControllerInfo> joystick_info;
 
 
+void Platform::Keyboard::rumble(bool enabled)
+{
+    // TODO... SFML doesn't support joystick rumble yet.
+}
+
+
 void Platform::Keyboard::register_controller(const ControllerInfo& info)
 {
     joystick_info.push_back(info);

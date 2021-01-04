@@ -138,6 +138,7 @@ enum class LocaleString {
     buy,
     sell,
     update_required,
+    swarm_approaching,
     peer_requires_update,
     overall_heading,
     peer_used_lethargy,

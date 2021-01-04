@@ -167,9 +167,10 @@ void LispReplState::repaint_completions(Platform& pfrm)
             tempstr[0] = str[j];
             completions_.back().append(
                 tempstr,
-                i == completion_cursor_ ? opts :
-                Text::OptColors{{custom_color(0x766df7),
-                                 ColorConstant::rich_black}});
+                i == completion_cursor_
+                    ? opts
+                    : Text::OptColors{
+                          {custom_color(0x766df7), ColorConstant::rich_black}});
         }
 
         const int len = str_len(str);

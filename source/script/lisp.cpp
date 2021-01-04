@@ -65,7 +65,7 @@ struct Context {
         }
     }
 
-    // We're allocating 8k bytes toward lisp values. Because our simplistic
+    // We're allocating 10k bytes toward lisp values. Because our simplistic
     // allocation strategy cannot support sizes other than 2k, we need to split
     // our memory for lisp values into regions.
     static constexpr const int value_pool_count = 5;
@@ -102,7 +102,7 @@ Value* get_nil()
 }
 
 
-void get_interns(::Function<16, void(const char*)> callback)
+void get_interns(::Function<24, void(const char*)> callback)
 {
     auto& ctx = bound_context;
 
@@ -1177,6 +1177,24 @@ void init(Platform& pfrm)
             // the function object. (2) Extra use of the operand stack.
             return get_op(0);
         }));
+
+    set_var("any-true", make_function([](int argc) {
+        for (int i = 0; i < argc; ++i) {
+            if (is_boolean_true(get_op(i))) {
+                return get_op(i);
+            }
+        }
+        return L_NIL;
+    }));
+
+    set_var("all-true", make_function([](int argc) {
+        for (int i = 0; i < argc; ++i) {
+            if (not is_boolean_true(get_op(i))) {
+                return L_NIL;
+            }
+        }
+        return make_integer(1);
+    }));
 
     set_var("not", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 1);

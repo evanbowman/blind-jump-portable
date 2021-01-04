@@ -60,45 +60,50 @@ void Game::init_script(Platform& pfrm)
     lisp::set_var("detail",
                   lisp::make_function([](int argc) { return L_NIL; }));
 
-    lisp::set_var("make-enemy", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 3);
-        L_EXPECT_OP(0, integer);
-        L_EXPECT_OP(1, integer);
-        L_EXPECT_OP(2, integer);
+    lisp::set_var(
+        "make-enemy", lisp::make_function([](int argc) {
+            L_EXPECT_ARGC(argc, 3);
+            L_EXPECT_OP(0, integer);
+            L_EXPECT_OP(1, integer);
+            L_EXPECT_OP(2, integer);
 
-        const Vec2<Float> pos {
-            Float(lisp::get_op(1)->integer_.value_),
-            Float(lisp::get_op(0)->integer_.value_)
-        };
+            const Vec2<Float> pos{Float(lisp::get_op(1)->integer_.value_),
+                                  Float(lisp::get_op(0)->integer_.value_)};
 
-        if (auto game = interp_get_game()) {
-            int index = 0;
-            game->enemies().transform([&](auto& buf) {
-                using T = typename std::remove_reference<decltype(buf)>::type;
-                using VT = typename T::ValueType::element_type;
+            if (auto game = interp_get_game()) {
+                int index = 0;
+                game->enemies().transform([&](auto& buf) {
+                    using T =
+                        typename std::remove_reference<decltype(buf)>::type;
+                    using VT = typename T::ValueType::element_type;
 
-                if (index == lisp::get_op(2)->integer_.value_) {
-                    // Sigh... Some special cases here. Some enemies have
-                    // slightly different constructors, so we need to handle a
-                    // couple enemies in specific ways.
-                    if constexpr (std::is_same<VT, SnakeHead>() or
-                                  std::is_same<VT, SnakeBody>() or
-                                  std::is_same<VT, SnakeTail>()) {
-                        game->enemies().spawn<SnakeHead>(pos, *game);
-                    } else if constexpr (std::is_same<VT, GatekeeperShield>()) {
-                        game->enemies().spawn<GatekeeperShield>(pos, rng::choice<INT16_MAX>(rng::utility_state)); // Otherwise, I'd have to add another parameter to the make-enemy function interface.
-                    } else if constexpr (std::is_same<VT, Gatekeeper>()) {
-                        game->enemies().spawn<Gatekeeper>(pos, *game);
-                    } else {
-                        game->enemies().spawn<VT>(pos);
+                    if (index == lisp::get_op(2)->integer_.value_) {
+                        // Sigh... Some special cases here. Some enemies have
+                        // slightly different constructors, so we need to handle a
+                        // couple enemies in specific ways.
+                        if constexpr (std::is_same<VT, SnakeHead>() or
+                                      std::is_same<VT, SnakeBody>() or
+                                      std::is_same<VT, SnakeTail>()) {
+                            game->enemies().spawn<SnakeHead>(pos, *game);
+                        } else if constexpr (std::is_same<VT,
+                                                          GatekeeperShield>()) {
+                            game->enemies().spawn<GatekeeperShield>(
+                                pos,
+                                rng::choice<INT16_MAX>(
+                                    rng::
+                                        utility_state)); // Otherwise, I'd have to add another parameter to the make-enemy function interface.
+                        } else if constexpr (std::is_same<VT, Gatekeeper>()) {
+                            game->enemies().spawn<Gatekeeper>(pos, *game);
+                        } else {
+                            game->enemies().spawn<VT>(pos);
+                        }
                     }
-                }
-                ++index;
-            });
-        }
+                    ++index;
+                });
+            }
 
-        return L_NIL;
-    }));
+            return L_NIL;
+        }));
 
     lisp::set_var("level", lisp::make_function([](int argc) {
                       if (auto game = interp_get_game()) {
@@ -169,6 +174,29 @@ void Game::init_script(Platform& pfrm)
                       return L_NIL;
                   }));
 
+    lisp::set_var("alert", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, integer);
+
+        auto game = interp_get_game();
+        if (not game) {
+            return L_NIL;
+        }
+
+        auto pfrm = interp_get_pfrm();
+        if (not pfrm) {
+            return L_NIL;
+        }
+
+        NotificationStr str =
+            locale_string(*pfrm, (LocaleString)lisp::get_op(0)->integer_.value_)
+            ->c_str();
+
+        push_notification(*pfrm, game->state(), str);
+
+        return L_NIL;
+    }));
+
     lisp::set_var(
         "kill", lisp::make_function([](int argc) {
             auto game = interp_get_game();
@@ -214,29 +242,30 @@ void Game::init_script(Platform& pfrm)
                           lisp::make_integer(entity->get_position().y));
                   }));
 
-    lisp::set_var("set-pos", lisp::make_function([](int argc) {
-                      L_EXPECT_ARGC(argc, 3);
-                      L_EXPECT_OP(0, integer);
-                      L_EXPECT_OP(1, integer);
-                      L_EXPECT_OP(2, integer);
+    lisp::set_var(
+        "set-pos", lisp::make_function([](int argc) {
+            L_EXPECT_ARGC(argc, 3);
+            L_EXPECT_OP(0, integer);
+            L_EXPECT_OP(1, integer);
+            L_EXPECT_OP(2, integer);
 
-                      auto game = interp_get_game();
-                      if (not game) {
-                          return L_NIL;
-                      }
+            auto game = interp_get_game();
+            if (not game) {
+                return L_NIL;
+            }
 
-                      auto entity = get_entity_by_id(
-                          *game, lisp::get_op(2)->integer_.value_);
+            auto entity =
+                get_entity_by_id(*game, lisp::get_op(2)->integer_.value_);
 
-                      if (not entity) {
-                          return L_NIL;
-                      }
+            if (not entity) {
+                return L_NIL;
+            }
 
-                      entity->set_position({Float(lisp::get_op(1)->integer_.value_),
-                                            Float(lisp::get_op(0)->integer_.value_)});
+            entity->set_position({Float(lisp::get_op(1)->integer_.value_),
+                                  Float(lisp::get_op(0)->integer_.value_)});
 
-                      return L_NIL;
-                  }));
+            return L_NIL;
+        }));
 
     lisp::set_var(
         "enemies", lisp::make_function([](int argc) {
@@ -353,6 +382,28 @@ void Game::init_script(Platform& pfrm)
 
                       return lisp::make_integer(tile);
                   }));
+
+    lisp::set_var("peer-conn", lisp::make_function([](int argc) {
+        auto pfrm = interp_get_pfrm();
+        if (not pfrm) {
+            return L_NIL;
+        }
+        return lisp::make_integer(pfrm->network_peer().is_connected());
+    }));
+
+    lisp::set_var("cr-choice", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, integer);
+        return lisp::make_integer(rng::choice(lisp::get_op(0)->integer_.value_,
+                                              rng::critical_state));
+    }));
+
+    lisp::set_var("ut-choice", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, integer);
+        return lisp::make_integer(rng::choice(lisp::get_op(0)->integer_.value_,
+                                              rng::utility_state));
+    }));
 
     lisp::set_var(
         "pattern-replace-tile", lisp::make_function([](int argc) {

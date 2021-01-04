@@ -219,7 +219,7 @@ Value* make_symbol(const char* name);
 Value* make_userdata(void* obj);
 
 
-void get_interns(::Function<16, void(const char*)> callback);
+void get_interns(::Function<24, void(const char*)> callback);
 
 
 Value* get_nil();
