@@ -1157,7 +1157,7 @@ void init(Platform& pfrm)
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, cons);
                 return get_op(0)->cons_.cdr();
-            }));
+           }));
 
     set_var("list", make_function([](int argc) {
                 auto lat = make_list(argc);
@@ -1275,6 +1275,23 @@ void init(Platform& pfrm)
 
                 return result;
             }));
+
+    set_var("gen", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 2);
+        L_EXPECT_OP(1, integer);
+
+        auto result = make_list(get_op(1)->integer_.value_);
+        auto fn = get_op(0);
+        const int count = get_op(1)->integer_.value_;
+        push_op(result);
+        for (int i = 0; i < count; ++i) {
+            funcall(fn, 0);
+            set_list(result, i, get_op(0));
+            pop_op(); // result from funcall
+        }
+        pop_op(); // result
+        return result;
+    }));
 
     set_var("length", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 1);
