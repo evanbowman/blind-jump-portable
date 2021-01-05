@@ -514,7 +514,8 @@ static bool unlock_gameboy_player(Platform& pfrm)
 
     REG_DISPCNT = MODE_0 | BG0_ENABLE;
     *bg0_control = 0x0088;
-
+    *bg0_x_scroll = 0;
+    *bg0_y_scroll = 0;
 
     static const auto white_555 = Color(custom_color(0xffffff)).bgr_hex_555();
 
