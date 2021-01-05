@@ -115,14 +115,14 @@ private:
 // of the same indices might refer to different sprites due to
 // different sprite sizes.
 enum TextureMap : TextureIndex {
-    player_still_down = 0,
-    player_walk_down = 1,
-    player_walk_up = 6,
-    player_still_up = 11,
-    player_walk_left = 16,
-    player_still_left = 22,
-    player_walk_right = 23,
-    player_still_right = 29,
+    player_still_down = 63,
+    player_walk_down = 64,
+    player_walk_up = 69,
+    player_still_up = 74,
+    player_walk_left = 75,
+    player_still_left = 81,
+    player_walk_right = 82,
+    player_still_right = 88,
     transporter = 15,
     item_chest = 12,
     turret = 18,

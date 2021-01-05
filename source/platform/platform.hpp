@@ -125,6 +125,42 @@ public:
     // Map a glyph into the vram space reserved for the overlay tile layer.
     TileDesc map_glyph(const utf8::Codepoint& glyph, TextureCpMapper);
 
+
+    static constexpr const int dynamic_texture_count = 6;
+
+    // While spritesheets are generally fixed, the platform provides a number of
+    // flexible texture indices, allowing memory to be mapped dynamically into
+    // video ram. By calling DynamicTexture::remap(), the platform will map the
+    // requested texture index into video memory, and the index may then be used
+    // when drawing sprites.
+    class DynamicTexture {
+    public:
+        // This constructor is not private, but still, do not create
+        // DynamicTexture instances except by calling
+        // Platform::make_dynamic_texture();
+        DynamicTexture(u8 mapping_index) : mapping_index_(mapping_index)
+        {
+        }
+
+        DynamicTexture(DynamicTexture&) = delete;
+
+        void remap(u16 spritesheet_offset);
+
+        u8 mapping_index() const
+        {
+            return mapping_index_;
+        }
+
+    private:
+        u8 mapping_index_;
+    };
+
+    using DynamicTexturePtr = Rc<DynamicTexture, dynamic_texture_count>;
+
+
+    DynamicTexturePtr make_dynamic_texture();
+
+
     // In glyph mode, the platform will automatically unmap glyphs when their
     // tiles are overwritten by set_tile.
     void enable_glyph_mode(bool enabled);

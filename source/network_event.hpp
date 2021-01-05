@@ -79,7 +79,7 @@ struct PlayerInfo {
 
     static const u8 opt2_visible_mask = 0b10000000;
     static const u8 opt2_weapon_drawn_mask = 0b01000000;
-    static const u8 opt2_texture_mask = 0b00111111;
+    static const u8 opt2_unused_mask = 0b00111111;
 
     static const u8 opt2_visible_shift = 7;
     static const u8 opt2_weapon_drawn_shift = 6;
@@ -145,20 +145,21 @@ struct PlayerInfo {
         return (opt2_ & opt2_weapon_drawn_mask) >> opt2_weapon_drawn_shift;
     }
 
+    u8 texture_;
+
     void set_texture_index(u8 val)
     {
-        opt2_ &= ~opt2_texture_mask;
-        opt2_ |= opt2_texture_mask & val;
+        texture_ = val;
     }
 
     u8 get_texture_index() const
     {
-        return opt2_ & opt2_texture_mask;
+        return texture_;
     }
 
     u8 player_id_;
 
-    u8 unused2_[2];
+    u8 unused2_[1];
 
     // For speed values, the player's speed ranges from float -1.5 to
     // 1.5. Therefore, we can save a lot of space in the message by using single

@@ -3,7 +3,8 @@
 #include "wallCollision.hpp"
 
 
-PeerPlayer::PeerPlayer()
+PeerPlayer::PeerPlayer(Platform& pfrm) :
+    dynamic_texture_(pfrm.make_dynamic_texture())
 {
     shadow_.set_origin({8, -9});
     shadow_.set_texture_index(TextureMap::drop_shadow);
@@ -75,6 +76,9 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
     head_.set_mix(sprite_.get_mix());
     blaster_.set_mix(sprite_.get_mix());
 
+    if (info.get_texture_index() not_eq sprite_.get_texture_index()) {
+        dynamic_texture_->remap(info.get_texture_index() * 2);
+    }
     sprite_.set_texture_index(info.get_texture_index());
 
     // Sorry about this switch statement. Basically, we want to render a
@@ -152,7 +156,7 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
         break;
     }
 
-    sprite_.set_size(info.get_sprite_size());
+    sprite_.set_size(Sprite::Size::w32_h32);
     speed_.x = Float(info.x_speed_) / 10;
     speed_.y = Float(info.y_speed_) / 10;
 
@@ -249,38 +253,32 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
     };
 
 
-    switch (sprite_.get_size()) {
-    case Sprite::Size::w16_h32:
-        if (texture_index >= player_walk_up and
-            texture_index < player_walk_up + 5) {
-        }
-        if (texture_index == player_still_down) {
-            set_blaster_down();
-        }
-        if (texture_index >= player_walk_down and
-            texture_index < player_walk_down + 5) {
+    if (texture_index >= player_walk_up and
+        texture_index < player_walk_up + 5) {
+    }
+    if (texture_index == player_still_down) {
+        set_blaster_down();
+    }
+    if (texture_index >= player_walk_down and
+        texture_index < player_walk_down + 5) {
 
-            set_blaster_down();
-        }
-        break;
+        set_blaster_down();
+    }
 
-    case Sprite::Size::w32_h32:
-        if (texture_index == player_still_right) {
-            set_blaster_right();
-        }
-        if (texture_index >= player_walk_right and
-            texture_index < player_walk_right + 6) {
+    if (texture_index == player_still_right) {
+        set_blaster_right();
+    }
+    if (texture_index >= player_walk_right and
+        texture_index < player_walk_right + 6) {
 
-            set_blaster_right();
-        }
-        if (texture_index == player_still_left) {
-            set_blaster_left();
-        }
-        if (texture_index >= player_walk_left and
-            texture_index < player_walk_left + 6) {
+        set_blaster_right();
+    }
+    if (texture_index == player_still_left) {
+        set_blaster_left();
+    }
+    if (texture_index >= player_walk_left and
+        texture_index < player_walk_left + 6) {
 
-            set_blaster_left();
-        }
-        break;
+        set_blaster_left();
     }
 }

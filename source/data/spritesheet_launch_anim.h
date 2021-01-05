@@ -3,13 +3,13 @@
 
 //======================================================================
 //
-//	spritesheet_launch_anim, 1392x32@4, 
+//	spritesheet_launch_anim, 1584x32@4, 
 //	Transparent color : FF,00,FF
 //	+ palette 256 entries, not compressed
-//	+ 696 tiles Metatiled by 2x4 not compressed
-//	Total size: 512 + 22272 = 22784
+//	+ 792 tiles Metatiled by 2x4 not compressed
+//	Total size: 512 + 25344 = 25856
 //
-//	Time-stamp: 2021-01-03, 16:05:26
+//	Time-stamp: 2021-01-05, 14:39:57
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -18,8 +18,8 @@
 #ifndef GRIT_SPRITESHEET_LAUNCH_ANIM_H
 #define GRIT_SPRITESHEET_LAUNCH_ANIM_H
 
-#define spritesheet_launch_animTilesLen 22272
-extern const unsigned int spritesheet_launch_animTiles[5568];
+#define spritesheet_launch_animTilesLen 25344
+extern const unsigned int spritesheet_launch_animTiles[6336];
 
 #define spritesheet_launch_animPalLen 512
 extern const unsigned short spritesheet_launch_animPal[256];

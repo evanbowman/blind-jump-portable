@@ -24,10 +24,11 @@ Player::Player(Platform& pfrm)
     : Entity(initial_health(pfrm)), frame_(0),
       frame_base_(ResourceLoc::player_still_down), anim_timer_(0),
       invulnerability_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
-      d_speed_(0.f), hitbox_{&position_, {{10, 22}, {9, 14}}}
+      d_speed_(0.f), hitbox_{&position_, {{10, 22}, {9, 14}}},
+      dynamic_texture_(pfrm.make_dynamic_texture())
 {
     sprite_.set_position({104.f, 64.f});
-    sprite_.set_size(Sprite::Size::w16_h32);
+    sprite_.set_size(Sprite::Size::w32_h32);
     sprite_.set_origin({8, 16});
     shadow_.set_origin({8, -9});
     shadow_.set_texture_index(TextureMap::drop_shadow);
@@ -396,21 +397,21 @@ void Player::soft_update(Platform& pfrm, Game& game, Microseconds dt)
 
     // Because we're comparing ranges below, make sure the someone hasn't
     // re-ordered the tiles.
-    static_assert(player_still_left == 22 and player_still_right == 29 and
-                  player_still_up == 11 and player_still_down == 0);
+    // static_assert(player_still_left == 22 and player_still_right == 29 and
+    //               player_still_up == 11 and player_still_down == 0);
 
     const auto t_idx = sprite_.get_texture_index();
     if (t_idx >= player_walk_down and t_idx < player_walk_up) {
-        sprite_.set_texture_index(player_still_down);
+        set_sprite_texture(player_still_down);
     }
     if (t_idx >= player_walk_up and t_idx <= player_still_up) {
-        sprite_.set_texture_index(player_still_up);
+        set_sprite_texture(player_still_up);
     }
     if (t_idx >= player_walk_left and t_idx < player_still_left) {
-        sprite_.set_texture_index(player_still_left);
+        set_sprite_texture(player_still_left);
     }
     if (t_idx >= player_walk_right and t_idx < player_still_right) {
-        sprite_.set_texture_index(player_still_right);
+        set_sprite_texture(player_still_right);
     }
 }
 
@@ -548,42 +549,48 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     switch (frame_base_) {
     case ResourceLoc::player_still_up:
     case ResourceLoc::player_still_down:
-        sprite_.set_size(Sprite::Size::w16_h32);
-        sprite_.set_texture_index(frame_base_);
-        sprite_.set_origin(v_origin);
+        sprite_.set_size(Sprite::Size::w32_h32);
+        // sprite_.set_size(Sprite::Size::w16_h32);
+        set_sprite_texture(frame_base_);
+        // sprite_.set_origin(v_origin);
+        sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::player_still_left:
     case ResourceLoc::player_still_right:
         sprite_.set_size(Sprite::Size::w32_h32);
-        sprite_.set_texture_index(frame_base_);
+        set_sprite_texture(frame_base_);
         sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::player_walk_up:
         update_animation<1>(pfrm, dt, 9, frame_persist);
-        sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
-        sprite_.set_size(Sprite::Size::w16_h32);
-        sprite_.set_origin(v_origin);
+        set_sprite_texture(frame_base_ + remap_vframe(frame_));
+        sprite_.set_size(Sprite::Size::w32_h32);
+        // sprite_.set_size(Sprite::Size::w16_h32);
+        // sprite_.set_origin(v_origin);
+        sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::player_walk_down:
         update_animation<1>(pfrm, dt, 9, frame_persist);
-        sprite_.set_texture_index(frame_base_ + remap_vframe(frame_));
-        sprite_.set_size(Sprite::Size::w16_h32);
-        sprite_.set_origin(v_origin);
+        set_sprite_texture(frame_base_ + remap_vframe(frame_));
+        sprite_.set_size(Sprite::Size::w32_h32);
+        // sprite_.set_size(Sprite::Size::w16_h32);
+        // sprite_.set_origin(v_origin);
+        sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::player_walk_left:
         update_animation<2>(pfrm, dt, 5, frame_persist);
-        sprite_.set_texture_index(frame_base_ + frame_);
+        set_sprite_texture(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin(h_origin);
         break;
 
     case ResourceLoc::player_walk_right:
         update_animation<2>(pfrm, dt, 5, frame_persist);
-        sprite_.set_texture_index(frame_base_ + frame_);
+        set_sprite_texture(frame_base_ + frame_);
         sprite_.set_size(Sprite::Size::w32_h32);
         sprite_.set_origin(h_origin);
         break;
@@ -676,15 +683,33 @@ void Player::set_visible(bool visible)
 }
 
 
+void Player::set_sprite_texture(TextureIndex tidx)
+{
+    if (tidx not_eq sprite_.get_texture_index()) {
+        // Because the player character has a large set of animations, we do not
+        // keep all of the frames in vram at once. We need to ask the platform
+        // to map our desired frame into video ram.
+        if (sprite_.get_size() == Sprite::Size::w32_h32) {
+            dynamic_texture_->remap(tidx * 2);
+        } else {
+            dynamic_texture_->remap(tidx);
+        }
+    }
+    sprite_.set_texture_index(tidx);
+}
+
+
 void Player::move(const Vec2<Float>& pos)
 {
     Player::set_position(pos);
     sprite_.set_position(pos);
     shadow_.set_position(pos);
     frame_base_ = ResourceLoc::player_still_down;
-    sprite_.set_texture_index(frame_base_);
-    sprite_.set_size(Sprite::Size::w16_h32);
-    sprite_.set_origin(v_origin);
+    set_sprite_texture(frame_base_);
+    // sprite_.set_size(Sprite::Size::w16_h32);
+    // sprite_.set_origin(v_origin);
+    sprite_.set_origin(h_origin);
+    sprite_.set_size(Sprite::Size::w32_h32);
     external_force_.reset();
 }
 

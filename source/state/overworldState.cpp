@@ -303,12 +303,16 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
     // FIXME: I strongly suspect that this number can be increased without
     // issues, but I'm waiting until I test on an actual device with a link
     // cable.
+    //
+    // Note: These numbers seem to result in smooth enough performance on a
+    // physical GBA, so I will not increase the refresh rates per now. Three
+    // updates per second is fairly smooth with interpolation.
     static const auto player_refresh_rate = seconds(1) / 20;
 
     static auto update_counter = player_refresh_rate;
 
     if (not game.peer()) {
-        game.peer().emplace();
+        game.peer().emplace(pfrm);
     }
 
     update_counter -= delta;

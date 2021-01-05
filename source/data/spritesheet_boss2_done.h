@@ -3,13 +3,13 @@
 
 //======================================================================
 //
-//	spritesheet_boss2_done, 2016x32@4, 
+//	spritesheet_boss2_done, 2848x32@4, 
 //	Transparent color : FF,00,FF
 //	+ palette 256 entries, not compressed
-//	+ 1008 tiles Metatiled by 2x4 not compressed
-//	Total size: 512 + 32256 = 32768
+//	+ 1424 tiles Metatiled by 2x4 not compressed
+//	Total size: 512 + 45568 = 46080
 //
-//	Time-stamp: 2021-01-03, 16:05:26
+//	Time-stamp: 2021-01-05, 17:06:13
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -18,8 +18,8 @@
 #ifndef GRIT_SPRITESHEET_BOSS2_DONE_H
 #define GRIT_SPRITESHEET_BOSS2_DONE_H
 
-#define spritesheet_boss2_doneTilesLen 32256
-extern const unsigned int spritesheet_boss2_doneTiles[8064];
+#define spritesheet_boss2_doneTilesLen 45568
+extern const unsigned int spritesheet_boss2_doneTiles[11392];
 
 #define spritesheet_boss2_donePalLen 512
 extern const unsigned short spritesheet_boss2_donePal[256];

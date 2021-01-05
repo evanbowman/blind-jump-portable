@@ -75,6 +75,11 @@ void LaunchCutsceneState::enter(Platform& pfrm, Game& game, State& prev_state)
     buf[2].set_origin({-32, 0});
 
     game.effects().spawn<Proxy>(buf);
+    for (auto& p : game.effects().get<Proxy>()) {
+        for (int i = 0; i < 3; ++i) {
+            p->buffer()[i].set_texture_index(12 + i);
+        }
+    }
 }
 
 
@@ -187,7 +192,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
                 anim_index_ += 1;
                 for (auto& p : game.effects().get<Proxy>()) {
                     for (int i = 0; i < 3; ++i) {
-                        p->buffer()[i].set_texture_index(anim_index_ * 3 + i);
+                        p->buffer()[i].set_texture_index(12 + anim_index_ * 3 + i);
                     }
                 }
             }

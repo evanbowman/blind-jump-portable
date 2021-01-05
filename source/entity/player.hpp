@@ -6,10 +6,10 @@
 #include "graphics/animation.hpp"
 #include "number/numeric.hpp"
 #include <optional>
+#include "platform/platform.hpp"
 
 
 class Game;
-class Platform;
 
 class Item;
 class Twin;
@@ -99,6 +99,8 @@ public:
     Cardinal facing() const;
 
 private:
+    void set_sprite_texture(TextureIndex tidx);
+
     using ResourceLoc = TextureMap;
 
     Health initial_health(Platform& pfrm) const;
@@ -141,6 +143,7 @@ private:
     Sprite shadow_;
     HitBox hitbox_;
     std::optional<Vec2<Float>> external_force_;
+    Platform::DynamicTexturePtr dynamic_texture_;
 
     Blaster blaster_;
 };

@@ -151,6 +151,22 @@ static constexpr const int cbb_bg_texture = sbb_bg_texture / sbb_per_cbb;
 ////////////////////////////////////////////////////////////////////////////////
 
 
+static constexpr int vram_tile_size()
+{
+    // 8 x 8 x (4 bitsperpixel / 8 bitsperbyte)
+    return 32;
+}
+
+
+#include "images.cpp"
+
+
+static const TextureData* current_spritesheet = &sprite_textures[0];
+static const TextureData* current_tilesheet0 = &tile_textures[0];
+static const TextureData* current_tilesheet1 = &tile_textures[1];
+static const TextureData* current_overlay_texture = &overlay_textures[1];
+
+
 void start(Platform&);
 
 
@@ -767,6 +783,27 @@ static PaletteBank color_mix(ColorConstant k, u8 amount)
 }
 
 
+static struct DynamicTextureMapping {
+    bool reserved_ = false;
+    bool dirty_ = false;
+    u16 spritesheet_offset_ = 0;
+} dynamic_texture_mappings[Platform::dynamic_texture_count];
+
+
+u16 find_dynamic_mapping(u16 virtual_index)
+{
+    // FIXME: this code will not work for 32x32 pixel sprites yet!
+    for (int i = 0; i < Platform::dynamic_texture_count; ++i) {
+        if (virtual_index == dynamic_texture_mappings[i].spritesheet_offset_ and
+            dynamic_texture_mappings[i].reserved_) {
+            return i * 2;
+        }
+    }
+    warning(*::platform, "mapping not found");
+    return 0;
+}
+
+
 void Platform::Screen::draw(const Sprite& spr)
 {
     if (UNLIKELY(spr.get_alpha() == Sprite::Alpha::transparent)) {
@@ -848,7 +885,17 @@ void Platform::Screen::draw(const Sprite& spr)
         }
 
         oa->attribute_1 |= (abs_position.x + x_off) & 0x01ff;
-        oa->attribute_2 = 2 + spr.get_texture_index() * scale + tex_off;
+
+        const auto w16_h32_index = spr.get_texture_index() * (scale == 16 ? 2 : 1);
+        auto ti = spr.get_texture_index();
+        if (w16_h32_index > 125) {
+            ti = find_dynamic_mapping(w16_h32_index);
+            if (scale == 16) {
+                ti /= 2;
+            }
+        }
+        const auto target_index = 2 + ti * scale + tex_off;
+        oa->attribute_2 = target_index;
         oa->attribute_2 |= pb;
         oa->attribute_2 |= ATTR2_PRIORITY(1);
         oam_write_index += 1;
@@ -904,6 +951,36 @@ void Platform::push_task(Task* task)
 }
 
 
+static void map_dynamic_textures()
+{
+    for (int i = 0; i < Platform::dynamic_texture_count; ++i) {
+        auto& mapping = dynamic_texture_mappings[i];
+        if (mapping.dirty_) {
+            // Ok, so now, we want to perform a copy from ROM into the reserved
+            // VRAM for our dynamic texture.
+            const auto offset = mapping.spritesheet_offset_;
+            const u8* image_data = (const u8*)current_spritesheet->tile_data_;
+            u8* spr_vram_base_addr = (u8*)&MEM_TILE[4][1];
+
+            constexpr auto single_tile_size = vram_tile_size();
+            constexpr auto w32_h16_chunk_size = single_tile_size * 8;
+            constexpr auto w32_h32_chunk_size = w32_h16_chunk_size * 2;
+
+            memcpy32(spr_vram_base_addr + w32_h16_chunk_size * (i * 2),
+                     image_data + w32_h16_chunk_size * offset,
+                     // NOTE: we always copy in 32x32 chunks. Our dynamic tiles
+                     // need to support either 32x16 or 32x32 chunks, and we do
+                     // not know enough about how the sprites are going to
+                     // leverage the video memory to know whether the remapped
+                     // tiles will be drawn with 32x16 or 32x32 pixel sprites.
+                     w32_h32_chunk_size / 4);
+
+            mapping.dirty_ = false;
+        }
+    }
+}
+
+
 void Platform::Screen::clear()
 {
     rumble_update();
@@ -922,6 +999,12 @@ void Platform::Screen::clear()
 
     // VSync
     VBlankIntrWait();
+
+    // We want to do the dynamic texture remapping near the screen clear, to
+    // reduce tearing. Most of the other changes that we make to vram, like the
+    // overlay tiles and OAM, are double-buffered, so the tearing is less
+    // noticable if we perform the copies further from the site of the vsync.
+    map_dynamic_textures();
 }
 
 
@@ -1073,14 +1156,6 @@ Vec2<u32> Platform::Screen::size() const
 // Platform
 ////////////////////////////////////////////////////////////////////////////////
 
-
-#include "images.cpp"
-
-
-static const TextureData* current_spritesheet = &sprite_textures[0];
-static const TextureData* current_tilesheet0 = &tile_textures[0];
-static const TextureData* current_tilesheet1 = &tile_textures[1];
-static const TextureData* current_overlay_texture = &overlay_textures[1];
 
 static u16 sprite_palette[16];
 static u16 tilesheet_0_palette[16];
@@ -1474,8 +1549,49 @@ void Platform::Screen::pixelate(u8 amount,
 }
 
 
+static ObjectPool<RcBase<Platform::DynamicTexture,
+                         Platform::dynamic_texture_count>::ControlBlock,
+                  Platform::dynamic_texture_count> dynamic_texture_pool;
+
+
+void Platform::DynamicTexture::remap(u16 spritesheet_offset)
+{
+    auto& mapping = dynamic_texture_mappings[mapping_index_];
+    mapping.dirty_ = true;
+    mapping.spritesheet_offset_ = spritesheet_offset;
+}
+
+
+Platform::DynamicTexturePtr Platform::make_dynamic_texture()
+{
+    auto finalizer = [](RcBase<Platform::DynamicTexture,
+                        Platform::dynamic_texture_count>::ControlBlock* ctrl) {
+        dynamic_texture_mappings[ctrl->data_.mapping_index()].reserved_ = false;
+        dynamic_texture_pool.post(ctrl);
+    };
+
+    for (u8 i = 0; i < dynamic_texture_count; ++i) {
+        if (not dynamic_texture_mappings[i].reserved_) {
+            auto dt = DynamicTexturePtr::create(&dynamic_texture_pool, finalizer, i);
+            if (dt) {
+                dynamic_texture_mappings[i].reserved_ = true;
+                return *dt;
+            }
+        }
+    }
+
+    error(*this, "Failed to allocate DynamicTexture.");
+    while (true) ;
+}
+
+
+
 void Platform::load_sprite_texture(const char* name)
 {
+    for (auto& mapping : dynamic_texture_mappings) {
+        mapping.dirty_ = true;
+    }
+
     for (auto& info : sprite_textures) {
 
         if (str_cmp(name, info.name_) == 0) {
@@ -1489,7 +1605,7 @@ void Platform::load_sprite_texture(const char* name)
             // end of the tile memory.
             memcpy16((void*)&MEM_TILE[4][1],
                      info.tile_data_,
-                     info.tile_data_length_ / 2);
+                     std::min((u32)16128, info.tile_data_length_ / 2));
 
             // We need to do this, otherwise whatever screen fade is currently
             // active will be overwritten by the copy.
@@ -1500,6 +1616,10 @@ void Platform::load_sprite_texture(const char* name)
             }
         }
     }
+
+    // By replacing the sprite texture, we overwrote whatever was in the dynamic
+    // texture memory. Let's try an recover.
+    map_dynamic_textures();
 }
 
 
@@ -2639,13 +2759,6 @@ void Platform::load_overlay_texture(const char* name)
 
 
 static const TileDesc bad_glyph = 111;
-
-
-static constexpr int vram_tile_size()
-{
-    // 8 x 8 x (4 bitsperpixel / 8 bitsperbyte)
-    return 32;
-}
 
 
 // Rather than doing tons of extra work to keep the palettes
