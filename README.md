@@ -40,6 +40,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Security](#security)
    * [Downloads](#downloads)
    * [Feedback](#feedback)
+   * [Licence](#licence)
 <!--te-->
 
 ## Introduction
@@ -184,3 +185,7 @@ See the [releases section](https://github.com/evanbowman/blind-jump-portable/rel
 Have an opinion about the game, or suggestions for improvements? I encourage you to create an issue, or to leave a comment over [here](https://evanbowman.itch.io/blindjump).
 
 [Contents↑](#contents)
+
+## Licence
+
+Most of the code in this project is available under the MIT licence. Some code from files in the source/platform/gba folder, which are only used for Gameboy Advance builds, is borrowed from libgba, which is a GPL project, so I suppose that the GBA builds (and only the GBA builds) have become infected with GPL's viral licence. The GPL'd files are clearly labled as such at the top of the file. I am not a legal expert, but I belive that the desktop builds of the project, which do not in any way reference the libgba code, may be distributed freely under the MIT licence. Anyway, you may take whatever code you like from gba_platform.cpp, which does not include any code from libgba (although the code does call some functions from libgba for registering interrupt service routines, these are defined in separate files).
