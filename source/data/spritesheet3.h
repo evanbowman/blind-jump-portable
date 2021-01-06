@@ -3,13 +3,13 @@
 
 //======================================================================
 //
-//	spritesheet3, 2848x32@4, 
+//	spritesheet3, 3136x32@4, 
 //	Transparent color : FF,00,FF
 //	+ palette 256 entries, not compressed
-//	+ 1424 tiles Metatiled by 2x4 not compressed
-//	Total size: 512 + 45568 = 46080
+//	+ 1568 tiles Metatiled by 2x4 not compressed
+//	Total size: 512 + 50176 = 50688
 //
-//	Time-stamp: 2021-01-05, 17:06:13
+//	Time-stamp: 2021-01-06, 00:06:31
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.16
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -18,8 +18,8 @@
 #ifndef GRIT_SPRITESHEET3_H
 #define GRIT_SPRITESHEET3_H
 
-#define spritesheet3TilesLen 45568
-extern const unsigned int spritesheet3Tiles[11392];
+#define spritesheet3TilesLen 50176
+extern const unsigned int spritesheet3Tiles[12544];
 
 #define spritesheet3PalLen 512
 extern const unsigned short spritesheet3Pal[256];

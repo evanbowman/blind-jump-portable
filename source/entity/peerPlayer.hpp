@@ -21,7 +21,7 @@ class PeerPlayer : public Entity {
 public:
     PeerPlayer(Platform& pfrm);
 
-    void sync(Game& game, const net_event::PlayerInfo& info);
+    void sync(Platform& pfrm, Game& game, const net_event::PlayerInfo& info);
 
     void update(Platform& pfrm, Game& game, Microseconds dt);
 
@@ -51,7 +51,7 @@ public:
 private:
     void update_sprite_position();
 
-    Platform::DynamicTexturePtr dynamic_texture_;
+    std::optional<Platform::DynamicTexturePtr> dynamic_texture_;
     Vec2<Float> speed_;
     Sprite shadow_;
     Sprite head_;

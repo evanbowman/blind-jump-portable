@@ -25,7 +25,13 @@ Player::Player(Platform& pfrm)
       frame_base_(ResourceLoc::player_still_down), anim_timer_(0),
       invulnerability_timer_(0), l_speed_(0.f), r_speed_(0.f), u_speed_(0.f),
       d_speed_(0.f), hitbox_{&position_, {{10, 22}, {9, 14}}},
-      dynamic_texture_(pfrm.make_dynamic_texture())
+      dynamic_texture_([&] {
+          if (auto t = pfrm.make_dynamic_texture()) {
+              return *t;
+          } else {
+              pfrm.fatal();
+          }
+      }())
 {
     sprite_.set_position({104.f, 64.f});
     sprite_.set_size(Sprite::Size::w32_h32);

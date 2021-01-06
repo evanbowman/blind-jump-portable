@@ -158,7 +158,7 @@ public:
     using DynamicTexturePtr = Rc<DynamicTexture, dynamic_texture_count>;
 
 
-    DynamicTexturePtr make_dynamic_texture();
+    std::optional<DynamicTexturePtr> make_dynamic_texture();
 
 
     // In glyph mode, the platform will automatically unmap glyphs when their

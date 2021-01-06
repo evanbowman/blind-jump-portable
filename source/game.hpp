@@ -19,6 +19,7 @@
 #include "entity/details/transporter.hpp"
 #include "entity/effects/conglomerateShot.hpp"
 #include "entity/effects/dialogBubble.hpp"
+#include "entity/effects/dynamicEffect.hpp"
 #include "entity/effects/explosion.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
@@ -118,7 +119,8 @@ public:
                                     WandererSmallLaser,
                                     ConglomerateShot,
                                     Particle,
-                                    DialogBubble>;
+                                    DialogBubble,
+                                    DynamicEffect>;
 
     inline Transporter& transporter()
     {

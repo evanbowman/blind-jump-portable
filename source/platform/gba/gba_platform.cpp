@@ -1562,7 +1562,7 @@ void Platform::DynamicTexture::remap(u16 spritesheet_offset)
 }
 
 
-Platform::DynamicTexturePtr Platform::make_dynamic_texture()
+std::optional<Platform::DynamicTexturePtr> Platform::make_dynamic_texture()
 {
     auto finalizer = [](RcBase<Platform::DynamicTexture,
                         Platform::dynamic_texture_count>::ControlBlock* ctrl) {
@@ -1580,8 +1580,8 @@ Platform::DynamicTexturePtr Platform::make_dynamic_texture()
         }
     }
 
-    error(*this, "Failed to allocate DynamicTexture.");
-    while (true) ;
+    warning(*this, "Failed to allocate DynamicTexture.");
+    return {};
 }
 
 

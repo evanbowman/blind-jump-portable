@@ -12,24 +12,34 @@ void on_enemy_destroyed(Platform& pfrm,
 {
     game.camera().shake();
 
-    game.effects().spawn<Explosion>(
-        rng::sample<18>(position, rng::utility_state));
+    auto dt = pfrm.make_dynamic_texture();
+    if (rng::choice<2>(rng::utility_state) and dt) {
+        game.effects().spawn<DynamicEffect>(Vec2<Float>{position.x, position.y - 2},
+                                            *dt,
+                                            milliseconds(90),
+                                            89,
+                                            8);
+    } else {
+        game.effects().spawn<Explosion>(
+            rng::sample<18>(position, rng::utility_state));
+
+        game.on_timeout(
+            pfrm, milliseconds(60), [pos = position](Platform& pf, Game& game) {
+                game.effects().spawn<Explosion>(
+                    rng::sample<18>(pos, rng::utility_state));
+
+                // Chaining these functions may uses less of the game's resources
+                game.on_timeout(
+                    pf, milliseconds(120), [pos = pos](Platform&, Game& game) {
+                        game.effects().spawn<Explosion>(
+                            rng::sample<18>(pos, rng::utility_state));
+                    });
+            });
+    }
+
 
     pfrm.speaker().play_sound("explosion1", 3, position);
 
-
-    game.on_timeout(
-        pfrm, milliseconds(60), [pos = position](Platform& pf, Game& game) {
-            game.effects().spawn<Explosion>(
-                rng::sample<18>(pos, rng::utility_state));
-
-            // Chaining these functions may uses less of the game's resources
-            game.on_timeout(
-                pf, milliseconds(120), [pos = pos](Platform&, Game& game) {
-                    game.effects().spawn<Explosion>(
-                        rng::sample<18>(pos, rng::utility_state));
-                });
-        });
 
     const auto tile_coord = to_tile_coord(position.cast<s32>());
     const auto tile = game.tiles().get_tile(tile_coord.x, tile_coord.y);

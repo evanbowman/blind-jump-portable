@@ -20,7 +20,9 @@ PeerPlayer::PeerPlayer(Platform& pfrm) :
 }
 
 
-void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
+void PeerPlayer::sync(Platform& pfrm,
+                      Game& game,
+                      const net_event::PlayerInfo& info)
 {
     if (warping_) {
         return;
@@ -77,7 +79,13 @@ void PeerPlayer::sync(Game& game, const net_event::PlayerInfo& info)
     blaster_.set_mix(sprite_.get_mix());
 
     if (info.get_texture_index() not_eq sprite_.get_texture_index()) {
-        dynamic_texture_->remap(info.get_texture_index() * 2);
+        if (not dynamic_texture_) {
+            dynamic_texture_ = pfrm.make_dynamic_texture();
+        }
+
+        if (dynamic_texture_) {
+            (*dynamic_texture_)->remap(info.get_texture_index() * 2);
+        }
     }
     sprite_.set_texture_index(info.get_texture_index());
 

@@ -227,11 +227,11 @@ void OverworldState::receive(const net_event::EnemyStateSync& s,
 
 
 void OverworldState::receive(const net_event::PlayerInfo& p,
-                             Platform&,
+                             Platform& pfrm,
                              Game& game)
 {
     if (game.peer()) {
-        game.peer()->sync(game, p);
+        game.peer()->sync(pfrm, game, p);
     }
 }
 
