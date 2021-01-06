@@ -49,12 +49,12 @@ void SnakeNode::update(Platform& pfrm, Game& game, Microseconds dt)
         if (destruct_timer_ <= 0) {
             if (parent()) {
                 static const Item::Type item_drop_vec[] = {Item::Type::null};
-                on_enemy_destroyed(pfrm, game, position_, 0, item_drop_vec);
+                on_enemy_destroyed(pfrm, game, 0, position_, 0, item_drop_vec);
                 parent()->destroy();
             } else /* No parent, i.e.: we're the head */ {
                 static const Item::Type item_drop_vec[] = {
                     Item::Type::heart, Item::Type::coin, Item::Type::null};
-                on_enemy_destroyed(pfrm, game, position_, 1, item_drop_vec);
+                on_enemy_destroyed(pfrm, game, 0, position_, 1, item_drop_vec);
             }
             game.score() += 8;
 
@@ -336,7 +336,7 @@ void SnakeTail::on_death(Platform& pf, Game& game)
     pf.sleep(5);
 
     static const Item::Type item_drop_vec[] = {Item::Type::null};
-    on_enemy_destroyed(pf, game, position_, 0, item_drop_vec);
+    on_enemy_destroyed(pf, game, 0, position_, 0, item_drop_vec);
 
     SnakeNode* current = parent();
     while (current) {

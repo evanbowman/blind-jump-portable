@@ -424,5 +424,5 @@ void Scarecrow::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(
-        pf, game, Vec2<Float>{position_.x, position_.y + 32}, 3, item_drop_vec);
+        pf, game, -16, Vec2<Float>{position_.x, position_.y + 32}, 3, item_drop_vec);
 }

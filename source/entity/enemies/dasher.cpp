@@ -382,7 +382,7 @@ void Dasher::on_death(Platform& pf, Game& game)
                                                Item::Type::heart,
                                                Item::Type::null};
 
-    on_enemy_destroyed(pf, game, position_, 2, item_drop_vec);
+    on_enemy_destroyed(pf, game, 0, position_, 2, item_drop_vec);
 }
 
 void Dasher::sync(const net_event::EnemyStateSync& s)

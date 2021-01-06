@@ -265,7 +265,7 @@ void Turret::on_death(Platform& pf, Game& game)
                                                Item::Type::heart,
                                                Item::Type::null};
 
-    on_enemy_destroyed(pf, game, position_, 4, item_drop_vec);
+    on_enemy_destroyed(pf, game, 0, position_, 4, item_drop_vec);
 }
 
 
