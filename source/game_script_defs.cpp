@@ -175,27 +175,29 @@ void Game::init_script(Platform& pfrm)
                   }));
 
     lisp::set_var("alert", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
 
-        auto game = interp_get_game();
-        if (not game) {
-            return L_NIL;
-        }
+                      auto game = interp_get_game();
+                      if (not game) {
+                          return L_NIL;
+                      }
 
-        auto pfrm = interp_get_pfrm();
-        if (not pfrm) {
-            return L_NIL;
-        }
+                      auto pfrm = interp_get_pfrm();
+                      if (not pfrm) {
+                          return L_NIL;
+                      }
 
-        NotificationStr str =
-            locale_string(*pfrm, (LocaleString)lisp::get_op(0)->integer_.value_)
-            ->c_str();
+                      NotificationStr str =
+                          locale_string(
+                              *pfrm,
+                              (LocaleString)lisp::get_op(0)->integer_.value_)
+                              ->c_str();
 
-        push_notification(*pfrm, game->state(), str);
+                      push_notification(*pfrm, game->state(), str);
 
-        return L_NIL;
-    }));
+                      return L_NIL;
+                  }));
 
     lisp::set_var(
         "kill", lisp::make_function([](int argc) {
@@ -384,26 +386,29 @@ void Game::init_script(Platform& pfrm)
                   }));
 
     lisp::set_var("peer-conn", lisp::make_function([](int argc) {
-        auto pfrm = interp_get_pfrm();
-        if (not pfrm) {
-            return L_NIL;
-        }
-        return lisp::make_integer(pfrm->network_peer().is_connected());
-    }));
+                      auto pfrm = interp_get_pfrm();
+                      if (not pfrm) {
+                          return L_NIL;
+                      }
+                      return lisp::make_integer(
+                          pfrm->network_peer().is_connected());
+                  }));
 
     lisp::set_var("cr-choice", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
-        return lisp::make_integer(rng::choice(lisp::get_op(0)->integer_.value_,
-                                              rng::critical_state));
-    }));
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
+                      return lisp::make_integer(
+                          rng::choice(lisp::get_op(0)->integer_.value_,
+                                      rng::critical_state));
+                  }));
 
     lisp::set_var("ut-choice", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
-        return lisp::make_integer(rng::choice(lisp::get_op(0)->integer_.value_,
-                                              rng::utility_state));
-    }));
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
+                      return lisp::make_integer(
+                          rng::choice(lisp::get_op(0)->integer_.value_,
+                                      rng::utility_state));
+                  }));
 
     lisp::set_var(
         "pattern-replace-tile", lisp::make_function([](int argc) {

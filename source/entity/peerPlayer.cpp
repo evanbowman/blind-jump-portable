@@ -3,8 +3,8 @@
 #include "wallCollision.hpp"
 
 
-PeerPlayer::PeerPlayer(Platform& pfrm) :
-    dynamic_texture_(pfrm.make_dynamic_texture())
+PeerPlayer::PeerPlayer(Platform& pfrm)
+    : dynamic_texture_(pfrm.make_dynamic_texture())
 {
     shadow_.set_origin({8, -9});
     shadow_.set_texture_index(TextureMap::drop_shadow);

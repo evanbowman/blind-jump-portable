@@ -192,7 +192,8 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
                 anim_index_ += 1;
                 for (auto& p : game.effects().get<Proxy>()) {
                     for (int i = 0; i < 3; ++i) {
-                        p->buffer()[i].set_texture_index(12 + anim_index_ * 3 + i);
+                        p->buffer()[i].set_texture_index(12 + anim_index_ * 3 +
+                                                         i);
                     }
                 }
             }

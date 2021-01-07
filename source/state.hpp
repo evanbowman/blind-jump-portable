@@ -26,7 +26,9 @@ public:
 
     virtual StatePtr update(Platform& platform, Game& game, Microseconds delta);
 
-    State() {}
+    State()
+    {
+    }
 
     State(const State&) = delete;
 
