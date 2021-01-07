@@ -79,5 +79,5 @@ void Sinkhole::on_death(Platform& pf, Game& game)
                                                Item::Type::null};
 
     on_enemy_destroyed(
-        pf, game, {position_.x, position_.y - 32}, 0, item_drop_vec, false);
+        pf, game, 0, {position_.x, position_.y - 32}, 0, item_drop_vec, false);
 }

@@ -193,5 +193,5 @@ void Theif::on_death(Platform& pf, Game& game)
     static const Item::Type item_drop_vec[] = {Item::Type::coin,
                                                Item::Type::heart};
 
-    on_enemy_destroyed(pf, game, position_, 0, item_drop_vec);
+    on_enemy_destroyed(pf, game, 0, position_, 0, item_drop_vec);
 }

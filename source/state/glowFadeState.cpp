@@ -32,7 +32,14 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.screen().fade(1.f, color_);
         pfrm.screen().pixelate(0, false);
         game.player().set_visible(false);
-        // game.effects().get<Particle>().clear();
+
+        // Just doing this because screen fades are expensive, and at this
+        // point, we can no longer see these entities anyway, so let's get rid
+        // of them.
+        game.enemies().clear();
+        game.details().clear();
+        game.effects().clear();
+        
         return state_pool().create<FadeOutState>(game, color_);
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);

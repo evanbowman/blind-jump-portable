@@ -5,6 +5,7 @@
 
 void on_enemy_destroyed(Platform& pfrm,
                         Game& game,
+                        int expl_y_offset,
                         const Vec2<Float>& position,
                         int item_drop_chance,
                         const Item::Type allowed_item_drop[],
@@ -12,20 +13,21 @@ void on_enemy_destroyed(Platform& pfrm,
 {
     game.camera().shake();
 
+    const auto expl_pos = Vec2<Float>{position.x, position.y + expl_y_offset};
+
     auto dt = pfrm.make_dynamic_texture();
     if (rng::choice<2>(rng::utility_state) and dt) {
-        game.effects().spawn<DynamicEffect>(
-            Vec2<Float>{position.x, position.y - 2},
-            *dt,
-            milliseconds(90),
-            89,
-            8);
+        game.effects().spawn<DynamicEffect>(Vec2<Float>{expl_pos.x, expl_pos.y - 2},
+                                            *dt,
+                                            milliseconds(90),
+                                            89,
+                                            8);
     } else {
         game.effects().spawn<Explosion>(
-            rng::sample<18>(position, rng::utility_state));
+            rng::sample<18>(expl_pos, rng::utility_state));
 
         game.on_timeout(
-            pfrm, milliseconds(60), [pos = position](Platform& pf, Game& game) {
+            pfrm, milliseconds(60), [pos = expl_pos](Platform& pf, Game& game) {
                 game.effects().spawn<Explosion>(
                     rng::sample<18>(pos, rng::utility_state));
 

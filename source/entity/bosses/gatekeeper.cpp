@@ -101,10 +101,29 @@ public:
         if (reload_ <= 0) {
             reload_ = milliseconds(280);
 
+
+            const auto interval =
+                [&] {
+                    switch (game.difficulty()) {
+                    case Settings::Difficulty::easy:
+                        return 30;
+
+                    case Settings::Difficulty::count:
+                    case Settings::Difficulty::normal:
+                        return 23;
+
+                    case Settings::Difficulty::hard:
+                    case Settings::Difficulty::survival:
+                        break;
+                    }
+                    return 20;
+                }();
+
+
             if (not spin_) {
-                rot_ += 20;
+                rot_ += interval;
             } else {
-                rot_ -= 20;
+                rot_ -= interval;
             }
 
             auto angle = rot_;
@@ -813,7 +832,7 @@ void GatekeeperShield::on_death(Platform& pfrm, Game& game)
     static const Item::Type item_drop_vec[] = {Item::Type::coin,
                                                Item::Type::null};
 
-    on_enemy_destroyed(pfrm, game, position_, 1, item_drop_vec);
+    on_enemy_destroyed(pfrm, game, 0, position_, 1, item_drop_vec);
 }
 
 
