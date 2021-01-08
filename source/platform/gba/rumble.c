@@ -25,9 +25,18 @@ static bool gbp_configured;
 static enum RumbleState rumble_state;
 
 
+enum GBPCommsStage {
+    gbp_comms_nintendo_handshake,
+    gbp_comms_check_magic1,
+    gbp_comms_check_magic2,
+    gbp_comms_rumble,
+    gbp_comms_finalize
+};
+
+
 static struct {
+    enum GBPCommsStage stage_;
     u32 serial_in_;
-    u16 stage_;
     u16 index_;
     u16 out_0_;
     u16 out_1_;
@@ -41,8 +50,9 @@ static void gbp_serial_isr()
     u16 in_1;
 
     gbp_comms.serial_in_ = REG_SIODATA32;
+
     switch (gbp_comms.stage_) {
-    case 0:
+    case gbp_comms_nintendo_handshake:
         in_0 = gbp_comms.serial_in_ >> 16;
         in_1 = gbp_comms.serial_in_;
         if (in_0 == gbp_comms.out_1_) {
@@ -54,7 +64,7 @@ static void gbp_serial_isr()
             } else {
                 if (in_1 == 0x8002) {
                     out = 0x10000010;
-                    gbp_comms.stage_ = 1;
+                    gbp_comms.stage_ = gbp_comms_check_magic1;
                     break;
                 }
             }
@@ -71,35 +81,35 @@ static void gbp_serial_isr()
         out = gbp_comms.out_1_ | (gbp_comms.out_0_ << 16);
         break;
 
-    case 1:
+    case gbp_comms_check_magic1:
         if (gbp_comms.serial_in_ == 0x10000010) {
             out = 0x20000013;
-            gbp_comms.stage_ = 2;
+            gbp_comms.stage_ = gbp_comms_check_magic2;
         } else {
-            gbp_comms.stage_ = 4;
+            gbp_comms.stage_ = gbp_comms_finalize;
         }
         break;
 
-    case 2:
+    case gbp_comms_check_magic2:
         if (gbp_comms.serial_in_ == 0x20000013) {
             out = 0x40000004;
-            gbp_comms.stage_ = 3;
+            gbp_comms.stage_ = gbp_comms_rumble;
         } else {
-            gbp_comms.stage_ = 4;
+            gbp_comms.stage_ = gbp_comms_finalize;
         }
         break;
 
-    case 3:
+    case gbp_comms_rumble:
         if (gbp_comms.serial_in_ == 0x30000003) {
             out = rumble_state;
         } else {
-            gbp_comms.stage_ = 4;
+            gbp_comms.stage_ = gbp_comms_finalize;
         }
         break;
 
-    case 4:
+    case gbp_comms_finalize:
         gbp_comms.serial_in_ = 0;
-        gbp_comms.stage_ = 0;
+        gbp_comms.stage_ = gbp_comms_nintendo_handshake;
         gbp_comms.index_ = 0;
         gbp_comms.out_0_ = 0;
         gbp_comms.out_1_ = 0;
@@ -131,7 +141,7 @@ void rumble_init(struct RumbleGBPConfig* config)
         config->serial_irq_setup_(gbp_serial_isr);
         gbp_configured = true;
         gbp_comms.serial_in_ = 0;
-        gbp_comms.stage_ = 0;
+        gbp_comms.stage_ = gbp_comms_nintendo_handshake;
         gbp_comms.index_ = 0;
         gbp_comms.out_0_ = 0;
         gbp_comms.out_1_ = 0;
