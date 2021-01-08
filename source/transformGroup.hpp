@@ -19,6 +19,19 @@ template <std::size_t I = 0, typename FuncT, typename... Tp>
     f(std::get<I>(t));
     for_each<I + 1, FuncT, Tp...>(t, f);
 }
+
+template <size_t I, typename T, typename Tuple_t>
+constexpr size_t index_in_tuple() {
+    static_assert(I < std::tuple_size<Tuple_t>::value);
+
+    typedef typename std::tuple_element<I,Tuple_t>::type el;
+    if constexpr(std::is_same<T,el>::value) {
+        return I;
+    } else {
+        return index_in_tuple<I + 1, T, Tuple_t>();
+    }
+}
+
 } // namespace detail
 
 
@@ -45,6 +58,11 @@ public:
     template <typename T> auto& get()
     {
         return std::get<T>(members_);
+    }
+
+    template <typename T> static constexpr int index_of()
+    {
+        return detail::index_in_tuple<0, T, decltype(members_)>();
     }
 
 private:

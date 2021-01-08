@@ -49,6 +49,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/effects/wandererBigLaser.cpp
   ${SOURCE_DIR}/entity/effects/conglomerateShot.cpp
   ${SOURCE_DIR}/entity/details/cutsceneCloud.cpp
+  ${SOURCE_DIR}/entity/effects/dynamicEffect.cpp
   ${SOURCE_DIR}/entity/details/cutsceneBird.cpp
   ${SOURCE_DIR}/entity/effects/dialogBubble.cpp
   ${SOURCE_DIR}/entity/bosses/infestedCore.cpp

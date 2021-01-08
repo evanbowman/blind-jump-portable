@@ -264,7 +264,7 @@ void Drone::on_collision(Platform& pf, Game& game, Player& player)
 
 void Drone::on_death(Platform& pf, Game& game)
 {
-    pf.sleep(5);
+    pf.sleep(6);
 
     static const Item::Type item_drop_vec[] = {Item::Type::coin,
                                                Item::Type::null};

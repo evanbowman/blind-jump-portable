@@ -58,6 +58,13 @@ public:
             n>();
     }
 
+    template <typename T>
+    static constexpr int index_of()
+    {
+        return TransformGroup<EntityBuffer<Members, Capacity>...>::template index_of<
+            EntityBuffer<T, Capacity>>();
+    }
+
     void clear()
     {
         this->template transform([](auto& buf) { buf.clear(); });

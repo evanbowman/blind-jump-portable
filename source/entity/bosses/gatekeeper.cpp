@@ -110,13 +110,13 @@ public:
 
                     case Settings::Difficulty::count:
                     case Settings::Difficulty::normal:
-                        return 23;
+                        return 22;
 
                     case Settings::Difficulty::hard:
                     case Settings::Difficulty::survival:
                         break;
                     }
-                    return 20;
+                    return 19;
                 }();
 
 

@@ -1791,7 +1791,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
     } info[] = {
         {[&]() {
              spawn_entity<Drone>(pfrm, free_spots, game.enemies());
-             if (game.level() > 6) {
+             if (game.level() > 6 and game.level() < boss_0_level) {
                  spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              }
          },

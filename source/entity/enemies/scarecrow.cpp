@@ -415,7 +415,7 @@ void Scarecrow::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 
 void Scarecrow::on_death(Platform& pf, Game& game)
 {
-    pf.sleep(5);
+    pf.sleep(6);
 
     static const Item::Type item_drop_vec[] = {Item::Type::coin,
                                                Item::Type::coin,

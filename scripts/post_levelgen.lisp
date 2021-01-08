@@ -17,6 +17,6 @@
              (not (equal (level) boss-2-level))
              (not (equal (level) boss-3-level)))
             (set #swarm (if (all-true (> (level) boss-0-level)
-                                      (cr-choice 2))
-                            6
-                            0)))))
+                                      (equal (cr-choice 3) 0))
+                            enemy-scarecrow
+                            enemy-drone)))))
