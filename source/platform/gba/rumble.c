@@ -55,28 +55,27 @@ static void gbp_serial_isr()
     case gbp_comms_nintendo_handshake:
         in_0 = gbp_comms.serial_in_ >> 16;
         in_1 = gbp_comms.serial_in_;
-        if (in_0 == gbp_comms.out_1_) {
-            if (gbp_comms.index_ <= 3) {
-                if (gbp_comms.serial_in_ ==
-                    (u32) ~(gbp_comms.out_1_ | (gbp_comms.out_0_ << 16))) {
-                    gbp_comms.index_++;
-                }
-            } else {
-                if (in_1 == 0x8002) {
-                    out = 0x10000010;
-                    gbp_comms.stage_ = gbp_comms_check_magic1;
-                    break;
-                }
-            }
-        } else {
+
+        if (in_1 == 0x8002) {
+            out = 0x10000010;
+            gbp_comms.stage_ = gbp_comms_check_magic1;
+            break;
+        }
+
+        if (in_0 != gbp_comms.out_1_) {
             gbp_comms.index_ = 0;
         }
+
         if (gbp_comms.index_ <= 3) {
-            gbp_comms.out_0_ =
-                ((const u16*)gbp_comms_stage0_data)[gbp_comms.index_];
+            if (gbp_comms.serial_in_ ==
+                (u32) ~(gbp_comms.out_1_ | (gbp_comms.out_0_ << 16))) {
+                gbp_comms.index_ += 1;
+            }
+            gbp_comms.out_0_ = ((const u16*)gbp_comms_stage0_data)[gbp_comms.index_];
         } else {
             gbp_comms.out_0_ = 0x8000;
         }
+
         gbp_comms.out_1_ = ~in_1;
         out = gbp_comms.out_1_ | (gbp_comms.out_0_ << 16);
         break;
