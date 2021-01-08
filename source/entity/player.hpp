@@ -5,8 +5,8 @@
 #include "entity/entityGroup.hpp"
 #include "graphics/animation.hpp"
 #include "number/numeric.hpp"
-#include <optional>
 #include "platform/platform.hpp"
+#include <optional>
 
 
 class Game;

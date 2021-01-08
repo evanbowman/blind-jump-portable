@@ -886,7 +886,8 @@ void Platform::Screen::draw(const Sprite& spr)
 
         oa->attribute_1 |= (abs_position.x + x_off) & 0x01ff;
 
-        const auto w16_h32_index = spr.get_texture_index() * (scale == 16 ? 2 : 1);
+        const auto w16_h32_index =
+            spr.get_texture_index() * (scale == 16 ? 2 : 1);
         auto ti = spr.get_texture_index();
         if (w16_h32_index > 125) {
             ti = find_dynamic_mapping(w16_h32_index);
@@ -1005,6 +1006,13 @@ void Platform::Screen::clear()
     // overlay tiles and OAM, are double-buffered, so the tearing is less
     // noticable if we perform the copies further from the site of the vsync.
     map_dynamic_textures();
+
+    auto view_offset = view_.get_center().cast<s32>();
+    *bg0_x_scroll = view_offset.x;
+    *bg0_y_scroll = view_offset.y;
+
+    *bg3_x_scroll = view_offset.x;
+    *bg3_y_scroll = view_offset.y;
 }
 
 
@@ -1108,11 +1116,6 @@ void Platform::Screen::display()
     }
 
     auto view_offset = view_.get_center().cast<s32>();
-    *bg0_x_scroll = view_offset.x;
-    *bg0_y_scroll = view_offset.y;
-
-    *bg3_x_scroll = view_offset.x;
-    *bg3_y_scroll = view_offset.y;
 
     // Depending on the amount of the background scroll, we want to mask off
     // certain parts of bg0 and bg3. The background tiles wrap when they scroll
@@ -1551,7 +1554,8 @@ void Platform::Screen::pixelate(u8 amount,
 
 static ObjectPool<RcBase<Platform::DynamicTexture,
                          Platform::dynamic_texture_count>::ControlBlock,
-                  Platform::dynamic_texture_count> dynamic_texture_pool;
+                  Platform::dynamic_texture_count>
+    dynamic_texture_pool;
 
 
 void Platform::DynamicTexture::remap(u16 spritesheet_offset)
@@ -1564,15 +1568,18 @@ void Platform::DynamicTexture::remap(u16 spritesheet_offset)
 
 std::optional<Platform::DynamicTexturePtr> Platform::make_dynamic_texture()
 {
-    auto finalizer = [](RcBase<Platform::DynamicTexture,
-                        Platform::dynamic_texture_count>::ControlBlock* ctrl) {
-        dynamic_texture_mappings[ctrl->data_.mapping_index()].reserved_ = false;
-        dynamic_texture_pool.post(ctrl);
-    };
+    auto finalizer =
+        [](RcBase<Platform::DynamicTexture,
+                  Platform::dynamic_texture_count>::ControlBlock* ctrl) {
+            dynamic_texture_mappings[ctrl->data_.mapping_index()].reserved_ =
+                false;
+            dynamic_texture_pool.post(ctrl);
+        };
 
     for (u8 i = 0; i < dynamic_texture_count; ++i) {
         if (not dynamic_texture_mappings[i].reserved_) {
-            auto dt = DynamicTexturePtr::create(&dynamic_texture_pool, finalizer, i);
+            auto dt =
+                DynamicTexturePtr::create(&dynamic_texture_pool, finalizer, i);
             if (dt) {
                 dynamic_texture_mappings[i].reserved_ = true;
                 return *dt;
@@ -1583,7 +1590,6 @@ std::optional<Platform::DynamicTexturePtr> Platform::make_dynamic_texture()
     warning(*this, "Failed to allocate DynamicTexture.");
     return {};
 }
-
 
 
 void Platform::load_sprite_texture(const char* name)

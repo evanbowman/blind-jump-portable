@@ -1785,32 +1785,28 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         std::max(std::min(max_enemies, int(free_spots.size() * density)), 1);
 
     struct EnemyInfo {
-        int min_level_;
         Function<64, void()> spawn_;
-        int max_level_ = std::numeric_limits<Level>::max();
+        bool (*level_in_range_)(Level) = [](Level) { return true; };
         int max_allowed_ = 1000;
     } info[] = {
-        {0,
-         [&]() {
+        {[&]() {
              spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              if (game.level() > 6) {
                  spawn_entity<Drone>(pfrm, free_spots, game.enemies());
              }
          },
-         boss_0_level},
-        {5,
-         [&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); },
-         boss_3_level},
-        {7,
-         [&]() {
+         [](Level l) { return l < boss_0_level or l > boss_1_level; }},
+        {[&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); },
+         [](Level l) { return l >= 5; }},
+        {[&]() {
              spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
          },
-         boss_0_level,
+         [](Level l) { return l >= 7 and l < boss_0_level; },
          1},
-        {1, [&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); }},
-        {boss_0_level,
-         [&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
-         boss_3_level}};
+        {[&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); },
+         [](Level l) { return l > 0; }},
+        {[&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
+         [](Level l) { return l > boss_0_level and l < boss_3_level; }}};
 
     Buffer<EnemyInfo*, 100> distribution;
 
@@ -1818,8 +1814,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         auto selected = &info[rng::choice<sizeof info / sizeof(EnemyInfo)>(
             rng::critical_state)];
 
-        if (selected->min_level_ > std::max(Level(0), game.level()) or
-            selected->max_level_ < game.level()) {
+        if (not selected->level_in_range_(game.level())) {
             continue;
         }
 
