@@ -758,6 +758,7 @@ private:
 class GoodbyeState : public State {
 public:
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 

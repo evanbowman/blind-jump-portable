@@ -2206,6 +2206,22 @@ bool Platform::Speaker::is_sound_playing(const char* name)
 }
 
 
+bool Platform::Speaker::is_music_playing(const char* name)
+{
+    bool playing = false;
+
+    if (auto track = find_music(name)) {
+        modify_audio([&] {
+            if (track->data_ == snd_ctx.music_track) {
+                playing = true;
+            }
+        });
+    }
+
+    return playing;
+}
+
+
 void Platform::Speaker::set_position(const Vec2<Float>&)
 {
     // We don't support spatialized audio on the gameboy.

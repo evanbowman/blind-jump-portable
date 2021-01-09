@@ -509,6 +509,8 @@ public:
         void play_music(const char* name, Microseconds offset);
         void stop_music();
 
+        bool is_music_playing(const char* name);
+
         // A platform's speaker may only have the resources to handle a limited
         // number of overlapping sounds. For such platforms, currently running
         // sounds with a lower priority will be evicted, to make room for
