@@ -59,24 +59,40 @@ void ConglomerateShot::on_collision(Platform& pf, Game&, Player&)
 
 void ConglomerateShot::on_death(Platform& pf, Game& game)
 {
+    const auto speed = [&] {
+        switch (game.persistent_data().settings_.difficulty_) {
+        case Settings::Difficulty::easy:
+            return 0.00009f;
+
+        case Settings::Difficulty::survival:
+        case Settings::Difficulty::hard:
+            return 0.00016f;
+
+        default:
+            break;
+        }
+
+        return 0.00013f;
+    }();
+
     if (game.level() == boss_2_level) {
         game.effects().spawn<WandererSmallLaser>(
-            position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
+            position_, Vec2<Float>{position_.x + 50, position_.y}, speed);
         game.effects().spawn<WandererSmallLaser>(
-            position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
+            position_, Vec2<Float>{position_.x - 50, position_.y}, speed);
         game.effects().spawn<WandererSmallLaser>(
-            position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
+            position_, Vec2<Float>{position_.x, position_.y + 50}, speed);
         game.effects().spawn<WandererSmallLaser>(
-            position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
+            position_, Vec2<Float>{position_.x, position_.y - 50}, speed);
     } else {
         game.effects().spawn<OrbShot>(
-            position_, Vec2<Float>{position_.x + 50, position_.y}, 0.00013f);
+            position_, Vec2<Float>{position_.x + 50, position_.y}, speed);
         game.effects().spawn<OrbShot>(
-            position_, Vec2<Float>{position_.x - 50, position_.y}, 0.00013f);
+            position_, Vec2<Float>{position_.x - 50, position_.y}, speed);
         game.effects().spawn<OrbShot>(
-            position_, Vec2<Float>{position_.x, position_.y + 50}, 0.00013f);
+            position_, Vec2<Float>{position_.x, position_.y + 50}, speed);
         game.effects().spawn<OrbShot>(
-            position_, Vec2<Float>{position_.x, position_.y - 50}, 0.00013f);
+            position_, Vec2<Float>{position_.x, position_.y - 50}, speed);
     }
 
 

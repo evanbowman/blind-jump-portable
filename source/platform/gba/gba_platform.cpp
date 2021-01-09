@@ -568,6 +568,12 @@ static bool unlock_gameboy_player(Platform& pfrm)
     for (int i = 0; i < fadein_frames; ++i) {
         push_palette(custom_color(0xffffff),
                      (1 - Float(i) / fadein_frames) * 255);
+        // The gameboy player will probably not be unlocked during the fade, but
+        // you never know, I guess...
+        if (*keys == 0x030F) {
+            gbp_detected = true;
+        }
+
         VBlankIntrWait();
     }
 

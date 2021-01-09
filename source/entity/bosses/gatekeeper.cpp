@@ -436,6 +436,7 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
             sprite_.set_texture_index(45 + 6);
             state_ = State::landing;
             game.camera().shake();
+            game.rumble(pfrm, milliseconds(125));
         }
         break;
     }
