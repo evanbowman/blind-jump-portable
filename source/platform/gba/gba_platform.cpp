@@ -528,6 +528,7 @@ static bool unlock_gameboy_player(Platform& pfrm)
 
     RegisterRamReset(RESET_VRAM);
 
+
     REG_DISPCNT = MODE_0 | BG0_ENABLE;
     *bg0_control = 0x0088;
     *bg0_x_scroll = 0;
@@ -1428,7 +1429,15 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
 
 [[noreturn]] static void restart()
 {
-    RegisterRamReset(RESET_VRAM);
+    // NOTE: I am clearing almost everything, because when I did not clear all
+    // of these memory segments, something seemed to be interfering with gameboy
+    // player unlocking.
+    RegisterRamReset(RESET_VRAM |
+                     RESET_PALETTE |
+                     RESET_OAM |
+                     RESET_SIO |
+                     RESET_SOUND |
+                     RESET_OTHER);
     SoftReset(ROM_RESTART), __builtin_unreachable();
 }
 
