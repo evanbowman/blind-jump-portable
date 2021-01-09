@@ -2654,7 +2654,7 @@ Platform::Platform()
     irqEnable(IRQ_VBLANK);
 
     if (unlock_gameboy_player(*this)) {
-        info(*::platform, "gameboy player unlocked!");
+        info(*this, "gameboy player unlocked!");
 
         set_gflag(GlobalFlag::gbp_unlocked, true);
 
@@ -2666,6 +2666,7 @@ Platform::Platform()
         rumble_init(&conf);
 
     } else {
+        info(*this, "gbp not detected");
         REG_SIOCNT = 0;
         rumble_init(nullptr);
     }
