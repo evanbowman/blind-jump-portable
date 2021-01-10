@@ -292,14 +292,14 @@ void update_ui_metrics(Platform& pfrm,
 {
     update_powerups(pfrm, game, health, score, dodge, powerups, align);
 
-    // const auto screen_tiles = calc_screen_tiles(pfrm);
+    const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    // if (dodge) {
-    //     dodge->emplace(
-    //                    pfrm,
-    //                    game.player().dodges() ? 383 : 387,
-    //                    OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
-    // }
+    if (dodge) {
+        dodge->emplace(
+                       pfrm,
+                       game.player().dodges() ? 383 : 387,
+                       OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
+    }
 
     if (last_health not_eq game.player().get_health()) {
         net_event::PlayerHealthChanged hc;

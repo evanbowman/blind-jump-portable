@@ -20,6 +20,7 @@
 #include "entity/effects/conglomerateShot.hpp"
 #include "entity/effects/dialogBubble.hpp"
 #include "entity/effects/dynamicEffect.hpp"
+#include "entity/effects/staticEffect.hpp"
 #include "entity/effects/explosion.hpp"
 #include "entity/effects/laser.hpp"
 #include "entity/effects/orbshot.hpp"
@@ -120,6 +121,7 @@ public:
                                     ConglomerateShot,
                                     Particle,
                                     DialogBubble,
+                                    StaticEffect,
                                     DynamicEffect>;
 
     inline Transporter& transporter()

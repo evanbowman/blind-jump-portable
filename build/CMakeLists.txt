@@ -50,6 +50,7 @@ set(SOURCES
   ${SOURCE_DIR}/entity/effects/conglomerateShot.cpp
   ${SOURCE_DIR}/entity/details/cutsceneCloud.cpp
   ${SOURCE_DIR}/entity/effects/dynamicEffect.cpp
+  ${SOURCE_DIR}/entity/effects/staticEffect.cpp
   ${SOURCE_DIR}/entity/details/cutsceneBird.cpp
   ${SOURCE_DIR}/entity/effects/dialogBubble.cpp
   ${SOURCE_DIR}/entity/bosses/infestedCore.cpp
@@ -243,6 +244,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/sound_thud.s
     ${DATA_DIR}/sound_click.s
     ${DATA_DIR}/sound_heart.s
+    ${DATA_DIR}/sound_dodge.s
     ${DATA_DIR}/sound_creak.s
     ${DATA_DIR}/sound_dropitem.s
     ${DATA_DIR}/sound_scroll.s

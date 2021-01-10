@@ -2111,6 +2111,7 @@ static const AudioTrack* find_music(const char* name)
 #include "data/sound_thud.hpp"
 #include "data/sound_tw_bell.hpp"
 #include "data/sound_typewriter.hpp"
+#include "data/sound_dodge.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
@@ -2129,6 +2130,7 @@ static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),
                                     DEF_SOUND(laser1, sound_laser1),
                                     DEF_SOUND(scroll, sound_scroll),
                                     DEF_SOUND(creak, sound_creak),
+                                    DEF_SOUND(dodge, sound_dodge),
                                     DEF_SOUND(heart, sound_heart),
                                     DEF_SOUND(click, sound_click),
                                     DEF_SOUND(thud, sound_thud),

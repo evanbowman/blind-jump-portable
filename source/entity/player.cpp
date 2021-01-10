@@ -14,6 +14,10 @@ static const Vec2<s16> h_origin{16, 16};
 // static const Player::Health initial_health{3};
 
 
+static const auto dodge_flicker_light_color = custom_color(0xadffff);
+static const auto dodge_flicker_dark_color = custom_color(0x021d96);
+
+
 Entity::Health Player::initial_health(Platform& pfrm) const
 {
     return 3;
@@ -390,7 +394,12 @@ void Player::update_animation(Platform& pf,
 
 void Player::soft_update(Platform& pfrm, Game& game, Microseconds dt)
 {
-    fade_color_anim_.advance(sprite_, dt);
+    if (sprite_.get_mix().color_ not_eq dodge_flicker_light_color and
+        sprite_.get_mix().color_ not_eq dodge_flicker_dark_color) {
+
+        fade_color_anim_.advance(sprite_, dt);
+    }
+
     blaster_.get_sprite().set_mix(sprite_.get_mix());
 
     if (invulnerability_timer_ > 0) {
@@ -608,13 +617,13 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         }
 
 
-        // if (not input.pressed(game.action1_key())) {
-        //     dodge_timer_ += dt;
-        // }
+        if (not input.pressed(game.action1_key())) {
+            dodge_timer_ += dt;
+        }
         if (dodge_timer_ >= [&] {
             switch (game.persistent_data().settings_.difficulty_) {
             case Settings::Difficulty::easy:
-                return seconds(1);
+                return milliseconds(500);
             case Settings::Difficulty::count:
             case Settings::Difficulty::normal:
                 break;
@@ -622,7 +631,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             case Settings::Difficulty::survival:
                 return seconds(3) + milliseconds(500);
             }
-            return seconds(1) + milliseconds(500);
+            return seconds(1);// + milliseconds(500);
         }()) {
             dodge_timer_ = 0;
             dodges_ = std::min(dodges_ + 1, max_dodges);
@@ -642,10 +651,31 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             r_speed_ *= 3;
             u_speed_ *= 3;
             d_speed_ *= 3;
-            pfrm.sleep(7);
-            game.camera().shake(4);
-            sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
+            pfrm.sleep(9);
+            game.camera().shake(8);
+            // pfrm.speaker().play_sound("dodge", 1);
+            //sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
+            sprite_.set_mix({dodge_flicker_light_color, 255});
+            blaster_.set_visible(false);
+            weapon_hide_timer_ = milliseconds(30);
+
             switch (facing()) {
+            case Cardinal::west:
+                if (l_speed_ > r_speed_) {
+                    set_sprite_texture(98);
+                } else {
+                    set_sprite_texture(102);
+                }
+                break;
+
+            case Cardinal::east:
+                if (r_speed_ > l_speed_) {
+                    set_sprite_texture(99);
+                } else {
+                    set_sprite_texture(103);
+                }
+                break;
+
             case Cardinal::north:
                 set_sprite_texture(101);
                 break;
@@ -653,25 +683,27 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             case Cardinal::south:
                 set_sprite_texture(100);
                 break;
-
-            case Cardinal::west:
-                set_sprite_texture(98);
-                break;
-
-            case Cardinal::east:
-                set_sprite_texture(99);
-                break;
             }
         }
         break;
     }
 
     case State::pre_dodge:
-        state_ = State::dodge;
+        dodge_timer_ += dt;
+        if (dodge_timer_ > milliseconds(80)) {
+            state_ = State::dodge;
+            sprite_.set_mix({dodge_flicker_dark_color, 255});
+        }
         break;
 
     case State::dodge:
         dodge_timer_ += dt;
+
+        if (dodge_timer_ > milliseconds(80)) {
+            // sprite_.set_mix({custom_color(0x99ffff), 75});
+            sprite_.set_mix({});
+        }
+
         if (wc.up) {
             u_speed_ = 0;
         }
@@ -696,7 +728,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         if (d_speed_) {
             d_speed_ = interpolate(0.f, d_speed_, 0.000000175f * dt);
         }
-        if (dodge_timer_ > milliseconds(75)) {
+        if (dodge_timer_ > milliseconds(150)) {
             state_ = State::normal;
         }
         break;
@@ -704,7 +736,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
     static const float MOVEMENT_RATE_CONSTANT = 0.000054f;
 
-    if (external_force_) {
+    if (external_force_ and state_ == State::normal) {
         if (external_force_->x > 0) {
             if (not wc.right) {
                 r_speed_ += external_force_->x;
