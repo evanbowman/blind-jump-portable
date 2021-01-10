@@ -29,10 +29,10 @@ void GoodbyeState::exit(Platform& pfrm, Game& game, State& next_state)
     pfrm.fill_overlay(0);
     game.camera() = {};
     game.camera().update(
-            pfrm,
-            Settings::CameraMode::fixed,
-            milliseconds(100),
-            {(float)pfrm.screen().size().x / 2, (float)pfrm.screen().size().y / 2});
+        pfrm,
+        Settings::CameraMode::fixed,
+        milliseconds(100),
+        {(float)pfrm.screen().size().x / 2, (float)pfrm.screen().size().y / 2});
     pfrm.set_overlay_origin(0, 0);
     game.enemies().clear();
     game.effects().clear();

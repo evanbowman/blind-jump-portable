@@ -102,22 +102,21 @@ public:
             reload_ = milliseconds(280);
 
 
-            const auto interval =
-                [&] {
-                    switch (game.difficulty()) {
-                    case Settings::Difficulty::easy:
-                        return 30;
+            const auto interval = [&] {
+                switch (game.difficulty()) {
+                case Settings::Difficulty::easy:
+                    return 30;
 
-                    case Settings::Difficulty::count:
-                    case Settings::Difficulty::normal:
-                        return 22;
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::normal:
+                    return 22;
 
-                    case Settings::Difficulty::hard:
-                    case Settings::Difficulty::survival:
-                        break;
-                    }
-                    return 19;
-                }();
+                case Settings::Difficulty::hard:
+                case Settings::Difficulty::survival:
+                    break;
+                }
+                return 19;
+            }();
 
 
             if (not spin_) {

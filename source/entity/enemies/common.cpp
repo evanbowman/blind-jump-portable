@@ -17,11 +17,12 @@ void on_enemy_destroyed(Platform& pfrm,
 
     auto dt = pfrm.make_dynamic_texture();
     if (rng::choice<2>(rng::utility_state) and dt) {
-        game.effects().spawn<DynamicEffect>(Vec2<Float>{expl_pos.x, expl_pos.y - 2},
-                                            *dt,
-                                            milliseconds(90),
-                                            89,
-                                            8);
+        game.effects().spawn<DynamicEffect>(
+            Vec2<Float>{expl_pos.x, expl_pos.y - 2},
+            *dt,
+            milliseconds(90),
+            89,
+            8);
     } else {
         game.effects().spawn<Explosion>(
             rng::sample<18>(expl_pos, rng::utility_state));

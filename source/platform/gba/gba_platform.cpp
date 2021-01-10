@@ -1438,12 +1438,8 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
     // NOTE: I am clearing almost everything, because when I did not clear all
     // of these memory segments, something seemed to be interfering with gameboy
     // player unlocking.
-    RegisterRamReset(RESET_VRAM |
-                     RESET_PALETTE |
-                     RESET_OAM |
-                     RESET_SIO |
-                     RESET_SOUND |
-                     RESET_OTHER);
+    RegisterRamReset(RESET_VRAM | RESET_PALETTE | RESET_OAM | RESET_SIO |
+                     RESET_SOUND | RESET_OTHER);
     SoftReset(ROM_RESTART), __builtin_unreachable();
 }
 

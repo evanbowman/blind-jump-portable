@@ -111,10 +111,9 @@ void Camera::update(Platform& pfrm,
 
 void Camera::shake(int magnitude)
 {
-    if (shake_magnitude_ == 0 or shake_magnitude_ < magnitude) {
+    if (shake_magnitude_ == 0 or shake_magnitude_ <= magnitude) {
         shake_magnitude_ = magnitude;
         shake_timer_ = 0;
-        shake_index_ = 0;
     }
 }
 

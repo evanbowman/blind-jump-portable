@@ -234,7 +234,7 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             scene_ = Scene::fade_in;
 
-            rng::critical_state = 2022;
+            rng::critical_state = 2017;
 
             pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, true, true);
 

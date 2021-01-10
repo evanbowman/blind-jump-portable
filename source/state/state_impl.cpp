@@ -168,6 +168,7 @@ void repaint_health_score(Platform& pfrm,
                           Game& game,
                           std::optional<UIMetric>* health,
                           std::optional<UIMetric>* score,
+                          std::optional<MediumIcon>* dodge,
                           UIMetric::Align align)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
@@ -195,6 +196,7 @@ void repaint_powerups(Platform& pfrm,
                       bool clean,
                       std::optional<UIMetric>* health,
                       std::optional<UIMetric>* score,
+                      std::optional<MediumIcon>* dodge,
                       Buffer<UIMetric, Powerup::max_>* powerups,
                       UIMetric::Align align)
 {
@@ -212,7 +214,7 @@ void repaint_powerups(Platform& pfrm,
 
     if (clean) {
 
-        repaint_health_score(pfrm, game, health, score, align);
+        repaint_health_score(pfrm, game, health, score, dodge, align);
 
         powerups->clear();
 
@@ -246,6 +248,7 @@ void update_powerups(Platform& pfrm,
                      Game& game,
                      std::optional<UIMetric>* health,
                      std::optional<UIMetric>* score,
+                     std::optional<MediumIcon>* dodge,
                      Buffer<UIMetric, Powerup::max_>* powerups,
                      UIMetric::Align align)
 {
@@ -271,7 +274,7 @@ void update_powerups(Platform& pfrm,
 
     if (update_powerups) {
         repaint_powerups(
-            pfrm, game, update_all, health, score, powerups, align);
+                 pfrm, game, update_all, health, score, dodge, powerups, align);
     }
 }
 
@@ -281,12 +284,22 @@ void update_ui_metrics(Platform& pfrm,
                        Microseconds delta,
                        std::optional<UIMetric>* health,
                        std::optional<UIMetric>* score,
+                       std::optional<MediumIcon>* dodge,
                        Buffer<UIMetric, Powerup::max_>* powerups,
                        Entity::Health last_health,
                        Score last_score,
                        UIMetric::Align align)
 {
-    update_powerups(pfrm, game, health, score, powerups, align);
+    update_powerups(pfrm, game, health, score, dodge, powerups, align);
+
+    // const auto screen_tiles = calc_screen_tiles(pfrm);
+
+    // if (dodge) {
+    //     dodge->emplace(
+    //                    pfrm,
+    //                    game.player().dodges() ? 383 : 387,
+    //                    OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
+    // }
 
     if (last_health not_eq game.player().get_health()) {
         net_event::PlayerHealthChanged hc;

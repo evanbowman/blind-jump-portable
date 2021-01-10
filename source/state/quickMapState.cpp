@@ -18,6 +18,7 @@ void QuickMapState::enter(Platform& pfrm, Game& game, State& prev_state)
                      true,
                      &health_,
                      &score_,
+                     nullptr,
                      &powerups_,
                      UIMetric::Align::right);
 
@@ -67,6 +68,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
                       delta,
                       &health_,
                       &score_,
+                      nullptr,
                       &powerups_,
                       last_health,
                       last_score,

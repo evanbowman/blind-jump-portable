@@ -467,141 +467,238 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
     soft_update(pfrm, game, dt);
 
-    if (not strafe) {
-        key_response<ResourceLoc::player_walk_up>(
-            up, down, left, right, u_speed_, wc.up);
-        key_response<ResourceLoc::player_walk_down>(
-            down, up, left, right, d_speed_, wc.down);
-        key_response<ResourceLoc::player_walk_left>(
-            left, right, down, up, l_speed_, wc.left);
-        key_response<ResourceLoc::player_walk_right>(
-            right, left, down, up, r_speed_, wc.right);
-    } else {
-        if (frame_base_ == ResourceLoc::player_walk_up or
-            frame_base_ == ResourceLoc::player_still_up) {
-
-            altKeyResponse<ResourceLoc::player_walk_up>(
-                up, left, right, u_speed_, wc.up);
-            altKeyResponse<ResourceLoc::player_walk_up>(
-                down, left, right, d_speed_, wc.down);
-            altKeyResponse<ResourceLoc::player_walk_up>(
-                left, up, down, l_speed_, wc.left);
-            altKeyResponse<ResourceLoc::player_walk_up>(
-                right, up, down, r_speed_, wc.right);
-
-        } else if (frame_base_ == ResourceLoc::player_walk_down or
-                   frame_base_ == ResourceLoc::player_still_down) {
-
-            altKeyResponse<ResourceLoc::player_walk_down>(
-                up, left, right, u_speed_, wc.up);
-            altKeyResponse<ResourceLoc::player_walk_down>(
-                down, left, right, d_speed_, wc.down);
-            altKeyResponse<ResourceLoc::player_walk_down>(
-                left, up, down, l_speed_, wc.left);
-            altKeyResponse<ResourceLoc::player_walk_down>(
-                right, up, down, r_speed_, wc.right);
-
-        } else if (frame_base_ == ResourceLoc::player_walk_right or
-                   frame_base_ == ResourceLoc::player_still_right) {
-
-            altKeyResponse<ResourceLoc::player_walk_right>(
-                up, left, right, u_speed_, wc.up);
-            altKeyResponse<ResourceLoc::player_walk_right>(
-                down, left, right, d_speed_, wc.down);
-            altKeyResponse<ResourceLoc::player_walk_right>(
-                left, up, down, l_speed_, wc.left);
-            altKeyResponse<ResourceLoc::player_walk_right>(
-                right, up, down, r_speed_, wc.right);
-
-        } else if (frame_base_ == ResourceLoc::player_walk_left or
-                   frame_base_ == ResourceLoc::player_still_left) {
-
-            altKeyResponse<ResourceLoc::player_walk_left>(
-                up, left, right, u_speed_, wc.up);
-            altKeyResponse<ResourceLoc::player_walk_left>(
-                down, left, right, d_speed_, wc.down);
-            altKeyResponse<ResourceLoc::player_walk_left>(
-                left, up, down, l_speed_, wc.left);
-            altKeyResponse<ResourceLoc::player_walk_left>(
-                right, up, down, r_speed_, wc.right);
-        }
-    }
-
-    if (input.up_transition<Key::up>()) {
-        on_key_released<ResourceLoc::player_still_up, 0>(
-            down, left, right, strafe);
-    }
-    if (input.up_transition<Key::down>()) {
-        on_key_released<ResourceLoc::player_still_down, 0>(
-            up, left, right, strafe);
-    }
-    if (input.up_transition<Key::left>()) {
-        on_key_released<ResourceLoc::player_still_left, 0>(
-            up, down, right, strafe);
-    }
-    if (input.up_transition<Key::right>()) {
-        on_key_released<ResourceLoc::player_still_right, 0>(
-            up, down, left, strafe);
-    }
-
-    const auto frame_persist = [&] {
-        if (strafe) {
-            return 130000;
+    switch (state_) {
+    case State::normal: {
+        if (not strafe) {
+            key_response<ResourceLoc::player_walk_up>(
+                up, down, left, right, u_speed_, wc.up);
+            key_response<ResourceLoc::player_walk_down>(
+                down, up, left, right, d_speed_, wc.down);
+            key_response<ResourceLoc::player_walk_left>(
+                left, right, down, up, l_speed_, wc.left);
+            key_response<ResourceLoc::player_walk_right>(
+                right, left, down, up, r_speed_, wc.right);
         } else {
-            return 100000;
+            if (frame_base_ == ResourceLoc::player_walk_up or
+                frame_base_ == ResourceLoc::player_still_up) {
+
+                altKeyResponse<ResourceLoc::player_walk_up>(
+                    up, left, right, u_speed_, wc.up);
+                altKeyResponse<ResourceLoc::player_walk_up>(
+                    down, left, right, d_speed_, wc.down);
+                altKeyResponse<ResourceLoc::player_walk_up>(
+                    left, up, down, l_speed_, wc.left);
+                altKeyResponse<ResourceLoc::player_walk_up>(
+                    right, up, down, r_speed_, wc.right);
+
+            } else if (frame_base_ == ResourceLoc::player_walk_down or
+                       frame_base_ == ResourceLoc::player_still_down) {
+
+                altKeyResponse<ResourceLoc::player_walk_down>(
+                    up, left, right, u_speed_, wc.up);
+                altKeyResponse<ResourceLoc::player_walk_down>(
+                    down, left, right, d_speed_, wc.down);
+                altKeyResponse<ResourceLoc::player_walk_down>(
+                    left, up, down, l_speed_, wc.left);
+                altKeyResponse<ResourceLoc::player_walk_down>(
+                    right, up, down, r_speed_, wc.right);
+
+            } else if (frame_base_ == ResourceLoc::player_walk_right or
+                       frame_base_ == ResourceLoc::player_still_right) {
+
+                altKeyResponse<ResourceLoc::player_walk_right>(
+                    up, left, right, u_speed_, wc.up);
+                altKeyResponse<ResourceLoc::player_walk_right>(
+                    down, left, right, d_speed_, wc.down);
+                altKeyResponse<ResourceLoc::player_walk_right>(
+                    left, up, down, l_speed_, wc.left);
+                altKeyResponse<ResourceLoc::player_walk_right>(
+                    right, up, down, r_speed_, wc.right);
+
+            } else if (frame_base_ == ResourceLoc::player_walk_left or
+                       frame_base_ == ResourceLoc::player_still_left) {
+
+                altKeyResponse<ResourceLoc::player_walk_left>(
+                    up, left, right, u_speed_, wc.up);
+                altKeyResponse<ResourceLoc::player_walk_left>(
+                    down, left, right, d_speed_, wc.down);
+                altKeyResponse<ResourceLoc::player_walk_left>(
+                    left, up, down, l_speed_, wc.left);
+                altKeyResponse<ResourceLoc::player_walk_left>(
+                    right, up, down, r_speed_, wc.right);
+            }
         }
-    }();
 
-    switch (frame_base_) {
-    case ResourceLoc::player_still_up:
-    case ResourceLoc::player_still_down:
-        sprite_.set_size(Sprite::Size::w32_h32);
-        // sprite_.set_size(Sprite::Size::w16_h32);
-        set_sprite_texture(frame_base_);
-        // sprite_.set_origin(v_origin);
-        sprite_.set_origin(h_origin);
+        if (input.up_transition<Key::up>()) {
+            on_key_released<ResourceLoc::player_still_up, 0>(
+                down, left, right, strafe);
+        }
+        if (input.up_transition<Key::down>()) {
+            on_key_released<ResourceLoc::player_still_down, 0>(
+                up, left, right, strafe);
+        }
+        if (input.up_transition<Key::left>()) {
+            on_key_released<ResourceLoc::player_still_left, 0>(
+                up, down, right, strafe);
+        }
+        if (input.up_transition<Key::right>()) {
+            on_key_released<ResourceLoc::player_still_right, 0>(
+                up, down, left, strafe);
+        }
+
+        const auto frame_persist = [&] {
+            if (strafe) {
+                return 130000;
+            } else {
+                return 100000;
+            }
+        }();
+
+        switch (frame_base_) {
+        case ResourceLoc::player_still_up:
+        case ResourceLoc::player_still_down:
+            sprite_.set_size(Sprite::Size::w32_h32);
+            // sprite_.set_size(Sprite::Size::w16_h32);
+            set_sprite_texture(frame_base_);
+            // sprite_.set_origin(v_origin);
+            sprite_.set_origin(h_origin);
+            break;
+
+        case ResourceLoc::player_still_left:
+        case ResourceLoc::player_still_right:
+            sprite_.set_size(Sprite::Size::w32_h32);
+            set_sprite_texture(frame_base_);
+            sprite_.set_origin(h_origin);
+            break;
+
+        case ResourceLoc::player_walk_up:
+            update_animation<1>(pfrm, dt, 9, frame_persist);
+            set_sprite_texture(frame_base_ + remap_vframe(frame_));
+            sprite_.set_size(Sprite::Size::w32_h32);
+            // sprite_.set_size(Sprite::Size::w16_h32);
+            // sprite_.set_origin(v_origin);
+            sprite_.set_origin(h_origin);
+            break;
+
+        case ResourceLoc::player_walk_down:
+            update_animation<1>(pfrm, dt, 9, frame_persist);
+            set_sprite_texture(frame_base_ + remap_vframe(frame_));
+            sprite_.set_size(Sprite::Size::w32_h32);
+            // sprite_.set_size(Sprite::Size::w16_h32);
+            // sprite_.set_origin(v_origin);
+            sprite_.set_origin(h_origin);
+            break;
+
+        case ResourceLoc::player_walk_left:
+            update_animation<2>(pfrm, dt, 5, frame_persist);
+            set_sprite_texture(frame_base_ + frame_);
+            sprite_.set_size(Sprite::Size::w32_h32);
+            sprite_.set_origin(h_origin);
+            break;
+
+        case ResourceLoc::player_walk_right:
+            update_animation<2>(pfrm, dt, 5, frame_persist);
+            set_sprite_texture(frame_base_ + frame_);
+            sprite_.set_size(Sprite::Size::w32_h32);
+            sprite_.set_origin(h_origin);
+            break;
+
+        default:
+            break;
+        }
+
+
+        // if (not input.pressed(game.action1_key())) {
+        //     dodge_timer_ += dt;
+        // }
+        if (dodge_timer_ >= [&] {
+            switch (game.persistent_data().settings_.difficulty_) {
+            case Settings::Difficulty::easy:
+                return seconds(1);
+            case Settings::Difficulty::count:
+            case Settings::Difficulty::normal:
+                break;
+            case Settings::Difficulty::hard:
+            case Settings::Difficulty::survival:
+                return seconds(3) + milliseconds(500);
+            }
+            return seconds(1) + milliseconds(500);
+        }()) {
+            dodge_timer_ = 0;
+            dodges_ = std::min(dodges_ + 1, max_dodges);
+        }
+
+        if (game.persistent_data().settings_.button_mode_
+                == Settings::ButtonMode::strafe_combined and
+            pfrm.keyboard().down_transition(game.action2_key()) and
+            (left or right or up or down) and
+            length(game.effects().get<DialogBubble>()) == 0 and
+            dodges_ > 0) {
+            dodges_ -= 1;
+            game.rumble(pfrm, milliseconds(150));
+            state_ = State::pre_dodge;
+            dodge_timer_ = 0;
+            l_speed_ *= 3;
+            r_speed_ *= 3;
+            u_speed_ *= 3;
+            d_speed_ *= 3;
+            pfrm.sleep(7);
+            game.camera().shake(4);
+            sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
+            switch (facing()) {
+            case Cardinal::north:
+                set_sprite_texture(101);
+                break;
+
+            case Cardinal::south:
+                set_sprite_texture(100);
+                break;
+
+            case Cardinal::west:
+                set_sprite_texture(98);
+                break;
+
+            case Cardinal::east:
+                set_sprite_texture(99);
+                break;
+            }
+        }
+        break;
+    }
+
+    case State::pre_dodge:
+        state_ = State::dodge;
         break;
 
-    case ResourceLoc::player_still_left:
-    case ResourceLoc::player_still_right:
-        sprite_.set_size(Sprite::Size::w32_h32);
-        set_sprite_texture(frame_base_);
-        sprite_.set_origin(h_origin);
-        break;
-
-    case ResourceLoc::player_walk_up:
-        update_animation<1>(pfrm, dt, 9, frame_persist);
-        set_sprite_texture(frame_base_ + remap_vframe(frame_));
-        sprite_.set_size(Sprite::Size::w32_h32);
-        // sprite_.set_size(Sprite::Size::w16_h32);
-        // sprite_.set_origin(v_origin);
-        sprite_.set_origin(h_origin);
-        break;
-
-    case ResourceLoc::player_walk_down:
-        update_animation<1>(pfrm, dt, 9, frame_persist);
-        set_sprite_texture(frame_base_ + remap_vframe(frame_));
-        sprite_.set_size(Sprite::Size::w32_h32);
-        // sprite_.set_size(Sprite::Size::w16_h32);
-        // sprite_.set_origin(v_origin);
-        sprite_.set_origin(h_origin);
-        break;
-
-    case ResourceLoc::player_walk_left:
-        update_animation<2>(pfrm, dt, 5, frame_persist);
-        set_sprite_texture(frame_base_ + frame_);
-        sprite_.set_size(Sprite::Size::w32_h32);
-        sprite_.set_origin(h_origin);
-        break;
-
-    case ResourceLoc::player_walk_right:
-        update_animation<2>(pfrm, dt, 5, frame_persist);
-        set_sprite_texture(frame_base_ + frame_);
-        sprite_.set_size(Sprite::Size::w32_h32);
-        sprite_.set_origin(h_origin);
-        break;
-
-    default:
+    case State::dodge:
+        dodge_timer_ += dt;
+        if (wc.up) {
+            u_speed_ = 0;
+        }
+        if (wc.down) {
+            d_speed_ = 0;
+        }
+        if (wc.left) {
+            l_speed_ = 0;
+        }
+        if (wc.right) {
+            r_speed_ = 0;
+        }
+        if (l_speed_) {
+            l_speed_ = interpolate(0.f, l_speed_, 0.000000175f * dt);
+        }
+        if (r_speed_) {
+            r_speed_ = interpolate(0.f, r_speed_, 0.000000175f * dt);
+        }
+        if (u_speed_) {
+            u_speed_ = interpolate(0.f, u_speed_, 0.000000175f * dt);
+        }
+        if (d_speed_) {
+            d_speed_ = interpolate(0.f, d_speed_, 0.000000175f * dt);
+        }
+        if (dodge_timer_ > milliseconds(75)) {
+            state_ = State::normal;
+        }
         break;
     }
 
@@ -842,6 +939,7 @@ void Blaster::shoot(Platform& pf, Game& game)
                         return game.effects().spawn<Laser>(
                             position_, dir_, Laser::Mode::explosive);
                     } else {
+                        game.camera().shake(2);
                         return game.effects().spawn<Laser>(
                             position_, dir_, Laser::Mode::normal);
                     }

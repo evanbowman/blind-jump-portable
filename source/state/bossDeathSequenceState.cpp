@@ -7,7 +7,7 @@ void BossDeathSequenceState::enter(Platform& pfrm,
 {
     OverworldState::enter(pfrm, game, prev_state);
     repaint_powerups(
-        pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
+                     pfrm, game, true, &health_, &score_, nullptr, &powerups_, UIMetric::Align::left);
 
     game.enemies().clear();
 }
@@ -37,6 +37,7 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
                       delta,
                       &health_,
                       &score_,
+                      nullptr,
                       &powerups_,
                       last_health,
                       last_score,

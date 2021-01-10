@@ -98,6 +98,11 @@ public:
 
     Cardinal facing() const;
 
+    int dodges() const
+    {
+        return dodges_;
+    }
+
 private:
     void set_sprite_texture(TextureIndex tidx);
 
@@ -134,6 +139,7 @@ private:
     ResourceLoc frame_base_;
     Microseconds anim_timer_;
     Microseconds invulnerability_timer_;
+    Microseconds dodge_timer_ = 0;
     Microseconds weapon_hide_timer_ = 0;
     FadeColorAnimation<Microseconds(15685)> fade_color_anim_;
     Float l_speed_;
@@ -144,6 +150,12 @@ private:
     HitBox hitbox_;
     std::optional<Vec2<Float>> external_force_;
     Platform::DynamicTexturePtr dynamic_texture_;
+
+    static constexpr const int max_dodges = 1;
+
+    u8 dodges_ = 0;
+
+    enum class State { normal, pre_dodge, dodge } state_ = State::normal;
 
     Blaster blaster_;
 };

@@ -19,7 +19,7 @@ void QuickSelectInventoryState::enter(Platform& pfrm,
     sidebar_->set_display_percentage(0.f);
 
     repaint_powerups(
-        pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
+                     pfrm, game, true, &health_, &score_, nullptr, &powerups_, UIMetric::Align::left);
 
     game.camera().set_speed(2.8f);
 }
@@ -159,6 +159,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                       delta,
                       &health_,
                       &score_,
+                      nullptr,
                       &powerups_,
                       last_health,
                       last_score,
@@ -368,6 +369,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                                  true,
                                  &health_,
                                  &score_,
+                                 nullptr,
                                  &powerups_,
                                  UIMetric::Align::left);
                 redraw_selector(112);

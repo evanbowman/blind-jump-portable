@@ -195,6 +195,15 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                     sprite_.set_mix({ColorConstant::electric_blue, 0});
                     head_.set_mix({ColorConstant::electric_blue, 0});
 
+                    if (auto dt = pf.make_dynamic_texture()) {
+                        game.effects().spawn<DynamicEffect>(position_ +
+                                                                shoot_offset(),
+                                                            *dt,
+                                                            milliseconds(40),
+                                                            89,
+                                                            5);
+                    }
+
                 } else {
                     state_ = State::small_laser_prep;
                 }

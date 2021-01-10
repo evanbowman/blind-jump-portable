@@ -11,10 +11,10 @@ void ActiveState::enter(Platform& pfrm, Game& game, State& prev_state)
         restore_keystates.reset();
     }
 
-    repaint_health_score(pfrm, game, &health_, &score_, UIMetric::Align::left);
+    repaint_health_score(pfrm, game, &health_, &score_, &dodge_ready_, UIMetric::Align::left);
 
     repaint_powerups(
-        pfrm, game, true, &health_, &score_, &powerups_, UIMetric::Align::left);
+                     pfrm, game, true, &health_, &score_, &dodge_ready_, &powerups_, UIMetric::Align::left);
 }
 
 
@@ -71,6 +71,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
                       delta,
                       &health_,
                       &score_,
+                      &dodge_ready_,
                       &powerups_,
                       last_health,
                       last_score,

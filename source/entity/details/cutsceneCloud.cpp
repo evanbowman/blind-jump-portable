@@ -6,7 +6,7 @@ CutsceneCloud::CutsceneCloud(const Vec2<Float>& position)
 {
     set_position(position);
 
-    const auto cloud_index = rng::choice<7>(rng::critical_state) + 1;
+    const auto cloud_index = rng::choice<7>(rng::critical_state) + 2;
 
     sprite_.set_texture_index(cloud_index * 3 + 2);
     overflow_sprs_[0].set_texture_index(cloud_index * 3 + 1);

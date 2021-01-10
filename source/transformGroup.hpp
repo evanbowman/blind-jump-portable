@@ -21,11 +21,12 @@ template <std::size_t I = 0, typename FuncT, typename... Tp>
 }
 
 template <size_t I, typename T, typename Tuple_t>
-constexpr size_t index_in_tuple() {
+constexpr size_t index_in_tuple()
+{
     static_assert(I < std::tuple_size<Tuple_t>::value);
 
-    typedef typename std::tuple_element<I,Tuple_t>::type el;
-    if constexpr(std::is_same<T,el>::value) {
+    typedef typename std::tuple_element<I, Tuple_t>::type el;
+    if constexpr (std::is_same<T, el>::value) {
         return I;
     } else {
         return index_in_tuple<I + 1, T, Tuple_t>();

@@ -39,7 +39,7 @@ StatePtr GlowFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
         game.enemies().clear();
         game.details().clear();
         game.effects().clear();
-        
+
         return state_pool().create<FadeOutState>(game, color_);
     } else {
         const auto amount = smoothstep(0.f, fade_duration, counter_);

@@ -58,11 +58,10 @@ public:
             n>();
     }
 
-    template <typename T>
-    static constexpr int index_of()
+    template <typename T> static constexpr int index_of()
     {
-        return TransformGroup<EntityBuffer<Members, Capacity>...>::template index_of<
-            EntityBuffer<T, Capacity>>();
+        return TransformGroup<EntityBuffer<Members, Capacity>...>::
+            template index_of<EntityBuffer<T, Capacity>>();
     }
 
     void clear()

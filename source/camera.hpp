@@ -48,6 +48,5 @@ private:
 
     int shake_magnitude_ = 0;
 
-    u8 shake_index_ = 0;
     Microseconds shake_timer_ = 0;
 };

@@ -261,6 +261,7 @@ private:
     std::optional<UIMetric> score_;
 
     Buffer<UIMetric, Powerup::max_> powerups_;
+    std::optional<MediumIcon> dodge_ready_;
 
     bool pixelated_ = false;
 };
@@ -1537,6 +1538,7 @@ void repaint_powerups(Platform& pfrm,
                       bool clean,
                       std::optional<UIMetric>* health,
                       std::optional<UIMetric>* score,
+                      std::optional<MediumIcon>* dodge,
                       Buffer<UIMetric, Powerup::max_>* powerups,
                       UIMetric::Align align);
 
@@ -1545,6 +1547,7 @@ void repaint_health_score(Platform& pfrm,
                           Game& game,
                           std::optional<UIMetric>* health,
                           std::optional<UIMetric>* score,
+                          std::optional<MediumIcon>* dodge,
                           UIMetric::Align align);
 
 
@@ -1552,6 +1555,7 @@ void update_powerups(Platform& pfrm,
                      Game& game,
                      std::optional<UIMetric>* health,
                      std::optional<UIMetric>* score,
+                     std::optional<MediumIcon>* dodge,
                      Buffer<UIMetric, Powerup::max_>* powerups,
                      UIMetric::Align align);
 
@@ -1561,6 +1565,7 @@ void update_ui_metrics(Platform& pfrm,
                        Microseconds delta,
                        std::optional<UIMetric>* health,
                        std::optional<UIMetric>* score,
+                       std::optional<MediumIcon>* dodge,
                        Buffer<UIMetric, Powerup::max_>* powerups,
                        Entity::Health last_health,
                        Score last_score,
