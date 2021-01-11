@@ -84,7 +84,7 @@ public:
 
     inline bool is_invulnerable() const;
 
-    void move(const Vec2<Float>& pos);
+    void init(const Vec2<Float>& pos);
 
     void revive(Platform& pfrm);
 

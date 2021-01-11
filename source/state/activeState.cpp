@@ -14,6 +14,13 @@ void ActiveState::enter(Platform& pfrm, Game& game, State& prev_state)
     repaint_health_score(
         pfrm, game, &health_, &score_, &dodge_ready_, UIMetric::Align::left);
 
+    const auto screen_tiles = calc_screen_tiles(pfrm);
+
+    dodge_ready_.emplace(
+            pfrm,
+            game.player().dodges() ? 383 : 387,
+            OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
+
     repaint_powerups(pfrm,
                      game,
                      true,
@@ -31,6 +38,7 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 
     health_.reset();
     score_.reset();
+    dodge_ready_.reset();
 
     powerups_.clear();
 
@@ -40,6 +48,7 @@ void ActiveState::exit(Platform& pfrm, Game& game, State& next_state)
 
 StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    const bool dodge_was_ready = game.player().dodges();
     game.player().update(pfrm, game, delta);
 
     const auto player_int_pos = game.player().get_position().cast<s32>();
@@ -82,6 +91,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
                       &powerups_,
                       last_health,
                       last_score,
+                      dodge_was_ready,
                       UIMetric::Align::left);
 
     if (game.player().get_health() == 0) {
@@ -176,7 +186,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
                 net_event::transmit(pfrm, e);
             }
 
-            game.player().move(t_pos);
+            game.player().init(t_pos);
             pfrm.speaker().play_sound("bell", 5);
             const auto c = current_zone(game).energy_glow_color_;
 

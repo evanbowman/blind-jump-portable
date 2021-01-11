@@ -2127,12 +2127,12 @@ COLD bool Game::respawn_entities(Platform& pfrm)
                 Vec2<Float>{80, 332}, pfrm, Item::Type::heart);
         }
         tiles_.set_tile(12, 4, Tile::none);
-        player_.move({409.1f, 167.2f});
+        player_.init({409.1f, 167.2f});
         transporter_.set_position({110, 306});
         return true;
     } else if (level() == boss_0_level + 1) {
 
-        player_.move({380.1f, 100.2f});
+        player_.init({380.1f, 100.2f});
 
         details().spawn<Signpost>(Vec2<Float>{430, 100},
                                   Signpost::Type::memorial);
@@ -2171,7 +2171,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
         const auto wc = world_coord(*player_coord);
 
-        player_.move({wc.x + 0.1f, wc.y + 0.1f});
+        player_.init({wc.x + 0.1f, wc.y + 0.1f});
 
         // We want to remove adjacent free spaces, so that the player doesn't
         // spawn on top of enemies, and get injured upon entry into a level. The
@@ -2256,7 +2256,7 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             enemies_.spawn<InfestedCore>(to_world_coord(Vec2<TIdx>{10, 12}));
             enemies_.spawn<InfestedCore>(to_world_coord(Vec2<TIdx>{5, 12}));
             const auto p = to_world_coord(Vec2<TIdx>{8, 11});
-            player_.move({p.x - 0.1f, p.y - 0.1f});
+            player_.init({p.x - 0.1f, p.y - 0.1f});
         } break;
         }
 

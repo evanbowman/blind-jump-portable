@@ -941,7 +941,7 @@ void Player::set_sprite_texture(TextureIndex tidx)
 }
 
 
-void Player::move(const Vec2<Float>& pos)
+void Player::init(const Vec2<Float>& pos)
 {
     Player::set_position(pos);
     sprite_.set_position(pos);
@@ -953,6 +953,14 @@ void Player::move(const Vec2<Float>& pos)
     sprite_.set_origin(h_origin);
     sprite_.set_size(Sprite::Size::w32_h32);
     external_force_.reset();
+
+    state_ = State::normal;
+    if (sprite_.get_mix().color_ == dodge_flicker_light_color or
+        sprite_.get_mix().color_ == dodge_flicker_dark_color) {
+        sprite_.set_mix({});
+    }
+    dodges_ = 1;
+    dodge_timer_ = 0;
 }
 
 

@@ -72,6 +72,7 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
                       &powerups_,
                       last_health,
                       last_score,
+                      false,
                       UIMetric::Align::right);
 
 

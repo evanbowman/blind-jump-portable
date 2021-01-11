@@ -288,13 +288,15 @@ void update_ui_metrics(Platform& pfrm,
                        Buffer<UIMetric, Powerup::max_>* powerups,
                        Entity::Health last_health,
                        Score last_score,
+                       bool dodge_was_ready,
                        UIMetric::Align align)
 {
     update_powerups(pfrm, game, health, score, dodge, powerups, align);
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    if (dodge) {
+    if (dodge and
+        static_cast<bool>(game.player().dodges()) not_eq dodge_was_ready) {
         dodge->emplace(
             pfrm,
             game.player().dodges() ? 383 : 387,

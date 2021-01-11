@@ -1569,6 +1569,7 @@ void update_ui_metrics(Platform& pfrm,
                        Buffer<UIMetric, Powerup::max_>* powerups,
                        Entity::Health last_health,
                        Score last_score,
+                       bool dodge_was_ready,
                        UIMetric::Align align);
 
 

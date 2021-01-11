@@ -169,6 +169,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                       &powerups_,
                       last_health,
                       last_score,
+                      false,
                       UIMetric::Align::left);
 
 
