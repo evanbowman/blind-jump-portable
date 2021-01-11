@@ -452,6 +452,25 @@ Cardinal Player::facing() const
 }
 
 
+void Player::push_dodge_effect(Platform& pfrm, Game& game)
+{
+    if (auto dt = pfrm.make_dynamic_texture()) {
+        if (game.effects().spawn<DynamicEffect>(
+                rng::sample<2>(Vec2<Float>{position_.x, position_.y},
+                               rng::utility_state),
+                *dt,
+                milliseconds(100),
+                sprite_.get_texture_index(),
+                0)) {
+            (*game.effects().get<DynamicEffect>().begin())
+                ->sprite()
+                .set_mix({dodge_flicker_light_color, 255});
+            (*game.effects().get<DynamicEffect>().begin())->set_backdrop(true);
+        }
+    }
+}
+
+
 void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto& input = pfrm.keyboard();
@@ -473,6 +492,35 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
 
     const auto wc = check_wall_collisions(game.tiles(), *this);
+
+    if (UNLIKELY(wc.up and wc.down and wc.left and wc.right)) {
+        // How did this happen? We've managed to get ourselves stuck inside a
+        // wall. This shouldn't happen under normal circumstances, but what if
+        // the game lags? So we should handle this condition... I guess we'll
+        // snap our position back to the nearest map tile, for now. Eventually,
+        // we'll want to snap our position to the nearest un-stuck x,y world
+        // coordinate, rather than a jarring jump to a tile coordinate.
+
+        Vec2<Float> nearest;
+        Float nearest_dist = std::numeric_limits<Float>::max();
+
+        game.tiles().for_each([&](const u8& tile, s8 x, s8 y) {
+            if (not is_walkable(tile)) {
+                return;
+            }
+
+            const auto c = to_world_coord(Vec2<s8>{x, y});
+
+            const auto dist = distance(position_, c);
+
+            if (dist < nearest_dist) {
+                nearest = c;
+                nearest_dist = dist;
+            }
+        });
+
+        set_position({nearest.x + 16, nearest.y - 16});
+    }
 
     soft_update(pfrm, game, dt);
 
@@ -621,31 +669,52 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             dodge_timer_ += dt;
         }
         if (dodge_timer_ >= [&] {
-            switch (game.persistent_data().settings_.difficulty_) {
-            case Settings::Difficulty::easy:
-                return milliseconds(500);
-            case Settings::Difficulty::count:
-            case Settings::Difficulty::normal:
-                break;
-            case Settings::Difficulty::hard:
-            case Settings::Difficulty::survival:
-                return seconds(3) + milliseconds(500);
-            }
-            return seconds(1);// + milliseconds(500);
-        }()) {
+                switch (game.persistent_data().settings_.difficulty_) {
+                case Settings::Difficulty::easy:
+                    return milliseconds(500);
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::normal:
+                    break;
+                case Settings::Difficulty::hard:
+                case Settings::Difficulty::survival:
+                    return seconds(3) + milliseconds(500);
+                }
+                return seconds(1); // + milliseconds(500);
+            }()) {
             dodge_timer_ = 0;
             dodges_ = std::min(dodges_ + 1, max_dodges);
         }
 
-        if (game.persistent_data().settings_.button_mode_
-                == Settings::ButtonMode::strafe_combined and
+        if (game.persistent_data().settings_.button_mode_ ==
+                Settings::ButtonMode::strafe_combined and
             pfrm.keyboard().down_transition(game.action2_key()) and
             (left or right or up or down) and
-            length(game.effects().get<DialogBubble>()) == 0 and
-            dodges_ > 0) {
+            length(game.effects().get<DialogBubble>()) == 0 and dodges_ > 0) {
             dodges_ -= 1;
             game.rumble(pfrm, milliseconds(150));
             state_ = State::pre_dodge;
+
+
+            if (auto dt = pfrm.make_dynamic_texture()) {
+                if (game.effects().spawn<DynamicEffect>(
+                        rng::sample<2>(
+                            Vec2<Float>{position_.x, position_.y + 14},
+                            rng::utility_state),
+                        *dt,
+                        milliseconds(90),
+                        104,
+                        4)) {
+                    (*game.effects().get<DynamicEffect>().begin())
+                        ->sprite()
+                        .set_mix({custom_color(0xf9f7f6), 255});
+
+                    (*game.effects().get<DynamicEffect>().begin())
+                        ->set_backdrop(true);
+                }
+            }
+
+            push_dodge_effect(pfrm, game);
+
             dodge_timer_ = 0;
             l_speed_ *= 3;
             r_speed_ *= 3;
@@ -657,7 +726,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             //sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
             sprite_.set_mix({dodge_flicker_light_color, 255});
             blaster_.set_visible(false);
-            weapon_hide_timer_ = milliseconds(30);
+            weapon_hide_timer_ = 0;
 
             switch (facing()) {
             case Cardinal::west:
@@ -689,6 +758,12 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     case State::pre_dodge:
+        weapon_hide_timer_ += dt;
+        if (weapon_hide_timer_ > milliseconds(50)) {
+            weapon_hide_timer_ = 0;
+            push_dodge_effect(pfrm, game);
+        }
+
         dodge_timer_ += dt;
         if (dodge_timer_ > milliseconds(80)) {
             state_ = State::dodge;
@@ -697,13 +772,19 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         break;
 
     case State::dodge:
+
+        weapon_hide_timer_ += dt;
+        if (weapon_hide_timer_ > milliseconds(80)) {
+            weapon_hide_timer_ = 0;
+            push_dodge_effect(pfrm, game);
+        }
+
         dodge_timer_ += dt;
 
         if (dodge_timer_ > milliseconds(80)) {
             // sprite_.set_mix({custom_color(0x99ffff), 75});
             sprite_.set_mix({});
         }
-
         if (wc.up) {
             u_speed_ = 0;
         }
@@ -730,6 +811,32 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         }
         if (dodge_timer_ > milliseconds(150)) {
             state_ = State::normal;
+            if (not left and not right and not up and not down) {
+                switch (frame_base_) {
+                case Player::ResourceLoc::player_walk_down:
+                    frame_base_ = Player::ResourceLoc::player_still_down;
+                    frame_ = 0;
+                    break;
+
+                case Player::ResourceLoc::player_walk_up:
+                    frame_base_ = Player::ResourceLoc::player_still_up;
+                    frame_ = 0;
+                    break;
+
+                case Player::ResourceLoc::player_walk_left:
+                    frame_base_ = Player::ResourceLoc::player_still_left;
+                    frame_ = 0;
+                    break;
+
+                case Player::ResourceLoc::player_walk_right:
+                    frame_base_ = Player::ResourceLoc::player_still_right;
+                    frame_ = 0;
+                    break;
+
+                default:
+                    break;
+                }
+            }
         }
         break;
     }
@@ -963,7 +1070,7 @@ void Blaster::shoot(Platform& pf, Game& game)
 
             pf.speaker().play_sound("blaster", 4);
 
-            if (not [&] {
+            if (not[&] {
                     if (expl_rounds > 0) {
                         game.camera().shake();
                         medium_explosion(pf, game, position_);

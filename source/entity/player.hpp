@@ -135,6 +135,8 @@ private:
 
     void footstep(Platform& pf);
 
+    void push_dodge_effect(Platform& pf, Game& game);
+
     u32 frame_;
     ResourceLoc frame_base_;
     Microseconds anim_timer_;

@@ -17,19 +17,22 @@ struct WallCollisions {
 };
 
 
-template <typename T>
-WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
-{
-    using Wall = Vec2<s32>;
-    Buffer<Wall, 16> adjacency_vector;
+using Wall = Vec2<s32>;
+using WallAdjacencyVector = Buffer<Wall, 16>;
 
+
+template <typename T>
+WallAdjacencyVector adjacent_walls(TileMap& tiles, const T& entity)
+{
+    WallAdjacencyVector v;
     Vec2<s32> pos = entity.get_position().template cast<s32>();
     pos.y += 2;
+
     const Vec2<TIdx> tile_coords = to_tile_coord(pos);
 
     auto check_wall = [&](TIdx x, TIdx y) {
         if (not is_walkable(tiles.get_tile(x, y))) {
-            adjacency_vector.push_back(to_world_coord<s32>({x, y}));
+            v.push_back(to_world_coord<s32>({x, y}));
         }
     };
 
@@ -40,6 +43,18 @@ WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
             check_wall(x, y);
         }
     }
+
+    return v;
+}
+
+
+template <typename T>
+WallCollisions check_wall_collisions(TileMap& tiles, T& entity)
+{
+    auto adjacency_vector = adjacent_walls(tiles, entity);
+
+    Vec2<s32> pos = entity.get_position().template cast<s32>();
+    pos.y += 2;
 
     WallCollisions result;
 

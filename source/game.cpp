@@ -293,7 +293,26 @@ HOT void Game::render(Platform& pfrm)
 
     // Draw the effects first. Effects are not subject to z-ordering like
     // overworld objects, therefore, faster to draw.
-    effects_.transform(show_sprites);
+
+    effects_.transform([&](auto& entity_buf) {
+        using T = typename std::remove_reference<decltype(entity_buf)>::type;
+
+        using VT = typename T::ValueType::element_type;
+
+        if constexpr (not std::is_same<VT, DynamicEffect>()) {
+            show_sprites(entity_buf);
+        } else {
+            for (auto& e : entity_buf) {
+                if (e->is_backdrop()) {
+                    // defer rendering...
+                } else {
+                    show_sprite(*e);
+                }
+            }
+        }
+    });
+
+    // effects_.transform(show_sprites);
     for (auto spr : display_buffer) {
         pfrm.screen().draw(*spr);
     }
@@ -326,6 +345,12 @@ HOT void Game::render(Platform& pfrm)
               [](const auto& l, const auto& r) {
                   return l->get_position().y > r->get_position().y;
               });
+
+    for (auto& e : effects_.get<DynamicEffect>()) {
+        if (e->is_backdrop()) {
+            show_sprite(*e);
+        }
+    }
 
     show_sprite(transporter_);
 

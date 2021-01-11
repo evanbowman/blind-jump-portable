@@ -6,8 +6,14 @@ void BossDeathSequenceState::enter(Platform& pfrm,
                                    State& prev_state)
 {
     OverworldState::enter(pfrm, game, prev_state);
-    repaint_powerups(
-                     pfrm, game, true, &health_, &score_, nullptr, &powerups_, UIMetric::Align::left);
+    repaint_powerups(pfrm,
+                     game,
+                     true,
+                     &health_,
+                     &score_,
+                     nullptr,
+                     &powerups_,
+                     UIMetric::Align::left);
 
     game.enemies().clear();
 }

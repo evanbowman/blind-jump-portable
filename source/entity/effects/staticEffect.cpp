@@ -5,12 +5,9 @@ StaticEffect::StaticEffect(const Vec2<Float>& position,
                            Microseconds interval,
                            u16 texture_start,
                            u8 frame_count,
-                           UpdateCallback update_callback) :
-    update_callback_(update_callback),
-    timer_(0),
-    interval_(interval),
-    texture_start_(texture_start),
-    frame_count_(frame_count)
+                           UpdateCallback update_callback)
+    : update_callback_(update_callback), timer_(0), interval_(interval),
+      texture_start_(texture_start), frame_count_(frame_count)
 {
     sprite_.set_size(Sprite::Size::w32_h32);
     sprite_.set_position(position);

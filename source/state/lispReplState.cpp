@@ -274,17 +274,11 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
                     // identifier out of the command buffer again.
                     completion_prefix_len_ = ident.length();
 
-                    error(pfrm, "ident is: ");
-                    error(pfrm, ident.c_str());
-
                     lisp::get_interns([&ident, this, &pfrm](
                                           const char* intern) {
                         if (completion_strs_.full()) {
                             return;
                         }
-
-                        error(pfrm, "checking intern");
-                        error(pfrm, intern);
 
                         const auto intern_len = str_len(intern);
                         if (intern_len <= ident.length()) {

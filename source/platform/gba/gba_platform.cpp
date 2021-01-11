@@ -1057,7 +1057,7 @@ void Platform::Screen::display()
 
     if (UNLIKELY(enter_sleep)) {
         enter_sleep = false;
-        if (not ::platform->network_peer().is_connected()) {
+        if (not::platform->network_peer().is_connected()) {
             ::platform->sleep(180);
             Stop();
         }
@@ -2093,6 +2093,7 @@ static const AudioTrack* find_music(const char* name)
 #include "data/sound_click.hpp"
 #include "data/sound_coin.hpp"
 #include "data/sound_creak.hpp"
+#include "data/sound_dodge.hpp"
 #include "data/sound_dropitem.hpp"
 #include "data/sound_explosion1.hpp"
 #include "data/sound_explosion2.hpp"
@@ -2111,7 +2112,6 @@ static const AudioTrack* find_music(const char* name)
 #include "data/sound_thud.hpp"
 #include "data/sound_tw_bell.hpp"
 #include "data/sound_typewriter.hpp"
-#include "data/sound_dodge.hpp"
 
 
 static const AudioTrack sounds[] = {DEF_SOUND(explosion1, sound_explosion1),

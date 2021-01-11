@@ -274,7 +274,7 @@ void update_powerups(Platform& pfrm,
 
     if (update_powerups) {
         repaint_powerups(
-                 pfrm, game, update_all, health, score, dodge, powerups, align);
+            pfrm, game, update_all, health, score, dodge, powerups, align);
     }
 }
 
@@ -296,9 +296,9 @@ void update_ui_metrics(Platform& pfrm,
 
     if (dodge) {
         dodge->emplace(
-                       pfrm,
-                       game.player().dodges() ? 383 : 387,
-                       OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
+            pfrm,
+            game.player().dodges() ? 383 : 387,
+            OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
     }
 
     if (last_health not_eq game.player().get_health()) {

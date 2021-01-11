@@ -18,8 +18,14 @@ void QuickSelectInventoryState::enter(Platform& pfrm,
                      OverlayCoord{calc_screen_tiles(pfrm).x, 0});
     sidebar_->set_display_percentage(0.f);
 
-    repaint_powerups(
-                     pfrm, game, true, &health_, &score_, nullptr, &powerups_, UIMetric::Align::left);
+    repaint_powerups(pfrm,
+                     game,
+                     true,
+                     &health_,
+                     &score_,
+                     nullptr,
+                     &powerups_,
+                     UIMetric::Align::left);
 
     game.camera().set_speed(2.8f);
 }
