@@ -275,6 +275,9 @@ Platform::DeltaClock::~DeltaClock()
 static volatile u32* keys = (volatile u32*)0x04000130;
 
 
+std::optional<Bitvector<int(Key::count)>> missed_keys;
+
+
 void Platform::Keyboard::register_controller(const ControllerInfo& info)
 {
     // ...
@@ -301,6 +304,15 @@ void Platform::Keyboard::poll()
 
         while (true)
             ;
+    }
+
+    if (UNLIKELY(static_cast<bool>(::missed_keys))) {
+        for (int i = 0; i < (int)Key::count; ++i) {
+            if ((*::missed_keys)[i]) {
+                states_[i] = true;
+            }
+        }
+        ::missed_keys.reset();
     }
 }
 
@@ -1724,7 +1736,27 @@ void Platform::sleep(u32 frames)
 
     irqDisable(IRQ_TIMER3);
 
+    // NOTE: When sleeping for large numbers of frames, we may miss button
+    // presses! So we should keep track of which keys were pressed during the
+    // sleep() call.
+    Keyboard temp_kb;
+
+    const auto start_keys = keyboard_.dump_state();
+
     while (frames--) {
+        temp_kb.poll();
+        const auto current_keys = temp_kb.dump_state();
+
+        for (int i = 0; i < (int)Key::count; ++i) {
+            if (start_keys[i] not_eq current_keys[i] and current_keys[i]) {
+                if (not ::missed_keys) {
+                    ::missed_keys.emplace();
+                    ::missed_keys->clear();
+                }
+                missed_keys->set(i, true);
+            }
+        }
+
         VBlankIntrWait();
     }
 
