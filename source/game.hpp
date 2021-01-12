@@ -280,7 +280,7 @@ enum {
     boss_0_level = 9,
     boss_1_level = 20,
     boss_2_level = 29,
-    boss_3_level = 35,
+    boss_3_level = 37,
     boss_max_level
 };
 

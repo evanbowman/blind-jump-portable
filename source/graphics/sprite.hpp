@@ -95,8 +95,8 @@ private:
     bool flip_y_ : 1;
 
     // Extra flags reserved for future use.
-    u8 flags1_ : 3;
-    u8 flags2_ : 8;
+    [[maybe_unused]] u8 flags1_ : 3;
+    [[maybe_unused]] u8 flags2_ : 8;
 
     // Because sprites are only 16x32 or 32x32, 16bits for the origin field is
     // quite generous...
@@ -123,6 +123,12 @@ enum TextureMap : TextureIndex {
     player_still_left = 81,
     player_walk_right = 82,
     player_still_right = 88,
+    player_dodge_left = 98,
+    player_dodge_right = 99,
+    player_dodge_down = 100,
+    player_dodge_up = 101,
+    player_sidestep_right = 102,
+    player_sidestep_left = 103,
     transporter = 15,
     item_chest = 12,
     turret = 18,

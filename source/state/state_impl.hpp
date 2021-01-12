@@ -201,7 +201,6 @@ private:
 
     Microseconds timer_ = 0;
     u8 cursor_index_ = 0;
-    u8 cursor_anim_ = 0;
 };
 
 
@@ -1000,8 +999,6 @@ private:
     void refresh(Platform& pfrm, Game& game);
 
     void draw_line(Platform& pfrm, int row, const char* value);
-
-    const char* str_ = nullptr;
 
     DeferredState exit_state_;
 

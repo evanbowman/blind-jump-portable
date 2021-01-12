@@ -47,7 +47,11 @@ inline bool is_little_endian()
 extern "C" {
 using size_t = decltype(sizeof(int)); // If only I wasn't too lazy to look up
                                       // which header it's defined in
+#ifdef __APPLE__
+void* memcpy(void* destination, const void* source, size_t num);
+#else
 void* memcpy(void* destination, const void* source, size_t num) noexcept;
+#endif
 }
 
 

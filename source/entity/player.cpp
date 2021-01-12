@@ -9,7 +9,7 @@
 // BlindJump from 2016. This code is kind of a mess.
 
 
-static const Vec2<s16> v_origin{8, 16};
+// static const Vec2<s16> v_origin{8, 16};
 static const Vec2<s16> h_origin{16, 16};
 // static const Player::Health initial_health{3};
 

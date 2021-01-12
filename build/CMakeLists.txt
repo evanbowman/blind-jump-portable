@@ -568,6 +568,7 @@ elseif(APPLE)
     COMMAND cp -r ${ROOT_DIR}/shaders/ BlindJump.app/Contents/shaders/
     COMMAND cp -r ${ROOT_DIR}/sounds/ BlindJump.app/Contents/sounds/
     COMMAND cp -r ${ROOT_DIR}/scripts/ BlindJump.app/Contents/scripts/
+    COMMAND cp -r ${ROOT_DIR}/strings/ BlindJump.app/Contents/strings/
     # COMMAND cp macOS/icon.icns BlindJump.app/Contents/Resources
     # COMMAND cp -r ${SFML_DIR}/lib/* BlindJump.app/Contents/Frameworks
     # COMMAND cp -r ${SFML_DIR}/extlibs/libs-osx/Frameworks/* BlindJump.app/Contents/Frameworks

@@ -647,6 +647,38 @@ static std::queue<std::pair<TileDesc, Platform::TextureMapping>> glyph_requests;
 static std::vector<Platform::Task*> task_queue;
 
 
+static ObjectPool<RcBase<Platform::DynamicTexture,
+                         Platform::dynamic_texture_count>::ControlBlock,
+                  Platform::dynamic_texture_count>
+    dynamic_texture_pool;
+
+
+void Platform::DynamicTexture::remap(u16 spritesheet_offset)
+{
+    // No need to do anything on the desktop platform. All of our texture fits
+    // in vram, so we do not need to manage any "virtual" tile indices.
+}
+
+
+std::optional<Platform::DynamicTexturePtr> Platform::make_dynamic_texture()
+{
+    auto finalizer =
+        [](RcBase<Platform::DynamicTexture,
+                  Platform::dynamic_texture_count>::ControlBlock* ctrl) {
+            // Nothing managed, so nothing to do.
+            dynamic_texture_pool.post(ctrl);
+        };
+
+    auto dt = DynamicTexturePtr::create(&dynamic_texture_pool, finalizer, 0);
+    if (dt) {
+        return *dt;
+    }
+
+    warning(*this, "Failed to allocate DynamicTexture.");
+    return {};
+}
+
+
 void Platform::push_task(Task* task)
 {
     task->complete_ = false;
@@ -1254,6 +1286,9 @@ Platform::Speaker::Speaker()
 }
 
 
+static std::string current_music;
+
+
 void Platform::Speaker::play_music(const char* name, Microseconds offset)
 {
     std::string path = resource_path() + ("sounds" PATH_DELIMITER);
@@ -1273,6 +1308,9 @@ void Platform::Speaker::play_music(const char* name, Microseconds offset)
         // where everthing is mono (there's only one speaker on the device, so
         // stereo isn't really worth the resources on the gameboy).
         ::platform->data()->music_.setVolume(70);
+
+        ::current_music = name;
+
     } else {
         error(*::platform, "failed to load music file");
     }
@@ -1329,6 +1367,12 @@ void Platform::Speaker::play_sound(const char* name,
 bool is_sound_playing(const char* name)
 {
     return false; // TODO...
+}
+
+
+bool Platform::Speaker::is_music_playing(const char* name)
+{
+    return ::current_music == name;
 }
 
 
@@ -1748,24 +1792,24 @@ void Platform::feed_watchdog()
 }
 
 
-static std::map<std::string, std::string> scripts;
+static std::map<std::string, std::string> files;
 
 
 const char* Platform::load_file_contents(const char* folder,
                                          const char* filename) const
 {
     const auto name = std::string(folder) + PATH_DELIMITER + filename;
-    const auto found = scripts.find(name);
-    if (found == scripts.end()) {
+    const auto found = files.find(name);
+    if (found == files.end()) {
         std::fstream file(resource_path() + name);
         std::stringstream buffer;
         buffer << file.rdbuf();
-        scripts[name] = buffer.str();
+        files[name] = buffer.str();
     } else {
         return found->second.c_str();
     }
 
-    return scripts[name].c_str();
+    return files[name].c_str();
 }
 
 

@@ -97,6 +97,34 @@ void PeerPlayer::sync(Platform& pfrm,
     // the walk cycle, we need to adjust the helmet's origin based on the
     // current keyframe.
     switch (sprite_.get_texture_index()) {
+    case player_dodge_left:
+        head_.set_texture_index(122);
+        head_.set_origin({14, 38});
+        break;
+
+    case player_dodge_right:
+        head_.set_texture_index(123);
+        head_.set_origin({4, 38});
+        break;
+
+    case player_dodge_down:
+        head_.set_texture_index(120);
+        head_.set_origin({8, 36});
+        break;
+
+    case player_dodge_up:
+        break;
+
+    case player_sidestep_right:
+        head_.set_texture_index(122);
+        head_.set_origin({7, 40});
+        break;
+
+    case player_sidestep_left:
+        head_.set_texture_index(123);
+        head_.set_origin({9, 40});
+        break;
+
     case player_still_down:
     case player_still_down + 3:
     case player_still_down + 5:
@@ -272,6 +300,9 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
 
         set_blaster_down();
     }
+    if (texture_index == player_dodge_down) {
+        set_blaster_down();
+    }
 
     if (texture_index == player_still_right) {
         set_blaster_right();
@@ -281,12 +312,21 @@ void PeerPlayer::update(Platform& pfrm, Game& game, Microseconds dt)
 
         set_blaster_right();
     }
+    if (texture_index == player_dodge_right or
+        texture_index == player_sidestep_right) {
+        set_blaster_right();
+    }
+
     if (texture_index == player_still_left) {
         set_blaster_left();
     }
     if (texture_index >= player_walk_left and
         texture_index < player_walk_left + 6) {
 
+        set_blaster_left();
+    }
+    if (texture_index == player_dodge_left or
+        texture_index == player_sidestep_left) {
         set_blaster_left();
     }
 }
