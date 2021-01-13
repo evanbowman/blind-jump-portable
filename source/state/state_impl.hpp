@@ -30,10 +30,9 @@ public:
         }
     }
 
-    void receive(const net_event::PlayerDied&, Platform& pfrm, Game&) override
-    {
-        pfrm.network_peer().disconnect();
-    }
+    void receive(const net_event::PlayerDied&,
+                 Platform& pfrm,
+                 Game& game) override;
 
     void receive(const net_event::ProgramVersion& vn,
                  Platform& pfrm,
@@ -1338,6 +1337,26 @@ private:
 };
 
 
+class MultiplayerReviveWaitingState : public OverworldState {
+public:
+    MultiplayerReviveWaitingState() :
+        OverworldState(true)
+    {
+    }
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+    using net_event::Listener::receive;
+
+    void receive(const net_event::PlayerEnteredGate&,
+                 Platform& pfrm,
+                 Game& game) override;
+
+private:
+    Camera camera_;
+};
+
+
 class ItemShopState : public OverworldState {
 private:
     enum class DisplayMode {
@@ -1521,7 +1540,8 @@ using StatePoolInst = StatePool<ActiveState,
                                 BossDeathSequenceState,
                                 QuickSelectInventoryState,
                                 SignalJammerSelectorState,
-                                HealthAndSafetyWarningState>;
+                                HealthAndSafetyWarningState,
+                                MultiplayerReviveWaitingState>;
 
 
 StatePoolInst& state_pool();

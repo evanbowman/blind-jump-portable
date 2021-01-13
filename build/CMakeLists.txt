@@ -110,6 +110,7 @@ set(SOURCES
 
 set(SOURCES
   ${SOURCES}
+  ${SOURCE_DIR}/state/multiplayerReviveWaitingState.cpp
   ${SOURCE_DIR}/state/healthAndSafetyWarningState.cpp
   ${SOURCE_DIR}/state/quickSelectInventoryState.cpp
   ${SOURCE_DIR}/state/networkConnectSetupState.cpp

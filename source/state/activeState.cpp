@@ -104,10 +104,11 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             net_event::PlayerDied pd;
             net_event::transmit(pfrm, pd);
 
-            // Eventually, in a future state, we will want to disconnect our own
-            // network peer. But we don't want to disconnect right away,
-            // otherwise, the PlayerDied event may not be sent out. So wait
-            // until the next state, or the state afterwards.
+            game.player().init({0, 0});
+            game.player().set_visible(false);
+
+            // We're dead, hopefully our friend comes to revive us!
+            return state_pool().create<MultiplayerReviveWaitingState>();
         }
 
         return state_pool().create<DeathFadeState>(game);

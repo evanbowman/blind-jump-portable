@@ -230,9 +230,10 @@ void OverworldState::receive(const net_event::PlayerInfo& p,
                              Platform& pfrm,
                              Game& game)
 {
-    if (game.peer()) {
-        game.peer()->sync(pfrm, game, p);
+    if (not game.peer()) {
+        game.peer().emplace(pfrm);
     }
+    game.peer()->sync(pfrm, game, p);
 }
 
 
@@ -311,15 +312,13 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
 
     static auto update_counter = player_refresh_rate;
 
-    if (not game.peer()) {
-        game.peer().emplace(pfrm);
-    }
-
     update_counter -= delta;
     if (update_counter <= 0) {
         update_counter = player_refresh_rate;
 
-        transmit_player_info(pfrm, game);
+        if (game.player().get_health() > 0) {
+            transmit_player_info(pfrm, game);
+        }
 
         if (pfrm.network_peer().is_host()) {
             net_event::SyncSeed s;
@@ -331,8 +330,10 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
 
     net_event::poll_messages(pfrm, game, *this);
 
+    if (game.peer()) {
+        game.peer()->update(pfrm, game, delta);
+    }
 
-    game.peer()->update(pfrm, game, delta);
 }
 
 
@@ -340,6 +341,23 @@ void player_death(Platform& pfrm, Game& game, const Vec2<Float>& position)
 {
     pfrm.speaker().play_sound("explosion1", 3, position);
     big_explosion(pfrm, game, position);
+}
+
+
+void CommonNetworkListener::receive(const net_event::PlayerDied&,
+                                    Platform& pfrm,
+                                    Game& game)
+{
+    if (game.player().get_health() == 0) {
+        // If we're already dead, and the peer just died, then no-one can revive
+        // us. Time to disconnect.
+        pfrm.network_peer().disconnect();
+    } else {
+        if (game.peer()) {
+            player_death(pfrm, game, game.peer()->get_position());
+            game.peer().reset();
+        }
+    }
 }
 
 
