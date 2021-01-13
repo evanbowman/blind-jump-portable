@@ -13,7 +13,7 @@ class State;
 
 
 using StatePtr = std::unique_ptr<State, void (*)(State*)>;
-
+using DeferredState = Function<16, StatePtr()>;
 
 class State {
 public:

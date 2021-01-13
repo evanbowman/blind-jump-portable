@@ -9,9 +9,6 @@
 #include "version.hpp"
 
 
-using DeferredState = Function<16, StatePtr()>;
-
-
 class CommonNetworkListener : public net_event::Listener {
 public:
     void receive(const net_event::PlayerEnteredGate&,

@@ -1,4 +1,5 @@
 #include "signpost.hpp"
+#include "state/state_impl.hpp"
 
 
 Signpost::Signpost(const Vec2<Float>& position, Type type) : type_(type)
@@ -6,6 +7,7 @@ Signpost::Signpost(const Vec2<Float>& position, Type type) : type_(type)
     position_ = position;
 
     switch (type_) {
+    case Type::knocked_out_peer: // TODO
     case Type::lander:
         sprite_.set_alpha(Sprite::Alpha::transparent);
         extra_.set_alpha(Sprite::Alpha::transparent);
@@ -41,6 +43,11 @@ static const LocaleString memorial_dialog[] = {
     LocaleString::empty};
 
 
+static const LocaleString knocked_out_peer_dialog[] = {
+    LocaleString::revive_peer,
+    LocaleString::empty};
+
+
 const LocaleString* Signpost::get_dialog() const
 {
     switch (type_) {
@@ -49,7 +56,23 @@ const LocaleString* Signpost::get_dialog() const
 
     case Type::lander:
         return lander_dialog;
+
+    case Type::knocked_out_peer:
+        return knocked_out_peer_dialog;
     }
 
     return memorial_dialog;
+}
+
+
+DeferredState Signpost::resume_state(Platform& pfrm, Game& game) const
+{
+    switch (type_) {
+    case Type::memorial:
+    case Type::lander:
+    case Type::knocked_out_peer:
+        break;
+    }
+
+    return make_deferred_state<ActiveState>();
 }
