@@ -1339,10 +1339,15 @@ private:
 
 class MultiplayerReviveWaitingState : public OverworldState {
 public:
-    MultiplayerReviveWaitingState() :
-        OverworldState(true)
+    MultiplayerReviveWaitingState(const Vec2<Float>& player_death_pos) :
+        OverworldState(true),
+        player_death_pos_(player_death_pos),
+        timer_(0),
+        display_mode_(DisplayMode::camera_pan)
     {
     }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
@@ -1353,7 +1358,12 @@ public:
                  Game& game) override;
 
 private:
+    Vec2<Float> player_death_pos_;
     Camera camera_;
+    Microseconds timer_;
+    enum class DisplayMode {
+        camera_pan, track_peer,
+    } display_mode_;
 };
 
 

@@ -104,11 +104,14 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             net_event::PlayerDied pd;
             net_event::transmit(pfrm, pd);
 
+            auto next_state =
+                state_pool().create<MultiplayerReviveWaitingState>(game.player().get_position());
+
             game.player().init({0, 0});
             game.player().set_visible(false);
 
             // We're dead, hopefully our friend comes to revive us!
-            return state_pool().create<MultiplayerReviveWaitingState>();
+            return next_state;
         }
 
         return state_pool().create<DeathFadeState>(game);
