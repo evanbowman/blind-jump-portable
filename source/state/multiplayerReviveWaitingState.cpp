@@ -8,7 +8,32 @@ void MultiplayerReviveWaitingState::receive(const net_event::PlayerEnteredGate&,
     // Ok, so at this point, the other player entered the warp gate and left us
     // behind. No one is coming to help, let's disconnect from the multiplayer
     // game ;(
-    pfrm.network_peer().disconnect();
+    safe_disconnect(pfrm);
+}
+
+
+void MultiplayerReviveWaitingState::receive(const net_event::HealthTransfer& hp,
+                                            Platform& pfrm,
+                                            Game& game)
+{
+    if (game.peer()) {
+
+        auto pos = Vec2<Float>{};
+
+        auto& sps = game.details().get<Signpost>();
+        for (auto it = sps.begin(); it not_eq sps.end();) {
+            if ((*it)->get_type() == Signpost::Type::knocked_out_peer) {
+                pos = (*it)->get_position();
+                it = sps.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        game.player().init(pos);
+        game.player().set_visible(true);
+    }
+    game.player().set_health(hp.amount_.get());
+    game.camera() = camera_;
 }
 
 
@@ -28,11 +53,27 @@ StatePtr MultiplayerReviveWaitingState::update(Platform& pfrm,
 {
     OverworldState::update(pfrm, game, delta);
 
-    if (not pfrm.network_peer().is_connected() or
-        not game.peer()) {
+    if (not pfrm.network_peer().is_connected() or not game.peer()) {
         if (pfrm.network_peer().is_connected()) {
-            pfrm.network_peer().disconnect();
+            safe_disconnect(pfrm);
         }
+        game.peer().reset();
+
+        auto pos = Vec2<Float>{};
+
+        auto& sps = game.details().get<Signpost>();
+        for (auto it = sps.begin(); it not_eq sps.end();) {
+            if ((*it)->get_type() == Signpost::Type::knocked_out_peer) {
+                pos = (*it)->get_position();
+                it = sps.erase(it);
+            } else {
+                ++it;
+            }
+        }
+
+        game.player().init(pos);
+        game.player().set_visible(false);
+
         return state_pool().create<DeathFadeState>(game);
     }
 
@@ -58,6 +99,10 @@ StatePtr MultiplayerReviveWaitingState::update(Platform& pfrm,
         // Safe access, because we checked contents of peer optional above.
         camera_target = game.peer()->get_position();
         break;
+    }
+
+    if (game.player().get_health() not_eq 0) {
+        return state_pool().create<ActiveState>();
     }
 
     // The overworld state has a lot of useful stuff in it, but we want to use

@@ -274,8 +274,7 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
                     // identifier out of the command buffer again.
                     completion_prefix_len_ = ident.length();
 
-                    lisp::get_interns([&ident, this](
-                                          const char* intern) {
+                    lisp::get_interns([&ident, this](const char* intern) {
                         if (completion_strs_.full()) {
                             return;
                         }

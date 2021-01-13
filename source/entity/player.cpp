@@ -754,11 +754,13 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
                 break;
             }
 
-            game.effects().spawn<Particle>(position_, dodge_flicker_light_color,
+            game.effects().spawn<Particle>(position_,
+                                           dodge_flicker_light_color,
                                            0.0000538f,
                                            false,
                                            milliseconds(500));
-            game.effects().spawn<Particle>(position_, dodge_flicker_light_color,
+            game.effects().spawn<Particle>(position_,
+                                           dodge_flicker_light_color,
                                            0.0000538f,
                                            false,
                                            milliseconds(500));

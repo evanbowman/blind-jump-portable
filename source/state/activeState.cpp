@@ -17,9 +17,9 @@ void ActiveState::enter(Platform& pfrm, Game& game, State& prev_state)
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
     dodge_ready_.emplace(
-            pfrm,
-            game.player().dodges() ? 383 : 387,
-            OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
+        pfrm,
+        game.player().dodges() ? 383 : 387,
+        OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
 
     repaint_powerups(pfrm,
                      game,
@@ -97,12 +97,18 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (game.player().get_health() == 0) {
         pfrm.sleep(5);
 
+        player_death(pfrm, game, game.player().get_position());
+
         if (pfrm.network_peer().is_connected()) {
             net_event::PlayerDied pd;
             net_event::transmit(pfrm, pd);
 
             auto next_state =
-                state_pool().create<MultiplayerReviveWaitingState>(game.player().get_position());
+                state_pool().create<MultiplayerReviveWaitingState>(
+                    game.player().get_position());
+
+            game.details().spawn<Signpost>(game.player().get_position(),
+                                           Signpost::Type::knocked_out_peer);
 
             game.player().init({0, 0});
             game.player().set_visible(false);
@@ -112,8 +118,6 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
 
         pfrm.speaker().stop_music();
-
-        player_death(pfrm, game, game.player().get_position());
 
         return state_pool().create<DeathFadeState>(game);
     }
@@ -214,8 +218,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
             if (pfrm.keyboard().down_transition(game.action2_key())) {
                 game.effects().get<DialogBubble>().clear();
-                return state_pool().create<DialogState>(sp->resume_state(pfrm, game),
-                                                        sp->get_dialog());
+                return state_pool().create<DialogState>(
+                    sp->resume_state(pfrm, game), sp->get_dialog());
             }
         } else {
             if (length(game.effects().get<DialogBubble>())) {

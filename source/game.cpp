@@ -2503,3 +2503,17 @@ SimulatedMiles distance_travelled(Level level)
         return total_distance * fraction_levels_done;
     }
 }
+
+
+void safe_disconnect(Platform& pfrm)
+{
+    net_event::Disconnect d;
+    net_event::transmit(pfrm, d);
+
+    for (int i = 0; i < 10; ++i) {
+        pfrm.network_peer().update();
+        pfrm.sleep(1);
+    }
+
+    pfrm.network_peer().disconnect();
+}

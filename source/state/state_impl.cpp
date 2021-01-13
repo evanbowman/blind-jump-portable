@@ -93,7 +93,7 @@ void CommonNetworkListener::receive(const net_event::ProgramVersion& vn,
             push_notification(pfrm, game.state(), str->c_str());
         }
 
-        pfrm.network_peer().disconnect();
+        safe_disconnect(pfrm);
 
     } else {
         info(pfrm, "received valid program version");
@@ -113,6 +113,14 @@ void CommonNetworkListener::receive(const net_event::PlayerEnteredGate&,
         pfrm,
         game.state(),
         locale_string(pfrm, LocaleString::peer_transport_waiting)->c_str());
+}
+
+
+void CommonNetworkListener::receive(const net_event::Disconnect&,
+                                    Platform& pfrm,
+                                    Game& game)
+{
+    pfrm.network_peer().disconnect();
 }
 
 

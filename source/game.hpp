@@ -414,3 +414,6 @@ bool level_in_range(Level level, LevelRange range);
 
 
 void newgame(Platform& pfrm, Game& game);
+
+
+void safe_disconnect(Platform& pfrm);

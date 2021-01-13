@@ -33,7 +33,7 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (game.peer()) {
                 game.peer().reset();
             }
-            pfrm.network_peer().disconnect();
+            safe_disconnect(pfrm);
         }
 
         return state_pool().create<DeathContinueState>();

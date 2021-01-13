@@ -7,7 +7,12 @@ Signpost::Signpost(const Vec2<Float>& position, Type type) : type_(type)
     position_ = position;
 
     switch (type_) {
-    case Type::knocked_out_peer: // TODO
+    case Type::knocked_out_peer:
+        sprite_.set_origin({16, 0});
+        sprite_.set_texture_index(16);
+        sprite_.set_position({position.x, position.y - 16});
+        break;
+
     case Type::lander:
         sprite_.set_alpha(Sprite::Alpha::transparent);
         extra_.set_alpha(Sprite::Alpha::transparent);
@@ -70,8 +75,10 @@ DeferredState Signpost::resume_state(Platform& pfrm, Game& game) const
     switch (type_) {
     case Type::memorial:
     case Type::lander:
-    case Type::knocked_out_peer:
         break;
+
+    case Type::knocked_out_peer:
+        return make_deferred_state<MultiplayerReviveState>();
     }
 
     return make_deferred_state<ActiveState>();

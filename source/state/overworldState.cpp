@@ -333,7 +333,6 @@ void OverworldState::multiplayer_sync(Platform& pfrm,
     if (game.peer()) {
         game.peer()->update(pfrm, game, delta);
     }
-
 }
 
 
@@ -351,10 +350,16 @@ void CommonNetworkListener::receive(const net_event::PlayerDied&,
     if (game.player().get_health() == 0) {
         // If we're already dead, and the peer just died, then no-one can revive
         // us. Time to disconnect.
-        pfrm.network_peer().disconnect();
+        safe_disconnect(pfrm);
     } else {
         if (game.peer()) {
-            player_death(pfrm, game, game.peer()->get_position());
+            const auto peer_pos = game.peer()->get_position();
+
+            player_death(pfrm, game, peer_pos);
+
+            game.details().spawn<Signpost>(peer_pos,
+                                           Signpost::Type::knocked_out_peer);
+
             game.peer().reset();
         }
     }

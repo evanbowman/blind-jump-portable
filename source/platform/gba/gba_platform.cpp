@@ -1749,7 +1749,7 @@ void Platform::sleep(u32 frames)
 
         for (int i = 0; i < (int)Key::count; ++i) {
             if (start_keys[i] not_eq current_keys[i] and current_keys[i]) {
-                if (not ::missed_keys) {
+                if (not::missed_keys) {
                     ::missed_keys.emplace();
                     ::missed_keys->clear();
                 }

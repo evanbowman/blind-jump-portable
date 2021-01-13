@@ -8,7 +8,7 @@ const Entity& Enemy::get_target(Game& game)
         if (game.peer() and not game.peer()->warping()) {
             if (game.player().get_health() == 0 or
                 manhattan_length(position_, game.player().get_position()) >
-                manhattan_length(position_, game.peer()->get_position())) {
+                    manhattan_length(position_, game.peer()->get_position())) {
 
                 return *game.peer();
             } else {

@@ -24,6 +24,7 @@ struct Header {
         player_entered_gate,
         player_health_changed,
         player_died,
+        health_transfer,
         enemy_health_changed,
         enemy_state_sync,
         sync_seed,
@@ -38,6 +39,7 @@ struct Header {
         data_stream_done_reading,
         quick_chat,
         lethargy_activated,
+        disconnect,
     } message_type_;
 };
 static_assert(sizeof(Header) == 1);
@@ -218,6 +220,16 @@ struct PlayerDied {
 };
 
 
+struct HealthTransfer {
+    Header header_;
+    HostInteger<Entity::Health> amount_;
+
+    u8 unused_[7];
+
+    static const auto mt = Header::MessageType::health_transfer;
+};
+
+
 struct ItemChestOpened {
     Header header_;
     HostInteger<Entity::Id> id_;
@@ -386,6 +398,15 @@ struct LethargyActivated {
 };
 
 
+struct Disconnect {
+    Header header_;
+
+    char unused_[11];
+
+    static const auto mt = Header::MessageType::disconnect;
+};
+
+
 template <typename T> void transmit(Platform& pfrm, T& message)
 {
     static_assert(sizeof(T) <= Platform::NetworkPeer::max_message_size);
@@ -464,6 +485,12 @@ public:
     {
     }
     virtual void receive(const LethargyActivated&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const Disconnect&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const HealthTransfer&, Platform&, Game&)
     {
     }
 };

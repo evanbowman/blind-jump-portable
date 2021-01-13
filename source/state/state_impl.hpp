@@ -27,9 +27,8 @@ public:
         }
     }
 
-    void receive(const net_event::PlayerDied&,
-                 Platform& pfrm,
-                 Game& game) override;
+    void
+    receive(const net_event::PlayerDied&, Platform& pfrm, Game& game) override;
 
     void receive(const net_event::ProgramVersion& vn,
                  Platform& pfrm,
@@ -37,6 +36,8 @@ public:
 
     void
     receive(const net_event::LethargyActivated&, Platform&, Game&) override;
+
+    void receive(const net_event::Disconnect&, Platform&, Game&) override;
 };
 
 
@@ -1336,11 +1337,9 @@ private:
 
 class MultiplayerReviveWaitingState : public OverworldState {
 public:
-    MultiplayerReviveWaitingState(const Vec2<Float>& player_death_pos) :
-        OverworldState(true),
-        player_death_pos_(player_death_pos),
-        timer_(0),
-        display_mode_(DisplayMode::camera_pan)
+    MultiplayerReviveWaitingState(const Vec2<Float>& player_death_pos)
+        : OverworldState(true), player_death_pos_(player_death_pos), timer_(0),
+          display_mode_(DisplayMode::camera_pan)
     {
     }
 
@@ -1354,13 +1353,43 @@ public:
                  Platform& pfrm,
                  Game& game) override;
 
+    void receive(const net_event::HealthTransfer&,
+                 Platform& pfrm,
+                 Game& game) override;
+
 private:
     Vec2<Float> player_death_pos_;
     Camera camera_;
     Microseconds timer_;
     enum class DisplayMode {
-        camera_pan, track_peer,
+        camera_pan,
+        track_peer,
     } display_mode_;
+};
+
+
+class MultiplayerReviveState : public OverworldState {
+public:
+    MultiplayerReviveState() : OverworldState(true)
+    {
+    }
+
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    void show_menu(Platform& pfrm);
+
+    enum class DisplayMode {
+        fade_in,
+        menu,
+        fade_out
+    } display_mode_ = DisplayMode::fade_in;
+
+    std::optional<SmallIcon> heart_icon_;
+    std::optional<Text> text_;
+    int donate_health_count_ = 0;
 };
 
 
@@ -1548,6 +1577,7 @@ using StatePoolInst = StatePool<ActiveState,
                                 QuickSelectInventoryState,
                                 SignalJammerSelectorState,
                                 HealthAndSafetyWarningState,
+                                MultiplayerReviveState,
                                 MultiplayerReviveWaitingState>;
 
 

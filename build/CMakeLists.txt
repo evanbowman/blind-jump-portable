@@ -115,6 +115,7 @@ set(SOURCES
   ${SOURCE_DIR}/state/quickSelectInventoryState.cpp
   ${SOURCE_DIR}/state/networkConnectSetupState.cpp
   ${SOURCE_DIR}/state/networkConnectWaitState.cpp
+  ${SOURCE_DIR}/state/multiplayerReviveState.cpp
   ${SOURCE_DIR}/state/bossDeathSequenceState.cpp
   ${SOURCE_DIR}/state/launchCutsceneState.cpp
   ${SOURCE_DIR}/state/endingCutsceneState.cpp
