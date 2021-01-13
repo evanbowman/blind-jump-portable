@@ -96,9 +96,6 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (game.player().get_health() == 0) {
         pfrm.sleep(5);
-        pfrm.speaker().stop_music();
-        // TODO: add a unique explosion sound effect
-        player_death(pfrm, game, game.player().get_position());
 
         if (pfrm.network_peer().is_connected()) {
             net_event::PlayerDied pd;
@@ -113,6 +110,10 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             // We're dead, hopefully our friend comes to revive us!
             return next_state;
         }
+
+        pfrm.speaker().stop_music();
+
+        player_death(pfrm, game, game.player().get_position());
 
         return state_pool().create<DeathFadeState>(game);
     }
@@ -213,8 +214,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
             if (pfrm.keyboard().down_transition(game.action2_key())) {
                 game.effects().get<DialogBubble>().clear();
-                auto future_state = make_deferred_state<ActiveState>();
-                return state_pool().create<DialogState>(future_state,
+                return state_pool().create<DialogState>(sp->resume_state(pfrm, game),
                                                         sp->get_dialog());
             }
         } else {

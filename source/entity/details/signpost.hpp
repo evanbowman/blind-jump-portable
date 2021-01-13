@@ -3,11 +3,12 @@
 #include "entity/entity.hpp"
 #include "localeString.hpp"
 #include "memory/buffer.hpp"
+#include "state.hpp"
 
 
 class Signpost : public Entity {
 public:
-    enum class Type { lander, memorial };
+    enum class Type { lander, memorial, knocked_out_peer };
 
     Signpost(const Vec2<Float>& position, Type type);
 
@@ -32,6 +33,7 @@ public:
             result.push_back(&extra_);
             break;
 
+        case Type::knocked_out_peer:
         default:
             result.push_back(&sprite_);
         }
@@ -47,12 +49,17 @@ public:
         case Type::lander:
         case Type::memorial:
             break;
+
+        case Type::knocked_out_peer:
+            break;
         }
 
         return result;
     }
 
     const LocaleString* get_dialog() const;
+
+    DeferredState resume_state(Platform& pfrm, Game& game) const;
 
 private:
     Sprite extra_;
