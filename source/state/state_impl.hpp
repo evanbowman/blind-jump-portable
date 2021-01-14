@@ -1389,6 +1389,9 @@ private:
 
     std::optional<SmallIcon> heart_icon_;
     std::optional<Text> text_;
+    std::optional<UIMetric> health_;
+    std::optional<UIMetric> score_;
+    Buffer<UIMetric, Powerup::max_> powerups_;
     int donate_health_count_ = 0;
 };
 

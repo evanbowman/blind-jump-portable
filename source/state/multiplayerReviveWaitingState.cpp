@@ -74,6 +74,8 @@ StatePtr MultiplayerReviveWaitingState::update(Platform& pfrm,
         game.player().init(pos);
         game.player().set_visible(false);
 
+        pfrm.speaker().stop_music();
+
         return state_pool().create<DeathFadeState>(game);
     }
 
