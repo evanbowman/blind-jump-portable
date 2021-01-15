@@ -751,7 +751,12 @@ static constexpr const ZoneInfo zone_1{
 
         draw_image(pfrm, 61, x, y, 3, 3, Layer::background);
     },
-    [](int x, int y, const TileMap&) { return 0; }};
+    [](int x, int y, const TileMap&) {
+        if (rng::choice<9>(rng::critical_state) == 0) {
+            return 18;
+        }
+        return 0;
+    }};
 
 
 static constexpr const ZoneInfo zone_2{
