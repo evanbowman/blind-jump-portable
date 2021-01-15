@@ -17,11 +17,10 @@
 
 You should find this readme mosty up-to-date, but as the game is under active development, everything is subject to change, and sometimes edits to the readme lag significantly behind changes to the game itself.
 
-<details>
-  <summary> <b>Game Preview GIF</b> (warning: contains flashing lights and colors)</summary>
-  <img src="imgs_for_readme/header.gif"/>
-</details>
+<b>Game Preview GIF</b>
 
+
+<img src="imgs_for_readme/header.gif"/>
 
 ## Contents
 <!--ts-->
@@ -103,7 +102,7 @@ Technically, you may also enter boss-rush mode at any time, by opening the scrip
 
 #### Script Console
 
-Open the pause screen, and press the left bumper repeatedly, and a menu option for a script console will appear in the pause menu. This gives you access to the game's lisp interpreter, which allows you to manipulate certain variables, add items, jump to levels, etc. See [Scripting](#scripting) for more info about the lisp dialect. Press B to enter text, and A for backspace (A will also exit the console if the text entry is empty). Press start to enter a command, and press L to open a list of variable autocomplete options. If the completion list is open, you may press B to select a completion, or A to cancel out of the autocomplete. The intrepreter will highlight excessive closing parentheses in red, making it easier to keep track of parens for really long lines where you cannot see the beginning of the command. Note that the buttons for A and B will be swapped if you enabled Swap A/B in the game settings.
+Open the pause screen, and press the left bumper repeatedly, and a menu option for a script console will appear in the pause menu. This gives you access to the game's lisp interpreter, which allows you to manipulate certain variables, add items, jump to levels, etc. See [Scripting](#scripting) for more info about the lisp dialect. Press A to enter text, and B for backspace (B will also exit the console if the text entry is empty). Press start to enter a command, and press L to open a list of variable autocomplete options. If the completion list is open, you may press A to select a completion, or B to cancel out of the autocomplete. The intrepreter will highlight excessive closing parentheses in red, making it easier to keep track of parens for really long lines where you cannot see the beginning of the command.
 
 <img src="imgs_for_readme/console.gif"/>
 
