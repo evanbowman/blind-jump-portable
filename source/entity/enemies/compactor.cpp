@@ -75,7 +75,7 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::await: {
         auto player_pos = game.player().get_position();
-        if (visible() and manhattan_length(player_pos, position_) < 110) {
+        if (visible() and manhattan_length(player_pos, position_) < 90) {
             if (abs(player_pos.x - position_.x) < 12 or
                 abs(player_pos.y - position_.y) < 15) {
 
@@ -100,7 +100,7 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::fall: {
         timer_ += dt;
         const auto spr_y_pos = sprite_.get_position().y;
-        static const auto duration = milliseconds(200);
+        static const auto duration = milliseconds(190);
         if (spr_y_pos < position_.y - 1) {
             const auto yoff = ease_out(timer_, 0, fall_height, duration);
 
@@ -142,7 +142,21 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::pause:
         timer_ += dt;
-        if (timer_ > milliseconds(220)) {
+        if (timer_ > [&]() {
+                switch (game.persistent_data().settings_.difficulty_) {
+                case Settings::Difficulty::normal:
+                    break;
+
+                case Settings::Difficulty::easy:
+                    return milliseconds(260);
+
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::hard:
+                case Settings::Difficulty::survival:
+                    return milliseconds(150);
+                }
+                return milliseconds(190);
+            }()) {
             timer_ = 0;
             state_ = State::rush;
         }
@@ -150,7 +164,21 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::rush:
         timer_ += dt;
-        static const Float target_speed(0.00025f);
+        const Float target_speed = [&] {
+            switch (game.persistent_data().settings_.difficulty_) {
+            case Settings::Difficulty::normal:
+                break;
+
+            case Settings::Difficulty::easy:
+                return 0.00022f;
+
+            case Settings::Difficulty::count:
+            case Settings::Difficulty::hard:
+            case Settings::Difficulty::survival:
+                return 0.00031f;
+            }
+            return 0.00026f;
+        }();
         const auto friction_start_time = milliseconds(600);
         if (timer_ < friction_start_time) {
             if (step_vector_.x and abs(step_vector_.x) < target_speed) {
