@@ -2097,7 +2097,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
             if ((int)item < (int)Item::Type::inventory_item_start or
                 item_is_persistent(item) or item == Item::Type::long_jump_z2 or
                 item == Item::Type::long_jump_z3 or
-                item == Item::Type::long_jump_z4) {
+                item == Item::Type::long_jump_z4 or
+                item == Item::Type::long_jump_home) {
 
                 continue;
             }
