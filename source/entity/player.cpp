@@ -722,7 +722,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             d_speed_ *= 3;
             pfrm.sleep(9);
             game.camera().shake(8);
-            // pfrm.speaker().play_sound("dodge", 1);
+            pfrm.speaker().play_sound("dodge", 1);
             //sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
             sprite_.set_mix({dodge_flicker_light_color, 255});
             blaster_.set_visible(false);
