@@ -106,14 +106,14 @@ void Game::init_script(Platform& pfrm)
         }));
 
     lisp::set_var("ID-OVERRIDE", lisp::make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
+                      L_EXPECT_ARGC(argc, 1);
+                      L_EXPECT_OP(0, integer);
 
-        Entity e;
-        e.override_id(lisp::get_op(0)->integer_.value_);
+                      Entity e;
+                      e.override_id(lisp::get_op(0)->integer_.value_);
 
-        return L_NIL;
-    }));
+                      return L_NIL;
+                  }));
 
     lisp::set_var("level", lisp::make_function([](int argc) {
                       if (auto game = interp_get_game()) {

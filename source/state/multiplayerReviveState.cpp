@@ -21,7 +21,7 @@ void MultiplayerReviveState::enter(Platform& pfrm,
                                    State& prev_state)
 {
     show_menu(pfrm);
-    
+
     repaint_health_score(
         pfrm, game, &health_, &score_, nullptr, UIMetric::Align::left);
 
@@ -51,34 +51,34 @@ MultiplayerReviveState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     const auto last_health = game.player().get_health();
     const auto last_score = game.score();
-    
+
     OverworldState::update(pfrm, game, delta);
-        
+
     if (pfrm.keyboard().down_transition<Key::up>()) {
         if (game.player().get_health() > 1) {
             ++donate_health_count_;
             game.player().set_health(game.player().get_health() - 1);
             show_menu(pfrm);
         }
-        
+
         pfrm.speaker().play_sound("scroll", 1);
-        
+
     } else if (pfrm.keyboard().down_transition<Key::down>()) {
         if (donate_health_count_ > 0) {
             --donate_health_count_;
             game.player().set_health(game.player().get_health() + 1);
             show_menu(pfrm);
         }
-        
+
         pfrm.speaker().play_sound("scroll", 1);
-        
+
     } else if (pfrm.keyboard().down_transition(game.action2_key())) {
         if (donate_health_count_ == 0) {
             return state_pool().create<ActiveState>();
         }
 
         pfrm.speaker().play_sound("select", 1);
-        
+
         net_event::HealthTransfer hp;
         hp.amount_.set(donate_health_count_);
 
@@ -111,6 +111,6 @@ MultiplayerReviveState::update(Platform& pfrm, Game& game, Microseconds delta)
                       last_score,
                       false,
                       UIMetric::Align::left);
-    
+
     return null_state();
 }

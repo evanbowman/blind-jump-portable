@@ -311,6 +311,23 @@ void update_ui_metrics(Platform& pfrm,
             OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
     }
 
+    if (static_cast<bool>(game.player().dodges()) == 0) {
+        if (pfrm.keyboard().pressed(game.action1_key())) {
+            dodge->emplace(
+                pfrm,
+                379,
+                OverlayCoord{
+                    1, u8(screen_tiles.y - (5 + game.powerups().size()))});
+        }
+        if (pfrm.keyboard().up_transition(game.action1_key())) {
+            dodge->emplace(
+                pfrm,
+                387,
+                OverlayCoord{
+                    1, u8(screen_tiles.y - (5 + game.powerups().size()))});
+        }
+    }
+
     if (last_health not_eq game.player().get_health()) {
         net_event::PlayerHealthChanged hc;
         hc.new_health_.set(game.player().get_health());
