@@ -534,6 +534,7 @@ void Game::init_script(Platform& pfrm)
         L_ITEM_K(long_jump_z2),
         L_ITEM_K(long_jump_z3),
         L_ITEM_K(long_jump_z4),
+        L_ITEM_K(long_jump_home),
         L_ITEM_K(engineer_notebook_1),
         L_ITEM_K(worker_notebook_2),
         L_ITEM_K(long_jump_home)};
