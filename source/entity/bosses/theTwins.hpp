@@ -52,7 +52,8 @@ public:
     void sync(const net_event::EnemyStateSync&, Game&)
     {
         // TODO: Bosses unsupported in multiplayer games.
-        while (true) ;
+        while (true)
+            ;
     }
 
     void on_collision(Platform&, Game&, LaserExplosion&);

@@ -161,18 +161,9 @@ void InfestedCore::update(Platform& pfrm, Game& game, Microseconds dt)
         spawn_timer_ += dt;
         if (spawn_timer_ > seconds(1)) {
             spawn_timer_ = 0;
-            if (rng::choice<5>(rng::critical_state) == 0) {
-                auto coord = enemy_spawn_coord();
-                for (int i = 0; i < 2; ++i) {
-                    if (game.enemies().spawn<Golem>(coord)) {
-                        (*game.enemies().get<Golem>().begin())->warped_in(game);
-                    }
-                }
-                state_ = State::active;
-            } else {
-                spawn_enemy();
-                state_ = State::spawn_2;
-            }
+            
+            spawn_enemy();
+            state_ = State::spawn_2;
         }
         break;
 
@@ -201,7 +192,14 @@ void InfestedCore::update(Platform& pfrm, Game& game, Microseconds dt)
         spawn_timer_ += dt;
         if (spawn_timer_ > seconds(1)) {
             spawn_timer_ = 0;
-            spawn_enemy();
+            if (rng::choice<2>(rng::critical_state)) {
+                auto coord = enemy_spawn_coord();
+                if (game.enemies().spawn<Golem>(coord)) {
+                    (*game.enemies().get<Golem>().begin())->warped_in(game);
+                }
+            } else {
+                spawn_enemy();
+            }
             state_ = State::active;
         }
         break;
