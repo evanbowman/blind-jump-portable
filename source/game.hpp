@@ -32,6 +32,7 @@
 #include "entity/enemies/compactor.hpp"
 #include "entity/enemies/dasher.hpp"
 #include "entity/enemies/drone.hpp"
+#include "entity/enemies/golem.hpp"
 #include "entity/enemies/scarecrow.hpp"
 #include "entity/enemies/sinkhole.hpp"
 #include "entity/enemies/snake.hpp"
@@ -96,7 +97,8 @@ public:
                                    Sinkhole,
                                    Twin,
                                    Compactor,
-                                   InfestedCore>;
+                                   InfestedCore,
+                                   Golem>;
 
     using DetailGroup = EntityGroup<30,
                                     ItemChest,

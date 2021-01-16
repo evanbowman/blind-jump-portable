@@ -1818,6 +1818,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         Function<64, void()> spawn_;
         bool (*level_in_range_)(Level) = [](Level) { return true; };
         int max_allowed_ = 1000;
+        bool (*ignore_)(Level) = [](Level) { return false; };
     } info[] = {
         {[&]() {
              spawn_entity<Drone>(pfrm, free_spots, game.enemies());
@@ -1836,7 +1837,26 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         {[&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); },
          [](Level l) { return l > 0; }},
         {[&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
-         [](Level l) { return l > boss_0_level and l < boss_3_level; }}};
+         [](Level l) { return l > boss_0_level and l < boss_3_level; }},
+        {[&]() {
+            if (rng::choice<2>(rng::utility_state) == 0) {
+                spawn_entity<Golem>(pfrm, free_spots, game.enemies());
+            } else {
+                spawn_entity<Dasher>(pfrm, free_spots, game.enemies());
+            }
+        },
+         [](Level l) { return l > boss_0_level + (boss_1_level - boss_0_level) / 2; },
+         1,
+         [](Level l) -> bool {
+             if (l < boss_1_level) {
+                 return rng::choice<7>(rng::critical_state);
+             } else if (l < boss_1_level + (boss_2_level - boss_1_level) / 2) {
+                 return rng::choice<5>(rng::critical_state);
+             } else if (l < boss_2_level) {
+                 return rng::choice<3>(rng::critical_state);
+             }
+             return rng::choice<3>(rng::critical_state) != 0;
+         }}};
 
     Buffer<EnemyInfo*, 100> distribution;
 
@@ -1861,9 +1881,11 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
             continue;
         }
 
-        ++i;
         choice->max_allowed_--;
-        choice->spawn_();
+        if (not choice->ignore_(game.level())) {
+            choice->spawn_();
+            ++i;
+        }
     }
 
     spawn_compactors(pfrm, game, free_spots);
