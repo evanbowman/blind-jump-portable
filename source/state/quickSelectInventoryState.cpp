@@ -263,6 +263,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
             if (selector_pos_ < items_.size()) {
                 int skip = page_ * items_.capacity() + selector_pos_;
                 bool done = false;
+                StatePtr next_state = null_state();
                 foreach_quickselect_item(
                     game, [&](Item::Type item, int page, int row, int col) {
                         if (skip > 0) {
@@ -275,7 +276,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                         if (pfrm.keyboard().down_transition(
                                 game.action2_key())) {
                             if (auto handler = inventory_item_handler(item)) {
-                                handler->callback_(pfrm, game);
+                                next_state = handler->callback_(pfrm, game);
                                 game.inventory().remove_item(page, col, row);
                                 done = true;
 
@@ -300,6 +301,11 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                             }
                         }
                     });
+
+                if (next_state) {
+                    return next_state;
+                }
+
                 while (not selector_shaded_)
                     redraw_selector(112);
 
