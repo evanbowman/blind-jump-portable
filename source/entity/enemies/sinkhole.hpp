@@ -1,6 +1,7 @@
 #pragma once
 
 #include "enemy.hpp"
+#include "network_event.hpp"
 
 
 class LaserExplosion;
@@ -24,6 +25,14 @@ public:
     }
 
     void on_death(Platform& pfr, Game& game);
+
+
+    void sync(const net_event::EnemyStateSync&, Game&)
+    {
+        // NOTE: Unsynchronized in multiplayer. This enemy neither deals damage,
+        // nor takes damage. Repositioning would also be inappropriate, as we do
+        // not synchronize the snake enemy.
+    }
 
 private:
     void injured(Platform&, Game&, Health amount);

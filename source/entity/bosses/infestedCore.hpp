@@ -2,6 +2,7 @@
 
 #include "entity/enemies/enemy.hpp"
 #include "localeString.hpp"
+#include "network_event.hpp"
 
 
 class LaserExplosion;
@@ -34,6 +35,12 @@ public:
     bool is_allied() const
     {
         return false;
+    }
+
+    void sync(const net_event::EnemyStateSync&, Game&)
+    {
+        // TODO: Bosses unsupported in multiplayer games.
+        while (true) ;
     }
 
     void update(Platform& pfrm, Game& game, Microseconds dt);

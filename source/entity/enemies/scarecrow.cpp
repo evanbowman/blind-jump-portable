@@ -357,7 +357,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
 }
 
 
-void Scarecrow::sync(const net_event::EnemyStateSync& state)
+void Scarecrow::sync(const net_event::EnemyStateSync& state, Game&)
 {
     state_ = static_cast<State>(state.state_);
     position_.x = state.x_.get();

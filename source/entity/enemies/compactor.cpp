@@ -296,7 +296,7 @@ void Compactor::on_collision(Platform& pfrm, Game& game, Laser&)
 }
 
 
-void Compactor::sync(const net_event::EnemyStateSync& state)
+void Compactor::sync(const net_event::EnemyStateSync& state, Game&)
 {
     // We do not actually care what's in the sync state message, we're just
     // using the event to let a connected multiplayer console know that the

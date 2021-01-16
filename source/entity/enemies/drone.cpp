@@ -273,7 +273,7 @@ void Drone::on_death(Platform& pf, Game& game)
 }
 
 
-void Drone::sync(const net_event::EnemyStateSync& state)
+void Drone::sync(const net_event::EnemyStateSync& state, Game&)
 {
     state_ = static_cast<State>(state.state_);
     position_.x = state.x_.get();

@@ -37,7 +37,7 @@ public:
 
     void on_death(Platform&, Game&);
 
-    void sync(const net_event::EnemyStateSync& state);
+    void sync(const net_event::EnemyStateSync& state, Game&);
 
 private:
     void injured(Platform&, Game&, Health amount);

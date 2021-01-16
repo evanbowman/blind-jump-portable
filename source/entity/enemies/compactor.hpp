@@ -38,7 +38,7 @@ public:
 
     void injured(Platform&, Game&, Health amount);
 
-    void sync(const net_event::EnemyStateSync& state);
+    void sync(const net_event::EnemyStateSync& state, Game&);
 
 private:
     void set_movement_vector(const Vec2<Float>& target);

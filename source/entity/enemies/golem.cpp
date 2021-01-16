@@ -115,6 +115,20 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
         }
     };
 
+    auto send_state = [&] {
+        if (&get_target(game) == &game.player()) {
+            const auto int_pos = position_.cast<s16>();
+
+            net_event::EnemyStateSync s;
+            s.state_ = static_cast<u8>(state_);
+            s.x_.set(int_pos.x);
+            s.y_.set(int_pos.y);
+            s.id_.set(id());
+
+            net_event::transmit(pfrm, s);
+        }
+    };
+
     switch (state_) {
     case State::sleep:
         timer_ += dt;
@@ -159,6 +173,7 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
             if (visible() and
                 distance(position_, get_target(game).get_position()) < 140) {
                 state_ = State::charge;
+                send_state();
                 sprite_.set_texture_index(18);
                 sprite_.set_origin({16, 8});
                 head_.set_origin({16, 40});
@@ -237,4 +252,25 @@ void Golem::on_death(Platform& pfrm, Game& game)
         Item::Type::coin, Item::Type::heart, Item::Type::null};
 
     on_enemy_destroyed(pfrm, game, 0, position_, 3, item_drop_vec);
+}
+
+
+void Golem::sync(const net_event::EnemyStateSync& state, Game&)
+{
+    timer_ = 0;
+
+    // Note: we only sync over the multiplayer link when we're just about to
+    // shoot.
+    sprite_.set_texture_index(18);
+    sprite_.set_origin({16, 8});
+    head_.set_origin({16, 40});
+
+    state_ = static_cast<State>(state.state_);
+
+    position_.x = state.x_.get();
+    position_.y = state.y_.get();
+
+    head_.set_position(position_);
+    sprite_.set_position(position_);
+    shadow_.set_position(position_);
 }

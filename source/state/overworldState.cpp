@@ -194,35 +194,20 @@ void OverworldState::receive(const net_event::EnemyStateSync& s,
                              Platform&,
                              Game& game)
 {
-    for (auto& e : game.enemies().get<Turret>()) {
-        if (e->id() == s.id_.get()) {
-            e->sync(s, game);
+    bool done = false;
+
+    game.enemies().transform([&](auto& buf) {
+        if (done) {
             return;
         }
-    }
-    for (auto& e : game.enemies().get<Dasher>()) {
-        if (e->id() == s.id_.get()) {
-            e->sync(s);
-            return;
+        for (auto& e : buf) {
+            if (e->id() == s.id_.get()) {
+                e->sync(s, game);
+                done = true;
+                return;
+            }
         }
-    }
-    for (auto& e : game.enemies().get<Scarecrow>()) {
-        if (e->id() == s.id_.get()) {
-            e->sync(s);
-        }
-    }
-    for (auto& e : game.enemies().get<Drone>()) {
-        if (e->id() == s.id_.get()) {
-            e->sync(s);
-            return;
-        }
-    }
-    for (auto& e : game.enemies().get<Compactor>()) {
-        if (e->id() == s.id_.get()) {
-            e->sync(s);
-            return;
-        }
-    }
+    });
 }
 
 

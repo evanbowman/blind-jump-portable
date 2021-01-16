@@ -37,7 +37,7 @@ public:
 
     void on_death(Platform&, Game&);
 
-    void sync(const net_event::EnemyStateSync&);
+    void sync(const net_event::EnemyStateSync&, Game&);
 
 private:
     enum class State {

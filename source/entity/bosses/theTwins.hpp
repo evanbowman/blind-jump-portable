@@ -2,6 +2,7 @@
 
 #include "entity/enemies/enemy.hpp"
 #include "localeString.hpp"
+#include "network_event.hpp"
 
 
 class LaserExplosion;
@@ -46,6 +47,12 @@ public:
         ret[0] = &shadow_;
         ret[1] = &shadow2_;
         return ret;
+    }
+
+    void sync(const net_event::EnemyStateSync&, Game&)
+    {
+        // TODO: Bosses unsupported in multiplayer games.
+        while (true) ;
     }
 
     void on_collision(Platform&, Game&, LaserExplosion&);

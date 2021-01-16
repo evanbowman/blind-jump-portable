@@ -8,6 +8,7 @@
 #include "enemy.hpp"
 #include "entity/entity.hpp"
 #include "tileMap.hpp"
+#include "network_event.hpp"
 
 
 class LaserExplosion;
@@ -27,6 +28,14 @@ public:
     const Vec2<TIdx>& tile_coord() const;
 
     friend class SnakeTail;
+
+    void sync(const net_event::EnemyStateSync&, Game&)
+    {
+        // NOTE: We have not implemented multiplayer synchronization for the
+        // snake enemy. If we did, we would need to re-position all of the tail
+        // segments, and make it look smooth, which is complicated, so lets just
+        // let this enemy be out of sync.
+    }
 
 protected:
     void destroy();
