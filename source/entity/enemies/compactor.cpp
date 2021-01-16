@@ -75,7 +75,7 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
 
     case State::await: {
         auto player_pos = game.player().get_position();
-        if (visible() and manhattan_length(player_pos, position_) < 90) {
+        if (visible() and manhattan_length(player_pos, position_) < 105) {
             if (abs(player_pos.x - position_.x) < 12 or
                 abs(player_pos.y - position_.y) < 15) {
 
