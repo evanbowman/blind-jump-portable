@@ -16,7 +16,7 @@
     (progn
 
       (add-items item-accelerator
-                 item-explosive_rounds)
+                 item-explosive_rounds_2)
 
       (if (< (level) boss-0-level)
           (level boss-0-level)

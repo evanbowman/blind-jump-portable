@@ -148,6 +148,7 @@ private:
     Float r_speed_;
     Float u_speed_;
     Float d_speed_;
+    Vec2<Float> last_pos_;
     Sprite shadow_;
     HitBox hitbox_;
     std::optional<Vec2<Float>> external_force_;

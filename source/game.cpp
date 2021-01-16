@@ -1839,7 +1839,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
         {[&]() { spawn_entity<Scarecrow>(pfrm, free_spots, game.enemies()); },
          [](Level l) { return l > boss_0_level and l < boss_3_level; }},
         {[&]() { spawn_entity<Golem>(pfrm, free_spots, game.enemies()); },
-         [](Level l) { return l > boss_2_level; },
+         [](Level l) { return l > boss_0_level + 4; },
          1,
          [](Level l) -> bool {
              if (l < boss_1_level and l > boss_0_level + 4) {

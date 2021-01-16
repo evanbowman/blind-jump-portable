@@ -493,33 +493,26 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
 
     const auto wc = check_wall_collisions(game.tiles(), *this);
 
-    if (UNLIKELY(wc.up and wc.down and wc.left and wc.right)) {
+    int collision_count = 0;
+    if (wc.up) {
+        ++collision_count;
+    }
+    if (wc.down) {
+        ++collision_count;
+    }
+    if (wc.left) {
+        ++collision_count;
+    }
+    if (wc.right) {
+        ++collision_count;
+    }
+
+    if (UNLIKELY(collision_count > 2)) {
         // How did this happen? We've managed to get ourselves stuck inside a
         // wall. This shouldn't happen under normal circumstances, but what if
-        // the game lags? So we should handle this condition... I guess we'll
-        // snap our position back to the nearest map tile, for now. Eventually,
-        // we'll want to snap our position to the nearest un-stuck x,y world
-        // coordinate, rather than a jarring jump to a tile coordinate.
-
-        Vec2<Float> nearest;
-        Float nearest_dist = std::numeric_limits<Float>::max();
-
-        game.tiles().for_each([&](const u8& tile, s8 x, s8 y) {
-            if (not is_walkable(tile)) {
-                return;
-            }
-
-            const auto c = to_world_coord(Vec2<s8>{x, y});
-
-            const auto dist = distance(position_, c);
-
-            if (dist < nearest_dist) {
-                nearest = c;
-                nearest_dist = dist;
-            }
-        });
-
-        set_position({nearest.x + 16, nearest.y - 16});
+        // the game lags, resulting in a large delta time? So we should handle
+        // this scenario, however unlikely.
+        set_position(last_pos_);
     }
 
     soft_update(pfrm, game, dt);
@@ -879,6 +872,8 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     const Vec2<Float> move_vec = {
         (l_speed_ + -r_speed_) * MOVEMENT_RATE_CONSTANT,
         (u_speed_ + -d_speed_) * MOVEMENT_RATE_CONSTANT};
+
+    last_pos_ = get_position();
 
     Vec2<Float> new_pos{position_.x - (move_vec.x * dt),
                         position_.y - (move_vec.y * dt)};
