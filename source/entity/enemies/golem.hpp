@@ -38,15 +38,16 @@ public:
     enum class State {
         sleep,
         inactive,
-        idle,
+        follow,
         charge,
         shooting,
         pause,
     };
 
 private:
-
     void injured(Platform&, Game&, Health amount);
+
+    void follow();
 
     Sprite head_;
     State state_;
@@ -54,5 +55,6 @@ private:
     Vec2<Float> speed_;
     Vec2<Float> target_;
     Microseconds timer_;
+    Microseconds anim_timer_;
     FadeColorAnimation<Microseconds(9865)> fade_color_anim_;
 };

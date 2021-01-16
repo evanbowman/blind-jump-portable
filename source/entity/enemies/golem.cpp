@@ -1,14 +1,12 @@
 #include "golem.hpp"
-#include "game.hpp"
 #include "common.hpp"
+#include "game.hpp"
 #include "wallCollision.hpp"
 
 
-Golem::Golem(const Vec2<Float>& pos) :
-    Enemy(Entity::Health(10), pos, {{20, 24}, {10, 14}}),
-    state_(State::sleep),
-    count_(0),
-    timer_(0)
+Golem::Golem(const Vec2<Float>& pos)
+    : Enemy(Entity::Health(10), pos, {{20, 24}, {10, 14}}),
+      state_(State::sleep), count_(0), timer_(0), anim_timer_(0)
 {
     sprite_.set_position(pos);
     sprite_.set_origin({16, 8});
@@ -48,7 +46,7 @@ void Golem::injured(Platform& pfrm, Game& game, Health amount)
     head_.set_mix({c, 255});
 
     if (state_ == State::inactive) {
-        state_ = State::idle;
+        follow();
     }
 }
 
@@ -68,6 +66,14 @@ void Golem::on_collision(Platform& pfrm, Game& game, LaserExplosion&)
 void Golem::on_collision(Platform& pfrm, Game& game, Laser&)
 {
     injured(pfrm, game, 1);
+}
+
+
+void Golem::follow()
+{
+    state_ = State::follow;
+    anim_timer_ = 0;
+    sprite_.set_texture_index(19);
 }
 
 
@@ -107,7 +113,6 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
                 speed_.y = 0.f;
             }
         }
-
     };
 
     switch (state_) {
@@ -122,35 +127,52 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::inactive:
         if (visible() or pfrm.network_peer().is_connected()) {
             timer_ = 0;
-            state_ = State::idle;
+            follow();
         }
         break;
 
-    case State::idle:
+    case State::follow:
         face_target();
 
-        speed_ = direction(position_, get_target(game).get_position()) * 1.4f;
+        anim_timer_ += dt;
+        if (anim_timer_ > milliseconds(90)) {
+            anim_timer_ = 0;
+            if (sprite_.get_texture_index() == 19) {
+                sprite_.set_texture_index(20);
+                sprite_.set_origin({16, 8});
+                head_.set_origin({16, 40});
+            } else {
+                sprite_.set_texture_index(19);
+                sprite_.set_origin({16, 9});
+                head_.set_origin({16, 41});
+            }
+        }
+
+        speed_ = direction(position_, get_target(game).get_position()) * 2.f;
         check_wall();
         position_.x += speed_.x * dt * movement_rate;
         position_.y += speed_.y * dt * movement_rate;
 
         timer_ += dt;
-        if (timer_ > milliseconds(1550)) {
+        if (timer_ > milliseconds(500)) {
             timer_ = 0;
-            if (visible() and distance(position_, get_target(game).get_position()) < 140) {
+            if (visible() and
+                distance(position_, get_target(game).get_position()) < 140) {
                 state_ = State::charge;
+                sprite_.set_texture_index(18);
+                sprite_.set_origin({16, 8});
+                head_.set_origin({16, 40});
             }
         }
         break;
 
     case State::charge:
         face_target();
-        if (timer_ > milliseconds(75) and
-            timer_ + dt > milliseconds(75)) {
+        if (timer_ > milliseconds(1000) and timer_ + dt > milliseconds(1000)) {
             target_ = get_target(game).get_position();
         }
         timer_ += dt;
-        if (timer_ > milliseconds(150)) {
+        if (timer_ > milliseconds(1100)) {
             timer_ = 0;
             state_ = State::shooting;
         }
@@ -159,20 +181,18 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
     case State::shooting:
         timer_ += dt;
 
-        target_ = interpolate(get_target(game).get_position(),
-                              target_,
-                              dt * 0.000012f);
+        target_ = interpolate(
+            get_target(game).get_position(), target_, dt * 0.000012f);
 
         if (timer_ > milliseconds(70)) {
             timer_ = 0;
 
             pfrm.speaker().play_sound("laser1", 4, position_);
-            this->shoot(
-                pfrm,
-                game,
-                position_,
-                rng::sample<24>(target_, rng::utility_state),
-                0.00019f);
+            this->shoot(pfrm,
+                        game,
+                        position_,
+                        rng::sample<24>(target_, rng::utility_state),
+                        0.00019f);
 
             speed_ = direction(target_, position_) * 1.4f;
 
@@ -197,7 +217,7 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
 
         if (timer_ > seconds(1)) {
             timer_ = 0;
-            state_ = State::idle;
+            follow();
             speed_ = {};
         }
         break;
@@ -213,9 +233,8 @@ void Golem::on_death(Platform& pfrm, Game& game)
 {
     pfrm.sleep(6);
 
-    static const Item::Type item_drop_vec[] = {Item::Type::coin,
-                                               Item::Type::heart,
-                                               Item::Type::null};
+    static const Item::Type item_drop_vec[] = {
+        Item::Type::coin, Item::Type::heart, Item::Type::null};
 
     on_enemy_destroyed(pfrm, game, 0, position_, 3, item_drop_vec);
 }
