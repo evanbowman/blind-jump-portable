@@ -2643,6 +2643,15 @@ extern char __eheap_start;
 
 Platform::Platform()
 {
+    logger().set_threshold(Severity::error);
+
+    keyboard().poll();
+    if (keyboard().pressed<Key::alt_1>() and
+        keyboard().pressed<Key::alt_1>() and
+        keyboard().pressed<Key::action_1>()) {
+        logger().set_threshold(Severity::debug);
+    }
+
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
     // attempt to save, and if the save fails, assume flash. I don't really know
