@@ -1553,6 +1553,25 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     if (zone_info(level()) == zone_1) {
         tiles_.for_each([&](u8& tile, int x, int y) {
+            const auto up = tiles_.get_tile(x, y + 1);
+            const auto down = tiles_.get_tile(x, y - 1);
+            const auto left = tiles_.get_tile(x - 1, y);
+            const auto right = tiles_.get_tile(x + 1, y);
+            if (tile == 0 and not contains(wall_tiles, left)
+                and (up == 0 or up == 18 or down == 0 or down == 18)
+                and (tiles_.get_tile(x - 2, y) == 0 or
+                     tiles_.get_tile(x - 2, y) == 19)) {
+                tiles_.set_tile(x, y, 18);
+            }
+            if (tile == 0 and not contains(wall_tiles, right)
+                and (up == 0 or up == 19 or down == 0 or down == 19)
+                and (tiles_.get_tile(x + 2, y) == 0 or
+                     tiles_.get_tile(x + 2, y) == 18)) {
+                tiles_.set_tile(x, y, 19);
+            }
+        });
+
+        tiles_.for_each([&](u8& tile, int x, int y) {
             if (tile == Tile::ledge) {
                 if (tiles_.get_tile(x + 1, y) == Tile::plate) {
                     tile = Tile::beam_br;
@@ -1582,12 +1601,12 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     if (zone_info(level()) == zone_1) {
         tiles_.for_each([&](u8& tile, int x, int y) {
+            const auto up = tiles_.get_tile(x, y + 1);
+            const auto down = tiles_.get_tile(x, y - 1);
+            const auto left = tiles_.get_tile(x - 1, y);
+            const auto right = tiles_.get_tile(x + 1, y);
             if (tile == Tile::plate and
                 grass_overlay->get_tile(x, y) == Tile::none) {
-                const auto up = tiles_.get_tile(x, y + 1);
-                const auto down = tiles_.get_tile(x, y - 1);
-                const auto left = tiles_.get_tile(x - 1, y);
-                const auto right = tiles_.get_tile(x + 1, y);
 
                 if (is_center_tile(
                         wall_tiles, edge_tiles, tiles_.get_tile(x + 1, y)) and
@@ -1627,7 +1646,28 @@ COLD void Game::regenerate_map(Platform& pfrm)
                 }
             }
         });
+
+        // tiles_.for_each([&](u8& tile, int x, int y) {
+        //     if (tile == 18 and (tiles_.get_tile(x, y - 1) not_eq 18 and
+        //                         tiles_.get_tile(x, y + 1) not_eq 18)) {
+        //         tile = 0;
+        //     }
+        //     if (tile == 19 and (tiles_.get_tile(x, y - 1) not_eq 19 and
+        //                         tiles_.get_tile(x, y + 1) not_eq 19)) {
+        //         tile = 0;
+        //     }
+
+        // });
     }
+
+    grass_overlay->for_each([&](u8& tile, int x, int y) {
+        if (level() <= boss_0_level or level() > boss_1_level) {
+            return;
+        }
+        if (tile == 16 and rng::choice<2>(rng::critical_state)) {
+            tile = 19;
+        }
+    });
 
     add_map_decorations(level(), pfrm, tiles_, *grass_overlay);
 

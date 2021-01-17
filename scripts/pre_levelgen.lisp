@@ -11,6 +11,10 @@
 (set #edge-tiles-list (list 1 4 14 15 16 17))
 
 
+(if (< (level) (+ boss-0-level 1))
+    (set #wall-tiles-list (cons 18 (cons 19 wall-tiles-list))))
+
+
 ;; Boss rush hack
 (if (equal debug-mode 7)
     (progn
