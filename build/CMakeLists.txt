@@ -193,10 +193,12 @@ if(GAMEBOY_ADVANCE)
     ${SOURCE_DIR}/platform/gba/gba_platform.cpp
     ${SOURCE_DIR}/platform/gba/gbp_logo.cpp
     ${SOURCE_DIR}/platform/gba/memcpy.s
-    ${SOURCE_DIR}/platform/gba/interrupt.c
-    ${SOURCE_DIR}/platform/gba/interrupt_dispatch.s
-    ${SOURCE_DIR}/platform/gba/bios_math.s
-    ${SOURCE_DIR}/platform/gba/reset.s
+
+    ${ROOT_DIR}/external/libgba/interrupt.c
+    ${ROOT_DIR}/external/libgba/interrupt_dispatch.s
+    ${ROOT_DIR}/external/libgba/bios_math.s
+    ${ROOT_DIR}/external/libgba/reset.s
+
     ${SOURCE_DIR}/platform/gba/rumble.c
 
     # Data files below. Because the gameboy advance does not have a filesystem,

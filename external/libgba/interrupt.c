@@ -24,7 +24,7 @@
 
 */
 
-#include "gba.h"
+#include "platform/gba/gba.h"
 
 //---------------------------------------------------------------------------------
 struct IntTable IntrTable[MAX_INTS];
