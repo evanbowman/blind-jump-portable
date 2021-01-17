@@ -1868,11 +1868,11 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          },
          [](Level l) { return l < boss_0_level or l > boss_1_level; }},
         {[&]() { spawn_entity<Dasher>(pfrm, free_spots, game.enemies()); },
-         [](Level l) { return l >= 5; }},
+         [](Level l) { return l >= 4; }},
         {[&]() {
              spawn_entity<SnakeHead>(pfrm, free_spots, game.enemies(), game);
          },
-         [](Level l) { return l >= 7 and l < boss_0_level; },
+         [](Level l) { return l >= 6 and l < boss_0_level; },
          1},
         {[&]() { spawn_entity<Turret>(pfrm, free_spots, game.enemies()); },
          [](Level l) { return l > 0; }},
