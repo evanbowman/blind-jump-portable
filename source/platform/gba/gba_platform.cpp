@@ -1934,7 +1934,7 @@ SynchronizedBase::~SynchronizedBase()
 
 // This is unfortunate. Maybe we should define a max save data size as part of
 // the platform header, so that we do not need to pull in game specific code.
-#include "persistentData.hpp"
+#include "blind_jump/persistentData.hpp"
 
 
 // NOTE: PersistentData goes first into flash memory, followed by the game's
@@ -1961,15 +1961,15 @@ void Platform::Logger::set_threshold(Severity severity)
 
 void Platform::Logger::log(Severity level, const char* msg)
 {
-    if (static_cast<int>(level) < static_cast<int>(::log_threshold)) {
-        return;
-    }
+    // if (static_cast<int>(level) < static_cast<int>(::log_threshold)) {
+    //     return;
+    // }
 
-    // We don't want to wear out the flash chip! The code below still works on
-    // flash though, if you just comment out the if statement below.
-    if (get_gflag(GlobalFlag::save_using_flash)) {
-        return;
-    }
+    // // We don't want to wear out the flash chip! The code below still works on
+    // // flash though, if you just comment out the if statement below.
+    // if (get_gflag(GlobalFlag::save_using_flash)) {
+    //     return;
+    // }
 
     std::array<char, 256> buffer;
 
@@ -2643,14 +2643,14 @@ extern char __eheap_start;
 
 Platform::Platform()
 {
-    logger().set_threshold(Severity::error);
+    // logger().set_threshold(Severity::error);
 
-    keyboard().poll();
-    if (keyboard().pressed<Key::alt_1>() and
-        keyboard().pressed<Key::alt_1>() and
-        keyboard().pressed<Key::action_1>()) {
-        logger().set_threshold(Severity::debug);
-    }
+    // keyboard().poll();
+    // if (keyboard().pressed<Key::alt_1>() and
+    //     keyboard().pressed<Key::alt_1>() and
+    //     keyboard().pressed<Key::action_1>()) {
+    //     logger().set_threshold(Severity::debug);
+    // }
 
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so

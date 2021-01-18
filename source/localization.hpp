@@ -3,7 +3,7 @@
 
 #include "bulkAllocator.hpp"
 #include "dateTime.hpp"
-#include "localeString.hpp"
+#include "blind_jump/localeString.hpp"
 #include "string.hpp"
 
 

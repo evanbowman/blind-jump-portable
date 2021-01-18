@@ -45,63 +45,64 @@ configure_file(dirlocals.in ${SOURCE_DIR}/.dir-locals.el)
 
 
 set(SOURCES
-  ${SOURCE_DIR}/entity/effects/wandererSmallLaser.cpp
-  ${SOURCE_DIR}/entity/effects/wandererBigLaser.cpp
-  ${SOURCE_DIR}/entity/effects/conglomerateShot.cpp
-  ${SOURCE_DIR}/entity/details/cutsceneCloud.cpp
-  ${SOURCE_DIR}/entity/effects/dynamicEffect.cpp
-  ${SOURCE_DIR}/entity/effects/staticEffect.cpp
-  ${SOURCE_DIR}/entity/details/cutsceneBird.cpp
-  ${SOURCE_DIR}/entity/effects/dialogBubble.cpp
-  ${SOURCE_DIR}/entity/bosses/infestedCore.cpp
-  ${SOURCE_DIR}/entity/bosses/gatekeeper.cpp
-  ${SOURCE_DIR}/entity/details/itemChest.cpp
-  ${SOURCE_DIR}/entity/details/scavenger.cpp
-  ${SOURCE_DIR}/entity/effects/explosion.cpp
-  ${SOURCE_DIR}/entity/enemies/scarecrow.cpp
-  ${SOURCE_DIR}/entity/enemies/compactor.cpp
-  ${SOURCE_DIR}/entity/details/signpost.cpp
-  ${SOURCE_DIR}/entity/effects/particle.cpp
-  ${SOURCE_DIR}/entity/enemies/sinkhole.cpp
-  ${SOURCE_DIR}/entity/bosses/wanderer.cpp
-  ${SOURCE_DIR}/entity/bosses/theTwins.cpp
-  ${SOURCE_DIR}/entity/effects/orbshot.cpp
-  ${SOURCE_DIR}/entity/details/lander.cpp
-  ${SOURCE_DIR}/entity/enemies/common.cpp
-  ${SOURCE_DIR}/entity/enemies/turret.cpp
-  ${SOURCE_DIR}/entity/enemies/dasher.cpp
-  ${SOURCE_DIR}/entity/details/rubble.cpp
-  ${SOURCE_DIR}/entity/details/debris.cpp
-  ${SOURCE_DIR}/entity/enemies/drone.cpp
-  ${SOURCE_DIR}/entity/enemies/enemy.cpp
-  ${SOURCE_DIR}/entity/enemies/golem.cpp
-  ${SOURCE_DIR}/entity/enemies/theif.cpp
-  ${SOURCE_DIR}/entity/enemies/snake.cpp
-  ${SOURCE_DIR}/entity/effects/laser.cpp
-  ${SOURCE_DIR}/entity/details/item.cpp
-  ${SOURCE_DIR}/entity/bosses/boss.cpp
-  ${SOURCE_DIR}/entity/peerPlayer.cpp
-  ${SOURCE_DIR}/state/state_impl.cpp
-  ${SOURCE_DIR}/game_script_defs.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/wandererSmallLaser.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/wandererBigLaser.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/conglomerateShot.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/cutsceneCloud.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/dynamicEffect.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/staticEffect.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/cutsceneBird.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/dialogBubble.cpp
+  ${SOURCE_DIR}/blind_jump/entity/bosses/infestedCore.cpp
+  ${SOURCE_DIR}/blind_jump/entity/bosses/gatekeeper.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/itemChest.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/scavenger.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/explosion.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/scarecrow.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/compactor.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/signpost.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/particle.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/sinkhole.cpp
+  ${SOURCE_DIR}/blind_jump/entity/bosses/wanderer.cpp
+  ${SOURCE_DIR}/blind_jump/entity/bosses/theTwins.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/orbshot.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/lander.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/common.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/turret.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/dasher.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/rubble.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/debris.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/drone.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/enemy.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/golem.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/theif.cpp
+  ${SOURCE_DIR}/blind_jump/entity/enemies/snake.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/laser.cpp
+  ${SOURCE_DIR}/blind_jump/entity/details/item.cpp
+  ${SOURCE_DIR}/blind_jump/entity/bosses/boss.cpp
+  ${SOURCE_DIR}/blind_jump/entity/peerPlayer.cpp
+  ${SOURCE_DIR}/blind_jump/state/state_impl.cpp
+  ${SOURCE_DIR}/blind_jump/game_script_defs.cpp
   ${SOURCE_DIR}/graphics/overlay.cpp
   ${SOURCE_DIR}/graphics/sprite.cpp
-  ${SOURCE_DIR}/persistentData.cpp
+  ${SOURCE_DIR}/blind_jump/persistentData.cpp
   ${SOURCE_DIR}/number/numeric.cpp
   ${SOURCE_DIR}/number/random.cpp
   ${SOURCE_DIR}/graphics/view.cpp
-  ${SOURCE_DIR}/entity/entity.cpp
-  ${SOURCE_DIR}/network_event.cpp
-  ${SOURCE_DIR}/entity/player.cpp
+  ${SOURCE_DIR}/blind_jump/entity/entity.cpp
+  ${SOURCE_DIR}/blind_jump/network_event.cpp
+  ${SOURCE_DIR}/blind_jump/entity/player.cpp
   ${SOURCE_DIR}/localization.cpp
-  ${SOURCE_DIR}/inventory.cpp
+  ${SOURCE_DIR}/blind_jump/inventory.cpp
   ${SOURCE_DIR}/collision.cpp
-  ${SOURCE_DIR}/powerup.cpp
+  ${SOURCE_DIR}/blind_jump/powerup.cpp
   ${SOURCE_DIR}/tileMap.cpp
+  ${SOURCE_DIR}/globals.cpp
   ${SOURCE_DIR}/camera.cpp
   ${SOURCE_DIR}/string.cpp
   ${SOURCE_DIR}/start.cpp
   ${SOURCE_DIR}/path.cpp
-  ${SOURCE_DIR}/game.cpp)
+  ${SOURCE_DIR}/blind_jump/game.cpp)
 
 
 set(SOURCES
@@ -111,47 +112,47 @@ set(SOURCES
 
 set(SOURCES
   ${SOURCES}
-  ${SOURCE_DIR}/state/multiplayerReviveWaitingState.cpp
-  ${SOURCE_DIR}/state/healthAndSafetyWarningState.cpp
-  ${SOURCE_DIR}/state/quickSelectInventoryState.cpp
-  ${SOURCE_DIR}/state/networkConnectSetupState.cpp
-  ${SOURCE_DIR}/state/networkConnectWaitState.cpp
-  ${SOURCE_DIR}/state/multiplayerReviveState.cpp
-  ${SOURCE_DIR}/state/bossDeathSequenceState.cpp
-  ${SOURCE_DIR}/state/launchCutsceneState.cpp
-  ${SOURCE_DIR}/state/endingCutsceneState.cpp
-  ${SOURCE_DIR}/state/deathContinueState.cpp
-  ${SOURCE_DIR}/state/endingCreditsState.cpp
-  ${SOURCE_DIR}/state/logfileViewerState.cpp
-  ${SOURCE_DIR}/state/preFadePauseState.cpp
-  ${SOURCE_DIR}/state/introCreditsState.cpp
-  ${SOURCE_DIR}/state/editSettingsState.cpp
-  ${SOURCE_DIR}/state/newLevelIdleState.cpp
-  ${SOURCE_DIR}/state/signalJammerState.cpp
-  ${SOURCE_DIR}/state/respawnWaitState.cpp
-  ${SOURCE_DIR}/state/scoreScreenState.cpp
-  ${SOURCE_DIR}/state/commandCodeState.cpp
-  ${SOURCE_DIR}/state/pauseScreenState.cpp
-  ${SOURCE_DIR}/state/titleScreenState.cpp
-  ${SOURCE_DIR}/state/remoteReplState.cpp
-  ${SOURCE_DIR}/state/quickChatState.cpp
-  ${SOURCE_DIR}/state/imageViewState.cpp
-  ${SOURCE_DIR}/state/inventoryState.cpp
-  ${SOURCE_DIR}/state/overworldState.cpp
-  ${SOURCE_DIR}/state/mapSystemState.cpp
-  ${SOURCE_DIR}/state/deathFadeState.cpp
-  ${SOURCE_DIR}/state/lispReplState.cpp
-  ${SOURCE_DIR}/state/newLevelState.cpp
-  ${SOURCE_DIR}/state/quickMapState.cpp
-  ${SOURCE_DIR}/state/notebookState.cpp
-  ${SOURCE_DIR}/state/glowFadeState.cpp
-  ${SOURCE_DIR}/state/itemShopState.cpp
-  ${SOURCE_DIR}/state/fadeOutState.cpp
-  ${SOURCE_DIR}/state/goodbyeState.cpp
-  ${SOURCE_DIR}/state/dialogState.cpp
-  ${SOURCE_DIR}/state/activeState.cpp
-  ${SOURCE_DIR}/state/fadeInState.cpp
-  ${SOURCE_DIR}/state/warpInState.cpp)
+  ${SOURCE_DIR}/blind_jump/state/multiplayerReviveWaitingState.cpp
+  ${SOURCE_DIR}/blind_jump/state/healthAndSafetyWarningState.cpp
+  ${SOURCE_DIR}/blind_jump/state/quickSelectInventoryState.cpp
+  ${SOURCE_DIR}/blind_jump/state/networkConnectSetupState.cpp
+  ${SOURCE_DIR}/blind_jump/state/networkConnectWaitState.cpp
+  ${SOURCE_DIR}/blind_jump/state/multiplayerReviveState.cpp
+  ${SOURCE_DIR}/blind_jump/state/bossDeathSequenceState.cpp
+  ${SOURCE_DIR}/blind_jump/state/launchCutsceneState.cpp
+  ${SOURCE_DIR}/blind_jump/state/endingCutsceneState.cpp
+  ${SOURCE_DIR}/blind_jump/state/deathContinueState.cpp
+  ${SOURCE_DIR}/blind_jump/state/endingCreditsState.cpp
+  ${SOURCE_DIR}/blind_jump/state/logfileViewerState.cpp
+  ${SOURCE_DIR}/blind_jump/state/preFadePauseState.cpp
+  ${SOURCE_DIR}/blind_jump/state/introCreditsState.cpp
+  ${SOURCE_DIR}/blind_jump/state/editSettingsState.cpp
+  ${SOURCE_DIR}/blind_jump/state/newLevelIdleState.cpp
+  ${SOURCE_DIR}/blind_jump/state/signalJammerState.cpp
+  ${SOURCE_DIR}/blind_jump/state/respawnWaitState.cpp
+  ${SOURCE_DIR}/blind_jump/state/scoreScreenState.cpp
+  ${SOURCE_DIR}/blind_jump/state/commandCodeState.cpp
+  ${SOURCE_DIR}/blind_jump/state/pauseScreenState.cpp
+  ${SOURCE_DIR}/blind_jump/state/titleScreenState.cpp
+  ${SOURCE_DIR}/blind_jump/state/remoteReplState.cpp
+  ${SOURCE_DIR}/blind_jump/state/quickChatState.cpp
+  ${SOURCE_DIR}/blind_jump/state/imageViewState.cpp
+  ${SOURCE_DIR}/blind_jump/state/inventoryState.cpp
+  ${SOURCE_DIR}/blind_jump/state/overworldState.cpp
+  ${SOURCE_DIR}/blind_jump/state/mapSystemState.cpp
+  ${SOURCE_DIR}/blind_jump/state/deathFadeState.cpp
+  ${SOURCE_DIR}/blind_jump/state/lispReplState.cpp
+  ${SOURCE_DIR}/blind_jump/state/newLevelState.cpp
+  ${SOURCE_DIR}/blind_jump/state/quickMapState.cpp
+  ${SOURCE_DIR}/blind_jump/state/notebookState.cpp
+  ${SOURCE_DIR}/blind_jump/state/glowFadeState.cpp
+  ${SOURCE_DIR}/blind_jump/state/itemShopState.cpp
+  ${SOURCE_DIR}/blind_jump/state/fadeOutState.cpp
+  ${SOURCE_DIR}/blind_jump/state/goodbyeState.cpp
+  ${SOURCE_DIR}/blind_jump/state/dialogState.cpp
+  ${SOURCE_DIR}/blind_jump/state/activeState.cpp
+  ${SOURCE_DIR}/blind_jump/state/fadeInState.cpp
+  ${SOURCE_DIR}/blind_jump/state/warpInState.cpp)
 
 
 set(FILES_DIR ${SOURCE_DIR}/../)

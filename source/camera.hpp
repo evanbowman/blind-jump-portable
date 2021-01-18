@@ -1,8 +1,7 @@
 #pragma once
 
-#include "entity/entity.hpp"
 #include "number/numeric.hpp"
-#include "settings.hpp"
+#include "blind_jump/settings.hpp"
 
 class Platform;
 

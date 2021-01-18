@@ -1,4 +1,5 @@
-#include "game.hpp"
+#include "blind_jump/game.hpp"
+#include "globals.hpp"
 #include "transformGroup.hpp"
 
 
@@ -38,8 +39,10 @@ void UpdateTask::run()
 }
 
 
-void start(Platform& pf)
+void blind_jump_main_loop(Platform& pf)
 {
+    globals().emplace<BlindJumpGlobalData>();
+
     Synchronized<Game> game(pf, pf);
 
     UpdateTask update(&game, &pf);
@@ -53,4 +56,10 @@ void start(Platform& pf)
         game.acquire([&](Game& gm) { gm.render(pf); });
         pf.screen().display();
     }
+}
+
+
+void start(Platform& pf)
+{
+    return blind_jump_main_loop(pf);
 }
