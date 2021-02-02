@@ -63,6 +63,7 @@ set(SOURCES
   ${SOURCE_DIR}/blind_jump/entity/details/signpost.cpp
   ${SOURCE_DIR}/blind_jump/entity/effects/particle.cpp
   ${SOURCE_DIR}/blind_jump/entity/enemies/sinkhole.cpp
+  ${SOURCE_DIR}/blind_jump/entity/effects/uiNumber.cpp
   ${SOURCE_DIR}/blind_jump/entity/bosses/wanderer.cpp
   ${SOURCE_DIR}/blind_jump/entity/bosses/theTwins.cpp
   ${SOURCE_DIR}/blind_jump/entity/effects/orbshot.cpp

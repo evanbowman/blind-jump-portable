@@ -97,6 +97,8 @@ void Enemy::health_changed(const net_event::EnemyHealthChanged& hc,
     if (hc.new_health_.get() < get_health()) {
         sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
+        damage_ = get_health() - hc.new_health_.get();
+
         if (alive()) {
             pfrm.speaker().play_sound("click", 1, position_);
         }

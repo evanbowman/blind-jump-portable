@@ -29,6 +29,10 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
     Enemy::update(pfrm, game, dt);
 
     fade_color_anim_.advance(sprite_, dt);
+    if (sprite_.get_mix().amount_ <= 50 and damage_) {
+        game.effects().spawn<UINumber>(get_position(), damage_ * -1, id());
+        damage_ = 0;
+    }
 
     auto& target = get_target(game);
 
@@ -218,6 +222,8 @@ void Drone::injured(Platform& pf, Game& game, Health amount)
         pf.sleep(2);
     }
 
+    damage_ += amount;
+
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
     debit_health(pf, amount);
@@ -265,6 +271,10 @@ void Drone::on_collision(Platform& pf, Game& game, Player& player)
 void Drone::on_death(Platform& pf, Game& game)
 {
     pf.sleep(6);
+
+    if (damage_) {
+        game.effects().spawn<UINumber>(get_position(), damage_ * -1, 0);
+    }
 
     static const Item::Type item_drop_vec[] = {Item::Type::coin,
                                                Item::Type::null};

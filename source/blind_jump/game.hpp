@@ -27,6 +27,7 @@
 #include "entity/effects/proxy.hpp"
 #include "entity/effects/reticule.hpp"
 #include "entity/effects/staticEffect.hpp"
+#include "entity/effects/uiNumber.hpp"
 #include "entity/effects/wandererBigLaser.hpp"
 #include "entity/effects/wandererSmallLaser.hpp"
 #include "entity/enemies/compactor.hpp"
@@ -111,6 +112,7 @@ public:
                                     Signpost>;
 
     using EffectGroup = EntityGroup<20,
+                                    UINumber,
                                     Reticule,
                                     Proxy,
                                     OrbShot,
@@ -419,3 +421,6 @@ void newgame(Platform& pfrm, Game& game);
 
 
 void safe_disconnect(Platform& pfrm);
+
+
+Entity* get_entity_by_id(Game& game, Entity::Id id);

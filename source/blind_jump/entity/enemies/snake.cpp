@@ -322,6 +322,11 @@ void SnakeTail::update(Platform& pfrm, Game& game, Microseconds dt)
 
         fade_color_anim_.advance(sprite_, dt);
 
+        if (sprite_.get_mix().amount_ <= 50 and damage_) {
+            game.effects().spawn<UINumber>(get_position(), damage_ * -1, 0);
+            damage_ = 0;
+        }
+
         SnakeNode* current = parent();
         while (current) {
             current->sprite_.set_mix(mix);
@@ -352,6 +357,8 @@ void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
+    damage_ += 1;
+
     debit_health(pf);
 }
 
@@ -359,6 +366,8 @@ void SnakeTail::on_collision(Platform& pf, Game& game, Laser&)
 void SnakeTail::on_collision(Platform& pf, Game& game, LaserExplosion&)
 {
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
+
+    damage_ += 8;
 
     debit_health(pf, 8);
 }
@@ -372,6 +381,8 @@ void SnakeTail::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
         }
 
         sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
+
+        damage_ += 1;
 
         debit_health(pf);
     }

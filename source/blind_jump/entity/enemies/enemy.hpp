@@ -78,4 +78,5 @@ protected:
     Sprite shadow_;
     HitBox hitbox_;
     bool is_allied_;
+    u8 damage_ = 0;
 };

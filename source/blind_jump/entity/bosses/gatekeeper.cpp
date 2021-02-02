@@ -558,6 +558,11 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
 
     fade_color_anim_.advance(sprite_, dt);
     head_.set_mix(sprite_.get_mix());
+
+    if (sprite_.get_mix().amount_ <= 50 and damage_) {
+        game.effects().spawn<UINumber>(get_position(), damage_ * -1, id());
+        damage_ = 0;
+    }
 }
 
 
@@ -566,6 +571,8 @@ void Gatekeeper::injured(Platform& pfrm, Game& game, Health amount)
     if (sprite_.get_mix().amount_ < 180) {
         pfrm.sleep(2);
     }
+
+    damage_ += amount;
 
     const bool was_second_form = second_form();
     const bool was_third_form = third_form();

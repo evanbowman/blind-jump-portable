@@ -94,7 +94,7 @@ public:
 
     Vec2<Float> get_speed() const;
 
-    void heal(Platform& pfrm, Health amount);
+    void heal(Platform& pfrm, Game& game, Health amount);
 
     Cardinal facing() const;
 

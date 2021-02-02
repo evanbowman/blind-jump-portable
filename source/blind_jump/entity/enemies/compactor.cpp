@@ -236,6 +236,8 @@ void Compactor::injured(Platform& pf, Game& game, Health amount)
 
     sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
 
+    game.effects().spawn<UINumber>(get_position(), amount * -1, id());
+
     debit_health(pf, amount);
 
     if (alive()) {

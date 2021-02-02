@@ -1351,10 +1351,14 @@ COLD void Game::regenerate_map(Platform& pfrm)
     }
 
     auto grass_overlay = mem.alloc<TileMap>([&](u8& t, int, int) {
-        if (rng::choice<3>(rng::critical_state)) {
-            t = Tile::none;
+        if (level() > boss_0_level) {
+            if (rng::choice<3>(rng::critical_state)) {
+                t = Tile::none;
+            } else {
+                t = Tile::plate;
+            }
         } else {
-            t = Tile::plate;
+            t = Tile::none;
         }
     });
 
@@ -2575,4 +2579,39 @@ void safe_disconnect(Platform& pfrm)
     }
 
     pfrm.network_peer().disconnect();
+}
+
+
+Entity* get_entity_by_id(Game& game, Entity::Id id)
+{
+    if (id == 0) {
+        return nullptr;
+    }
+
+    if (id == game.player().id()) {
+        return &game.player();
+    }
+    if (id == game.transporter().id()) {
+        return &game.transporter();
+    }
+
+    Entity* result = nullptr;
+
+    auto match_id = [&](auto& buf) {
+        for (auto& entity : buf) {
+            if (entity->id() == id) {
+                result = entity.get();
+            }
+        }
+    };
+
+    game.enemies().transform(match_id);
+    if (result) {
+        return result;
+    }
+
+    game.details().transform(match_id);
+    game.effects().transform(match_id);
+
+    return result;
 }
