@@ -9,7 +9,7 @@ void Entity::override_id(Id id)
     id_ = id;
 
     if (id_counter_ < id) {
-        id_counter_ = id;
+        id_counter_ = id + 1;
     }
 }
 
