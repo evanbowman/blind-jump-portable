@@ -77,7 +77,8 @@ Game::Game(Platform& pfrm)
                std::get<BlindJumpGlobalData>(globals()).effect_node_pool_),
       score_(0),
       next_state_(null_state()),
-      state_(null_state())
+      state_(null_state()),
+      boss_target_(0)
 {
     if (not this->load_save_data(pfrm)) {
         info(pfrm, "no save file found");

@@ -2,6 +2,29 @@
 #include "blind_jump/game.hpp"
 
 
+const Entity& Enemy::boss_get_target(Game& game)
+{
+    if (game.get_boss_target() == 0) {
+
+        if (game.player().get_health() == 0) {
+            if (game.peer()) {
+                return *game.peer();
+            }
+        }
+
+        return game.player();
+
+    } else {
+
+        if (game.peer()) {
+            return *game.peer();
+        }
+
+        return game.player();
+    }
+}
+
+
 const Entity& Enemy::get_target(Game& game)
 {
     if (not is_allied_) {

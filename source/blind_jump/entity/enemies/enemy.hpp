@@ -41,6 +41,8 @@ public:
 
     const Entity& get_target(Game& game);
 
+    const Entity& boss_get_target(Game& game);
+
     OrbShot* shoot(Platform&,
                    Game&,
                    const Vec2<Float>& position,

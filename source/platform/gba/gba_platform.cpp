@@ -3482,12 +3482,17 @@ static void multiplayer_schedule_tx()
 }
 
 
+static bool is_host = false;
+
+
 static void multiplayer_serial_isr()
 {
     if (UNLIKELY(multiplayer_error())) {
         ::platform->network_peer().disconnect();
         return;
     }
+
+    ::is_host = multiplayer_is_master();
 
     multiplayer_rx_receive();
     multiplayer_schedule_tx();
@@ -3722,7 +3727,7 @@ bool Platform::NetworkPeer::is_connected() const
 
 bool Platform::NetworkPeer::is_host() const
 {
-    return multiplayer_is_master();
+    return ::is_host;
 }
 
 

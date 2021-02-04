@@ -54,6 +54,7 @@ void poll_messages(Platform& pfrm, Game& game, Listener& listener)
             HANDLE_MESSAGE(LethargyActivated)
             HANDLE_MESSAGE(Disconnect)
             HANDLE_MESSAGE(HealthTransfer)
+            HANDLE_MESSAGE(BossSwapTarget)
         }
 
         error(pfrm, "garbled message!?");

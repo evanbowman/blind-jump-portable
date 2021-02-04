@@ -216,6 +216,16 @@ public:
         return persistent_data_.settings_.action2_key_;
     }
 
+    u16 get_boss_target() const
+    {
+        return boss_target_;
+    }
+
+    void set_boss_target(u16 target)
+    {
+        boss_target_ = target;
+    }
+
 private:
     bool load_save_data(Platform& pfrm);
 
@@ -235,6 +245,8 @@ private:
     StatePtr state_;
     Powerups powerups_;
     Rumble rumble_;
+
+    u16 boss_target_;
 
     std::optional<PeerPlayer> peer_player_;
     std::optional<Scavenger> scavenger_;

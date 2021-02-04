@@ -40,6 +40,7 @@ struct Header {
         quick_chat,
         lethargy_activated,
         disconnect,
+        boss_swap_target,
     } message_type_;
 };
 static_assert(sizeof(Header) == 1);
@@ -407,6 +408,17 @@ struct Disconnect {
 };
 
 
+struct BossSwapTarget {
+    Header header_;
+
+    host_u16 target_;
+
+    u8 unused_[9];
+
+    static const auto mt = Header::MessageType::boss_swap_target;
+};
+
+
 template <typename T> void transmit(Platform& pfrm, T& message)
 {
     static_assert(sizeof(T) <= Platform::NetworkPeer::max_message_size);
@@ -491,6 +503,9 @@ public:
     {
     }
     virtual void receive(const HealthTransfer&, Platform&, Game&)
+    {
+    }
+    virtual void receive(const BossSwapTarget&, Platform&, Game&)
     {
     }
 };

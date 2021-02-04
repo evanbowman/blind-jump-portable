@@ -59,7 +59,8 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
         head_.set_flip({0, 0});
     };
 
-    auto& target = get_target(game);
+    auto& target = boss_get_target(game);
+
 
     auto face_player = [this, &target, &face_left, &face_right] {
         if (target.get_position().x > position_.x) {
@@ -349,6 +350,28 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                 0.00015f);
             timer_ = 0;
             state_ = State::done_shooting;
+
+            if (pf.network_peer().is_connected() and
+                pf.network_peer().is_host()) {
+                if (rng::choice<2>(rng::critical_state) == 0) {
+                    const auto int_pos = position_.cast<s16>();
+
+                    net_event::EnemyStateSync s;
+                    s.state_ = static_cast<u8>(state_);
+                    s.x_.set(int_pos.x);
+                    s.y_.set(int_pos.y);
+                    s.id_.set(id());
+
+                    net_event::transmit(pf, s);
+
+
+                    net_event::BossSwapTarget t;
+                    t.target_.set(game.get_boss_target());
+                    game.set_boss_target(not game.get_boss_target());
+
+                    net_event::transmit(pf, t);
+                }
+            }
         }
         break;
 
@@ -449,19 +472,6 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
 
             sprite_.set_texture_index(50);
             head_.set_texture_index(51);
-
-            // if (&target == &game.player()) {
-            //     const auto int_pos = position_.cast<s16>();
-
-            //     // net_event::EnemyStateSync s;
-            //     // s.state_ = static_cast<u8>(state_);
-            //     // s.x_.set(int_pos.x);
-            //     // s.y_.set(int_pos.y);
-            //     // s.id_.set(id());
-
-            //     // net_event::transmit(pf, s);
-            // }
-
 
             timer_ = 0;
             timer2_ = 0;
@@ -566,13 +576,10 @@ void Wanderer::on_death(Platform& pf, Game& game)
 
 void Wanderer::sync(const net_event::EnemyStateSync& s, Game& game)
 {
-    state_ = State::
-        after_dash; // Currently, this is the only state where we send a sync message...
+    state_ = static_cast<State>(s.state_);
+    timer_ = 0;
     position_.x = s.x_.get();
     position_.y = s.y_.get();
-
-    sprite_.set_texture_index(50);
-    head_.set_texture_index(51);
 
     sprite_.set_position(position_);
     head_.set_position({position_.x, position_.y - 16});

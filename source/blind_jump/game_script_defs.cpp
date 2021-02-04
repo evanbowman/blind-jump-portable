@@ -501,7 +501,7 @@ void Game::init_script(Platform& pfrm)
         {"enemy-scarecrow", Game::EnemyGroup::index_of<Scarecrow>()},
         {"enemy-compactor", Game::EnemyGroup::index_of<Compactor>()},
         {"enemy-golem", Game::EnemyGroup::index_of<Golem>()},
-        {"player", 0},
+        {"player", 1},
         L_ITEM_K(worker_notebook_1),
         L_ITEM_K(blaster),
         L_ITEM_K(accelerator),

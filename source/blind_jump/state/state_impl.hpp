@@ -27,6 +27,14 @@ public:
         }
     }
 
+    void receive(const net_event::BossSwapTarget& t,
+                 Platform&,
+                 Game& game) override
+    {
+        game.set_boss_target(t.target_.get());
+    }
+
+
     void
     receive(const net_event::PlayerDied&, Platform& pfrm, Game& game) override;
 

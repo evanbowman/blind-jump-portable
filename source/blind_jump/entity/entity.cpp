@@ -1,7 +1,7 @@
 #include "entity.hpp"
 
 
-static Entity::Id id_counter_ = 0;
+static Entity::Id id_counter_ = 1;
 
 
 void Entity::override_id(Id id)
@@ -20,7 +20,7 @@ void Entity::reset_ids()
     // that one of the players during a multiplayer game ends up with more
     // enemies spawned during a level for one reason or another, and stuff
     // getting glitched up.
-    id_counter_ = 0;
+    id_counter_ = 1;
 }
 
 
