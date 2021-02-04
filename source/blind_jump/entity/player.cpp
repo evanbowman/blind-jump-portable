@@ -82,8 +82,10 @@ void Player::injured(Platform& pf, Game& game, Health damage)
         sprite_.set_mix({current_zone(game).injury_glow_color_, 255});
         blaster_.get_sprite().set_mix(sprite_.get_mix());
         invulnerability_timer_ = milliseconds(700);
-        // If 'injured' sound not playing, play sound...
-        game.effects().spawn<UINumber>(get_position(), damage * -1, id());
+
+        if (auto num = game.effects().spawn<UINumber>(get_position(), damage * -1, id())) {
+            num->hold(milliseconds(700));
+        }
     }
 }
 

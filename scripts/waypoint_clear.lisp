@@ -18,8 +18,8 @@
       ;; Give the enemies a bit of a random offset when spawning
       (set #temp
            (cons
-            (map + (fill n (- (car (get-pos 2)) 15)) (gen n (list cr-choice 30)))
-            (map + (fill n (- (cdr (get-pos 2)) 15)) (gen n (list cr-choice 30)))))
+            (map + (fill n (- (car (get-pos gate)) 15)) (gen n (list cr-choice 30)))
+            (map + (fill n (- (cdr (get-pos gate)) 15)) (gen n (list cr-choice 30)))))
 
       (map make-enemy (fill n swarm) (car temp) (cdr temp))
 

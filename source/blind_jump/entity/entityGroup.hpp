@@ -35,7 +35,7 @@ public:
     }
 
     template <typename T, typename... CtorArgs>
-    bool spawn(CtorArgs&&... ctorArgs)
+    T* spawn(CtorArgs&&... ctorArgs)
     {
         auto deleter = [](T* obj) {
             if (obj) {
@@ -49,9 +49,9 @@ public:
 
             this->get<T>().push({reinterpret_cast<T*>(mem), deleter});
 
-            return true;
+            return reinterpret_cast<T*>(mem);
         } else {
-            return false;
+            return nullptr;
         }
     }
 
