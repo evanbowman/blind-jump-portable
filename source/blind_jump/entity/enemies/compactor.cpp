@@ -1,7 +1,7 @@
 #include "compactor.hpp"
-#include "common.hpp"
 #include "blind_jump/entity/effects/explosion.hpp"
 #include "blind_jump/game.hpp"
+#include "common.hpp"
 
 
 static const int fall_height = 120;

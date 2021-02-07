@@ -149,6 +149,11 @@ public:
         return mem_.end() - 1;
     }
 
+    typename Buffer::Iterator insert(typename Buffer::Iterator pos, char val)
+    {
+        return mem_.insert(pos, val);
+    }
+
     StringBuffer& operator+=(const char* str)
     {
         while (*str not_eq '\0') {

@@ -4,10 +4,10 @@
 // spawn one per level.
 
 
-#include "collision.hpp"
-#include "enemy.hpp"
 #include "blind_jump/entity/entity.hpp"
 #include "blind_jump/network_event.hpp"
+#include "collision.hpp"
+#include "enemy.hpp"
 #include "tileMap.hpp"
 
 

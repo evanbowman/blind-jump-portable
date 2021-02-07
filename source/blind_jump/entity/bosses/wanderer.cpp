@@ -1,7 +1,7 @@
 #include "wanderer.hpp"
-#include "boss.hpp"
 #include "blind_jump/entity/effects/explosion.hpp"
 #include "blind_jump/game.hpp"
+#include "boss.hpp"
 #include "number/random.hpp"
 #include "wallCollision.hpp"
 

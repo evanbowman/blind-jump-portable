@@ -1,6 +1,6 @@
 #include "golem.hpp"
-#include "common.hpp"
 #include "blind_jump/game.hpp"
+#include "common.hpp"
 #include "wallCollision.hpp"
 
 

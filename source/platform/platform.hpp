@@ -610,21 +610,18 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // RemoteConsole
     //
-    // Some platforms, like desktop computers, support a remote console, whereby
-    // the user can enter text;
+    //
     //
     ////////////////////////////////////////////////////////////////////////////
 
 
     class RemoteConsole {
     public:
-        bool supported_by_device();
+        using Line = StringBuffer<1024>;
 
-        // Return true if readline succeeds and callback is true, return false
-        // if readline fails or if callback returns false.
-        bool readline(bool (*callback)(Platform&, const char*));
+        std::optional<Line> readline();
 
-        void print(const char* text);
+        void printline(const char* text);
     };
 
 

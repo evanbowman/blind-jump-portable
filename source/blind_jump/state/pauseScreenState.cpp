@@ -171,11 +171,7 @@ PauseScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                     make_deferred_state<PauseScreenState>(false));
 
             case LocaleString::menu_console:
-                if (pfrm.remote_console().supported_by_device()) {
-                    return state_pool().create<RemoteReplState>();
-                } else {
-                    return state_pool().create<LispReplState>();
-                }
+                return state_pool().create<LispReplState>();
 
             case LocaleString::menu_connect_peer:
                 if (connect_peer_option_available(game)) {

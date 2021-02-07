@@ -1,7 +1,7 @@
 #pragma once
 
-#include "entity.hpp"
 #include "blind_jump/network_event.hpp"
+#include "entity.hpp"
 #include "platform/platform.hpp"
 
 

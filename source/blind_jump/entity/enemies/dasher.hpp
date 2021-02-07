@@ -1,10 +1,10 @@
 #pragma once
 
+#include "blind_jump/entity/entity.hpp"
+#include "blind_jump/network_event.hpp"
 #include "collision.hpp"
 #include "enemy.hpp"
-#include "blind_jump/entity/entity.hpp"
 #include "graphics/sprite.hpp"
-#include "blind_jump/network_event.hpp"
 
 
 class LaserExplosion;

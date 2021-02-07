@@ -1,8 +1,8 @@
 #pragma once
 
+#include "blind_jump/entity/entityGroup.hpp"
 #include "collision.hpp"
 #include "entity.hpp"
-#include "blind_jump/entity/entityGroup.hpp"
 #include "graphics/animation.hpp"
 #include "number/numeric.hpp"
 #include "platform/platform.hpp"

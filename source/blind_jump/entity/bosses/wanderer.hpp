@@ -1,8 +1,8 @@
 #pragma once
 
-#include "collision.hpp"
 #include "blind_jump/entity/enemies/enemy.hpp"
 #include "blind_jump/network_event.hpp"
+#include "collision.hpp"
 #include <optional>
 
 

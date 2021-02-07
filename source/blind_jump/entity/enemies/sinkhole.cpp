@@ -1,6 +1,6 @@
 #include "sinkhole.hpp"
-#include "common.hpp"
 #include "blind_jump/game.hpp"
+#include "common.hpp"
 
 
 Sinkhole::Sinkhole(const Vec2<Float>& pos)

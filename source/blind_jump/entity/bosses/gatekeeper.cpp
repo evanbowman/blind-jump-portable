@@ -1,7 +1,7 @@
 #include "gatekeeper.hpp"
-#include "boss.hpp"
 #include "blind_jump/entity/enemies/common.hpp"
 #include "blind_jump/game.hpp"
+#include "boss.hpp"
 #include "number/random.hpp"
 
 

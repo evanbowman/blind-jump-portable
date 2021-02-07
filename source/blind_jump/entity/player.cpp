@@ -83,7 +83,8 @@ void Player::injured(Platform& pf, Game& game, Health damage)
         blaster_.get_sprite().set_mix(sprite_.get_mix());
         invulnerability_timer_ = milliseconds(700);
 
-        if (auto num = game.effects().spawn<UINumber>(get_position(), damage * -1, id())) {
+        if (auto num = game.effects().spawn<UINumber>(
+                get_position(), damage * -1, id())) {
             num->hold(milliseconds(700));
         }
     }
@@ -1088,7 +1089,7 @@ void Blaster::shoot(Platform& pf, Game& game)
 
             pf.speaker().play_sound("blaster", 4);
 
-            if (not[&] {
+            if (not [&] {
                     if (expl_rounds > 0) {
                         game.camera().shake();
                         medium_explosion(pf, game, position_);

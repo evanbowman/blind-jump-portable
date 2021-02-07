@@ -1,5 +1,5 @@
-#include "state_impl.hpp"
 #include "globals.hpp"
+#include "state_impl.hpp"
 
 
 void ActiveState::enter(Platform& pfrm, Game& game, State& prev_state)
@@ -57,8 +57,8 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     const Vec2<TIdx> tile_coords =
         to_tile_coord({player_int_pos.x, player_int_pos.y + 6});
 
-    std::get<BlindJumpGlobalData>(globals()).
-        visited_.set(tile_coords.x, tile_coords.y, true);
+    std::get<BlindJumpGlobalData>(globals()).visited_.set(
+        tile_coords.x, tile_coords.y, true);
 
     const auto t = pfrm.get_tile(Layer::map_1, tile_coords.x, tile_coords.y);
     switch (t) {

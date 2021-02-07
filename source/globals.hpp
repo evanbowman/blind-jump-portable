@@ -29,8 +29,7 @@ struct ExampleGlobalData {
 // am declaring them all in this one structure. I have been toying with the idea
 // of compiling multiple games into a single rom/executable, which makes keeping
 // track of global variable memory usage important.
-using Globals = std::variant<BlindJumpGlobalData,
-                             ExampleGlobalData>;
+using Globals = std::variant<BlindJumpGlobalData, ExampleGlobalData>;
 
 
 Globals& globals();

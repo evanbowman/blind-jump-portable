@@ -1,7 +1,7 @@
 #pragma once
 
-#include "collision.hpp"
 #include "blind_jump/entity/entity.hpp"
+#include "collision.hpp"
 #include "localization.hpp"
 
 

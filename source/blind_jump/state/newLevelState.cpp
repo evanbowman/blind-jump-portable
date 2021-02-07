@@ -1,5 +1,5 @@
-#include "state_impl.hpp"
 #include "globals.hpp"
+#include "state_impl.hpp"
 
 
 void NewLevelState::enter(Platform& pfrm, Game& game, State&)

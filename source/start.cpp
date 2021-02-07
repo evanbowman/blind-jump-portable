@@ -41,6 +41,8 @@ void UpdateTask::run()
 
 void blind_jump_main_loop(Platform& pf)
 {
+    pf.remote_console().printline("BlindJump LISP Console");
+
     globals().emplace<BlindJumpGlobalData>();
 
     Synchronized<Game> game(pf, pf);

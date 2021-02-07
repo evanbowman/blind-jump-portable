@@ -11,15 +11,14 @@ public:
         Function<16,
                  void(Platform&, Game&, const Microseconds&, DynamicEffect&)>;
 
-    DynamicEffect(const Vec2<Float>& position,
-                  Platform::DynamicTexturePtr texture,
-                  Microseconds interval,
-                  u16 texture_start,
-                  u8 frame_count,
-                  UpdateCallback update_callback = [](Platform&,
-                                                      Game&,
-                                                      const Microseconds&,
-                                                      DynamicEffect&) {});
+    DynamicEffect(
+        const Vec2<Float>& position,
+        Platform::DynamicTexturePtr texture,
+        Microseconds interval,
+        u16 texture_start,
+        u8 frame_count,
+        UpdateCallback update_callback =
+            [](Platform&, Game&, const Microseconds&, DynamicEffect&) {});
 
     void update(Platform&, Game&, Microseconds dt);
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "enemy.hpp"
 #include "blind_jump/network_event.hpp"
+#include "enemy.hpp"
 
 
 class LaserExplosion;

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "bulkAllocator.hpp"
 #include "blind_jump/game.hpp"
-#include "graphics/overlay.hpp"
 #include "blind_jump/network_event.hpp"
+#include "bulkAllocator.hpp"
+#include "graphics/overlay.hpp"
 #include "path.hpp"
 #include "state.hpp"
 #include "version.hpp"
@@ -27,9 +27,8 @@ public:
         }
     }
 
-    void receive(const net_event::BossSwapTarget& t,
-                 Platform&,
-                 Game& game) override
+    void
+    receive(const net_event::BossSwapTarget& t, Platform&, Game& game) override
     {
         game.set_boss_target(t.target_.get());
     }

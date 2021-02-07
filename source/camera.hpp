@@ -1,7 +1,7 @@
 #pragma once
 
-#include "number/numeric.hpp"
 #include "blind_jump/settings.hpp"
+#include "number/numeric.hpp"
 
 class Platform;
 

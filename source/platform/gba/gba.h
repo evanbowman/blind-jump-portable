@@ -428,6 +428,11 @@ extern "C" {
 #define REG_JSTAT		*(volatile u16*)(REG_BASE + 0x158)	// SIO JOY Bus Receive Status
 
 
+#define SIO_UART_LENGTH_8      0x0080
+#define SIO_UART_SEND_ENABLE   0x0400
+#define SIO_UART_RECV_ENABLE   0x0800
+
+
 //---------------------------------------------------------------------------------
 /*! \def SystemCall(Number)
     \brief helper macro to insert a bios call.
@@ -733,7 +738,6 @@ typedef enum KEYPAD_BITS {
 #define S3511A_STATUS_INTAE  0x20 // alarm interrupt enable
 #define S3511A_STATUS_24HOUR 0x40 // 0: 12-hour mode, 1: 24-hour mode
 #define S3511A_STATUS_POWER  0x80 // power on or power failure occurred
-
 
 
 #ifdef __cplusplus

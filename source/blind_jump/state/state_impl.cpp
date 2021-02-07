@@ -1,7 +1,7 @@
 #include "state_impl.hpp"
 #include "bitvector.hpp"
-#include "number/random.hpp"
 #include "globals.hpp"
+#include "number/random.hpp"
 
 
 void State::enter(Platform&, Game&, State&)
@@ -634,7 +634,8 @@ bool draw_minimap(Platform& pfrm,
             for (int y2 = std::max(0, y - offset);
                  y2 < std::min((int)TileMap::height, y + offset);
                  ++y2) {
-                if (std::get<BlindJumpGlobalData>(globals()).visited_.get(x2, y2)) {
+                if (std::get<BlindJumpGlobalData>(globals()).visited_.get(x2,
+                                                                          y2)) {
                     visited_nearby = true;
                 }
             }

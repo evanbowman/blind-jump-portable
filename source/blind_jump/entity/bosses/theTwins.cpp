@@ -1,6 +1,6 @@
 #include "theTwins.hpp"
-#include "boss.hpp"
 #include "blind_jump/game.hpp"
+#include "boss.hpp"
 
 
 static const Entity::Health initial_health = 58;

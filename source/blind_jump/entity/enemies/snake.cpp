@@ -1,6 +1,6 @@
 #include "snake.hpp"
-#include "common.hpp"
 #include "blind_jump/game.hpp"
+#include "common.hpp"
 #include "number/random.hpp"
 
 

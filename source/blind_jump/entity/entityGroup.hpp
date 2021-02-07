@@ -20,7 +20,6 @@ using EntityBuffer = List<EntityRef<Arg>, EntityNodePool<Capacity>>;
 template <size_t Capacity, typename... Members>
 class EntityGroup : public TransformGroup<EntityBuffer<Members, Capacity>...> {
 public:
-
     using Pool_ = Pool<std::max({sizeof(Members)...}),
                        Capacity,
                        std::max({alignof(Members)...})>;
@@ -34,8 +33,7 @@ public:
         pool_ = &pool;
     }
 
-    template <typename T, typename... CtorArgs>
-    T* spawn(CtorArgs&&... ctorArgs)
+    template <typename T, typename... CtorArgs> T* spawn(CtorArgs&&... ctorArgs)
     {
         auto deleter = [](T* obj) {
             if (obj) {

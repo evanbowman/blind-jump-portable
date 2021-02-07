@@ -1,6 +1,7 @@
 #include "game.hpp"
 #include "bulkAllocator.hpp"
 #include "function.hpp"
+#include "globals.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
 #include "path.hpp"
@@ -10,7 +11,6 @@
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
-#include "globals.hpp"
 
 
 bool within_view_frustum(const Platform::Screen& screen,
@@ -75,9 +75,7 @@ Game::Game(Platform& pfrm)
                std::get<BlindJumpGlobalData>(globals()).detail_node_pool_),
       effects_(std::get<BlindJumpGlobalData>(globals()).effect_pool_,
                std::get<BlindJumpGlobalData>(globals()).effect_node_pool_),
-      score_(0),
-      next_state_(null_state()),
-      state_(null_state()),
+      score_(0), next_state_(null_state()), state_(null_state()),
       boss_target_(0)
 {
     if (not this->load_save_data(pfrm)) {
@@ -146,6 +144,36 @@ Game::Game(Platform& pfrm)
 }
 
 
+class RemoteConsoleLispPrinter : public lisp::Printer {
+public:
+    RemoteConsoleLispPrinter(Platform& pfrm) : pfrm_(pfrm)
+    {
+    }
+
+    void put_str(const char* str) override
+    {
+        fmt_ += str;
+    }
+
+    Platform::RemoteConsole::Line fmt_;
+    Platform& pfrm_;
+};
+
+
+COLD void on_remote_console_text(Platform& pfrm,
+                                 const Platform::RemoteConsole::Line& str)
+{
+    RemoteConsoleLispPrinter printer(pfrm);
+
+    lisp::eval(str.c_str());
+    format(lisp::get_op(0), printer);
+
+    lisp::pop_op();
+
+    pfrm.remote_console().printline(printer.fmt_.c_str());
+}
+
+
 HOT void Game::update(Platform& pfrm, Microseconds delta)
 {
     if (next_state_) {
@@ -155,6 +183,11 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
     }
 
     rumble_.update(pfrm, delta);
+
+    auto line = pfrm.remote_console().readline();
+    if (UNLIKELY(static_cast<bool>(line))) {
+        on_remote_console_text(pfrm, *line);
+    }
 
     for (auto it = deferred_callbacks_.begin();
          it not_eq deferred_callbacks_.end();) {
@@ -1151,7 +1184,7 @@ static void add_map_decorations(Level level,
 }
 
 
-static void debug_log_tilemap(Platform& pfrm, TileMap& map)
+void debug_log_tilemap(Platform& pfrm, TileMap& map)
 {
     debug(pfrm, "printing map...");
     for (int i = 0; i < TileMap::width; ++i) {
@@ -1192,7 +1225,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     }
 
     seed_map(pfrm, *temporary);
-    debug_log_tilemap(pfrm, tiles_);
+    // debug_log_tilemap(pfrm, tiles_);
 
     // Remove tiles from edges of the map. Some platforms,
     // particularly consoles, have automatic tile-wrapping, and we
@@ -1374,7 +1407,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         cell_automata_advance(*grass_overlay, *temporary);
     }
 
-    debug_log_tilemap(pfrm, *grass_overlay);
+    // debug_log_tilemap(pfrm, *grass_overlay);
 
     if (auto info = get_boss_level(level())) {
         if (info->grass_pattern_) {
@@ -1561,16 +1594,16 @@ COLD void Game::regenerate_map(Platform& pfrm)
             const auto down = tiles_.get_tile(x, y - 1);
             const auto left = tiles_.get_tile(x - 1, y);
             const auto right = tiles_.get_tile(x + 1, y);
-            if (tile == 0 and not contains(wall_tiles, left)
-                and (up == 0 or up == 18 or down == 0 or down == 18)
-                and (tiles_.get_tile(x - 2, y) == 0 or
-                     tiles_.get_tile(x - 2, y) == 19)) {
+            if (tile == 0 and not contains(wall_tiles, left) and
+                (up == 0 or up == 18 or down == 0 or down == 18) and
+                (tiles_.get_tile(x - 2, y) == 0 or
+                 tiles_.get_tile(x - 2, y) == 19)) {
                 tiles_.set_tile(x, y, 18);
             }
-            if (tile == 0 and not contains(wall_tiles, right)
-                and (up == 0 or up == 19 or down == 0 or down == 19)
-                and (tiles_.get_tile(x + 2, y) == 0 or
-                     tiles_.get_tile(x + 2, y) == 18)) {
+            if (tile == 0 and not contains(wall_tiles, right) and
+                (up == 0 or up == 19 or down == 0 or down == 19) and
+                (tiles_.get_tile(x + 2, y) == 0 or
+                 tiles_.get_tile(x + 2, y) == 18)) {
                 tiles_.set_tile(x, y, 19);
             }
         });

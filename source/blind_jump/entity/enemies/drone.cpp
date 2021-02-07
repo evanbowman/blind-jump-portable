@@ -1,7 +1,7 @@
 #include "drone.hpp"
-#include "common.hpp"
 #include "blind_jump/game.hpp"
 #include "blind_jump/network_event.hpp"
+#include "common.hpp"
 #include "number/random.hpp"
 
 
