@@ -714,6 +714,15 @@ static u32 eval_expr(const char* expr, u32 len)
     int param_count = 0;
 
     while (expr[i] not_eq ')') {
+
+        if (i >= len - 1) {
+            for (int i = 0; i < param_count; ++i) {
+                pop_op();
+            }
+            push_op(lisp::make_error(Error::Code::mismatched_parentheses));
+            return i;
+        }
+
         i += eat_whitespace(expr + i);
 
         i += eval(expr + i);
