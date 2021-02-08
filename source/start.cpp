@@ -39,11 +39,22 @@ void UpdateTask::run()
 }
 
 
+// clang-format off
+
+const char* console_header =
+"\r\n"
+"*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*\r\n"
+"|  BlindJump LISP Console                                                      |\r\n"
+"*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*\r\n"
+"Type (env) to show available symbols";
+
+// clang-format on
+
+
+
 void blind_jump_main_loop(Platform& pf)
 {
-    pf.remote_console().printline("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-    pf.sleep(30);
-    pf.remote_console().printline("BlindJump LISP Console");
+    pf.remote_console().printline(::console_header);
 
     globals().emplace<BlindJumpGlobalData>();
 

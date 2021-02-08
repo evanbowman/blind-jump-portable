@@ -609,15 +609,12 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // RemoteConsole
-    //
-    //
-    //
     ////////////////////////////////////////////////////////////////////////////
 
 
     class RemoteConsole {
     public:
-        using Line = StringBuffer<1024>;
+        using Line = StringBuffer<1956>;
 
         std::optional<Line> readline();
 

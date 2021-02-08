@@ -985,20 +985,24 @@ void format(Value* value, Printer& p)
 
 static void gc_mark_value(Value* value)
 {
+    if (value->mark_bit_) {
+        return;
+    }
+
     switch (value->type_) {
     case Value::Type::cons:
         if (value->cons_.cdr()->type_ == Value::Type::cons) {
             auto current = value;
-
-            current->mark_bit_ = true; // possibly redundant
 
             while (current->cons_.cdr()->type_ == Value::Type::cons) {
                 gc_mark_value(current->cons_.car());
                 current = current->cons_.cdr();
                 current->mark_bit_ = true;
             }
-            gc_mark_value(value->cons_.car());
-            gc_mark_value(value->cons_.cdr());
+
+            gc_mark_value(current->cons_.car());
+            gc_mark_value(current->cons_.cdr());
+
         } else {
             gc_mark_value(value->cons_.car());
             gc_mark_value(value->cons_.cdr());
@@ -1030,7 +1034,7 @@ static void gc_mark()
 }
 
 
-static void gc_sweep()
+void gc_sweep()
 {
     for (auto& pl : bound_context->value_pools_) {
         pl->scan_cells([&pl](Value* val) {
@@ -1620,6 +1624,32 @@ void init(Platform& pfrm)
 
             return result;
         }));
+
+    set_var("env", make_function([](int argc) {
+
+        auto pfrm = lisp::get_var("*pfrm*");
+        if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+            return get_nil();
+        }
+
+        Value* result = make_cons(get_nil(), get_nil());
+        push_op(result); // protect from the gc
+
+        Value* current = result;
+
+        get_interns([&current, pfrm](const char* str) {
+            current->cons_.set_car(make_symbol(str));
+            auto next = make_cons(get_nil(), get_nil());
+            current->cons_.set_cdr(next);
+            current = next;
+
+            (*(Platform*)pfrm->user_data_.obj_).feed_watchdog();
+        });
+
+        pop_op(); // result
+
+        return result;
+    }));
 }
 
 
