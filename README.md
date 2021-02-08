@@ -110,9 +110,9 @@ Open the pause screen, and press the left bumper repeatedly, and a menu option f
 
 In addition to providing an on-screen script console, the Blind Jump ROM also supports a scripting interface via UART. To connect your personal computer to the Gameboy Advance's serial port, you will need to splice an RS232 cable into a Gameboy Advance link cable, such that:
 ```
-SO  red --------> 5 RxD
-SI  org <-------- 4 TxD
-GND blu <-------> 1 GND
+SO  --------> 5 RxD
+SI  <-------- 4 TxD
+GND <-------> 1 GND
 ```
 
 Connect the two devices, set your PC's baud rate the standard 9600 Hz, and turn on the gameboy advance. If you've never used a UART console, try picocom, which is known to work.
