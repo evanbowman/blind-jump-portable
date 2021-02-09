@@ -1381,26 +1381,16 @@ bool Platform::Speaker::is_music_playing(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool Platform::RemoteConsole::supported_by_device()
+auto Platform::RemoteConsole::readline() -> std::optional<Line>
 {
-    return true;
+    // TODO...
+    return {};
 }
 
 
-bool Platform::RemoteConsole::readline(bool (*callback)(Platform&, const char*))
+void Platform::RemoteConsole::printline(const char* text)
 {
-    std::string line;
-    auto result = static_cast<bool>(std::getline(std::cin, line));
-    if (result) {
-        return callback(*::platform, line.c_str());
-    }
-    return result;
-}
-
-
-void Platform::RemoteConsole::print(const char* text)
-{
-    std::cout << text;
+    // TODO...
 }
 
 

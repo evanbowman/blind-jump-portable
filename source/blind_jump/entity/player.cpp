@@ -751,7 +751,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
                 set_sprite_texture(100);
                 break;
             }
-
+#ifdef __GBA__
             game.effects().spawn<Particle>(position_,
                                            dodge_flicker_light_color,
                                            0.0000538f,
@@ -762,6 +762,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
                                            0.0000538f,
                                            false,
                                            milliseconds(500));
+#endif // __GBA__
         }
         break;
     }
