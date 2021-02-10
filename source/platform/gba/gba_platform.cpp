@@ -1990,6 +1990,10 @@ void Platform::Logger::log(Severity level, const char* msg)
         buffer[0] = 'E';
         break;
 
+    case Severity::fatal:
+        buffer[0] = 'f';
+        break;
+
     case Severity::count:
         return;
     }
@@ -2644,7 +2648,7 @@ extern char __eheap_start;
 
 Platform::Platform()
 {
-    logger().set_threshold(Severity::error);
+    logger().set_threshold(Severity::fatal);
 
     keyboard().poll();
     if (keyboard().pressed<Key::alt_1>() and
