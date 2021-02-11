@@ -124,8 +124,7 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                          &pfrm](const utf8::Codepoint& cp, const char*, int) {
                             if (cp == '%') {
                                 if (contains_fill_char) {
-                                    error(pfrm, "two fill chars not allowed");
-                                    pfrm.fatal();
+                                    pfrm.fatal("two fill chars not allowed");
                                 }
                                 contains_fill_char = true;
                             }
@@ -134,8 +133,7 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                         str_len(str));
 
                     if (utf8::len(str) > u32(screen_tiles.x - 2)) {
-                        error(pfrm, "credits text too large");
-                        pfrm.fatal();
+                        pfrm.fatal("credits text too large");
                     }
 
                     if (contains_fill_char) {

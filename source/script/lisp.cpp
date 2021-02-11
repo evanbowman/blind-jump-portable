@@ -3,6 +3,9 @@
 #include "localization.hpp"
 #include "memory/buffer.hpp"
 #include "memory/pool.hpp"
+#ifndef __GBA__
+#include <iostream>
+#endif
 
 
 namespace lisp {
@@ -30,6 +33,7 @@ struct Context {
     using OperandStack = Buffer<CompressedPtr, 994>;
     using Globals = std::array<Variable, 249>;
     using Interns = char[string_intern_table_size];
+    u16 arguments_break_loc_;
 
     Value* nil_ = nullptr;
     Value* oom_ = nullptr;
@@ -38,11 +42,14 @@ struct Context {
 
     int eval_depth_ = 0;
 
+    int interp_entry_count_ = 0;
+
     const IntegralConstant* constants_ = nullptr;
     u16 constants_count_ = 0;
 
     Context(Platform& pfrm)
         : value_pools_{allocate_dynamic<ValuePool>(pfrm),
+                       allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
@@ -68,7 +75,7 @@ struct Context {
     // We're allocating 10k bytes toward lisp values. Because our simplistic
     // allocation strategy cannot support sizes other than 2k, we need to split
     // our memory for lisp values into regions.
-    static constexpr const int value_pool_count = 5;
+    static constexpr const int value_pool_count = 6;
     DynamicMemory<ValuePool> value_pools_[value_pool_count];
 
     DynamicMemory<OperandStack> operand_stack_;
@@ -117,6 +124,19 @@ void get_interns(::Function<24, void(const char*)> callback)
 
     for (u16 i = 0; i < bound_context->constants_count_; ++i) {
         callback((const char*)bound_context->constants_[i].name_);
+    }
+}
+
+
+
+// Only meant to be called by lisp functions
+Value* get_arg(u16 arg)
+{
+    auto br = bound_context->arguments_break_loc_;
+    if (br + arg < bound_context->operand_stack_->size() - 1) {
+        return dcompr((*bound_context->operand_stack_)[br - arg]);
+    } else {
+        return get_nil();
     }
 }
 
@@ -238,11 +258,24 @@ static Value* alloc_value()
 }
 
 
-Value* make_function(Function::Impl impl)
+Value* make_function(Function::CPP_Impl impl)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::function;
-        val->function_.impl_ = impl;
+        val->function_.cpp_impl_ = impl;
+        val->mode_bits_ = Function::ModeBits::cpp_function;
+        return val;
+    }
+    return bound_context->oom_;
+}
+
+
+Value* make_lisp_function(Value* impl)
+{
+    if (auto val = alloc_value()) {
+        val->type_ = Value::Type::function;
+        val->function_.lisp_impl_ = compr(impl);
+        val->mode_bits_ = Function::ModeBits::lisp_function;
         return val;
     }
     return bound_context->oom_;
@@ -306,6 +339,17 @@ Value* make_symbol(const char* name)
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::symbol;
         val->symbol_.name_ = intern(name);
+        return val;
+    }
+    return bound_context->oom_;
+}
+
+
+static Value* intern_to_symbol(const char* already_interned_str)
+{
+    if (auto val = alloc_value()) {
+        val->type_ = Value::Type::symbol;
+        val->symbol_.name_ = already_interned_str;
         return val;
     }
     return bound_context->oom_;
@@ -414,38 +458,36 @@ void funcall(Value* obj, u8 argc)
             return;
         }
 
-        auto result = obj->function_.impl_(argc);
-        pop_args();
-
-        push_op(result);
-        break;
-    }
-
-    case Value::Type::cons: {
-        if (not length(obj)) {
+        switch (obj->mode_bits_) {
+        case Function::ModeBits::cpp_function: {
+            auto result = obj->function_.cpp_impl_(argc);
             pop_args();
-            push_op(make_error(Error::Code::value_not_callable));
-            return;
+            push_op(result);
+            break;
         }
-        auto lat = obj;
-        auto fn = lat->cons_.car();
-        if (fn->type_ not_eq Value::Type::function) {
+
+        case Function::ModeBits::lisp_function: {
+            auto& ctx = *bound_context;
+            const auto break_loc = ctx.operand_stack_->size() - 1;
+            auto expression_list = dcompr(obj->function_.lisp_impl_);
+            auto result = get_nil();
+            push_op(result);
+            while (expression_list not_eq get_nil()) {
+                if (expression_list->type_ not_eq Value::Type::cons) {
+                    break;
+                }
+                pop_op(); // result
+                ctx.arguments_break_loc_ = break_loc;
+                eval(expression_list->cons_.car()); // new result
+                expression_list = expression_list->cons_.cdr();
+            }
+            result = get_op(0);
+            pop_op(); // result
             pop_args();
-            push_op(make_error(Error::Code::value_not_callable));
-            return;
+            push_op(result);
+            break;
         }
-        const int stack_insert_offset = argc;
-        lat = lat->cons_.cdr();
-        while (lat not_eq L_NIL) {
-            insert_op(stack_insert_offset, lat->cons_.car());
-            lat = lat->cons_.cdr();
-            ++argc;
         }
-
-        auto result = fn->function_.impl_(argc);
-        pop_args();
-
-        push_op(result);
         break;
     }
 
@@ -500,67 +542,6 @@ Value* get_var(const char* name)
 }
 
 
-static bool is_whitespace(char c)
-{
-    return c == ' ' or c == '\r' or c == '\n' or c == '\t';
-}
-
-
-static int eat_whitespace(const char* c)
-{
-    int i = 0;
-    while (is_whitespace(c[i])) {
-        ++i;
-        if (c[i] == '\0') {
-            return i;
-        }
-    }
-
-    while (c[i] == ';') { // Skip comments
-        while (c[i] not_eq '\n') {
-            ++i;
-            if (c[i] == '\0') {
-                return i;
-            }
-        }
-        while (is_whitespace(c[i])) {
-            ++i;
-            if (c[i] == '\0') {
-                return i;
-            }
-        }
-    }
-
-    return i;
-}
-
-
-static u32 expr_len(const char* str, u32 script_len)
-{
-    int paren_count = 0;
-    u32 i = 0;
-    for (; i < script_len; ++i) {
-        if (str[i] == '(') {
-            paren_count = 1;
-            ++i;
-            break;
-        }
-    }
-    for (; i < script_len; ++i) {
-        if (str[i] == '(') {
-            ++paren_count;
-        }
-        if (str[i] == ')') {
-            --paren_count;
-        }
-        if (paren_count == 0) {
-            return i + 1;
-        }
-    }
-    return i;
-}
-
-
 static bool is_boolean_true(Value* val)
 {
     switch (val->type_) {
@@ -572,186 +553,6 @@ static bool is_boolean_true(Value* val)
     }
 
     return val not_eq get_nil();
-}
-
-
-static u32 eval_while(const char* expr, u32 len)
-{
-    // (while <COND> <EXPR>)
-
-    push_op(get_nil()); // The return value, will be replaced if the loop
-                        // branches into the body expression.
-
-TOP:
-    int i = 0;
-
-    i += eval(expr) + 1;
-
-    const bool done = not is_boolean_true(get_op(0));
-    pop_op();
-
-    i += eat_whitespace(expr + i);
-
-    if (done) {
-        if (expr[i] == '(') {
-            i += expr_len(expr + i, str_len(expr + i));
-        } else {
-            while (expr[i] not_eq ' ') {
-                ++i;
-                if (expr[i] == ')') {
-                    break;
-                }
-            }
-        }
-        return i + 7;
-    } else {
-        pop_op();
-        eval(expr + i);
-        goto TOP;
-    }
-}
-
-
-static u32 eval_if(const char* expr, u32 len)
-{
-    // (if <COND> <EXPR1> <EXPR2>)
-
-    int i = 0;
-
-    i += eval(expr) + 1;
-
-    const bool branch = is_boolean_true(get_op(0));
-
-    pop_op();
-
-    // Now we'll need to skip over one of the branches. If the next
-    // non-whitespace character is not a '(' or a ''', then should be easy,
-    // because we can just eat chars until we hit some whitespace or a ')'. If
-    // then next non-whitespace character is a '(', we'll need to count
-    // opening/closing parens to determine where the expression ends.
-
-    i += eat_whitespace(expr + i);
-
-    if (not branch) {
-        if (expr[i] == '(') {
-            i += expr_len(expr + i, str_len(expr + i));
-        } else {
-            while (expr[i] not_eq ' ') {
-                ++i;
-                if (expr[i] == ')') {
-                    break;
-                }
-            }
-        }
-    } else {
-        i += eval(expr + i);
-    }
-
-    i += eat_whitespace(expr + i);
-
-    if (expr[i] == ')') { // if without an else branch
-        if (not branch) {
-            push_op(get_nil());
-        }
-        return i + 4;
-    }
-
-    if (not branch) {
-        // We've skipped the first expression, and want to eval the second one.
-        const auto consumed = eval(expr + i);
-
-        i += consumed;
-
-        i += eat_whitespace(expr + i);
-
-        return i + 4;
-    } else {
-        // We've evaulated the first expresion, and want to skip the second one.
-        if (expr[i] == '(' or expr[i] == '#') {
-            i += expr_len(expr + i, str_len(expr + i));
-        } else {
-            while (expr[i] not_eq ' ' and expr[i] not_eq ')') {
-                ++i;
-            }
-        }
-    }
-
-    i += eat_whitespace(expr + i);
-
-    return i + 4;
-}
-
-
-static u32 eval_expr(const char* expr, u32 len)
-{
-    u32 i = 0;
-
-    static const int max_fn_name = 31;
-    char fn_name[max_fn_name + 1];
-    fn_name[0] = '\0';
-
-    i += eat_whitespace(expr + i);
-
-    if (i < len) {
-        int start = i;
-        while (i < len and i < max_fn_name and (not is_whitespace(expr[i])) and
-               expr[i] not_eq ')' and expr[i] not_eq '(') {
-
-            fn_name[i - start] = expr[i];
-            ++i;
-        }
-        fn_name[i - start] = '\0';
-    }
-
-    if (str_cmp("if", fn_name) == 0) {
-        return eval_if(expr + i, len - i);
-    } else if (str_cmp("while", fn_name) == 0) {
-        return eval_while(expr + i, len - i);
-    }
-
-    i += eat_whitespace(expr + i);
-
-    int param_count = 0;
-
-    while (expr[i] not_eq ')') {
-
-        if (i >= len - 1) {
-            for (int i = 0; i < param_count; ++i) {
-                pop_op();
-            }
-            push_op(lisp::make_error(Error::Code::mismatched_parentheses));
-            return i;
-        }
-
-        i += eat_whitespace(expr + i);
-
-        i += eval(expr + i);
-
-        ++param_count;
-
-        i += eat_whitespace(expr + i);
-    }
-    i += 2;
-
-    const auto fn = get_var(fn_name);
-    // if (fn->type_ not_eq Value::Type::function) {
-    //     for (int i = 0; i < param_count; ++i) {
-    //         pop_op();
-    //     }
-    //     push_op(fn);
-    //     return i;
-    // }
-
-    funcall(fn, param_count);
-
-    return i;
-}
-
-
-static bool is_numeric(char c)
-{
-    return c == '0' or c == '1' or c == '2' or c == '3' or c == '4' or
-           c == '5' or c == '6' or c == '7' or c == '8' or c == '9';
 }
 
 
@@ -772,150 +573,35 @@ static const long hextable[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 
-static u32 eval_number(const char* code, u32 len, bool positive)
+bool is_executing()
 {
-    u32 result = 0;
-
-    u32 i = 0;
-
-    if (code[0] == '0' and code[1] == 'x') {
-        i += 2;
-        for (; i < len; ++i) {
-            if (is_whitespace(code[i]) or code[i] == ')') {
-                break;
-            } else {
-                result = (result << 4) | hextable[(unsigned char)code[i]];
-            }
-        }
-    } else {
-        for (; i < len; ++i) {
-            if (is_whitespace(code[i]) or code[i] == ')') {
-                break;
-            } else {
-                result = result * 10 + (code[i] - '0');
-            }
-        }
+    if (bound_context) {
+        return bound_context->interp_entry_count_;
     }
 
-    lisp::push_op(lisp::make_integer(positive ? result : -result));
-    return i;
+    return false;
 }
 
 
-static u32 eval_variable(const char* code, u32 len)
+void dostring(const char* code)
 {
-    static const u32 max_var_name = 31;
-    StringBuffer<max_var_name> variable_name;
-    // char variable_name[max_var_name];
+    ++bound_context->interp_entry_count_;
 
-    u32 i = 0;
+    int i = 0;
 
-    bool is_symbol = false;
-
-    if (code[i] == '#') {
-        is_symbol = true;
-        i += 1;
-    }
-
-    i += eat_whitespace(code + i);
-
-    for (; i < len; ++i) {
-        if (is_whitespace(code[i]) or code[i] == ')') {
+    while (true) {
+        i += read(code + i);
+        auto reader_result = get_op(0);
+        if (reader_result == get_nil()) {
+            pop_op();
             break;
-        } else {
-            variable_name.push_back(code[i]);
         }
+        eval(reader_result);
+        pop_op(); // reader result
+        pop_op(); // expression result
     }
 
-    // FIXME: actually support quoted stuff...
-    if (is_symbol) {
-        push_op(make_symbol(variable_name.c_str()));
-        return i;
-    }
-
-    if (str_cmp(variable_name.c_str(), "nil") == 0) {
-        push_op(get_nil());
-    } else {
-        auto var = lisp::get_var(variable_name.c_str());
-        push_op(var);
-    }
-    return i;
-}
-
-
-static u32 eval_value(const char* code, u32 len)
-{
-    if (is_numeric(code[0])) {
-        return eval_number(code, len, true);
-    } else if (len > 1 and code[0] == '-' and is_numeric(code[1])) {
-        return eval_number(code + 1, len - 1, false);
-    } else {
-        return eval_variable(code, len);
-    }
-}
-
-
-u32 eval(const char* code)
-{
-    const auto code_len = str_len(code);
-
-    u32 i = 0;
-    i += eat_whitespace(code);
-
-    if (i < code_len) {
-        if (is_whitespace(code[i])) {
-            while (true)
-                ;
-        }
-        if (code[i] == '(') {
-            bound_context->eval_depth_ += 1;
-            auto result = eval_expr(code + i + 1, code_len - (i + 1));
-            bound_context->eval_depth_ -= 1;
-            return result;
-        } else {
-            return eval_value(code + i, code_len - i);
-        }
-    }
-    push_op(get_nil());
-    return code_len;
-}
-
-
-void dostring(const char* code, Value** result)
-{
-    const auto script_len = str_len(code);
-
-    // if (paren_balance(code) not_eq 0) {
-    //     if (result) {
-    //         *result = lisp::make_error(Error::Code::mismatched_parentheses);
-    //     }
-    //     return;
-    // }
-
-    // I designed the eval function to read a single expression. Find where each
-    // expression begins and ends, and skip ahead to the next expression in the
-    // file after reading the current one. Ideally, I would simply fix whatever
-    // bug in the eval function causes incorrect result offsets...
-
-    Value* ret = get_nil();
-
-    u32 i = 0;
-    while (i < script_len) {
-        lisp::eval(code + i);
-
-        auto len = expr_len(code + i, script_len - i);
-
-        // TODO: check for errors!
-
-        i += len;
-
-        ret = lisp::get_op(0);
-        lisp::pop_op();
-    }
-
-    if (result) {
-        *result = ret;
-    }
+    --bound_context->interp_entry_count_;
 }
 
 
@@ -999,6 +685,12 @@ static void gc_mark_value(Value* value)
     }
 
     switch (value->type_) {
+    case Value::Type::function:
+        if (value->mode_bits_ == Function::ModeBits::lisp_function) {
+            gc_mark_value((dcompr(value->function_.lisp_impl_)));
+        }
+        break;
+
     case Value::Type::cons:
         if (value->cons_.cdr()->type_ == Value::Type::cons) {
             auto current = value;
@@ -1106,6 +798,351 @@ template <typename F> void foreach_string_intern(F&& fn)
 }
 
 
+static u32 read_list(const char* code)
+{
+    int i = 0;
+
+    auto result = get_nil();
+    push_op(get_nil());
+
+    while (true) {
+        switch (code[i]) {
+        case '\r':
+        case '\n':
+        case '\t':
+        case ' ':
+            ++i;
+            break;
+
+        case ';':
+            while (true) {
+                if (code[i] == '\0' or
+                    code[i] == '\r' or
+                    code[i] == '\n') {
+                    break;
+                } else {
+                    ++i;
+                }
+            }
+            break;
+
+        case ')':
+            ++i;
+            return i;
+
+        case '\0':
+            pop_op();
+            push_op(lisp::make_error(Error::Code::mismatched_parentheses));
+            return i;
+            break;
+
+        default:
+            i += read(code + i);
+
+            if (result == get_nil()) {
+                result = make_cons(get_op(0), get_nil());
+                pop_op(); // the result from read()
+                pop_op(); // nil
+                push_op(result);
+            } else {
+                auto next = make_cons(get_op(0), get_nil());
+                pop_op();
+                result->cons_.set_cdr(next);
+                result = next;
+            }
+            break;
+        }
+    }
+}
+
+
+static u32 read_symbol(const char* code)
+{
+    int i = 0;
+
+    StringBuffer<64> symbol;
+
+    if (code[0] == '\'') {
+        push_op(make_symbol("'"));
+        return 1;
+    }
+
+    while (true) {
+        switch (code[i]) {
+        case '(':
+        case ')':
+        case ' ':
+        case '\r':
+        case '\n':
+        case '\t':
+        case '\0':
+        case ';':
+            goto FINAL;
+
+        default:
+            symbol.push_back(code[i++]);
+            break;
+        }
+    }
+
+ FINAL:
+
+    if (symbol == "nil") {
+        push_op(get_nil());
+    } else {
+        push_op(make_symbol(symbol.c_str()));
+    }
+
+    return i;
+}
+
+
+static u32 read_number(const char* code)
+{
+    int i = 0;
+
+    StringBuffer<64> num_str;
+
+    while (true) {
+        switch (code[i]) {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            num_str.push_back(code[i++]);
+            break;
+
+        default:
+            goto FINAL;
+        }
+    }
+
+ FINAL:
+    s32 result = 0;
+    for (u32 i = 0; i < num_str.length(); ++i) {
+        result = result * 10 + (num_str[i] - '0');
+    }
+
+    lisp::push_op(lisp::make_integer(result));
+    return i;
+}
+
+
+u32 read(const char* code)
+{
+    int i = 0;
+
+    push_op(get_nil());
+
+    while (true) {
+        switch (code[i]) {
+        case '\0':
+            return i;
+
+        case '(':
+            ++i;
+            pop_op(); // nil
+            i += read_list(code + i);
+            // list now at stack top.
+            return i;
+
+        case ';':
+            while (true) {
+                if (code[i] == '\0' or
+                    code[i] == '\r' or
+                    code[i] == '\n') {
+                    break;
+                } else {
+                    ++i;
+                }
+            }
+            break;
+
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            pop_op(); // nil
+            i += read_number(code + i);
+            // number now at stack top.
+            return i;
+
+        case '\n':
+        case '\r':
+        case '\t':
+        case ' ':
+            ++i;
+            break;
+
+        default:
+            pop_op(); // nil
+            i += read_symbol(code + i);
+            // symbol now at stack top.
+
+            // Ok, so for quoted expressions, we're going to put the value into
+            // a cons, where the car holds the quote symbol, and the cdr holds
+            // the value. Not sure how else to support top-level quoted
+            // values outside of s-expressions.
+            if (get_op(0)->type_ == Value::Type::symbol and
+                str_cmp(get_op(0)->symbol_.name_, "'") == 0) {
+
+                auto pair = make_cons(get_op(0), get_nil());
+                push_op(pair);
+                i += read(code + i);
+                pair->cons_.set_cdr(get_op(0));
+                pop_op(); // result of read()
+                pop_op(); // pair
+                pop_op(); // symbol
+                push_op(pair);
+            }
+            return i;
+        }
+    }
+}
+
+
+static void eval_if(Value* code)
+{
+    if (code->type_ not_eq Value::Type::cons) {
+        push_op(lisp::make_error(Error::Code::mismatched_parentheses));
+        return;
+    }
+
+    auto cond = code->cons_.car();
+
+    auto true_branch = get_nil();
+    auto false_branch = get_nil();
+
+    if (code->cons_.cdr()->type_ == Value::Type::cons) {
+        true_branch = code->cons_.cdr()->cons_.car();
+
+        if (code->cons_.cdr()->cons_.cdr()->type_ == Value::Type::cons) {
+            false_branch = code->cons_.cdr()->cons_.cdr()->cons_.car();
+        }
+    }
+
+    eval(cond);
+    if (is_boolean_true(get_op(0))) {
+        eval(true_branch);
+    } else {
+        eval(false_branch);
+    }
+
+    auto result = get_op(0);
+    pop_op(); // result
+    pop_op(); // cond
+    push_op(result);
+}
+
+
+static void eval_lambda(Value* code)
+{
+    // todo: argument list...
+
+    push_op(make_lisp_function(code));
+}
+
+
+void eval(Value* code)
+{
+    ++bound_context->interp_entry_count_;
+    --bound_context->interp_entry_count_;
+
+    // NOTE: just to protect this from the GC, in case the user didn't bother to
+    // do so.
+    push_op(code);
+
+    if (code->type_ == Value::Type::symbol) {
+        pop_op();
+        push_op(get_var(code->symbol_.name_));
+    } else if (code->type_ == Value::Type::cons) {
+        auto form = code->cons_.car();
+        if (form->type_ == Value::Type::symbol) {
+            if (str_cmp(form->symbol_.name_, "if") == 0) {
+                eval_if(code->cons_.cdr());
+                auto result = get_op(0);
+                pop_op(); // result
+                pop_op(); // code
+                push_op(result);
+                --bound_context->interp_entry_count_;
+                return;
+            } else if (str_cmp(form->symbol_.name_, "while") == 0) {
+                pop_op();
+                // TODO...
+                push_op(make_error(Error::Code::value_not_callable));
+                --bound_context->interp_entry_count_;
+                return;
+            } else if (str_cmp(form->symbol_.name_, "lambda") == 0) {
+                eval_lambda(code->cons_.cdr());
+                auto result = get_op(0);
+                pop_op(); // result
+                pop_op(); // code
+                push_op(result);
+                --bound_context->interp_entry_count_;
+                return;
+            } else if (str_cmp(form->symbol_.name_, "'") == 0) {
+                pop_op(); // code
+                push_op(code->cons_.cdr());
+                --bound_context->interp_entry_count_;
+                return;
+            }
+        }
+
+        eval(code->cons_.car());
+        auto function = get_op(0);
+        pop_op();
+
+        int argc = 0;
+
+        auto clear_args = [&] {
+            while (argc) {
+                pop_op();
+                --argc;
+            }
+        };
+
+        auto arg_list = code->cons_.cdr();
+        while (true) {
+            if (arg_list == get_nil()) {
+                break;
+            }
+            if (arg_list->type_ not_eq Value::Type::cons) {
+                clear_args();
+                pop_op();
+                push_op(make_error(Error::Code::value_not_callable));
+                --bound_context->interp_entry_count_;
+                return;
+            }
+
+            eval(arg_list->cons_.car());
+            ++argc;
+
+            arg_list = arg_list->cons_.cdr();
+        }
+
+        funcall(function, argc);
+        auto result = get_op(0);
+        pop_op(); // result
+        pop_op(); // protected expr (see top)
+        push_op(result);
+        --bound_context->interp_entry_count_;
+        return;
+    }
+}
+
+
 void init(Platform& pfrm)
 {
     bound_context.emplace(pfrm);
@@ -1139,11 +1176,7 @@ void init(Platform& pfrm)
 
     lisp::set_var("*pfrm*", lisp::make_userdata(&pfrm));
 
-    // For optimization purposes, the commonly used loop iteration variables are
-    // placed at the beginning of the string intern table, which makes setting
-    // the contents of variables bound to i or j faster than usual.
-    intern("i");
-    intern("j");
+    intern("'");
 
     set_var("set", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
@@ -1179,6 +1212,12 @@ void init(Platform& pfrm)
                 }
                 return lat;
             }));
+
+    set_var("arg", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, integer);
+        return get_arg(get_op(0)->integer_.value_);
+    }));
 
     set_var(
         "progn", make_function([](int argc) {
@@ -1603,33 +1642,14 @@ void init(Platform& pfrm)
             }));
 #endif // __GBA__
 
-    set_var(
-        "eval", make_function([](int argc) {
+    set_var("eval", make_function([](int argc) {
             if (argc < 1) {
                 return lisp::make_error(lisp::Error::Code::invalid_argc);
             }
 
-            // FIXME... improve this code. Our parser operates on strings, rather
-            // than lists, for memory reasons--we just don't have enough extra
-            // memory lying around to justify converting all lisp code into data
-            // before interpreting. So our eval implementation needs to print our
-            // data to an intermediary buffer, and execute the buffer's string
-            // contents as code.
-
-            auto pfrm = lisp::get_var("*pfrm*");
-            if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
-                return get_nil();
-            }
-
-            auto buffer =
-                allocate_dynamic<EvalBuffer>(*(Platform*)pfrm->user_data_.obj_);
-
-            EvalPrinter p(*buffer);
-
-            format(get_op(argc - 1), p);
-
-            Value* result = nullptr;
-            dostring(buffer->c_str(), &result);
+            eval(get_op(0));
+            auto result = get_op(0);
+            pop_op(); // result
 
             return result;
         }));
@@ -1647,12 +1667,10 @@ void init(Platform& pfrm)
         Value* current = result;
 
         get_interns([&current, pfrm](const char* str) {
-            current->cons_.set_car(make_symbol(str));
+            current->cons_.set_car(intern_to_symbol(str));
             auto next = make_cons(get_nil(), get_nil());
             current->cons_.set_cdr(next);
             current = next;
-
-            (*(Platform*)pfrm->user_data_.obj_).feed_watchdog();
         });
 
         pop_op(); // result

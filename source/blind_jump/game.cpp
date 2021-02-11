@@ -21,7 +21,7 @@ bool Game::load_save_data(Platform& pfrm)
 {
     alignas(PersistentData) u8 save_buffer[sizeof(PersistentData)] = {0};
 
-    if (pfrm.read_save_data(save_buffer, sizeof(PersistentData))) {
+    if (pfrm.read_save_data(save_buffer, sizeof(PersistentData), 0)) {
         PersistentData* loaded = (PersistentData*)save_buffer;
         if (loaded->magic_.get() == PersistentData::magic_val) {
             info(pfrm, "loaded existing save file");
@@ -58,7 +58,7 @@ void newgame(Platform& pfrm, Game& game)
 
     game.persistent_data().settings_ = settings;
 
-    pfrm.write_save_data(&game.persistent_data(), sizeof(PersistentData));
+    pfrm.write_save_data(&game.persistent_data(), sizeof(PersistentData), 0);
 
     game.player().set_health(game.persistent_data().player_health_.get());
     game.score() = 0;
@@ -139,7 +139,7 @@ Game::Game(Platform& pfrm)
         // Not sure what else to do... but at least if the code breaks because
         // we got stuck in a loop, we can return the user to where they left
         // off...
-        pfrm.write_save_data((byte*)&persistent_data_, sizeof persistent_data_);
+        pfrm.write_save_data((byte*)&persistent_data_, sizeof persistent_data_, 0);
     });
 }
 
@@ -165,10 +165,13 @@ COLD void on_remote_console_text(Platform& pfrm,
 {
     RemoteConsoleLispPrinter printer(pfrm);
 
-    lisp::eval(str.c_str());
+    lisp::read(str.c_str());
+    lisp::eval(lisp::get_op(0));
     format(lisp::get_op(0), printer);
 
     lisp::pop_op();
+    lisp::pop_op();
+
 
     pfrm.remote_console().printline(printer.fmt_.c_str());
 }
@@ -1039,8 +1042,7 @@ flood_fill(Platform& pfrm, TileMap& map, u8 replace, TIdx x, TIdx y)
     auto stack = mem.alloc<Buffer<Coord, TileMap::width * TileMap::height>>();
 
     if (UNLIKELY(not stack)) {
-        error(pfrm, "fatal error in floodfill");
-        pfrm.fatal();
+        pfrm.fatal("fatal error in floodfill");
     }
 
     const u8 target = map.get_tile(x, y);
@@ -1220,8 +1222,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
 
     auto temporary = mem.alloc<TileMap>();
     if (not temporary) {
-        error(pfrm, "falled to create temporary tilemap");
-        pfrm.fatal();
+        pfrm.fatal("failed to create temporary tilemap");
     }
 
     seed_map(pfrm, *temporary);
@@ -1397,8 +1398,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
     });
 
     if (not grass_overlay) {
-        error(pfrm, "failed to alloc map1 workspace");
-        pfrm.fatal();
+        pfrm.fatal("failed to alloc map1 workspace");
     }
 
     const auto cell_iters = lisp::loadv<lisp::Integer>("cell-iters").value_;

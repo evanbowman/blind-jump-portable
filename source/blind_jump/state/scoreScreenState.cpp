@@ -30,7 +30,7 @@ void ScoreScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     PersistentData& data = game.persistent_data().reset(pfrm);
     data.clean_ = false;
-    pfrm.write_save_data(&data, sizeof data);
+    pfrm.write_save_data(&data, sizeof data, 0);
 }
 
 

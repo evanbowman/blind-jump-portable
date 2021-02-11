@@ -33,7 +33,7 @@ Player::Player(Platform& pfrm)
           if (auto t = pfrm.make_dynamic_texture()) {
               return *t;
           } else {
-              pfrm.fatal();
+              pfrm.fatal("failed to alloc texture");
           }
       }())
 {

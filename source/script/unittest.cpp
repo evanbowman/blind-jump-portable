@@ -3,6 +3,7 @@
 
 
 #include <iostream>
+#include <fstream>
 
 
 static lisp::Value* function_test()
@@ -132,15 +133,27 @@ int main(int argc, char** argv)
     // }
     // TODO: real argument parsing...
 
+    std::ifstream t("file.txt");
+    std::string str((std::istreambuf_iterator<char>(t)),
+                    std::istreambuf_iterator<char>());
+
+    lisp::dostring(str.c_str());
+
+
     std::string line;
     std::cout << ">> ";
     while (std::getline(std::cin, line)) {
-        lisp::Value* result = nullptr;
-        lisp::dostring(line.c_str(), &result);
+
+        lisp::read(line.c_str());
         Printer p;
-        if (result) {
-            format(result, p);
-        }
+        auto result = lisp::get_op(0);
+        format(result, p);
+        std::cout << std::endl;
+        lisp::pop_op();
+        lisp::eval(result);
+        result = lisp::get_op(0);
+        lisp::pop_op();
+        format(result, p);
         // std::cout << "stack size: "
         //           << lisp::bound_context->operand_stack_.size()
         //           << ", object pool: "

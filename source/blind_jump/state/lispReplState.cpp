@@ -314,12 +314,14 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             pfrm.speaker().play_sound("tw_bell", 2);
 
-            lisp::eval(command_.c_str());
+            lisp::read(command_.c_str());
+            lisp::eval(lisp::get_op(0));
 
             command_.clear();
             Printer p(command_);
             format(lisp::get_op(0), p);
 
+            lisp::pop_op();
             lisp::pop_op();
 
             display_mode_ = DisplayMode::show_result;

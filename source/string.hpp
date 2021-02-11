@@ -209,6 +209,11 @@ public:
         return mem_.data();
     }
 
+    u32 remaining() const
+    {
+        return (mem_.capacity() - 1) - mem_.size();
+    }
+
 private:
     Buffer mem_;
 };

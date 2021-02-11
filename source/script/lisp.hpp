@@ -77,9 +77,17 @@ private:
 
 
 struct Function {
-    using Impl = Value* (*)(int);
+    using CPP_Impl = Value* (*)(int);
 
-    Impl impl_;
+    union {
+        CPP_Impl cpp_impl_;
+        CompressedPtr lisp_impl_;
+    };
+
+    enum ModeBits {
+        cpp_function,
+        lisp_function,
+    };
 };
 
 
@@ -135,10 +143,11 @@ struct Value {
         symbol,
         user_data,
     };
-    u8 type_ : 6;
+    u8 type_ : 4;
 
     bool alive_ : 1;
     bool mark_bit_ : 1;
+    bool mode_bits_ : 2;
 
     union {
         Integer integer_;
@@ -210,7 +219,7 @@ struct IntegralConstant {
 void set_constants(const IntegralConstant* array, u16 count);
 
 
-Value* make_function(Function::Impl impl);
+Value* make_function(Function::CPP_Impl impl);
 Value* make_cons(Value* car, Value* cdr);
 Value* make_integer(s32 value);
 Value* make_list(u32 length);
@@ -261,17 +270,17 @@ template <typename T> T& loadv(const char* name)
 }
 
 
-// Interpret lisp code, leaving the result at the top of the operand stack
-// (similar to funcall). NOTE: this function does not work like a traditional
-// eval function in lisp. The input should be a string representation of lisp
-// code, not a higher level s-expression (due to memory constraints, we do not
-// parse lisp code into lisp data before evaluating).
-u32 eval(const char* code);
+// Read an S-expression, leaving the result at the top of the operand stack.
+u32 read(const char* code);
 
 
-// Use this function for reading lisp code containing multiple
-// expressions. eval() should only be used for single expressions.
-void dostring(const char* code, Value** result = nullptr);
+void eval(Value* code);
+
+
+void dostring(const char* code);
+
+
+bool is_executing();
 
 
 int paren_balance(const char* ptr);

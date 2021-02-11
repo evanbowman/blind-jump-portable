@@ -704,12 +704,3 @@ StatePtr State::initial(Platform& pfrm, Game& game)
 
     // return state_pool().create<HealthAndSafetyWarningState>();
 }
-
-
-[[noreturn]] void factory_reset(Platform& pfrm)
-{
-    PersistentData data;
-    data.magic_.set(0xBAD);
-    pfrm.write_save_data(&data, sizeof data);
-    pfrm.fatal();
-}

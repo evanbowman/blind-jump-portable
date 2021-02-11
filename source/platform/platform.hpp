@@ -107,7 +107,7 @@ public:
     // simple to reset a process back to its original state at time of creation,
     // so it's easier in those cases to just exit. In any event, fatal() does
     // not return.
-    [[noreturn]] void fatal();
+    [[noreturn]] void fatal(const char* message);
 
     // Enable platform specific features. NOP if unsupported.
     void enable_feature(const char* feature_name, bool enabled);
@@ -221,8 +221,8 @@ public:
     // function.
     void soft_exit();
 
-    bool write_save_data(const void* data, u32 length);
-    bool read_save_data(void* buffer, u32 data_length);
+    bool write_save_data(const void* data, u32 length, u32 offset);
+    bool read_save_data(void* buffer, u32 data_length, u32 offset);
 
 
     const char* load_file_contents(const char* folder,
@@ -618,7 +618,7 @@ public:
 
         std::optional<Line> readline();
 
-        void printline(const char* text);
+        bool printline(const char* text);
     };
 
 

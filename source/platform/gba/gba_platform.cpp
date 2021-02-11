@@ -19,12 +19,34 @@
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
+#include "localization.hpp"
+#include "script/lisp.hpp"
 
 
 void english__to_string(int num, char* buffer, int base);
 
 
 #include "gba.h"
+
+
+namespace {
+
+class RemoteConsoleLispPrinter : public lisp::Printer {
+public:
+    RemoteConsoleLispPrinter(Platform& pfrm) : pfrm_(pfrm)
+    {
+    }
+
+    void put_str(const char* str) override
+    {
+        fmt_ += str;
+    }
+
+    Platform::RemoteConsole::Line fmt_;
+    Platform& pfrm_;
+};
+
+}
 
 
 static int overlay_y = 0;
@@ -296,13 +318,6 @@ void Platform::Keyboard::poll()
     states_[int(Key::up)] = ~(*keys) & KEY_UP;
     states_[int(Key::alt_1)] = ~(*keys) & KEY_L;
     states_[int(Key::alt_2)] = ~(*keys) & KEY_R;
-
-    if (states_[int(Key::right)] and states_[int(Key::left)] and
-        states_[int(Key::down)] and states_[int(Key::up)]) {
-
-        while (true)
-            ;
-    }
 
     if (UNLIKELY(static_cast<bool>(::missed_keys))) {
         for (int i = 0; i < (int)Key::count; ++i) {
@@ -1018,6 +1033,7 @@ void Platform::Screen::clear()
     // VSync
     VBlankIntrWait();
 
+
     // We want to do the dynamic texture remapping near the screen clear, to
     // reduce tearing. Most of the other changes that we make to vram, like the
     // overlay tiles and OAM, are double-buffered, so the tearing is less
@@ -1033,27 +1049,20 @@ void Platform::Screen::clear()
 }
 
 
-static void key_wake_isr();
-static void key_standby_isr();
-static bool enter_sleep = false;
-
-
-static void key_wake_isr()
+[[noreturn]] static void restart()
 {
-    REG_KEYCNT = KEY_SELECT | KEY_R | KEY_L | KEYIRQ_ENABLE | KEYIRQ_AND;
-
-    irqSet(IRQ_KEYPAD, key_standby_isr);
+    // NOTE: I am clearing almost everything, because when I did not clear all
+    // of these memory segments, something seemed to be interfering with gameboy
+    // player unlocking.
+    RegisterRamReset(RESET_VRAM | RESET_PALETTE | RESET_OAM | RESET_SIO |
+                     RESET_SOUND | RESET_OTHER);
+    SoftReset(ROM_RESTART), __builtin_unreachable();
 }
 
 
-static void key_standby_isr()
+static void keypad_isr()
 {
-    REG_KEYCNT = KEY_SELECT | KEY_START | KEY_A | KEY_B | DPAD | KEYIRQ_ENABLE |
-                 KEYIRQ_OR;
-
-    irqSet(IRQ_KEYPAD, key_wake_isr);
-
-    enter_sleep = true;
+    restart();
 }
 
 
@@ -1064,14 +1073,6 @@ static bool overlay_back_buffer_changed = false;
 void Platform::Screen::display()
 {
     // platform->stopwatch().start();
-
-    if (UNLIKELY(enter_sleep)) {
-        enter_sleep = false;
-        if (not ::platform->network_peer().is_connected()) {
-            ::platform->sleep(180);
-            Stop();
-        }
-    }
 
     if (overlay_back_buffer_changed) {
         overlay_back_buffer_changed = false;
@@ -1268,8 +1269,7 @@ static bool validate_tilemap_texture_size(Platform& pfrm, size_t size)
 {
     constexpr auto charblock_size = sizeof(ScreenBlock) * 7;
     if (size > charblock_size) {
-        error(pfrm, "tileset exceeds charblock size");
-        pfrm.fatal();
+        pfrm.fatal("tileset exceeds charblock size");
         return false;
     }
     return true;
@@ -1280,8 +1280,7 @@ static bool validate_overlay_texture_size(Platform& pfrm, size_t size)
 {
     constexpr auto charblock_size = sizeof(ScreenBlock) * 8;
     if (size > charblock_size) {
-        error(pfrm, "tileset exceeds charblock size");
-        pfrm.fatal();
+        pfrm.fatal("tileset exceeds charblock size");
         return false;
     }
     return true;
@@ -1443,20 +1442,76 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
 }
 
 
-[[noreturn]] static void restart()
+void Platform::fatal(const char* msg)
 {
-    // NOTE: I am clearing almost everything, because when I did not clear all
-    // of these memory segments, something seemed to be interfering with gameboy
-    // player unlocking.
-    RegisterRamReset(RESET_VRAM | RESET_PALETTE | RESET_OAM | RESET_SIO |
-                     RESET_SOUND | RESET_OTHER);
-    SoftReset(ROM_RESTART), __builtin_unreachable();
-}
+    const auto bkg_color = custom_color(0xcb1500);
+
+    irqDisable(IRQ_TIMER2 | IRQ_KEYPAD | IRQ_TIMER3 | IRQ_VBLANK);
 
 
-void Platform::fatal()
-{
-    restart();
+    ::platform->screen().fade(1.f, bkg_color);
+    ::platform->fill_overlay(0);
+    ::platform->load_overlay_texture("overlay");
+    enable_glyph_mode(true);
+
+    static const Text::OptColors text_colors {
+        {custom_color(0xffffff), bkg_color}
+    };
+
+    static const Text::OptColors text_colors_inv {
+        {text_colors->background_, text_colors->foreground_}
+    };
+
+    Text text(*::platform, {1, 1});
+    text.append("fatal error:", text_colors_inv);
+
+    Text text2(*::platform, {1, 3});
+    text2.append(msg, text_colors);
+
+    Buffer<Text, 6> line_buffer;
+    int offset = 0;
+
+    auto render_line = [&](const char* line,
+                           int spacing,
+                           Text::OptColors colors) {
+        line_buffer.emplace_back(*::platform, OverlayCoord{1, u8(6 + offset)});
+        line_buffer.back().append(line, colors);
+        offset += spacing;
+    };
+
+    render_line("uart console available", 2, text_colors);
+    render_line("link port        rs232 cable", 2, text_colors_inv);
+    render_line("  SO  ---------------> RxD", 2, text_colors);
+    render_line("  SI  ---------------> TxD", 2, text_colors);
+    render_line("  GND ---------------> GND", 2, text_colors);
+    render_line("    3.3 volts, 9600 baud    ", 2, text_colors_inv);
+
+    Text text3(*::platform, {1, 18});
+    text3.append("press start to reset...", text_colors);
+
+
+    ::platform->screen().display();
+
+    while (true) {
+
+        if (auto line = ::platform->remote_console().readline()) {
+            RemoteConsoleLispPrinter printer(*::platform);
+
+            lisp::read(line->c_str());
+            lisp::eval(lisp::get_op(0));
+            format(lisp::get_op(0), printer);
+
+            lisp::pop_op();
+            lisp::pop_op();
+
+            platform->remote_console().printline(printer.fmt_.c_str());
+        }
+
+        ::platform->keyboard().poll();
+        if (::platform->keyboard().pressed<Key::start>()) {
+            restart();
+        }
+    }
 }
 
 
@@ -1883,23 +1938,23 @@ void sram_load(void* dest, u32 offset, u32 length)
 }
 
 
-bool Platform::write_save_data(const void* data, u32 length)
+bool Platform::write_save_data(const void* data, u32 length, u32 offset)
 {
     if (get_gflag(GlobalFlag::save_using_flash)) {
-        return flash_save(data, 0, length);
+        return flash_save(data, offset, length);
     } else {
-        sram_save(data, 0, length);
+        sram_save(data, offset, length);
         return true;
     }
 }
 
 
-bool Platform::read_save_data(void* buffer, u32 data_length)
+bool Platform::read_save_data(void* buffer, u32 data_length, u32 offset)
 {
     if (get_gflag(GlobalFlag::save_using_flash)) {
-        flash_load(buffer, 0, data_length);
+        flash_load(buffer, offset, data_length);
     } else {
-        sram_load(buffer, 0, data_length);
+        sram_load(buffer, offset, data_length);
     }
     return true;
 }
@@ -1930,16 +1985,7 @@ SynchronizedBase::~SynchronizedBase()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// This is unfortunate. Maybe we should define a max save data size as part of
-// the platform header, so that we do not need to pull in game specific code.
-#include "blind_jump/persistentData.hpp"
-
-
-// NOTE: PersistentData goes first into flash memory, followed by the game's
-// logs. The platform implementation isn't supposed to need to know about the
-// layout of the game's save data, but, in this particular implementation, we're
-// using the cartridge ram as a logfile.
-static const u32 initial_log_write_loc = sizeof(PersistentData);
+static const u32 initial_log_write_loc = 16000;
 static u32 log_write_loc = initial_log_write_loc;
 
 
@@ -1954,6 +2000,27 @@ static Severity log_threshold;
 void Platform::Logger::set_threshold(Severity severity)
 {
     log_threshold = severity;
+}
+
+
+
+static void mgba_log(const char* msg)
+{
+    *reinterpret_cast<uint16_t*>(0x4FFF780) = 0xC0DE;
+
+    int max_characters_per_line = 256;
+    auto reg_debug_string = reinterpret_cast<char*>(0x4FFF600);
+    int characters_left = str_len(msg);
+
+    while (characters_left > 0) {
+        volatile u16& reg_debug_flags = *reinterpret_cast<u16*>(0x4FFF700);
+
+        int characters_to_write = std::min(characters_left, max_characters_per_line);
+        __builtin_memcpy(reg_debug_string, msg, characters_to_write);
+        reg_debug_flags = 2 | 0x100;
+        msg += characters_to_write;
+        characters_left -= characters_to_write;
+    }
 }
 
 
@@ -2003,14 +2070,6 @@ void Platform::Logger::log(Severity level, const char* msg)
     u32 i;
     constexpr size_t prefix_size = 2;
 
-    if (log_write_loc + prefix_size + msg_size + 2 >= 64000) {
-        // We cannot be certain of how much cartridge ram will be available. But
-        // 64k is a reasonable assumption. When we reach the end, wrap around to
-        // the beginning.
-        log_write_loc = initial_log_write_loc;
-    }
-
-
     for (i = 0;
          i < std::min(size_t(msg_size), buffer.size() - (prefix_size + 1));
          ++i) {
@@ -2022,22 +2081,29 @@ void Platform::Logger::log(Severity level, const char* msg)
               // the end of the log, in the case where the log wraps
               // around.
 
-    if (get_gflag(GlobalFlag::save_using_flash)) {
-        flash_save(buffer.data(), log_write_loc, buffer.size());
+    if (log_write_loc + prefix_size + msg_size + 2 >= 64000) {
+        // Out of loggin space! We could wrap around to the beginning...
+        // log_write_loc = initial_log_write_loc;
     } else {
-        sram_save(buffer.data(), log_write_loc, buffer.size());
+        if (get_gflag(GlobalFlag::save_using_flash)) {
+            flash_save(buffer.data(), log_write_loc, buffer.size());
+        } else {
+            sram_save(buffer.data(), log_write_loc, buffer.size());
+        }
     }
 
     log_write_loc += msg_size + prefix_size + 1;
+
+    mgba_log(buffer.data());
 }
 
 
 void Platform::Logger::read(void* buffer, u32 start_offset, u32 num_bytes)
 {
     if (get_gflag(GlobalFlag::save_using_flash)) {
-        flash_load(buffer, sizeof(PersistentData) + start_offset, num_bytes);
+        flash_load(buffer, initial_log_write_loc + start_offset, num_bytes);
     } else {
-        sram_load(buffer, sizeof(PersistentData) + start_offset, num_bytes);
+        sram_load(buffer, initial_log_write_loc + start_offset, num_bytes);
     }
 }
 
@@ -2443,13 +2509,17 @@ static void watchdog_update_isr()
     // microseconds. 0xffff is the max counter value upon overflow.
     ::watchdog_counter += 61 * 0xffff;
 
-    if (::watchdog_counter > seconds(10)) {
+    if (UNLIKELY(::watchdog_counter > seconds(10))) {
         ::watchdog_counter = 0;
+
+        ::platform->speaker().stop_music();
 
         if (::platform and ::watchdog_callback) {
             (*::watchdog_callback)(*platform);
         }
 
+        // this seems not to work :(
+        // unrecoverrable_error("game froze, watchdog not fed");
         restart();
     }
 }
@@ -2481,10 +2551,6 @@ const char* Platform::load_file_contents(const char* folder,
     }
     return nullptr;
 }
-
-
-__attribute__((section(".iwram"), long_call)) void
-cartridge_interrupt_handler();
 
 
 static void enable_watchdog()
@@ -2539,8 +2605,7 @@ Platform::ScratchBufferPtr Platform::make_scratch_buffer()
         return *maybe_buffer;
     } else {
         screen().fade(1.f, ColorConstant::electric_blue);
-        error(*this, "scratch buffer pool exhausted");
-        fatal();
+        fatal("scratch buffer pool exhausted");
     }
 }
 
@@ -2657,6 +2722,12 @@ Platform::Platform()
         logger().set_threshold(Severity::debug);
     }
 
+    irqInit();
+
+    irqSet(IRQ_KEYPAD, keypad_isr);
+    irqEnable(IRQ_KEYPAD);
+    REG_KEYCNT = KEY_SELECT | KEY_START | KEY_R | KEY_L | KEYIRQ_ENABLE | KEYIRQ_AND;
+
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
     // attempt to save, and if the save fails, assume flash. I don't really know
@@ -2675,7 +2746,7 @@ Platform::Platform()
     glyph_table.emplace(allocate_dynamic<GlyphTable>(*this));
     if (not glyph_table) {
         error(*this, "failed to allocate glyph table");
-        fatal();
+        restart();
     }
 
     {
@@ -2725,7 +2796,6 @@ Platform::Platform()
     // cartridge.
     system_clock_.init(*this);
 
-    irqInit();
     irqEnable(IRQ_VBLANK);
 
     if (unlock_gameboy_player(*this)) {
@@ -4037,6 +4107,19 @@ static void uart_serial_isr()
         return;
     }
 
+    const bool send_ready = !(REG_SIOCNT & 0x0010);
+    if (send_ready and state.tx_msg_ and not (*state.tx_msg_)->empty()) {
+
+        // just for debugging purposes
+        ++multiplayer_comms.tx_message_count;
+
+        REG_SIODATA8 = *((*state.tx_msg_)->end() - 1);
+        (*state.tx_msg_)->pop_back();
+        return;
+    } else if (state.tx_msg_ and (*state.tx_msg_)->empty()) {
+        state.tx_msg_.reset();
+    }
+
     // FIXME: I'm not seeing the receive_ready flag for some reason, but this
     // code really _should_ be checking the state of the receive flag in the
     // serial control register before reading a byte. What I'm doing here is
@@ -4071,18 +4154,6 @@ static void uart_serial_isr()
         }
 
     // }
-
-    const bool send_ready = !(REG_SIOCNT & 0x0010);
-    if (send_ready and state.tx_msg_ and not (*state.tx_msg_)->empty()) {
-
-        // just for debugging purposes
-        ++multiplayer_comms.tx_message_count;
-
-        REG_SIODATA8 = *((*state.tx_msg_)->end() - 1);
-        (*state.tx_msg_)->pop_back();
-    } else if ((*state.tx_msg_)->empty()) {
-        state.tx_msg_.reset();
-    }
 }
 
 
@@ -4127,14 +4198,14 @@ auto Platform::RemoteConsole::readline() -> std::optional<Line>
 }
 
 
-void Platform::RemoteConsole::printline(const char* text)
+bool Platform::RemoteConsole::printline(const char* text)
 {
     auto& state = **::remote_console_state;
 
     if (state.tx_msg_ and not (*state.tx_msg_)->empty()) {
         // TODO: add a queue for output messages! At the moment, there's already
         // a message being written, so we'll need to ignore the input.
-        return;
+        return false;
     }
 
     state.tx_msg_ = allocate_dynamic<ConsoleLine>(*::platform);
@@ -4168,6 +4239,8 @@ void Platform::RemoteConsole::printline(const char* text)
         // character in the uart shift register, to kick off the send.
         REG_SIODATA8 = *first_char;
     }
+
+    return true;
 }
 
 

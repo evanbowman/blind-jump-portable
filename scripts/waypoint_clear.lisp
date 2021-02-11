@@ -3,10 +3,10 @@
 ;;;
 
 
-(if (bound #swarm)
+(if (bound 'swarm)
     (progn
       (alert 136)
-      (set #n (if (equal swarm 0) 10 5))
+      (set 'n (if (equal swarm 0) 10 5))
 
       (ID-OVERRIDE 1073741823) ;; NOTE: This is a hack for multiplayer games. We
                                ;; do not sychronize entity ids after level
@@ -16,11 +16,14 @@
                                ;; consoles.
 
       ;; Give the enemies a bit of a random offset when spawning
-      (set #temp
+      (set 'temp
            (cons
-            (map + (fill n (- (car (get-pos gate)) 15)) (gen n (list cr-choice 30)))
-            (map + (fill n (- (cdr (get-pos gate)) 15)) (gen n (list cr-choice 30)))))
+            (map + (fill n (- (car (get-pos gate)) 15)) (gen n (lambda (cr-choice 15))))
+            (map + (fill n (- (cdr (get-pos gate)) 15)) (gen n (lambda (cr-choice 15))))))
 
       (map make-enemy (fill n swarm) (car temp) (cdr temp))
 
-      (unbind #swarm)))
+      (unbind 'swarm)))
+
+
+(map (lambda ((arg 0))) waypoint-clear-hooks)

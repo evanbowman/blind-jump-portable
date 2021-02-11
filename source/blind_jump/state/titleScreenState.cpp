@@ -184,7 +184,7 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                     // they die and resume from the same save file again.
                     auto data = game.persistent_data();
                     data.reset(pfrm);
-                    pfrm.write_save_data(&data, sizeof(data));
+                    pfrm.write_save_data(&data, sizeof(data), 0);
                 }
             } else {
                 newgame(pfrm, game);

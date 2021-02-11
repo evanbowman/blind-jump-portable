@@ -12,7 +12,7 @@
          (not (equal (level) boss-1-level))
          (not (equal (level) boss-2-level))
          (not (equal (level) boss-3-level)))
-        (set #swarm (if (all-true (> (level) boss-0-level)
+        (set 'swarm (if (all-true (> (level) boss-0-level)
                                   (equal (cr-choice 3) 0))
                         enemy-scarecrow
                         enemy-drone))))
@@ -21,5 +21,8 @@
 ;; The only way that we could end up in this scenario, is if we previously died
 ;; on a swarm level.
 (if (all-true (equal (level) 0)
-              (bound #swarm))
-    (unbind #swarm))
+              (bound 'swarm))
+    (unbind 'swarm))
+
+
+(map (lambda ((arg 0))) post-levelgen-hooks)
