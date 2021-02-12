@@ -245,6 +245,7 @@ Value* make_symbol(const char* name,
 
 
 void get_interns(::Function<24, void(const char*)> callback);
+void get_env(::Function<24, void(const char*)> callback);
 
 
 Value* get_nil();
@@ -274,8 +275,6 @@ void pop_op();
 void funcall(Value* fn, u8 argc);
 
 
-// For named variables. Currently, the interpreter does not support function
-// definitions in lisp yet, so all variables are globally scoped.
 Value* set_var(const char* name, Value* value);
 Value* get_var(const char* name);
 

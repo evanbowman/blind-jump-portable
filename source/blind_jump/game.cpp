@@ -139,7 +139,8 @@ Game::Game(Platform& pfrm)
         // Not sure what else to do... but at least if the code breaks because
         // we got stuck in a loop, we can return the user to where they left
         // off...
-        pfrm.write_save_data((byte*)&persistent_data_, sizeof persistent_data_, 0);
+        pfrm.write_save_data(
+            (byte*)&persistent_data_, sizeof persistent_data_, 0);
     });
 }
 

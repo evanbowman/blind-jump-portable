@@ -23,7 +23,7 @@ struct Variable {
 };
 
 
-static void run_gc();
+static int run_gc();
 
 
 static const u32 string_intern_table_size = 1999;
@@ -129,6 +129,21 @@ void get_interns(::Function<24, void(const char*)> callback)
     }
 }
 
+
+void get_env(::Function<24, void(const char*)> callback)
+{
+    auto& ctx = bound_context;
+
+    for (u32 i = 0; i < ctx->globals_->size(); ++i) {
+        if (str_cmp("", (*ctx->globals_)[i].name_)) {
+            callback((const char*)(*ctx->globals_)[i].name_);
+        }
+    }
+
+    for (u16 i = 0; i < bound_context->constants_count_; ++i) {
+        callback((const char*)bound_context->constants_[i].name_);
+    }
+}
 
 
 // Only meant to be called by lisp functions
@@ -746,10 +761,11 @@ static void gc_mark()
 }
 
 
-void gc_sweep()
+static int gc_sweep()
 {
+    int collect_count = 0;
     for (auto& pl : bound_context->value_pools_) {
-        pl->scan_cells([&pl](Value* val) {
+        pl->scan_cells([&pl, &collect_count](Value* val) {
             if (val->alive_) {
                 if (val->mark_bit_) {
                     val->mark_bit_ = false;
@@ -757,17 +773,18 @@ void gc_sweep()
                     // This value should be unreachable, let's collect it.
                     val->alive_ = false;
                     pl->post(val);
+                    ++collect_count;
                 }
             }
         });
     }
+    return collect_count;
 }
 
 
-static void run_gc()
+static int run_gc()
 {
-    gc_mark();
-    gc_sweep();
+    return gc_mark(), gc_sweep();
 }
 
 
@@ -827,9 +844,7 @@ static u32 read_list(const char* code)
 
         case ';':
             while (true) {
-                if (code[i] == '\0' or
-                    code[i] == '\r' or
-                    code[i] == '\n') {
+                if (code[i] == '\0' or code[i] == '\r' or code[i] == '\n') {
                     break;
                 } else {
                     ++i;
@@ -896,7 +911,7 @@ static u32 read_symbol(const char* code)
         }
     }
 
- FINAL:
+FINAL:
 
     if (symbol == "nil") {
         push_op(get_nil());
@@ -934,7 +949,7 @@ static u32 read_number(const char* code)
         }
     }
 
- FINAL:
+FINAL:
     s32 result = 0;
     for (u32 i = 0; i < num_str.length(); ++i) {
         result = result * 10 + (num_str[i] - '0');
@@ -965,9 +980,7 @@ u32 read(const char* code)
 
         case ';':
             while (true) {
-                if (code[i] == '\0' or
-                    code[i] == '\r' or
-                    code[i] == '\n') {
+                if (code[i] == '\0' or code[i] == '\r' or code[i] == '\n') {
                     break;
                 } else {
                     ++i;
@@ -1058,6 +1071,34 @@ static void eval_if(Value* code)
 }
 
 
+static void eval_while(Value* code)
+{
+    if (code->type_ not_eq Value::Type::cons) {
+        push_op(lisp::make_error(Error::Code::mismatched_parentheses));
+        return;
+    }
+
+    auto cond = code->cons_.car();
+
+    // result
+    push_op(get_nil());
+
+    while (true) {
+        eval(cond);
+
+        if (not is_boolean_true(get_op(0))) {
+            pop_op(); // cond
+            break;
+        }
+
+        pop_op(); // cond
+
+        pop_op();                // previous result
+        eval(code->cons_.cdr()); // new result at top of stack
+    }
+}
+
+
 static void eval_lambda(Value* code)
 {
     // todo: argument list...
@@ -1090,9 +1131,11 @@ void eval(Value* code)
                 --bound_context->interp_entry_count_;
                 return;
             } else if (str_cmp(form->symbol_.name_, "while") == 0) {
+                eval_while(code->cons_.cdr());
+                auto result = get_op(0);
                 pop_op();
-                // TODO...
-                push_op(make_error(Error::Code::value_not_callable));
+                pop_op();
+                push_op(result);
                 --bound_context->interp_entry_count_;
                 return;
             } else if (str_cmp(form->symbol_.name_, "lambda") == 0) {
@@ -1189,7 +1232,8 @@ void init(Platform& pfrm)
 
     intern("'");
 
-    set_var("set", make_function([](int argc) {
+    set_var("set",
+            make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
                 L_EXPECT_OP(1, symbol);
 
@@ -1225,10 +1269,10 @@ void init(Platform& pfrm)
             }));
 
     set_var("arg", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, integer);
-        return get_arg(get_op(0)->integer_.value_);
-    }));
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, integer);
+                return get_arg(get_op(0)->integer_.value_);
+            }));
 
     set_var(
         "progn", make_function([](int argc) {
@@ -1422,10 +1466,27 @@ void init(Platform& pfrm)
                 }
 
                 push_op(lat); // for the gc
-                set_list(lat, 0, make_integer(values_remaining));
-                set_list(lat, 1, make_integer(ctx->string_intern_pos_));
-                set_list(lat, 2, make_integer(ctx->operand_stack_->size()));
-                set_list(lat, 3, make_integer([&] {
+
+                auto make_stat = [&](const char* name, int value) {
+                    auto c = make_cons(get_nil(), get_nil());
+                    push_op(c); // gc protect
+
+                    c->cons_.set_car(
+                        make_symbol(name, Symbol::ModeBits::stable_pointer));
+                    c->cons_.set_cdr(make_integer(value));
+
+                    pop_op(); // gc unprotect
+                    return c;
+                };
+
+                set_list(lat, 0, make_stat("vals-left", values_remaining));
+                set_list(lat,
+                         1,
+                         make_stat("interned-bytes", ctx->string_intern_pos_));
+                set_list(lat,
+                         2,
+                         make_stat("stack-used", ctx->operand_stack_->size()));
+                set_list(lat, 3, make_stat("vars", [&] {
                              int symb_tab_used = 0;
                              for (u32 i = 0; i < ctx->globals_->size(); ++i) {
                                  if (str_cmp("", (*ctx->globals_)[i].name_)) {
@@ -1598,9 +1659,15 @@ void init(Platform& pfrm)
                 return result;
             }));
 
-    set_var("gc", make_function([](int argc) {
-                run_gc();
-                return get_nil();
+    set_var("gc",
+            make_function([](int argc) { return make_integer(run_gc()); }));
+
+    set_var("get", make_function([](int argc) {
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(1, cons);
+                L_EXPECT_OP(0, integer);
+
+                return get_list(get_op(1), get_op(0)->integer_.value_);
             }));
 
 #ifdef __GBA__
@@ -1654,40 +1721,39 @@ void init(Platform& pfrm)
 #endif // __GBA__
 
     set_var("eval", make_function([](int argc) {
-            if (argc < 1) {
-                return lisp::make_error(lisp::Error::Code::invalid_argc);
-            }
+                if (argc < 1) {
+                    return lisp::make_error(lisp::Error::Code::invalid_argc);
+                }
 
-            eval(get_op(0));
-            auto result = get_op(0);
-            pop_op(); // result
+                eval(get_op(0));
+                auto result = get_op(0);
+                pop_op(); // result
 
-            return result;
-        }));
+                return result;
+            }));
 
     set_var("env", make_function([](int argc) {
+                auto pfrm = lisp::get_var("*pfrm*");
+                if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+                    return get_nil();
+                }
 
-        auto pfrm = lisp::get_var("*pfrm*");
-        if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
-            return get_nil();
-        }
+                Value* result = make_cons(get_nil(), get_nil());
+                push_op(result); // protect from the gc
 
-        Value* result = make_cons(get_nil(), get_nil());
-        push_op(result); // protect from the gc
+                Value* current = result;
 
-        Value* current = result;
+                get_env([&current, pfrm](const char* str) {
+                    current->cons_.set_car(intern_to_symbol(str));
+                    auto next = make_cons(get_nil(), get_nil());
+                    current->cons_.set_cdr(next);
+                    current = next;
+                });
 
-        get_interns([&current, pfrm](const char* str) {
-            current->cons_.set_car(intern_to_symbol(str));
-            auto next = make_cons(get_nil(), get_nil());
-            current->cons_.set_cdr(next);
-            current = next;
-        });
+                pop_op(); // result
 
-        pop_op(); // result
-
-        return result;
-    }));
+                return result;
+            }));
 }
 
 

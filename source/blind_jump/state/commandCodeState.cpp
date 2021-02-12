@@ -211,7 +211,7 @@ bool CommandCodeState::handle_command_code(Platform& pfrm, Game& game)
 
 
     // default:
-        return false;
+    return false;
 
     // case 592:
     //     factory_reset(pfrm);

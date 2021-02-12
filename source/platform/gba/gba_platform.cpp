@@ -13,14 +13,14 @@
 #include "gba_color.hpp"
 #include "gbp_logo.hpp"
 #include "graphics/overlay.hpp"
+#include "localization.hpp"
 #include "number/random.hpp"
 #include "platform/platform.hpp"
 #include "rumble.h"
+#include "script/lisp.hpp"
 #include "string.hpp"
 #include "util.hpp"
 #include <algorithm>
-#include "localization.hpp"
-#include "script/lisp.hpp"
 
 
 void english__to_string(int num, char* buffer, int base);
@@ -46,7 +46,7 @@ public:
     Platform& pfrm_;
 };
 
-}
+} // namespace
 
 
 static int overlay_y = 0;
@@ -1454,13 +1454,11 @@ void Platform::fatal(const char* msg)
     ::platform->load_overlay_texture("overlay");
     enable_glyph_mode(true);
 
-    static const Text::OptColors text_colors {
-        {custom_color(0xffffff), bkg_color}
-    };
+    static const Text::OptColors text_colors{
+        {custom_color(0xffffff), bkg_color}};
 
-    static const Text::OptColors text_colors_inv {
-        {text_colors->background_, text_colors->foreground_}
-    };
+    static const Text::OptColors text_colors_inv{
+        {text_colors->background_, text_colors->foreground_}};
 
     Text text(*::platform, {1, 1});
     text.append("fatal error:", text_colors_inv);
@@ -2003,7 +2001,6 @@ void Platform::Logger::set_threshold(Severity severity)
 }
 
 
-
 static void mgba_log(const char* msg)
 {
     *reinterpret_cast<uint16_t*>(0x4FFF780) = 0xC0DE;
@@ -2015,7 +2012,8 @@ static void mgba_log(const char* msg)
     while (characters_left > 0) {
         volatile u16& reg_debug_flags = *reinterpret_cast<u16*>(0x4FFF700);
 
-        int characters_to_write = std::min(characters_left, max_characters_per_line);
+        int characters_to_write =
+            std::min(characters_left, max_characters_per_line);
         __builtin_memcpy(reg_debug_string, msg, characters_to_write);
         reg_debug_flags = 2 | 0x100;
         msg += characters_to_write;
@@ -2726,7 +2724,8 @@ Platform::Platform()
 
     irqSet(IRQ_KEYPAD, keypad_isr);
     irqEnable(IRQ_KEYPAD);
-    REG_KEYCNT = KEY_SELECT | KEY_START | KEY_R | KEY_L | KEYIRQ_ENABLE | KEYIRQ_AND;
+    REG_KEYCNT =
+        KEY_SELECT | KEY_START | KEY_R | KEY_L | KEYIRQ_ENABLE | KEYIRQ_AND;
 
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
@@ -4108,7 +4107,7 @@ static void uart_serial_isr()
     }
 
     const bool send_ready = !(REG_SIOCNT & 0x0010);
-    if (send_ready and state.tx_msg_ and not (*state.tx_msg_)->empty()) {
+    if (send_ready and state.tx_msg_ and not(*state.tx_msg_)->empty()) {
 
         // just for debugging purposes
         ++multiplayer_comms.tx_message_count;
@@ -4129,29 +4128,28 @@ static void uart_serial_isr()
     // const bool is_rcv = !(REG_SIOCNT & 0x0020);
     // if (is_rcv) {
 
-        // just for debugging purposes
-        ++multiplayer_comms.rx_message_count;
+    // just for debugging purposes
+    ++multiplayer_comms.rx_message_count;
 
-        if (data == '\r') {
-            if (state.rx_in_progress_) {
-                state.rx_full_lines_.push_back(std::move(*state.rx_in_progress_));
-                state.rx_in_progress_.reset();
-            }
-        } else if (data == 8 /* ASCII backspace */ or
-                   data == 0x7f /* Strange char used by picocom as a backspace */) {
-            if (state.rx_in_progress_) {
-                (*state.rx_in_progress_)->pop_back();
-            }
-        } else {
-            if (not state.rx_in_progress_) {
-                state.rx_in_progress_ =
-                    allocate_dynamic<ConsoleLine>(*::platform);
-            }
-
-            if (state.rx_in_progress_) {
-                (*state.rx_in_progress_)->push_back(data);
-            }
+    if (data == '\r') {
+        if (state.rx_in_progress_) {
+            state.rx_full_lines_.push_back(std::move(*state.rx_in_progress_));
+            state.rx_in_progress_.reset();
         }
+    } else if (data == 8 /* ASCII backspace */ or
+               data == 0x7f /* Strange char used by picocom as a backspace */) {
+        if (state.rx_in_progress_) {
+            (*state.rx_in_progress_)->pop_back();
+        }
+    } else {
+        if (not state.rx_in_progress_) {
+            state.rx_in_progress_ = allocate_dynamic<ConsoleLine>(*::platform);
+        }
+
+        if (state.rx_in_progress_) {
+            (*state.rx_in_progress_)->push_back(data);
+        }
+    }
 
     // }
 }
@@ -4174,12 +4172,8 @@ static void start_remote_console(Platform& pfrm)
     REG_SIOCNT = 0;
 
     // NOTE: see gba.h for constants
-    REG_SIOCNT = SIO_9600
-        | SIO_UART_LENGTH_8
-        | SIO_UART_SEND_ENABLE
-        | SIO_UART_RECV_ENABLE
-        | SIO_UART
-        | SIO_IRQ;
+    REG_SIOCNT = SIO_9600 | SIO_UART_LENGTH_8 | SIO_UART_SEND_ENABLE |
+                 SIO_UART_RECV_ENABLE | SIO_UART | SIO_IRQ;
 }
 
 
@@ -4202,7 +4196,7 @@ bool Platform::RemoteConsole::printline(const char* text)
 {
     auto& state = **::remote_console_state;
 
-    if (state.tx_msg_ and not (*state.tx_msg_)->empty()) {
+    if (state.tx_msg_ and not(*state.tx_msg_)->empty()) {
         // TODO: add a queue for output messages! At the moment, there's already
         // a message being written, so we'll need to ignore the input.
         return false;

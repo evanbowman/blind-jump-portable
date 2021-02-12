@@ -51,7 +51,6 @@ const char* console_header =
 // clang-format on
 
 
-
 void blind_jump_main_loop(Platform& pf)
 {
     pf.remote_console().printline(::console_header);

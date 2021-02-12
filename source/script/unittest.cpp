@@ -2,8 +2,8 @@
 #include "platform/platform.hpp"
 
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 
 static lisp::Value* function_test()
