@@ -19,6 +19,14 @@ struct Value;
 
 struct Symbol {
     const char* name_;
+
+    enum class ModeBits {
+        requires_intern,
+        // If you create a symbol, while promising that the string pointer is
+        // stable, the string will _not_ be interned. This uses less memory, but
+        // should be used very carefully, and ONLY WITH STRING LITERALS.
+        stable_pointer,
+    };
 };
 
 
@@ -41,6 +49,11 @@ struct CompressedPtr {
 
     u16 source_pool_ : source_pool_bits;
     u16 offset_ : offset_bits;
+};
+
+
+struct Number {
+    float value_;
 };
 
 
@@ -142,6 +155,7 @@ struct Value {
         error,
         symbol,
         user_data,
+        number,
     };
     u8 type_ : 4;
 
@@ -156,6 +170,7 @@ struct Value {
         Error error_;
         Symbol symbol_;
         UserData user_data_;
+        Number number_;
     };
 
     template <typename T> T& expect()
@@ -224,8 +239,9 @@ Value* make_cons(Value* car, Value* cdr);
 Value* make_integer(s32 value);
 Value* make_list(u32 length);
 Value* make_error(Error::Code error_code);
-Value* make_symbol(const char* name);
 Value* make_userdata(void* obj);
+Value* make_symbol(const char* name,
+                   Symbol::ModeBits mode = Symbol::ModeBits::requires_intern);
 
 
 void get_interns(::Function<24, void(const char*)> callback);

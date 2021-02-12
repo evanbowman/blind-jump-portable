@@ -817,7 +817,7 @@ public:
 
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
-    using Command = StringBuffer<60>;
+    using Command = StringBuffer<256>;
 
 private:
     enum class DisplayMode {

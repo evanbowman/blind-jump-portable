@@ -3,6 +3,7 @@
 #include "localization.hpp"
 #include "memory/buffer.hpp"
 #include "memory/pool.hpp"
+#include <complex>
 #ifndef __GBA__
 #include <iostream>
 #endif
@@ -53,6 +54,7 @@ struct Context {
                        allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm),
+                       allocate_dynamic<ValuePool>(pfrm),
                        allocate_dynamic<ValuePool>(pfrm)},
           operand_stack_(allocate_dynamic<OperandStack>(pfrm)),
           globals_(allocate_dynamic<Globals>(pfrm)),
@@ -75,7 +77,7 @@ struct Context {
     // We're allocating 10k bytes toward lisp values. Because our simplistic
     // allocation strategy cannot support sizes other than 2k, we need to split
     // our memory for lisp values into regions.
-    static constexpr const int value_pool_count = 6;
+    static constexpr const int value_pool_count = 7;
     DynamicMemory<ValuePool> value_pools_[value_pool_count];
 
     DynamicMemory<OperandStack> operand_stack_;
@@ -334,11 +336,20 @@ Value* make_error(Error::Code error_code)
 }
 
 
-Value* make_symbol(const char* name)
+Value* make_symbol(const char* name, Symbol::ModeBits mode)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::symbol;
-        val->symbol_.name_ = intern(name);
+        val->symbol_.name_ = [mode, name] {
+            switch (mode) {
+            case Symbol::ModeBits::requires_intern:
+                break;
+
+            case Symbol::ModeBits::stable_pointer:
+                return name;
+            }
+            return intern(name);
+        }();
         return val;
     }
     return bound_context->oom_;
@@ -863,7 +874,7 @@ static u32 read_symbol(const char* code)
     StringBuffer<64> symbol;
 
     if (code[0] == '\'') {
-        push_op(make_symbol("'"));
+        push_op(make_symbol("'", Symbol::ModeBits::stable_pointer));
         return 1;
     }
 
