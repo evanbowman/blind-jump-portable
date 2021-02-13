@@ -2619,6 +2619,37 @@ static void audio_update_isr()
 }
 
 
+// Simpler mixer, without stereo sound or volume modulation, for multiplayer
+// games.
+static void audio_update_multiplayer_isr()
+{
+    alignas(4) AudioSample mixing_buffer[4];
+
+    // NOTE: audio tracks in ROM should therefore have four byte alignment!
+    *((u32*)mixing_buffer) =
+        ((u32*)(snd_ctx.music_track))[snd_ctx.music_track_pos++];
+
+    if (UNLIKELY(snd_ctx.music_track_pos > snd_ctx.music_track_length)) {
+        snd_ctx.music_track_pos = 0;
+    }
+
+    for (auto it = snd_ctx.active_sounds.begin();
+         it not_eq snd_ctx.active_sounds.end();) {
+        if (UNLIKELY(it->position_ + 4 >= it->length_)) {
+            it = snd_ctx.active_sounds.erase(it);
+        } else {
+            for (int i = 0; i < 4; ++i) {
+                mixing_buffer[i] += (u8)it->data_[it->position_];
+                ++it->position_;
+            }
+            ++it;
+        }
+    }
+
+    REG_SGFIFOA = *((u32*)mixing_buffer);
+}
+
+
 void Platform::soft_exit()
 {
     Stop();
@@ -3883,6 +3914,7 @@ MASTER_RETRY:
                 }
             }
             info(*::platform, "validated handshake");
+            irqSet(IRQ_TIMER1, audio_update_multiplayer_isr);
             ::platform->network_peer().poll_consume(sizeof handshake);
             return;
         }
@@ -3971,6 +4003,9 @@ void Platform::NetworkPeer::disconnect()
     // you leave a message sitting in the transmit ring, it may be erroneously
     // sent out when you try to reconnect, instead of the handshake message);
     if (is_connected()) {
+
+        irqSet(IRQ_TIMER1, audio_update_isr);
+
         info(*::platform, "disconnected!");
         set_gflag(GlobalFlag::multiplayer_connected, false);
         irqDisable(IRQ_SERIAL);

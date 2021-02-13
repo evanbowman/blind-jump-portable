@@ -1,3 +1,5 @@
+#pragma once
+
 #include "function.hpp"
 #include "number/numeric.hpp"
 #include "string.hpp"
@@ -262,6 +264,26 @@ int length(Value* lat);
 void push_op(Value* operand);
 Value* get_op(u32 operand_number);
 void pop_op();
+
+
+template <typename F>
+void foreach(Value* list, F&& fn)
+{
+    push_op(list);
+
+    while (true) {
+
+        if (list->type_ not_eq Value::Type::cons) {
+            break;
+        } else {
+            fn(list->cons_.car());
+        }
+
+        list = list->cons_.cdr();
+    }
+
+    pop_op();
+}
 
 
 // Arguments should be pushed onto the operand stack prior to the function

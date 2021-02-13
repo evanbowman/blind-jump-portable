@@ -51,21 +51,26 @@ void on_enemy_destroyed(Platform& pfrm,
     // We do not want to spawn rubble over an empty map tile
     if (create_debris and is_walkable(tile)) {
         game.on_timeout(
-            pfrm, milliseconds(200), [pos = position](Platform&, Game& game) {
+            pfrm, milliseconds(200), [pos = position](Platform& pfrm, Game& game) {
                 game.details().spawn<Rubble>(pos);
-                game.details().spawn<Debris>(pos);
-                game.details().spawn<Debris>(pos);
-                game.details().spawn<Debris>(pos);
-                game.details().spawn<Debris>(pos);
+
+                if (not pfrm.network_peer().is_connected()) {
+                    game.details().spawn<Debris>(pos);
+                    game.details().spawn<Debris>(pos);
+                    game.details().spawn<Debris>(pos);
+                    game.details().spawn<Debris>(pos);
+                }
             });
     } else {
         game.on_timeout(
-            pfrm, milliseconds(200), [pos = position](Platform&, Game& game) {
-                game.details().spawn<Debris>(pos);
-                game.details().spawn<Debris>(pos);
-                game.details().spawn<Debris>(pos);
-                game.details().spawn<Debris>(pos);
-                game.details().spawn<Debris>(pos);
+            pfrm, milliseconds(200), [pos = position](Platform& pfrm, Game& game) {
+                if (not pfrm.network_peer().is_connected()) {
+                    game.details().spawn<Debris>(pos);
+                    game.details().spawn<Debris>(pos);
+                    game.details().spawn<Debris>(pos);
+                    game.details().spawn<Debris>(pos);
+                    game.details().spawn<Debris>(pos);
+                }
             });
     }
 

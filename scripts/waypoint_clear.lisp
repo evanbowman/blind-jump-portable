@@ -3,7 +3,7 @@
 ;;;
 
 
-(if (bound 'swarm)
+(if (all-true (not (peer-conn)) (bound 'swarm))
     (progn
       (alert 136)
       (set 'n (if (equal swarm 0) 10 5))
