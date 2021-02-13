@@ -1110,7 +1110,6 @@ static void eval_lambda(Value* code)
 void eval(Value* code)
 {
     ++bound_context->interp_entry_count_;
-    --bound_context->interp_entry_count_;
 
     // NOTE: just to protect this from the GC, in case the user didn't bother to
     // do so.

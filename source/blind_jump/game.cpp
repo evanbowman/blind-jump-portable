@@ -206,7 +206,8 @@ HOT void Game::update(Platform& pfrm, Microseconds delta)
         }
     }
 
-    pfrm.speaker().set_position(player_.get_position());
+    pfrm.speaker().set_position({camera_.center().x + pfrm.screen().size().x / 2,
+                                 camera_.center().y + pfrm.screen().size().y / 2});
 
     next_state_ = state_->update(pfrm, *this, delta);
 

@@ -40,6 +40,11 @@ Platform::ScratchBufferPtr Platform::make_scratch_buffer()
 }
 
 
+void Platform::feed_watchdog()
+{
+
+}
+
 void english__to_string(int num, char* buffer, int base)
 {
     int i = 0;

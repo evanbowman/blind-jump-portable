@@ -2263,10 +2263,85 @@ Microseconds Platform::Speaker::track_length(const char* name)
 }
 
 
+namespace detail {
+template<std::size_t... Is> struct seq{};
+template<std::size_t N, std::size_t... Is>
+struct gen_seq : gen_seq<N-1, N-1, Is...>{};
+template<std::size_t... Is>
+struct gen_seq<0, Is...> : seq<Is...>{};
+
+
+template<class Generator, std::size_t... Is>
+constexpr auto generate_array_helper(Generator g, seq<Is...>)
+-> std::array<decltype(g(std::size_t{}, sizeof...(Is))), sizeof...(Is)>
+{
+    return {{g(Is, sizeof...(Is))...}};
+}
+
+template<std::size_t tcount, class Generator>
+constexpr auto generate_array(Generator g)
+-> decltype( generate_array_helper(g, gen_seq<tcount>{}) )
+{
+    return generate_array_helper(g, gen_seq<tcount>{});
+}
+}
+
+
+auto make_volume_lut = [](float scale) {
+    return detail::generate_array<256>([scale](std::size_t curr, std::size_t total) -> s8 {
+        const auto real = (s8)((u8)curr);
+        return real * scale;
+    });
+ };
+
+
+// Each table entry contains the whole number space of a signed 8-bit value,
+// scaled by a fraction.
+static constexpr std::array<VolumeScaleLUT, 20> volume_scale_LUTs = {
+    {{make_volume_lut(0.05f)},
+     {make_volume_lut(0.10f)},
+     {make_volume_lut(0.15f)},
+     {make_volume_lut(0.20f)},
+     {make_volume_lut(0.25f)},
+     {make_volume_lut(0.30f)},
+     {make_volume_lut(0.35f)},
+     {make_volume_lut(0.40f)},
+     {make_volume_lut(0.45f)},
+     {make_volume_lut(0.50f)},
+     {make_volume_lut(0.55f)},
+     {make_volume_lut(0.60f)},
+     {make_volume_lut(0.65f)},
+     {make_volume_lut(0.70f)},
+     {make_volume_lut(0.75f)},
+     {make_volume_lut(0.80f)},
+     {make_volume_lut(0.85f)},
+     {make_volume_lut(0.90f)},
+     {make_volume_lut(0.95f)},
+     {make_volume_lut(1.0f)}},
+};
+
+
+static const VolumeScaleLUT* get_volume_lut(Float volume)
+{
+    return &volume_scale_LUTs[volume * (volume_scale_LUTs.size() - 1)];
+}
+
+
+static void set_sound_volume(ActiveSoundInfo& sound,
+                             Float left_volume,
+                             Float right_volume)
+{
+    sound.l_volume_lut_ = get_volume_lut(left_volume);
+    sound.r_volume_lut_ = get_volume_lut(right_volume);
+}
+
+
 static std::optional<ActiveSoundInfo> make_sound(const char* name)
 {
     if (auto sound = get_sound(name)) {
-        return ActiveSoundInfo{0, sound->length_, sound->data_, 0};
+        return ActiveSoundInfo{0, sound->length_, sound->data_, 0,
+            &volume_scale_LUTs[19],
+            &volume_scale_LUTs[19]};
     } else {
         return {};
     }
@@ -2318,9 +2393,36 @@ bool Platform::Speaker::is_music_playing(const char* name)
 }
 
 
-void Platform::Speaker::set_position(const Vec2<Float>&)
+static Vec2<Float> spatialized_audio_listener_pos;
+
+
+void Platform::Speaker::set_position(const Vec2<Float>& position)
 {
-    // We don't support spatialized audio on the gameboy.
+    spatialized_audio_listener_pos = position;
+}
+
+
+static void add_sound(Buffer<ActiveSoundInfo, 3>& sounds,
+                      const ActiveSoundInfo& info)
+{
+    if (not sounds.full()) {
+        sounds.push_back(info);
+    } else {
+        ActiveSoundInfo* lowest = sounds.begin();
+        for (auto it = sounds.begin();
+             it not_eq sounds.end();
+             ++it) {
+            if (it->priority_ < lowest->priority_) {
+                lowest = it;
+            }
+        }
+
+        if (lowest not_eq sounds.end() and
+            lowest->priority_ < info.priority_) {
+            sounds.erase(lowest);
+            sounds.push_back(info);
+        }
+    }
 }
 
 
@@ -2334,26 +2436,50 @@ void Platform::Speaker::play_sound(const char* name,
     if (auto info = make_sound(name)) {
         info->priority_ = priority;
 
-        modify_audio([&] {
-            if (not snd_ctx.active_sounds.full()) {
-                snd_ctx.active_sounds.push_back(*info);
+        if (position) {
+            const auto dist =
+                distance(*position, spatialized_audio_listener_pos);
 
+            const auto dir =
+                direction(spatialized_audio_listener_pos, *position);
+
+            if (dist < 48) {
+                set_sound_volume(*info, 1.f, 1.f);
             } else {
-                ActiveSoundInfo* lowest = snd_ctx.active_sounds.begin();
-                for (auto it = snd_ctx.active_sounds.begin();
-                     it not_eq snd_ctx.active_sounds.end();
-                     ++it) {
-                    if (it->priority_ < lowest->priority_) {
-                        lowest = it;
-                    }
+                const Float distance_scale = 0.0005f;
+
+                const auto inv_sqr_intensity = 1.f / (distance_scale * ((dist / 3) * dist));
+
+                const auto attenuation = 1.f - inv_sqr_intensity;
+
+                auto l_vol = inv_sqr_intensity;
+                auto r_vol = inv_sqr_intensity;
+
+                const auto partial_attenuation = attenuation / 2.f;
+
+                l_vol -= partial_attenuation * dir.x;
+                r_vol += partial_attenuation * dir.x;
+
+                if (r_vol < 0 and l_vol > r_vol) {
+                    l_vol += r_vol;
                 }
 
-                if (lowest not_eq snd_ctx.active_sounds.end() and
-                    lowest->priority_ < priority) {
-                    snd_ctx.active_sounds.erase(lowest);
-                    snd_ctx.active_sounds.push_back(*info);
+                if (l_vol < 0 and l_vol > r_vol) {
+                    r_vol += l_vol;
                 }
+
+                l_vol = clamp(l_vol, 0.f, 1.f);
+                r_vol = clamp(r_vol, 0.f, 1.f);
+
+                set_sound_volume(*info, l_vol, r_vol);
             }
+
+        } else {
+            set_sound_volume(*info, 1.f, 1.f);
+        }
+
+        modify_audio([&] {
+            add_sound(snd_ctx.active_sounds, *info);
         });
     }
 }
@@ -2439,6 +2565,7 @@ Platform::Speaker::Speaker()
 
 
 #define REG_SGFIFOA *(volatile u32*)0x40000A0
+#define REG_SGFIFOB *(volatile u32*)0x40000A4
 
 
 // NOTE: I tried to move this audio update interrupt handler to IWRAM, but the
@@ -2460,32 +2587,35 @@ Platform::Speaker::Speaker()
 // multiplayer games.
 static void audio_update_isr()
 {
-    alignas(4) AudioSample mixing_buffer[4];
+    alignas(4) AudioSample mixing_buffer_l[4];
+    alignas(4) AudioSample mixing_buffer_r[4];
 
     // NOTE: audio tracks in ROM should therefore have four byte alignment!
-    *((u32*)mixing_buffer) =
+    *((u32*)mixing_buffer_l) =
         ((u32*)(snd_ctx.music_track))[snd_ctx.music_track_pos++];
+
+    *((u32*)mixing_buffer_r) = *((u32*)mixing_buffer_l);
 
     if (UNLIKELY(snd_ctx.music_track_pos > snd_ctx.music_track_length)) {
         snd_ctx.music_track_pos = 0;
     }
 
-    // Maybe the world's worst sound mixing code...
     for (auto it = snd_ctx.active_sounds.begin();
          it not_eq snd_ctx.active_sounds.end();) {
         if (UNLIKELY(it->position_ + 4 >= it->length_)) {
             it = snd_ctx.active_sounds.erase(it);
-
         } else {
             for (int i = 0; i < 4; ++i) {
-                mixing_buffer[i] += it->data_[it->position_++];
+                mixing_buffer_r[i] += (*it->r_volume_lut_)[(u8)it->data_[it->position_]];
+                mixing_buffer_l[i] += (*it->l_volume_lut_)[(u8)it->data_[it->position_]];
+                ++it->position_;
             }
-
             ++it;
         }
     }
 
-    REG_SGFIFOA = *((u32*)mixing_buffer);
+    REG_SGFIFOA = *((u32*)mixing_buffer_r);
+    REG_SGFIFOB = *((u32*)mixing_buffer_l);
 }
 
 
@@ -2650,8 +2780,11 @@ static void audio_start()
 {
     clear_music();
 
-    REG_SOUNDCNT_H =
-        0x0B0F; //DirectSound A + fifo reset + max volume to L and R
+    // 0b1010100100000011;
+
+    // Both direct sound channels, FIFO reset, A is R, B is L.
+    REG_SOUNDCNT_H = 0b1010100100001111;
+
     REG_SOUNDCNT_X = 0x0080; //turn sound chip on
 
     irqEnable(IRQ_TIMER1);

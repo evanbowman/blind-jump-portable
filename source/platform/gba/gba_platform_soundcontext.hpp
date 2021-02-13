@@ -4,6 +4,9 @@
 #include "memory/buffer.hpp"
 
 
+using VolumeScaleLUT = std::array<s8, 256>;
+
+
 using AudioSample = s8;
 
 
@@ -12,6 +15,8 @@ struct ActiveSoundInfo {
     const s32 length_;
     const AudioSample* data_;
     s32 priority_;
+    const VolumeScaleLUT* l_volume_lut_;
+    const VolumeScaleLUT* r_volume_lut_;
 };
 
 
