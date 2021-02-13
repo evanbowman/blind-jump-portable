@@ -148,14 +148,14 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
                     break;
 
                 case Settings::Difficulty::easy:
-                    return milliseconds(260);
+                    return milliseconds(400);
 
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::hard:
                 case Settings::Difficulty::survival:
                     return milliseconds(150);
                 }
-                return milliseconds(190);
+                return milliseconds(210);
             }()) {
             timer_ = 0;
             state_ = State::rush;
@@ -170,14 +170,14 @@ void Compactor::update(Platform& pfrm, Game& game, Microseconds dt)
                 break;
 
             case Settings::Difficulty::easy:
-                return 0.00022f;
+                return 0.00018f;
 
             case Settings::Difficulty::count:
             case Settings::Difficulty::hard:
             case Settings::Difficulty::survival:
                 return 0.00031f;
             }
-            return 0.00026f;
+            return 0.00023f;
         }();
         const auto friction_start_time = milliseconds(600);
         if (timer_ < friction_start_time) {
@@ -257,6 +257,8 @@ void Compactor::on_death(Platform& pf, Game& game)
     static const Item::Type item_drop_vec[] = {Item::Type::coin,
                                                Item::Type::null};
 
+    big_explosion(pf, game, position_);
+
     on_enemy_destroyed(pf, game, 0, position_, 2, item_drop_vec);
 }
 
@@ -278,8 +280,7 @@ void Compactor::on_collision(Platform& pfrm, Game& game, PeerLaser&)
 
 void Compactor::on_collision(Platform& pfrm, Game& game, Player&)
 {
-    big_explosion(pfrm, game, position_);
-    this->kill();
+    debit_health(pfrm, 100);
 }
 
 
