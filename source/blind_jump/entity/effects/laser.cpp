@@ -35,6 +35,8 @@ Laser::Laser(const Vec2<Float>& position, Cardinal dir, Mode mode)
         sprite_.set_flip({true, false});
     }
 
+    sprite_.set_alpha(Sprite::Alpha::transparent);
+
     mark_visible(true); // NOTE: This is just a hack to fix obscure bugs...
 }
 
@@ -44,6 +46,10 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
     // wait till we've had one update cycle to check visibility
     timer_ += dt;
 
+    if (timer_ > milliseconds(90)) {
+        sprite_.set_alpha(Sprite::Alpha::opaque);
+    }
+
     if (timer_ > milliseconds(20)) {
         if (not this->visible()) {
             this->kill();
@@ -51,7 +57,8 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
         }
     }
 
-    if (timer_ > milliseconds(20)) {
+    if (sprite_.get_alpha() == Sprite::Alpha::opaque and
+        timer_ > milliseconds(20)) {
         timer_ = 0;
         const auto flip = sprite_.get_flip();
         // const auto spr = sprite_.get_texture_index();
@@ -66,11 +73,12 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
         }
         if (mode_ not_eq Mode::explosive) {
             if (rng::choice<3>(rng::utility_state) == 0) {
-                if (sprite_.get_mix().amount_) {
+                auto& info = zone_info(game.level());
+                if (sprite_.get_mix().color_ == info.energy_glow_color_2_) {
                     sprite_.set_mix({});
                 } else {
                     sprite_.set_mix(
-                        {zone_info(game.level()).energy_glow_color_2_, 255});
+                        {info.energy_glow_color_2_, 255});
                 }
             }
         }

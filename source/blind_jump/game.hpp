@@ -280,6 +280,7 @@ struct ZoneInfo {
     ColorConstant energy_glow_color_;
     ColorConstant energy_glow_color_2_;
     ColorConstant injury_glow_color_;
+    ColorConstant laser_flicker_bright_color_;
 
     BackgroundGenerator generate_background_;
     DecorationGenerator generate_decoration_;

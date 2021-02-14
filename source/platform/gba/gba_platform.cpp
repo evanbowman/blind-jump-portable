@@ -2440,9 +2440,6 @@ void Platform::Speaker::play_sound(const char* name,
             const auto dist =
                 distance(*position, spatialized_audio_listener_pos);
 
-            const auto dir =
-                direction(spatialized_audio_listener_pos, *position);
-
             if (dist < 48) {
                 set_sound_volume(*info, 1.f, 1.f);
             } else {
@@ -2450,23 +2447,25 @@ void Platform::Speaker::play_sound(const char* name,
 
                 const auto inv_sqr_intensity = 1.f / (distance_scale * ((dist / 3) * dist));
 
-                const auto attenuation = 1.f - inv_sqr_intensity;
-
                 auto l_vol = inv_sqr_intensity;
                 auto r_vol = inv_sqr_intensity;
 
-                const auto partial_attenuation = attenuation / 2.f;
+                // Currently disabled, used for stereo sound effects
+                // const auto dir =
+                //     direction(spatialized_audio_listener_pos, *position);
+                // const auto attenuation = 1.f - inv_sqr_intensity;
+                // const auto partial_attenuation = attenuation / 2.f;
 
-                l_vol -= partial_attenuation * dir.x;
-                r_vol += partial_attenuation * dir.x;
+                // l_vol -= partial_attenuation * dir.x;
+                // r_vol += partial_attenuation * dir.x;
 
-                if (r_vol < 0 and l_vol > r_vol) {
-                    l_vol += r_vol;
-                }
+                // if (r_vol < 0 and l_vol > r_vol) {
+                //     l_vol += r_vol;
+                // }
 
-                if (l_vol < 0 and l_vol > r_vol) {
-                    r_vol += l_vol;
-                }
+                // if (l_vol < 0 and l_vol > r_vol) {
+                //     r_vol += l_vol;
+                // }
 
                 l_vol = clamp(l_vol, 0.f, 1.f);
                 r_vol = clamp(r_vol, 0.f, 1.f);
@@ -2585,7 +2584,8 @@ Platform::Speaker::Speaker()
 // wonder why we aren't using one of the DMA channels to load sound samples. The
 // DMA halts the CPU, which could result in missed serial I/O interrupts during
 // multiplayer games.
-static void audio_update_isr()
+[[maybe_unused]]
+static void audio_update_spatialized_stereo_isr()
 {
     alignas(4) AudioSample mixing_buffer_l[4];
     alignas(4) AudioSample mixing_buffer_r[4];
@@ -2616,6 +2616,36 @@ static void audio_update_isr()
 
     REG_SGFIFOA = *((u32*)mixing_buffer_r);
     REG_SGFIFOB = *((u32*)mixing_buffer_l);
+}
+
+
+static void audio_update_spatialized_isr()
+{
+    alignas(4) AudioSample mixing_buffer[4];
+
+    // NOTE: audio tracks in ROM should therefore have four byte alignment!
+    *((u32*)mixing_buffer) =
+        ((u32*)(snd_ctx.music_track))[snd_ctx.music_track_pos++];
+
+    if (UNLIKELY(snd_ctx.music_track_pos > snd_ctx.music_track_length)) {
+        snd_ctx.music_track_pos = 0;
+    }
+
+    for (auto it = snd_ctx.active_sounds.begin();
+         it not_eq snd_ctx.active_sounds.end();) {
+        if (UNLIKELY(it->position_ + 4 >= it->length_)) {
+            it = snd_ctx.active_sounds.erase(it);
+        } else {
+            for (int i = 0; i < 4; ++i) {
+                mixing_buffer[i] += (*it->r_volume_lut_)[(u8)it->data_[it->position_]];
+                ++it->position_;
+            }
+            ++it;
+        }
+    }
+
+    REG_SGFIFOA = *((u32*)mixing_buffer);
+    REG_SGFIFOB = *((u32*)mixing_buffer);
 }
 
 
@@ -2819,7 +2849,7 @@ static void audio_start()
     REG_SOUNDCNT_X = 0x0080; //turn sound chip on
 
     irqEnable(IRQ_TIMER1);
-    irqSet(IRQ_TIMER1, audio_update_isr);
+    irqSet(IRQ_TIMER1, audio_update_spatialized_isr);
 
     REG_TM0CNT_L = 0xffff;
     REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
@@ -4004,7 +4034,7 @@ void Platform::NetworkPeer::disconnect()
     // sent out when you try to reconnect, instead of the handshake message);
     if (is_connected()) {
 
-        irqSet(IRQ_TIMER1, audio_update_isr);
+        irqSet(IRQ_TIMER1, audio_update_spatialized_isr);
 
         info(*::platform, "disconnected!");
         set_gflag(GlobalFlag::multiplayer_connected, false);

@@ -31,13 +31,13 @@ enum class ColorConstant {
 };
 
 
-inline ColorConstant custom_color(int hex)
+constexpr inline ColorConstant custom_color(int hex)
 {
     return static_cast<ColorConstant>(hex);
 }
 
 
-inline ColorConstant custom_color(u8 r, u8 g, u8 b)
+constexpr inline ColorConstant custom_color(u8 r, u8 g, u8 b)
 {
     return static_cast<ColorConstant>((r << 16) | (g << 8) | b);
 }

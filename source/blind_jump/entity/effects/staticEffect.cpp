@@ -32,4 +32,5 @@ void StaticEffect::update(Platform& pfrm, Game& game, Microseconds dt)
     }
 
     update_callback_(pfrm, game, dt, *this);
+    sprite_.set_position(position_);
 }

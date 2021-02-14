@@ -337,7 +337,8 @@ HOT void Game::render(Platform& pfrm)
 
         using VT = typename T::ValueType::element_type;
 
-        if constexpr (not std::is_same<VT, DynamicEffect>()) {
+        if constexpr (not std::is_same<VT, DynamicEffect>() and
+                      not std::is_same<VT, StaticEffect>()) {
             show_sprites(entity_buf);
         } else {
             for (auto& e : entity_buf) {
@@ -385,6 +386,12 @@ HOT void Game::render(Platform& pfrm)
               });
 
     for (auto& e : effects_.get<DynamicEffect>()) {
+        if (e->is_backdrop()) {
+            show_sprite(*e);
+        }
+    }
+
+    for (auto& e : effects_.get<StaticEffect>()) {
         if (e->is_backdrop()) {
             show_sprite(*e);
         }
@@ -781,6 +788,7 @@ static constexpr const ZoneInfo zone_1{
     ColorConstant::electric_blue,
     ColorConstant::picton_blue,
     ColorConstant::aerospace_orange,
+    custom_color(0x6bffff),
     [](Platform& pfrm, Game&) {
         draw_starfield(pfrm);
 
@@ -808,6 +816,7 @@ static constexpr const ZoneInfo zone_2{
     ColorConstant::turquoise_blue,
     ColorConstant::maya_blue,
     ColorConstant::safety_orange,
+    ColorConstant::turquoise_blue,
     [](Platform& pfrm, Game&) {
         draw_starfield(pfrm);
 
@@ -835,6 +844,7 @@ static constexpr const ZoneInfo zone_3{
     ColorConstant::cerulean_blue,
     ColorConstant::picton_blue,
     ColorConstant::aerospace_orange,
+    ColorConstant::cerulean_blue,
     [](Platform& pfrm, Game&) {
         draw_starfield(pfrm);
 
@@ -867,6 +877,7 @@ static constexpr const ZoneInfo zone_4{
     ColorConstant::turquoise_blue,
     ColorConstant::maya_blue,
     ColorConstant::safety_orange,
+    custom_color(0x6bffff),
     [](Platform& pfrm, Game&) {
         draw_starfield(pfrm);
 
@@ -889,6 +900,7 @@ const ZoneInfo& zone_info(Level level)
             "",
             "",
             0,
+            ColorConstant::null,
             ColorConstant::null,
             ColorConstant::null,
             ColorConstant::null,
