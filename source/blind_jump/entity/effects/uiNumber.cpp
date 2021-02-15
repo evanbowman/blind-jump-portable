@@ -97,8 +97,6 @@ void UINumber::update(Platform& pf, Game& game, Microseconds dt)
 
     if (auto e = get_entity_by_id(game, parent_)) {
         set_position({e->get_position().x - 16, e->get_position().y - 12});
-    } else {
-        parent_ = 0;
     }
 
     sign_.set_position({position_.x, position_.y + offset_});

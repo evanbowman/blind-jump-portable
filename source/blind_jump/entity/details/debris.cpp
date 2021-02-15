@@ -33,6 +33,10 @@ Debris::Debris(const Vec2<Float>& position) : timer_(0)
 
 void Debris::update(Platform& pfrm, Game& game, Microseconds delta)
 {
+    if (not visible()) {
+        kill();
+    }
+
     timer_ += delta;
 
     if (rotation_dir_) {
