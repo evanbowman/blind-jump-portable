@@ -63,11 +63,6 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
     fade_color_anim_.advance(sprite_, dt);
     leg_.set_mix(sprite_.get_mix());
 
-    if (sprite_.get_mix().amount_ <= 50 and damage_) {
-        game.effects().spawn<UINumber>(get_position(), damage_ * -1, id());
-        damage_ = 0;
-    }
-
     switch (state_) {
     case State::sleep:
         timer_ += dt;
@@ -428,11 +423,6 @@ void Scarecrow::on_death(Platform& pf, Game& game)
                                                Item::Type::coin,
                                                Item::Type::heart,
                                                Item::Type::null};
-
-    if (damage_) {
-        game.effects().spawn<UINumber>(get_position(), damage_ * -1, 0);
-    }
-
 
     on_enemy_destroyed(pf,
                        game,

@@ -89,11 +89,6 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     fade_color_anim_.advance(sprite_, dt);
     head_.set_mix(sprite_.get_mix());
 
-    if (sprite_.get_mix().amount_ <= 50 and damage_) {
-        game.effects().spawn<UINumber>(get_position(), damage_ * -1, id());
-        damage_ = 0;
-    }
-
     const auto& screen_size = pf.screen().size();
 
     switch (state_) {
@@ -382,10 +377,6 @@ void Dasher::on_collision(Platform& pf, Game& game, AlliedOrbShot&)
 void Dasher::on_death(Platform& pf, Game& game)
 {
     pf.sleep(6);
-
-    if (damage_) {
-        game.effects().spawn<UINumber>(get_position(), damage_ * -1, 0);
-    }
 
     static const Item::Type item_drop_vec[] = {Item::Type::coin,
                                                Item::Type::coin,

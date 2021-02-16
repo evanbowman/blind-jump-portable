@@ -84,11 +84,6 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
     fade_color_anim_.advance(sprite_, dt);
     head_.set_mix(sprite_.get_mix());
 
-    if (sprite_.get_mix().amount_ <= 50 and damage_) {
-        game.effects().spawn<UINumber>(get_position(), damage_ * -1, id());
-        damage_ = 0;
-    }
-
     static const float kickback_rate = 0.00005f;
     static const float movement_rate = 0.00004f;
 
@@ -254,10 +249,6 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
 void Golem::on_death(Platform& pfrm, Game& game)
 {
     pfrm.sleep(6);
-
-    if (damage_) {
-        game.effects().spawn<UINumber>(get_position(), damage_ * -1, 0);
-    }
 
     static const Item::Type item_drop_vec[] = {
         Item::Type::coin, Item::Type::heart, Item::Type::null};
