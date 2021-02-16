@@ -1115,52 +1115,6 @@ void Blaster::shoot(Platform& pf, Game& game)
                 e.y_.set(position_.cast<s16>().y);
 
                 net_event::transmit(pf, e);
-
-                Vec2<Float> offset;
-                Vec2<bool> flip;
-                u16 image_index = 54;
-
-                switch (dir_) {
-                case Cardinal::east:
-                    offset = {31, 9};
-                    break;
-
-                case Cardinal::west:
-                    offset = {-15, 9};
-                    flip.x = true;
-                    break;
-
-                case Cardinal::north:
-                    offset = {14, -20};
-                    image_index = 55;
-                    flip.y = true;
-                    break;
-
-                case Cardinal::south:
-                    offset = {6, 17};
-                    image_index = 55;
-                    break;
-                }
-
-
-                auto callback = [offset](Platform&, Game& game, const Microseconds&, StaticEffect& e) {
-                    const auto pos = game.player().get_position();
-                    e.set_position(pos + offset);
-                };
-
-                if (auto effect = game.effects().spawn<StaticEffect>(position_ + offset,
-                                                                     milliseconds(100),
-                                                                     image_index,
-                                                                     0,
-                                                                     callback)) {
-                    effect->sprite().set_size(Sprite::Size::w16_h32);
-                    effect->sprite().set_flip(flip);
-                    effect->sprite().set_mix({dodge_flicker_light_color, 255});
-
-                    if (dir_ == Cardinal::north) {
-                        effect->set_backdrop(true);
-                    }
-                }
             }
         }
     }
