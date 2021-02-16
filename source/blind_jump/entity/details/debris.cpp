@@ -33,9 +33,10 @@ Debris::Debris(const Vec2<Float>& position) : timer_(0)
 
 void Debris::update(Platform& pfrm, Game& game, Microseconds delta)
 {
-    if (not visible()) {
+    if (not visible() and timer_ > 0) {
         kill();
     }
+
 
     timer_ += delta;
 
