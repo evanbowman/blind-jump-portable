@@ -8,8 +8,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "platform/platform.hpp"
-#include <pspkernel.h>
+#include <pspctrl.h>
 #include <pspdebug.h>
+#include <pspkernel.h>
 
 
 PSP_MODULE_INFO("Blind Jump", 0, 1, 0);
@@ -21,8 +22,12 @@ int main(int argc, char** argv)
 }
 
 
+static bool is_running = true;
+
+
 int exit_callback(int arg1, int arg2, void* common){
     sceKernelExitGame();
+    is_running = false;
     return 0;
 }
 
@@ -30,10 +35,6 @@ int callback_thread(SceSize args, void* argp) {
     int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
     sceKernelRegisterExitCallback(cbid);
     sceKernelSleepThreadCB();
-
-    while (true) {
-        // ...
-    }
 
     return 0;
 }
@@ -45,6 +46,12 @@ int setup_callbacks(void) {
         sceKernelStartThread(thid, 0, 0);
     }
     return thid;
+}
+
+
+bool Platform::is_running() const
+{
+    return ::is_running;
 }
 
 
