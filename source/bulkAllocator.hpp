@@ -27,8 +27,8 @@ align(size_t __align, size_t __size, void*& __ptr, size_t& __space) noexcept
 // other stuff.
 template <typename T> struct DynamicMemory {
     static_assert(sizeof(T) + alignof(T) <=
-                  sizeof Platform::ScratchBuffer::data_);
-    Platform::ScratchBufferPtr memory_;
+                  sizeof ScratchBuffer::data_);
+    ScratchBufferPtr memory_;
     std::unique_ptr<T, void (*)(T*)> obj_;
 
     T& operator*() const
@@ -128,7 +128,7 @@ struct ScratchBufferBulkAllocator {
     }
 
 private:
-    Platform::ScratchBufferPtr buffer_;
+    ScratchBufferPtr buffer_;
     void* alloc_ptr_;
     std::size_t size_;
 };

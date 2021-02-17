@@ -11,6 +11,7 @@
 #include "memory/rc.hpp"
 #include "number/numeric.hpp"
 #include "severity.hpp"
+#include "scratch_buffer.hpp"
 #include "sound.hpp"
 #include "unicode.hpp"
 #include <array>
@@ -228,21 +229,6 @@ public:
     const char* load_file_contents(const char* folder,
                                    const char* filename) const;
 
-
-#ifdef __GBA__
-#define SCRATCH_BUFFER_SIZE 2000
-#else
-#define SCRATCH_BUFFER_SIZE 4000
-#endif // __GBA__
-
-    struct ScratchBuffer {
-        // NOTE: do not make any assumptions about the alignment of the data_
-        // member.
-        char data_[SCRATCH_BUFFER_SIZE];
-    };
-
-    static constexpr const int scratch_buffer_count = 100;
-    using ScratchBufferPtr = Rc<ScratchBuffer, scratch_buffer_count>;
 
     // Scratch buffers are sort of a blunt instrument. Designed for uncommon
     // scenarios where you need a lot of memory. The platform provides one

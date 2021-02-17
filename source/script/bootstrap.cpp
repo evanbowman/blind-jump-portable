@@ -7,9 +7,9 @@
 // running the interpreter.
 
 
-ObjectPool<RcBase<Platform::ScratchBuffer,
-                  Platform::scratch_buffer_count>::ControlBlock,
-           Platform::scratch_buffer_count>
+ObjectPool<RcBase<ScratchBuffer,
+                  scratch_buffer_count>::ControlBlock,
+           scratch_buffer_count>
     scratch_buffer_pool;
 
 
@@ -17,9 +17,9 @@ static int scratch_buffers_in_use = 0;
 static int scratch_buffer_highwater = 0;
 
 
-Platform::ScratchBufferPtr Platform::make_scratch_buffer()
+ScratchBufferPtr Platform::make_scratch_buffer()
 {
-    auto finalizer = [](RcBase<Platform::ScratchBuffer,
+    auto finalizer = [](RcBase<ScratchBuffer,
                                scratch_buffer_count>::ControlBlock* ctrl) {
         --scratch_buffers_in_use;
         ctrl->pool_->post(ctrl);

@@ -3,6 +3,7 @@
 #include "function.hpp"
 #include "number/numeric.hpp"
 #include "string.hpp"
+#include "platform/scratch_buffer.hpp"
 
 
 class Platform;
@@ -19,6 +20,11 @@ void init(Platform& pfrm);
 struct Value;
 
 
+struct Nil {
+    static void finalizer(Value*) {}
+};
+
+
 struct Symbol {
     const char* name_;
 
@@ -29,11 +35,15 @@ struct Symbol {
         // should be used very carefully, and ONLY WITH STRING LITERALS.
         stable_pointer,
     };
+
+    static void finalizer(Value*) {}
 };
 
 
 struct Integer {
     s32 value_;
+
+    static void finalizer(Value*) {}
 };
 
 
@@ -51,11 +61,6 @@ struct CompressedPtr {
 
     u16 source_pool_ : source_pool_bits;
     u16 offset_ : offset_bits;
-};
-
-
-struct Number {
-    float value_;
 };
 
 
@@ -85,6 +90,8 @@ struct Cons {
         cdr_ = compr(val);
     }
 
+    static void finalizer(Value*) {}
+
 private:
     CompressedPtr car_;
     CompressedPtr cdr_;
@@ -103,6 +110,24 @@ struct Function {
         cpp_function,
         lisp_function,
     };
+
+    static void finalizer(Value*) {}
+};
+
+
+
+struct DataBuffer {
+    alignas(ScratchBufferPtr) u8 sbr_mem_[sizeof(ScratchBufferPtr)];
+
+    ScratchBufferPtr value()
+    {
+        return *reinterpret_cast<ScratchBufferPtr*>(sbr_mem_);
+    }
+
+    static void finalizer(Value* buffer)
+    {
+        reinterpret_cast<ScratchBufferPtr*>(buffer)->~ScratchBufferPtr();
+    }
 };
 
 
@@ -140,11 +165,15 @@ struct Error {
         }
         return "Unknown error";
     }
+
+    static void finalizer(Value*) {}
 };
 
 
 struct UserData {
     void* obj_;
+
+    static void finalizer(Value*) {}
 };
 
 
@@ -157,7 +186,8 @@ struct Value {
         error,
         symbol,
         user_data,
-        number,
+        data_buffer,
+        count,
     };
     u8 type_ : 4;
 
@@ -166,13 +196,14 @@ struct Value {
     bool mode_bits_ : 2;
 
     union {
+        Nil nil_;
         Integer integer_;
         Cons cons_;
         Function function_;
         Error error_;
         Symbol symbol_;
         UserData user_data_;
-        Number number_;
+        DataBuffer data_buffer_;
     };
 
     template <typename T> T& expect()
@@ -244,6 +275,7 @@ Value* make_error(Error::Code error_code);
 Value* make_userdata(void* obj);
 Value* make_symbol(const char* name,
                    Symbol::ModeBits mode = Symbol::ModeBits::requires_intern);
+Value* make_databuffer(Platform& pfrm);
 
 
 void get_interns(::Function<24, void(const char*)> callback);

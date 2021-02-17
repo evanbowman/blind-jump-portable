@@ -1501,17 +1501,17 @@ Platform::~Platform()
 // EWRAM, called scratch space, for non-essential stuff. Right now, I am setting
 // the buffer to ~100K in size. One could theoretically make the buffer almost
 // 256kB, because I am using none of EWRAM as far as I know...
-static ObjectPool<RcBase<Platform::ScratchBuffer, 100>::ControlBlock, 100>
+static ObjectPool<RcBase<ScratchBuffer, 100>::ControlBlock, 100>
     scratch_buffer_pool;
 
 
 static int scratch_buffers_in_use = 0;
 
 
-Rc<Platform::ScratchBuffer, 100> Platform::make_scratch_buffer()
+Rc<ScratchBuffer, 100> Platform::make_scratch_buffer()
 {
     auto finalizer =
-        [](RcBase<Platform::ScratchBuffer, 100>::ControlBlock* ctrl) {
+        [](RcBase<ScratchBuffer, 100>::ControlBlock* ctrl) {
             --scratch_buffers_in_use;
             ctrl->pool_->post(ctrl);
         };
@@ -1524,7 +1524,7 @@ Rc<Platform::ScratchBuffer, 100> Platform::make_scratch_buffer()
     } else {
         screen().fade(1.f, ColorConstant::electric_blue);
         error(*this, "scratch buffer pool exhausted");
-        fatal();
+        fatal("scratch buffer pool exhausted");
     }
 }
 

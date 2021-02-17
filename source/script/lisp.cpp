@@ -287,7 +287,7 @@ Value* make_function(Function::CPP_Impl impl)
 }
 
 
-Value* make_lisp_function(Value* impl)
+static Value* make_lisp_function(Value* impl)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::function;
@@ -387,6 +387,23 @@ Value* make_userdata(void* obj)
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::user_data;
         val->user_data_.obj_ = obj;
+        return val;
+    }
+    return bound_context->oom_;
+}
+
+
+Value* make_databuffer(Platform& pfrm)
+{
+    if (not pfrm.scratch_buffers_remaining()) {
+        // Collect any data buffers that may be lying around.
+        run_gc();
+    }
+
+    if (auto val = alloc_value()) {
+        val->type_ = Value::Type::data_buffer;
+        new ((ScratchBufferPtr*)val->data_buffer_.sbr_mem_)
+            ScratchBufferPtr(pfrm.make_scratch_buffer());
         return val;
     }
     return bound_context->oom_;
@@ -633,7 +650,7 @@ void dostring(const char* code)
 
 void format_impl(Value* value, Printer& p)
 {
-    switch (value->type_) {
+    switch ((lisp::Value::Type)value->type_) {
     case lisp::Value::Type::nil:
         p.put_str("nil");
         break;
@@ -683,6 +700,13 @@ void format_impl(Value* value, Printer& p)
     case lisp::Value::Type::error:
         p.put_str("ERR: ");
         p.put_str(lisp::Error::get_string(value->error_.code_));
+        break;
+
+    case lisp::Value::Type::data_buffer:
+        p.put_str("<sbr>");
+        break;
+
+    case lisp::Value::Type::count:
         break;
     }
 }
@@ -761,6 +785,36 @@ static void gc_mark()
 }
 
 
+using Finalizer = void (*)(Value*);
+
+struct FinalizerTableEntry {
+    FinalizerTableEntry(Finalizer fn) : fn_(fn)
+    {
+
+    }
+
+    Finalizer fn_;
+};
+
+
+static void invoke_finalizer(Value* value)
+{
+    // NOTE: This ordering should match the Value::Type enum.
+    static const std::array<FinalizerTableEntry, Value::Type::count> table = {
+        Nil::finalizer,
+        Integer::finalizer,
+        Cons::finalizer,
+        Function::finalizer,
+        Error::finalizer,
+        Symbol::finalizer,
+        UserData::finalizer,
+        DataBuffer::finalizer,
+    };
+
+    table[value->type_].fn_(value);
+}
+
+
 static int gc_sweep()
 {
     int collect_count = 0;
@@ -772,6 +826,7 @@ static int gc_sweep()
                 } else {
                     // This value should be unreachable, let's collect it.
                     val->alive_ = false;
+                    invoke_finalizer(val);
                     pl->post(val);
                     ++collect_count;
                 }
