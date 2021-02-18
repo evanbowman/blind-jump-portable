@@ -2,6 +2,9 @@ TARGET = BlindJump
 CURRENT_DIR = $(shell pwd)
 SRC = $(CURRENT_DIR)/../../source
 OBJS = $(SRC)/platform/psp/psp_platform.o \
+	$(SRC)/platform/psp/graphics.o \
+        $(SRC)/../external/pngle/miniz.o \
+	$(SRC)/../external/pngle/pngle.o \
 	$(SRC)/blind_jump/entity/effects/wandererSmallLaser.o \
 	$(SRC)/blind_jump/entity/effects/wandererBigLaser.o \
 	$(SRC)/blind_jump/entity/effects/conglomerateShot.o \
@@ -115,7 +118,7 @@ CFLAGS = -Os -G0 -g3 -mpreferred-stack-boundary=4 -ffast-math -gdwarf-2
 CXXFLAGS = $(CFLAGS) -std=c++17 -fno-exceptions -I$(SRC) -D__PSP__
 ASFLAGS = $(CFLAGS)
 
-LIBS = -lstdc++ -lSDL2main -lSDL2 -lGL -lpspdisplay -lSDL2_image -lSDL2_gfx -lSDL2_mixer -lpspaudio -lpspvram -lpspgu -ljpeg -lpng -lm -lpspirkeyb -lpsprtc -lpspge -lpspctrl -lpsphprm -lpspvfpu -lz
+LIBS = -lstdc++ -lpspgum -lpspgu -lpng -ljpeg -lz -lm -lpspusb -lpsputility -lpspusbcam -lpspjpeg
 
 # PSP Stuff
 BUILD_PRX = 1
@@ -124,7 +127,7 @@ PSP_LARGE_MEMORY = 1
 
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = BlindJump
-#PSP_EBOOT_ICON = ICON0.PNG
+PSP_EBOOT_ICON = icon.png
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak

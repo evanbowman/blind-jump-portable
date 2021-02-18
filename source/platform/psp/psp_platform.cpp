@@ -12,8 +12,19 @@
 #include <pspdebug.h>
 #include <pspkernel.h>
 #include <pspsystimer.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <pspdisplay.h>
+#include <pspctrl.h>
+#include <pspgu.h>
+#include <png.h>
+#include <stdio.h>
+#include <memory>
+#include "localization.hpp"
+
+
+extern "C" {
+#include "graphics.h"
+}
+
 
 
 PSP_MODULE_INFO("Blind Jump", 0, 1, 0);
@@ -29,9 +40,15 @@ void start(Platform& pf);
 // }
 
 
+Platform* platform;
+
+
 int main(int argc, char** argv)
 {
+    // pspDebugScreenInit();
+
     Platform pf;
+    ::platform = &pf;
 
     start(pf);
 
@@ -76,33 +93,32 @@ bool Platform::is_running() const
 }
 
 
-static SDL_Window* window;
-static SDL_Renderer* renderer;
+// FIXME!
+#include "../../../external/pngle/pngle.h"
+
+
+extern "C" {
+// FIXME!
+#include "../../../build/psp/spritesheet.c"
+
+}
+
+
+struct SpriteMemory {
+    alignas(16) Color pixels_[64 * 64];
+};
+
+
+SpriteMemory sprite_image_ram[200];
 
 
 Platform::Platform()
 {
     setup_callbacks();
+    initGraphics();
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-
-
-    SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_PNG);
-
-    window = SDL_CreateWindow("Active Window",
-        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 240, 160, 0);
-
-    if (window == nullptr) {
-        fatal("failed to create window");
-    }
-
-    renderer = SDL_CreateRenderer(window, -1, 0);
-
-    if (renderer == nullptr) {
-        fatal("failed to create renderer");
-    }
 }
 
 
@@ -180,7 +196,10 @@ Platform::~Platform()
 
 void Platform::sleep(Frame frames)
 {
-    // ...
+    while (frames) {
+        --frames;
+        sceDisplayWaitVblankStart();
+    }
 }
 
 
@@ -254,7 +273,52 @@ std::optional<Platform::DynamicTexturePtr> Platform::make_dynamic_texture()
 
 void Platform::load_sprite_texture(const char* name)
 {
-    // TODO
+    StringBuffer<64> str_name = name;
+
+    auto pngle = pngle_new();
+    if (pngle == nullptr) {
+        fatal("failed to create png loader context");
+    }
+
+    pngle_set_draw_callback(pngle, [](pngle_t *pngle,
+                                      u32 x,
+                                      u32 y,
+                                      u32 w,
+                                      u32 h,
+                                      u8 rgba[4]) {
+        auto target_sprite = x / 32;
+        auto color = RGBA(rgba[0], rgba[1], rgba[2], rgba[3]);
+
+        if (rgba[0] == 0xFF and rgba[2] == 0xFF) {
+            color = RGBA(255, 0, 255, 0);
+        }
+
+        auto& spr = sprite_image_ram[target_sprite];
+
+        auto set_pixel = [&](int x, int y) {
+            spr.pixels_[x % 64 + y * 64] = color;
+        };
+
+        set_pixel((x * 2), (y * 2));
+        set_pixel((x * 2) + 1, (y * 2));
+        set_pixel((x * 2), (y * 2) + 1);
+        set_pixel((x * 2) + 1, (y * 2) + 1);
+    });
+
+    int remaining = size_spritesheet;
+    auto buf = spritesheet;
+    while (remaining) {
+        auto status = pngle_feed(pngle, buf, remaining);
+        if (status == -1) {
+            StringBuffer<64> err("pngle error: ");
+            err += pngle_error(pngle);
+            fatal(err.c_str());
+        }
+        remaining -= status;
+        buf += status;
+    }
+
+    pngle_destroy(pngle);
 }
 
 
@@ -480,7 +544,7 @@ Platform::DeltaClock::DeltaClock()
 Microseconds Platform::DeltaClock::reset()
 {
     // FIXME
-    return seconds(Float(1) / 60);
+    return (Float(1) / 60) * 1000000;
 }
 
 
@@ -501,9 +565,10 @@ Platform::Screen::Screen()
 
 Vec2<u32> Platform::Screen::size() const
 {
-    // TODO
-    static const Vec2<u32> gba_widescreen{240, 160};
-    return gba_widescreen;
+    // We upsample the textures by 2x on the psp, because the pixels are so
+    // small.
+    static const Vec2<u32> psp_half_widescreen{240, 136};
+    return psp_half_widescreen;
 }
 
 
@@ -519,13 +584,16 @@ void Platform::Screen::clear()
         }
     }
 
-    // TODO: VSYNC here?
+    clearScreen(RGB(0, 0, 10));
 }
+
+
+static Buffer<Sprite, 128> sprite_queue;
 
 
 void Platform::Screen::draw(const Sprite& spr)
 {
-    // TODO...
+    sprite_queue.push_back(spr);
 }
 
 
@@ -548,11 +616,65 @@ void Platform::Screen::pixelate(u8 amount,
 }
 
 
+static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
+{
+    // FIXME: support translucent sprites
+    if (spr.get_alpha() not_eq Sprite::Alpha::opaque) {
+        return;
+    }
+
+    Image temp;
+    temp.textureWidth = 64;
+    temp.textureHeight = 64;
+    temp.imageWidth = 64;
+    temp.imageHeight = 64;
+
+    int offset = 0;
+    int width = 64;
+
+    // FIXME: Flipping flags! What to do about these? Maybe there's some way to
+    // easily do this by messing around with the vertices.
+
+    if (spr.get_size() == Sprite::Size::w32_h32) {
+        temp.data = sprite_image_ram[spr.get_texture_index()].pixels_;
+    } else {
+        width = 32;
+        if (spr.get_texture_index() % 2) {
+            offset = 32;
+        }
+        temp.data = sprite_image_ram[spr.get_texture_index() / 2].pixels_;
+    }
+
+    const auto view_center = screen.get_view().get_center();
+
+    const auto pos = spr.get_position() - spr.get_origin().cast<Float>();
+
+    auto abs_position = pos - view_center;
+
+    abs_position.x *= 2.f;
+    abs_position.y *= 2.f;
+
+    blitAlphaImageToScreen(offset,
+                           0,
+                           width,
+                           64,
+                           &temp,
+                           abs_position.x,
+                           abs_position.y);
+}
+
+
 void Platform::Screen::display()
 {
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_RenderDrawPoint(renderer, 20, 20);
-    SDL_RenderPresent(renderer);
+    for (auto& spr : reversed(::sprite_queue)) {
+        display_sprite(*this, spr);
+    }
+
+    sprite_queue.clear();
+
+    sceDisplayWaitVblankStart();
+
+    flipScreen();
 }
 
 
@@ -668,7 +790,7 @@ Platform::Logger::Logger()
 
 bool Platform::RemoteConsole::printline(const char* line)
 {
-    // TODO
+    //    pspDebugScreenPrintf(line);
     return false;
 }
 
@@ -708,18 +830,17 @@ void Platform::Keyboard::poll()
 
     sceCtrlPeekBufferPositive(&buttonInput, 1);
 
-    if (buttonInput.Buttons) {
-        states_[int(Key::start)] = buttonInput.Buttons & PSP_CTRL_START;
-        states_[int(Key::select)] = buttonInput.Buttons & PSP_CTRL_SELECT;
-        states_[int(Key::right)] = buttonInput.Buttons & PSP_CTRL_RIGHT;
-        states_[int(Key::left)] = buttonInput.Buttons & PSP_CTRL_LEFT;
-        states_[int(Key::down)] =  buttonInput.Buttons & PSP_CTRL_DOWN;
-        states_[int(Key::up)] = buttonInput.Buttons & PSP_CTRL_UP;
-        states_[int(Key::alt_1)] = buttonInput.Buttons & PSP_CTRL_RTRIGGER;
-        states_[int(Key::alt_2)] = buttonInput.Buttons & PSP_CTRL_LTRIGGER;
-        states_[int(Key::action_1)] = buttonInput.Buttons & PSP_CTRL_CROSS;
-        states_[int(Key::action_2)] = buttonInput.Buttons & PSP_CTRL_CIRCLE;
-    }
+    states_[int(Key::start)] = buttonInput.Buttons & PSP_CTRL_START;
+    states_[int(Key::select)] = buttonInput.Buttons & PSP_CTRL_SELECT;
+    states_[int(Key::right)] = buttonInput.Buttons & PSP_CTRL_RIGHT;
+    states_[int(Key::left)] = buttonInput.Buttons & PSP_CTRL_LEFT;
+    states_[int(Key::down)] =  buttonInput.Buttons & PSP_CTRL_DOWN;
+    states_[int(Key::up)] = buttonInput.Buttons & PSP_CTRL_UP;
+    states_[int(Key::alt_1)] = buttonInput.Buttons & PSP_CTRL_RTRIGGER;
+    states_[int(Key::alt_2)] = buttonInput.Buttons & PSP_CTRL_LTRIGGER;
+    states_[int(Key::action_1)] = buttonInput.Buttons & PSP_CTRL_CROSS;
+    states_[int(Key::action_2)] = buttonInput.Buttons & PSP_CTRL_CIRCLE;
+
 
     if (UNLIKELY(static_cast<bool>(::missed_keys))) {
         for (int i = 0; i < (int)Key::count; ++i) {

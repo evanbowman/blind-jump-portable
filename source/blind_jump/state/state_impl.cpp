@@ -697,7 +697,9 @@ StatePtr State::initial(Platform& pfrm, Game& game)
     // if (str_cmp("NintendoDS", pfrm.device_name().c_str()) == 0 or
     //     game.persistent_data().displayed_health_warning_) {
 
-    return state_pool().create<TitleScreenState>();
+    // return state_pool().create<TitleScreenState>();
+    pfrm.enable_glyph_mode(true);
+    return state_pool().create<NewLevelState>(1);
     // }
 
     // game.persistent_data().displayed_health_warning_ = true;
