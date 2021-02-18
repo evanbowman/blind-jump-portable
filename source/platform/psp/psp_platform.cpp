@@ -12,12 +12,11 @@
 #include <pspdebug.h>
 #include <pspkernel.h>
 #include <pspsystimer.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 
 PSP_MODULE_INFO("Blind Jump", 0, 1, 0);
-
-
-extern "C" void __cxa_pure_virtual() { while (1); }
 
 
 void start(Platform& pf);
@@ -77,6 +76,10 @@ bool Platform::is_running() const
 }
 
 
+static SDL_Window* window;
+static SDL_Renderer* renderer;
+
+
 Platform::Platform()
 {
     setup_callbacks();
@@ -84,8 +87,22 @@ Platform::Platform()
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
-    pspDebugScreenInit();
-    pspDebugScreenPrintf("Blind Jump Init");
+
+    SDL_Init(SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_PNG);
+
+    window = SDL_CreateWindow("Active Window",
+        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 240, 160, 0);
+
+    if (window == nullptr) {
+        fatal("failed to create window");
+    }
+
+    renderer = SDL_CreateRenderer(window, -1, 0);
+
+    if (renderer == nullptr) {
+        fatal("failed to create renderer");
+    }
 }
 
 
@@ -298,6 +315,7 @@ Platform::DeviceName Platform::device_name() const
 
 void Platform::fatal(const char* msg)
 {
+    pspDebugScreenInit();
     pspDebugScreenPrintf(msg);
     while (true) ;
 }
@@ -319,7 +337,6 @@ const char* Platform::load_file_contents(const char* folder,
     for (auto& file : files) {
         if (str_cmp(file.name_, filename) == 0 and
             str_cmp(file.root_, folder) == 0) {
-            pspDebugScreenPrintf((const char*)file.data_);
             return reinterpret_cast<const char*>(file.data_);
         }
     }
@@ -533,7 +550,9 @@ void Platform::Screen::pixelate(u8 amount,
 
 void Platform::Screen::display()
 {
-    // TODO
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderDrawPoint(renderer, 20, 20);
+    SDL_RenderPresent(renderer);
 }
 
 
@@ -649,7 +668,6 @@ Platform::Logger::Logger()
 
 bool Platform::RemoteConsole::printline(const char* line)
 {
-    pspDebugScreenPrintf(line);
     // TODO
     return false;
 }
