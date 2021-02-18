@@ -654,7 +654,7 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
     abs_position.x *= 2.f;
     abs_position.y *= 2.f;
 
-    blitAlphaImageToScreen(offset,
+    blitImageToScreen(offset,
                            0,
                            width,
                            64,
