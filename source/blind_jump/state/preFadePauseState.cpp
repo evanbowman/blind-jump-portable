@@ -25,6 +25,13 @@ PreFadePauseState::update(Platform& pfrm, Game& game, Microseconds delta)
         timer_ = 0;
     }
 
+#ifdef __PSP__
+    return state_pool().create<GlowFadeState>(game, fade_color_);
+    // FIXME: Due to the differing screen size, the code below does not work. I
+    // really should use a timer, rather than waiting for the camera to reach a
+    // certain spot...
+#endif
+
     if (manhattan_length(pfrm.screen().get_view().get_center() +
                              pfrm.screen().get_view().get_size() / 2.f,
                          game.player().get_position()) < 18) {

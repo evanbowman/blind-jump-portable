@@ -89,6 +89,7 @@ extern "C" {
 // FIXME!
 #include "../../../build/psp/spritesheet.c"
 #include "../../../build/psp/test_tilemap.c"
+#include "../../../build/psp/overlay.c"
 }
 
 
@@ -273,6 +274,48 @@ static TileMemory map0_image_ram[map_image_ram_capacity];
 static TileMemory map1_image_ram[map_image_ram_capacity];
 
 
+struct OverlayMemory {
+    alignas(16) g2dColor pixels_[16 * 16];
+};
+
+
+constexpr auto overlay_image_ram_capacity = 504;
+
+
+static OverlayMemory overlay_image_ram[overlay_image_ram_capacity];
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Image Format:
+//
+// The game stores images as linear uncompressed arrays of bytes, i.e.:
+// r, g, b, r, g, b, r, g, b, ...
+//
+// We could use PNG, or something, but then we'd need to decode the images. For
+// historical reasons (related to gameboy texture mapping), BlindJump uses very
+// wide spritesheet images (thousands of pixels wide). De-compressing these
+// sorts of pngs is memory intensive, so we convert images to plain rgb values.
+//
+// The repository stores data as PNG files anyway, and given that we are not
+// using PNG, we'd have to convert to some uncompressed format. BMP is tedious
+// to work with, so we're just converting images to arrays of rgb values.
+// Because we are able to assume the heights of the various image files, we do
+// not need to store any metadata about the images.
+//
+// BlindJump uses indexed color by design, so there are certainly changes that
+// we could make to decrease the size of the image data, but the images are not
+// too big to begin with.
+//
+// A final note: Because the PSP screen is a lot more dense than the Gameboy
+// Advance, we're upsampling all textures by 2x. The PSP screen is exactly twice
+// the width of the GBA screen, but less than twice the height. So there is a
+// bit of cropping going on, but nothing too excessive (PSP: 480x272, GBA:
+// 240x160 (480x320, so the GBA display is 48 virtual pixels taller)).
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
 void Platform::load_sprite_texture(const char* name)
 {
     StringBuffer<64> str_name = name;
@@ -380,38 +423,148 @@ void Platform::load_tile1_texture(const char* name)
 
 void Platform::load_overlay_texture(const char* name)
 {
-    // TODO
+    StringBuffer<64> str_name = name;
+
+    static const auto line_height = 8;
+    const auto line_width = (size_overlay_img / line_height) / 3;
+
+    if (size_overlay_img % line_height not_eq 0) {
+        fatal("Invalid image format. "
+              "Overlay images must be 8px in height.");
+    }
+
+    for (int x = 0; x < line_width; ++x) {
+        for (int y = 0; y < line_height; ++y) {
+            u8 r = overlay_img[(x * 3) + (y * line_width * 3)];
+            u8 g = overlay_img[(x * 3) + 1 + (y * line_width * 3)];
+            u8 b = overlay_img[(x * 3) + 2 + (y * line_width * 3)];
+
+            auto target_overlay = x / 8;
+            auto color = G2D_RGBA(r, g, b, 255);
+
+            if (r == 0xFF and b == 0xFF) {
+                color = G2D_RGBA(255, 0, 255, 0);
+            }
+
+            if (target_overlay >= overlay_image_ram_capacity) {
+                ::platform->fatal("Overlay texture too large");
+            }
+
+            auto& overlay = overlay_image_ram[target_overlay];
+
+            auto set_pixel = [&](int x, int y) {
+                overlay.pixels_[x % 16 + y * 16] = color;
+            };
+
+            set_pixel((x * 2), (y * 2));
+            set_pixel((x * 2) + 1, (y * 2));
+            set_pixel((x * 2), (y * 2) + 1);
+            set_pixel((x * 2) + 1, (y * 2) + 1);
+        }
+    }
 }
+
+
+static u8 map0_tiles[16][20];
+static u8 map1_tiles[16][20];
+static u16 background_tiles[32][32];
+static u16 overlay_tiles[32][32];
 
 
 void Platform::fill_overlay(u16 TileDesc)
 {
-    // TODO
+    for (int x = 0; x < 32; ++x) {
+        for (int y = 0; y < 32; ++y) {
+            overlay_tiles[x][y] = 0;
+        }
+    }
+}
+
+
+void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
+{
+    switch (layer) {
+    case Layer::overlay:
+        if (x > 31 or y > 31) {
+            return;
+        }
+        if (val >= overlay_image_ram_capacity) {
+            return;
+        }
+        overlay_tiles[x][y] = val;
+        break;
+
+    case Layer::map_1:
+        if (x > 15 or y > 19) {
+            return;
+        }
+        if (val >= map_image_ram_capacity) {
+            return;
+        }
+        // Only 37 possible tile indices, so this is fine.
+        map1_tiles[x][y] = val;
+        break;
+
+    case Layer::map_0:
+        if (x > 15 or y > 19) {
+            return;
+        }
+        if (val >= map_image_ram_capacity) {
+            return;
+        }
+        map0_tiles[x][y] = val;
+        break;
+
+    case Layer::background:
+        if (x > 31 or y > 32) {
+            return;
+        }
+        background_tiles[x][y] = val;
+        break;
+    }
+}
+
+
+u16 Platform::get_tile(Layer layer, u16 x, u16 y)
+{
+    switch (layer) {
+    case Layer::overlay:
+        if (x > 31 or y > 31) {
+            break;
+        }
+        return overlay_tiles[x][y];
+
+    case Layer::map_1:
+        if (x > 15 or y > 19) {
+            break;
+        }
+        return map1_tiles[x][y];
+
+    case Layer::map_0:
+        if (x > 15 or y > 19) {
+            break;
+        }
+        return map0_tiles[x][y];
+
+    case Layer::background:
+        if (x > 31 or y > 32) {
+            break;
+        }
+        return background_tiles[x][y];
+    }
+    return 0;
+}
+
+
+void Platform::set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors)
+{
+    set_tile(Layer::overlay, x, y, glyph);
 }
 
 
 void Platform::set_overlay_origin(Float x, Float y)
 {
     // TODO
-}
-
-
-void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
-{
-    // TODO
-}
-
-
-void Platform::set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors)
-{
-    // TODO
-}
-
-
-u16 Platform::get_tile(Layer layer, u16 x, u16 y)
-{
-    // TODO
-    return 0;
 }
 
 
@@ -618,7 +771,7 @@ Vec2<u32> Platform::Screen::size() const
 
 void Platform::Screen::clear()
 {
-    g2dClear(G2D_RGBA(128, 128, 128, 255));
+    g2dClear(G2D_RGBA(80, 95, 150, 255));
 
     for (auto it = task_queue_.begin(); it not_eq task_queue_.end();) {
         (*it)->run();
@@ -685,15 +838,9 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
     int offset = 0;
     int width = 64;
 
-    // FIXME: Flipping flags! What to do about these? Maybe there's some way to
-    // easily do this by messing around with the vertices.
-
     if (spr.get_size() == Sprite::Size::w32_h32) {
         temp.data = sprite_image_ram[spr.get_texture_index()].pixels_;
     } else {
-        // if (spr.get_texture_index() % 2) {
-
-        // }
         width = 32;
         temp.data = sprite_image_ram[spr.get_texture_index() / 2].pixels_;
     }
@@ -738,17 +885,17 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
             g2dSetCropWH(32, 64);
         }
     }
-    if (spr.get_alpha() == Sprite::Alpha::translucent) {
-        g2dSetAlpha(128);
-    } else {
-        g2dSetAlpha(255);
-    }
     if (spr.get_mix().color_ not_eq ColorConstant::null and
         spr.get_mix().amount_ == 255) {
         g2dSetColor(make_color((int)spr.get_mix().color_,
                                spr.get_mix().amount_));
     } else {
         g2dResetColor();
+    }
+    if (spr.get_alpha() == Sprite::Alpha::translucent) {
+        g2dSetAlpha(128);
+    } else {
+        g2dSetAlpha(255);
     }
     if (spr.get_flip().x or spr.get_flip().y) {
         Float x_scale = 1.f;
@@ -764,11 +911,26 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
 
         g2dSetScale(x_scale, y_scale);
 
-    } // else if (spr.get_scale().x or spr.get_scale().y) {
-    //     g2dSetScale(spr.get_scale().x, spr.get_scale().y);
+    } else if (spr.get_scale().x or spr.get_scale().y) {
 
-    // }
-    else {
+        g2dSetCoordMode(G2D_CENTER);
+        abs_position.x += width / 2;
+        abs_position.y += 32;
+        g2dSetCoordXY(abs_position.x, abs_position.y);
+
+        float x_scale = 1.f;
+        float y_scale = 1.f;
+
+        if (spr.get_scale().x < 0.f) {
+            x_scale = 1.f * (1.f - float(spr.get_scale().x * -1) / (500.f));
+        }
+
+        if (spr.get_scale().y < 0.f) {
+            y_scale = 1.f * (1.f - float(spr.get_scale().y * -1) / (500.f));
+        }
+
+        g2dSetScale(x_scale, y_scale);
+    } else {
         g2dResetScale();
     }
     g2dAdd();
@@ -777,13 +939,75 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
 }
 
 
+static void display_map(const Vec2<Float>& view_offset)
+{
+    g2dTexture temp;
+    temp.tw = 64;
+    temp.th = 64;
+    temp.w = 64;
+    temp.h = 48;
+    temp.swizzled = false;
+
+    const auto fixed_offset = view_offset.cast<s32>();
+
+    for (int x = 0; x < 16; ++x) {
+        for (int y = 0; y < 20; ++y) {
+            const auto tile = map0_tiles[x][y];
+
+            if (tile == 0) {
+                // Don't bother to draw empty tiles.
+                continue;
+            }
+
+            temp.data = map0_image_ram[tile].pixels_;
+            g2dBeginRects(&temp);
+            g2dSetCoordMode(G2D_UP_LEFT);
+            g2dSetCoordXY(x * 64 - (fixed_offset.x),
+                          y * 48 - (fixed_offset.y));
+            g2dAdd();
+            g2dEnd();
+        }
+    }
+}
+
+
+static void display_overlay()
+{
+    g2dTexture temp;
+    temp.tw = 16;
+    temp.th = 16;
+    temp.w = 16;
+    temp.h = 16;
+    temp.swizzled = false;
+
+    for (int x = 0; x < 32; ++x) {
+        for (int y = 0; y < 32; ++y) {
+            const auto tile = overlay_tiles[x][y];
+
+            if (tile) {
+                temp.data = overlay_image_ram[tile].pixels_;
+                g2dBeginRects(&temp);
+                g2dSetCoordMode(G2D_UP_LEFT);
+                g2dSetCoordXY(x * 16, y * 16);
+                g2dAdd();
+                g2dEnd();
+            }
+        }
+    }
+}
+
+
 void Platform::Screen::display()
 {
+    display_map(view_.get_center() * 2.f);
+
     for (auto& spr : reversed(::sprite_queue)) {
         display_sprite(*this, spr);
     }
 
     sprite_queue.clear();
+
+    display_overlay();
 
     g2dFlip(G2D_VSYNC);
 }
