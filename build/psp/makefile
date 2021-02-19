@@ -2,7 +2,7 @@ TARGET = BlindJump
 CURRENT_DIR = $(shell pwd)
 SRC = $(CURRENT_DIR)/../../source
 OBJS = $(SRC)/platform/psp/psp_platform.o \
-	$(SRC)/platform/psp/graphics.o \
+	$(SRC)/platform/psp/glib2d.o \
         $(SRC)/../external/pngle/miniz.o \
 	$(SRC)/../external/pngle/pngle.o \
 	$(SRC)/blind_jump/entity/effects/wandererSmallLaser.o \
@@ -118,7 +118,7 @@ CFLAGS = -Os -G0 -g3 -mpreferred-stack-boundary=4 -ffast-math -gdwarf-2
 CXXFLAGS = $(CFLAGS) -std=c++17 -fno-exceptions -I$(SRC) -D__PSP__
 ASFLAGS = $(CFLAGS)
 
-LIBS = -lstdc++ -lpspgum -lpspgu -lpng -ljpeg -lz -lm -lpspusb -lpsputility -lpspusbcam -lpspjpeg
+LIBS = -lstdc++ -lpspgum -lpspgu -lpng -ljpeg -lz -lm  -lpspvram -lpspusb -lpsputility -lpspusbcam -lpspjpeg
 
 # PSP Stuff
 BUILD_PRX = 1

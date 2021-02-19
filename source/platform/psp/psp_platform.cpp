@@ -22,12 +22,13 @@
 
 
 extern "C" {
-#include "graphics.h"
+#include "glib2d.h"
 }
 
 
 
-PSP_MODULE_INFO("Blind Jump", 0, 1, 0);
+PSP_MODULE_INFO("Blind Jump", 0, 1, 1);
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
 
 void start(Platform& pf);
@@ -105,7 +106,7 @@ extern "C" {
 
 
 struct SpriteMemory {
-    alignas(16) Color pixels_[64 * 64];
+    alignas(16) g2dColor pixels_[64 * 64];
 };
 
 
@@ -115,7 +116,6 @@ SpriteMemory sprite_image_ram[200];
 Platform::Platform()
 {
     setup_callbacks();
-    initGraphics();
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
@@ -287,10 +287,10 @@ void Platform::load_sprite_texture(const char* name)
                                       u32 h,
                                       u8 rgba[4]) {
         auto target_sprite = x / 32;
-        auto color = RGBA(rgba[0], rgba[1], rgba[2], rgba[3]);
+        auto color = G2D_RGBA(rgba[0], rgba[1], rgba[2], rgba[3]);
 
         if (rgba[0] == 0xFF and rgba[2] == 0xFF) {
-            color = RGBA(255, 0, 255, 0);
+            color = G2D_RGBA(255, 0, 255, 0);
         }
 
         auto& spr = sprite_image_ram[target_sprite];
@@ -574,6 +574,8 @@ Vec2<u32> Platform::Screen::size() const
 
 void Platform::Screen::clear()
 {
+    g2dClear(G2D_RGBA(128, 128, 128, 255));
+
     for (auto it = task_queue_.begin(); it not_eq task_queue_.end();) {
         (*it)->run();
         if ((*it)->complete()) {
@@ -583,8 +585,6 @@ void Platform::Screen::clear()
             ++it;
         }
     }
-
-    clearScreen(RGB(0, 0, 10));
 }
 
 
@@ -616,18 +616,28 @@ void Platform::Screen::pixelate(u8 amount,
 }
 
 
+static g2dColor make_color(int color_hex, u8 alpha)
+{
+    const auto r = (color_hex & 0xFF0000) >> 16;
+    const auto g = (color_hex & 0x00FF00) >> 8;
+    const auto b = (color_hex & 0x0000FF);
+
+    return G2D_RGBA(r, g, b, alpha);
+}
+
+
 static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
 {
     // FIXME: support translucent sprites
-    if (spr.get_alpha() not_eq Sprite::Alpha::opaque) {
+    if (spr.get_alpha() == Sprite::Alpha::transparent) {
         return;
     }
 
-    Image temp;
-    temp.textureWidth = 64;
-    temp.textureHeight = 64;
-    temp.imageWidth = 64;
-    temp.imageHeight = 64;
+    g2dTexture temp;
+    temp.tw = 64;
+    temp.th = 64;
+    temp.h = 64;
+    temp.swizzled = false;
 
     int offset = 0;
     int width = 64;
@@ -638,12 +648,14 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
     if (spr.get_size() == Sprite::Size::w32_h32) {
         temp.data = sprite_image_ram[spr.get_texture_index()].pixels_;
     } else {
+        // if (spr.get_texture_index() % 2) {
+
+        // }
         width = 32;
-        if (spr.get_texture_index() % 2) {
-            offset = 32;
-        }
         temp.data = sprite_image_ram[spr.get_texture_index() / 2].pixels_;
     }
+
+    temp.w = width;
 
     const auto view_center = screen.get_view().get_center();
 
@@ -651,16 +663,62 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
 
     auto abs_position = pos - view_center;
 
+    if (spr.get_flip().x) {
+        abs_position.x += width / 2;
+    }
+
+    if (spr.get_flip().y) {
+        abs_position.y += 32;
+    }
+
     abs_position.x *= 2.f;
     abs_position.y *= 2.f;
 
-    blitImageToScreen(offset,
-                           0,
-                           width,
-                           64,
-                           &temp,
-                           abs_position.x,
-                           abs_position.y);
+    g2dBeginRects(&temp);
+    g2dSetCoordMode(G2D_UP_LEFT);
+    g2dSetCoordXY(abs_position.x, abs_position.y);
+    if (spr.get_size() not_eq Sprite::Size::w32_h32) {
+        if (spr.get_texture_index() % 2) {
+            g2dSetCropXY(32, 0);
+            g2dSetCropWH(32, 64);
+        } else {
+            g2dSetCropXY(0, 0);
+            g2dSetCropWH(32, 64);
+        }
+    }
+    if (spr.get_alpha() == Sprite::Alpha::translucent) {
+        g2dSetAlpha(128);
+    } else {
+        g2dSetAlpha(255);
+    }
+    g2dSetRotation(0);
+    if (spr.get_mix().color_ not_eq ColorConstant::null and
+        spr.get_mix().amount_ == 255) {
+        g2dSetColor(make_color((int)spr.get_mix().color_,
+                               spr.get_mix().amount_));
+    } else {
+        g2dResetColor();
+    }
+    if (spr.get_flip().x or spr.get_flip().y) {
+        Float x_scale = 1.f;
+        Float y_scale = 1.f;
+
+        if (spr.get_flip().x) {
+            x_scale = -1;
+        }
+
+        if (spr.get_flip().y) {
+            y_scale = -1;
+        }
+
+        g2dSetScale(x_scale, y_scale);
+
+    } else {
+        g2dResetScale();
+    }
+    g2dAdd();
+    g2dEnd();
+    g2dResetCrop();
 }
 
 
@@ -672,9 +730,7 @@ void Platform::Screen::display()
 
     sprite_queue.clear();
 
-    sceDisplayWaitVblankStart();
-
-    flipScreen();
+    g2dFlip(G2D_VSYNC);
 }
 
 
