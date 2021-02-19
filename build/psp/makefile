@@ -3,10 +3,6 @@ CURRENT_DIR = $(shell pwd)
 SRC = $(CURRENT_DIR)/../../source
 OBJS = $(SRC)/platform/psp/psp_platform.o \
 	$(SRC)/platform/psp/glib2d.o \
-	$(SRC)/../external/umm_malloc/src/umm_malloc.o \
-	$(SRC)/../external/umm_malloc/src/umm_poison.o \
-	$(SRC)/../external/umm_malloc/src/umm_info.o \
-	$(SRC)/../external/umm_malloc/src/umm_integrity.o \
 	$(SRC)/blind_jump/entity/effects/wandererSmallLaser.o \
 	$(SRC)/blind_jump/entity/effects/wandererBigLaser.o \
 	$(SRC)/blind_jump/entity/effects/conglomerateShot.o \

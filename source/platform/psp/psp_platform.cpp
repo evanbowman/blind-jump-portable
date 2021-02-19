@@ -21,19 +21,10 @@
 #include <memory>
 #include "localization.hpp"
 
-#include "../../../external/umm_malloc/src/umm_malloc.h"
-
-
 
 extern "C" {
 #include "glib2d.h"
 }
-
-
-alignas(4) static u8 heap[2000000];
-
-void *UMM_MALLOC_CFG_HEAP_ADDR = &heap;
-uint32_t UMM_MALLOC_CFG_HEAP_SIZE = sizeof heap;
 
 
 PSP_MODULE_INFO("Blind Jump", 0, 1, 1);
@@ -48,8 +39,6 @@ Platform* platform;
 
 int main(int argc, char** argv)
 {
-    umm_init();
-
     Platform pf;
     ::platform = &pf;
 
