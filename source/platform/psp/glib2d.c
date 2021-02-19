@@ -23,7 +23,6 @@
 #include <pspdisplay.h>
 #include <pspgu.h>
 #include <vram.h>
-#include <malloc.h>
 #include <math.h>
 
 #ifdef USE_PNG
@@ -41,6 +40,7 @@
 #define PIXEL_SIZE              (4)
 #define FRAMEBUFFER_SIZE        (LINE_SIZE*G2D_SCR_H*PIXEL_SIZE)
 #define MALLOC_STEP             (128)
+#define OBJ_COUNT               (MALLOC_STEP * 10)
 #define TSTACK_MAX              (64)
 #define SLICE_WIDTH             (64.f)
 #define M_180_PI                (57.29578f)
@@ -316,6 +316,9 @@ void g2dClearZ()
 }
 
 
+static Object obj_buffer[OBJ_COUNT];
+
+
 void _g2dBeginCommon(Obj_Type type, g2dTexture *tex)
 {
     if (begin)
@@ -325,10 +328,7 @@ void _g2dBeginCommon(Obj_Type type, g2dTexture *tex)
         _g2dStart();
 
     // Reset render context
-    rctx.obj = realloc(rctx.obj, MALLOC_STEP * sizeof(Object));
-    while (rctx.obj == NULL) {
-        // ...
-    }
+    rctx.obj = obj_buffer;
     rctx.n = 0;
     rctx.type = type;
     rctx.tex = tex;
@@ -659,13 +659,9 @@ void g2dAdd()
     if (!begin || rctx.cur_obj.scale_w == 0.f || rctx.cur_obj.scale_h == 0.f)
         return;
 
-    if (rctx.n % MALLOC_STEP == 0)
+    while (rctx.n == OBJ_COUNT)
     {
-        rctx.obj = realloc(rctx.obj,
-                           (rctx.n+MALLOC_STEP) * sizeof(Object));
-        while (rctx.obj == NULL) {
-            // ;
-        }
+        // we ran out of objects!?
     }
 
     rctx.n++;
@@ -1156,227 +1152,227 @@ void _swizzle(unsigned char *dest, unsigned char *source, int width, int height)
 }
 
 
-g2dTexture*g2dTexCreate(int w, int h)
-{
-    g2dTexture *tex = malloc(sizeof(g2dTexture));
-    if (tex == NULL)
-        return NULL;
+/* g2dTexture*g2dTexCreate(int w, int h) */
+/* { */
+/*     g2dTexture *tex = malloc(sizeof(g2dTexture)); */
+/*     if (tex == NULL) */
+/*         return NULL; */
 
-    tex->tw = _getNextPower2(w);
-    tex->th = _getNextPower2(h);
-    tex->w = w;
-    tex->h = h;
-    tex->ratio = (float)w / h;
-    tex->swizzled = false;
+/*     tex->tw = _getNextPower2(w); */
+/*     tex->th = _getNextPower2(h); */
+/*     tex->w = w; */
+/*     tex->h = h; */
+/*     tex->ratio = (float)w / h; */
+/*     tex->swizzled = false; */
 
-    tex->data = malloc(tex->tw * tex->th * sizeof(g2dColor));
-    if (tex->data == NULL)
-    {
-        free(tex);
-        return NULL;
-    }
+/*     tex->data = malloc(tex->tw * tex->th * sizeof(g2dColor)); */
+/*     if (tex->data == NULL) */
+/*     { */
+/*         free(tex); */
+/*         return NULL; */
+/*     } */
 
-    memset(tex->data, 0, tex->tw * tex->th * sizeof(g2dColor));
+/*     memset(tex->data, 0, tex->tw * tex->th * sizeof(g2dColor)); */
 
-    return tex;
-}
+/*     return tex; */
+/* } */
 
 
-void g2dTexFree(g2dTexture **tex)
-{
-    if (tex == NULL)
-        return;
-    if (*tex == NULL)
-        return;
+/* void g2dTexFree(g2dTexture **tex) */
+/* { */
+/*     if (tex == NULL) */
+/*         return; */
+/*     if (*tex == NULL) */
+/*         return; */
 
-    free((*tex)->data);
-    free((*tex));
+/*     free((*tex)->data); */
+/*     free((*tex)); */
 
-    *tex = NULL;
-}
+/*     *tex = NULL; */
+/* } */
 
 
 #ifdef USE_PNG
-g2dTexture* _g2dTexLoadPNG(FILE *fp)
-{
-    png_structp png_ptr;
-    png_infop info_ptr;
-    unsigned int sig_read = 0;
-    png_uint_32 width, height;
-    int bit_depth, color_type, interlace_type;
-    u32 x, y;
-    g2dColor *line;
-    g2dTexture *tex;
+/* g2dTexture* _g2dTexLoadPNG(FILE *fp) */
+/* { */
+/*     png_structp png_ptr; */
+/*     png_infop info_ptr; */
+/*     unsigned int sig_read = 0; */
+/*     png_uint_32 width, height; */
+/*     int bit_depth, color_type, interlace_type; */
+/*     u32 x, y; */
+/*     g2dColor *line; */
+/*     g2dTexture *tex; */
 
-    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    png_set_error_fn(png_ptr, NULL, NULL, NULL);
-    info_ptr = png_create_info_struct(png_ptr);
-    png_init_io(png_ptr, fp);
-    png_set_sig_bytes(png_ptr, sig_read);
-    png_read_info(png_ptr, info_ptr);
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
-                 &interlace_type, NULL, NULL);
-    png_set_strip_16(png_ptr);
-    png_set_packing(png_ptr);
+/*     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL); */
+/*     png_set_error_fn(png_ptr, NULL, NULL, NULL); */
+/*     info_ptr = png_create_info_struct(png_ptr); */
+/*     png_init_io(png_ptr, fp); */
+/*     png_set_sig_bytes(png_ptr, sig_read); */
+/*     png_read_info(png_ptr, info_ptr); */
+/*     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, */
+/*                  &interlace_type, NULL, NULL); */
+/*     png_set_strip_16(png_ptr); */
+/*     png_set_packing(png_ptr); */
 
-    if (color_type == PNG_COLOR_TYPE_PALETTE)
-        png_set_palette_to_rgb(png_ptr);
-    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
-        png_set_tRNS_to_alpha(png_ptr);
+/*     if (color_type == PNG_COLOR_TYPE_PALETTE) */
+/*         png_set_palette_to_rgb(png_ptr); */
+/*     if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) */
+/*         png_set_tRNS_to_alpha(png_ptr); */
 
-    png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER);
+/*     png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER); */
 
-    tex = g2dTexCreate(width, height);
-    line = malloc(width * 4);
+/*     tex = g2dTexCreate(width, height); */
+/*     line = malloc(width * 4); */
 
-    for (y = 0; y < height; y++)
-    {
-        png_read_row(png_ptr, (u8*) line, NULL);
+/*     for (y = 0; y < height; y++) */
+/*     { */
+/*         png_read_row(png_ptr, (u8*) line, NULL); */
 
-        for (x = 0; x < width; x++)
-            tex->data[x + y*tex->tw] = line[x];
-    }
+/*         for (x = 0; x < width; x++) */
+/*             tex->data[x + y*tex->tw] = line[x]; */
+/*     } */
 
-    free(line);
-    png_read_end(png_ptr, info_ptr);
-    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+/*     free(line); */
+/*     png_read_end(png_ptr, info_ptr); */
+/*     png_destroy_read_struct(&png_ptr, &info_ptr, NULL); */
 
-    return tex;
-}
+/*     return tex; */
+/* } */
 #endif
 
 
 #ifdef USE_JPEG
-g2dTexture* _g2dTexLoadJPEG(FILE *fp)
-{
-    struct jpeg_decompress_struct dinfo;
-    struct jpeg_error_mgr jerr;
-    int width, height;
-    g2dTexture *tex;
-    u8 *line;
+/* g2dTexture* _g2dTexLoadJPEG(FILE *fp) */
+/* { */
+/*     struct jpeg_decompress_struct dinfo; */
+/*     struct jpeg_error_mgr jerr; */
+/*     int width, height; */
+/*     g2dTexture *tex; */
+/*     u8 *line; */
 
-    dinfo.err = jpeg_std_error(&jerr);
-    jpeg_create_decompress(&dinfo);
-    jpeg_stdio_src(&dinfo, fp);
-    jpeg_read_header(&dinfo, TRUE);
+/*     dinfo.err = jpeg_std_error(&jerr); */
+/*     jpeg_create_decompress(&dinfo); */
+/*     jpeg_stdio_src(&dinfo, fp); */
+/*     jpeg_read_header(&dinfo, TRUE); */
 
-    width = dinfo.image_width;
-    height = dinfo.image_height;
-    tex = g2dTexCreate(width, height);
-    line = malloc(width * 3);
+/*     width = dinfo.image_width; */
+/*     height = dinfo.image_height; */
+/*     tex = g2dTexCreate(width, height); */
+/*     line = malloc(width * 3); */
 
-    jpeg_start_decompress(&dinfo);
+/*     jpeg_start_decompress(&dinfo); */
 
-    if (dinfo.jpeg_color_space == JCS_GRAYSCALE)
-    {
-        while (dinfo.output_scanline < dinfo.output_height)
-        {
-            int y = dinfo.output_scanline;
-            int x;
+/*     if (dinfo.jpeg_color_space == JCS_GRAYSCALE) */
+/*     { */
+/*         while (dinfo.output_scanline < dinfo.output_height) */
+/*         { */
+/*             int y = dinfo.output_scanline; */
+/*             int x; */
 
-            jpeg_read_scanlines(&dinfo, &line, 1);
+/*             jpeg_read_scanlines(&dinfo, &line, 1); */
 
-            for (x=0; x<width; x++)
-            {
-                g2dColor gray = line[x];
-                g2dColor c = gray | (gray << 8) | (gray << 16) | 0xff000000;
+/*             for (x=0; x<width; x++) */
+/*             { */
+/*                 g2dColor gray = line[x]; */
+/*                 g2dColor c = gray | (gray << 8) | (gray << 16) | 0xff000000; */
 
-                tex->data[x + tex->tw * y] = c;
-            }
-        }
-    }
-    else
-    {
-        while (dinfo.output_scanline < dinfo.output_height)
-        {
-            int y = dinfo.output_scanline;
-            int x;
-            u8 *pline;
+/*                 tex->data[x + tex->tw * y] = c; */
+/*             } */
+/*         } */
+/*     } */
+/*     else */
+/*     { */
+/*         while (dinfo.output_scanline < dinfo.output_height) */
+/*         { */
+/*             int y = dinfo.output_scanline; */
+/*             int x; */
+/*             u8 *pline; */
 
-            jpeg_read_scanlines(&dinfo, &line, 1);
-            pline = line;
+/*             jpeg_read_scanlines(&dinfo, &line, 1); */
+/*             pline = line; */
 
-            for (x=0; x<width; x++)
-            {
-                g2dColor c;
+/*             for (x=0; x<width; x++) */
+/*             { */
+/*                 g2dColor c; */
 
-                c  = (*(pline++));
-                c |= (*(pline++)) << 8;
-                c |= (*(pline++)) << 16;
+/*                 c  = (*(pline++)); */
+/*                 c |= (*(pline++)) << 8; */
+/*                 c |= (*(pline++)) << 16; */
 
-                tex->data[x + tex->tw * y] = c | 0xff000000;
-            }
-        }
-    }
+/*                 tex->data[x + tex->tw * y] = c | 0xff000000; */
+/*             } */
+/*         } */
+/*     } */
 
-    jpeg_finish_decompress(&dinfo);
-    jpeg_destroy_decompress(&dinfo);
-    free(line);
+/*     jpeg_finish_decompress(&dinfo); */
+/*     jpeg_destroy_decompress(&dinfo); */
+/*     free(line); */
 
-    return tex;
-}
+/*     return tex; */
+/* } */
 #endif
 
 
-g2dTexture* g2dTexLoad(char path[], g2dTex_Mode mode)
-{
-    g2dTexture *tex = NULL;
-    FILE *fp = NULL;
+/* g2dTexture* g2dTexLoad(char path[], g2dTex_Mode mode) */
+/* { */
+/*     g2dTexture *tex = NULL; */
+/*     FILE *fp = NULL; */
 
-    if (path == NULL)
-        return NULL;
-    if ((fp = fopen(path, "rb")) == NULL)
-        return NULL;
+/*     if (path == NULL) */
+/*         return NULL; */
+/*     if ((fp = fopen(path, "rb")) == NULL) */
+/*         return NULL; */
 
-#ifdef USE_PNG
-    if (strstr(path, ".png"))
-    {
-        tex = _g2dTexLoadPNG(fp);
-    }
-#endif
+/* #ifdef USE_PNG */
+/*     if (strstr(path, ".png")) */
+/*     { */
+/*         tex = _g2dTexLoadPNG(fp); */
+/*     } */
+/* #endif */
 
-#ifdef USE_JPEG
-    if (strstr(path, ".jpg") || strstr(path, ".jpeg"))
-    {
-        tex = _g2dTexLoadJPEG(fp);
-    }
-#endif
+/* #ifdef USE_JPEG */
+/*     if (strstr(path, ".jpg") || strstr(path, ".jpeg")) */
+/*     { */
+/*         tex = _g2dTexLoadJPEG(fp); */
+/*     } */
+/* #endif */
 
-    if (tex == NULL)
-        goto error;
+/*     if (tex == NULL) */
+/*         goto error; */
 
-    fclose(fp);
-    fp = NULL;
+/*     fclose(fp); */
+/*     fp = NULL; */
 
-    // The PSP can't draw 512*512+ textures.
-    if (tex->w > 512 || tex->h > 512)
-        goto error;
+/*     // The PSP can't draw 512*512+ textures. */
+/*     if (tex->w > 512 || tex->h > 512) */
+/*         goto error; */
 
-    // Swizzling is useless with small textures.
-    if ((mode & G2D_SWIZZLE) && (tex->w >= 16 || tex->h >= 16))
-    {
-        u8 *tmp = malloc(tex->tw*tex->th*PIXEL_SIZE);
-        _swizzle(tmp, (u8*)tex->data, tex->tw*PIXEL_SIZE, tex->th);
-        free(tex->data);
-        tex->data = (g2dColor*)tmp;
-        tex->swizzled = true;
-    }
-    else
-        tex->swizzled = false;
+/*     // Swizzling is useless with small textures. */
+/*     if ((mode & G2D_SWIZZLE) && (tex->w >= 16 || tex->h >= 16)) */
+/*     { */
+/*         u8 *tmp = malloc(tex->tw*tex->th*PIXEL_SIZE); */
+/*         _swizzle(tmp, (u8*)tex->data, tex->tw*PIXEL_SIZE, tex->th); */
+/*         free(tex->data); */
+/*         tex->data = (g2dColor*)tmp; */
+/*         tex->swizzled = true; */
+/*     } */
+/*     else */
+/*         tex->swizzled = false; */
 
-    sceKernelDcacheWritebackRange(tex->data, tex->tw*tex->th*PIXEL_SIZE);
+/*     sceKernelDcacheWritebackRange(tex->data, tex->tw*tex->th*PIXEL_SIZE); */
 
-    return tex;
+/*     return tex; */
 
-    // Load failure... abort
-error:
-    if (fp != NULL)
-        fclose(fp);
+/*     // Load failure... abort */
+/* error: */
+/*     if (fp != NULL) */
+/*         fclose(fp); */
 
-    g2dTexFree(&tex);
+/*     g2dTexFree(&tex); */
 
-    return NULL;
-}
+/*     return NULL; */
+/* } */
 
 /* Scissor functions */
 

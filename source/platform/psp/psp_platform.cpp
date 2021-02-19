@@ -7,6 +7,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+
 #include "platform/platform.hpp"
 #include <pspctrl.h>
 #include <pspdebug.h>
@@ -20,11 +21,20 @@
 #include <memory>
 #include "localization.hpp"
 
+#include "../../../external/umm_malloc/src/umm_malloc.h"
+
+
 
 extern "C" {
 #include "glib2d.h"
 }
 
+
+//
+alignas(4) static u8 heap[2000000];
+
+void *UMM_MALLOC_CFG_HEAP_ADDR = &heap;
+uint32_t UMM_MALLOC_CFG_HEAP_SIZE = sizeof heap;
 
 
 PSP_MODULE_INFO("Blind Jump", 0, 1, 1);
@@ -32,13 +42,6 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
 
 void start(Platform& pf);
-// {
-//     while (pf.is_running()) {
-//         pf.keyboard().poll();
-
-//         const auto delta = pf.delta_clock().reset();
-//     }
-// }
 
 
 Platform* platform;
@@ -46,7 +49,7 @@ Platform* platform;
 
 int main(int argc, char** argv)
 {
-    // pspDebugScreenInit();
+    umm_init();
 
     Platform pf;
     ::platform = &pf;
@@ -101,16 +104,8 @@ bool Platform::is_running() const
 extern "C" {
 // FIXME!
 #include "../../../build/psp/spritesheet.c"
-
+#include "../../../build/psp/test_tilemap.c"
 }
-
-
-struct SpriteMemory {
-    alignas(16) g2dColor pixels_[64 * 64];
-};
-
-
-SpriteMemory sprite_image_ram[200];
 
 
 Platform::Platform()
@@ -271,6 +266,29 @@ std::optional<Platform::DynamicTexturePtr> Platform::make_dynamic_texture()
 }
 
 
+struct SpriteMemory {
+    alignas(16) g2dColor pixels_[64 * 64];
+};
+
+
+constexpr auto sprite_image_ram_capacity = 200;
+
+
+static SpriteMemory sprite_image_ram[sprite_image_ram_capacity];
+
+
+struct TileMemory {
+    alignas(16) g2dColor pixels_[64 * 64];
+};
+
+
+constexpr auto map_image_ram_capacity = 36;
+
+
+static TileMemory map0_image_ram[map_image_ram_capacity];
+static TileMemory map1_image_ram[map_image_ram_capacity];
+
+
 void Platform::load_sprite_texture(const char* name)
 {
     StringBuffer<64> str_name = name;
@@ -291,6 +309,10 @@ void Platform::load_sprite_texture(const char* name)
 
         if (rgba[0] == 0xFF and rgba[2] == 0xFF) {
             color = G2D_RGBA(255, 0, 255, 0);
+        }
+
+        if (target_sprite >= sprite_image_ram_capacity) {
+            ::platform->fatal("sprite texture too large");
         }
 
         auto& spr = sprite_image_ram[target_sprite];
@@ -322,9 +344,74 @@ void Platform::load_sprite_texture(const char* name)
 }
 
 
+void load_map_texture(Platform& pfrm,
+                      TileMemory* dest,
+                      const u8* src_data,
+                      u32 src_size)
+{
+    auto pngle = pngle_new();
+
+    if (pngle == nullptr) {
+        pfrm.fatal("failed to create png loader context");
+    }
+
+    pngle_set_user_data(pngle, dest);
+
+    pngle_set_draw_callback(pngle, [](pngle_t *pngle,
+                                      u32 x,
+                                      u32 y,
+                                      u32 w,
+                                      u32 h,
+                                      u8 rgba[4]) {
+
+        auto dest = (TileMemory*)pngle_get_user_data(pngle);
+
+        auto target_tile = x / 32;
+        auto color = G2D_RGBA(rgba[0], rgba[1], rgba[2], rgba[3]);
+
+        if (rgba[0] == 0xFF and rgba[2] == 0xFF) {
+            color = G2D_RGBA(255, 0, 255, 0);
+        }
+
+        if (target_tile >= map_image_ram_capacity) {
+            ::platform->fatal("tilemap texture too large");
+        }
+
+        auto& tile = dest[target_tile];
+
+        auto set_pixel = [&](int x, int y) {
+            tile.pixels_[x % 64 + y * 64] = color;
+        };
+
+        set_pixel((x * 2), (y * 2));
+        set_pixel((x * 2) + 1, (y * 2));
+        set_pixel((x * 2), (y * 2) + 1);
+        set_pixel((x * 2) + 1, (y * 2) + 1);
+    });
+
+    int remaining = src_size;
+    auto buf = src_data;
+    while (remaining) {
+        auto status = pngle_feed(pngle, buf, remaining);
+        if (status == -1) {
+            StringBuffer<64> err("pngle error: ");
+            err += pngle_error(pngle);
+            pfrm.fatal(err.c_str());
+        }
+        remaining -= status;
+        buf += status;
+    }
+
+    pngle_destroy(pngle);
+}
+
+
 void Platform::load_tile0_texture(const char* name)
 {
-    // TODO
+    load_map_texture(*this,
+                     map0_image_ram,
+                     test_tilemap,
+                     size_test_tilemap);
 }
 
 
@@ -628,7 +715,6 @@ static g2dColor make_color(int color_hex, u8 alpha)
 
 static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
 {
-    // FIXME: support translucent sprites
     if (spr.get_alpha() == Sprite::Alpha::transparent) {
         return;
     }
@@ -721,7 +807,11 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
 
         g2dSetScale(x_scale, y_scale);
 
-    } else {
+    } // else if (spr.get_scale().x or spr.get_scale().y) {
+    //     g2dSetScale(spr.get_scale().x, spr.get_scale().y);
+
+    // }
+    else {
         g2dResetScale();
     }
     g2dAdd();

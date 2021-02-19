@@ -5,6 +5,10 @@ OBJS = $(SRC)/platform/psp/psp_platform.o \
 	$(SRC)/platform/psp/glib2d.o \
         $(SRC)/../external/pngle/miniz.o \
 	$(SRC)/../external/pngle/pngle.o \
+	$(SRC)/../external/umm_malloc/src/umm_malloc.o \
+	$(SRC)/../external/umm_malloc/src/umm_poison.o \
+	$(SRC)/../external/umm_malloc/src/umm_info.o \
+	$(SRC)/../external/umm_malloc/src/umm_integrity.o \
 	$(SRC)/blind_jump/entity/effects/wandererSmallLaser.o \
 	$(SRC)/blind_jump/entity/effects/wandererBigLaser.o \
 	$(SRC)/blind_jump/entity/effects/conglomerateShot.o \
