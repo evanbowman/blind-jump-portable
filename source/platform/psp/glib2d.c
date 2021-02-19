@@ -40,7 +40,7 @@
 #define PIXEL_SIZE              (4)
 #define FRAMEBUFFER_SIZE        (LINE_SIZE*G2D_SCR_H*PIXEL_SIZE)
 #define MALLOC_STEP             (128)
-#define OBJ_COUNT               (MALLOC_STEP * 10)
+#define OBJ_COUNT               (MALLOC_STEP * 20)
 #define TSTACK_MAX              (64)
 #define SLICE_WIDTH             (64.f)
 #define M_180_PI                (57.29578f)

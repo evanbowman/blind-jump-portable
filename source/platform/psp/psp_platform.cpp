@@ -90,6 +90,7 @@ extern "C" {
 #include "../../../build/psp/spritesheet.c"
 #include "../../../build/psp/test_tilemap.c"
 #include "../../../build/psp/overlay.c"
+#include "../../../build/psp/tilesheet_top.c"
 }
 
 
@@ -417,7 +418,10 @@ void Platform::load_tile0_texture(const char* name)
 
 void Platform::load_tile1_texture(const char* name)
 {
-    // TODO
+    load_map_texture(*this,
+                     map1_image_ram,
+                     tilesheet_top_img,
+                     size_tilesheet_top_img);
 }
 
 
@@ -951,21 +955,37 @@ static void display_map(const Vec2<Float>& view_offset)
     const auto fixed_offset = view_offset.cast<s32>();
 
     for (int x = 0; x < 16; ++x) {
-        for (int y = 0; y < 20; ++y) {
-            const auto tile = map0_tiles[x][y];
+        const auto x_target = x * 64 - (fixed_offset.x);
+        if (x_target < -64 or x_target > 480) {
+            continue;
+        }
 
-            if (tile == 0) {
-                // Don't bother to draw empty tiles.
+        for (int y = 0; y < 20; ++y) {
+            const auto y_target = y * 48 - (fixed_offset.y);
+            if (y_target < -48 or y_target > 272) {
                 continue;
             }
 
-            temp.data = map0_image_ram[tile].pixels_;
-            g2dBeginRects(&temp);
-            g2dSetCoordMode(G2D_UP_LEFT);
-            g2dSetCoordXY(x * 64 - (fixed_offset.x),
-                          y * 48 - (fixed_offset.y));
-            g2dAdd();
-            g2dEnd();
+            const auto tile = map0_tiles[x][y];
+
+            if (tile not_eq 0) { // Don't bother to draw empty tiles.
+                temp.data = map0_image_ram[tile].pixels_;
+                g2dBeginRects(&temp);
+                g2dSetCoordMode(G2D_UP_LEFT);
+                g2dSetCoordXY(x_target, y_target);
+                g2dAdd();
+                g2dEnd();
+            }
+
+            const auto tile1 = map1_tiles[x][y];
+            if (tile1 not_eq 0) {
+                temp.data = map1_image_ram[tile1].pixels_;
+                g2dBeginRects(&temp);
+                g2dSetCoordMode(G2D_UP_LEFT);
+                g2dSetCoordXY(x_target, y_target);
+                g2dAdd();
+                g2dEnd();
+            }
         }
     }
 }
@@ -997,8 +1017,36 @@ static void display_overlay()
 }
 
 
+static void display_background()
+{
+    g2dTexture temp;
+    temp.tw = 16;
+    temp.th = 16;
+    temp.w = 16;
+    temp.h = 16;
+    temp.swizzled = false;
+
+    for (int x = 0; x < 32; ++x) {
+        for (int y = 0; y < 32; ++y) {
+            const auto tile = background_tiles[x][y];
+
+            if (tile) {
+                // temp.data = overlay_image_ram[tile].pixels_;
+                // g2dBeginRects(&temp);
+                // g2dSetCoordMode(G2D_UP_LEFT);
+                // g2dSetCoordXY(x * 16, y * 16);
+                // g2dAdd();
+                // g2dEnd();
+            }
+        }
+    }
+}
+
+
 void Platform::Screen::display()
 {
+    display_background();
+
     display_map(view_.get_center() * 2.f);
 
     for (auto& spr : reversed(::sprite_queue)) {

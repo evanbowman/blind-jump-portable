@@ -90,6 +90,14 @@ void QuickSelectInventoryState::draw_items(Platform& pfrm, Game& game)
 
     int skip = page_ * items_.capacity();
 
+    auto margin = [&] {
+        if (screen_tiles.y == 17) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }();
+
     foreach_quickselect_item(game, [&](Item::Type item, int, int, int) {
         if (item_icons_.full()) {
             more_pages_ = true;
@@ -102,7 +110,7 @@ void QuickSelectInventoryState::draw_items(Platform& pfrm, Game& game)
         items_.push_back(item);
 
         const OverlayCoord coord{static_cast<u8>(screen_tiles.x - 4),
-                                 static_cast<u8>(4 + item_icons_.size() * 5)};
+                                 static_cast<u8>(3 + margin + item_icons_.size() * 5)};
 
         if (auto handler = inventory_item_handler(item)) {
             item_icons_.emplace_back(pfrm, handler->icon_, coord);
@@ -117,23 +125,31 @@ void QuickSelectInventoryState::show_sidebar(Platform& pfrm)
 
     sidebar_->set_display_percentage(1.f);
 
+    auto margin = [&] {
+        if (screen_tiles.y == 17) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }();
+
     for (int y = 0; y < screen_tiles.y; y += 5) {
-        pfrm.set_tile(Layer::overlay, screen_tiles.x - 1, y + 2, 129);
-        pfrm.set_tile(Layer::overlay, screen_tiles.x - 6, y + 2, 129);
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 1, y + 1 + margin, 129);
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 6, y + 1 + margin, 129);
     }
 
     if (page_ > 0) {
-        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, 1, 153);
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, margin, 153);
     } else {
-        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, 1, 151);
+        pfrm.set_tile(Layer::overlay, screen_tiles.x - 3, margin, 151);
     }
 
     if (more_pages_) {
         pfrm.set_tile(
-            Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 154);
+            Layer::overlay, screen_tiles.x - 3, screen_tiles.y - (1 + margin), 154);
     } else {
         pfrm.set_tile(
-            Layer::overlay, screen_tiles.x - 3, screen_tiles.y - 2, 152);
+            Layer::overlay, screen_tiles.x - 3, screen_tiles.y - (1 + margin), 152);
     }
 }
 
@@ -178,8 +194,16 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
     auto redraw_selector = [&](TileDesc erase_color) {
         auto screen_tiles = calc_screen_tiles(pfrm);
 
+        auto margin = [&] {
+            if (screen_tiles.y == 17) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }();
+
         const OverlayCoord pos{static_cast<u8>(screen_tiles.x - 5),
-                               static_cast<u8>(3 + selector_pos_ * 5)};
+                               static_cast<u8>(2 + margin + selector_pos_ * 5)};
         if (selector_shaded_) {
             selector_.emplace(
                 pfrm, OverlayCoord{4, 4}, pos, false, 8 + 278, erase_color);

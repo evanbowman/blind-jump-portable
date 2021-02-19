@@ -24,3 +24,4 @@ def convert_img(name):
 convert_img("test")
 convert_img("test_tilemap")
 convert_img("test_overlay")
+convert_img("tilesheet_top")
