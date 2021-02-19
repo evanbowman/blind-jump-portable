@@ -671,11 +671,20 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
         abs_position.y += 32;
     }
 
+    g2dBeginRects(&temp);
+    if (auto rot = spr.get_rotation()) {
+        g2dSetCoordMode(G2D_CENTER);
+        abs_position.x += width / 4;
+        abs_position.y += 16;
+        g2dSetRotation(360 * ((float)rot / std::numeric_limits<Sprite::Rotation>::max()));
+    } else {
+        g2dSetCoordMode(G2D_UP_LEFT);
+        g2dSetRotation(0);
+    }
+
     abs_position.x *= 2.f;
     abs_position.y *= 2.f;
 
-    g2dBeginRects(&temp);
-    g2dSetCoordMode(G2D_UP_LEFT);
     g2dSetCoordXY(abs_position.x, abs_position.y);
     if (spr.get_size() not_eq Sprite::Size::w32_h32) {
         if (spr.get_texture_index() % 2) {
@@ -691,7 +700,6 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
     } else {
         g2dSetAlpha(255);
     }
-    g2dSetRotation(0);
     if (spr.get_mix().color_ not_eq ColorConstant::null and
         spr.get_mix().amount_ == 255) {
         g2dSetColor(make_color((int)spr.get_mix().color_,
