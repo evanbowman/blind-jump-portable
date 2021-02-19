@@ -30,7 +30,6 @@ extern "C" {
 }
 
 
-//
 alignas(4) static u8 heap[2000000];
 
 void *UMM_MALLOC_CFG_HEAP_ADDR = &heap;
@@ -95,10 +94,6 @@ bool Platform::is_running() const
 {
     return ::is_running;
 }
-
-
-// FIXME!
-#include "../../../external/pngle/pngle.h"
 
 
 extern "C" {
@@ -282,7 +277,7 @@ struct TileMemory {
 };
 
 
-constexpr auto map_image_ram_capacity = 36;
+constexpr auto map_image_ram_capacity = 37;
 
 
 static TileMemory map0_image_ram[map_image_ram_capacity];
@@ -293,54 +288,43 @@ void Platform::load_sprite_texture(const char* name)
 {
     StringBuffer<64> str_name = name;
 
-    auto pngle = pngle_new();
-    if (pngle == nullptr) {
-        fatal("failed to create png loader context");
+    static const auto line_height = 32;
+    const auto line_width = (size_spritesheet / line_height) / 3;
+
+    if (size_spritesheet % line_height not_eq 0) {
+        fatal("Invalid image format. "
+              "Spritesheet images must be 32px in height.");
     }
 
-    pngle_set_draw_callback(pngle, [](pngle_t *pngle,
-                                      u32 x,
-                                      u32 y,
-                                      u32 w,
-                                      u32 h,
-                                      u8 rgba[4]) {
-        auto target_sprite = x / 32;
-        auto color = G2D_RGBA(rgba[0], rgba[1], rgba[2], rgba[3]);
+    for (int x = 0; x < line_width; ++x) {
+        for (int y = 0; y < line_height; ++y) {
+            u8 r = spritesheet[(x * 3) + (y * line_width * 3)];
+            u8 g = spritesheet[(x * 3) + 1 + (y * line_width * 3)];
+            u8 b = spritesheet[(x * 3) + 2 + (y * line_width * 3)];
 
-        if (rgba[0] == 0xFF and rgba[2] == 0xFF) {
-            color = G2D_RGBA(255, 0, 255, 0);
+            auto target_sprite = x / 32;
+            auto color = G2D_RGBA(r, g, b, 255);
+
+            if (r == 0xFF and b == 0xFF) {
+                color = G2D_RGBA(255, 0, 255, 0);
+            }
+
+            if (target_sprite >= sprite_image_ram_capacity) {
+                ::platform->fatal("sprite texture too large");
+            }
+
+            auto& spr = sprite_image_ram[target_sprite];
+
+            auto set_pixel = [&](int x, int y) {
+                spr.pixels_[x % 64 + y * 64] = color;
+            };
+
+            set_pixel((x * 2), (y * 2));
+            set_pixel((x * 2) + 1, (y * 2));
+            set_pixel((x * 2), (y * 2) + 1);
+            set_pixel((x * 2) + 1, (y * 2) + 1);
         }
-
-        if (target_sprite >= sprite_image_ram_capacity) {
-            ::platform->fatal("sprite texture too large");
-        }
-
-        auto& spr = sprite_image_ram[target_sprite];
-
-        auto set_pixel = [&](int x, int y) {
-            spr.pixels_[x % 64 + y * 64] = color;
-        };
-
-        set_pixel((x * 2), (y * 2));
-        set_pixel((x * 2) + 1, (y * 2));
-        set_pixel((x * 2), (y * 2) + 1);
-        set_pixel((x * 2) + 1, (y * 2) + 1);
-    });
-
-    int remaining = size_spritesheet;
-    auto buf = spritesheet;
-    while (remaining) {
-        auto status = pngle_feed(pngle, buf, remaining);
-        if (status == -1) {
-            StringBuffer<64> err("pngle error: ");
-            err += pngle_error(pngle);
-            fatal(err.c_str());
-        }
-        remaining -= status;
-        buf += status;
     }
-
-    pngle_destroy(pngle);
 }
 
 
@@ -349,60 +333,44 @@ void load_map_texture(Platform& pfrm,
                       const u8* src_data,
                       u32 src_size)
 {
-    auto pngle = pngle_new();
+    static const auto line_height = 24;
+    const auto line_width = (src_size / line_height) / 3;
 
-    if (pngle == nullptr) {
-        pfrm.fatal("failed to create png loader context");
+    if (src_size % line_height not_eq 0) {
+        pfrm.fatal("Invalid tile image format. "
+                   "Tileset images must be 24px in height.");
     }
 
-    pngle_set_user_data(pngle, dest);
+    for (int x = 0; x < line_width; ++x) {
+        for (int y = 0; y < line_height; ++y) {
+            u8 r = src_data[(x * 3) + (y * line_width * 3)];
+            u8 g = src_data[(x * 3) + 1 + (y * line_width * 3)];
+            u8 b = src_data[(x * 3) + 2 + (y * line_width * 3)];
 
-    pngle_set_draw_callback(pngle, [](pngle_t *pngle,
-                                      u32 x,
-                                      u32 y,
-                                      u32 w,
-                                      u32 h,
-                                      u8 rgba[4]) {
+            auto target_tile = x / 32;
+            auto color = G2D_RGBA(r, g, b, 255);
 
-        auto dest = (TileMemory*)pngle_get_user_data(pngle);
+            if (r == 0xFF and b == 0xFF) {
+                color = G2D_RGBA(255, 0, 255, 0);
+            }
 
-        auto target_tile = x / 32;
-        auto color = G2D_RGBA(rgba[0], rgba[1], rgba[2], rgba[3]);
+            if (target_tile >= map_image_ram_capacity) {
+                pfrm.fatal("map texture too large");
+            }
 
-        if (rgba[0] == 0xFF and rgba[2] == 0xFF) {
-            color = G2D_RGBA(255, 0, 255, 0);
+            auto& tile = dest[target_tile];
+
+            auto set_pixel = [&](int x, int y) {
+                tile.pixels_[x % 64 + y * 64] = color;
+            };
+
+            set_pixel((x * 2), (y * 2));
+            set_pixel((x * 2) + 1, (y * 2));
+            set_pixel((x * 2), (y * 2) + 1);
+            set_pixel((x * 2) + 1, (y * 2) + 1);
+
         }
-
-        if (target_tile >= map_image_ram_capacity) {
-            ::platform->fatal("tilemap texture too large");
-        }
-
-        auto& tile = dest[target_tile];
-
-        auto set_pixel = [&](int x, int y) {
-            tile.pixels_[x % 64 + y * 64] = color;
-        };
-
-        set_pixel((x * 2), (y * 2));
-        set_pixel((x * 2) + 1, (y * 2));
-        set_pixel((x * 2), (y * 2) + 1);
-        set_pixel((x * 2) + 1, (y * 2) + 1);
-    });
-
-    int remaining = src_size;
-    auto buf = src_data;
-    while (remaining) {
-        auto status = pngle_feed(pngle, buf, remaining);
-        if (status == -1) {
-            StringBuffer<64> err("pngle error: ");
-            err += pngle_error(pngle);
-            pfrm.fatal(err.c_str());
-        }
-        remaining -= status;
-        buf += status;
     }
-
-    pngle_destroy(pngle);
 }
 
 
