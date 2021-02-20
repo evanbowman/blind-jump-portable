@@ -92,6 +92,7 @@ extern "C" {
 #include "../../../build/psp/test_tilemap.c"
 #include "../../../build/psp/overlay.c"
 #include "../../../build/psp/tilesheet_top.c"
+#include "../../../build/psp/charset.c"
 }
 
 
@@ -310,6 +311,27 @@ static OverlayMemory overlay_image_ram[overlay_image_ram_capacity];
 ////////////////////////////////////////////////////////////////////////////////
 
 
+static g2dColor load_pixel(const u8* img_data,
+                           u32 img_size,
+                           int img_height,
+                           int x,
+                           int y)
+{
+    const auto line_width = (img_size / img_height) / 3;
+    u8 r = img_data[(x * 3) + (y * line_width * 3)];
+    u8 g = img_data[(x * 3) + 1 + (y * line_width * 3)];
+    u8 b = img_data[(x * 3) + 2 + (y * line_width * 3)];
+
+    auto pixel = G2D_RGBA(r, g, b, 255);
+
+    if (r == 0xFF and g == 0x00 and b == 0xFF) {
+        pixel = G2D_RGBA(255, 0, 255, 0);
+    }
+
+    return pixel;
+}
+
+
 void Platform::load_sprite_texture(const char* name)
 {
     StringBuffer<64> str_name = name;
@@ -324,16 +346,14 @@ void Platform::load_sprite_texture(const char* name)
 
     for (int x = 0; x < line_width; ++x) {
         for (int y = 0; y < line_height; ++y) {
-            u8 r = spritesheet[(x * 3) + (y * line_width * 3)];
-            u8 g = spritesheet[(x * 3) + 1 + (y * line_width * 3)];
-            u8 b = spritesheet[(x * 3) + 2 + (y * line_width * 3)];
+
+            auto color = load_pixel(spritesheet,
+                                    size_spritesheet,
+                                    line_height,
+                                    x,
+                                    y);
 
             auto target_sprite = x / 32;
-            auto color = G2D_RGBA(r, g, b, 255);
-
-            if (r == 0xFF and b == 0xFF) {
-                color = G2D_RGBA(255, 0, 255, 0);
-            }
 
             if (target_sprite >= sprite_image_ram_capacity) {
                 ::platform->fatal("sprite texture too large");
@@ -369,17 +389,14 @@ void load_map_texture(Platform& pfrm,
 
     for (int x = 0; x < line_width; ++x) {
         for (int y = 0; y < line_height; ++y) {
-            u8 r = src_data[(x * 3) + (y * line_width * 3)];
-            u8 g = src_data[(x * 3) + 1 + (y * line_width * 3)];
-            u8 b = src_data[(x * 3) + 2 + (y * line_width * 3)];
+
+            auto color = load_pixel(src_data,
+                                    src_size,
+                                    line_height,
+                                    x,
+                                    y);
 
             auto target_tile = x / 32;
-            auto color = G2D_RGBA(r, g, b, 255);
-
-            if (r == 0xFF and b == 0xFF) {
-                color = G2D_RGBA(255, 0, 255, 0);
-            }
-
             if (target_tile >= map_image_ram_capacity) {
                 pfrm.fatal("map texture too large");
             }
@@ -418,6 +435,48 @@ void Platform::load_tile1_texture(const char* name)
 }
 
 
+static bool glyph_mode;
+
+
+struct GlyphMapping {
+    utf8::Codepoint character_;
+
+    // -1 represents unassigned. Mapping a tile into memory sets the reference
+    //  count to zero. When a call to Platform::set_tile reduces the reference
+    //  count back to zero, the tile is once again considered to be unassigned,
+    //  and will be set to -1.
+    s16 reference_count_ = -1;
+
+    bool valid() const
+    {
+        return reference_count_ > -1;
+    }
+};
+
+
+static constexpr const auto glyph_start_offset = 1;
+static constexpr const auto glyph_mapping_count = 78;
+
+struct GlyphTable {
+    GlyphMapping mappings_[glyph_mapping_count];
+};
+
+
+static GlyphTable glyph_table;
+
+
+void Platform::enable_glyph_mode(bool enabled)
+{
+    if (enabled) {
+        for (auto& gm : ::glyph_table.mappings_) {
+            gm.character_ = 0;
+            gm.reference_count_ = -1;
+        }
+    }
+    glyph_mode = enabled;
+}
+
+
 void Platform::load_overlay_texture(const char* name)
 {
     StringBuffer<64> str_name = name;
@@ -432,16 +491,14 @@ void Platform::load_overlay_texture(const char* name)
 
     for (int x = 0; x < line_width; ++x) {
         for (int y = 0; y < line_height; ++y) {
-            u8 r = overlay_img[(x * 3) + (y * line_width * 3)];
-            u8 g = overlay_img[(x * 3) + 1 + (y * line_width * 3)];
-            u8 b = overlay_img[(x * 3) + 2 + (y * line_width * 3)];
+
+            auto color = load_pixel(overlay_img,
+                                    size_overlay_img,
+                                    line_height,
+                                    x,
+                                    y);
 
             auto target_overlay = x / 8;
-            auto color = G2D_RGBA(r, g, b, 255);
-
-            if (r == 0xFF and b == 0xFF) {
-                color = G2D_RGBA(255, 0, 255, 0);
-            }
 
             if (target_overlay >= overlay_image_ram_capacity) {
                 ::platform->fatal("Overlay texture too large");
@@ -457,6 +514,12 @@ void Platform::load_overlay_texture(const char* name)
             set_pixel((x * 2) + 1, (y * 2));
             set_pixel((x * 2), (y * 2) + 1);
             set_pixel((x * 2) + 1, (y * 2) + 1);
+        }
+    }
+
+    if (::glyph_mode) {
+        for (auto& gm : ::glyph_table.mappings_) {
+            gm.reference_count_ = -1;
         }
     }
 }
@@ -475,6 +538,58 @@ void Platform::fill_overlay(u16 TileDesc)
             overlay_tiles[x][y] = 0;
         }
     }
+
+    for (auto& gm : ::glyph_table.mappings_) {
+        gm.reference_count_ = -1;
+    }
+}
+
+
+static bool is_glyph(u16 t)
+{
+    return t >= glyph_start_offset and
+           t - glyph_start_offset < glyph_mapping_count;
+}
+
+
+static void set_overlay_tile(Platform& pfrm, int x, int y, u16 val)
+{
+    if (::glyph_mode) {
+        const auto old_tile = pfrm.get_tile(Layer::overlay, x, y);
+        if (old_tile not_eq val) {
+            if (is_glyph(old_tile)) {
+                auto& gm = ::glyph_table.mappings_[old_tile - glyph_start_offset];
+                if (gm.valid()) {
+                    gm.reference_count_ -= 1;
+
+                    if (gm.reference_count_ == 0) {
+                        gm.reference_count_ = -1;
+                        gm.character_ = 0;
+                    }
+                } else {
+                    error(pfrm,
+                          "existing tile is a glyph, but has no"
+                          " mapping table entry!");
+                }
+            }
+
+            if (is_glyph(val)) {
+                auto& gm =
+                    ::glyph_table.mappings_[val - glyph_start_offset];
+                if (not gm.valid()) {
+                    // Not clear exactly what to do here... Somehow we've
+                    // gotten into an erroneous state, but not a permanently
+                    // unrecoverable state (tile isn't valid, so it'll be
+                    // overwritten upon the next call to map_tile).
+                    warning(pfrm, "invalid assignment to glyph table");
+                    return;
+                }
+                gm.reference_count_++;
+            }
+        }
+    }
+
+    overlay_tiles[x][y] = val;
 }
 
 
@@ -488,7 +603,7 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
         if (val >= overlay_image_ram_capacity) {
             return;
         }
-        overlay_tiles[x][y] = val;
+        set_overlay_tile(*this, x, y, val);
         break;
 
     case Layer::map_1:
@@ -602,16 +717,58 @@ const char* Platform::load_file_contents(const char* folder,
 }
 
 
-void Platform::enable_glyph_mode(bool enabled)
-{
-    // ...
-}
-
-
 TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                              TextureCpMapper mapper)
 {
-    // TODO
+    if (not ::glyph_mode) {
+        return 111;
+    }
+
+    for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
+        auto& gm = ::glyph_table.mappings_[tile];
+        if (gm.valid() and gm.character_ == glyph) {
+            return glyph_start_offset + tile;
+        }
+    }
+
+    const auto mapping_info = mapper(glyph);
+
+    if (not mapping_info) {
+        return 111;
+    }
+
+    for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
+        auto& gm = ::glyph_table.mappings_[t];
+        if (not gm.valid()) {
+            gm.character_ = glyph;
+            gm.reference_count_ = 0;
+
+            const auto target_tile = t + glyph_start_offset;
+
+            for (int x = 0; x < 8; ++x) {
+                for (int y = 0; y < 8; ++y) {
+                    auto& overlay = overlay_image_ram[target_tile];
+
+                    auto color = load_pixel(charset_img,
+                                            size_charset_img,
+                                            8,
+                                            x + mapping_info->offset_ * 8,
+                                            y);
+
+                    auto set_pixel = [&](int x, int y) {
+                        overlay.pixels_[x % 16 + y * 16] = color;
+                    };
+
+                    set_pixel((x * 2), (y * 2));
+                    set_pixel((x * 2) + 1, (y * 2));
+                    set_pixel((x * 2), (y * 2) + 1);
+                    set_pixel((x * 2) + 1, (y * 2) + 1);
+                }
+            }
+
+            return target_tile;
+        }
+    }
     return 111;
 }
 
