@@ -812,7 +812,7 @@ void Platform::Screen::clear()
                            }
                            error(*::platform,
                                  "invalid texture swap enumeration");
-                           ::platform->fatal();
+                           ::platform->fatal("invalid texture swap enumeration");
                        }()
                                ->loadFromImage(image)) {
                 error(*::platform, "Failed to create texture");
@@ -1388,9 +1388,9 @@ auto Platform::RemoteConsole::readline() -> std::optional<Line>
 }
 
 
-void Platform::RemoteConsole::printline(const char* text)
+bool Platform::RemoteConsole::printline(const char* text)
 {
-    // TODO...
+    return false;
 }
 
 
@@ -1604,7 +1604,7 @@ void Platform::soft_exit()
 static const char* const save_file_name = "save.dat";
 
 
-bool Platform::write_save_data(const void* data, u32 length)
+bool Platform::write_save_data(const void* data, u32 length, u32 offset)
 {
     std::ofstream out(save_file_name,
                       std::ios_base::out | std::ios_base::binary);
@@ -1615,7 +1615,7 @@ bool Platform::write_save_data(const void* data, u32 length)
 }
 
 
-bool Platform::read_save_data(void* buffer, u32 data_length)
+bool Platform::read_save_data(void* buffer, u32 data_length, u32 offset)
 {
     std::ifstream in(save_file_name, std::ios_base::in | std::ios_base::binary);
 
@@ -1770,7 +1770,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
 }
 
 
-void Platform::fatal()
+void Platform::fatal(const char* msg)
 {
     exit(1);
 }

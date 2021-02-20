@@ -21,6 +21,7 @@
 #include <memory>
 #include "localization.hpp"
 #include <chrono>
+#include "graphics/overlay.hpp"
 
 
 extern "C" {
@@ -673,8 +674,8 @@ Platform::DeviceName Platform::device_name() const
 
 void Platform::fatal(const char* msg)
 {
-    pspDebugScreenInit();
-    pspDebugScreenPrintf(msg);
+    ::is_running = false;
+    sceKernelExitGame();
     while (true) ;
 }
 
@@ -966,7 +967,6 @@ void Platform::Screen::pixelate(u8 amount,
                                 bool include_background,
                                 bool include_sprites)
 {
-    // TODO
 }
 
 
@@ -1016,7 +1016,6 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
         g2dSetRotation(360 * ((float)rot / std::numeric_limits<Sprite::Rotation>::max()));
     } else {
         g2dSetCoordMode(G2D_UP_LEFT);
-        g2dSetRotation(0);
     }
 
     abs_position.x *= 2.f;
@@ -1047,8 +1046,6 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
         // Glib2d has a bug where you have to set the alpha twice.
         g2dSetAlpha(128);
         g2dSetAlpha(128);
-    } else {
-        g2dResetAlpha();
     }
     if (spr.get_flip().x or spr.get_flip().y) {
         Float x_scale = 1.f;
@@ -1083,12 +1080,9 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
         }
 
         g2dSetScale(x_scale, y_scale);
-    } else {
-        g2dResetScale();
     }
     g2dAdd();
     g2dEnd();
-    g2dResetCrop();
 }
 
 
