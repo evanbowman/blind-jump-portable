@@ -21,8 +21,5 @@ def convert_img(name):
                 raw.write(struct.pack("=B", b))
 
 
-convert_img("test")
-convert_img("test_tilemap")
-convert_img("test_overlay")
-convert_img("tilesheet_top")
-convert_img("charset")
+if __name__ == "__main__":
+    convert_img(sys.argv[1])

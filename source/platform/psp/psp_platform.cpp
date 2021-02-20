@@ -88,11 +88,22 @@ bool Platform::is_running() const
 
 extern "C" {
 // FIXME!
-#include "../../../build/psp/spritesheet.c"
-#include "../../../build/psp/test_tilemap.c"
-#include "../../../build/psp/overlay.c"
-#include "../../../build/psp/tilesheet_top.c"
-#include "../../../build/psp/charset.c"
+#include "../../../build/psp/includes.img.h"
+}
+
+
+#include "../../../build/psp/stub.hpp"
+
+
+const ImageData* find_image(const char* name)
+{
+    StringBuffer<64> str_name = name;
+    for (auto& entry : image_table) {
+        if (str_name == entry.name_) {
+            return &entry;
+        }
+    }
+    return nullptr;
 }
 
 
@@ -280,6 +291,12 @@ constexpr auto overlay_image_ram_capacity = 504;
 static OverlayMemory overlay_image_ram[overlay_image_ram_capacity];
 
 
+constexpr auto charset_image_ram_capacity = 300;
+
+
+static OverlayMemory charset_image_ram[charset_image_ram_capacity];
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Image Format:
@@ -334,12 +351,15 @@ static g2dColor load_pixel(const u8* img_data,
 
 void Platform::load_sprite_texture(const char* name)
 {
-    StringBuffer<64> str_name = name;
+    auto img_data = find_image(name);
+    if (not img_data) {
+        return;
+    }
 
     static const auto line_height = 32;
-    const auto line_width = (size_spritesheet / line_height) / 3;
+    const auto line_width = (img_data->size_ / line_height) / 3;
 
-    if (size_spritesheet % line_height not_eq 0) {
+    if (img_data->size_ % line_height not_eq 0) {
         fatal("Invalid image format. "
               "Spritesheet images must be 32px in height.");
     }
@@ -347,8 +367,8 @@ void Platform::load_sprite_texture(const char* name)
     for (int x = 0; x < line_width; ++x) {
         for (int y = 0; y < line_height; ++y) {
 
-            auto color = load_pixel(spritesheet,
-                                    size_spritesheet,
+            auto color = load_pixel(img_data->data_,
+                                    img_data->size_,
                                     line_height,
                                     x,
                                     y);
@@ -417,62 +437,46 @@ void load_map_texture(Platform& pfrm,
 }
 
 
+static g2dColor clear_color;
+
+
 void Platform::load_tile0_texture(const char* name)
 {
+    auto img_data = find_image(name);
+    if (not img_data) {
+        return;
+    }
+
     load_map_texture(*this,
                      map0_image_ram,
-                     test_tilemap,
-                     size_test_tilemap);
+                     img_data->data_,
+                     img_data->size_);
+
+    const auto tile_block = 60 / 12;
+    const auto block_offset = 60 % 12;
+    clear_color = map0_image_ram[tile_block].pixels_[0];
 }
 
 
 void Platform::load_tile1_texture(const char* name)
 {
+    auto img_data = find_image(name);
+    if (not img_data) {
+        return;
+    }
+
     load_map_texture(*this,
                      map1_image_ram,
-                     tilesheet_top_img,
-                     size_tilesheet_top_img);
+                     img_data->data_,
+                     img_data->size_);
 }
 
 
 static bool glyph_mode;
 
 
-struct GlyphMapping {
-    utf8::Codepoint character_;
-
-    // -1 represents unassigned. Mapping a tile into memory sets the reference
-    //  count to zero. When a call to Platform::set_tile reduces the reference
-    //  count back to zero, the tile is once again considered to be unassigned,
-    //  and will be set to -1.
-    s16 reference_count_ = -1;
-
-    bool valid() const
-    {
-        return reference_count_ > -1;
-    }
-};
-
-
-static constexpr const auto glyph_start_offset = 1;
-static constexpr const auto glyph_mapping_count = 78;
-
-struct GlyphTable {
-    GlyphMapping mappings_[glyph_mapping_count];
-};
-
-
-static GlyphTable glyph_table;
-
-
 void Platform::enable_glyph_mode(bool enabled)
 {
-    if (enabled) {
-        for (auto& gm : ::glyph_table.mappings_) {
-            gm.character_ = 0;
-            gm.reference_count_ = -1;
-        }
-    }
     glyph_mode = enabled;
 }
 
@@ -517,11 +521,35 @@ void Platform::load_overlay_texture(const char* name)
         }
     }
 
-    if (::glyph_mode) {
-        for (auto& gm : ::glyph_table.mappings_) {
-            gm.reference_count_ = -1;
+    const auto charset_line_width = (size_charset_img / line_height) / 3;
+    for (int x = 0; x < charset_line_width; ++x) {
+        for (int y = 0; y < line_height; ++y) {
+
+            auto color = load_pixel(charset_img,
+                                    size_charset_img,
+                                    line_height,
+                                    x,
+                                    y);
+
+            auto target_charset = x / 8;
+
+            if (target_charset >= charset_image_ram_capacity) {
+                ::platform->fatal("Charset texture too large");
+            }
+
+            auto& charset = charset_image_ram[target_charset];
+
+            auto set_pixel = [&](int x, int y) {
+                charset.pixels_[x % 16 + y * 16] = color;
+            };
+
+            set_pixel((x * 2), (y * 2));
+            set_pixel((x * 2) + 1, (y * 2));
+            set_pixel((x * 2), (y * 2) + 1);
+            set_pixel((x * 2) + 1, (y * 2) + 1);
         }
     }
+
 }
 
 
@@ -538,57 +566,14 @@ void Platform::fill_overlay(u16 TileDesc)
             overlay_tiles[x][y] = 0;
         }
     }
-
-    for (auto& gm : ::glyph_table.mappings_) {
-        gm.reference_count_ = -1;
-    }
 }
 
 
-static bool is_glyph(u16 t)
-{
-    return t >= glyph_start_offset and
-           t - glyph_start_offset < glyph_mapping_count;
-}
+const auto glyph_start_tile = 500;
 
 
 static void set_overlay_tile(Platform& pfrm, int x, int y, u16 val)
 {
-    if (::glyph_mode) {
-        const auto old_tile = pfrm.get_tile(Layer::overlay, x, y);
-        if (old_tile not_eq val) {
-            if (is_glyph(old_tile)) {
-                auto& gm = ::glyph_table.mappings_[old_tile - glyph_start_offset];
-                if (gm.valid()) {
-                    gm.reference_count_ -= 1;
-
-                    if (gm.reference_count_ == 0) {
-                        gm.reference_count_ = -1;
-                        gm.character_ = 0;
-                    }
-                } else {
-                    error(pfrm,
-                          "existing tile is a glyph, but has no"
-                          " mapping table entry!");
-                }
-            }
-
-            if (is_glyph(val)) {
-                auto& gm =
-                    ::glyph_table.mappings_[val - glyph_start_offset];
-                if (not gm.valid()) {
-                    // Not clear exactly what to do here... Somehow we've
-                    // gotten into an erroneous state, but not a permanently
-                    // unrecoverable state (tile isn't valid, so it'll be
-                    // overwritten upon the next call to map_tile).
-                    warning(pfrm, "invalid assignment to glyph table");
-                    return;
-                }
-                gm.reference_count_++;
-            }
-        }
-    }
-
     overlay_tiles[x][y] = val;
 }
 
@@ -600,7 +585,7 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
         if (x > 31 or y > 31) {
             return;
         }
-        if (val >= overlay_image_ram_capacity) {
+        if (val >= overlay_image_ram_capacity and val < glyph_start_tile) {
             return;
         }
         set_overlay_tile(*this, x, y, val);
@@ -724,52 +709,13 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
         return 111;
     }
 
-    for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
-        auto& gm = ::glyph_table.mappings_[tile];
-        if (gm.valid() and gm.character_ == glyph) {
-            return glyph_start_offset + tile;
-        }
-    }
-
     const auto mapping_info = mapper(glyph);
 
     if (not mapping_info) {
         return 111;
     }
 
-    for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
-        auto& gm = ::glyph_table.mappings_[t];
-        if (not gm.valid()) {
-            gm.character_ = glyph;
-            gm.reference_count_ = 0;
-
-            const auto target_tile = t + glyph_start_offset;
-
-            for (int x = 0; x < 8; ++x) {
-                for (int y = 0; y < 8; ++y) {
-                    auto& overlay = overlay_image_ram[target_tile];
-
-                    auto color = load_pixel(charset_img,
-                                            size_charset_img,
-                                            8,
-                                            x + mapping_info->offset_ * 8,
-                                            y);
-
-                    auto set_pixel = [&](int x, int y) {
-                        overlay.pixels_[x % 16 + y * 16] = color;
-                    };
-
-                    set_pixel((x * 2), (y * 2));
-                    set_pixel((x * 2) + 1, (y * 2));
-                    set_pixel((x * 2), (y * 2) + 1);
-                    set_pixel((x * 2) + 1, (y * 2) + 1);
-                }
-            }
-
-            return target_tile;
-        }
-    }
-    return 111;
+    return glyph_start_tile + mapping_info->offset_;
 }
 
 
@@ -915,23 +861,6 @@ Platform::DeltaClock::~DeltaClock()
 }
 
 
-void Platform::sleep(Frame frames)
-{
-    u64 sleep_start = 0;
-    sceRtcGetCurrentTick(&sleep_start);
-
-    while (frames) {
-        --frames;
-        sceDisplayWaitVblankStart();
-    }
-
-    u64 sleep_end = 0;
-    sceRtcGetCurrentTick(&sleep_end);
-
-    ::slept_ticks += sleep_end - sleep_start;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Screen
 ////////////////////////////////////////////////////////////////////////////////
@@ -953,7 +882,7 @@ Vec2<u32> Platform::Screen::size() const
 
 void Platform::Screen::clear()
 {
-    g2dClear(G2D_RGBA(80, 95, 150, 255));
+    g2dClear(::clear_color);
 
     for (auto it = task_queue_.begin(); it not_eq task_queue_.end();) {
         (*it)->run();
@@ -1109,10 +1038,10 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
     }
     if (spr.get_mix().color_ not_eq ColorConstant::null and
         spr.get_mix().amount_ == 255) {
-        g2dSetColor(make_color((int)spr.get_mix().color_,
-                               spr.get_mix().amount_));
+        // g2dSetColor(make_color((int)spr.get_mix().color_,
+        //                        spr.get_mix().amount_));
     } else {
-        g2dResetColor();
+        // g2dResetColor();
     }
     if (spr.get_alpha() == Sprite::Alpha::translucent) {
         // Glib2d has a bug where you have to set the alpha twice.
@@ -1174,40 +1103,50 @@ static void display_map(const Vec2<Float>& view_offset)
 
     const auto fixed_offset = view_offset.cast<s32>();
 
-    for (int x = 0; x < 16; ++x) {
-        const auto x_target = x * 64 - (fixed_offset.x);
-        if (x_target < -64 or x_target > 480) {
-            continue;
-        }
+    auto disp_layer = [&](u8 map_tiles[16][20],
+                          TileMemory map_image_ram[map_image_ram_capacity]) {
 
-        for (int y = 0; y < 20; ++y) {
-            const auto y_target = y * 48 - (fixed_offset.y);
-            if (y_target < -48 or y_target > 272) {
+        // Because many tiles will be repeated, we are going to batch the draws
+        // for similar tiles.
+
+        const int tiles_screen_capacity_heuristic = 48;
+        Buffer<Vec2<int>, tiles_screen_capacity_heuristic>
+            disp_buffers[map_image_ram_capacity];
+
+        for (int x = 0; x < 16; ++x) {
+            const auto x_target = x * 64 - (fixed_offset.x);
+            if (x_target < -64 or x_target > 480) {
                 continue;
             }
 
-            const auto tile = map0_tiles[x][y];
+            for (int y = 0; y < 20; ++y) {
+                const auto y_target = y * 48 - (fixed_offset.y);
+                if (y_target < -48 or y_target > 272) {
+                    continue;
+                }
 
-            if (tile not_eq 0) { // Don't bother to draw empty tiles.
-                temp.data = map0_image_ram[tile].pixels_;
-                g2dBeginRects(&temp);
-                g2dSetCoordMode(G2D_UP_LEFT);
-                g2dSetCoordXY(x_target, y_target);
-                g2dAdd();
-                g2dEnd();
-            }
-
-            const auto tile1 = map1_tiles[x][y];
-            if (tile1 not_eq 0) {
-                temp.data = map1_image_ram[tile1].pixels_;
-                g2dBeginRects(&temp);
-                g2dSetCoordMode(G2D_UP_LEFT);
-                g2dSetCoordXY(x_target, y_target);
-                g2dAdd();
-                g2dEnd();
+                const auto tile = map_tiles[x][y];
+                if (tile not_eq 0) {
+                    disp_buffers[tile].push_back(Vec2<int>{x_target, y_target});
+                }
             }
         }
-    }
+
+        for (int i = 0; i < map_image_ram_capacity; ++i) {
+            auto& buffer = disp_buffers[i];
+            temp.data = map_image_ram[i].pixels_;
+            g2dBeginRects(&temp);
+            g2dSetCoordMode(G2D_UP_LEFT);
+            for (auto& pos : buffer) {
+                g2dSetCoordXY(pos.x, pos.y);
+                g2dAdd();
+            }
+            g2dEnd();
+        }
+    };
+
+    disp_layer(map0_tiles, map0_image_ram);
+    disp_layer(map1_tiles, map1_image_ram);
 }
 
 
@@ -1225,7 +1164,11 @@ static void display_overlay()
             const auto tile = overlay_tiles[x][y];
 
             if (tile) {
-                temp.data = overlay_image_ram[tile].pixels_;
+                if (tile >= glyph_start_tile) {
+                    temp.data = charset_image_ram[tile - glyph_start_tile].pixels_;
+                } else {
+                    temp.data = overlay_image_ram[tile].pixels_;
+                }
                 g2dBeginRects(&temp);
                 g2dSetCoordMode(G2D_UP_LEFT);
                 g2dSetCoordXY(x * 16, y * 16);
@@ -1245,6 +1188,9 @@ static void display_background(const Vec2<Float>& view_offset)
     temp.w = 16;
     temp.h = 16;
     temp.swizzled = false;
+
+    Buffer<Vec2<int>, 32 * 32> star_buffer_1;
+    Buffer<Vec2<int>, 32 * 32> star_buffer_2;
 
     const auto fixed_offset = view_offset.cast<s32>();
 
@@ -1266,7 +1212,11 @@ static void display_background(const Vec2<Float>& view_offset)
 
             const auto tile = background_tiles[x][y];
 
-            if (tile not_eq 60) {
+            if (tile == 70) {
+                star_buffer_1.push_back(Vec2<int>{x_target, y_target});
+            } else if (tile == 71) {
+                star_buffer_2.push_back(Vec2<int>{x_target, y_target});
+            } else if (tile not_eq 60) {
                 const auto tile_block = tile / 12;
                 const auto block_offset = tile % 12;
                 const int sub_x = block_offset % 4;
@@ -1282,6 +1232,50 @@ static void display_background(const Vec2<Float>& view_offset)
             }
         }
     }
+
+    if (not star_buffer_1.empty()) {
+        const auto tile_block = 70 / 12;
+        const auto block_offset = 70 % 12;
+        const int sub_x = block_offset % 4;
+        const int sub_y = block_offset / 4;
+
+        temp.data = map0_image_ram[tile_block].pixels_;
+
+        g2dBeginRects(&temp);
+        g2dSetCoordMode(G2D_UP_LEFT);
+
+        g2dSetCropXY(sub_x * 16, sub_y * 16);
+        g2dSetCropWH(16, 16);
+
+        for (auto& pos : star_buffer_1) {
+            g2dSetCoordXY(pos.x, pos.y);
+            g2dAdd();
+        }
+
+        g2dEnd();
+    }
+
+    if (not star_buffer_2.empty()) {
+        const auto tile_block = 71 / 12;
+        const auto block_offset = 71 % 12;
+        const int sub_x = block_offset % 4;
+        const int sub_y = block_offset / 4;
+
+        temp.data = map0_image_ram[tile_block].pixels_;
+
+        g2dBeginRects(&temp);
+        g2dSetCoordMode(G2D_UP_LEFT);
+
+        g2dSetCropXY(sub_x * 16, sub_y * 16);
+        g2dSetCropWH(16, 16);
+
+        for (auto& pos : star_buffer_2) {
+            g2dSetCoordXY(pos.x, pos.y);
+            g2dAdd();
+        }
+
+        g2dEnd();
+    }
 }
 
 
@@ -1292,24 +1286,23 @@ static void display_fade()
     }
 
     g2dTexture temp;
-    temp.tw = 8;
-    temp.th = 8;
-    temp.h = 8;
-    temp.w = 8;
-    temp.swizzled = true; // I mean, it's just a solid-colored rectangle.
+    temp.tw = fade_rect_side_length;
+    temp.th = fade_rect_side_length;
+    temp.h = fade_rect_side_length;
+    temp.w = fade_rect_side_length;
+    temp.swizzled = false;
     temp.data = fade_rect;
 
     g2dBeginRects(&temp);
     g2dSetCoordMode(G2D_UP_LEFT);
-    g2dSetCoordXY(0, 0);
 
+    for (int x = 0; x < (480 / fade_rect_side_length); ++x) {
+        for (int y = 0; y < (272 / fade_rect_side_length) + fade_rect_side_length; ++y) {
+            g2dSetCoordXY(x * 32, y * 32);
+            g2dAdd();
+        }
+    }
 
-    g2dSetScale((480 * 4) / Float(fade_rect_side_length),
-                (272 * 4) / Float(fade_rect_side_length));
-
-    // g2dSetAlpha(fade_amount * 255);
-    // g2dSetAlpha(fade_amount * 255);
-    g2dAdd();
     g2dEnd();
 
 }
@@ -1507,4 +1500,38 @@ void Platform::Keyboard::poll()
         }
         ::missed_keys.reset();
     }
+}
+
+
+void Platform::sleep(Frame frames)
+{
+    u64 sleep_start = 0;
+    sceRtcGetCurrentTick(&sleep_start);
+
+    Keyboard temp_kb;
+
+    const auto start_keys = keyboard_.dump_state();
+
+    while (frames) {
+        temp_kb.poll();
+        const auto current_keys = temp_kb.dump_state();
+
+        for (int i = 0; i < (int)Key::count; ++i) {
+            if (start_keys[i] not_eq current_keys[i] and current_keys[i]) {
+                if (not ::missed_keys) {
+                    ::missed_keys.emplace();
+                    ::missed_keys->clear();
+                }
+                missed_keys->set(i, true);
+            }
+        }
+
+        --frames;
+        sceDisplayWaitVblankStart();
+    }
+
+    u64 sleep_end = 0;
+    sceRtcGetCurrentTick(&sleep_end);
+
+    ::slept_ticks += sleep_end - sleep_start;
 }

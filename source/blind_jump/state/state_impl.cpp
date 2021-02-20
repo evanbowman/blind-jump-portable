@@ -699,7 +699,7 @@ StatePtr State::initial(Platform& pfrm, Game& game)
 
     // return state_pool().create<TitleScreenState>();
     pfrm.enable_glyph_mode(true);
-    return state_pool().create<NewLevelState>(1);
+    return state_pool().create<NewLevelState>(0);
     // }
 
     // game.persistent_data().displayed_health_warning_ = true;
