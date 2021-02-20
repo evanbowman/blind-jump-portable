@@ -268,6 +268,15 @@ constexpr auto sprite_image_ram_capacity = 200;
 
 static SpriteMemory sprite_image_ram[sprite_image_ram_capacity];
 
+// Unfortunately, the PSP does not support shaders. For some of the palette
+// effects that we want to support, we need to be able to blend any sprite with
+// an arbitrary color. So when we load a spritesheet, we mask out each sprite
+// texture, and replace all of the pixels with solid white. Then, when drawing,
+// we draw the regular sprite, then push the white mask, blended with a color,
+// and alpha-blended with the underlying sprite. It's complicated and uses tons
+// of extra memory, but at least it looks pretty.
+static SpriteMemory sprite_image_mask[sprite_image_ram_capacity];
+
 
 struct TileMemory {
     alignas(16) g2dColor pixels_[64 * 64];
@@ -390,6 +399,24 @@ void Platform::load_sprite_texture(const char* name)
             set_pixel((x * 2) + 1, (y * 2));
             set_pixel((x * 2), (y * 2) + 1);
             set_pixel((x * 2) + 1, (y * 2) + 1);
+
+            auto& mask = sprite_image_mask[target_sprite];
+
+            auto set_mask_pixel = [&](int x, int y) {
+                if (G2D_GET_R(color) == 0xFF and
+                    G2D_GET_G(color) == 0x00 and
+                    G2D_GET_B(color) == 0xFF) {
+                    // Our pixel is not part of the mask.
+                    mask.pixels_[x % 64 + y * 64] = color;
+                } else {
+                    mask.pixels_[x % 64 + y * 64] = g2dColors::WHITE;
+                }
+            };
+
+            set_mask_pixel((x * 2), (y * 2));
+            set_mask_pixel((x * 2) + 1, (y * 2));
+            set_mask_pixel((x * 2), (y * 2) + 1);
+            set_mask_pixel((x * 2) + 1, (y * 2) + 1);
         }
     }
 }
@@ -970,30 +997,10 @@ void Platform::Screen::pixelate(u8 amount,
 }
 
 
-static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
+static void set_sprite_params(const Platform::Screen& screen,
+                              const Sprite& spr,
+                              int width)
 {
-    if (spr.get_alpha() == Sprite::Alpha::transparent) {
-        return;
-    }
-
-    g2dTexture temp;
-    temp.tw = 64;
-    temp.th = 64;
-    temp.h = 64;
-    temp.swizzled = false;
-
-    int offset = 0;
-    int width = 64;
-
-    if (spr.get_size() == Sprite::Size::w32_h32) {
-        temp.data = sprite_image_ram[spr.get_texture_index()].pixels_;
-    } else {
-        width = 32;
-        temp.data = sprite_image_ram[spr.get_texture_index() / 2].pixels_;
-    }
-
-    temp.w = width;
-
     const auto view_center = screen.get_view().get_center();
 
     const auto pos = spr.get_position() - spr.get_origin().cast<Float>();
@@ -1008,7 +1015,6 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
         abs_position.y += 32;
     }
 
-    g2dBeginRects(&temp);
     if (auto rot = spr.get_rotation()) {
         g2dSetCoordMode(G2D_CENTER);
         abs_position.x += width / 4;
@@ -1034,13 +1040,6 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
             g2dSetCropXY(0, 0);
             g2dSetCropWH(32, 64);
         }
-    }
-    if (spr.get_mix().color_ not_eq ColorConstant::null and
-        spr.get_mix().amount_ == 255) {
-        // g2dSetColor(make_color((int)spr.get_mix().color_,
-        //                        spr.get_mix().amount_));
-    } else {
-        // g2dResetColor();
     }
     if (spr.get_alpha() == Sprite::Alpha::translucent) {
         // Glib2d has a bug where you have to set the alpha twice.
@@ -1081,8 +1080,64 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
 
         g2dSetScale(x_scale, y_scale);
     }
-    g2dAdd();
-    g2dEnd();
+}
+
+
+static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
+{
+    if (spr.get_alpha() == Sprite::Alpha::transparent) {
+        return;
+    }
+
+    g2dTexture temp;
+    temp.tw = 64;
+    temp.th = 64;
+    temp.h = 64;
+    temp.swizzled = false;
+
+    int width = 64;
+
+    if (spr.get_size() == Sprite::Size::w32_h32) {
+        temp.data = sprite_image_ram[spr.get_texture_index()].pixels_;
+    } else {
+        width = 32;
+        temp.data = sprite_image_ram[spr.get_texture_index() / 2].pixels_;
+    }
+
+    temp.w = width;
+
+    if (not (spr.get_mix().color_ not_eq ColorConstant::null and
+             spr.get_mix().amount_ == 255)) {
+
+        g2dBeginRects(&temp);
+
+        set_sprite_params(screen, spr, width);
+
+        g2dAdd();
+        g2dEnd();
+    }
+
+    if (spr.get_mix().color_ not_eq ColorConstant::null) {
+
+        if (spr.get_size() == Sprite::Size::w32_h32) {
+            temp.data = sprite_image_mask[spr.get_texture_index()].pixels_;
+        } else {
+            width = 32;
+            temp.data = sprite_image_mask[spr.get_texture_index() / 2].pixels_;
+        }
+
+        g2dBeginRects(&temp);
+
+        set_sprite_params(screen, spr, width);
+
+        g2dSetColor(make_color((int)spr.get_mix().color_, 255));
+
+        g2dSetAlpha(spr.get_mix().amount_);
+        g2dSetAlpha(spr.get_mix().amount_);
+
+        g2dAdd();
+        g2dEnd();
+    }
 }
 
 
