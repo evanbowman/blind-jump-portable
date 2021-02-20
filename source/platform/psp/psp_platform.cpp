@@ -1019,27 +1019,30 @@ static void display_overlay()
 
 static void display_background()
 {
-    g2dTexture temp;
-    temp.tw = 16;
-    temp.th = 16;
-    temp.w = 16;
-    temp.h = 16;
-    temp.swizzled = false;
+    // g2dTexture temp;
+    // temp.tw = 64;
+    // temp.th = 64;
+    // temp.w = 16;
+    // temp.h = 16;
+    // temp.swizzled = false;
 
-    for (int x = 0; x < 32; ++x) {
-        for (int y = 0; y < 32; ++y) {
-            const auto tile = background_tiles[x][y];
+    // for (int x = 0; x < 32; ++x) {
+    //     for (int y = 0; y < 32; ++y) {
+    //         const auto tile = background_tiles[x][y];
 
-            if (tile) {
-                // temp.data = overlay_image_ram[tile].pixels_;
-                // g2dBeginRects(&temp);
-                // g2dSetCoordMode(G2D_UP_LEFT);
-                // g2dSetCoordXY(x * 16, y * 16);
-                // g2dAdd();
-                // g2dEnd();
-            }
-        }
-    }
+    //         if (tile) {
+    //             const auto tile_block = tile / 12;
+    //             temp.data = map0_image_ram[tile_block].pixels_;
+    //             g2dBeginRects(&temp);
+    //             g2dSetCoordMode(G2D_UP_LEFT);
+    //             g2dSetCoordXY(x * 16, y * 16);
+    //             g2dSetCropXY(0, 0);
+    //             g2dSetCropWH(16, 16);
+    //             g2dAdd();
+    //             g2dEnd();
+    //         }
+    //     }
+    // }
 }
 
 
@@ -1219,8 +1222,8 @@ void Platform::Keyboard::poll()
     states_[int(Key::left)] = buttonInput.Buttons & PSP_CTRL_LEFT;
     states_[int(Key::down)] =  buttonInput.Buttons & PSP_CTRL_DOWN;
     states_[int(Key::up)] = buttonInput.Buttons & PSP_CTRL_UP;
-    states_[int(Key::alt_1)] = buttonInput.Buttons & PSP_CTRL_RTRIGGER;
-    states_[int(Key::alt_2)] = buttonInput.Buttons & PSP_CTRL_LTRIGGER;
+    states_[int(Key::alt_1)] = buttonInput.Buttons & PSP_CTRL_LTRIGGER;
+    states_[int(Key::alt_2)] = buttonInput.Buttons & PSP_CTRL_RTRIGGER;
     states_[int(Key::action_1)] = buttonInput.Buttons & PSP_CTRL_CROSS;
     states_[int(Key::action_2)] = buttonInput.Buttons & PSP_CTRL_CIRCLE;
 
