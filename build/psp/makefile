@@ -116,7 +116,7 @@ CFLAGS = -Os -G0 -g3 -mpreferred-stack-boundary=4 -ffast-math -gdwarf-2
 CXXFLAGS = $(CFLAGS) -std=c++17 -fno-exceptions -I$(SRC) -D__PSP__
 ASFLAGS = $(CFLAGS)
 
-LIBS = -lstdc++ -lpspgum -lpspgu -lpng -ljpeg -lz -lm  -lpspvram -lpspusb -lpsputility -lpspusbcam -lpspjpeg
+LIBS = -lstdc++ -lpspgum -lpspgu -lpng -ljpeg -lz -lm  -lpspvram -lpsprtc -lpspusb -lpsputility -lpspusbcam -lpspjpeg
 
 # PSP Stuff
 BUILD_PRX = 1

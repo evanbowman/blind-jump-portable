@@ -12,7 +12,7 @@
 #include <pspctrl.h>
 #include <pspdebug.h>
 #include <pspkernel.h>
-#include <pspsystimer.h>
+#include <psprtc.h>
 #include <pspdisplay.h>
 #include <pspctrl.h>
 #include <pspgu.h>
@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <memory>
 #include "localization.hpp"
+#include <chrono>
 
 
 extern "C" {
@@ -100,6 +101,7 @@ Platform::Platform()
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+
 }
 
 
@@ -172,15 +174,6 @@ void Platform::feed_watchdog()
 
 Platform::~Platform()
 {
-}
-
-
-void Platform::sleep(Frame frames)
-{
-    while (frames) {
-        --frames;
-        sceDisplayWaitVblankStart();
-    }
 }
 
 
@@ -737,20 +730,48 @@ Platform::NetworkPeer::~NetworkPeer()
 ////////////////////////////////////////////////////////////////////////////////
 
 
+static u64 last_clock;
+static u32 slept_ticks;
+
+
 Platform::DeltaClock::DeltaClock()
 {
+    sceRtcGetCurrentTick(&last_clock);
 }
 
 
 Microseconds Platform::DeltaClock::reset()
 {
-    // FIXME
-    return (Float(1) / 60) * 1000000;
+    const auto prev = ::last_clock;
+    sceRtcGetCurrentTick(&::last_clock);
+
+    const auto result = (::last_clock - prev) - slept_ticks;
+
+    ::slept_ticks = 0;
+
+    return result;
 }
 
 
 Platform::DeltaClock::~DeltaClock()
 {
+}
+
+
+void Platform::sleep(Frame frames)
+{
+    u64 sleep_start = 0;
+    sceRtcGetCurrentTick(&sleep_start);
+
+    while (frames) {
+        --frames;
+        sceDisplayWaitVblankStart();
+    }
+
+    u64 sleep_end = 0;
+    sceRtcGetCurrentTick(&sleep_end);
+
+    ::slept_ticks += sleep_end - sleep_start;
 }
 
 
@@ -798,13 +819,59 @@ void Platform::Screen::draw(const Sprite& spr)
 }
 
 
-void Platform::Screen::fade(Float amount,
-                            ColorConstant,
-                            std::optional<ColorConstant>,
-                            bool,
-                            bool)
+static g2dColor make_color(int color_hex, u8 alpha)
 {
-    // TODO
+    const auto r = (color_hex & 0xFF0000) >> 16;
+    const auto g = (color_hex & 0x00FF00) >> 8;
+    const auto b = (color_hex & 0x0000FF);
+
+    return G2D_RGBA(r, g, b, alpha);
+}
+
+
+static bool fade_include_sprites;
+static bool fade_include_overlay;
+static float fade_amount;
+static g2dColor fade_color;
+
+const int fade_rect_side_length = 32;
+alignas(16) g2dColor fade_rect[fade_rect_side_length * fade_rect_side_length];
+
+
+void Platform::Screen::fade(Float amount,
+                            ColorConstant k,
+                            std::optional<ColorConstant> base,
+                            bool include_sprites,
+                            bool include_overlay)
+{
+    fade_include_sprites = include_sprites;
+    fade_include_overlay = include_overlay;
+    fade_amount = amount;
+    fade_color = make_color((int)k, amount * 255);
+
+    if (base) {
+        fade_color = make_color((int)k, 255);
+        const auto base_color = make_color((int)*base, 255);
+
+        fade_color =
+            G2D_RGBA(interpolate(G2D_GET_R(fade_color),
+                                 G2D_GET_R(base_color),
+                                 amount),
+                     interpolate(G2D_GET_G(fade_color),
+                                 G2D_GET_G(base_color),
+                                 amount),
+                     interpolate(G2D_GET_B(fade_color),
+                                 G2D_GET_B(base_color),
+                                 amount),
+                     255);
+
+    }
+
+    for (int i = 0; i < fade_rect_side_length; ++i) {
+        for (int j = 0; j < fade_rect_side_length; ++j) {
+            fade_rect[i + j * fade_rect_side_length] = fade_color;
+        }
+    }
 }
 
 
@@ -814,16 +881,6 @@ void Platform::Screen::pixelate(u8 amount,
                                 bool include_sprites)
 {
     // TODO
-}
-
-
-static g2dColor make_color(int color_hex, u8 alpha)
-{
-    const auto r = (color_hex & 0xFF0000) >> 16;
-    const auto g = (color_hex & 0x00FF00) >> 8;
-    const auto b = (color_hex & 0x0000FF);
-
-    return G2D_RGBA(r, g, b, alpha);
 }
 
 
@@ -879,7 +936,11 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
     abs_position.x *= 2.f;
     abs_position.y *= 2.f;
 
-    g2dSetCoordXY(abs_position.x, abs_position.y);
+    // Unless you want lots of graphical artifacts, better to constrain your
+    // graphics to pixel boundaries.
+    auto integer_pos = abs_position.cast<s32>();
+
+    g2dSetCoordXY(integer_pos.x, integer_pos.y);
     if (spr.get_size() not_eq Sprite::Size::w32_h32) {
         if (spr.get_texture_index() % 2) {
             g2dSetCropXY(32, 0);
@@ -897,9 +958,11 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
         g2dResetColor();
     }
     if (spr.get_alpha() == Sprite::Alpha::translucent) {
+        // Glib2d has a bug where you have to set the alpha twice.
+        g2dSetAlpha(128);
         g2dSetAlpha(128);
     } else {
-        g2dSetAlpha(255);
+        g2dResetAlpha();
     }
     if (spr.get_flip().x or spr.get_flip().y) {
         Float x_scale = 1.f;
@@ -918,9 +981,9 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
     } else if (spr.get_scale().x or spr.get_scale().y) {
 
         g2dSetCoordMode(G2D_CENTER);
-        abs_position.x += width / 2;
-        abs_position.y += 32;
-        g2dSetCoordXY(abs_position.x, abs_position.y);
+        integer_pos.x += width / 2;
+        integer_pos.y += 32;
+        g2dSetCoordXY(integer_pos.x, integer_pos.y);
 
         float x_scale = 1.f;
         float y_scale = 1.f;
@@ -1017,38 +1080,87 @@ static void display_overlay()
 }
 
 
-static void display_background()
+static void display_background(const Vec2<Float>& view_offset)
 {
-    // g2dTexture temp;
-    // temp.tw = 64;
-    // temp.th = 64;
-    // temp.w = 16;
-    // temp.h = 16;
-    // temp.swizzled = false;
+    g2dTexture temp;
+    temp.tw = 64;
+    temp.th = 64;
+    temp.w = 16;
+    temp.h = 16;
+    temp.swizzled = false;
 
-    // for (int x = 0; x < 32; ++x) {
-    //     for (int y = 0; y < 32; ++y) {
-    //         const auto tile = background_tiles[x][y];
+    const auto fixed_offset = view_offset.cast<s32>();
 
-    //         if (tile) {
-    //             const auto tile_block = tile / 12;
-    //             temp.data = map0_image_ram[tile_block].pixels_;
-    //             g2dBeginRects(&temp);
-    //             g2dSetCoordMode(G2D_UP_LEFT);
-    //             g2dSetCoordXY(x * 16, y * 16);
-    //             g2dSetCropXY(0, 0);
-    //             g2dSetCropWH(16, 16);
-    //             g2dAdd();
-    //             g2dEnd();
-    //         }
-    //     }
-    // }
+    for (int x = 0; x < 32; ++x) {
+
+        const auto x_target = x * 16 - fixed_offset.x;
+
+        if (x_target < -16 or x_target > 480) {
+            continue;
+        }
+
+        for (int y = 0; y < 32; ++y) {
+
+            const auto y_target = y * 16 - fixed_offset.y;
+
+            if (y_target < -16 or y_target > 272) {
+                continue;
+            }
+
+            const auto tile = background_tiles[x][y];
+
+            if (tile not_eq 60) {
+                const auto tile_block = tile / 12;
+                const auto block_offset = tile % 12;
+                const int sub_x = block_offset % 4;
+                const int sub_y = block_offset / 4;
+                temp.data = map0_image_ram[tile_block].pixels_;
+                g2dBeginRects(&temp);
+                g2dSetCoordMode(G2D_UP_LEFT);
+                g2dSetCoordXY(x_target, y_target);
+                g2dSetCropXY(sub_x * 16, sub_y * 16);
+                g2dSetCropWH(16, 16);
+                g2dAdd();
+                g2dEnd();
+            }
+        }
+    }
+}
+
+
+static void display_fade()
+{
+    if (fade_amount == 0.f) {
+        return;
+    }
+
+    g2dTexture temp;
+    temp.tw = 8;
+    temp.th = 8;
+    temp.h = 8;
+    temp.w = 8;
+    temp.swizzled = true; // I mean, it's just a solid-colored rectangle.
+    temp.data = fade_rect;
+
+    g2dBeginRects(&temp);
+    g2dSetCoordMode(G2D_UP_LEFT);
+    g2dSetCoordXY(0, 0);
+
+
+    g2dSetScale((480 * 4) / Float(fade_rect_side_length),
+                (272 * 4) / Float(fade_rect_side_length));
+
+    // g2dSetAlpha(fade_amount * 255);
+    // g2dSetAlpha(fade_amount * 255);
+    g2dAdd();
+    g2dEnd();
+
 }
 
 
 void Platform::Screen::display()
 {
-    display_background();
+    display_background((view_.get_center() * 0.3f) * 2.f);
 
     display_map(view_.get_center() * 2.f);
 
@@ -1057,6 +1169,8 @@ void Platform::Screen::display()
     }
 
     sprite_queue.clear();
+
+    display_fade();
 
     display_overlay();
 

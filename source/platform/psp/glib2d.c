@@ -40,7 +40,7 @@
 #define PIXEL_SIZE              (4)
 #define FRAMEBUFFER_SIZE        (LINE_SIZE*G2D_SCR_H*PIXEL_SIZE)
 #define MALLOC_STEP             (128)
-#define OBJ_COUNT               (MALLOC_STEP * 20)
+#define OBJ_COUNT               (MALLOC_STEP * 25)
 #define TSTACK_MAX              (64)
 #define SLICE_WIDTH             (64.f)
 #define M_180_PI                (57.29578f)
@@ -659,9 +659,9 @@ void g2dAdd()
     if (!begin || rctx.cur_obj.scale_w == 0.f || rctx.cur_obj.scale_h == 0.f)
         return;
 
-    while (rctx.n == OBJ_COUNT)
-    {
-        // we ran out of objects!?
+
+    if (rctx.n == OBJ_COUNT) {
+        return;
     }
 
     rctx.n++;
