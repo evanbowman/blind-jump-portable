@@ -309,7 +309,8 @@ void update_ui_metrics(Platform& pfrm,
             OverlayCoord{1, u8(screen_tiles.y - (5 + game.powerups().size()))});
     }
 
-    if (static_cast<bool>(game.player().dodges()) == 0) {
+    if (dodge and
+        static_cast<bool>(game.player().dodges()) == 0) {
         if (pfrm.keyboard().pressed(game.action1_key())) {
             dodge->emplace(
                 pfrm,

@@ -83,10 +83,10 @@ void Player::injured(Platform& pf, Game& game, Health damage)
         blaster_.get_sprite().set_mix(sprite_.get_mix());
         invulnerability_timer_ = milliseconds(700);
 
-        if (auto num = game.effects().spawn<UINumber>(
-                get_position(), damage * -1, id())) {
-            num->hold(milliseconds(700));
-        }
+        // if (auto num = game.effects().spawn<UINumber>(
+        //         get_position(), damage * -1, id())) {
+        //     num->hold(milliseconds(700));
+        // }
     }
 }
 
@@ -212,7 +212,7 @@ void Player::heal(Platform& pfrm, Game& game, Health amount)
     sprite_.set_mix({ColorConstant::spanish_crimson, 255});
     add_health(amount);
     pfrm.speaker().play_sound("pop", 1);
-    game.effects().spawn<UINumber>(get_position(), amount, id());
+    // game.effects().spawn<UINumber>(get_position(), amount, id());
 }
 
 
@@ -754,7 +754,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
                 set_sprite_texture(100);
                 break;
             }
-#ifdef __GBA__
+#if defined(__GBA__) or defined(__PSP__)
             game.effects().spawn<Particle>(position_,
                                            dodge_flicker_light_color,
                                            0.0000538f,
@@ -765,7 +765,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
                                            0.0000538f,
                                            false,
                                            milliseconds(500));
-#endif // __GBA__
+#endif // __GBA__ or __PSP__
         }
         break;
     }

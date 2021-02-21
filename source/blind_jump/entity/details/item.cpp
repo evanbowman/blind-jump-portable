@@ -28,7 +28,7 @@ void Item::on_collision(Platform& pf, Game& game, Player&)
     pos.x += 8;
 
     // FIXME: Sprite scaling is broken on the desktop version of the game.
-#ifdef __GBA__
+#if defined(__GBA__) or defined(__PSP__)
     switch (type_) {
     case Type::coin:
         game.effects().spawn<Particle>(pos,
@@ -48,7 +48,7 @@ void Item::on_collision(Platform& pf, Game& game, Player&)
     default:
         break;
     }
-#endif // __GBA__
+#endif
 
     pf.sleep(5);
 }

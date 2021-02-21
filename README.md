@@ -48,7 +48,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
   <img src="imgs_for_readme/s8.png"/>
 </p>
 
-Blind Jump is a simple action/adventure game, featuring procedurally generated level maps, collectible items, fluid animation, and meticulously designed color palettes. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a several year long hiatus, during which he was teaching himself oil painting. Originally developed for macOS, the game was rebuilt from scratch during the 2020 pandemic, with a new custom engine. Blind Jump now compiles for various other platforms, including Linux, Windows and the Nintendo Gameboy Advance.
+Blind Jump is a simple action/adventure game, featuring procedurally generated level maps, collectible items, fluid animation, and meticulously designed color palettes. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a several year long hiatus, during which he was teaching himself oil painting. Originally developed for macOS, the game was rebuilt from scratch during the 2020 pandemic, with a new custom engine. Blind Jump now compiles for various other platforms, including Linux, Windows, Nintendo Gameboy Advance, and Sony PlayStation Portable.
 
 <p align="center">
   <img src="imgs_for_readme/s1.png"/>
@@ -76,7 +76,7 @@ Blind Jump is a simple action/adventure game, featuring procedurally generated l
 
 ### Controls
 
-On the gameboy advance, use the d-pad to move, the A button to shoot, and the B button to interact with things and to select items and options in the game's menus. If you hold the A button while walking, you will shoot repeatedly, and also the player will strafe.
+On the the directional buttons or analog stick to move, the A/X button to shoot, and the B/O button to interact with things and to select items and options in the game's menus. If you hold the A button while walking, you will shoot repeatedly, and also the player will strafe.
 
 Hold the right shoulder button, or the left shoulder button, to open up a quick item selector menu, or a minimap, respectively.
 
@@ -89,7 +89,7 @@ To access all for your items, press select. Press start for more options.
 
 <img src="imgs_for_readme/multiplayer_connect.gif"/>
 
-The game supports multiplayer over the gameboy advance's serial port. While certainly incomplete, you should find the multiplayer mode to be more-or-less playable.
+The GBA edition of the game supports multiplayer over the gameboy advance's serial port. While certainly incomplete, you should find the multiplayer mode to be more-or-less playable. The PSP edition does not support multiplayer at this time.
 To enable, press the start button on both devices, and then select the "Connect Peer" option within twenty seconds. You need to be on the very first level to connect a peer, otherwise the option will be grayed-out. If running on an actual GAMBOY ADVANCE, you may need to select "Connect Peer" on the device plugged into the gray end of the link cable first, followed by the device connected to the smaller purple end of the link cable. This is a known issue, and I am still working on resolving this, at time of writing.
 
 ### Secrets
@@ -108,7 +108,7 @@ Open the pause screen, and press the left bumper repeatedly, and a menu option f
 
 #### UART Interface
 
-In addition to providing an on-screen script console, the Blind Jump ROM also supports a scripting interface via UART. To connect your personal computer to the Gameboy Advance's serial port, you will need to splice an RS232 cable into a Gameboy Advance link cable, such that:
+In addition to providing an on-screen script console, the Blind Jump GBA edition also supports a scripting interface via UART. To connect your personal computer to the Gameboy Advance's serial port, you will need to splice an RS232 cable into a Gameboy Advance link cable, such that:
 ```
 SO  --------> 5 RxD
 SI  <-------- 4 TxD
@@ -122,7 +122,7 @@ Connect the two devices, set your PC's baud rate the standard 9600 Hz, and turn 
 
 ## Implementation
 
-This repository contains a substantial re-write of the original BlindJump code. In the current iteration, the core parts of the code have no external dependencies, and target a [theoretically] platform-neutral hardware abstraction layer. The embedded version of BlindJump runs on Gameboy Advance, and has partial support for Desktop OSs via SFML. When porting the game to a new platform, one only needs to re-implement the Platform class in source/platform/.
+This repository contains a substantial re-write of the original BlindJump code. In the current iteration, the core parts of the code have no external dependencies, and target a [theoretically] platform-neutral hardware abstraction layer. This embedded version of BlindJump runs on Gameboy Advance, PSP, and has partial support for Desktop OSs via SFML. When porting the game to a new platform, one only needs to re-implement the Platform class in source/platform/.
 
 The game is written almost entirely in C++, along with a small amount of C, a custom dialect of LISP, as well as a teeny bit of ARM assembly.
 
@@ -198,6 +198,6 @@ Have an opinion about the game, or suggestions for improvements? I encourage you
 
 ## Licence
 
-Most of the code in this project is available under the MIT licence. The Gameboy Advance builds of the project reference code from external/libgba, which is a GPL project. Consequently, the Gameboy Advance builds must be distributed under the terms of the GPL licence. The game is already open source, so this makes little difference, just worth mentioning, for people reading the code. As the Desktop builds of the project do not reference the libgba code in any way, the desktop builds are not GPL.
+Most of the code in this project is available under the MIT licence. The Gameboy Advance and PlayStation Portable builds of the project reference code from external/libgba, which is a GPL project. Consequently, the Gameboy Advance builds must be distributed under the terms of the GPL licence. The game is already open source, so this makes little difference, just worth mentioning, for people reading the code. As the Desktop builds of the project do not reference the libgba code in any way, the desktop builds are not GPL.
 
 All of images and character designs belong to Evan Bowman, and should not be used without permission. The music belongs to various composers. Most of the music tracks are Creative Commons and merely require attribution (see the game's ending credits), but a few of the music tracks may not allow distribution in a commercial context. These tracks would need to be replaced, if copies of the game were to be sold.
