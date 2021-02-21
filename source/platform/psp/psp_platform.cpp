@@ -22,6 +22,7 @@
 #include "localization.hpp"
 #include <chrono>
 #include "graphics/overlay.hpp"
+#include <psputility.h>
 
 
 extern "C" {
@@ -513,10 +514,15 @@ void Platform::load_overlay_texture(const char* name)
 {
     StringBuffer<64> str_name = name;
 
-    static const auto line_height = 8;
-    const auto line_width = (size_overlay_img / line_height) / 3;
+    auto img_data = find_image(name);
+    if (not img_data) {
+        return;
+    }
 
-    if (size_overlay_img % line_height not_eq 0) {
+    static const auto line_height = 8;
+    const auto line_width = (img_data->size_ / line_height) / 3;
+
+    if (img_data->size_ % line_height not_eq 0) {
         fatal("Invalid image format. "
               "Overlay images must be 8px in height.");
     }
@@ -524,8 +530,8 @@ void Platform::load_overlay_texture(const char* name)
     for (int x = 0; x < line_width; ++x) {
         for (int y = 0; y < line_height; ++y) {
 
-            auto color = load_pixel(overlay_img,
-                                    size_overlay_img,
+            auto color = load_pixel(img_data->data_,
+                                    img_data->size_,
                                     line_height,
                                     x,
                                     y);
@@ -747,17 +753,35 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
 }
 
 
-bool Platform::read_save_data(void* buffer, u32 data_length, u32 offset)
+const char* savefile_name = "ms0:/blind_jump.sav";
+
+
+bool Platform::read_save_data(void* buffer, u32 length, u32 offset)
 {
-    // TODO
-    return false;
+    int fd;
+    if(!(fd = sceIoOpen(savefile_name, PSP_O_RDONLY | PSP_O_CREAT, 0777))) {
+        return false;
+    }
+
+    const auto success = (sceIoRead(fd, buffer, length) == length);
+
+    sceIoClose(fd);
+    return success;
 }
 
 
 bool Platform::write_save_data(const void* data, u32 length, u32 offset)
 {
-    // TODO
-    return false;
+    int fd;
+    if(!(fd = sceIoOpen(savefile_name, PSP_O_WRONLY | PSP_O_CREAT, 0777))) {
+        return false;
+    }
+
+    const auto success = (sceIoWrite(fd, data, length) == length);
+
+    sceIoClose(fd);
+
+    return success;
 }
 
 
