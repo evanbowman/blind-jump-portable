@@ -114,7 +114,7 @@ OBJS =  $(SRC)/platform/psp/psp_platform.o \
 
 
 CFLAGS = -Os -G0 -g3 -mpreferred-stack-boundary=4 -ffast-math -gdwarf-2
-CXXFLAGS = $(CFLAGS) -std=c++17 -fno-exceptions -I$(SRC) -D__PSP__
+CXXFLAGS = $(CFLAGS) -std=c++17 -fno-exceptions -I$(SRC) -D__PSP__ -D__BLINDJUMP_ENABLE_LOGS
 ASFLAGS = $(CFLAGS)
 
 LIBS = -lstdc++ -lpspgum -lpspgu -lpng -ljpeg -lz -lm  -lpspvram -lpsprtc -lpspusb -lpsputility -lpspusbcam -lpspjpeg

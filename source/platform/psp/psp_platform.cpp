@@ -1490,6 +1490,29 @@ void Platform::Logger::set_threshold(Severity severity)
 }
 
 
+void Platform::Logger::log(Severity severity, const char* msg)
+{
+    int fd;
+    if(!(fd = sceIoOpen("ms0:/blindjump_logfile.txt", PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777))) {
+        return;
+    }
+
+    const char* snames[(int)Severity::count] = {
+        "[DEBUG] ",
+        "[INFO] ",
+        "[WARNING] ",
+        "[ERROR] ",
+        "[FATAL] ",
+    };
+
+    sceIoWrite(fd, snames[(int)severity], str_len(snames[(int)severity]));
+    sceIoWrite(fd, msg, str_len(msg));
+    sceIoWrite(fd, "\n", 1);
+
+    sceIoClose(fd);
+}
+
+
 void Platform::Logger::read(void* buffer, u32 start_offset, u32 num_bytes)
 {
 }
@@ -1564,6 +1587,21 @@ void Platform::Keyboard::poll()
     states_[int(Key::action_1)] = buttonInput.Buttons & PSP_CTRL_CROSS;
     states_[int(Key::action_2)] = buttonInput.Buttons & PSP_CTRL_CIRCLE;
 
+    const u8 stick_x = buttonInput.Lx;
+    const u8 stick_y = buttonInput.Ly;
+
+    static const int dead_zone = 50;
+    if (stick_x < 128 - dead_zone) {
+        states_[int(Key::left)] = true;
+    } else if (stick_x > 128 + dead_zone) {
+        states_[int(Key::right)] = true;
+    }
+
+    if (stick_y < 128 - dead_zone) {
+        states_[int(Key::up)] = true;
+    } else if (stick_y > 128 + dead_zone) {
+        states_[int(Key::down)] = true;
+    }
 
     if (UNLIKELY(static_cast<bool>(::missed_keys))) {
         for (int i = 0; i < (int)Key::count; ++i) {
