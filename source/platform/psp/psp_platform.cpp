@@ -426,7 +426,8 @@ void Platform::load_sprite_texture(const char* name)
 void load_map_texture(Platform& pfrm,
                       TileMemory* dest,
                       const u8* src_data,
-                      u32 src_size)
+                      u32 src_size,
+                      bool meta)
 {
     static const auto line_height = 24;
     const auto line_width = (src_size / line_height) / 3;
@@ -436,31 +437,78 @@ void load_map_texture(Platform& pfrm,
                    "Tileset images must be 24px in height.");
     }
 
-    for (int x = 0; x < line_width; ++x) {
-        for (int y = 0; y < line_height; ++y) {
+    if (meta) {
+        //
+        // 11112222    11115555
+        // 33334444 -> 22226666
+        // 55556666    33337777
+        // 77778888    44448888
+        //
 
-            auto color = load_pixel(src_data,
-                                    src_size,
-                                    line_height,
-                                    x,
-                                    y);
+        const auto line_height = 8;
 
-            auto target_tile = x / 32;
-            if (target_tile >= map_image_ram_capacity) {
-                pfrm.fatal("map texture too large");
+        for (int x = 0; x < (src_size / 8) / 3; ++x) {
+            for (int y = 0; y < line_height; ++y) {
+
+                auto color = load_pixel(src_data,
+                                        src_size,
+                                        line_height,
+                                        x,
+                                        y);
+
+                auto& tile = dest[x / (32 * 3)];
+
+                const int scl = x % (32 * 3);
+                int row;
+                if (scl < 32) {
+                    row = 0;
+                } else if (scl < 64) {
+                    row = 1;
+                } else {
+                    row = 2;
+                }
+
+                const int packed_x = x % 32;
+                const int packed_y = y + row * 8;
+
+                auto set_pixel = [&](int x, int y) {
+                    tile.pixels_[x % 64 + y * 64] = color;
+                };
+
+                set_pixel((packed_x * 2), (packed_y * 2));
+                set_pixel((packed_x * 2) + 1, (packed_y * 2));
+                set_pixel((packed_x * 2), (packed_y * 2) + 1);
+                set_pixel((packed_x * 2) + 1, (packed_y * 2) + 1);
             }
+        }
 
-            auto& tile = dest[target_tile];
+    } else {
+        for (int x = 0; x < line_width; ++x) {
+            for (int y = 0; y < line_height; ++y) {
 
-            auto set_pixel = [&](int x, int y) {
-                tile.pixels_[x % 64 + y * 64] = color;
-            };
+                auto color = load_pixel(src_data,
+                                        src_size,
+                                        line_height,
+                                        x,
+                                        y);
 
-            set_pixel((x * 2), (y * 2));
-            set_pixel((x * 2) + 1, (y * 2));
-            set_pixel((x * 2), (y * 2) + 1);
-            set_pixel((x * 2) + 1, (y * 2) + 1);
+                auto target_tile = x / 32;
+                if (target_tile >= map_image_ram_capacity) {
+                    pfrm.fatal("map texture too large");
+                }
 
+                auto& tile = dest[target_tile];
+
+                auto set_pixel = [&](int x, int y) {
+                    tile.pixels_[x % 64 + y * 64] = color;
+                };
+
+                set_pixel((x * 2), (y * 2));
+                set_pixel((x * 2) + 1, (y * 2));
+                set_pixel((x * 2), (y * 2) + 1);
+                set_pixel((x * 2) + 1, (y * 2) + 1);
+
+            }
         }
     }
 }
@@ -471,6 +519,10 @@ static g2dColor clear_color;
 
 void Platform::load_tile0_texture(const char* name)
 {
+    // if (str_cmp(name, "title_1_flattened")) {
+    //     while (true) ;
+    // }
+
     auto img_data = find_image(name);
     if (not img_data) {
         return;
@@ -479,7 +531,8 @@ void Platform::load_tile0_texture(const char* name)
     load_map_texture(*this,
                      map0_image_ram,
                      img_data->data_,
-                     img_data->size_);
+                     img_data->size_,
+                     strstr(name, "_flattened"));
 
     const auto tile_block = 60 / 12;
     const auto block_offset = 60 % 12;
@@ -497,7 +550,8 @@ void Platform::load_tile1_texture(const char* name)
     load_map_texture(*this,
                      map1_image_ram,
                      img_data->data_,
-                     img_data->size_);
+                     img_data->size_,
+                     false);
 }
 
 
@@ -693,9 +747,12 @@ void Platform::set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors)
 }
 
 
+static Vec2<Float> overlay_origin;
+
+
 void Platform::set_overlay_origin(Float x, Float y)
 {
-    // TODO
+    overlay_origin = {x, y};
 }
 
 
@@ -1232,6 +1289,8 @@ static void display_overlay()
     temp.h = 16;
     temp.swizzled = false;
 
+    const auto origin = (overlay_origin * 2.f).cast<s32>();
+
     for (int x = 0; x < 32; ++x) {
         for (int y = 0; y < 32; ++y) {
             const auto tile = overlay_tiles[x][y];
@@ -1244,7 +1303,7 @@ static void display_overlay()
                 }
                 g2dBeginRects(&temp);
                 g2dSetCoordMode(G2D_UP_LEFT);
-                g2dSetCoordXY(x * 16, y * 16);
+                g2dSetCoordXY(x * 16 - origin.x, y * 16 - origin.y);
                 g2dAdd();
                 g2dEnd();
             }

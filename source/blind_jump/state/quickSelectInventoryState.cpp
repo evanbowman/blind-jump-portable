@@ -381,8 +381,16 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
 
                 auto screen_tiles = calc_screen_tiles(pfrm);
 
+                auto margin = [&] {
+                    if (screen_tiles.y == 17) {
+                        return 0;
+                    } else {
+                        return 1;
+                    }
+                }();
+
                 const OverlayCoord pos{static_cast<u8>(screen_tiles.x - 5),
-                                       static_cast<u8>(3 + selector_pos_ * 5)};
+                                       static_cast<u8>(2 + margin + selector_pos_ * 5)};
 
                 const auto idx = 394 + used_item_anim_index_;
 
