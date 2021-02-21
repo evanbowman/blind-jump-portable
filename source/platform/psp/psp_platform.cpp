@@ -1328,18 +1328,46 @@ static void display_background(const Vec2<Float>& view_offset)
 
     for (int x = 0; x < 32; ++x) {
 
-        const auto x_target = x * 16 - fixed_offset.x;
+        auto x_target = x * 16 - fixed_offset.x;
 
-        if (x_target < -16 or x_target > 480) {
-            continue;
+        if (x_target > 480) {
+            x_target -= 32 * 16;
+            // we try to wrap the tile, and if it's still out of bounds, don't
+            // draw it.
+            if (x_target > 480) {
+                continue;
+            }
+        }
+
+        if (x_target < -16) {
+            x_target += 32 * 16;
+            // we try to wrap the tile, and if it's still out of bounds, don't
+            // draw it.
+            if (x_target < -16 or x_target > 480) {
+                continue;
+            }
         }
 
         for (int y = 0; y < 32; ++y) {
 
-            const auto y_target = y * 16 - fixed_offset.y;
+            auto y_target = y * 16 - fixed_offset.y;
 
-            if (y_target < -16 or y_target > 272) {
-                continue;
+            if (y_target > 272) {
+                y_target -= 32 * 16;
+                // we try to wrap the tile, and if it's still out of bounds, don't
+                // draw it.
+                if (y_target > 272) {
+                    continue;
+                }
+            }
+
+            if (y_target < -16) {
+                y_target += 32 * 16;
+                // we try to wrap the tile, and if it's still out of bounds, don't
+                // draw it.
+                if (y_target < -16 or x_target > 272) {
+                    continue;
+                }
             }
 
             const auto tile = background_tiles[x][y];

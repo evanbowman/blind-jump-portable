@@ -678,7 +678,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
                     break;
                 case Settings::Difficulty::hard:
                 case Settings::Difficulty::survival:
-                    return seconds(3) + milliseconds(500);
+                    return seconds(2);
                 }
                 return seconds(1); // + milliseconds(500);
             }()) {
