@@ -29,3 +29,6 @@ Release
 *.vcxproj.filters
 *.sln
 *.sav
+*.o
+build/*.png
+build/psp/*.c

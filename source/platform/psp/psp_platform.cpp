@@ -657,9 +657,6 @@ void Platform::fill_overlay(u16 TileDesc)
 }
 
 
-const auto glyph_start_tile = 500;
-
-
 static void set_overlay_tile(Platform& pfrm, int x, int y, u16 val)
 {
     overlay_tiles[x][y] = val;
@@ -673,7 +670,7 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
         if (x > 31 or y > 31) {
             return;
         }
-        if (val >= overlay_image_ram_capacity and val < glyph_start_tile) {
+        if (val >= overlay_image_ram_capacity and not (val & (1 << 15))) {
             return;
         }
         set_overlay_tile(*this, x, y, val);
@@ -806,7 +803,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
         return 111;
     }
 
-    return glyph_start_tile + mapping_info->offset_;
+    return mapping_info->offset_ | (1 << 15);
 }
 
 
@@ -1293,11 +1290,17 @@ static void display_overlay()
 
     for (int x = 0; x < 32; ++x) {
         for (int y = 0; y < 32; ++y) {
-            const auto tile = overlay_tiles[x][y];
+            auto tile = overlay_tiles[x][y];
+            bool is_glyph = false;
+
+            if (tile & (1 << 15)) {
+                tile = tile & (~ (1 << 15));
+                is_glyph = true;
+            }
 
             if (tile) {
-                if (tile >= glyph_start_tile) {
-                    temp.data = charset_image_ram[tile - glyph_start_tile].pixels_;
+                if (is_glyph) {
+                    temp.data = charset_image_ram[tile].pixels_;
                 } else {
                     temp.data = overlay_image_ram[tile].pixels_;
                 }
