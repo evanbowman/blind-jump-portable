@@ -147,8 +147,8 @@ int main(int argc, char** argv)
         lisp::read(line.c_str());
         Printer p;
         auto result = lisp::get_op(0);
-        format(result, p);
-        std::cout << std::endl;
+        // format(result, p);
+        // std::cout << std::endl;
         lisp::pop_op();
         lisp::eval(result);
         result = lisp::get_op(0);

@@ -102,7 +102,7 @@ struct Function {
     using CPP_Impl = Value* (*)(int);
 
     struct Bytecode {
-        u8 bc_offset_;
+        u16 bc_offset_;
         CompressedPtr data_buffer_;
     };
 
@@ -390,6 +390,34 @@ public:
 
 
 void format(Value* value, Printer& p);
+
+
+class Protected {
+public:
+    Protected(Value* val);
+
+    ~Protected();
+
+    Protected* next() const
+    {
+        return next_;
+    }
+
+    Protected* prev() const
+    {
+        return prev_;
+    }
+
+    operator Value*()
+    {
+        return val_;
+    }
+
+protected:
+    Value* val_;
+    Protected* prev_;
+    Protected* next_;
+};
 
 
 } // namespace lisp

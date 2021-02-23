@@ -101,6 +101,18 @@ void set_constants(const IntegralConstant* constants, u16 count)
 }
 
 
+u16 symbol_offset(const char* symbol)
+{
+    return symbol - *bound_context->interns_;
+}
+
+
+const char* symbol_from_offset(u16 offset)
+{
+    return *bound_context->interns_ + offset;
+}
+
+
 Value* get_nil()
 {
     if (not bound_context->nil_) {
@@ -495,6 +507,9 @@ Value* get_op(u32 offset)
 }
 
 
+void vm_execute(ScratchBuffer& code, int start_offset);
+
+
 // The function arguments should be sitting at the top of the operand stack
 // prior to calling funcall. The arguments will be consumed, and replaced with
 // the result of the function call.
@@ -541,6 +556,15 @@ void funcall(Value* obj, u8 argc)
             pop_op(); // result
             pop_args();
             push_op(result);
+            break;
+        }
+
+        case Function::ModeBits::lisp_bytecode_function: {
+            auto& ctx = *bound_context;
+            const auto break_loc = ctx.operand_stack_->size() - 1;
+            ctx.arguments_break_loc_ = break_loc;
+            vm_execute(*dcompr(obj->function_.bytecode_impl_.data_buffer_)->data_buffer_.value(),
+                       obj->function_.bytecode_impl_.bc_offset_);
             break;
         }
         }
@@ -781,6 +805,33 @@ static void gc_mark_value(Value* value)
 }
 
 
+static Protected* __protected_values = nullptr;
+
+
+Protected::Protected(Value* val)
+    : val_(val), next_(nullptr)
+{
+    auto plist = __protected_values;
+    if (plist) {
+        plist->next_ = this;
+        prev_ = plist;
+    } else {
+        prev_ = nullptr;
+    }
+    plist = this;
+}
+
+Protected::~Protected()
+{
+    if (next_) {
+        next_->prev_ = prev_;
+    }
+    if (prev_) {
+        prev_->next_ = next_;
+    }
+}
+
+
 static void gc_mark()
 {
     gc_mark_value(bound_context->nil_);
@@ -794,6 +845,12 @@ static void gc_mark()
 
     for (auto& var : *ctx->globals_) {
         gc_mark_value(var.value_);
+    }
+
+    auto p_list = __protected_values;
+    while (p_list) {
+        gc_mark_value(*p_list);
+        p_list = p_list->next();
     }
 }
 
@@ -1858,30 +1915,19 @@ void init(Platform& pfrm)
             auto data = buffer->data_buffer_.value();
             for (int i = 0; i < SCRATCH_BUFFER_SIZE;) {
                 switch ((Opcode)(*data).data_[i]) {
-                case Opcode::nop:
+                case Opcode::fatal:
                     // std::cout << ": NOP" << std::endl;
                     // i += 1;
                     // break;
                     return get_nil();
 
                 case Opcode::load_var:
-                    std::cout << ": LOAD_VAR" << std::endl;
                     i += 1;
-                    break;
-
-                case Opcode::set_var:
-                    std::cout << ": SET_VAR" << std::endl;
-                    i += 1;
-                    break;
-
-                case Opcode::load_cached:
-                    std::cout << ": LOAD_CACHED" << std::endl;
-                    i += 1;
-                    break;
-
-                case Opcode::set_cached:
-                    std::cout << ": SET_CACHED" << std::endl;
-                    i += 1;
+                    std::cout << ": LOAD_VAR("
+                              << ((HostInteger<s16>*)(data->data_ + i))->get()
+                              << ")"
+                              << std::endl;
+                    i += 2;
                     break;
 
                 case Opcode::push_nil:

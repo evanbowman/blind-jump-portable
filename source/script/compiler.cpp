@@ -9,6 +9,9 @@ namespace lisp {
 Value* make_bytecode_function(Value* buffer);
 
 
+u16 symbol_offset(const char* symbol);
+
+
 int compile_impl(ScratchBuffer& buffer,
                  int write_pos,
                  Value* code)
@@ -20,6 +23,11 @@ int compile_impl(ScratchBuffer& buffer,
         auto int_data = (HostInteger<s32>*)(buffer.data_ + write_pos);
         int_data->set(code->integer_.value_);
         write_pos += 4;
+    } else if (code->type_ == Value::Type::symbol) {
+        buffer.data_[write_pos++] = (u8)Opcode::load_var;
+        auto offset_data = (HostInteger<u16>*)(buffer.data_ + write_pos);
+        offset_data->set(symbol_offset(code->symbol_.name_));
+        write_pos += 2;
     } else if (code->type_ == Value::Type::cons) {
         u8 argc = 0;
 
@@ -74,6 +82,8 @@ void compile(Platform& pfrm, Value* code)
         push_op(err);
         return;
     }
+
+    fn->function_.bytecode_impl_.bc_offset_ = 0;
 
     auto buffer = get_op(0)->data_buffer_.value();
     pop_op();
