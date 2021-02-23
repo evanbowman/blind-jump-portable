@@ -350,7 +350,6 @@ void eval(Value* code);
 
 
 void compile(Platform& pfrm, Value* code);
-void disassemble(Value* code);
 
 
 void dostring(const char* code);

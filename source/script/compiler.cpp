@@ -3,6 +3,9 @@
 #include "number/endian.hpp"
 
 
+#include <iostream>
+
+
 namespace lisp {
 
 
@@ -19,10 +22,21 @@ int compile_impl(ScratchBuffer& buffer,
     if (code->type_ == Value::Type::nil) {
         buffer.data_[write_pos++] = (u8)Opcode::push_nil;
     } else if (code->type_ == Value::Type::integer) {
-        buffer.data_[write_pos++] = (u8)Opcode::push_integer;
-        auto int_data = (HostInteger<s32>*)(buffer.data_ + write_pos);
-        int_data->set(code->integer_.value_);
-        write_pos += 4;
+        if (code->integer_.value_ == 0) {
+            buffer.data_[write_pos++] = (u8)Opcode::push_0;
+        } else if (code->integer_.value_ == 1) {
+            buffer.data_[write_pos++] = (u8)Opcode::push_1;
+        } else if (code->integer_.value_ == 2) {
+            buffer.data_[write_pos++] = (u8)Opcode::push_2;
+        } else if (code->integer_.value_ < 127 and code->integer_.value_ > -127) {
+            buffer.data_[write_pos++] = (u8)Opcode::push_small_integer;
+            buffer.data_[write_pos++] = code->integer_.value_;
+        } else {
+            buffer.data_[write_pos++] = (u8)Opcode::push_integer;
+            auto int_data = (HostInteger<s32>*)(buffer.data_ + write_pos);
+            int_data->set(code->integer_.value_);
+            write_pos += 4;
+        }
     } else if (code->type_ == Value::Type::symbol) {
         buffer.data_[write_pos++] = (u8)Opcode::load_var;
         auto offset_data = (HostInteger<u16>*)(buffer.data_ + write_pos);
@@ -56,14 +70,33 @@ int compile_impl(ScratchBuffer& buffer,
 
         write_pos += compile_impl(buffer, write_pos, fn) - write_pos;
 
-        buffer.data_[write_pos++] = (u8)Opcode::funcall;
-        buffer.data_[write_pos++] = argc;
+        switch (argc) {
+        case 1:
+            buffer.data_[write_pos++] = (u8)Opcode::funcall_1;
+            break;
+
+        case 2:
+            buffer.data_[write_pos++] = (u8)Opcode::funcall_2;
+            break;
+
+        case 3:
+            buffer.data_[write_pos++] = (u8)Opcode::funcall_3;
+            break;
+
+        default:
+            buffer.data_[write_pos++] = (u8)Opcode::funcall;
+            buffer.data_[write_pos++] = argc;
+            break;
+        }
 
     } else {
         buffer.data_[write_pos++] = (u8)Opcode::push_nil;
     }
     return write_pos;
 }
+
+
+void live_values(::Function<24, void(Value&)> callback);
 
 
 void compile(Platform& pfrm, Value* code)
@@ -110,6 +143,57 @@ void compile(Platform& pfrm, Value* code)
     }
 
     buffer->data_[write_pos++] = (u8)Opcode::ret;
+
+    std::cout << "compilation finished, bytes used: " << write_pos << std::endl;
+
+    // OK, so now, we've successfully compiled our function into the scratch
+    // buffer. But, what about all the extra space in the buffer!? So we're
+    // going to scan over all of the interpreter's allocated memory, and
+    // collapse our own bytecode into a previously allocated slab of bytecode,
+    // if possible.
+
+    const int bytes_used = write_pos;
+    bool done = false;
+
+    live_values([fn, &done, bytes_used](Value& val) {
+        if (done) {
+            return;
+        }
+
+        if (fn not_eq &val and
+            val.type_ == Value::Type::function and
+            val.mode_bits_ == Function::ModeBits::lisp_bytecode_function) {
+
+            auto buf = dcompr(val.function_.bytecode_impl_.data_buffer_);
+            int used = SCRATCH_BUFFER_SIZE - 1;
+            for (; used > 0; --used) {
+                if ((Opcode)buf->data_buffer_.value()->data_[used] not_eq Opcode::fatal) {
+                    ++used;
+                    break;
+                }
+            }
+
+            const int remaining = SCRATCH_BUFFER_SIZE - used;
+            if (remaining >= bytes_used) {
+                done = true;
+
+                std::cout << "found another buffer with remaining space: "
+                          << remaining
+                          << ", copying " << bytes_used
+                          << " bytes to dest buffer offset "
+                          << used;
+
+                auto src_buffer = dcompr(fn->function_.bytecode_impl_.data_buffer_);
+                for (int i = 0; i < bytes_used; ++i) {
+                    buf->data_buffer_.value()->data_[used + i] =
+                        src_buffer->data_buffer_.value()->data_[i];
+                }
+
+                fn->function_.bytecode_impl_.bc_offset_ = used;
+                fn->function_.bytecode_impl_.data_buffer_ = compr(buf);
+            }
+        }
+    });
 }
 
 

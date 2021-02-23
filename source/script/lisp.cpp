@@ -913,6 +913,18 @@ static int gc_sweep()
 }
 
 
+void live_values(::Function<24, void(Value&)> callback)
+{
+    for (auto& pl : bound_context->value_pools_) {
+        pl->scan_cells([&callback](Value* val) {
+            if (val->alive_) {
+                callback(*val);
+            }
+        });
+    }
+}
+
+
 static int run_gc()
 {
     return gc_mark(), gc_sweep();
@@ -1913,7 +1925,8 @@ void init(Platform& pfrm)
         if (get_op(0)->mode_bits_ == Function::ModeBits::lisp_bytecode_function) {
             auto buffer = dcompr(get_op(0)->function_.bytecode_impl_.data_buffer_);
             auto data = buffer->data_buffer_.value();
-            for (int i = 0; i < SCRATCH_BUFFER_SIZE;) {
+            for (int i = get_op(0)->function_.bytecode_impl_.bc_offset_;
+                 i < SCRATCH_BUFFER_SIZE;) {
                 switch ((Opcode)(*data).data_[i]) {
                 case Opcode::fatal:
                     // std::cout << ": NOP" << std::endl;
@@ -1935,6 +1948,21 @@ void init(Platform& pfrm)
                     i += 1;
                     break;
 
+                case Opcode::push_0:
+                    i += 1;
+                    std::cout << ": PUSH_0" << std::endl;
+                    break;
+
+                case Opcode::push_1:
+                    i += 1;
+                    std::cout << ": PUSH_1" << std::endl;
+                    break;
+
+                case Opcode::push_2:
+                    i += 1;
+                    std::cout << ": PUSH_2" << std::endl;
+                    break;
+
                 case Opcode::push_integer:
                     i += 1;
                     std::cout << ": PUSH_INTEGER("
@@ -1942,6 +1970,13 @@ void init(Platform& pfrm)
                               << ")"
                               << std::endl;
                     i += 4;
+                    break;
+
+                case Opcode::push_small_integer:
+                    std::cout << ": PUSH_SMALL_INTEGER("
+                              << (s32)*(data->data_ + i + 1) << ")"
+                              << std::endl;
+                    i += 2;
                     break;
 
                 case Opcode::push_symbol:
@@ -1954,6 +1989,21 @@ void init(Platform& pfrm)
                     i += 2;
                     break;
 
+                case Opcode::funcall_1:
+                    std::cout << ": FUNCALL(1)" << std::endl;
+                    i += 1;
+                    break;
+
+                case Opcode::funcall_2:
+                    std::cout << ": FUNCALL(2)" << std::endl;
+                    i += 1;
+                    break;
+
+                case Opcode::funcall_3:
+                    std::cout << ": FUNCALL(3)" << std::endl;
+                    i += 1;
+                    break;
+
                 case Opcode::pop:
                     std::cout << ": POP" << std::endl;
                     i += 1;
@@ -1961,8 +2011,7 @@ void init(Platform& pfrm)
 
                 case Opcode::ret:
                     std::cout << ": RET" << std::endl;
-                    i += 1;
-                    break;
+                    return get_nil();
 
                 default:
                     return get_nil();
