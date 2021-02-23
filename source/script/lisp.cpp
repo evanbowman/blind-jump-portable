@@ -7,6 +7,7 @@
 #ifndef __GBA__
 #include <iostream>
 #endif
+#include "bytecode.hpp"
 
 
 namespace lisp {
@@ -293,6 +294,18 @@ static Value* make_lisp_function(Value* impl)
         val->type_ = Value::Type::function;
         val->function_.lisp_impl_ = compr(impl);
         val->mode_bits_ = Function::ModeBits::lisp_function;
+        return val;
+    }
+    return bound_context->oom_;
+}
+
+
+Value* make_bytecode_function(Value* buffer)
+{
+    if (auto val = alloc_value()) {
+        val->type_ = Value::Type::function;
+        val->function_.bytecode_impl_.data_buffer_ = compr(buffer);
+        val->mode_bits_ = Function::ModeBits::lisp_bytecode_function;
         return val;
     }
     return bound_context->oom_;
@@ -812,6 +825,12 @@ static void invoke_finalizer(Value* value)
     };
 
     table[value->type_].fn_(value);
+}
+
+
+void DataBuffer::finalizer(Value* buffer)
+{
+    reinterpret_cast<ScratchBufferPtr*>(buffer->data_buffer_.sbr_mem_)->~ScratchBufferPtr();
 }
 
 
@@ -1808,6 +1827,107 @@ void init(Platform& pfrm)
 
                 return result;
             }));
+
+    set_var("compile", make_function([](int argc) {
+        auto pfrm = lisp::get_var("*pfrm*");
+        if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+            return get_nil();
+        }
+
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, function);
+
+        if (get_op(0)->mode_bits_ == Function::ModeBits::lisp_function) {
+            compile(*(Platform*)pfrm->user_data_.obj_,
+                    dcompr(get_op(0)->function_.lisp_impl_));
+            auto ret = get_op(0);
+            pop_op();
+            return ret;
+        } else {
+            return get_op(0);
+        }
+    }));
+
+#ifndef __GBA__
+    set_var("disassemble", make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, function);
+
+        if (get_op(0)->mode_bits_ == Function::ModeBits::lisp_bytecode_function) {
+            auto buffer = dcompr(get_op(0)->function_.bytecode_impl_.data_buffer_);
+            auto data = buffer->data_buffer_.value();
+            for (int i = 0; i < SCRATCH_BUFFER_SIZE;) {
+                switch ((Opcode)(*data).data_[i]) {
+                case Opcode::nop:
+                    // std::cout << ": NOP" << std::endl;
+                    // i += 1;
+                    // break;
+                    return get_nil();
+
+                case Opcode::load_var:
+                    std::cout << ": LOAD_VAR" << std::endl;
+                    i += 1;
+                    break;
+
+                case Opcode::set_var:
+                    std::cout << ": SET_VAR" << std::endl;
+                    i += 1;
+                    break;
+
+                case Opcode::load_cached:
+                    std::cout << ": LOAD_CACHED" << std::endl;
+                    i += 1;
+                    break;
+
+                case Opcode::set_cached:
+                    std::cout << ": SET_CACHED" << std::endl;
+                    i += 1;
+                    break;
+
+                case Opcode::push_nil:
+                    std::cout << ": PUSH_NIL" << std::endl;
+                    i += 1;
+                    break;
+
+                case Opcode::push_integer:
+                    i += 1;
+                    std::cout << ": PUSH_INTEGER("
+                              << ((HostInteger<s32>*)(data->data_ + i))->get()
+                              << ")"
+                              << std::endl;
+                    i += 4;
+                    break;
+
+                case Opcode::push_symbol:
+                    std::cout << ": PUSH_SYMBOL(" << 0 << ")" << std::endl;
+                    i += 3;
+                    break;
+
+                case Opcode::funcall:
+                    std::cout << ": FUNCALL(" << (u32)*(data->data_ + i + 1) << ")" << std::endl;
+                    i += 2;
+                    break;
+
+                case Opcode::pop:
+                    std::cout << ": POP" << std::endl;
+                    i += 1;
+                    break;
+
+                case Opcode::ret:
+                    std::cout << ": RET" << std::endl;
+                    i += 1;
+                    break;
+
+                default:
+                    return get_nil();
+                }
+            }
+            return get_nil();
+        } else {
+            return get_nil();
+        }
+    }));
+#endif
 }
 
 

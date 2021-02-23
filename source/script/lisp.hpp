@@ -101,19 +101,25 @@ private:
 struct Function {
     using CPP_Impl = Value* (*)(int);
 
+    struct Bytecode {
+        u8 bc_offset_;
+        CompressedPtr data_buffer_;
+    };
+
     union {
         CPP_Impl cpp_impl_;
         CompressedPtr lisp_impl_;
+        Bytecode bytecode_impl_;
     };
 
     enum ModeBits {
         cpp_function,
         lisp_function,
+        lisp_bytecode_function,
     };
 
     static void finalizer(Value*) {}
 };
-
 
 
 struct DataBuffer {
@@ -124,10 +130,7 @@ struct DataBuffer {
         return *reinterpret_cast<ScratchBufferPtr*>(sbr_mem_);
     }
 
-    static void finalizer(Value* buffer)
-    {
-        reinterpret_cast<ScratchBufferPtr*>(buffer)->~ScratchBufferPtr();
-    }
+    static void finalizer(Value* buffer);
 };
 
 
@@ -193,7 +196,7 @@ struct Value {
 
     bool alive_ : 1;
     bool mark_bit_ : 1;
-    bool mode_bits_ : 2;
+    u8 mode_bits_ : 2;
 
     union {
         Nil nil_;
@@ -344,6 +347,10 @@ u32 read(const char* code);
 
 
 void eval(Value* code);
+
+
+void compile(Platform& pfrm, Value* code);
+void disassemble(Value* code);
 
 
 void dostring(const char* code);

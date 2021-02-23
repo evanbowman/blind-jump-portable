@@ -108,7 +108,8 @@ set(SOURCES
 
 set(SOURCES
   ${SOURCES}
-  ${SOURCE_DIR}/script/lisp.cpp)
+  ${SOURCE_DIR}/script/lisp.cpp
+  ${SOURCE_DIR}/script/compiler.cpp)
 
 
 set(SOURCES

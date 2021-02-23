@@ -15,4 +15,5 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 add_executable(LISP
   lisp.cpp
   unittest.cpp
+  compiler.cpp
   bootstrap.cpp)

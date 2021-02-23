@@ -40,6 +40,12 @@ ScratchBufferPtr Platform::make_scratch_buffer()
 }
 
 
+int Platform::scratch_buffers_remaining()
+{
+    return scratch_buffer_count - scratch_buffers_in_use;
+}
+
+
 void Platform::feed_watchdog()
 {
 
