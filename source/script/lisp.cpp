@@ -5,6 +5,7 @@
 #include "memory/pool.hpp"
 #include <complex>
 #ifndef __GBA__
+#include <iomanip>
 #include <iostream>
 #endif
 #include "bytecode.hpp"
@@ -563,7 +564,8 @@ void funcall(Value* obj, u8 argc)
             auto& ctx = *bound_context;
             const auto break_loc = ctx.operand_stack_->size() - 1;
             ctx.arguments_break_loc_ = break_loc;
-            vm_execute(*dcompr(obj->function_.bytecode_impl_.data_buffer_)->data_buffer_.value(),
+            vm_execute(*dcompr(obj->function_.bytecode_impl_.data_buffer_)
+                            ->data_buffer_.value(),
                        obj->function_.bytecode_impl_.bc_offset_);
             break;
         }
@@ -622,7 +624,7 @@ Value* get_var(const char* name)
 }
 
 
-static bool is_boolean_true(Value* val)
+bool is_boolean_true(Value* val)
 {
     switch (val->type_) {
     case Value::Type::integer:
@@ -808,8 +810,7 @@ static void gc_mark_value(Value* value)
 static Protected* __protected_values = nullptr;
 
 
-Protected::Protected(Value* val)
-    : val_(val), next_(nullptr)
+Protected::Protected(Value* val) : val_(val), next_(nullptr)
 {
     auto plist = __protected_values;
     if (plist) {
@@ -860,7 +861,6 @@ using Finalizer = void (*)(Value*);
 struct FinalizerTableEntry {
     FinalizerTableEntry(Finalizer fn) : fn_(fn)
     {
-
     }
 
     Finalizer fn_;
@@ -887,7 +887,8 @@ static void invoke_finalizer(Value* value)
 
 void DataBuffer::finalizer(Value* buffer)
 {
-    reinterpret_cast<ScratchBufferPtr*>(buffer->data_buffer_.sbr_mem_)->~ScratchBufferPtr();
+    reinterpret_cast<ScratchBufferPtr*>(buffer->data_buffer_.sbr_mem_)
+        ->~ScratchBufferPtr();
 }
 
 
@@ -1374,8 +1375,7 @@ void init(Platform& pfrm)
 
     intern("'");
 
-    set_var("set",
-            make_function([](int argc) {
+    set_var("set", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
                 L_EXPECT_OP(1, symbol);
 
@@ -1898,131 +1898,176 @@ void init(Platform& pfrm)
             }));
 
     set_var("compile", make_function([](int argc) {
-        auto pfrm = lisp::get_var("*pfrm*");
-        if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
-            return get_nil();
-        }
-
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, function);
-
-        if (get_op(0)->mode_bits_ == Function::ModeBits::lisp_function) {
-            compile(*(Platform*)pfrm->user_data_.obj_,
-                    dcompr(get_op(0)->function_.lisp_impl_));
-            auto ret = get_op(0);
-            pop_op();
-            return ret;
-        } else {
-            return get_op(0);
-        }
-    }));
-
-#ifndef __GBA__
-    set_var("disassemble", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        L_EXPECT_OP(0, function);
-
-        if (get_op(0)->mode_bits_ == Function::ModeBits::lisp_bytecode_function) {
-            auto buffer = dcompr(get_op(0)->function_.bytecode_impl_.data_buffer_);
-            auto data = buffer->data_buffer_.value();
-            for (int i = get_op(0)->function_.bytecode_impl_.bc_offset_;
-                 i < SCRATCH_BUFFER_SIZE;) {
-                switch ((Opcode)(*data).data_[i]) {
-                case Opcode::fatal:
-                    // std::cout << ": NOP" << std::endl;
-                    // i += 1;
-                    // break;
-                    return get_nil();
-
-                case Opcode::load_var:
-                    i += 1;
-                    std::cout << ": LOAD_VAR("
-                              << ((HostInteger<s16>*)(data->data_ + i))->get()
-                              << ")"
-                              << std::endl;
-                    i += 2;
-                    break;
-
-                case Opcode::push_nil:
-                    std::cout << ": PUSH_NIL" << std::endl;
-                    i += 1;
-                    break;
-
-                case Opcode::push_0:
-                    i += 1;
-                    std::cout << ": PUSH_0" << std::endl;
-                    break;
-
-                case Opcode::push_1:
-                    i += 1;
-                    std::cout << ": PUSH_1" << std::endl;
-                    break;
-
-                case Opcode::push_2:
-                    i += 1;
-                    std::cout << ": PUSH_2" << std::endl;
-                    break;
-
-                case Opcode::push_integer:
-                    i += 1;
-                    std::cout << ": PUSH_INTEGER("
-                              << ((HostInteger<s32>*)(data->data_ + i))->get()
-                              << ")"
-                              << std::endl;
-                    i += 4;
-                    break;
-
-                case Opcode::push_small_integer:
-                    std::cout << ": PUSH_SMALL_INTEGER("
-                              << (s32)*(data->data_ + i + 1) << ")"
-                              << std::endl;
-                    i += 2;
-                    break;
-
-                case Opcode::push_symbol:
-                    std::cout << ": PUSH_SYMBOL(" << 0 << ")" << std::endl;
-                    i += 3;
-                    break;
-
-                case Opcode::funcall:
-                    std::cout << ": FUNCALL(" << (u32)*(data->data_ + i + 1) << ")" << std::endl;
-                    i += 2;
-                    break;
-
-                case Opcode::funcall_1:
-                    std::cout << ": FUNCALL(1)" << std::endl;
-                    i += 1;
-                    break;
-
-                case Opcode::funcall_2:
-                    std::cout << ": FUNCALL(2)" << std::endl;
-                    i += 1;
-                    break;
-
-                case Opcode::funcall_3:
-                    std::cout << ": FUNCALL(3)" << std::endl;
-                    i += 1;
-                    break;
-
-                case Opcode::pop:
-                    std::cout << ": POP" << std::endl;
-                    i += 1;
-                    break;
-
-                case Opcode::ret:
-                    std::cout << ": RET" << std::endl;
-                    return get_nil();
-
-                default:
+                auto pfrm = lisp::get_var("*pfrm*");
+                if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
                     return get_nil();
                 }
+
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, function);
+
+                if (get_op(0)->mode_bits_ ==
+                    Function::ModeBits::lisp_function) {
+                    compile(*(Platform*)pfrm->user_data_.obj_,
+                            dcompr(get_op(0)->function_.lisp_impl_));
+                    auto ret = get_op(0);
+                    pop_op();
+                    return ret;
+                } else {
+                    return get_op(0);
+                }
+            }));
+
+    set_var(
+        "disassemble", make_function([](int argc) {
+            L_EXPECT_ARGC(argc, 1);
+            L_EXPECT_OP(0, function);
+
+            if (get_op(0)->mode_bits_ ==
+                Function::ModeBits::lisp_bytecode_function) {
+
+                Platform::RemoteConsole::Line out;
+
+                auto buffer =
+                    dcompr(get_op(0)->function_.bytecode_impl_.data_buffer_);
+
+                auto data = buffer->data_buffer_.value();
+
+                const auto start_offset =
+                    get_op(0)->function_.bytecode_impl_.bc_offset_;
+
+                for (int i = start_offset; i < SCRATCH_BUFFER_SIZE;) {
+
+                    const auto offset = to_string<10>(i - start_offset);
+                    if (offset.length() < 4) {
+                        for (u32 i = 0; i < 4 - offset.length(); ++i) {
+                            out.push_back('0');
+                        }
+                    }
+
+                    out += offset;
+                    out += ": ";
+
+                    switch ((Opcode)(*data).data_[i]) {
+                    case Opcode::fatal:
+                        return get_nil();
+
+                    case Opcode::load_var:
+                        i += 1;
+                        out += "LOAD_VAR(";
+                        out += to_string<10>(
+                            ((HostInteger<s16>*)(data->data_ + i))->get());
+                        out += ")";
+                        i += 2;
+                        break;
+
+                    case Opcode::push_nil:
+                        out += "PUSH_NIL";
+                        i += 1;
+                        break;
+
+                    case Opcode::push_0:
+                        i += 1;
+                        out += "PUSH_0";
+                        break;
+
+                    case Opcode::push_1:
+                        i += 1;
+                        out += "PUSH_1";
+                        break;
+
+                    case Opcode::push_2:
+                        i += 1;
+                        out += "PUSH_2";
+                        break;
+
+                    case Opcode::push_integer:
+                        i += 1;
+                        out += "PUSH_INTEGER(";
+                        out += to_string<10>(
+                            ((HostInteger<s32>*)(data->data_ + i))->get());
+                        out += ")";
+                        i += 4;
+                        break;
+
+                    case Opcode::push_small_integer:
+                        out += "PUSH_SMALL_INTEGER(";
+                        out += to_string<10>(*(data->data_ + i + 1));
+                        out += ")";
+                        i += 2;
+                        break;
+
+                    case Opcode::push_symbol:
+                        out += "PUSH_SYMBOL(0)";
+                        i += 3;
+                        break;
+
+                    case Opcode::jump_if_false:
+                        out += "JUMP_IF_FALSE(";
+                        out += to_string<10>(
+                            ((HostInteger<u16>*)(data->data_ + i + 1))->get());
+                        out += ")";
+                        i += 3;
+                        break;
+
+                    case Opcode::jump:
+                        out += "JUMP(";
+                        out += to_string<10>(
+                            ((HostInteger<u16>*)(data->data_ + i + 1))->get());
+                        out += ")";
+                        i += 3;
+                        break;
+
+                    case Opcode::funcall:
+                        out += "FUNCALL(";
+                        out += to_string<10>(*(data->data_ + i + 1));
+                        out += ")";
+                        i += 2;
+                        break;
+
+                    case Opcode::funcall_1:
+                        out += "FUNCALL_1";
+                        i += 1;
+                        break;
+
+                    case Opcode::funcall_2:
+                        out += "FUNCALL_2";
+                        i += 1;
+                        break;
+
+                    case Opcode::funcall_3:
+                        out += "FUNCALL_3";
+                        i += 1;
+                        break;
+
+                    case Opcode::pop:
+                        out += "POP";
+                        i += 1;
+                        break;
+
+                    case Opcode::ret: {
+                        out += "RET\r\n";
+                        auto pfrm = lisp::get_var("*pfrm*");
+                        if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+                            return get_nil();
+                        }
+                        ((Platform*)pfrm)
+                            ->remote_console()
+                            .printline(out.c_str());
+                        ((Platform*)pfrm)->sleep(30);
+                        return get_nil();
+                    }
+
+                    default:
+                        return get_nil();
+                    }
+                    out += "\r\n";
+                }
+                return get_nil();
+            } else {
+                return get_nil();
             }
-            return get_nil();
-        } else {
-            return get_nil();
-        }
-    }));
-#endif
+        }));
 }
 
 

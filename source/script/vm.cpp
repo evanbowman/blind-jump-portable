@@ -1,9 +1,12 @@
-#include "lisp.hpp"
 #include "bytecode.hpp"
+#include "lisp.hpp"
 #include "number/endian.hpp"
 
 
 namespace lisp {
+
+
+bool is_boolean_true(Value* val);
 
 
 const char* symbol_from_offset(u16 offset);
@@ -13,6 +16,7 @@ void vm_execute(ScratchBuffer& code, int start_offset)
 {
     int pc = start_offset;
 
+#define READ_U16 ((HostInteger<u16>*)(code.data_ + pc))->get()
 #define READ_S16 ((HostInteger<s16>*)(code.data_ + pc))->get()
 #define READ_S32 ((HostInteger<s32>*)(code.data_ + pc))->get()
 #define READ_U8 *(code.data_ + pc)
@@ -21,10 +25,31 @@ void vm_execute(ScratchBuffer& code, int start_offset)
     while (true) {
 
         switch ((Opcode)code.data_[pc]) {
+        case Opcode::jump_if_false:
+            ++pc;
+            if (not is_boolean_true(get_op(0))) {
+                pc = start_offset + READ_U16;
+            } else {
+                pc += 2;
+            }
+            pop_op();
+            break;
+
+        case Opcode::jump:
+            ++pc;
+            pc = start_offset + READ_U16;
+            break;
+
         case Opcode::load_var:
             ++pc;
             push_op(get_var(symbol_from_offset(READ_S16)));
             pc += 2;
+            break;
+
+        case Opcode::dup:
+            ++pc;
+            push_op(get_op(0));
+            ;
             break;
 
         case Opcode::push_nil:
@@ -60,7 +85,8 @@ void vm_execute(ScratchBuffer& code, int start_offset)
             break;
 
         case Opcode::push_symbol:
-            while (true) ; // TODO...
+            while (true)
+                ; // TODO...
             break;
 
         case Opcode::funcall: {
@@ -107,12 +133,12 @@ void vm_execute(ScratchBuffer& code, int start_offset)
 
         default:
         case Opcode::fatal:
-            while (true) ;
+            while (true)
+                ;
             break;
         }
-
     }
 }
 
 
-}
+} // namespace lisp

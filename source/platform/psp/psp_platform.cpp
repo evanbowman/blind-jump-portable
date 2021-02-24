@@ -8,21 +8,20 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+#include "graphics/overlay.hpp"
+#include "localization.hpp"
 #include "platform/platform.hpp"
+#include <chrono>
+#include <memory>
+#include <png.h>
 #include <pspctrl.h>
 #include <pspdebug.h>
+#include <pspdisplay.h>
+#include <pspgu.h>
 #include <pspkernel.h>
 #include <psprtc.h>
-#include <pspdisplay.h>
-#include <pspctrl.h>
-#include <pspgu.h>
-#include <png.h>
-#include <stdio.h>
-#include <memory>
-#include "localization.hpp"
-#include <chrono>
-#include "graphics/overlay.hpp"
 #include <psputility.h>
+#include <stdio.h>
 
 
 extern "C" {
@@ -74,7 +73,8 @@ int callback_thread(SceSize args, void* argp)
 
 int setup_callbacks(void)
 {
-    int thid = sceKernelCreateThread("update_thread", callback_thread, 0x11, 0xFA0, 0, 0);
+    int thid = sceKernelCreateThread(
+        "update_thread", callback_thread, 0x11, 0xFA0, 0, 0);
     if (thid >= 0) {
         sceKernelStartThread(thid, 0, 0);
     }
@@ -115,13 +115,12 @@ Platform::Platform()
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-
 }
 
 
-static ObjectPool<RcBase<ScratchBuffer,
-                         scratch_buffer_count>::ControlBlock,
-                  scratch_buffer_count> scratch_buffer_pool;
+static ObjectPool<RcBase<ScratchBuffer, scratch_buffer_count>::ControlBlock,
+                  scratch_buffer_count>
+    scratch_buffer_pool;
 
 
 static int scratch_buffers_in_use = 0;
@@ -130,11 +129,11 @@ static int scratch_buffer_highwater = 0;
 
 ScratchBufferPtr Platform::make_scratch_buffer()
 {
-    auto finalizer = [](RcBase<ScratchBuffer,
-                               scratch_buffer_count>::ControlBlock* ctrl) {
-        --scratch_buffers_in_use;
-        ctrl->pool_->post(ctrl);
-    };
+    auto finalizer =
+        [](RcBase<ScratchBuffer, scratch_buffer_count>::ControlBlock* ctrl) {
+            --scratch_buffers_in_use;
+            ctrl->pool_->post(ctrl);
+        };
 
     auto maybe_buffer = Rc<ScratchBuffer, scratch_buffer_count>::create(
         &scratch_buffer_pool, finalizer);
@@ -153,7 +152,8 @@ ScratchBufferPtr Platform::make_scratch_buffer()
     } else {
         // screen().fade(1.f, ColorConstant::electric_blue);
         fatal("scratch buffer pool exhausted");
-        while (true) ;
+        while (true)
+            ;
     }
 }
 
@@ -306,6 +306,7 @@ constexpr auto charset_image_ram_capacity = 300;
 
 
 static OverlayMemory charset_image_ram[charset_image_ram_capacity];
+static OverlayMemory charset_image_ram2[charset_image_ram_capacity];
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,11 +340,8 @@ static OverlayMemory charset_image_ram[charset_image_ram_capacity];
 ////////////////////////////////////////////////////////////////////////////////
 
 
-static g2dColor load_pixel(const u8* img_data,
-                           u32 img_size,
-                           int img_height,
-                           int x,
-                           int y)
+static g2dColor
+load_pixel(const u8* img_data, u32 img_size, int img_height, int x, int y)
 {
     const auto line_width = (img_size / img_height) / 3;
     u8 r = img_data[(x * 3) + (y * line_width * 3)];
@@ -378,11 +376,8 @@ void Platform::load_sprite_texture(const char* name)
     for (int x = 0; x < line_width; ++x) {
         for (int y = 0; y < line_height; ++y) {
 
-            auto color = load_pixel(img_data->data_,
-                                    img_data->size_,
-                                    line_height,
-                                    x,
-                                    y);
+            auto color =
+                load_pixel(img_data->data_, img_data->size_, line_height, x, y);
 
             auto target_sprite = x / 32;
 
@@ -404,8 +399,7 @@ void Platform::load_sprite_texture(const char* name)
             auto& mask = sprite_image_mask[target_sprite];
 
             auto set_mask_pixel = [&](int x, int y) {
-                if (G2D_GET_R(color) == 0xFF and
-                    G2D_GET_G(color) == 0x00 and
+                if (G2D_GET_R(color) == 0xFF and G2D_GET_G(color) == 0x00 and
                     G2D_GET_B(color) == 0xFF) {
                     // Our pixel is not part of the mask.
                     mask.pixels_[x % 64 + y * 64] = color;
@@ -450,11 +444,7 @@ void load_map_texture(Platform& pfrm,
         for (int x = 0; x < (src_size / 8) / 3; ++x) {
             for (int y = 0; y < line_height; ++y) {
 
-                auto color = load_pixel(src_data,
-                                        src_size,
-                                        line_height,
-                                        x,
-                                        y);
+                auto color = load_pixel(src_data, src_size, line_height, x, y);
 
                 auto& tile = dest[x / (32 * 3)];
 
@@ -486,11 +476,7 @@ void load_map_texture(Platform& pfrm,
         for (int x = 0; x < line_width; ++x) {
             for (int y = 0; y < line_height; ++y) {
 
-                auto color = load_pixel(src_data,
-                                        src_size,
-                                        line_height,
-                                        x,
-                                        y);
+                auto color = load_pixel(src_data, src_size, line_height, x, y);
 
                 auto target_tile = x / 32;
                 if (target_tile >= map_image_ram_capacity) {
@@ -507,7 +493,6 @@ void load_map_texture(Platform& pfrm,
                 set_pixel((x * 2) + 1, (y * 2));
                 set_pixel((x * 2), (y * 2) + 1);
                 set_pixel((x * 2) + 1, (y * 2) + 1);
-
             }
         }
     }
@@ -547,11 +532,8 @@ void Platform::load_tile1_texture(const char* name)
         return;
     }
 
-    load_map_texture(*this,
-                     map1_image_ram,
-                     img_data->data_,
-                     img_data->size_,
-                     false);
+    load_map_texture(
+        *this, map1_image_ram, img_data->data_, img_data->size_, false);
 }
 
 
@@ -584,11 +566,8 @@ void Platform::load_overlay_texture(const char* name)
     for (int x = 0; x < line_width; ++x) {
         for (int y = 0; y < line_height; ++y) {
 
-            auto color = load_pixel(img_data->data_,
-                                    img_data->size_,
-                                    line_height,
-                                    x,
-                                    y);
+            auto color =
+                load_pixel(img_data->data_, img_data->size_, line_height, x, y);
 
             auto target_overlay = x / 8;
 
@@ -613,11 +592,8 @@ void Platform::load_overlay_texture(const char* name)
     for (int x = 0; x < charset_line_width; ++x) {
         for (int y = 0; y < line_height; ++y) {
 
-            auto color = load_pixel(charset_img,
-                                    size_charset_img,
-                                    line_height,
-                                    x,
-                                    y);
+            auto color =
+                load_pixel(charset_img, size_charset_img, line_height, x, y);
 
             auto target_charset = x / 8;
 
@@ -637,7 +613,6 @@ void Platform::load_overlay_texture(const char* name)
             set_pixel((x * 2) + 1, (y * 2) + 1);
         }
     }
-
 }
 
 
@@ -670,7 +645,7 @@ void Platform::set_tile(Layer layer, u16 x, u16 y, u16 val)
         if (x > 31 or y > 31) {
             return;
         }
-        if (val >= overlay_image_ram_capacity and not (val & (1 << 15))) {
+        if (val >= overlay_image_ram_capacity and not(val & (1 << 15))) {
             return;
         }
         set_overlay_tile(*this, x, y, val);
@@ -763,7 +738,8 @@ void Platform::fatal(const char* msg)
 {
     ::is_running = false;
     sceKernelExitGame();
-    while (true) ;
+    while (true)
+        ;
 }
 
 
@@ -813,7 +789,7 @@ const char* savefile_name = "ms0:/blind_jump.sav";
 bool Platform::read_save_data(void* buffer, u32 length, u32 offset)
 {
     int fd;
-    if(!(fd = sceIoOpen(savefile_name, PSP_O_RDONLY | PSP_O_CREAT, 0777))) {
+    if (!(fd = sceIoOpen(savefile_name, PSP_O_RDONLY | PSP_O_CREAT, 0777))) {
         return false;
     }
 
@@ -827,7 +803,7 @@ bool Platform::read_save_data(void* buffer, u32 length, u32 offset)
 bool Platform::write_save_data(const void* data, u32 length, u32 offset)
 {
     int fd;
-    if(!(fd = sceIoOpen(savefile_name, PSP_O_WRONLY | PSP_O_CREAT, 0777))) {
+    if (!(fd = sceIoOpen(savefile_name, PSP_O_WRONLY | PSP_O_CREAT, 0777))) {
         return false;
     }
 
@@ -1045,18 +1021,11 @@ void Platform::Screen::fade(Float amount,
         fade_color = make_color((int)k, 255);
         const auto base_color = make_color((int)*base, 255);
 
-        fade_color =
-            G2D_RGBA(interpolate(G2D_GET_R(fade_color),
-                                 G2D_GET_R(base_color),
-                                 amount),
-                     interpolate(G2D_GET_G(fade_color),
-                                 G2D_GET_G(base_color),
-                                 amount),
-                     interpolate(G2D_GET_B(fade_color),
-                                 G2D_GET_B(base_color),
-                                 amount),
-                     255);
-
+        fade_color = G2D_RGBA(
+            interpolate(G2D_GET_R(fade_color), G2D_GET_R(base_color), amount),
+            interpolate(G2D_GET_G(fade_color), G2D_GET_G(base_color), amount),
+            interpolate(G2D_GET_B(fade_color), G2D_GET_B(base_color), amount),
+            255);
     }
 
     for (int i = 0; i < fade_rect_side_length; ++i) {
@@ -1075,9 +1044,8 @@ void Platform::Screen::pixelate(u8 amount,
 }
 
 
-static void set_sprite_params(const Platform::Screen& screen,
-                              const Sprite& spr,
-                              int width)
+static void
+set_sprite_params(const Platform::Screen& screen, const Sprite& spr, int width)
 {
     const auto view_center = screen.get_view().get_center();
 
@@ -1097,7 +1065,8 @@ static void set_sprite_params(const Platform::Screen& screen,
         g2dSetCoordMode(G2D_CENTER);
         abs_position.x += width / 4;
         abs_position.y += 16;
-        g2dSetRotation(360 * ((float)rot / std::numeric_limits<Sprite::Rotation>::max()));
+        g2dSetRotation(
+            360 * ((float)rot / std::numeric_limits<Sprite::Rotation>::max()));
     } else {
         g2dSetCoordMode(G2D_UP_LEFT);
     }
@@ -1184,8 +1153,8 @@ static void display_sprite(const Platform::Screen& screen, const Sprite& spr)
 
     temp.w = width;
 
-    if (not (spr.get_mix().color_ not_eq ColorConstant::null and
-             spr.get_mix().amount_ == 255)) {
+    if (not(spr.get_mix().color_ not_eq ColorConstant::null and
+            spr.get_mix().amount_ == 255)) {
 
         g2dBeginRects(&temp);
 
@@ -1232,7 +1201,6 @@ static void display_map(const Vec2<Float>& view_offset)
 
     auto disp_layer = [&](u8 map_tiles[16][20],
                           TileMemory map_image_ram[map_image_ram_capacity]) {
-
         // Because many tiles will be repeated, we are going to batch the draws
         // for similar tiles.
 
@@ -1294,7 +1262,7 @@ static void display_overlay()
             bool is_glyph = false;
 
             if (tile & (1 << 15)) {
-                tile = tile & (~ (1 << 15));
+                tile = tile & (~(1 << 15));
                 is_glyph = true;
             }
 
@@ -1460,14 +1428,15 @@ static void display_fade()
     g2dSetCoordMode(G2D_UP_LEFT);
 
     for (int x = 0; x < (480 / fade_rect_side_length); ++x) {
-        for (int y = 0; y < (272 / fade_rect_side_length) + fade_rect_side_length; ++y) {
+        for (int y = 0;
+             y < (272 / fade_rect_side_length) + fade_rect_side_length;
+             ++y) {
             g2dSetCoordXY(x * 32, y * 32);
             g2dAdd();
         }
     }
 
     g2dEnd();
-
 }
 
 
@@ -1583,7 +1552,9 @@ void Platform::Logger::set_threshold(Severity severity)
 void Platform::Logger::log(Severity severity, const char* msg)
 {
     int fd;
-    if(!(fd = sceIoOpen("ms0:/blindjump_logfile.txt", PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777))) {
+    if (!(fd = sceIoOpen("ms0:/blindjump_logfile.txt",
+                         PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND,
+                         0777))) {
         return;
     }
 
@@ -1670,7 +1641,7 @@ void Platform::Keyboard::poll()
     states_[int(Key::select)] = buttonInput.Buttons & PSP_CTRL_SELECT;
     states_[int(Key::right)] = buttonInput.Buttons & PSP_CTRL_RIGHT;
     states_[int(Key::left)] = buttonInput.Buttons & PSP_CTRL_LEFT;
-    states_[int(Key::down)] =  buttonInput.Buttons & PSP_CTRL_DOWN;
+    states_[int(Key::down)] = buttonInput.Buttons & PSP_CTRL_DOWN;
     states_[int(Key::up)] = buttonInput.Buttons & PSP_CTRL_UP;
     states_[int(Key::alt_1)] = buttonInput.Buttons & PSP_CTRL_LTRIGGER;
     states_[int(Key::alt_2)] = buttonInput.Buttons & PSP_CTRL_RTRIGGER;

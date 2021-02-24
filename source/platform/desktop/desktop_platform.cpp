@@ -812,7 +812,8 @@ void Platform::Screen::clear()
                            }
                            error(*::platform,
                                  "invalid texture swap enumeration");
-                           ::platform->fatal("invalid texture swap enumeration");
+                           ::platform->fatal(
+                               "invalid texture swap enumeration");
                        }()
                                ->loadFromImage(image)) {
                 error(*::platform, "Failed to create texture");
@@ -1510,11 +1511,10 @@ static int scratch_buffers_in_use = 0;
 
 Rc<ScratchBuffer, 100> Platform::make_scratch_buffer()
 {
-    auto finalizer =
-        [](RcBase<ScratchBuffer, 100>::ControlBlock* ctrl) {
-            --scratch_buffers_in_use;
-            ctrl->pool_->post(ctrl);
-        };
+    auto finalizer = [](RcBase<ScratchBuffer, 100>::ControlBlock* ctrl) {
+        --scratch_buffers_in_use;
+        ctrl->pool_->post(ctrl);
+    };
 
     auto maybe_buffer =
         Rc<ScratchBuffer, 100>::create(&scratch_buffer_pool, finalizer);

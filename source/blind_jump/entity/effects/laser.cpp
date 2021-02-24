@@ -70,8 +70,7 @@ void Laser::update(Platform& pf, Game& game, Microseconds dt)
                 if (sprite_.get_mix().color_ == info.energy_glow_color_2_) {
                     sprite_.set_mix({});
                 } else {
-                    sprite_.set_mix(
-                        {info.energy_glow_color_2_, 255});
+                    sprite_.set_mix({info.energy_glow_color_2_, 255});
                 }
             }
         }

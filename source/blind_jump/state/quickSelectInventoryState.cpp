@@ -109,8 +109,9 @@ void QuickSelectInventoryState::draw_items(Platform& pfrm, Game& game)
         }
         items_.push_back(item);
 
-        const OverlayCoord coord{static_cast<u8>(screen_tiles.x - 4),
-                                 static_cast<u8>(3 + margin + item_icons_.size() * 5)};
+        const OverlayCoord coord{
+            static_cast<u8>(screen_tiles.x - 4),
+            static_cast<u8>(3 + margin + item_icons_.size() * 5)};
 
         if (auto handler = inventory_item_handler(item)) {
             item_icons_.emplace_back(pfrm, handler->icon_, coord);
@@ -145,11 +146,15 @@ void QuickSelectInventoryState::show_sidebar(Platform& pfrm)
     }
 
     if (more_pages_) {
-        pfrm.set_tile(
-            Layer::overlay, screen_tiles.x - 3, screen_tiles.y - (1 + margin), 154);
+        pfrm.set_tile(Layer::overlay,
+                      screen_tiles.x - 3,
+                      screen_tiles.y - (1 + margin),
+                      154);
     } else {
-        pfrm.set_tile(
-            Layer::overlay, screen_tiles.x - 3, screen_tiles.y - (1 + margin), 152);
+        pfrm.set_tile(Layer::overlay,
+                      screen_tiles.x - 3,
+                      screen_tiles.y - (1 + margin),
+                      152);
     }
 }
 
@@ -389,8 +394,9 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                     }
                 }();
 
-                const OverlayCoord pos{static_cast<u8>(screen_tiles.x - 5),
-                                       static_cast<u8>(2 + margin + selector_pos_ * 5)};
+                const OverlayCoord pos{
+                    static_cast<u8>(screen_tiles.x - 5),
+                    static_cast<u8>(2 + margin + selector_pos_ * 5)};
 
                 const auto idx = 394 + used_item_anim_index_;
 

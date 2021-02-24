@@ -1,9 +1,6 @@
-#include "lisp.hpp"
 #include "bytecode.hpp"
+#include "lisp.hpp"
 #include "number/endian.hpp"
-
-
-#include <iostream>
 
 
 namespace lisp {
@@ -15,9 +12,7 @@ Value* make_bytecode_function(Value* buffer);
 u16 symbol_offset(const char* symbol);
 
 
-int compile_impl(ScratchBuffer& buffer,
-                 int write_pos,
-                 Value* code)
+int compile_impl(ScratchBuffer& buffer, int write_pos, Value* code)
 {
     if (code->type_ == Value::Type::nil) {
         buffer.data_[write_pos++] = (u8)Opcode::push_nil;
@@ -28,7 +23,8 @@ int compile_impl(ScratchBuffer& buffer,
             buffer.data_[write_pos++] = (u8)Opcode::push_1;
         } else if (code->integer_.value_ == 2) {
             buffer.data_[write_pos++] = (u8)Opcode::push_2;
-        } else if (code->integer_.value_ < 127 and code->integer_.value_ > -127) {
+        } else if (code->integer_.value_ < 127 and
+                   code->integer_.value_ > -127) {
             buffer.data_[write_pos++] = (u8)Opcode::push_small_integer;
             buffer.data_[write_pos++] = code->integer_.value_;
         } else {
@@ -43,50 +39,101 @@ int compile_impl(ScratchBuffer& buffer,
         offset_data->set(symbol_offset(code->symbol_.name_));
         write_pos += 2;
     } else if (code->type_ == Value::Type::cons) {
-        u8 argc = 0;
 
         auto lat = code;
 
         auto fn = lat->cons_.car();
-        lat = lat->cons_.cdr();
 
-        while (lat not_eq get_nil()) {
+        if (fn->type_ == Value::Type::symbol and
+            str_cmp(fn->symbol_.name_, "if") == 0) {
+
+            lat = lat->cons_.cdr();
             if (lat->type_ not_eq Value::Type::cons) {
-                // ...
-                break;
+                while (true)
+                    ; // TODO: raise error!
             }
 
-            write_pos += compile_impl(buffer, write_pos, lat->cons_.car()) - write_pos;
+            write_pos +=
+                compile_impl(buffer, write_pos, lat->cons_.car()) - write_pos;
+
+            buffer.data_[write_pos++] = (u8)Opcode::jump_if_false;
+            auto jne_pos = (HostInteger<u16>*)(buffer.data_ + write_pos);
+            write_pos += 2;
+
+            auto true_branch = get_nil();
+            auto false_branch = get_nil();
+
+            if (lat->cons_.cdr()->type_ == Value::Type::cons) {
+                true_branch = lat->cons_.cdr()->cons_.car();
+
+                if (lat->cons_.cdr()->cons_.cdr()->type_ == Value::Type::cons) {
+                    false_branch = lat->cons_.cdr()->cons_.cdr()->cons_.car();
+                }
+            }
+
+            write_pos +=
+                compile_impl(buffer, write_pos, true_branch) - write_pos;
+            buffer.data_[write_pos++] = (u8)Opcode::jump;
+            auto j_pos = (HostInteger<u16>*)(buffer.data_ + write_pos);
+            write_pos += 2;
+
+            jne_pos->set(write_pos);
+
+            write_pos +=
+                compile_impl(buffer, write_pos, false_branch) - write_pos;
+
+            j_pos->set(write_pos);
+
+        } else if (fn->type_ == Value::Type::symbol and
+                   str_cmp(fn->symbol_.name_, "lambda") == 0) {
+            while (true) {
+                // ...
+            }
+        } else {
+            u8 argc = 0;
 
             lat = lat->cons_.cdr();
 
-            argc++;
+            while (lat not_eq get_nil()) {
+                if (lat->type_ not_eq Value::Type::cons) {
+                    // ...
+                    break;
+                }
 
-            if (argc == 255) {
-                // FIXME: raise error!
-                while (true) ;
+                write_pos += compile_impl(buffer, write_pos, lat->cons_.car()) -
+                             write_pos;
+
+                lat = lat->cons_.cdr();
+
+                argc++;
+
+                if (argc == 255) {
+                    // FIXME: raise error!
+                    while (true)
+                        ;
+                }
             }
-        }
 
-        write_pos += compile_impl(buffer, write_pos, fn) - write_pos;
+            write_pos += compile_impl(buffer, write_pos, fn) - write_pos;
 
-        switch (argc) {
-        case 1:
-            buffer.data_[write_pos++] = (u8)Opcode::funcall_1;
-            break;
+            switch (argc) {
+            case 1:
+                buffer.data_[write_pos++] = (u8)Opcode::funcall_1;
+                break;
 
-        case 2:
-            buffer.data_[write_pos++] = (u8)Opcode::funcall_2;
-            break;
+            case 2:
+                buffer.data_[write_pos++] = (u8)Opcode::funcall_2;
+                break;
 
-        case 3:
-            buffer.data_[write_pos++] = (u8)Opcode::funcall_3;
-            break;
+            case 3:
+                buffer.data_[write_pos++] = (u8)Opcode::funcall_3;
+                break;
 
-        default:
-            buffer.data_[write_pos++] = (u8)Opcode::funcall;
-            buffer.data_[write_pos++] = argc;
-            break;
+            default:
+                buffer.data_[write_pos++] = (u8)Opcode::funcall;
+                buffer.data_[write_pos++] = argc;
+                break;
+            }
         }
 
     } else {
@@ -97,6 +144,17 @@ int compile_impl(ScratchBuffer& buffer,
 
 
 void live_values(::Function<24, void(Value&)> callback);
+
+
+class PeepholeOptimizer {
+public:
+    u32 run(ScratchBuffer& code_buffer, u32 code_size)
+    {
+        // TODO...
+        // Be careful about jump offsets when implementing these optimizations.
+        return code_size;
+    }
+};
 
 
 void compile(Platform& pfrm, Value* code)
@@ -137,14 +195,21 @@ void compile(Platform& pfrm, Value* code)
             buffer->data_[write_pos++] = (u8)Opcode::pop;
         }
 
-        write_pos += compile_impl(*buffer, write_pos, lat->cons_.car()) - write_pos;
+        write_pos +=
+            compile_impl(*buffer, write_pos, lat->cons_.car()) - write_pos;
 
         lat = lat->cons_.cdr();
     }
 
     buffer->data_[write_pos++] = (u8)Opcode::ret;
 
-    std::cout << "compilation finished, bytes used: " << write_pos << std::endl;
+
+    write_pos = PeepholeOptimizer().run(
+        *dcompr(fn->function_.bytecode_impl_.data_buffer_)
+             ->data_buffer_.value(),
+        write_pos);
+
+    // std::cout << "compilation finished, bytes used: " << write_pos << std::endl;
 
     // OK, so now, we've successfully compiled our function into the scratch
     // buffer. But, what about all the extra space in the buffer!? So we're
@@ -160,14 +225,14 @@ void compile(Platform& pfrm, Value* code)
             return;
         }
 
-        if (fn not_eq &val and
-            val.type_ == Value::Type::function and
+        if (fn not_eq &val and val.type_ == Value::Type::function and
             val.mode_bits_ == Function::ModeBits::lisp_bytecode_function) {
 
             auto buf = dcompr(val.function_.bytecode_impl_.data_buffer_);
             int used = SCRATCH_BUFFER_SIZE - 1;
             for (; used > 0; --used) {
-                if ((Opcode)buf->data_buffer_.value()->data_[used] not_eq Opcode::fatal) {
+                if ((Opcode)buf->data_buffer_.value()->data_[used] not_eq
+                    Opcode::fatal) {
                     ++used;
                     break;
                 }
@@ -177,13 +242,14 @@ void compile(Platform& pfrm, Value* code)
             if (remaining >= bytes_used) {
                 done = true;
 
-                std::cout << "found another buffer with remaining space: "
-                          << remaining
-                          << ", copying " << bytes_used
-                          << " bytes to dest buffer offset "
-                          << used;
+                // std::cout << "found another buffer with remaining space: "
+                //           << remaining
+                //           << ", copying " << bytes_used
+                //           << " bytes to dest buffer offset "
+                //           << used;
 
-                auto src_buffer = dcompr(fn->function_.bytecode_impl_.data_buffer_);
+                auto src_buffer =
+                    dcompr(fn->function_.bytecode_impl_.data_buffer_);
                 for (int i = 0; i < bytes_used; ++i) {
                     buf->data_buffer_.value()->data_[used + i] =
                         src_buffer->data_buffer_.value()->data_[i];
@@ -197,4 +263,4 @@ void compile(Platform& pfrm, Value* code)
 }
 
 
-}
+} // namespace lisp

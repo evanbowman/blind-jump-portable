@@ -43,6 +43,6 @@
 
 
 (set 'add-hook
-     (lambda
-       ;; (add-hook hooks-sym hook)
-       (set (arg 1) (cons (arg 0) (eval (arg 1))))))
+     (compile (lambda
+                ;; (add-hook hooks-sym hook)
+                (set (arg 1) (cons (arg 0) (eval (arg 1)))))))

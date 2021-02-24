@@ -2,8 +2,8 @@
 
 #include "function.hpp"
 #include "number/numeric.hpp"
-#include "string.hpp"
 #include "platform/scratch_buffer.hpp"
+#include "string.hpp"
 
 
 class Platform;
@@ -21,7 +21,9 @@ struct Value;
 
 
 struct Nil {
-    static void finalizer(Value*) {}
+    static void finalizer(Value*)
+    {
+    }
 };
 
 
@@ -36,14 +38,18 @@ struct Symbol {
         stable_pointer,
     };
 
-    static void finalizer(Value*) {}
+    static void finalizer(Value*)
+    {
+    }
 };
 
 
 struct Integer {
     s32 value_;
 
-    static void finalizer(Value*) {}
+    static void finalizer(Value*)
+    {
+    }
 };
 
 
@@ -90,7 +96,9 @@ struct Cons {
         cdr_ = compr(val);
     }
 
-    static void finalizer(Value*) {}
+    static void finalizer(Value*)
+    {
+    }
 
 private:
     CompressedPtr car_;
@@ -118,7 +126,9 @@ struct Function {
         lisp_bytecode_function,
     };
 
-    static void finalizer(Value*) {}
+    static void finalizer(Value*)
+    {
+    }
 };
 
 
@@ -169,14 +179,18 @@ struct Error {
         return "Unknown error";
     }
 
-    static void finalizer(Value*) {}
+    static void finalizer(Value*)
+    {
+    }
 };
 
 
 struct UserData {
     void* obj_;
 
-    static void finalizer(Value*) {}
+    static void finalizer(Value*)
+    {
+    }
 };
 
 
@@ -301,8 +315,7 @@ Value* get_op(u32 operand_number);
 void pop_op();
 
 
-template <typename F>
-void foreach(Value* list, F&& fn)
+template <typename F> void foreach (Value* list, F && fn)
 {
     push_op(list);
 

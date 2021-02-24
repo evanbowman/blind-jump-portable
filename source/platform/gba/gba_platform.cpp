@@ -2264,60 +2264,53 @@ Microseconds Platform::Speaker::track_length(const char* name)
 
 
 namespace detail {
-template<std::size_t... Is> struct seq{};
-template<std::size_t N, std::size_t... Is>
-struct gen_seq : gen_seq<N-1, N-1, Is...>{};
-template<std::size_t... Is>
-struct gen_seq<0, Is...> : seq<Is...>{};
+template <std::size_t... Is> struct seq {
+};
+template <std::size_t N, std::size_t... Is>
+struct gen_seq : gen_seq<N - 1, N - 1, Is...> {
+};
+template <std::size_t... Is> struct gen_seq<0, Is...> : seq<Is...> {
+};
 
 
-template<class Generator, std::size_t... Is>
+template <class Generator, std::size_t... Is>
 constexpr auto generate_array_helper(Generator g, seq<Is...>)
--> std::array<decltype(g(std::size_t{}, sizeof...(Is))), sizeof...(Is)>
+    -> std::array<decltype(g(std::size_t{}, sizeof...(Is))), sizeof...(Is)>
 {
     return {{g(Is, sizeof...(Is))...}};
 }
 
-template<std::size_t tcount, class Generator>
+template <std::size_t tcount, class Generator>
 constexpr auto generate_array(Generator g)
--> decltype( generate_array_helper(g, gen_seq<tcount>{}) )
+    -> decltype(generate_array_helper(g, gen_seq<tcount>{}))
 {
     return generate_array_helper(g, gen_seq<tcount>{});
 }
-}
+} // namespace detail
 
 
 auto make_volume_lut = [](float scale) {
-    return detail::generate_array<256>([scale](std::size_t curr, std::size_t total) -> s8 {
-        const auto real = (s8)((u8)curr);
-        return real * scale;
-    });
- };
+    return detail::generate_array<256>(
+        [scale](std::size_t curr, std::size_t total) -> s8 {
+            const auto real = (s8)((u8)curr);
+            return real * scale;
+        });
+};
 
 
 // Each table entry contains the whole number space of a signed 8-bit value,
 // scaled by a fraction.
 static constexpr std::array<VolumeScaleLUT, 20> volume_scale_LUTs = {
-    {{make_volume_lut(0.05f)},
-     {make_volume_lut(0.10f)},
-     {make_volume_lut(0.15f)},
-     {make_volume_lut(0.20f)},
-     {make_volume_lut(0.25f)},
-     {make_volume_lut(0.30f)},
-     {make_volume_lut(0.35f)},
-     {make_volume_lut(0.40f)},
-     {make_volume_lut(0.45f)},
-     {make_volume_lut(0.50f)},
-     {make_volume_lut(0.55f)},
-     {make_volume_lut(0.60f)},
-     {make_volume_lut(0.65f)},
-     {make_volume_lut(0.70f)},
-     {make_volume_lut(0.75f)},
-     {make_volume_lut(0.80f)},
-     {make_volume_lut(0.85f)},
-     {make_volume_lut(0.90f)},
-     {make_volume_lut(0.95f)},
-     {make_volume_lut(1.0f)}},
+    {{make_volume_lut(0.05f)}, {make_volume_lut(0.10f)},
+     {make_volume_lut(0.15f)}, {make_volume_lut(0.20f)},
+     {make_volume_lut(0.25f)}, {make_volume_lut(0.30f)},
+     {make_volume_lut(0.35f)}, {make_volume_lut(0.40f)},
+     {make_volume_lut(0.45f)}, {make_volume_lut(0.50f)},
+     {make_volume_lut(0.55f)}, {make_volume_lut(0.60f)},
+     {make_volume_lut(0.65f)}, {make_volume_lut(0.70f)},
+     {make_volume_lut(0.75f)}, {make_volume_lut(0.80f)},
+     {make_volume_lut(0.85f)}, {make_volume_lut(0.90f)},
+     {make_volume_lut(0.95f)}, {make_volume_lut(1.0f)}},
 };
 
 
@@ -2327,9 +2320,8 @@ static const VolumeScaleLUT* get_volume_lut(Float volume)
 }
 
 
-static void set_sound_volume(ActiveSoundInfo& sound,
-                             Float left_volume,
-                             Float right_volume)
+static void
+set_sound_volume(ActiveSoundInfo& sound, Float left_volume, Float right_volume)
 {
     sound.l_volume_lut_ = get_volume_lut(left_volume);
     sound.r_volume_lut_ = get_volume_lut(right_volume);
@@ -2339,9 +2331,12 @@ static void set_sound_volume(ActiveSoundInfo& sound,
 static std::optional<ActiveSoundInfo> make_sound(const char* name)
 {
     if (auto sound = get_sound(name)) {
-        return ActiveSoundInfo{0, sound->length_, sound->data_, 0,
-            &volume_scale_LUTs[19],
-            &volume_scale_LUTs[19]};
+        return ActiveSoundInfo{0,
+                               sound->length_,
+                               sound->data_,
+                               0,
+                               &volume_scale_LUTs[19],
+                               &volume_scale_LUTs[19]};
     } else {
         return {};
     }
@@ -2409,16 +2404,13 @@ static void add_sound(Buffer<ActiveSoundInfo, 3>& sounds,
         sounds.push_back(info);
     } else {
         ActiveSoundInfo* lowest = sounds.begin();
-        for (auto it = sounds.begin();
-             it not_eq sounds.end();
-             ++it) {
+        for (auto it = sounds.begin(); it not_eq sounds.end(); ++it) {
             if (it->priority_ < lowest->priority_) {
                 lowest = it;
             }
         }
 
-        if (lowest not_eq sounds.end() and
-            lowest->priority_ < info.priority_) {
+        if (lowest not_eq sounds.end() and lowest->priority_ < info.priority_) {
             sounds.erase(lowest);
             sounds.push_back(info);
         }
@@ -2445,7 +2437,8 @@ void Platform::Speaker::play_sound(const char* name,
             } else {
                 const Float distance_scale = 0.0005f;
 
-                const auto inv_sqr_intensity = 1.f / (distance_scale * ((dist / 3) * dist));
+                const auto inv_sqr_intensity =
+                    1.f / (distance_scale * ((dist / 3) * dist));
 
                 auto l_vol = inv_sqr_intensity;
                 auto r_vol = inv_sqr_intensity;
@@ -2477,9 +2470,7 @@ void Platform::Speaker::play_sound(const char* name,
             set_sound_volume(*info, 1.f, 1.f);
         }
 
-        modify_audio([&] {
-            add_sound(snd_ctx.active_sounds, *info);
-        });
+        modify_audio([&] { add_sound(snd_ctx.active_sounds, *info); });
     }
 }
 
@@ -2584,8 +2575,7 @@ Platform::Speaker::Speaker()
 // wonder why we aren't using one of the DMA channels to load sound samples. The
 // DMA halts the CPU, which could result in missed serial I/O interrupts during
 // multiplayer games.
-[[maybe_unused]]
-static void audio_update_spatialized_stereo_isr()
+[[maybe_unused]] static void audio_update_spatialized_stereo_isr()
 {
     alignas(4) AudioSample mixing_buffer_l[4];
     alignas(4) AudioSample mixing_buffer_r[4];
@@ -2606,8 +2596,10 @@ static void audio_update_spatialized_stereo_isr()
             it = snd_ctx.active_sounds.erase(it);
         } else {
             for (int i = 0; i < 4; ++i) {
-                mixing_buffer_r[i] += (*it->r_volume_lut_)[(u8)it->data_[it->position_]];
-                mixing_buffer_l[i] += (*it->l_volume_lut_)[(u8)it->data_[it->position_]];
+                mixing_buffer_r[i] +=
+                    (*it->r_volume_lut_)[(u8)it->data_[it->position_]];
+                mixing_buffer_l[i] +=
+                    (*it->l_volume_lut_)[(u8)it->data_[it->position_]];
                 ++it->position_;
             }
             ++it;
@@ -2637,7 +2629,8 @@ static void audio_update_spatialized_isr()
             it = snd_ctx.active_sounds.erase(it);
         } else {
             for (int i = 0; i < 4; ++i) {
-                mixing_buffer[i] += (*it->r_volume_lut_)[(u8)it->data_[it->position_]];
+                mixing_buffer[i] +=
+                    (*it->r_volume_lut_)[(u8)it->data_[it->position_]];
                 ++it->position_;
             }
             ++it;
@@ -2760,8 +2753,7 @@ bool use_optimized_waitstates = false;
 // the buffer to ~100K in size. One could theoretically make the buffer almost
 // 256kB, because I am using none of EWRAM as far as I know...
 static EWRAM_DATA
-    ObjectPool<RcBase<ScratchBuffer,
-                      scratch_buffer_count>::ControlBlock,
+    ObjectPool<RcBase<ScratchBuffer, scratch_buffer_count>::ControlBlock,
                scratch_buffer_count>
         scratch_buffer_pool;
 
@@ -2772,11 +2764,11 @@ static int scratch_buffer_highwater = 0;
 
 ScratchBufferPtr Platform::make_scratch_buffer()
 {
-    auto finalizer = [](RcBase<ScratchBuffer,
-                               scratch_buffer_count>::ControlBlock* ctrl) {
-        --scratch_buffers_in_use;
-        ctrl->pool_->post(ctrl);
-    };
+    auto finalizer =
+        [](RcBase<ScratchBuffer, scratch_buffer_count>::ControlBlock* ctrl) {
+            --scratch_buffers_in_use;
+            ctrl->pool_->post(ctrl);
+        };
 
     auto maybe_buffer = Rc<ScratchBuffer, scratch_buffer_count>::create(
         &scratch_buffer_pool, finalizer);

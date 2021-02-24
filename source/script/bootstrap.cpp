@@ -1,14 +1,14 @@
 #include "memory/pool.hpp"
 #include "memory/rc.hpp"
 #include "platform/platform.hpp"
+#include <iostream>
 
 
 // This file should contain the minimal subset of platform code necessary for
 // running the interpreter.
 
 
-ObjectPool<RcBase<ScratchBuffer,
-                  scratch_buffer_count>::ControlBlock,
+ObjectPool<RcBase<ScratchBuffer, scratch_buffer_count>::ControlBlock,
            scratch_buffer_count>
     scratch_buffer_pool;
 
@@ -19,11 +19,11 @@ static int scratch_buffer_highwater = 0;
 
 ScratchBufferPtr Platform::make_scratch_buffer()
 {
-    auto finalizer = [](RcBase<ScratchBuffer,
-                               scratch_buffer_count>::ControlBlock* ctrl) {
-        --scratch_buffers_in_use;
-        ctrl->pool_->post(ctrl);
-    };
+    auto finalizer =
+        [](RcBase<ScratchBuffer, scratch_buffer_count>::ControlBlock* ctrl) {
+            --scratch_buffers_in_use;
+            ctrl->pool_->post(ctrl);
+        };
 
     auto maybe_buffer = Rc<ScratchBuffer, scratch_buffer_count>::create(
         &scratch_buffer_pool, finalizer);
@@ -48,7 +48,6 @@ int Platform::scratch_buffers_remaining()
 
 void Platform::feed_watchdog()
 {
-
 }
 
 void english__to_string(int num, char* buffer, int base)
@@ -132,5 +131,17 @@ Platform::DeltaClock::~DeltaClock()
 
 
 Platform::NetworkPeer::~NetworkPeer()
+{
+}
+
+
+bool Platform::RemoteConsole::printline(const char* text)
+{
+    std::cout << text;
+    return true;
+}
+
+
+void Platform::sleep(u32)
 {
 }
