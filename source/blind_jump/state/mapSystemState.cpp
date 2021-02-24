@@ -131,7 +131,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             }();
 
             draw_minimap(
-                pfrm, game, 1.f, last_column_ = -1, 1, 0, 0, false, path);
+                 pfrm, game, 1.f, last_column_ = -1, 1, 0, 0, 0, false, path);
         }
 
         if (incomplete == false) {

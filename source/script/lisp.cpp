@@ -508,7 +508,7 @@ Value* get_op(u32 offset)
 }
 
 
-void vm_execute(ScratchBuffer& code, int start_offset);
+void vm_execute(Value* code, int start_offset);
 
 
 // The function arguments should be sitting at the top of the operand stack
@@ -564,8 +564,7 @@ void funcall(Value* obj, u8 argc)
             auto& ctx = *bound_context;
             const auto break_loc = ctx.operand_stack_->size() - 1;
             ctx.arguments_break_loc_ = break_loc;
-            vm_execute(*dcompr(obj->function_.bytecode_impl_.data_buffer_)
-                            ->data_buffer_.value(),
+            vm_execute(dcompr(obj->function_.bytecode_impl_.data_buffer_),
                        obj->function_.bytecode_impl_.bc_offset_);
             break;
         }
@@ -1928,6 +1927,8 @@ void init(Platform& pfrm)
 
                 Platform::RemoteConsole::Line out;
 
+                u8 depth = 0;
+
                 auto buffer =
                     dcompr(get_op(0)->function_.bytecode_impl_.data_buffer_);
 
@@ -2018,6 +2019,15 @@ void init(Platform& pfrm)
                         i += 3;
                         break;
 
+                    case Opcode::push_lambda:
+                        out += "PUSH_LAMBDA(";
+                        out += to_string<10>(
+                            ((HostInteger<u16>*)(data->data_ + i + 1))->get());
+                        out += ")";
+                        i += 3;
+                        ++depth;
+                        break;
+
                     case Opcode::funcall:
                         out += "FUNCALL(";
                         out += to_string<10>(*(data->data_ + i + 1));
@@ -2046,16 +2056,23 @@ void init(Platform& pfrm)
                         break;
 
                     case Opcode::ret: {
-                        out += "RET\r\n";
-                        auto pfrm = lisp::get_var("*pfrm*");
-                        if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+                        if (depth == 0) {
+                            out += "RET\r\n";
+                            auto pfrm = lisp::get_var("*pfrm*");
+                            if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+                                return get_nil();
+                            }
+                            ((Platform*)pfrm)
+                                ->remote_console()
+                                .printline(out.c_str());
+                            ((Platform*)pfrm)->sleep(30);
                             return get_nil();
+                        } else {
+                            --depth;
+                            out += "RET";
+                            i += 1;
                         }
-                        ((Platform*)pfrm)
-                            ->remote_console()
-                            .printline(out.c_str());
-                        ((Platform*)pfrm)->sleep(30);
-                        return get_nil();
+                        break;
                     }
 
                     default:

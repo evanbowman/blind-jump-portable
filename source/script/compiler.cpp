@@ -12,7 +12,10 @@ Value* make_bytecode_function(Value* buffer);
 u16 symbol_offset(const char* symbol);
 
 
-int compile_impl(ScratchBuffer& buffer, int write_pos, Value* code)
+int compile_impl(ScratchBuffer& buffer,
+                 int write_pos,
+                 Value* code,
+                 int jump_offset)
 {
     if (code->type_ == Value::Type::nil) {
         buffer.data_[write_pos++] = (u8)Opcode::push_nil;
@@ -53,8 +56,8 @@ int compile_impl(ScratchBuffer& buffer, int write_pos, Value* code)
                     ; // TODO: raise error!
             }
 
-            write_pos +=
-                compile_impl(buffer, write_pos, lat->cons_.car()) - write_pos;
+            write_pos =
+                compile_impl(buffer, write_pos, lat->cons_.car(), jump_offset);
 
             buffer.data_[write_pos++] = (u8)Opcode::jump_if_false;
             auto jne_pos = (HostInteger<u16>*)(buffer.data_ + write_pos);
@@ -71,24 +74,44 @@ int compile_impl(ScratchBuffer& buffer, int write_pos, Value* code)
                 }
             }
 
-            write_pos +=
-                compile_impl(buffer, write_pos, true_branch) - write_pos;
+            write_pos =
+                compile_impl(buffer, write_pos, true_branch, jump_offset);
+
             buffer.data_[write_pos++] = (u8)Opcode::jump;
             auto j_pos = (HostInteger<u16>*)(buffer.data_ + write_pos);
             write_pos += 2;
 
-            jne_pos->set(write_pos);
+            jne_pos->set(write_pos - jump_offset);
 
-            write_pos +=
-                compile_impl(buffer, write_pos, false_branch) - write_pos;
+            write_pos =
+                compile_impl(buffer, write_pos, false_branch, jump_offset);
 
-            j_pos->set(write_pos);
+            j_pos->set(write_pos - jump_offset);
 
         } else if (fn->type_ == Value::Type::symbol and
                    str_cmp(fn->symbol_.name_, "lambda") == 0) {
-            while (true) {
-                // ...
+
+            lat = lat->cons_.cdr();
+
+            if (lat->type_ not_eq Value::Type::cons) {
+                while (true)
+                    ; // TODO: raise error!
             }
+
+            buffer.data_[write_pos++] = (u8)Opcode::push_lambda;
+            auto j_pos = (HostInteger<u16>*)(buffer.data_ + write_pos);
+            write_pos += 2;
+
+            write_pos =
+                compile_impl(buffer,
+                             write_pos,
+                             lat->cons_.car(),
+                             jump_offset + write_pos);
+
+            buffer.data_[write_pos++] = (u8)Opcode::ret;
+
+            j_pos->set(write_pos - jump_offset);
+
         } else {
             u8 argc = 0;
 
@@ -100,8 +123,8 @@ int compile_impl(ScratchBuffer& buffer, int write_pos, Value* code)
                     break;
                 }
 
-                write_pos += compile_impl(buffer, write_pos, lat->cons_.car()) -
-                             write_pos;
+                write_pos = compile_impl(buffer, write_pos, lat->cons_.car(),
+                                         jump_offset);
 
                 lat = lat->cons_.cdr();
 
@@ -114,7 +137,7 @@ int compile_impl(ScratchBuffer& buffer, int write_pos, Value* code)
                 }
             }
 
-            write_pos += compile_impl(buffer, write_pos, fn) - write_pos;
+            write_pos = compile_impl(buffer, write_pos, fn, jump_offset);
 
             switch (argc) {
             case 1:
@@ -195,8 +218,8 @@ void compile(Platform& pfrm, Value* code)
             buffer->data_[write_pos++] = (u8)Opcode::pop;
         }
 
-        write_pos +=
-            compile_impl(*buffer, write_pos, lat->cons_.car()) - write_pos;
+        write_pos =
+            compile_impl(*buffer, write_pos, lat->cons_.car(), 0);
 
         lat = lat->cons_.cdr();
     }

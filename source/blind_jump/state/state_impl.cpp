@@ -595,6 +595,7 @@ bool draw_minimap(Platform& pfrm,
                   Float percentage,
                   int& last_column,
                   int x_start,
+                  int y_start,
                   int y_skip_top,
                   int y_skip_bot,
                   bool force_icons,
@@ -604,11 +605,11 @@ bool draw_minimap(Platform& pfrm,
         if (y < y_skip_top or y >= TileMap::height - y_skip_bot) {
             return;
         }
-        const auto tile = pfrm.get_tile(Layer::overlay, x + x_start, y);
+        const auto tile = pfrm.get_tile(Layer::overlay, x + x_start, y + y_start);
         if (dodge and (tile == 133 or tile == 132)) {
             // ...
         } else {
-            pfrm.set_tile(Layer::overlay, x + x_start, y, icon);
+            pfrm.set_tile(Layer::overlay, x + x_start, y + y_start, icon);
         }
     };
 

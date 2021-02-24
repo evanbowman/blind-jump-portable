@@ -88,15 +88,18 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             display_mode_ = DisplayMode::draw;
 
+
             sidebar_->set_display_percentage(0.96f);
 
-            auto level_str = locale_string(pfrm, LocaleString::waypoint_text);
-            const auto text_len = utf8::len(level_str->c_str()) +
-                                  integer_text_length(game.level());
+            if (resolution(pfrm.screen()) not_eq Resolution::r16_9) {
+                auto level_str = locale_string(pfrm, LocaleString::waypoint_text);
+                const auto text_len = utf8::len(level_str->c_str()) +
+                    integer_text_length(game.level());
 
-            level_text_.emplace(pfrm, OverlayCoord{u8((15 - text_len) / 2), 0});
-            level_text_->assign(level_str->c_str());
-            level_text_->append(game.level());
+                level_text_.emplace(pfrm, OverlayCoord{u8((15 - text_len) / 2), 0});
+                level_text_->assign(level_str->c_str());
+                level_text_->append(game.level());
+            }
 
             restore_keystates = pfrm.keyboard().dump_state();
 
@@ -136,13 +139,25 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
                 to_tile_coord(game.transporter().get_position().cast<s32>())
                     .cast<u8>()));
 
-            draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true);
+            int offset = 0;
+            if (resolution(pfrm.screen()) == Resolution::r16_9) {
+                offset = -1;
+            }
+
+            draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, offset, 1, 1, true);
         } else {
+
+            int offset = 0;
+            if (resolution(pfrm.screen()) == Resolution::r16_9) {
+                offset = -1;
+            }
+
             draw_minimap(pfrm,
                          game,
                          0.9f * (timer_ / Float(duration)),
                          last_map_column_,
                          -1,
+                         offset,
                          1,
                          1);
         }
@@ -192,8 +207,12 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
                     return nullptr;
                 }
             }();
+            int offset = 0;
+            if (resolution(pfrm.screen()) == Resolution::r16_9) {
+                offset = -1;
+            }
             draw_minimap(
-                pfrm, game, 0.9f, last_map_column_, -1, 1, 1, true, path);
+                 pfrm, game, 0.9f, last_map_column_, -1, offset, 1, 1, true, path);
         }
 
         game.player().soft_update(pfrm, game, delta);

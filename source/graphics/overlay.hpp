@@ -285,6 +285,25 @@ inline OverlayCoord calc_screen_tiles(Platform& pfrm)
 }
 
 
+enum class Resolution {
+    r16_9,
+    r3_2,
+    unknown,
+    count,
+};
+
+
+inline Resolution resolution(Platform::Screen& screen)
+{
+    if (screen.size().x == 240 and screen.size().y == 160) {
+        return Resolution::r3_2;
+    } else if (screen.size().x == 240 and screen.size().y == 136) {
+        return Resolution::r16_9;
+    }
+    return Resolution::unknown;
+}
+
+
 using Margin = u16;
 
 

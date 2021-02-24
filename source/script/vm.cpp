@@ -12,9 +12,14 @@ bool is_boolean_true(Value* val);
 const char* symbol_from_offset(u16 offset);
 
 
-void vm_execute(ScratchBuffer& code, int start_offset)
+Value* make_bytecode_function(Value* buffer);
+
+
+void vm_execute(Value* code_buffer, int start_offset)
 {
     int pc = start_offset;
+
+    auto& code = *code_buffer->data_buffer_.value();
 
 #define READ_U16 ((HostInteger<u16>*)(code.data_ + pc))->get()
 #define READ_S16 ((HostInteger<s16>*)(code.data_ + pc))->get()
@@ -130,6 +135,17 @@ void vm_execute(ScratchBuffer& code, int start_offset)
 
         case Opcode::ret:
             return;
+
+        case Opcode::push_lambda: {
+            ++pc;
+            auto fn = make_bytecode_function(code_buffer);
+            if (fn->type_ == lisp::Value::Type::function) {
+                fn->function_.bytecode_impl_.bc_offset_ = pc + 2;
+            }
+            push_op(fn);
+            pc = start_offset + READ_U16;
+            break;
+        }
 
         default:
         case Opcode::fatal:
