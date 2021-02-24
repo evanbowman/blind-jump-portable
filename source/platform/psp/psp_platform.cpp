@@ -546,6 +546,10 @@ void Platform::enable_glyph_mode(bool enabled)
 }
 
 
+static g2dColor default_text_foreground_color;
+static g2dColor default_text_background_color;
+
+
 void Platform::load_overlay_texture(const char* name)
 {
     StringBuffer<64> str_name = name;
@@ -568,6 +572,12 @@ void Platform::load_overlay_texture(const char* name)
 
             auto color =
                 load_pixel(img_data->data_, img_data->size_, line_height, x, y);
+
+            if (x == 648 and y == 0) {
+                default_text_foreground_color = color;
+            } else if (x == 649 and y == 0) {
+                default_text_background_color = color;
+            }
 
             auto target_overlay = x / 8;
 
@@ -602,9 +612,16 @@ void Platform::load_overlay_texture(const char* name)
             }
 
             auto& charset = charset_image_ram[target_charset];
+            auto& charset2 = charset_image_ram2[target_charset];
 
             auto set_pixel = [&](int x, int y) {
-                charset.pixels_[x % 16 + y * 16] = color;
+                if (color == G2D_RGBA(0, 0, 16, 255)) {
+                    charset.pixels_[x % 16 + y * 16] = G2D_RGBA(255, 255, 255, 255);
+                    charset2.pixels_[x % 16 + y * 16] = G2D_RGBA(0, 0, 0, 0);
+                } else {
+                    charset.pixels_[x % 16 + y * 16] = G2D_RGBA(0, 0, 0, 0);
+                    charset2.pixels_[x % 16 + y * 16] = G2D_RGBA(255, 255, 255, 255);
+                }
             };
 
             set_pixel((x * 2), (y * 2));
@@ -713,9 +730,28 @@ u16 Platform::get_tile(Layer layer, u16 x, u16 y)
 }
 
 
+static FontColors font_extra_palettes[16];
+static u32 font_extra_palette_write_index = 0;
+
+
 void Platform::set_tile(u16 x, u16 y, TileDesc glyph, const FontColors& colors)
 {
+    glyph |= (1 << 10);
+
+    for (int i = 0; i < 16; ++i) {
+        if (font_extra_palettes[i].foreground_ == colors.foreground_ and
+            font_extra_palettes[i].background_ == colors.background_) {
+            glyph |= ((i & 0xf) << 11);
+            set_tile(Layer::overlay, x, y, glyph);
+            return;
+        }
+    }
+
+    font_extra_palettes[(font_extra_palette_write_index) % 16] = colors;
+    glyph |= (((font_extra_palette_write_index % 16) & 0xf) << 11);
     set_tile(Layer::overlay, x, y, glyph);
+
+    font_extra_palette_write_index++;
 }
 
 
@@ -1260,10 +1296,17 @@ static void display_overlay()
         for (int y = 0; y < 32; ++y) {
             auto tile = overlay_tiles[x][y];
             bool is_glyph = false;
+            std::optional<int> ext_palette;
 
             if (tile & (1 << 15)) {
                 tile = tile & (~(1 << 15));
                 is_glyph = true;
+
+                if (tile & (1 << 10)) {
+                    ext_palette = (tile & (0xf << 11)) >> 11;
+                    tile = tile & (~(0xf << 11));
+                    tile = tile & (~(1 << 10));
+                }
             }
 
             if (tile) {
@@ -1275,8 +1318,31 @@ static void display_overlay()
                 g2dBeginRects(&temp);
                 g2dSetCoordMode(G2D_UP_LEFT);
                 g2dSetCoordXY(x * 16 - origin.x, y * 16 - origin.y);
+                if (is_glyph) {
+                    if (ext_palette) {
+                        auto& colors = font_extra_palettes[*ext_palette];
+                        g2dSetColor(make_color((int)colors.background_, 255));
+                    } else {
+                        g2dSetColor(default_text_background_color);
+                    }
+                }
                 g2dAdd();
                 g2dEnd();
+
+                if (is_glyph) {
+                    temp.data = charset_image_ram2[tile].pixels_;
+                    g2dBeginRects(&temp);
+                    g2dSetCoordMode(G2D_UP_LEFT);
+                    g2dSetCoordXY(x * 16 - origin.x, y * 16 - origin.y);
+                    if (ext_palette) {
+                        auto& colors = font_extra_palettes[*ext_palette];
+                        g2dSetColor(make_color((int)colors.foreground_, 255));
+                    } else {
+                        g2dSetColor(default_text_foreground_color);
+                    }
+                    g2dAdd();
+                    g2dEnd();
+                }
             }
         }
     }

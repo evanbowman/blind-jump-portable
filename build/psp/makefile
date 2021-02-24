@@ -63,6 +63,8 @@ OBJS =  $(SRC)/platform/psp/psp_platform.o \
 	$(SRC)/path.o \
 	$(SRC)/blind_jump/game.o \
 	$(SRC)/script/lisp.o \
+	$(SRC)/script/vm.o \
+	$(SRC)/script/compiler.o \
 	$(SRC)/blind_jump/state/multiplayerReviveWaitingState.o \
 	$(SRC)/blind_jump/state/healthAndSafetyWarningState.o \
 	$(SRC)/blind_jump/state/quickSelectInventoryState.o \
