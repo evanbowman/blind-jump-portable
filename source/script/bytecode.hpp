@@ -1,54 +1,364 @@
 #pragma once
 
 #include "number/int.h"
+#include "number/endian.hpp"
 
 
-// clang-format off
+namespace lisp {
 
 
-enum class Opcode : u8 {
-//  name                | width |  usage
+using Opcode = u8;
 
-// OPCODE VALUE 0 TRIGGERS A FATAL ERROR IF CALLED. THE BYTECODE COMPILER WILL
-// SET ALL NEWLY-ALLOCATED PROGRAM MEMORY TO ZERO, SO ERRONEOUS JUMP
-// INSTRUCTIONS OR ERRORS IN THE BYTECODE OUTPUT ARE LIKELY TO EXIT THE VM,
-// RATHER THAN OVERRUN THE CODE BUFFER.
-    fatal,               // 1      FATAL
 
-// VARIABLE LOADING OPCODES
-    load_var,            // 3      LOAD_VAR(u16 name_offset)
+namespace instruction {
 
-// OPCODES FOR PUSHING LITERALS
-    push_nil,            // 1      PUSH_NIL
-    push_integer,        // 5      PUSH_INTEGER(s32 value)
-    push_small_integer,  // 2      PUSH_SMALL_INTEGER(s8 value)
-    push_0,              // 1      PUSH_0
-    push_1,              // 1      PUSH_1
-    push_2,              // 1      PUSH_2
-    push_symbol,         // 3      PUSH_SYMBOL(u16 name_offset)
-    push_list,           // 2      PUSH_LIST(u8 count)
 
-// FUNCtiON CALL OPCODES
-    funcall,             // 2      FUNCALL(u8 argc)
-    funcall_1,           // 1      FUNCALL_1
-    funcall_2,           // 1      FUNCALL_2
-    funcall_3,           // 1      FUNCALL_3
-
-// OPCODES THAT MODIFY THE VM's PROGRAM COUNTER
-    jump,                // 3      JUMP(u16 offset)
-    jump_small,          // 2      JUMP_SMALL(u8 offset)
-    jump_if_false,       // 3      JUMP_IF_FALSE(u16 offset)
-    jump_small_if_false, // 2      JUMP_SMALL_IF_FALSE(u8 offset)
-    push_lambda,         // 1      PUSH_LAMBDA(u16 lambda_end)
-
-// MISC OPCODES FOR THE OPERAND STACK
-    pop,                 // 1      POP
-    popn,                // 2      POPN
-    dup,                 // 1      DUP
-
-// RETURN OPCODES
-    ret,                 // 1      RET
+struct Header {
+    Opcode op_;
 };
 
 
-// clang-format on
+struct Fatal {
+    Header header_;
+
+    static const char* name()
+    {
+        return "FATAL";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 0;
+    }
+};
+
+
+struct LoadVar {
+    Header header_;
+    host_u16 name_offset_;
+
+    static const char* name()
+    {
+        return "LOAD_VAR";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 1;
+    }
+};
+
+
+struct PushNil {
+    Header header_;
+
+    static const char* name()
+    {
+        return "PUSH_NIL";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 2;
+    }
+};
+
+
+struct PushInteger {
+    Header header_;
+    host_u32 value_;
+
+    static const char* name()
+    {
+        return "PUSH_INTEGER";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 3;
+    }
+};
+
+
+struct PushSmallInteger {
+    Header header_;
+    s8 value_;
+
+    static const char* name()
+    {
+        return "PUSH_SMALL_INTEGER";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 4;
+    }
+};
+
+
+struct Push0 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "PUSH_0";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 5;
+    }
+};
+
+
+struct Push1 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "PUSH_1";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 6;
+    }
+};
+
+
+struct Push2 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "PUSH_2";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 7;
+    }
+};
+
+
+struct PushSymbol {
+    Header header_;
+    host_u16 name_offset_;
+
+    static const char* name()
+    {
+        return "PUSH_SYMBOL";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 8;
+    }
+};
+
+
+struct PushList {
+    Header header_;
+    u8 element_count_;
+
+    static const char* name()
+    {
+        return "PUSH_LIST";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 9;
+    }
+};
+
+
+struct Funcall {
+    Header header_;
+    u8 argc_;
+
+    static const char* name()
+    {
+        return "FUNCALL";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 10;
+    }
+};
+
+
+struct Funcall1 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "FUNCALL_1";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 11;
+    }
+};
+
+
+struct Funcall2 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "FUNCALL_2";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 12;
+    }
+};
+
+
+struct Funcall3 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "FUNCALL_3";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 13;
+    }
+};
+
+
+struct Jump {
+    Header header_;
+    host_u16 offset_;
+
+    static const char* name()
+    {
+        return "JUMP";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 14;
+    }
+};
+
+
+struct JumpSmall {
+    Header header_;
+    u8 offset_;
+
+    static const char* name()
+    {
+        return "JUMP_SMALL";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 15;
+    }
+};
+
+
+struct JumpIfFalse {
+    Header header_;
+    host_u16 offset_;
+
+    static const char* name()
+    {
+        return "JUMP_IF_FALSE";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 16;
+    }
+};
+
+
+struct JumpSmallIfFalse {
+    Header header_;
+    u8 offset_;
+
+    static const char* name()
+    {
+        return "JUMP_SMALL_IF_FALSE";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 17;
+    }
+};
+
+
+struct PushLambda {
+    Header header_;
+    host_u16 lambda_end_;
+
+    static const char* name()
+    {
+        return "PUSH_LAMBDA";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 18;
+    }
+};
+
+
+struct Pop {
+    Header header_;
+
+    static const char* name()
+    {
+        return "POP";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 19;
+    }
+};
+
+
+struct Dup {
+    Header header_;
+
+    static const char* name()
+    {
+        return "DUP";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 20;
+    }
+};
+
+
+struct Ret {
+    Header header_;
+
+    static const char* name()
+    {
+        return "RET";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 21;
+    }
+};
+
+
+}
+
+}

@@ -15,145 +15,146 @@ const char* symbol_from_offset(u16 offset);
 Value* make_bytecode_function(Value* buffer);
 
 
+template <typename Instruction>
+Instruction* read(ScratchBuffer& buffer, int& pc)
+{
+    auto result = (Instruction*)(buffer.data_ + pc);
+    pc += sizeof(Instruction);
+    return result;
+}
+
+
 void vm_execute(Value* code_buffer, int start_offset)
 {
     int pc = start_offset;
 
     auto& code = *code_buffer->data_buffer_.value();
 
-#define READ_U16 ((HostInteger<u16>*)(code.data_ + pc))->get()
-#define READ_S16 ((HostInteger<s16>*)(code.data_ + pc))->get()
-#define READ_S32 ((HostInteger<s32>*)(code.data_ + pc))->get()
-#define READ_U8 *(code.data_ + pc)
-#define READ_S8 *(s8*)(code.data_ + pc)
+    using namespace instruction;
 
     while (true) {
 
         switch ((Opcode)code.data_[pc]) {
-        case Opcode::jump_if_false:
-            ++pc;
+        case JumpIfFalse::op(): {
+            auto inst = read<JumpIfFalse>(code, pc);
             if (not is_boolean_true(get_op(0))) {
-                pc = start_offset + READ_U16;
-            } else {
-                pc += 2;
+                pc = start_offset + inst->offset_.get();
             }
             pop_op();
             break;
+        }
 
-        case Opcode::jump:
-            ++pc;
-            pc = start_offset + READ_U16;
+        case Jump::op(): {
+            auto inst = read<Jump>(code, pc);
+            pc = start_offset + inst->offset_.get();
             break;
+        }
 
-        case Opcode::load_var:
-            ++pc;
-            push_op(get_var(symbol_from_offset(READ_S16)));
-            pc += 2;
+        case LoadVar::op(): {
+            auto inst = read<LoadVar>(code, pc);
+            push_op(get_var(symbol_from_offset(inst->name_offset_.get())));
             break;
+        }
 
-        case Opcode::dup:
-            ++pc;
+        case Dup::op(): {
+            read<Dup>(code, pc);
             push_op(get_op(0));
-            ;
             break;
+        }
 
-        case Opcode::push_nil:
-            ++pc;
+        case PushNil::op():
+            read<PushNil>(code, pc);
             push_op(get_nil());
             break;
 
-        case Opcode::push_integer:
-            ++pc;
-            push_op(make_integer(READ_S32));
-            pc += 4;
+        case PushInteger::op(): {
+            auto inst = read<PushInteger>(code, pc);
+            push_op(make_integer(inst->value_.get()));
             break;
+        }
 
-        case Opcode::push_0:
+        case Push0::op():
+            read<Push0>(code, pc);
             push_op(make_integer(0));
-            ++pc;
             break;
 
-        case Opcode::push_1:
+        case Push1::op():
+            read<Push1>(code, pc);
             push_op(make_integer(1));
-            ++pc;
             break;
 
-        case Opcode::push_2:
+        case Push2::op():
+            read<Push2>(code, pc);
             push_op(make_integer(2));
-            ++pc;
             break;
 
-        case Opcode::push_small_integer:
-            ++pc;
-            push_op(make_integer(READ_S8));
-            ++pc;
+        case PushSmallInteger::op(): {
+            auto inst = read<PushSmallInteger>(code, pc);
+            push_op(make_integer(inst->value_));
             break;
+        }
 
-        case Opcode::push_symbol:
-            ++pc;
-            push_op(make_symbol(symbol_from_offset(READ_S16),
+        case PushSymbol::op(): {
+            auto inst = read<PushSymbol>(code, pc);
+            push_op(make_symbol(symbol_from_offset(inst->name_offset_.get()),
                                 Symbol::ModeBits::stable_pointer));
-            pc += 2;
             break;
+        }
 
-        case Opcode::funcall: {
-            ++pc;
+        case Funcall::op(): {
             Protected fn(get_op(0));
-            auto argc = READ_U8;
-            ++pc;
+            auto argc = read<Funcall>(code, pc)->argc_;
             pop_op();
             funcall(fn, argc);
             break;
         }
 
-        case Opcode::funcall_1: {
-            ++pc;
+        case Funcall1::op(): {
+            read<Funcall1>(code, pc);
             Protected fn(get_op(0));
             pop_op();
             funcall(fn, 1);
             break;
         }
 
-        case Opcode::funcall_2: {
-            ++pc;
+        case Funcall2::op(): {
+            read<Funcall2>(code, pc);
             Protected fn(get_op(0));
             pop_op();
             funcall(fn, 2);
             break;
         }
 
-        case Opcode::funcall_3: {
-            ++pc;
+        case Funcall3::op(): {
+            read<Funcall3>(code, pc);
             Protected fn(get_op(0));
             pop_op();
             funcall(fn, 3);
             break;
         }
 
-        case Opcode::pop:
+        case Pop::op():
+            read<Pop>(code, pc);
             pop_op();
-            ++pc;
             break;
 
-        case Opcode::ret:
+        case Ret::op():
             return;
 
-        case Opcode::push_lambda: {
-            ++pc;
+        case PushLambda::op(): {
+            auto inst = read<PushLambda>(code, pc);
             auto fn = make_bytecode_function(code_buffer);
             if (fn->type_ == lisp::Value::Type::function) {
-                fn->function_.bytecode_impl_.bc_offset_ = pc + 2;
+                fn->function_.bytecode_impl_.bc_offset_ = pc;
             }
             push_op(fn);
-            pc = start_offset + READ_U16;
+            pc = start_offset + inst->lambda_end_.get();
             break;
         }
 
-        case Opcode::push_list: {
-            ++pc;
-            auto list_size = READ_U8;
+        case PushList::op(): {
+            auto list_size = read<PushList>(code, pc)->element_count_;
             Protected lat(make_list(list_size));
-            ++pc;
             for (int i = 0; i < list_size; ++i) {
                 set_list(lat, i, get_op((list_size - 1) - i));
             }
@@ -165,7 +166,7 @@ void vm_execute(Value* code_buffer, int start_offset)
         }
 
         default:
-        case Opcode::fatal:
+        case Fatal::op():
             while (true)
                 ;
             break;

@@ -1949,11 +1949,13 @@ void init(Platform& pfrm)
                     out += offset;
                     out += ": ";
 
+                    using namespace instruction;
+
                     switch ((Opcode)(*data).data_[i]) {
-                    case Opcode::fatal:
+                    case Fatal::op():
                         return get_nil();
 
-                    case Opcode::load_var:
+                    case LoadVar::op():
                         i += 1;
                         out += "LOAD_VAR(";
                         out += to_string<10>(
@@ -1962,7 +1964,7 @@ void init(Platform& pfrm)
                         i += 2;
                         break;
 
-                    case Opcode::push_symbol:
+                    case PushSymbol::op():
                         i += 1;
                         out += "PUSH_SYMBOL(";
                         out += to_string<10>(
@@ -1971,27 +1973,27 @@ void init(Platform& pfrm)
                         i += 2;
                         break;
 
-                    case Opcode::push_nil:
+                    case PushNil::op():
                         out += "PUSH_NIL";
                         i += 1;
                         break;
 
-                    case Opcode::push_0:
+                    case Push0::op():
                         i += 1;
                         out += "PUSH_0";
                         break;
 
-                    case Opcode::push_1:
+                    case Push1::op():
                         i += 1;
                         out += "PUSH_1";
                         break;
 
-                    case Opcode::push_2:
+                    case Push2::op():
                         i += 1;
                         out += "PUSH_2";
                         break;
 
-                    case Opcode::push_integer:
+                    case PushInteger::op():
                         i += 1;
                         out += "PUSH_INTEGER(";
                         out += to_string<10>(
@@ -2000,14 +2002,14 @@ void init(Platform& pfrm)
                         i += 4;
                         break;
 
-                    case Opcode::push_small_integer:
+                    case PushSmallInteger::op():
                         out += "PUSH_SMALL_INTEGER(";
                         out += to_string<10>(*(data->data_ + i + 1));
                         out += ")";
                         i += 2;
                         break;
 
-                    case Opcode::jump_if_false:
+                    case JumpIfFalse::op():
                         out += "JUMP_IF_FALSE(";
                         out += to_string<10>(
                             ((HostInteger<u16>*)(data->data_ + i + 1))->get());
@@ -2015,7 +2017,7 @@ void init(Platform& pfrm)
                         i += 3;
                         break;
 
-                    case Opcode::jump:
+                    case Jump::op():
                         out += "JUMP(";
                         out += to_string<10>(
                             ((HostInteger<u16>*)(data->data_ + i + 1))->get());
@@ -2023,7 +2025,7 @@ void init(Platform& pfrm)
                         i += 3;
                         break;
 
-                    case Opcode::push_lambda:
+                    case PushLambda::op():
                         out += "PUSH_LAMBDA(";
                         out += to_string<10>(
                             ((HostInteger<u16>*)(data->data_ + i + 1))->get());
@@ -2032,41 +2034,41 @@ void init(Platform& pfrm)
                         ++depth;
                         break;
 
-                    case Opcode::funcall:
+                    case Funcall::op():
                         out += "FUNCALL(";
                         out += to_string<10>(*(data->data_ + i + 1));
                         out += ")";
                         i += 2;
                         break;
 
-                    case Opcode::push_list:
+                    case PushList::op():
                         out += "PUSH_LIST(";
                         out += to_string<10>(*(data->data_ + i + 1));
                         out += ")";
                         i += 2;
                         break;
 
-                    case Opcode::funcall_1:
+                    case Funcall1::op():
                         out += "FUNCALL_1";
                         i += 1;
                         break;
 
-                    case Opcode::funcall_2:
+                    case Funcall2::op():
                         out += "FUNCALL_2";
                         i += 1;
                         break;
 
-                    case Opcode::funcall_3:
+                    case Funcall3::op():
                         out += "FUNCALL_3";
                         i += 1;
                         break;
 
-                    case Opcode::pop:
+                    case Pop::op():
                         out += "POP";
                         i += 1;
                         break;
 
-                    case Opcode::ret: {
+                    case Ret::op(): {
                         if (depth == 0) {
                             out += "RET\r\n";
                             auto pfrm = lisp::get_var("*pfrm*");

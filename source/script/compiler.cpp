@@ -18,6 +18,24 @@ int compile_impl(ScratchBuffer& buffer,
                  int jump_offset);
 
 
+template <typename Instruction>
+static Instruction* append(ScratchBuffer& buffer, int& write_pos)
+{
+    if (write_pos + sizeof(Instruction) >= SCRATCH_BUFFER_SIZE) {
+        // FIXME: propagate error! We should return nullptr, but the caller does
+        // not check the return value yet. Now, a lambda that takes up 2kb of
+        // bytecode seems highly unlikely in the first place, but you never know
+        // I guess...
+        while (true) ;
+    }
+
+    auto result = (Instruction*)(buffer.data_ + write_pos);
+    result->header_.op_ = Instruction::op();
+    write_pos += sizeof(Instruction);
+    return result;
+}
+
+
 int compile_quoted(ScratchBuffer& buffer,
                    int write_pos,
                    Value* code)
@@ -25,10 +43,8 @@ int compile_quoted(ScratchBuffer& buffer,
     if (code->type_ == Value::Type::integer) {
         write_pos = compile_impl(buffer, write_pos, code, 0);
     } else if (code->type_ == Value::Type::symbol) {
-        buffer.data_[write_pos++] = (u8)Opcode::push_symbol;
-        auto offset_data = (HostInteger<u16>*)(buffer.data_ + write_pos);
-        offset_data->set(symbol_offset(code->symbol_.name_));
-        write_pos += 2;
+        auto inst = append<instruction::PushSymbol>(buffer, write_pos);
+        inst->name_offset_.set(symbol_offset(code->symbol_.name_));
     } else if (code->type_ == Value::Type::cons) {
 
         int list_len = 0;
@@ -51,8 +67,8 @@ int compile_quoted(ScratchBuffer& buffer,
             }
         }
 
-        buffer.data_[write_pos++] = (u8)Opcode::push_list;
-        buffer.data_[write_pos++] = list_len;
+        auto inst = append<instruction::PushList>(buffer, write_pos);
+        inst->element_count_ = list_len;
     }
 
     return write_pos;
@@ -65,29 +81,32 @@ int compile_impl(ScratchBuffer& buffer,
                  int jump_offset)
 {
     if (code->type_ == Value::Type::nil) {
-        buffer.data_[write_pos++] = (u8)Opcode::push_nil;
+
+        append<instruction::PushNil>(buffer, write_pos);
+
     } else if (code->type_ == Value::Type::integer) {
+
         if (code->integer_.value_ == 0) {
-            buffer.data_[write_pos++] = (u8)Opcode::push_0;
+            append<instruction::Push0>(buffer, write_pos);
         } else if (code->integer_.value_ == 1) {
-            buffer.data_[write_pos++] = (u8)Opcode::push_1;
+            append<instruction::Push1>(buffer, write_pos);
         } else if (code->integer_.value_ == 2) {
-            buffer.data_[write_pos++] = (u8)Opcode::push_2;
+            append<instruction::Push2>(buffer, write_pos);
         } else if (code->integer_.value_ < 127 and
                    code->integer_.value_ > -127) {
-            buffer.data_[write_pos++] = (u8)Opcode::push_small_integer;
-            buffer.data_[write_pos++] = code->integer_.value_;
+
+            append<instruction::PushSmallInteger>(buffer, write_pos)
+                ->value_ = code->integer_.value_;
+
         } else {
-            buffer.data_[write_pos++] = (u8)Opcode::push_integer;
-            auto int_data = (HostInteger<s32>*)(buffer.data_ + write_pos);
-            int_data->set(code->integer_.value_);
-            write_pos += 4;
+            append<instruction::PushInteger>(buffer, write_pos)
+                ->value_.set(code->integer_.value_);
         }
     } else if (code->type_ == Value::Type::symbol) {
-        buffer.data_[write_pos++] = (u8)Opcode::load_var;
-        auto offset_data = (HostInteger<u16>*)(buffer.data_ + write_pos);
-        offset_data->set(symbol_offset(code->symbol_.name_));
-        write_pos += 2;
+
+        append<instruction::LoadVar>(buffer, write_pos)
+            ->name_offset_.set(symbol_offset(code->symbol_.name_));
+
     } else if (code->type_ == Value::Type::cons) {
 
         auto lat = code;
@@ -106,9 +125,7 @@ int compile_impl(ScratchBuffer& buffer,
             write_pos =
                 compile_impl(buffer, write_pos, lat->cons_.car(), jump_offset);
 
-            buffer.data_[write_pos++] = (u8)Opcode::jump_if_false;
-            auto jne_pos = (HostInteger<u16>*)(buffer.data_ + write_pos);
-            write_pos += 2;
+            auto jne = append<instruction::JumpIfFalse>(buffer, write_pos);
 
             auto true_branch = get_nil();
             auto false_branch = get_nil();
@@ -124,16 +141,14 @@ int compile_impl(ScratchBuffer& buffer,
             write_pos =
                 compile_impl(buffer, write_pos, true_branch, jump_offset);
 
-            buffer.data_[write_pos++] = (u8)Opcode::jump;
-            auto j_pos = (HostInteger<u16>*)(buffer.data_ + write_pos);
-            write_pos += 2;
+            auto jmp = append<instruction::Jump>(buffer, write_pos);
 
-            jne_pos->set(write_pos - jump_offset);
+            jne->offset_.set(write_pos - jump_offset);
 
             write_pos =
                 compile_impl(buffer, write_pos, false_branch, jump_offset);
 
-            j_pos->set(write_pos - jump_offset);
+            jmp->offset_.set(write_pos - jump_offset);
 
         } else if (fn->type_ == Value::Type::symbol and
                    str_cmp(fn->symbol_.name_, "lambda") == 0) {
@@ -145,9 +160,7 @@ int compile_impl(ScratchBuffer& buffer,
                     ; // TODO: raise error!
             }
 
-            buffer.data_[write_pos++] = (u8)Opcode::push_lambda;
-            auto j_pos = (HostInteger<u16>*)(buffer.data_ + write_pos);
-            write_pos += 2;
+            auto lambda = append<instruction::PushLambda>(buffer, write_pos);
 
             write_pos =
                 compile_impl(buffer,
@@ -155,9 +168,9 @@ int compile_impl(ScratchBuffer& buffer,
                              lat->cons_.car(),
                              jump_offset + write_pos);
 
-            buffer.data_[write_pos++] = (u8)Opcode::ret;
+            append<instruction::Ret>(buffer, write_pos);
 
-            j_pos->set(write_pos - jump_offset);
+            lambda->lambda_end_.set(write_pos - jump_offset);
 
         } else if (fn->type_ == Value::Type::symbol and
                    str_cmp(fn->symbol_.name_, "'") == 0) {
@@ -194,26 +207,25 @@ int compile_impl(ScratchBuffer& buffer,
 
             switch (argc) {
             case 1:
-                buffer.data_[write_pos++] = (u8)Opcode::funcall_1;
+                append<instruction::Funcall1>(buffer, write_pos);
                 break;
 
             case 2:
-                buffer.data_[write_pos++] = (u8)Opcode::funcall_2;
+                append<instruction::Funcall2>(buffer, write_pos);
                 break;
 
             case 3:
-                buffer.data_[write_pos++] = (u8)Opcode::funcall_3;
+                append<instruction::Funcall3>(buffer, write_pos);
                 break;
 
             default:
-                buffer.data_[write_pos++] = (u8)Opcode::funcall;
-                buffer.data_[write_pos++] = argc;
+                append<instruction::Funcall>(buffer, write_pos)->argc_ = argc;
                 break;
             }
         }
 
     } else {
-        buffer.data_[write_pos++] = (u8)Opcode::push_nil;
+        append<instruction::PushNil>(buffer, write_pos);
     }
     return write_pos;
 }
@@ -224,12 +236,30 @@ void live_values(::Function<24, void(Value&)> callback);
 
 class PeepholeOptimizer {
 public:
+
     u32 run(ScratchBuffer& code_buffer, u32 code_size)
     {
         // TODO...
         // Be careful about jump offsets when implementing these optimizations.
         return code_size;
     }
+
+
+    // // We have just inserted/removed an instruction, and now need to scan
+    // // through the bytecode, and adjust the offsets of local jumps within the
+    // // lambda definition.
+    // void fixup_jumps(ScratchBuffer& code_buffer,
+    //                  int inflection_point,
+    //                  int size_diff)
+    // {
+    //     int pc = 0;
+
+    //     while (true) {
+    //         switch ((Opcode)code_buffer.data_[pc]) {
+
+    //         }
+    //     }
+    // }
 };
 
 
@@ -268,7 +298,7 @@ void compile(Platform& pfrm, Value* code)
         }
 
         if (write_pos not_eq 0) {
-            buffer->data_[write_pos++] = (u8)Opcode::pop;
+            append<instruction::Pop>(*buffer, write_pos);
         }
 
         write_pos =
@@ -277,8 +307,7 @@ void compile(Platform& pfrm, Value* code)
         lat = lat->cons_.cdr();
     }
 
-    buffer->data_[write_pos++] = (u8)Opcode::ret;
-
+    append<instruction::Ret>(*buffer, write_pos);
 
     write_pos = PeepholeOptimizer().run(
         *dcompr(fn->function_.bytecode_impl_.data_buffer_)
@@ -308,7 +337,7 @@ void compile(Platform& pfrm, Value* code)
             int used = SCRATCH_BUFFER_SIZE - 1;
             for (; used > 0; --used) {
                 if ((Opcode)buf->data_buffer_.value()->data_[used] not_eq
-                    Opcode::fatal) {
+                    instruction::Fatal::op()) {
                     ++used;
                     break;
                 }
