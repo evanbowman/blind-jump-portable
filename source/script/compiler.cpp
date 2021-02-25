@@ -15,6 +15,53 @@ u16 symbol_offset(const char* symbol);
 int compile_impl(ScratchBuffer& buffer,
                  int write_pos,
                  Value* code,
+                 int jump_offset);
+
+
+int compile_quoted(ScratchBuffer& buffer,
+                   int write_pos,
+                   Value* code)
+{
+    if (code->type_ == Value::Type::integer) {
+        write_pos = compile_impl(buffer, write_pos, code, 0);
+    } else if (code->type_ == Value::Type::symbol) {
+        buffer.data_[write_pos++] = (u8)Opcode::push_symbol;
+        auto offset_data = (HostInteger<u16>*)(buffer.data_ + write_pos);
+        offset_data->set(symbol_offset(code->symbol_.name_));
+        write_pos += 2;
+    } else if (code->type_ == Value::Type::cons) {
+
+        int list_len = 0;
+
+        while (code not_eq get_nil()) {
+            if (code->type_ not_eq Value::Type::cons) {
+                // ...
+                break;
+            }
+            write_pos = compile_quoted(buffer, write_pos, code->cons_.car());
+
+            code = code->cons_.cdr();
+
+            list_len++;
+
+            if (list_len == 255) {
+                // FIXME: raise error!
+                while (true)
+                    ;
+            }
+        }
+
+        buffer.data_[write_pos++] = (u8)Opcode::push_list;
+        buffer.data_[write_pos++] = list_len;
+    }
+
+    return write_pos;
+}
+
+
+int compile_impl(ScratchBuffer& buffer,
+                 int write_pos,
+                 Value* code,
                  int jump_offset)
 {
     if (code->type_ == Value::Type::nil) {
@@ -112,6 +159,12 @@ int compile_impl(ScratchBuffer& buffer,
 
             j_pos->set(write_pos - jump_offset);
 
+        } else if (fn->type_ == Value::Type::symbol and
+                   str_cmp(fn->symbol_.name_, "'") == 0) {
+
+            write_pos = compile_quoted(buffer,
+                                       write_pos,
+                                       lat->cons_.cdr());
         } else {
             u8 argc = 0;
 

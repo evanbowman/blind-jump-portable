@@ -90,8 +90,10 @@ void vm_execute(Value* code_buffer, int start_offset)
             break;
 
         case Opcode::push_symbol:
-            while (true)
-                ; // TODO...
+            ++pc;
+            push_op(make_symbol(symbol_from_offset(READ_S16),
+                                Symbol::ModeBits::stable_pointer));
+            pc += 2;
             break;
 
         case Opcode::funcall: {
@@ -144,6 +146,21 @@ void vm_execute(Value* code_buffer, int start_offset)
             }
             push_op(fn);
             pc = start_offset + READ_U16;
+            break;
+        }
+
+        case Opcode::push_list: {
+            ++pc;
+            auto list_size = READ_U8;
+            Protected lat(make_list(list_size));
+            ++pc;
+            for (int i = 0; i < list_size; ++i) {
+                set_list(lat, i, get_op((list_size - 1) - i));
+            }
+            for (int i = 0; i < list_size; ++i) {
+                pop_op();
+            }
+            push_op(lat);
             break;
         }
 

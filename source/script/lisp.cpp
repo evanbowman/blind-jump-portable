@@ -1962,6 +1962,15 @@ void init(Platform& pfrm)
                         i += 2;
                         break;
 
+                    case Opcode::push_symbol:
+                        i += 1;
+                        out += "PUSH_SYMBOL(";
+                        out += to_string<10>(
+                            ((HostInteger<s16>*)(data->data_ + i))->get());
+                        out += ")";
+                        i += 2;
+                        break;
+
                     case Opcode::push_nil:
                         out += "PUSH_NIL";
                         i += 1;
@@ -1998,11 +2007,6 @@ void init(Platform& pfrm)
                         i += 2;
                         break;
 
-                    case Opcode::push_symbol:
-                        out += "PUSH_SYMBOL(0)";
-                        i += 3;
-                        break;
-
                     case Opcode::jump_if_false:
                         out += "JUMP_IF_FALSE(";
                         out += to_string<10>(
@@ -2030,6 +2034,13 @@ void init(Platform& pfrm)
 
                     case Opcode::funcall:
                         out += "FUNCALL(";
+                        out += to_string<10>(*(data->data_ + i + 1));
+                        out += ")";
+                        i += 2;
+                        break;
+
+                    case Opcode::push_list:
+                        out += "PUSH_LIST(";
                         out += to_string<10>(*(data->data_ + i + 1));
                         out += ")";
                         i += 2;
