@@ -148,6 +148,17 @@ void vm_execute(Value* code_buffer, int start_offset)
             break;
         }
 
+        case MakePair::op(): {
+            read<MakePair>(code, pc);
+            auto car = get_op(1);
+            auto cdr = get_op(0);
+            auto cons = make_cons(car, cdr);
+            pop_op();
+            pop_op();
+            push_op(cons);
+            break;
+        }
+
         case Pop::op():
             read<Pop>(code, pc);
             pop_op();

@@ -2078,6 +2078,11 @@ void init(Platform& pfrm)
                         i += 1;
                         break;
 
+                    case MakePair::op():
+                        out += "MAKE_PAIR";
+                        i += 1;
+                        break;
+
                     case Dup::op():
                         out += Dup::name();
                         i += 1;

@@ -203,24 +203,33 @@ int compile_impl(ScratchBuffer& buffer,
                 }
             }
 
-            write_pos = compile_impl(buffer, write_pos, fn, jump_offset);
+            if (fn->type_ == Value::Type::symbol and
+                str_cmp(fn->symbol_.name_, "cons") == 0 and
+                argc == 2) {
 
-            switch (argc) {
-            case 1:
-                append<instruction::Funcall1>(buffer, write_pos);
-                break;
+                append<instruction::MakePair>(buffer, write_pos);
 
-            case 2:
-                append<instruction::Funcall2>(buffer, write_pos);
-                break;
+            } else {
 
-            case 3:
-                append<instruction::Funcall3>(buffer, write_pos);
-                break;
+                write_pos = compile_impl(buffer, write_pos, fn, jump_offset);
 
-            default:
-                append<instruction::Funcall>(buffer, write_pos)->argc_ = argc;
-                break;
+                switch (argc) {
+                case 1:
+                    append<instruction::Funcall1>(buffer, write_pos);
+                    break;
+
+                case 2:
+                    append<instruction::Funcall2>(buffer, write_pos);
+                    break;
+
+                case 3:
+                    append<instruction::Funcall3>(buffer, write_pos);
+                    break;
+
+                default:
+                    append<instruction::Funcall>(buffer, write_pos)->argc_ = argc;
+                    break;
+                }
             }
         }
 
