@@ -4,10 +4,6 @@
 #include "memory/buffer.hpp"
 #include "memory/pool.hpp"
 #include <complex>
-#ifndef __GBA__
-#include <iomanip>
-#include <iostream>
-#endif
 #include "bytecode.hpp"
 
 
@@ -2025,6 +2021,20 @@ void init(Platform& pfrm)
                         i += 3;
                         break;
 
+                    case SmallJumpIfFalse::op():
+                        out += "SMALL_JUMP_IF_FALSE(";
+                        out += to_string<10>(*(data->data_ + i + 1));
+                        out += ")";
+                        i += 2;
+                        break;
+
+                    case SmallJump::op():
+                        out += "SMALL_JUMP(";
+                        out += to_string<10>(*(data->data_ + i + 1));
+                        out += ")";
+                        i += 2;
+                        break;
+
                     case PushLambda::op():
                         out += "PUSH_LAMBDA(";
                         out += to_string<10>(
@@ -2068,6 +2078,11 @@ void init(Platform& pfrm)
                         i += 1;
                         break;
 
+                    case Dup::op():
+                        out += Dup::name();
+                        i += 1;
+                        break;
+
                     case Ret::op(): {
                         if (depth == 0) {
                             out += "RET\r\n";
@@ -2075,7 +2090,7 @@ void init(Platform& pfrm)
                             if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
                                 return get_nil();
                             }
-                            ((Platform*)pfrm)
+                            ((Platform*)pfrm->user_data_.obj_)
                                 ->remote_console()
                                 .printline(out.c_str());
                             ((Platform*)pfrm)->sleep(30);
@@ -2089,6 +2104,9 @@ void init(Platform& pfrm)
                     }
 
                     default:
+                            ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
+                                ->remote_console()
+                                .printline(out.c_str());
                         return get_nil();
                     }
                     out += "\r\n";

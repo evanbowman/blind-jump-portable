@@ -236,30 +236,241 @@ void live_values(::Function<24, void(Value&)> callback);
 
 class PeepholeOptimizer {
 public:
-
-    u32 run(ScratchBuffer& code_buffer, u32 code_size)
+    template <typename U, typename T>
+    void replace(ScratchBuffer& code_buffer, U& dest, T& source, u32& code_size)
     {
-        // TODO...
-        // Be careful about jump offsets when implementing these optimizations.
-        return code_size;
+        static_assert(sizeof dest > sizeof source);
+        memcpy(&dest, &source, sizeof source);
+
+
+        auto diff = (sizeof dest) - (sizeof source);
+        const int start = ((u8*)&dest - (u8*)code_buffer.data_) + sizeof source;
+
+        for (u32 i = start; i < code_size - diff; ++i) {
+            code_buffer.data_[i] = code_buffer.data_[i + diff];
+        }
+
+        code_size -= diff;
+
+        fixup_jumps(code_buffer, start, -diff);
     }
 
 
-    // // We have just inserted/removed an instruction, and now need to scan
-    // // through the bytecode, and adjust the offsets of local jumps within the
-    // // lambda definition.
-    // void fixup_jumps(ScratchBuffer& code_buffer,
-    //                  int inflection_point,
-    //                  int size_diff)
-    // {
-    //     int pc = 0;
+    u32 run(ScratchBuffer& code_buffer, u32 code_size)
+    {
+        int index = 0;
+        while (true) {
+            using namespace instruction;
+            auto inst = load_instruction(code_buffer, index);
 
-    //     while (true) {
-    //         switch ((Opcode)code_buffer.data_[pc]) {
+            switch (inst->op_) {
+            case PushLambda::op():
+                // FIXME! We do not support optimization yet when there are
+                // nested lambda definitions, we need to carefully adjust the
+                // jump instruction coordinates in these cases, as jumps are
+                // relative to the beginning of the lambda.
+                return code_size;
 
-    //         }
-    //     }
-    // }
+            case Ret::op():
+                goto TOP;
+
+            default:
+                ++index;
+                break;
+            }
+        }
+
+    TOP:
+        index = 0;
+
+        while (true) {
+            using namespace instruction;
+
+            auto inst = load_instruction(code_buffer, index);
+            switch (inst->op_) {
+            case Ret::op():
+                return code_size;
+
+            case PushLambda::op():
+                return code_size;
+
+            case PushSmallInteger::op(): {
+                if (index > 0) {
+                    auto prev = load_instruction(code_buffer, index - 1);
+                    if (prev->op_ == PushSmallInteger::op()) {
+                        if (((PushSmallInteger*)prev)->value_ ==
+                            ((PushSmallInteger*)inst)->value_) {
+
+                            Dup d;
+                            d.header_.op_ = Dup::op();
+                            replace(code_buffer, *(PushSmallInteger*)inst, d, code_size);
+                            goto TOP;
+                        }
+                    } else if (prev->op_ == Dup::op()) {
+                        int backtrack = index - 2;
+                        while (backtrack > 0) {
+                            auto it = load_instruction(code_buffer, backtrack);
+                            if (it->op_ == Dup::op()) {
+                                --backtrack;
+                            } else if (it->op_ == PushSmallInteger::op()) {
+                                if (((PushSmallInteger*)it)->value_ ==
+                                    ((PushSmallInteger*)inst)->value_) {
+
+                                    Dup d;
+                                    d.header_.op_ = Dup::op();
+                                    replace(code_buffer, *(PushSmallInteger*)inst, d, code_size);
+                                    // code_size -= sizeof(PushSmallInteger) - sizeof(Dup);
+                                    goto TOP;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                ++index;
+                break;
+            }
+
+            case PushInteger::op(): {
+                if (index > 0) {
+                    auto prev = load_instruction(code_buffer, index - 1);
+                    if (prev->op_ == PushInteger::op()) {
+                        if (((PushInteger*)prev)->value_.get() ==
+                            ((PushInteger*)inst)->value_.get()) {
+
+                            Dup d;
+                            d.header_.op_ = Dup::op();
+                            replace(code_buffer, *(PushInteger*)inst, d, code_size);
+                            goto TOP;
+                        }
+                    } else if (prev->op_ == Dup::op()) {
+                        int backtrack = index - 2;
+                        while (backtrack > 0) {
+                            auto it = load_instruction(code_buffer, backtrack);
+                            if (it->op_ == Dup::op()) {
+                                --backtrack;
+                            } else if (it->op_ == PushInteger::op()) {
+                                if (((PushInteger*)it)->value_.get() ==
+                                    ((PushInteger*)inst)->value_.get()) {
+
+                                    Dup d;
+                                    d.header_.op_ = Dup::op();
+                                    replace(code_buffer, *(PushInteger*)inst, d, code_size);
+                                    goto TOP;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                ++index;
+                break;
+            }
+
+            case Jump::op():
+                if (((Jump*)inst)->offset_.get() < 255) {
+                    SmallJump j;
+                    j.header_.op_ = SmallJump::op();
+                    j.offset_ = ((Jump*)inst)->offset_.get();
+                    replace(code_buffer, *(Jump*)inst, j, code_size);
+                    goto TOP;
+                }
+                ++index;
+                break;
+
+            case JumpIfFalse::op():
+                if (((JumpIfFalse*)inst)->offset_.get() < 255) {
+                    SmallJumpIfFalse j;
+                    j.header_.op_ = SmallJumpIfFalse::op();
+                    j.offset_ = ((JumpIfFalse*)inst)->offset_.get();
+                    replace(code_buffer, *(JumpIfFalse*)inst, j, code_size);
+                    goto TOP;
+                }
+                ++index;
+                break;
+
+            default:
+                index++;
+                break;
+            }
+        }
+    }
+
+
+    // We have just inserted/removed an instruction, and now need to scan
+    // through the bytecode, and adjust the offsets of local jumps within the
+    // lambda definition.
+    void fixup_jumps(ScratchBuffer& code_buffer,
+                     int inflection_point,
+                     int size_diff)
+    {
+        int index = 0;
+        int depth = 0;
+
+        struct LambdaInfo {
+            int start_ = 0;
+        };
+
+        Buffer<LambdaInfo, 15> function_stack;
+        function_stack.push_back({0});
+
+        while (true) {
+            using namespace instruction;
+
+            auto inst = load_instruction(code_buffer, index);
+            switch (inst->op_) {
+            case PushLambda::op():
+                ++depth;
+                if (((PushLambda*)inst)->lambda_end_.get() > inflection_point) {
+                    auto end = ((PushLambda*)inst)->lambda_end_.get();
+                    ((PushLambda*)inst)->lambda_end_.set(end + size_diff);
+                }
+                ++index;
+                break;
+
+            case Jump::op():
+                if (((Jump*)inst)->offset_.get() > inflection_point) {
+                    auto offset = ((Jump*)inst)->offset_.get();
+                    ((Jump*)inst)->offset_.set(offset + size_diff);
+                }
+                ++index;
+                break;
+
+            case JumpIfFalse::op():
+                if (((JumpIfFalse*)inst)->offset_.get() > inflection_point) {
+                    auto offset = ((JumpIfFalse*)inst)->offset_.get();
+                    ((JumpIfFalse*)inst)->offset_.set(offset + size_diff);
+                }
+                ++index;
+                break;
+
+            case SmallJump::op():
+                if (((SmallJump*)inst)->offset_ > inflection_point) {
+                    auto offset = ((SmallJump*)inst)->offset_;
+                    ((SmallJump*)inst)->offset_ = offset + size_diff;
+                }
+                ++index;
+                break;
+
+            case SmallJumpIfFalse::op():
+                if (((SmallJumpIfFalse*)inst)->offset_ > inflection_point) {
+                    auto offset = ((SmallJumpIfFalse*)inst)->offset_;
+                    ((SmallJumpIfFalse*)inst)->offset_ = offset + size_diff;
+                }
+                ++index;
+                break;
+
+            default:
+                ++index;
+                break;
+
+            case Ret::op():
+                return;
+            }
+        }
+    }
 };
 
 

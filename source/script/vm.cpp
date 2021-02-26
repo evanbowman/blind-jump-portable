@@ -50,6 +50,21 @@ void vm_execute(Value* code_buffer, int start_offset)
             break;
         }
 
+        case SmallJumpIfFalse::op(): {
+            auto inst = read<SmallJumpIfFalse>(code, pc);
+            if (not is_boolean_true(get_op(0))) {
+                pc = start_offset + inst->offset_;
+            }
+            pop_op();
+            break;
+        }
+
+        case SmallJump::op(): {
+            auto inst = read<SmallJump>(code, pc);
+            pc = start_offset + inst->offset_;
+            break;
+        }
+
         case LoadVar::op(): {
             auto inst = read<LoadVar>(code, pc);
             push_op(get_var(symbol_from_offset(inst->name_offset_.get())));

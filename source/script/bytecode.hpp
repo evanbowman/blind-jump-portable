@@ -2,6 +2,7 @@
 
 #include "number/int.h"
 #include "number/endian.hpp"
+#include "platform/scratch_buffer.hpp"
 
 
 namespace lisp {
@@ -28,6 +29,9 @@ struct Fatal {
 
     static constexpr Opcode op()
     {
+        // Do not replace the fatal opcode with anything else, this is meant to
+        // prevent buffer overruns in the event of errors. (The interpreter
+        // initializes all slabs of by bytecode memory to zero.)
         return 0;
     }
 };
@@ -250,7 +254,7 @@ struct Jump {
 };
 
 
-struct JumpSmall {
+struct SmallJump {
     Header header_;
     u8 offset_;
 
@@ -282,7 +286,7 @@ struct JumpIfFalse {
 };
 
 
-struct JumpSmallIfFalse {
+struct SmallJumpIfFalse {
     Header header_;
     u8 offset_;
 
@@ -359,6 +363,51 @@ struct Ret {
 };
 
 
+// Just a utility intended for the compiler, not to be used by the vm.
+inline Header* load_instruction(ScratchBuffer& buffer, int index)
+{
+    int offset = 0;
+
+    while (true) {
+       switch (buffer.data_[offset]) {
+        case Fatal::op():
+            return nullptr;
+
+#define MATCH(NAME)                                              \
+            case NAME::op():                                     \
+                if (index == 0) {                                \
+                    return (Header*)(buffer.data_ + offset);     \
+                } else {                                         \
+                    index--;                                     \
+                    offset += sizeof(NAME);                      \
+                }                                                \
+                break;                                           \
+
+            MATCH(LoadVar)
+            MATCH(PushSymbol)
+            MATCH(PushNil)
+            MATCH(Push0)
+            MATCH(Push1)
+            MATCH(Push2)
+            MATCH(PushInteger)
+            MATCH(PushSmallInteger)
+            MATCH(JumpIfFalse)
+            MATCH(Jump)
+            MATCH(SmallJumpIfFalse)
+            MATCH(SmallJump)
+            MATCH(PushLambda)
+            MATCH(Funcall)
+            MATCH(Funcall1)
+            MATCH(Funcall2)
+            MATCH(Funcall3)
+            MATCH(PushList)
+            MATCH(Pop)
+            MATCH(Ret)
+            MATCH(Dup)
+        }
+    }
+    return nullptr;
+}
 }
 
 }
