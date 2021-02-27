@@ -56,23 +56,31 @@ void on_enemy_destroyed(Platform& pfrm,
                             game.details().spawn<Rubble>(pos);
 
                             if (not pfrm.network_peer().is_connected()) {
-                                game.details().spawn<Debris>(pos);
-                                game.details().spawn<Debris>(pos);
-                                game.details().spawn<Debris>(pos);
-                                game.details().spawn<Debris>(pos);
+                                if (length(game.details().get<Debris>()) < 8) {
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                } else {
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                }
                             }
                         });
     } else {
         game.on_timeout(pfrm,
                         milliseconds(200),
                         [pos = position](Platform& pfrm, Game& game) {
-                            if (not pfrm.network_peer().is_connected()) {
-                                game.details().spawn<Debris>(pos);
-                                game.details().spawn<Debris>(pos);
-                                game.details().spawn<Debris>(pos);
-                                game.details().spawn<Debris>(pos);
-                                game.details().spawn<Debris>(pos);
-                            }
+                            if (length(game.details().get<Debris>()) < 8) {
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                } else {
+                                    game.details().spawn<Debris>(pos);
+                                    game.details().spawn<Debris>(pos);
+                                }
                         });
     }
 
