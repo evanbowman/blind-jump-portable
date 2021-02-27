@@ -111,9 +111,74 @@ const ImageData* find_image(const char* name)
 }
 
 
+const float PI = 3.1415926535897932f;
+const int sampleRate = 44100;
+float frequency = 440.0f;
+float time_counter = 0;
+int function = 1;
+
+typedef struct {
+        short l, r;
+} sample_t;
+
+
+#include <math.h>
+#include <stdlib.h>
+#include <limits.h>
+
+float currentFunction(const float time) {
+        double x;
+	float t = modf(time / (2 * PI), &x);
+
+        switch(function) {
+	case 0: // SINE
+	        return sinf(time);
+	case 1: // SQUARE
+	        if (t < 0.5f) {
+	                return -0.2f;
+	        } else {
+	                return 0.2f;
+	        }
+	case 2: // TRIANGLE
+	        if (t < 0.5f) {
+	                return t * 2.0f - 0.5f;
+	        } else {
+	                return 0.5f - (t - 0.5f) * 2.0f;
+	        }
+	default:
+ 	        return 0.0f;
+        }
+}
+
+
 Platform::Platform()
 {
     setup_callbacks();
+
+    pspAudioInit();
+
+    pspAudioSetChannelCallback(0, [](void* buf, unsigned int length, void* userdata) {
+        const float sampleLength = 1.0f / sampleRate;
+	const float scaleFactor = SHRT_MAX - 1.0f;
+        static float freq0 = 440.0f;
+       	sample_t* ubuf = (sample_t*) buf;
+	int i;
+
+	if (frequency != freq0) {
+	        time_counter *= (freq0 / frequency);
+	}
+	for (i = 0; i < length; i++) {
+	        short s = (short) (scaleFactor * currentFunction(2.0f * PI * frequency * time_counter));
+		ubuf[i].l = s;
+		ubuf[i].r = s;
+		time_counter += sampleLength;
+	}
+	if (time_counter * frequency > 1.0f) {
+	        double d;
+		time_counter = modf(time_counter * frequency, &d) / frequency;
+	}
+	freq0 = frequency;
+    }, nullptr);
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
@@ -238,7 +303,8 @@ bool Platform::NetworkPeer::supported_by_device()
 
 Platform::NetworkPeer::Stats Platform::NetworkPeer::stats()
 {
-    return {0, 0, 0, 0, 0};
+    Stats ret{0, 0, 0, 0, 0};
+    return ret;
 }
 
 
@@ -1663,7 +1729,7 @@ Platform::Logger::Logger()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool Platform::RemoteConsole::printline(const char* line)
+bool Platform::RemoteConsole::printline(const char* line, bool show_prompt)
 {
     //    pspDebugScreenPrintf(line);
     return false;
