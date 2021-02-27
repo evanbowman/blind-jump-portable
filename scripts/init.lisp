@@ -46,3 +46,23 @@
      (compile (lambda
                 ;; (add-hook hooks-sym hook)
                 (set (arg 1) (cons (arg 0) (eval (arg 1)))))))
+
+
+(add-hook
+ 'waypoint-clear-hooks
+ (compile
+  (lambda
+    (if (all-true (not (peer-conn)) (bound 'swarm))
+        (progn
+          (alert 136)
+          (set 'n (if (equal swarm 0) 10 5))
+
+          (set 'temp
+               (lambda (map
+                        +
+                        (fill n (- ((arg 0) (get-pos gate)) 15))
+                        (gen n (lambda (cr-choice 15))))))
+
+          (map make-enemy (fill n swarm) (temp car) (temp cdr))
+
+          (unbind 'swarm))))))

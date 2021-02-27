@@ -352,8 +352,8 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
     fps_timer_ += delta;
     fps_frame_count_ += 1;
 
-    if (fps_timer_ >= seconds(2)) {
-        fps_timer_ -= seconds(2);
+    if (fps_timer_ >= seconds(1)) {
+        fps_timer_ -= seconds(1);
 
         fps_text_.emplace(pfrm, OverlayCoord{1, 2});
         link_saturation_text_.emplace(pfrm, OverlayCoord{1, 3});
@@ -369,7 +369,7 @@ void OverworldState::show_stats(Platform& pfrm, Game& game, Microseconds delta)
                                    ColorConstant::aerospace_orange}}
                 : Text::OptColors{};
 
-        fps_text_->assign(fps_frame_count_ / 2, colors);
+        fps_text_->assign(fps_frame_count_, colors);
         fps_text_->append(" fps", colors);
         fps_frame_count_ = 0;
 

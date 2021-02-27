@@ -164,6 +164,8 @@ public:
 COLD void on_remote_console_text(Platform& pfrm,
                                  const Platform::RemoteConsole::Line& str)
 {
+    info(pfrm, str.c_str());
+
     RemoteConsoleLispPrinter printer(pfrm);
 
     lisp::read(str.c_str());

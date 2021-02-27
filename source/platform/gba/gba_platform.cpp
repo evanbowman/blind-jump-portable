@@ -2024,9 +2024,9 @@ static void mgba_log(const char* msg)
 
 void Platform::Logger::log(Severity level, const char* msg)
 {
-    if (static_cast<int>(level) < static_cast<int>(::log_threshold)) {
-        return;
-    }
+    // if (static_cast<int>(level) < static_cast<int>(::log_threshold)) {
+    //     return;
+    // }
 
     // We don't want to wear out the flash chip! The code below still works on
     // flash though, if you just comment out the if statement below.
@@ -2438,7 +2438,7 @@ void Platform::Speaker::play_sound(const char* name,
                 const Float distance_scale = 0.0005f;
 
                 const auto inv_sqr_intensity =
-                    1.f / (distance_scale * ((dist / 3) * dist));
+                    1.f / (distance_scale * ((dist / 4) * dist));
 
                 auto l_vol = inv_sqr_intensity;
                 auto r_vol = inv_sqr_intensity;
@@ -2638,7 +2638,7 @@ static void audio_update_spatialized_isr()
     }
 
     REG_SGFIFOA = *((u32*)mixing_buffer);
-    REG_SGFIFOB = *((u32*)mixing_buffer);
+    // REG_SGFIFOB = *((u32*)mixing_buffer);
 }
 
 
@@ -2833,12 +2833,16 @@ static void audio_start()
 {
     clear_music();
 
-    // 0b1010100100000011;
-
-    // Both direct sound channels, FIFO reset, A is R, B is L.
-    REG_SOUNDCNT_H = 0b1010100100001111;
-
+    REG_SOUNDCNT_H =
+        0x0B0F; //DirectSound A + fifo reset + max volume to L and R
     REG_SOUNDCNT_X = 0x0080; //turn sound chip on
+
+
+    // Required for stereo, currently unused.
+    // // Both direct sound channels, FIFO reset, A is R, B is L.
+    // REG_SOUNDCNT_H = 0b1010100100001111;
+    // REG_SOUNDCNT_X = 0x0080; //turn sound chip on
+
 
     irqEnable(IRQ_TIMER1);
     irqSet(IRQ_TIMER1, audio_update_spatialized_isr);

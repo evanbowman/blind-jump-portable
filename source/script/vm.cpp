@@ -159,6 +159,30 @@ void vm_execute(Value* code_buffer, int start_offset)
             break;
         }
 
+        case First::op(): {
+            read<First>(code, pc);
+            auto arg = get_op(0);
+            pop_op();
+            if (arg->type_ == Value::Type::cons) {
+                push_op(arg->cons_.car());
+            } else {
+                push_op(make_error(Error::Code::invalid_argument_type));
+            }
+            break;
+        }
+
+        case Rest::op(): {
+            read<Rest>(code, pc);
+            auto arg = get_op(0);
+            pop_op();
+            if (arg->type_ == Value::Type::cons) {
+                push_op(arg->cons_.cdr());
+            } else {
+                push_op(make_error(Error::Code::invalid_argument_type));
+            }
+            break;
+        }
+
         case Pop::op():
             read<Pop>(code, pc);
             pop_op();

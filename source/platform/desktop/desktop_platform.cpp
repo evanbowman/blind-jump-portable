@@ -1389,7 +1389,7 @@ auto Platform::RemoteConsole::readline() -> std::optional<Line>
 }
 
 
-bool Platform::RemoteConsole::printline(const char* text)
+bool Platform::RemoteConsole::printline(const char* text, bool show_prompt)
 {
     return false;
 }
