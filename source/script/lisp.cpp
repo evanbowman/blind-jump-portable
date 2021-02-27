@@ -5,6 +5,9 @@
 #include "memory/pool.hpp"
 #include <complex>
 #include "bytecode.hpp"
+#if not defined(__GBA__) and not defined(__PSP__)
+#include <iostream>
+#endif
 
 
 namespace lisp {
@@ -160,7 +163,7 @@ void get_env(::Function<24, void(const char*)> callback)
 Value* get_arg(u16 arg)
 {
     auto br = bound_context->arguments_break_loc_;
-    if (br + arg < bound_context->operand_stack_->size() - 1) {
+    if (br + arg < bound_context->operand_stack_->size()) {
         return dcompr((*bound_context->operand_stack_)[br - arg]);
     } else {
         return get_nil();
@@ -562,6 +565,10 @@ void funcall(Value* obj, u8 argc)
             ctx.arguments_break_loc_ = break_loc;
             vm_execute(dcompr(obj->function_.bytecode_impl_.data_buffer_),
                        obj->function_.bytecode_impl_.bc_offset_);
+            auto result = get_op(0);
+            pop_op();
+            pop_args();
+            push_op(result);
             break;
         }
         }
@@ -2084,6 +2091,16 @@ void init(Platform& pfrm)
                     case MakePair::op():
                         out += "MAKE_PAIR";
                         i += 1;
+                        break;
+
+                    case First::op():
+                        out += First::name();
+                        i += sizeof(First);
+                        break;
+
+                    case Rest::op():
+                        out += Rest::name();
+                        i += sizeof(Rest);
                         break;
 
                     case Dup::op():

@@ -378,6 +378,36 @@ struct MakePair {
 };
 
 
+struct First {
+    Header header_;
+
+    static const char* name()
+    {
+        return "FIRST";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 23;
+    }
+};
+
+
+struct Rest {
+    Header header_;
+
+    static const char* name()
+    {
+        return "REST";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 24;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -420,6 +450,8 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(Ret)
             MATCH(Dup)
             MATCH(MakePair)
+            MATCH(First)
+            MATCH(Rest)
         }
     }
     return nullptr;

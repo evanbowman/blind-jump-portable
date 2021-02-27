@@ -209,6 +209,18 @@ int compile_impl(ScratchBuffer& buffer,
 
                 append<instruction::MakePair>(buffer, write_pos);
 
+            } else if (fn->type_ == Value::Type::symbol and
+                       str_cmp(fn->symbol_.name_, "car") == 0 and
+                       argc == 1) {
+
+                append<instruction::First>(buffer, write_pos);
+
+            } else if (fn->type_ == Value::Type::symbol and
+                       str_cmp(fn->symbol_.name_, "cdr") == 0 and
+                       argc == 1) {
+
+                append<instruction::Rest>(buffer, write_pos);
+
             } else {
 
                 write_pos = compile_impl(buffer, write_pos, fn, jump_offset);
