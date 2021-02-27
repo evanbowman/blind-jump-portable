@@ -17,11 +17,6 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto zone = zone_info(next_level_);
     auto last_zone = zone_info(next_level_ - 1);
 
-
-    StringBuffer<64> log("delta %d");
-    log += to_string<20>(delta).c_str();
-    pfrm.remote_console().printline(log.c_str());
-
     switch (display_mode_) {
     case DisplayMode::wait_1:
         timer_ += delta;
@@ -171,8 +166,6 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
                 pfrm.speaker().play_music(zone.music_name_, zone.music_offset_);
 
-                pfrm.remote_console().printline("transition");
-
                 return state_pool().create<FadeInState>(game);
             }
 
@@ -185,8 +178,6 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                     pfrm.speaker().play_music(zone.music_name_,
                                               zone.music_offset_);
                 }
-
-                pfrm.remote_console().printline("transition");
 
                 return state_pool().create<FadeInState>(game);
             }

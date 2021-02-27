@@ -22,6 +22,8 @@
 #include <psprtc.h>
 #include <psputility.h>
 #include <stdio.h>
+#include <pspaudiolib.h>
+#include <pspaudio.h>
 
 
 extern "C" {

@@ -4382,7 +4382,7 @@ auto Platform::RemoteConsole::readline() -> std::optional<Line>
 }
 
 
-bool Platform::RemoteConsole::printline(const char* text)
+bool Platform::RemoteConsole::printline(const char* text, bool show_prompt)
 {
     auto& state = **::remote_console_state;
 
@@ -4414,9 +4414,11 @@ bool Platform::RemoteConsole::printline(const char* text)
     (*state.tx_msg_)->insert((*state.tx_msg_)->begin(), '\r');
     (*state.tx_msg_)->insert((*state.tx_msg_)->begin(), '\n');
 
-    // Show the prompt
-    (*state.tx_msg_)->insert((*state.tx_msg_)->begin(), '>');
-    (*state.tx_msg_)->insert((*state.tx_msg_)->begin(), ' ');
+    if (show_prompt) {
+        // Show the prompt
+        (*state.tx_msg_)->insert((*state.tx_msg_)->begin(), '>');
+        (*state.tx_msg_)->insert((*state.tx_msg_)->begin(), ' ');
+    }
 
     if (first_char) {
         // Now that we're done copying the output message, place the first

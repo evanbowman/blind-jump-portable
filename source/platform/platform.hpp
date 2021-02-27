@@ -604,7 +604,12 @@ public:
 
         std::optional<Line> readline();
 
-        bool printline(const char* text);
+        bool printline(const char* text, bool show_prompt = true);
+
+        void printline_blocking(const char* text, bool show_prompt = true)
+        {
+            while (not printline(text, show_prompt)) ;
+        }
     };
 
 

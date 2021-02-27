@@ -772,6 +772,9 @@ static void gc_mark_value(Value* value)
     case Value::Type::function:
         if (value->mode_bits_ == Function::ModeBits::lisp_function) {
             gc_mark_value((dcompr(value->function_.lisp_impl_)));
+        } else if (value->mode_bits_ ==
+                   Function::ModeBits::lisp_bytecode_function) {
+            gc_mark_value((dcompr(value->function_.bytecode_impl_.data_buffer_)));
         }
         break;
 
@@ -2097,8 +2100,8 @@ void init(Platform& pfrm)
                             }
                             ((Platform*)pfrm->user_data_.obj_)
                                 ->remote_console()
-                                .printline(out.c_str());
-                            ((Platform*)pfrm)->sleep(30);
+                                .printline(out.c_str(), false);
+                            ((Platform*)pfrm)->sleep(80);
                             return get_nil();
                         } else {
                             --depth;
@@ -2111,7 +2114,9 @@ void init(Platform& pfrm)
                     default:
                             ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
                                 ->remote_console()
-                                .printline(out.c_str());
+                                .printline(out.c_str(), false);
+                            ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
+                                ->sleep(80);
                         return get_nil();
                     }
                     out += "\r\n";
