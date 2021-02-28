@@ -116,6 +116,11 @@ extern "C" {
 __attribute__((section(".iwram"), long_call)) void
 memcpy32(void* dst, const void* src, uint wcount);
 void memcpy16(void* dst, const void* src, uint hwcount);
+
+// I had my own version of color interpolation written in C, but libTonc has a
+// very fast version.
+__attribute__((section(".iwram"), long_call)) void
+clr_fade_fast(u16* src, u16 clr, u16* dst, int nclrs, u32 alpha);
 }
 
 
@@ -792,14 +797,11 @@ static PaletteBank color_mix(ColorConstant k, u8 amount)
     const auto c = nightmode_adjust(real_color(k));
 
     if (amount not_eq 255) {
-        for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(MEM_PALETTE[i]);
-            const u32 index = 16 * palette_counter + i;
-            MEM_PALETTE[index] = Color(fast_interpolate(c.r_, from.r_, amount),
-                                       fast_interpolate(c.g_, from.g_, amount),
-                                       fast_interpolate(c.b_, from.b_, amount))
-                                     .bgr_hex_555();
-        }
+        clr_fade_fast(MEM_PALETTE,
+                      c.bgr_hex_555(),
+                      MEM_PALETTE + 16 * palette_counter,
+                      16,
+                      amount >> 3);
     } else {
         for (int i = 0; i < 16; ++i) {
             const u32 index = 16 * palette_counter + i;
@@ -1554,18 +1556,24 @@ void Platform::Screen::fade(float amount,
     const auto c = nightmode_adjust(real_color(k));
 
     if (not base) {
-        for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(sprite_palette[i]);
-            MEM_PALETTE[i] = blend(from, c, include_sprites ? amt : 0);
-        }
-        for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(tilesheet_0_palette[i]);
-            MEM_BG_PALETTE[i] = blend(from, c, amt);
-        }
-        for (int i = 0; i < 16; ++i) {
-            auto from = Color::from_bgr_hex_555(tilesheet_1_palette[i]);
-            MEM_BG_PALETTE[32 + i] = blend(from, c, amt);
-        }
+        clr_fade_fast(sprite_palette,
+                      c.bgr_hex_555(),
+                      MEM_PALETTE,
+                      16,
+                      include_sprites ? (amt >> 3) : 0);
+
+        clr_fade_fast(tilesheet_0_palette,
+                      c.bgr_hex_555(),
+                      MEM_BG_PALETTE,
+                      16,
+                      amt >> 3);
+
+        clr_fade_fast(tilesheet_1_palette,
+                      c.bgr_hex_555(),
+                      MEM_BG_PALETTE + 32,
+                      16,
+                      amt >> 3);
+
         if (include_overlay or overlay_was_faded) {
             for (int i = 0; i < 16; ++i) {
                 auto from = Color::from_bgr_hex_555(overlay_palette[i]);
