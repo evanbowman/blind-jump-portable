@@ -151,33 +151,59 @@ float currentFunction(const float time) {
 }
 
 
+static int sound_fd;
+
+constexpr int buffer_chunks = 50;
+alignas(64) u8 sound_buffer[PSP_NUM_AUDIO_SAMPLES * buffer_chunks];
+auto buffer_index = 0;
+
+
+constexpr int music_buffer_chunks = 40;
+alignas(64) u8 music_buffers[PSP_NUM_AUDIO_SAMPLES * music_buffer_chunks][2];
+
+void* music_front_buffer = music_buffers[0];
+void* music_back_buffer = music_buffers[1];
+
+
 Platform::Platform()
 {
     setup_callbacks();
 
     pspAudioInit();
 
-    pspAudioSetChannelCallback(0, [](void* buf, unsigned int length, void* userdata) {
-        const float sampleLength = 1.0f / sampleRate;
-	const float scaleFactor = SHRT_MAX - 1.0f;
-        static float freq0 = 440.0f;
-       	sample_t* ubuf = (sample_t*) buf;
-	int i;
+    memset(sound_buffer, 0, sizeof sound_buffer);
 
-	if (frequency != freq0) {
-	        time_counter *= (freq0 / frequency);
+    if (!(sound_fd = sceIoOpen("ms0:/explosion_psp.raw", PSP_O_RDONLY, 0777))) {
+        while (true) ;
+    }
+
+    auto read = sceIoRead(sound_fd, sound_buffer, PSP_NUM_AUDIO_SAMPLES * buffer_chunks);
+    // sceIoChangeAsyncPriority(sound_fd, 0x10);
+    // sceIoReadAsync(sound_fd, sound_buffer, PSP_NUM_AUDIO_SAMPLES);
+
+    pspAudioSetChannelCallback(0, [](void* buf, unsigned int length, void* userdata) {
+        // SceInt64 res;
+        // sceIoWaitAsync(sound_fd, &res);
+
+        // if (res == 0) {
+        //     sceIoLseek(sound_fd, 0, SEEK_SET);
+        // }
+
+        if (buffer_index >= buffer_chunks - 20) {
+            buffer_index = 0;
+        }
+
+        sample_t* ubuf = (sample_t*) buf;
+        auto src_buf = (u16*)sound_buffer;
+
+	for (int i = 0; i < length; i++) {
+            ubuf[i].l = src_buf[buffer_index * PSP_NUM_AUDIO_SAMPLES + i];
+            ubuf[i].r = src_buf[buffer_index * PSP_NUM_AUDIO_SAMPLES + i];
 	}
-	for (i = 0; i < length; i++) {
-	        short s = (short) (scaleFactor * currentFunction(2.0f * PI * frequency * time_counter));
-		ubuf[i].l = s;
-		ubuf[i].r = s;
-		time_counter += sampleLength;
-	}
-	if (time_counter * frequency > 1.0f) {
-	        double d;
-		time_counter = modf(time_counter * frequency, &d) / frequency;
-	}
-	freq0 = frequency;
+
+        buffer_index++;
+
+        // sceIoReadAsync(sound_fd, sound_buffer, PSP_NUM_AUDIO_SAMPLES);
     }, nullptr);
 
     sceCtrlSetSamplingCycle(0);
