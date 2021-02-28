@@ -62,7 +62,7 @@ void ConglomerateShot::on_death(Platform& pf, Game& game)
     const auto speed = [&] {
         switch (game.persistent_data().settings_.difficulty_) {
         case Settings::Difficulty::easy:
-            return 0.00009f;
+            return 0.00008f;
 
         case Settings::Difficulty::survival:
         case Settings::Difficulty::hard:

@@ -201,19 +201,54 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
         target_ = interpolate(
             get_target(game).get_position(), target_, dt * 0.000012f);
 
-        if (timer_ > milliseconds(70)) {
+        if (timer_ > [&] {
+            switch (game.difficulty()) {
+            case Settings::Difficulty::easy:
+                return milliseconds(70);
+
+            case Settings::Difficulty::count:
+            case Settings::Difficulty::normal:
+                break;
+
+            case Settings::Difficulty::survival:
+            case Settings::Difficulty::hard:
+                return milliseconds(70);
+            }
+            return milliseconds(70);
+        }()) {
             timer_ = 0;
+
+            Float shot_speed = 0.00019f;
+
+            const auto max_count = [&] {
+                switch (game.difficulty()) {
+                case Settings::Difficulty::easy:
+                    shot_speed = 0.00016f;
+                    return 3;
+
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::normal:
+                    break;
+
+                case Settings::Difficulty::survival:
+                case Settings::Difficulty::hard:
+                    shot_speed = 0.00021f;
+                    return 6;
+                }
+                return 5;
+            }();
+
 
             pfrm.speaker().play_sound("laser1", 4, position_);
             this->shoot(pfrm,
                         game,
                         position_,
                         rng::sample<24>(target_, rng::utility_state),
-                        0.00019f);
+                        shot_speed);
 
             speed_ = direction(target_, position_) * 1.4f;
 
-            if (++count_ > 5) {
+            if (++count_ > max_count) {
                 count_ = 0;
                 state_ = State::pause;
             }
@@ -221,16 +256,22 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
             speed_ = interpolate(Vec2<Float>{0, 0}, speed_, dt * 0.00005f);
         }
         check_wall();
-        position_.x += speed_.x * dt * kickback_rate;
-        position_.y += speed_.y * dt * kickback_rate;
+        // Some glitches at low framerates cause the character to jump off the
+        // screen due to the kickback deceleration at high deltas.
+        if (dt < seconds(1) / 20) {
+            position_.x += speed_.x * dt * kickback_rate;
+            position_.y += speed_.y * dt * kickback_rate;
+        }
         break;
 
     case State::pause:
         timer_ += dt;
         speed_ = interpolate(Vec2<Float>{0, 0}, speed_, dt * 0.00005f);
         check_wall();
-        position_.x += speed_.x * dt * kickback_rate;
-        position_.y += speed_.y * dt * kickback_rate;
+        if (dt < seconds(1) / 20) {
+            position_.x += speed_.x * dt * kickback_rate;
+            position_.y += speed_.y * dt * kickback_rate;
+        }
 
         if (timer_ > seconds(1)) {
             timer_ = 0;
