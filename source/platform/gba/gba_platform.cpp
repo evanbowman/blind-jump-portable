@@ -2910,13 +2910,6 @@ Platform::Platform()
         logger().set_threshold(Severity::debug);
     }
 
-    irqInit();
-
-    irqSet(IRQ_KEYPAD, keypad_isr);
-    irqEnable(IRQ_KEYPAD);
-    REG_KEYCNT =
-        KEY_SELECT | KEY_START | KEY_R | KEY_L | KEYIRQ_ENABLE | KEYIRQ_AND;
-
     // Not sure how else to determine whether the cartridge has sram, flash, or
     // something else. An sram write will fail if the cartridge ram is flash, so
     // attempt to save, and if the save fails, assume flash. I don't really know
@@ -2985,6 +2978,11 @@ Platform::Platform()
     // cartridge.
     system_clock_.init(*this);
 
+
+
+    irqInit(); // NOTE: Do not move these lines with respect to
+               // unlock_gameboy_player(), or you could break the rumble
+               // unlocking.
     irqEnable(IRQ_VBLANK);
 
     if (unlock_gameboy_player(*this)) {
@@ -3006,6 +3004,11 @@ Platform::Platform()
 
         rumble_init(nullptr);
     }
+
+    irqSet(IRQ_KEYPAD, keypad_isr);
+    irqEnable(IRQ_KEYPAD);
+    REG_KEYCNT =
+        KEY_SELECT | KEY_START | KEY_R | KEY_L | KEYIRQ_ENABLE | KEYIRQ_AND;
 
     init_video(screen());
 
