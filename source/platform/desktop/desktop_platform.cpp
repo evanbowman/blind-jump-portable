@@ -318,10 +318,10 @@ private:
 } watchdog_task;
 
 
-void Platform::enable_feature(const char* feature_name, bool enabled)
+void Platform::enable_feature(const char* feature_name, int value)
 {
     if (str_cmp(feature_name, "vignette") == 0) {
-        ::platform->data()->show_vignette_ = enabled;
+        ::platform->data()->show_vignette_ = value;
     }
 }
 

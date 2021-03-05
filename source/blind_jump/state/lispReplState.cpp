@@ -248,7 +248,7 @@ StatePtr LispReplState::update(Platform& pfrm, Game& game, Microseconds delta)
             // Try to isolate an identifier from the command buffer, for autocomplete.
 
             auto is_delimiter = [](char c) {
-                return c == ' ' or c == ')' or c == '(';
+                return c == ' ' or c == ')' or c == '(' or c == '\'';
             };
 
             if (not command_.empty() and

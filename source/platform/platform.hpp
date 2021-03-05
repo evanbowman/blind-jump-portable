@@ -111,7 +111,7 @@ public:
     [[noreturn]] void fatal(const char* message);
 
     // Enable platform specific features. NOP if unsupported.
-    void enable_feature(const char* feature_name, bool enabled);
+    void enable_feature(const char* feature_name, int value);
 
     struct TextureMapping {
         const char* texture_name_;

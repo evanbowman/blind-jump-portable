@@ -330,6 +330,34 @@ void Game::init_script(Platform& pfrm)
                       return lisp::make_symbol(pfrm->device_name().c_str());
                   }));
 
+    lisp::set_var("enable-feature", lisp::make_function([](int argc) {
+        if (argc < 1 or argc > 2) {
+            return lisp::make_error(lisp::Error::Code::invalid_argc);
+        }
+
+        lisp::Value* sym;
+        int param = 1;
+        if (argc == 2) {
+            L_EXPECT_OP(1, symbol);
+            L_EXPECT_OP(0, integer);
+            sym = lisp::get_op(1);
+            param = lisp::get_op(0)->integer_.value_;
+        } else {
+            L_EXPECT_OP(0, integer);
+            sym = lisp::get_op(0);
+        }
+
+        auto pfrm = interp_get_pfrm();
+        if (not pfrm) {
+            return L_NIL;
+        }
+
+        ((Platform*)pfrm)->enable_feature(sym->symbol_.name_,
+                                          param);
+
+        return L_NIL;
+    }));
+
     lisp::set_var("set-tile", lisp::make_function([](int argc) {
                       L_EXPECT_ARGC(argc, 4);
                       for (int i = 0; i < 4; ++i) {

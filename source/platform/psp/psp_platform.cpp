@@ -1775,3 +1775,8 @@ void Platform::sleep(Frame frames)
 
     ::slept_ticks += sleep_end - sleep_start;
 }
+
+
+void Platform::enable_feature(const char* feature_name, int value)
+{
+}

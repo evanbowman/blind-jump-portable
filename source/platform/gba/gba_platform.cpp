@@ -101,14 +101,6 @@ Platform::DeviceName Platform::device_name() const
 }
 
 
-void Platform::enable_feature(const char* feature_name, bool enabled)
-{
-    if (str_cmp(feature_name, "gswap") == 0) {
-        *((u16*)0x4000002) = 0x0000 | enabled;
-    }
-}
-
-
 // These word and halfword versions of memcpy are written in assembly. They use
 // special ARM instructions to copy data faster than you could do with thumb
 // code.
@@ -2611,7 +2603,7 @@ Platform::Speaker::Speaker()
 }
 
 
-static void audio_update_spatialized_isr()
+[[maybe_unused]] static void audio_update_spatialized_isr()
 {
     alignas(4) AudioSample mixing_buffer[4];
 
@@ -2644,7 +2636,7 @@ static void audio_update_spatialized_isr()
 
 // Simpler mixer, without stereo sound or volume modulation, for multiplayer
 // games.
-static void audio_update_multiplayer_isr()
+static void audio_update_fast_isr()
 {
     alignas(4) AudioSample mixing_buffer[4];
 
@@ -2845,7 +2837,7 @@ static void audio_start()
 
 
     irqEnable(IRQ_TIMER1);
-    irqSet(IRQ_TIMER1, audio_update_spatialized_isr);
+    irqSet(IRQ_TIMER1, audio_update_fast_isr);
 
     REG_TM0CNT_L = 0xffff;
     REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
@@ -3943,7 +3935,7 @@ MASTER_RETRY:
                 }
             }
             info(*::platform, "validated handshake");
-            irqSet(IRQ_TIMER1, audio_update_multiplayer_isr);
+            irqSet(IRQ_TIMER1, audio_update_fast_isr);
             ::platform->network_peer().poll_consume(sizeof handshake);
             return;
         }
@@ -4033,7 +4025,7 @@ void Platform::NetworkPeer::disconnect()
     // sent out when you try to reconnect, instead of the handshake message);
     if (is_connected()) {
 
-        irqSet(IRQ_TIMER1, audio_update_spatialized_isr);
+        irqSet(IRQ_TIMER1, audio_update_fast_isr);
 
         info(*::platform, "disconnected!");
         set_gflag(GlobalFlag::multiplayer_connected, false);
@@ -4434,6 +4426,28 @@ bool Platform::RemoteConsole::printline(const char* text, bool show_prompt)
     }
 
     return true;
+}
+
+
+void Platform::enable_feature(const char* feature_name, int value)
+{
+    if (str_cmp(feature_name, "gswap") == 0) {
+        *((u16*)0x4000002) = 0x0000 | (bool)value;
+    } else if (str_cmp(feature_name, "spatialized-audio") == 0) {
+        switch (value) {
+        case 0:
+            irqSet(IRQ_TIMER1, audio_update_fast_isr);
+            break;
+
+        case 1:
+            irqSet(IRQ_TIMER1, audio_update_spatialized_isr);
+            break;
+
+        case 2:
+            irqSet(IRQ_TIMER1, audio_update_spatialized_stereo_isr);
+            break;
+        }
+    }
 }
 
 
