@@ -7,10 +7,9 @@
 
 (set 'languages
      '(null
-       english ;; The engine uses index 1 of the list as the default language,
-               ;; when a save file does not yet exist. To change the default,
-               ;; move another language above this line.
-       spanish))
+       english
+       spanish
+       chinese))
 
 
 (if (equal (platform) 'Desktop)

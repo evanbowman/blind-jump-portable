@@ -11,6 +11,8 @@ extern const unsigned char file_waypoint_clear[];
 extern const unsigned char file_english[];
 //;
 extern const unsigned char file_spanish[];
+//;
+extern const unsigned char file_chinese[];
 //
 
 static const struct {
@@ -30,5 +32,7 @@ static const struct {
     {"strings", "english.txt", file_english},
 //;
     {"strings", "spanish.txt", file_spanish},
+//;
+    {"strings", "chinese.txt", file_chinese},
 //
 };

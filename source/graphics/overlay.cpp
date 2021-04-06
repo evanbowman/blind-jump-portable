@@ -13,23 +13,43 @@ u32 integer_text_length(int n)
 }
 
 
-Text::Text(Platform& pfrm, const char* str, const OverlayCoord& coord)
-    : pfrm_(pfrm), coord_(coord), len_(0)
+Text::Text(Platform& pfrm,
+           const char* str,
+           const OverlayCoord& coord,
+           const FontConfiguration& config)
+    : pfrm_(pfrm), coord_(coord), len_(0), config_(config)
 {
+    while (config_.double_size_) {
+
+    }
     this->assign(str);
 }
 
 
-Text::Text(Platform& pfrm, const OverlayCoord& coord)
-    : pfrm_(pfrm), coord_(coord), len_(0)
+Text::Text(Platform& pfrm,
+           const OverlayCoord& coord,
+           const FontConfiguration& config)
+    : pfrm_(pfrm), coord_(coord), len_(0), config_(config)
 {
+    while (config_.double_size_) {
+
+    }
 }
 
 
 void Text::erase()
 {
-    for (int i = 0; i < len_; ++i) {
-        pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y, 0);
+    if (not config_.double_size_) {
+        for (int i = 0; i < len_; ++i) {
+            pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y, 0);
+        }
+    } else {
+        for (int i = 0; i < len_ * 2; ++i) {
+            pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y, 0);
+        }
+        for (int i = 0; i < len_ * 2; ++i) {
+            pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y + 1, 0);
+        }
     }
 
     len_ = 0;
@@ -37,7 +57,10 @@ void Text::erase()
 
 
 Text::Text(Text&& from)
-    : pfrm_(from.pfrm_), coord_(from.coord_), len_(from.len_)
+    : pfrm_(from.pfrm_),
+      coord_(from.coord_),
+      len_(from.len_),
+      config_(from.config_)
 {
     from.len_ = 0;
 }
@@ -59,6 +82,35 @@ void Text::assign(int val, const OptColors& colors)
 
 
 Platform::TextureCpMapper locale_texture_map();
+
+
+static void print_double_char(Platform& pfrm,
+                              utf8::Codepoint c,
+                              const OverlayCoord& coord,
+                              const std::optional<FontColors>& colors = {})
+{
+    if (c not_eq 0) {
+        const auto t = pfrm.map_glyph(c, locale_texture_map());
+
+        if (not colors) {
+            pfrm.set_tile(Layer::overlay, coord.x, coord.y, t);
+            pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y, t + 1);
+            pfrm.set_tile(Layer::overlay, coord.x, coord.y + 1, t + 2);
+            pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y + 1, t + 3);
+        } else {
+            pfrm.set_tile(coord.x, coord.y, t, *colors);
+            pfrm.set_tile(coord.x + 1, coord.y, t + 1, *colors);
+            pfrm.set_tile(coord.x, coord.y + 1, t + 2, *colors);
+            pfrm.set_tile(coord.x + 1, coord.y + 1, t + 3, *colors);
+        }
+    } else {
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 0);
+        pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y, 0);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y + 1, 0);
+        pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y + 1, 0);
+
+    }
+}
 
 
 static void print_char(Platform& pfrm,
@@ -104,16 +156,29 @@ void Text::append(const char* str, const OptColors& colors)
         return;
     }
 
-    auto write_pos = static_cast<u8>(coord_.x + len_);
+    if (config_.double_size_) {
+        auto write_pos = static_cast<u8>(coord_.x + len_ * 2);
 
-    utf8::scan(
-        [&](const utf8::Codepoint& cp, const char* raw, int) {
-            print_char(pfrm_, cp, {write_pos, coord_.y}, colors);
-            ++write_pos;
+        utf8::scan([&](const utf8::Codepoint& cp, const char* raw, int) {
+            print_double_char(pfrm_, cp, {write_pos, coord_.y}, colors);
+            write_pos += 2;
             ++len_;
         },
         str,
         str_len(str));
+
+    } else {
+        auto write_pos = static_cast<u8>(coord_.x + len_);
+
+        utf8::scan(
+            [&](const utf8::Codepoint& cp, const char* raw, int) {
+                print_char(pfrm_, cp, {write_pos, coord_.y}, colors);
+                ++write_pos;
+                ++len_;
+            },
+            str,
+            str_len(str));
+    }
 }
 
 

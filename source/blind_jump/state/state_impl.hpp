@@ -1524,7 +1524,7 @@ public:
                       "State missing from state pool");
 
 #ifdef __GBA__
-        static_assert(std::max({sizeof(States)...}) < 720,
+        static_assert(std::max({sizeof(States)...}) < 780,
                       "Note: this is merely a warning. You are welcome to "
                       "increase the overall size of the state pool, just be "
                       "careful, as the state cells are already quite large, in"
