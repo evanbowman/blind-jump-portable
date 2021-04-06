@@ -19,9 +19,6 @@ Text::Text(Platform& pfrm,
            const FontConfiguration& config)
     : pfrm_(pfrm), coord_(coord), len_(0), config_(config)
 {
-    while (config_.double_size_) {
-
-    }
     this->assign(str);
 }
 
@@ -31,9 +28,6 @@ Text::Text(Platform& pfrm,
            const FontConfiguration& config)
     : pfrm_(pfrm), coord_(coord), len_(0), config_(config)
 {
-    while (config_.double_size_) {
-
-    }
 }
 
 

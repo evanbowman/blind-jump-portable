@@ -75,7 +75,7 @@ private:
     Platform& pfrm_;
     const OverlayCoord coord_;
     Length len_;
-    const FontConfiguration& config_;
+    const FontConfiguration config_;
 };
 
 
