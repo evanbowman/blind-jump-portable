@@ -28,11 +28,11 @@ public:
         if constexpr ((str_const(_STR_)[0] & 0x80) == 0) {                                     \
             return str_const(_STR_)[0];                                                        \
         } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xC0) {                           \
-            return str_const(_STR_)[0] | str_const(_STR_)[1] << 8;                             \
+            return str_const(_STR_)[0] | ((u32)str_const(_STR_)[1]) << 8; \
         } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xE0) {                           \
-            return str_const(_STR_)[0] | str_const(_STR_)[1] << 8 | str_const(_STR_)[2] << 16; \
+            return str_const(_STR_)[0] | ((u32)str_const(_STR_)[1]) << 8 | (u32)str_const(_STR_)[2] << 16; \
         } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xF0) {                           \
-            return str_const(_STR_)[0] | str_const(_STR_)[1] << 8 | str_const(_STR_)[2] << 16 | str_const(_STR_)[3] << 24;  \
+            return str_const(_STR_)[0] | (u32)str_const(_STR_)[1] << 8 | (u32)str_const(_STR_)[2] << 16 | (u32)str_const(_STR_)[3] << 24; \
         } else {                                                                               \
             return 0;                                                                          \
         }                                                                                      \
@@ -150,6 +150,33 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"点"): return 251;
         case UTF8_GETCHR(u8"物"): return 255;
         case UTF8_GETCHR(u8"品"): return 259;
+        case UTF8_GETCHR(u8"的"): return 263;
+        case UTF8_GETCHR(u8"开"): return 267;
+        case UTF8_GETCHR(u8"始"): return 271;
+        case UTF8_GETCHR(u8"商"): return 275;
+        case UTF8_GETCHR(u8"店"): return 279;
+        case UTF8_GETCHR(u8"章"): return 283;
+        case UTF8_GETCHR(u8"节"): return 287;
+        case UTF8_GETCHR(u8"到"): return 291;
+        case UTF8_GETCHR(u8"达"): return 295;
+        case UTF8_GETCHR(u8"者"): return 299;
+        case UTF8_GETCHR(u8"一"): return 303;
+        case UTF8_GETCHR(u8"二"): return 307;
+        case UTF8_GETCHR(u8"三"): return 311;
+        case UTF8_GETCHR(u8"四"): return 315;
+        case UTF8_GETCHR(u8"勇"): return 319;
+        case UTF8_GETCHR(u8"往"): return 323;
+        case UTF8_GETCHR(u8"直"): return 327;
+        case UTF8_GETCHR(u8"下"): return 331;
+        case UTF8_GETCHR(u8"肮"): return 335;
+        case UTF8_GETCHR(u8"脏"): return 339;
+        case UTF8_GETCHR(u8"之"): return 343;
+        case UTF8_GETCHR(u8"处"): return 347;
+        case UTF8_GETCHR(u8"月"): return 351;
+        case UTF8_GETCHR(u8"光"): return 355;
+
+
+
 
         default:
             if (cp == utf8::getc(u8"©")) {

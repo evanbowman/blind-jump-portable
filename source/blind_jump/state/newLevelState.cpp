@@ -17,6 +17,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto zone = zone_info(next_level_);
     auto last_zone = zone_info(next_level_ - 1);
 
+    const bool bigfont = locale_requires_doublesize_font();
+
     switch (display_mode_) {
     case DisplayMode::wait_1:
         timer_ += delta;
@@ -31,26 +33,43 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (not(zone == last_zone) or next_level_ == 0) {
 
                 pos_ = OverlayCoord{1, u8(s_tiles.y * 0.3f)};
-                text_[0].emplace(pfrm, pos_);
 
-                pos_.y += 2;
+                if (bigfont) {
+                    pos_.y -= 1;
+                }
 
-                text_[1].emplace(pfrm, pos_);
+                FontConfiguration font_conf;
+                font_conf.double_size_ = bigfont;
 
                 {
                     const auto l1str = locale_string(pfrm, zone.title_line_1);
-                    const auto margin =
-                        centered_text_margins(pfrm, utf8::len(l1str->c_str()));
-                    left_text_margin(*text_[0], std::max(0, int{margin} - 1));
+                    auto margin =
+                        centered_text_margins(pfrm, utf8::len(l1str->c_str()) *
+                                              (bigfont ? 2 : 1));
 
+                    auto temp = pos_;
+                    temp.x = margin;
+
+                    text_[0].emplace(pfrm, temp, font_conf);
                     text_[0]->append(l1str->c_str());
+                }
+
+                pos_.y += 2;
+
+                if (bigfont) {
+                    pos_.y += 1;
                 }
 
                 {
                     const auto l2str = locale_string(pfrm, zone.title_line_2);
-                    const auto margin2 =
-                        centered_text_margins(pfrm, utf8::len(l2str->c_str()));
-                    left_text_margin(*text_[1], std::max(0, int{margin2} - 1));
+                    auto margin =
+                        centered_text_margins(pfrm, utf8::len(l2str->c_str()) *
+                                              (bigfont ? 2 : 1));
+
+                    auto temp = pos_;
+                    temp.x = margin;
+
+                    text_[1].emplace(pfrm, temp, font_conf);
 
                     text_[1]->append(l2str->c_str());
                 }
@@ -73,21 +92,32 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ += delta;
 
             const auto max_j =
-                (int)utf8::len(
-                    locale_string(pfrm, zone.title_line_2)->c_str()) /
+                ((int)utf8::len(
+                               locale_string(pfrm, zone.title_line_2)->c_str())
+                 * (bigfont ? 2 : 1)) /
                     2 +
                 1;
             const auto max_i = max_j * 8;
 
             const int i = ease_out(timer_, 0, max_i, seconds(1));
 
-            auto repaint = [&pfrm, this](int max_i) {
+            auto repaint = [&pfrm, this, &bigfont](int max_i) {
                 while (true) {
                     int i = 0, j = 0;
                     auto center = calc_screen_tiles(pfrm).x / 2 - 1;
 
                     while (true) {
-                        const int y_off = 3;
+                        int y_off = 3;
+
+                        if (bigfont) {
+                            y_off = 4;
+                        }
+
+                        int y_lower = 2;
+
+                        if (bigfont) {
+                            y_lower = 3;
+                        }
 
                         if (max_i > i + 7 + j * 8) {
                             pfrm.set_tile(Layer::overlay,
@@ -95,7 +125,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                                           pos_.y - y_off,
                                           107);
                             pfrm.set_tile(
-                                Layer::overlay, center - j, pos_.y + 2, 107);
+                                Layer::overlay, center - j,
+                                pos_.y + y_lower, 107);
 
                             pfrm.set_tile(Layer::overlay,
                                           center + 1 + j,
@@ -103,7 +134,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                                           107);
                             pfrm.set_tile(Layer::overlay,
                                           center + 1 + j,
-                                          pos_.y + 2,
+                                          pos_.y + y_lower,
                                           107);
 
                             i = 0;
@@ -118,7 +149,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                         pfrm.set_tile(
                             Layer::overlay, center - j, pos_.y - y_off, 93 + i);
                         pfrm.set_tile(
-                            Layer::overlay, center - j, pos_.y + 2, 93 + i);
+                            Layer::overlay, center - j, pos_.y + y_lower, 93 + i);
 
                         pfrm.set_tile(Layer::overlay,
                                       center + 1 + j,
@@ -126,7 +157,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                                       100 + i);
                         pfrm.set_tile(Layer::overlay,
                                       center + 1 + j,
-                                      pos_.y + 2,
+                                      pos_.y + y_lower,
                                       100 + i);
 
                         i++;
@@ -137,7 +168,8 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                                           pos_.y - y_off,
                                           107);
                             pfrm.set_tile(
-                                Layer::overlay, center - j, pos_.y + 2, 107);
+                                Layer::overlay, center - j,
+                                pos_.y + y_lower, 107);
 
                             pfrm.set_tile(Layer::overlay,
                                           center + 1 + j,
@@ -145,7 +177,7 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                                           107);
                             pfrm.set_tile(Layer::overlay,
                                           center + 1 + j,
-                                          pos_.y + 2,
+                                          pos_.y + y_lower,
                                           107);
 
                             i = 0;
