@@ -7,9 +7,9 @@
 
 (set 'languages
      '(null
-       english
-       spanish
-       chinese))
+       (english 1) ;; Language name, required font size (1:normal or 2:double)
+       (chinese 2)
+       (spanish 1)))
 
 
 (if (equal (platform) 'Desktop)

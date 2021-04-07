@@ -84,18 +84,35 @@ static void print_double_char(Platform& pfrm,
                               const std::optional<FontColors>& colors = {})
 {
     if (c not_eq 0) {
-        const auto t = pfrm.map_glyph(c, locale_texture_map());
+        const auto mapping_info = locale_texture_map()(c);
+
+        u16 t0 = 111;
+        u16 t1 = 111;
+        u16 t2 = 111;
+        u16 t3 = 111;
+
+        if (mapping_info) {
+            auto info = *mapping_info;
+
+            t0 = pfrm.map_glyph(c, info);
+            info.offset_++;
+            t1 = pfrm.map_glyph(c, info);
+            info.offset_++;
+            t2 = pfrm.map_glyph(c, info);
+            info.offset_++;
+            t3 = pfrm.map_glyph(c, info);
+        }
 
         if (not colors) {
-            pfrm.set_tile(Layer::overlay, coord.x, coord.y, t);
-            pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y, t + 1);
-            pfrm.set_tile(Layer::overlay, coord.x, coord.y + 1, t + 2);
-            pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y + 1, t + 3);
+            pfrm.set_tile(Layer::overlay, coord.x, coord.y, t0);
+            pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y, t1);
+            pfrm.set_tile(Layer::overlay, coord.x, coord.y + 1, t2);
+            pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y + 1, t3);
         } else {
-            pfrm.set_tile(coord.x, coord.y, t, *colors);
-            pfrm.set_tile(coord.x + 1, coord.y, t + 1, *colors);
-            pfrm.set_tile(coord.x, coord.y + 1, t + 2, *colors);
-            pfrm.set_tile(coord.x + 1, coord.y + 1, t + 3, *colors);
+            pfrm.set_tile(coord.x, coord.y, t0, *colors);
+            pfrm.set_tile(coord.x + 1, coord.y, t1, *colors);
+            pfrm.set_tile(coord.x, coord.y + 1, t2, *colors);
+            pfrm.set_tile(coord.x + 1, coord.y + 1, t3, *colors);
         }
     } else {
         pfrm.set_tile(Layer::overlay, coord.x, coord.y, 0);
@@ -113,7 +130,13 @@ static void print_char(Platform& pfrm,
                        const std::optional<FontColors>& colors = {})
 {
     if (c not_eq 0) {
-        const auto t = pfrm.map_glyph(c, locale_texture_map());
+        auto mapping_info = locale_texture_map()(c);
+
+        u16 t = 111;
+
+        if (mapping_info) {
+            t = pfrm.map_glyph(c, *mapping_info);
+        }
 
         if (not colors) {
             pfrm.set_tile(Layer::overlay, coord.x, coord.y, t);

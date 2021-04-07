@@ -2796,7 +2796,7 @@ Platform::~Platform()
 
 
 struct GlyphMapping {
-    utf8::Codepoint character_;
+    u16 mapper_offset_;
 
     // -1 represents unassigned. Mapping a tile into memory sets the reference
     //  count to zero. When a call to Platform::set_tile reduces the reference
@@ -3127,31 +3127,31 @@ static FontColorIndices font_color_indices()
 // memory, we've only got 256K to work with, and the table is big enough as it
 // is.
 TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
-                             TextureCpMapper mapper)
+                             const TextureMapping& mapping_info)
 {
     if (not get_gflag(GlobalFlag::glyph_mode)) {
         return bad_glyph;
     }
 
+    // const auto mapping_info = mapper(glyph);
+
+    // if (not mapping_info) {
+    //     return bad_glyph;
+    // }
+
     for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
         auto& gm = ::glyph_table->obj_->mappings_[tile];
-        if (gm.valid() and gm.character_ == glyph) {
+        if (gm.valid() and gm.mapper_offset_ == mapping_info.offset_) {
             return glyph_start_offset + tile;
         }
     }
 
-    const auto mapping_info = mapper(glyph);
-
-    if (not mapping_info) {
-        return bad_glyph;
-    }
-
     for (auto& info : overlay_textures) {
-        if (str_cmp(mapping_info->texture_name_, info.name_) == 0) {
+        if (str_cmp(mapping_info.texture_name_, info.name_) == 0) {
             for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
                 auto& gm = ::glyph_table->obj_->mappings_[t];
                 if (not gm.valid()) {
-                    gm.character_ = glyph;
+                    gm.mapper_offset_ = mapping_info.offset_;
                     gm.reference_count_ = 0;
 
                     // 8 x 8 x (4 bitsperpixel / 8 bitsperbyte)
@@ -3176,7 +3176,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     u8 buffer[tile_size] = {0};
                     memcpy16(buffer,
                              info.tile_data_ +
-                                 (mapping_info->offset_ * tile_size) /
+                                 (mapping_info.offset_ * tile_size) /
                                      sizeof(decltype(info.tile_data_)),
                              tile_size / 2);
 
@@ -3267,7 +3267,7 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
 
                     if (gm.reference_count_ == 0) {
                         gm.reference_count_ = -1;
-                        gm.character_ = 0;
+                        gm.mapper_offset_ = 0;
                     }
                 } else {
                     error(pfrm,

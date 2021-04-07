@@ -52,6 +52,10 @@ void newgame(Platform& pfrm, Game& game)
     game.persistent_data().inventory_.push_item(
         pfrm, game, Item::Type::blaster, false);
 
+    game.persistent_data().inventory_.push_item(
+        pfrm, game, Item::Type::map_system, false);
+
+
     std::copy(std::begin(highscores),
               std::end(highscores),
               std::begin(game.persistent_data().highscores_));

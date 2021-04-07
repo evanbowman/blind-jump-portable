@@ -124,7 +124,8 @@ public:
         std::optional<TextureMapping> (*)(const utf8::Codepoint&);
 
     // Map a glyph into the vram space reserved for the overlay tile layer.
-    TileDesc map_glyph(const utf8::Codepoint& glyph, TextureCpMapper);
+    TileDesc map_glyph(const utf8::Codepoint& glyph,
+                       const TextureMapping& mapping);
 
 
     static constexpr const int dynamic_texture_count = 6;

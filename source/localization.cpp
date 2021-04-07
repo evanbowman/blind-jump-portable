@@ -3,184 +3,154 @@
 #include "script/lisp.hpp"
 
 
-// Each language should define a texture mapping, which tells the rendering code
-// where in the texture data to look for the glyph corresponding to a given utf8
-// codepoint. Keep in mind, that on some platforms, like the Gameboy Advance,
-// there is very little texture memory available for displaying glyphs. You may
-// only be able to display 80 or so unique characters on the screen at a time.
+class str_const {
+private:
+    const char* const p_;
+    const size_t sz_;
+public:
+    template <size_t N>
+    constexpr str_const(const char(&a)[N]) :
+        p_(a), sz_(N - 1)
+    {
+    }
+
+    constexpr char operator[](std::size_t n) {
+        return n < sz_ ? p_[n] : '0';
+    }
+};
+
+
+// FIXME: This assumes little endian?
+// Needs to be a macro because there's no way to pass a str_const as a
+// constexpr parameter.
+#define UTF8_GETCHR(_STR_)                                                                     \
+    []() -> utf8::Codepoint {                                                                  \
+        if constexpr ((str_const(_STR_)[0] & 0x80) == 0) {                                     \
+            return str_const(_STR_)[0];                                                        \
+        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xC0) {                           \
+            return str_const(_STR_)[0] | str_const(_STR_)[1] << 8;                             \
+        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xE0) {                           \
+            return str_const(_STR_)[0] | str_const(_STR_)[1] << 8 | str_const(_STR_)[2] << 16; \
+        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xF0) {                           \
+            return str_const(_STR_)[0] | str_const(_STR_)[1] << 8 | str_const(_STR_)[2] << 16 | str_const(_STR_)[3] << 24;  \
+        } else {                                                                               \
+            return 0;                                                                          \
+        }                                                                                      \
+    }()
+
+
+
 std::optional<Platform::TextureMapping>
 standard_texture_map(const utf8::Codepoint& cp)
 {
     auto mapping = [&]() -> std::optional<u16> {
         switch (cp) {
-        case '0':
-            return 1;
-        case '1':
-            return 2;
-        case '2':
-            return 3;
-        case '3':
-            return 4;
-        case '4':
-            return 5;
-        case '5':
-            return 6;
-        case '6':
-            return 7;
-        case '7':
-            return 8;
-        case '8':
-            return 9;
-        case '9':
-            return 10;
-        case 'a':
-            return 11;
-        case 'b':
-            return 12;
-        case 'c':
-            return 13;
-        case 'd':
-            return 14;
-        case 'e':
-            return 15;
-        case 'f':
-            return 16;
-        case 'g':
-            return 17;
-        case 'h':
-            return 18;
-        case 'i':
-            return 19;
-        case 'j':
-            return 20;
-        case 'k':
-            return 21;
-        case 'l':
-            return 22;
-        case 'm':
-            return 23;
-        case 'n':
-            return 24;
-        case 'o':
-            return 25;
-        case 'p':
-            return 26;
-        case 'q':
-            return 27;
-        case 'r':
-            return 28;
-        case 's':
-            return 29;
-        case 't':
-            return 30;
-        case 'u':
-            return 31;
-        case 'v':
-            return 32;
-        case 'w':
-            return 33;
-        case 'x':
-            return 34;
-        case 'y':
-            return 35;
-        case 'z':
-            return 36;
-        case '.':
-            return 37;
-        case ',':
-            return 38;
-        case 'A':
-            return 39;
-        case 'B':
-            return 40;
-        case 'C':
-            return 41;
-        case 'D':
-            return 42;
-        case 'E':
-            return 43;
-        case 'F':
-            return 44;
-        case 'G':
-            return 45;
-        case 'H':
-            return 46;
-        case 'I':
-            return 47;
-        case 'J':
-            return 48;
-        case 'K':
-            return 49;
-        case 'L':
-            return 50;
-        case 'M':
-            return 51;
-        case 'N':
-            return 52;
-        case 'O':
-            return 53;
-        case 'P':
-            return 54;
-        case 'Q':
-            return 55;
-        case 'R':
-            return 56;
-        case 'S':
-            return 57;
-        case 'T':
-            return 58;
-        case 'U':
-            return 59;
-        case 'V':
-            return 60;
-        case 'W':
-            return 61;
-        case 'X':
-            return 62;
-        case 'Y':
-            return 63;
-        case 'Z':
-            return 64;
-        case '"':
-            return 65;
-        case '\'':
-            return 66;
-        case '[':
-            return 67;
-        case ']':
-            return 68;
-        case '(':
-            return 69;
-        case ')':
-            return 70;
-        case ':':
-            return 71;
-        case ' ':
-            return 72;
-        case '%':
-            return 93;
-        case '!':
-            return 94;
-        case '?':
-            return 95;
-        case '+':
-            return 98;
-        case '-':
-            return 99;
-        case '/':
-            return 100;
-        case '*':
-            return 101;
-        case '=':
-            return 102;
-        case '<':
-            return 103;
-        case '>':
-            return 104;
-        case '#':
-            return 105;
-        case '_':
-            return 186;
+        case UTF8_GETCHR(u8"0"): return 1;
+        case UTF8_GETCHR(u8"1"): return 2;
+        case UTF8_GETCHR(u8"2"): return 3;
+        case UTF8_GETCHR(u8"3"): return 4;
+        case UTF8_GETCHR(u8"4"): return 5;
+        case UTF8_GETCHR(u8"5"): return 6;
+        case UTF8_GETCHR(u8"6"): return 7;
+        case UTF8_GETCHR(u8"7"): return 8;
+        case UTF8_GETCHR(u8"8"): return 9;
+        case UTF8_GETCHR(u8"9"): return 10;
+        case UTF8_GETCHR(u8"a"): return 11;
+        case UTF8_GETCHR(u8"b"): return 12;
+        case UTF8_GETCHR(u8"c"): return 13;
+        case UTF8_GETCHR(u8"d"): return 14;
+        case UTF8_GETCHR(u8"e"): return 15;
+        case UTF8_GETCHR(u8"f"): return 16;
+        case UTF8_GETCHR(u8"g"): return 17;
+        case UTF8_GETCHR(u8"h"): return 18;
+        case UTF8_GETCHR(u8"i"): return 19;
+        case UTF8_GETCHR(u8"j"): return 20;
+        case UTF8_GETCHR(u8"k"): return 21;
+        case UTF8_GETCHR(u8"l"): return 22;
+        case UTF8_GETCHR(u8"m"): return 23;
+        case UTF8_GETCHR(u8"n"): return 24;
+        case UTF8_GETCHR(u8"o"): return 25;
+        case UTF8_GETCHR(u8"p"): return 26;
+        case UTF8_GETCHR(u8"q"): return 27;
+        case UTF8_GETCHR(u8"r"): return 28;
+        case UTF8_GETCHR(u8"s"): return 29;
+        case UTF8_GETCHR(u8"t"): return 30;
+        case UTF8_GETCHR(u8"u"): return 31;
+        case UTF8_GETCHR(u8"v"): return 32;
+        case UTF8_GETCHR(u8"w"): return 33;
+        case UTF8_GETCHR(u8"x"): return 34;
+        case UTF8_GETCHR(u8"y"): return 35;
+        case UTF8_GETCHR(u8"z"): return 36;
+        case UTF8_GETCHR(u8"."): return 37;
+        case UTF8_GETCHR(u8","): return 38;
+        case UTF8_GETCHR(u8"A"): return 39;
+        case UTF8_GETCHR(u8"B"): return 40;
+        case UTF8_GETCHR(u8"C"): return 41;
+        case UTF8_GETCHR(u8"D"): return 42;
+        case UTF8_GETCHR(u8"E"): return 43;
+        case UTF8_GETCHR(u8"F"): return 44;
+        case UTF8_GETCHR(u8"G"): return 45;
+        case UTF8_GETCHR(u8"H"): return 46;
+        case UTF8_GETCHR(u8"I"): return 47;
+        case UTF8_GETCHR(u8"J"): return 48;
+        case UTF8_GETCHR(u8"K"): return 49;
+        case UTF8_GETCHR(u8"L"): return 50;
+        case UTF8_GETCHR(u8"M"): return 51;
+        case UTF8_GETCHR(u8"N"): return 52;
+        case UTF8_GETCHR(u8"O"): return 53;
+        case UTF8_GETCHR(u8"P"): return 54;
+        case UTF8_GETCHR(u8"Q"): return 55;
+        case UTF8_GETCHR(u8"R"): return 56;
+        case UTF8_GETCHR(u8"S"): return 57;
+        case UTF8_GETCHR(u8"T"): return 58;
+        case UTF8_GETCHR(u8"U"): return 59;
+        case UTF8_GETCHR(u8"V"): return 60;
+        case UTF8_GETCHR(u8"W"): return 61;
+        case UTF8_GETCHR(u8"X"): return 62;
+        case UTF8_GETCHR(u8"Y"): return 63;
+        case UTF8_GETCHR(u8"Z"): return 64;
+        case UTF8_GETCHR(u8"\""): return 65;
+        case UTF8_GETCHR(u8"'"): return 66;
+        case UTF8_GETCHR(u8"["): return 67;
+        case UTF8_GETCHR(u8"]"): return 68;
+        case UTF8_GETCHR(u8"("): return 69;
+        case UTF8_GETCHR(u8")"): return 70;
+        case UTF8_GETCHR(u8":"): return 71;
+        case UTF8_GETCHR(u8" "): return 72;
+        case UTF8_GETCHR(u8"%"): return 93;
+        case UTF8_GETCHR(u8"!"): return 94;
+        case UTF8_GETCHR(u8"?"): return 95;
+        case UTF8_GETCHR(u8"+"): return 98;
+        case UTF8_GETCHR(u8"-"): return 99;
+        case UTF8_GETCHR(u8"/"): return 100;
+        case UTF8_GETCHR(u8"*"): return 101;
+        case UTF8_GETCHR(u8"="): return 102;
+        case UTF8_GETCHR(u8"<"): return 103;
+        case UTF8_GETCHR(u8">"): return 104;
+        case UTF8_GETCHR(u8"#"): return 105;
+        case UTF8_GETCHR(u8"_"): return 186;
+
+        // Chinese Glyphs:
+        case UTF8_GETCHR(u8"星"): return 187;
+        case UTF8_GETCHR(u8"际"): return 191;
+        case UTF8_GETCHR(u8"跃"): return 195;
+        case UTF8_GETCHR(u8"动"): return 199;
+        case UTF8_GETCHR(u8"新"): return 203;
+        case UTF8_GETCHR(u8"游"): return 207;
+        case UTF8_GETCHR(u8"戏"): return 211;
+        case UTF8_GETCHR(u8"继"): return 215;
+        case UTF8_GETCHR(u8"续"): return 219;
+        case UTF8_GETCHR(u8"制"): return 223;
+        case UTF8_GETCHR(u8"作"): return 227;
+        case UTF8_GETCHR(u8"你"): return 231;
+        case UTF8_GETCHR(u8"敌"): return 235;
+        case UTF8_GETCHR(u8"人"): return 239;
+        case UTF8_GETCHR(u8"传"): return 243;
+        case UTF8_GETCHR(u8"送"): return 247;
+        case UTF8_GETCHR(u8"点"): return 251;
+        case UTF8_GETCHR(u8"物"): return 255;
+        case UTF8_GETCHR(u8"品"): return 259;
+
         default:
             if (cp == utf8::getc(u8"©")) {
                 return 185;
@@ -391,6 +361,7 @@ standard_texture_map(const utf8::Codepoint& cp)
             } else if (cp == utf8::getc(u8"・")) {
                 return 184;
             }
+
             return std::nullopt;
         }
     }();
@@ -435,7 +406,19 @@ StringBuffer<31> locale_language_name(int language)
 
     auto lang = lisp::get_list(languages, language);
 
-    return lang->expect<lisp::Symbol>().name_;
+    return lang->expect<lisp::Cons>().car()->expect<lisp::Symbol>().name_;
+}
+
+
+bool locale_requires_doublesize_font()
+{
+    auto languages = lisp::get_var("languages");
+
+    auto lang = lisp::get_list(languages, ::language_id);
+
+    return lang->expect<lisp::Cons>()
+        .cdr()->expect<lisp::Cons>()
+        .car()->expect<lisp::Integer>().value_ == 2;
 }
 
 
@@ -447,7 +430,7 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls)
 
     auto lang = lisp::get_list(languages, ::language_id);
 
-    StringBuffer<31> fname = lang->expect<lisp::Symbol>().name_;
+    StringBuffer<31> fname = lang->expect<lisp::Cons>().car()->expect<lisp::Symbol>().name_;
     fname += ".txt";
 
     if (auto data = pfrm.load_file_contents("strings", fname.c_str())) {

@@ -159,5 +159,7 @@ enum class LocaleString {
     worker_notebook_2_str,
     engineer_notebook_1_str,
     engineer_notebook_2_str,
+    newgame_str,
+    continue_str,
     count
 };

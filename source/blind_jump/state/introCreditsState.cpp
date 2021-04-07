@@ -44,8 +44,12 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
+    const bool bigfont = locale_requires_doublesize_font();
+
+    const char* creator_str = "Evan Bowman";
+
     // Center horizontally, and place text vertically in top third of screen
-    const auto len = utf8::len(str_->c_str());
+    const auto len = str_len(creator_str) + utf8::len(str_->c_str()) * (bigfont ? 2 : 1);
     pos.x -= len + 1;
     pos.x /= 2;
     pos.y *= 0.35f;
@@ -53,7 +57,19 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     if (len % 2 == 0) {
         pfrm.set_overlay_origin(-4, 0);
     }
-    text_.emplace(pfrm, str_->c_str(), pos);
+
+    creator_.emplace(pfrm, creator_str, pos);
+
+    pos.x += str_len(creator_str);
+
+    if (bigfont) {
+        pos.y -= 1;
+    }
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
+    text_.emplace(pfrm, str_->c_str(), pos, font_conf);
 
     center(pfrm);
     // pfrm.screen().fade(0.f);
@@ -68,6 +84,7 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 void IntroCreditsState::exit(Platform& pfrm, Game& game, State&)
 {
     text_.reset();
+    creator_.reset();
     version_.reset();
     pfrm.set_overlay_origin(0, 0);
 }
@@ -118,6 +135,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
     if (text_) {
         if (timer_ > show_text_time or skip) {
             text_.reset();
+            creator_.reset();
             version_.reset();
             timer_ = 0;
 

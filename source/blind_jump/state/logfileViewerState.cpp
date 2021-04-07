@@ -71,9 +71,11 @@ void LogfileViewerState::repaint(Platform& pfrm, int offset)
                         pfrm.set_tile(Layer::overlay, i, j, 0);
                     }
                 } else {
-                    const auto t =
-                        pfrm.map_glyph(buffer[index], locale_texture_map());
-                    pfrm.set_tile(Layer::overlay, i, j, t);
+                    // FIXME: I broke the mapper when I was working on
+                    // localization for asian charsets.
+                    // const auto t =
+                    //     pfrm.map_glyph(buffer[index], locale_texture_map());
+                    // pfrm.set_tile(Layer::overlay, i, j, t);
                 }
                 index += 1;
             }

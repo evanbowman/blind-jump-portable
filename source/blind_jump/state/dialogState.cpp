@@ -115,7 +115,14 @@ bool DialogState::advance_text(Platform& pfrm,
         int bytes_consumed = 0;
         const auto cp = utf8::getc(text_state_.current_word_, &bytes_consumed);
 
-        const auto t = pfrm.map_glyph(cp, locale_texture_map());
+        const auto mapping_info = locale_texture_map()(cp);
+
+        u16 t = 111; // bad glyph, FIXME: add a constant
+
+        if (mapping_info) {
+            t = pfrm.map_glyph(cp, *mapping_info);
+        }
+
         const int y_offset = text_state_.line_ == 0 ? 4 : 2;
         const int x_offset = text_state_.pos_ + 1;
 

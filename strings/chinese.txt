@@ -1,37 +1,37 @@
+        
 
-
-Evan Bowman presents
-BLIND JUMP
-you
-enemy
-exit
-item
-shop
+制作
+星际跃动
+你
+敌人
+传送点
+物品
+商店休息处 
 waypoint 
-part I:
-the arrival 
-part II:
-the descent 
-part III:
-into the waste
-part IV:
-by moonlight
-Empty
-Old poster (1)
-Worker's notebook (1/2)
-Worker's notebook (2/2)
-Engineer's notebook (1/2)
-Engineer's notebook (2/2)
-Blaster
-Accelerator (60 shots)
-Lethargy (18 sec)
-Map system
-Explosive rounds (2)
-Signal jammer
-Seed packet
-Navigation pamphlet
-Orange (+1 hp)
-Orange seeds
+章节 I:
+到达者 
+章节 II:
+勇往直下 
+章节 III:
+肮脏之处
+章节 IV:
+月光之下
+空白
+曾经的海报 (1)
+工作笔记 (1/2)
+工作笔记 (2/2)
+工程师笔记 (1/2)
+工程师笔记 (2/2)
+爆破器
+加速器 (60 开)
+Lethargy (18 秒)
+地图系统
+爆炸弹 (2)
+电磁干扰器
+种子袋
+导航册
+桔子 (+1 hp)
+桔子籽
 
 Long jump drive (pt. II)
 Long jump drive (pt. III)
@@ -65,11 +65,11 @@ items collected %
 items collected %
 waypoints 
 .
-Resume
+返回
 Connect Peer
 Settings
 Script Console
-Save and Quit
+退出并保存
 See you later...
 Choose a target:
 No road map? No problem! The hyperspace gate network calculates a path to your destination by routing your journey through a sequence of waypoints. Tens of thousands of waypoints were contructed in orbit around Earth and its moon. Because the waypoints are constantly in motion during orbit, the gate network continually recalculates the path to your destination. You'll never visit the same waypoints twice! Due to the unpredictable nature of the hyperspace gates, passing through a gate is sometimes referred to as a blind jump.
@@ -77,12 +77,12 @@ Show Stats:
 Language: 
 Contrast: 
 Night Mode: 
-Swap A/B: 
+AB按钮反转: 
 default
-Difficulty: 
-easy
-normal
-hard
+难度选择: 
+简单
+普通
+困难
 survival
 level must be clear!
 Strafe Key: 
@@ -95,8 +95,8 @@ fixed
 tracking (low)
 tracking (high)
 Rumble Enabled: 
-yes
-no
+确定
+不
 menu disabled
  ft
 launch: 
@@ -155,3 +155,5 @@ Your ship...
 [3.7.2081]  I was lucky to be on some of the near-earth waypoints when the robots turned on us... a lot of people aparantly weren't so fortunate. To escape the machines, I fled through the warp gates, but the carnage seems to be even worse the further I go. Some of the stations out here seem to have been more populated, unfortunately.
 Power surges emanating from the hyperspace gates seem to have an unusual effect on machinery, especially the robots on the stations. We've observed some unfortunate violent reactions from the machines recently--this is all starting to get out of control. During the last power surge, I thought that I glimpsed the sillouette of a large, cloaked figure through the veil of the jump gate. We long suspected that there was something... else... out there in hyperspace, something that we, perhaps, should never have disturbed by opening these gates...
 The power surges from the jump gates are more-or-less constant now, and we've lost control of everything. I sent word back to Earth, that someone needs to be sent out here, to deal the causes of these fluctuations... they're dealing with their own mechanized revolt, though, so I'm not sure how soon they'll send a  soldier. In the meantime, I've invented a signal jamming device, which seems to render the machines immune to the power surges...
+新游戏
+继续

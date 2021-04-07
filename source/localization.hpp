@@ -11,6 +11,7 @@ void locale_set_language(int language_id);
 void locale_set_language_english();
 int locale_get_language();
 
+bool locale_requires_doublesize_font();
 
 using LocalizedStrBuffer = StringBuffer<1987>;
 using LocalizedText = DynamicMemory<LocalizedStrBuffer>;
