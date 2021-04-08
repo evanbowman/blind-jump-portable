@@ -623,11 +623,12 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             auto margin =
                 centered_text_margins(pfrm,
-                                      notification_str.length());
+                                      utf8::len(notification_str.c_str())
+                                      * (bigfont ? 2 : 1));
 
-            left_text_margin(*notification_text, margin);
+            left_text_margin(*notification_text, margin / (bigfont ? 2 : 1));
             notification_text->append(notification_str.c_str());
-            right_text_margin(*notification_text, margin);
+            right_text_margin(*notification_text, margin / (bigfont ? 2 : 1));
 
             notification_status = NotificationStatus::display;
         }
