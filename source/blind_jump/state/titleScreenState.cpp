@@ -105,8 +105,7 @@ draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
 
     const bool bigfont = locale_requires_doublesize_font();
 
-    auto margin = centered_text_margins(
-        pfrm, utf8::len(str->c_str()));
+    auto margin = centered_text_margins(pfrm, utf8::len(str->c_str()));
 
     if (bigfont) {
         margin -= utf8::len(str->c_str()) / 2;

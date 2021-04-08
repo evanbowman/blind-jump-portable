@@ -74,13 +74,26 @@ void PauseScreenState::repaint_text(Platform& pfrm, Game& game)
 
     const u8 y = screen_tiles.y / 2;
 
+
+    const bool bigfont = locale_requires_doublesize_font();
+
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
+
     for (int i = 0; i < (int)strs_.size(); ++i) {
-        const auto len = utf8::len(locale_string(pfrm, strs_[i])->c_str());
+        const auto len = utf8::len(locale_string(pfrm, strs_[i])->c_str()) *
+                         (bigfont ? 2 : 1);
 
         const u8 text_x_loc = (screen_tiles.x - len) / 2;
 
         texts_.emplace_back(
-            pfrm, OverlayCoord{text_x_loc, u8(y - strs_.size() + i * 2)});
+            pfrm,
+            OverlayCoord{text_x_loc,
+                         u8(y - strs_.size() + i * (bigfont ? 3 : 2) +
+                            (bigfont ? -1 : 0))},
+            font_conf);
 
         if (strs_[i] == LocaleString::menu_connect_peer) {
             texts_.back().assign(locale_string(pfrm, strs_[i])->c_str(),

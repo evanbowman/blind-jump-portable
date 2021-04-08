@@ -5,6 +5,7 @@ enum class LocaleString {
     empty,
     intro_text_1,
     intro_text_2,
+    translator_name,
     game_title,
     map_legend_1,
     map_legend_2,

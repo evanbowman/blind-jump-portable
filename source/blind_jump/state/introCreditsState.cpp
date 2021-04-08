@@ -72,6 +72,15 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 
     text_.emplace(pfrm, str_->c_str(), pos, font_conf);
 
+    pos.y += 8;
+    pos.x = 1;
+    translator_.emplace(pfrm, pos);
+    translator_->assign(locale_string(pfrm, LocaleString::translator_name)->c_str(),
+                        FontColors{ColorConstant::med_blue_gray,
+                                   ColorConstant::rich_black});
+
+
+
     center(pfrm);
     // pfrm.screen().fade(0.f);
     pfrm.screen().fade(1.f);
@@ -87,6 +96,7 @@ void IntroCreditsState::exit(Platform& pfrm, Game& game, State&)
     text_.reset();
     creator_.reset();
     version_.reset();
+    translator_.reset();
     pfrm.set_overlay_origin(0, 0);
 }
 
@@ -138,6 +148,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             text_.reset();
             creator_.reset();
             version_.reset();
+            translator_.reset();
             timer_ = 0;
 
             if (skip) {

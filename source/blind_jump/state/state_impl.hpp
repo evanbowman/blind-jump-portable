@@ -706,6 +706,7 @@ private:
     LocalizedText str_;
     std::optional<Text> creator_;
     std::optional<Text> text_;
+    std::optional<Text> translator_;
     std::optional<Text> version_;
     Microseconds timer_ = 0;
 };

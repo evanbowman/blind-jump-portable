@@ -214,8 +214,6 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"册"): return 491;
         case UTF8_GETCHR(u8"桔"): return 495;
         case UTF8_GETCHR(u8"籽"): return 499;
-        // NOTE: All glyphs for the first 35 lines completed.
-
         case UTF8_GETCHR(u8"仅"): return 503;
         case UTF8_GETCHR(u8"能"): return 507;
         case UTF8_GETCHR(u8"使"): return 511;
@@ -520,10 +518,14 @@ const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer)
     if (str_cmp(lang_name, "chinese") == 0) {
         switch (num) {
         default:
-        case 1: return "一";
-        case 2: return "二";
-        case 3: return "三";
-        case 4: return "四";
+        case 1:
+            return "一";
+        case 2:
+            return "二";
+        case 3:
+            return "三";
+        case 4:
+            return "四";
         }
     } else {
         locale_num2str(num, buffer.data(), 10);

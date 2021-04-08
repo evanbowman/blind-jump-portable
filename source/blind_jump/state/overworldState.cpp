@@ -621,10 +621,8 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             notification_text.emplace(pfrm, OverlayCoord{0, 0}, font_conf);
 
-            auto margin =
-                centered_text_margins(pfrm,
-                                      utf8::len(notification_str.c_str())
-                                      * (bigfont ? 2 : 1));
+            auto margin = centered_text_margins(
+                pfrm, utf8::len(notification_str.c_str()) * (bigfont ? 2 : 1));
 
             left_text_margin(*notification_text, margin / (bigfont ? 2 : 1));
             notification_text->append(notification_str.c_str());

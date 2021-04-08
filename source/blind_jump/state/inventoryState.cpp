@@ -245,8 +245,8 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
             locale_string(pfrm, handler->description_)->c_str(),
             text_loc,
             font_conf);
-        item_description_->append(
-            locale_string(pfrm, LocaleString::punctuation_period)->c_str());
+        // item_description_->append(
+        //     locale_string(pfrm, LocaleString::punctuation_period)->c_str());
 
         if (handler->single_use_) {
 

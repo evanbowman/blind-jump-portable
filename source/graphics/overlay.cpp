@@ -51,9 +51,7 @@ void Text::erase()
 
 
 Text::Text(Text&& from)
-    : pfrm_(from.pfrm_),
-      coord_(from.coord_),
-      len_(from.len_),
+    : pfrm_(from.pfrm_), coord_(from.coord_), len_(from.len_),
       config_(from.config_)
 {
     from.len_ = 0;
@@ -136,7 +134,6 @@ static void print_double_char(Platform& pfrm,
         pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y, 0);
         pfrm.set_tile(Layer::overlay, coord.x, coord.y + 1, 0);
         pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y + 1, 0);
-
     }
 }
 
@@ -193,13 +190,14 @@ void Text::append(const char* str, const OptColors& colors)
     if (config_.double_size_) {
         auto write_pos = static_cast<u8>(coord_.x + len_ * 2);
 
-        utf8::scan([&](const utf8::Codepoint& cp, const char* raw, int) {
-            print_double_char(pfrm_, cp, {write_pos, coord_.y}, colors);
-            write_pos += 2;
-            ++len_;
-        },
-        str,
-        str_len(str));
+        utf8::scan(
+            [&](const utf8::Codepoint& cp, const char* raw, int) {
+                print_double_char(pfrm_, cp, {write_pos, coord_.y}, colors);
+                write_pos += 2;
+                ++len_;
+            },
+            str,
+            str_len(str));
 
     } else {
         auto write_pos = static_cast<u8>(coord_.x + len_);
