@@ -256,9 +256,9 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"并"): return 651;
         case UTF8_GETCHR(u8"保"): return 655;
         case UTF8_GETCHR(u8"咱"): return 659;
-        case UTF8_GETCHR(u8"见"): return 673;
-        case UTF8_GETCHR(u8"过"): return 677;
-        case UTF8_GETCHR(u8"会"): return 681;
+        case UTF8_GETCHR(u8"见"): return 663;
+        case UTF8_GETCHR(u8"过"): return 667;
+        case UTF8_GETCHR(u8"会"): return 671;
         // NOTE: finished all glyphes up to line 74
 
             // clang-format on
