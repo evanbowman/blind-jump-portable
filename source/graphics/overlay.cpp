@@ -95,12 +95,20 @@ static void print_double_char(Platform& pfrm,
             auto info = *mapping_info;
 
             t0 = pfrm.map_glyph(c, info);
-            info.offset_++;
-            t1 = pfrm.map_glyph(c, info);
-            info.offset_++;
-            t2 = pfrm.map_glyph(c, info);
-            info.offset_++;
-            t3 = pfrm.map_glyph(c, info);
+
+            if (info.offset_ == 72) {
+                // Special case for space character
+                t1 = 72;
+                t2 = 72;
+                t3 = 72;
+            } else {
+                info.offset_++;
+                t1 = pfrm.map_glyph(c, info);
+                info.offset_++;
+                t2 = pfrm.map_glyph(c, info);
+                info.offset_++;
+                t3 = pfrm.map_glyph(c, info);
+            }
         }
 
         if (not colors) {

@@ -228,18 +228,29 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
     const auto item =
         game.inventory().get_item(page_, selector_coord_.x, selector_coord_.y);
 
-    constexpr static const OverlayCoord text_loc{3, 15};
+    OverlayCoord text_loc{3, 15};
+
+    const bool bigfont = locale_requires_doublesize_font();
+
+    if (bigfont) {
+        text_loc.y -= 1;
+    }
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
 
     if (auto handler = inventory_item_handler(item)) {
         item_description_.emplace(
             pfrm,
             locale_string(pfrm, handler->description_)->c_str(),
-            text_loc);
-        item_description_->append(".");
+            text_loc, font_conf);
+        item_description_->append(locale_string(pfrm, LocaleString::punctuation_period)->c_str());
 
         if (handler->single_use_) {
-            item_description2_.emplace(
-                pfrm, OverlayCoord{text_loc.x, text_loc.y + 2});
+
+            item_description2_.emplace(pfrm,
+                                       OverlayCoord{text_loc.x, u8(text_loc.y + 2)},
+                                       font_conf);
 
             item_description2_->assign(
                 locale_string(pfrm, LocaleString::single_use_warning)->c_str(),

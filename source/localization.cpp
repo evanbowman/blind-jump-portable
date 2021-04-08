@@ -174,9 +174,43 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"处"): return 347;
         case UTF8_GETCHR(u8"月"): return 351;
         case UTF8_GETCHR(u8"光"): return 355;
-
-
-
+        case UTF8_GETCHR(u8"空"): return 359;
+        case UTF8_GETCHR(u8"白"): return 363;
+        case UTF8_GETCHR(u8"曾"): return 367;
+        case UTF8_GETCHR(u8"经"): return 371;
+        case UTF8_GETCHR(u8"海"): return 375;
+        case UTF8_GETCHR(u8"报"): return 379;
+        case UTF8_GETCHR(u8"工"): return 383;
+        case UTF8_GETCHR(u8"笔"): return 387;
+        case UTF8_GETCHR(u8"记"): return 391;
+        case UTF8_GETCHR(u8"程"): return 395;
+        case UTF8_GETCHR(u8"师"): return 399;
+        case UTF8_GETCHR(u8"爆"): return 403;
+        case UTF8_GETCHR(u8"破"): return 407;
+        case UTF8_GETCHR(u8"器"): return 411;
+        case UTF8_GETCHR(u8"加"): return 415;
+        case UTF8_GETCHR(u8"速"): return 419;
+        case UTF8_GETCHR(u8"放"): return 423;
+        case UTF8_GETCHR(u8"慢"): return 427;
+        case UTF8_GETCHR(u8"系"): return 431;
+        case UTF8_GETCHR(u8"统"): return 435;
+        case UTF8_GETCHR(u8"地"): return 439;
+        case UTF8_GETCHR(u8"图"): return 443;
+        case UTF8_GETCHR(u8"炸"): return 447;
+        case UTF8_GETCHR(u8"弹"): return 451;
+        case UTF8_GETCHR(u8"电"): return 455;
+        case UTF8_GETCHR(u8"磁"): return 459;
+        case UTF8_GETCHR(u8"干"): return 463;
+        case UTF8_GETCHR(u8"扰"): return 467;
+        case UTF8_GETCHR(u8"种"): return 471;
+        case UTF8_GETCHR(u8"子"): return 475;
+        case UTF8_GETCHR(u8"袋"): return 479;
+        case UTF8_GETCHR(u8"导"): return 483;
+        case UTF8_GETCHR(u8"航"): return 487;
+        case UTF8_GETCHR(u8"册"): return 491;
+        case UTF8_GETCHR(u8"桔"): return 495;
+        case UTF8_GETCHR(u8"籽"): return 499;
+        // NOTE: All glyphs for the first 35 lines completed.
 
         default:
             if (cp == utf8::getc(u8"©")) {
