@@ -107,6 +107,13 @@ static void print_double_char(Platform& pfrm,
                 info.offset_ = 72; // space
                 t2 = pfrm.map_glyph(c, info);
                 t3 = pfrm.map_glyph(c, info);
+            } else if (info.offset_ == 38 or info.offset_ == 37) {
+                // Special case for period, comma
+                t2 = pfrm.map_glyph(c, info);
+                info.offset_ = 72; // space
+                t0 = pfrm.map_glyph(c, info);
+                t1 = pfrm.map_glyph(c, info);
+                t3 = pfrm.map_glyph(c, info);
             } else {
                 t0 = pfrm.map_glyph(c, info);
                 info.offset_++;

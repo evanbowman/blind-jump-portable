@@ -257,6 +257,22 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"见"): return 663;
         case UTF8_GETCHR(u8"过"): return 667;
         case UTF8_GETCHR(u8"会"): return 671;
+        case UTF8_GETCHR(u8"抵"): return 675;
+        case UTF8_GETCHR(u8"深"): return 679;
+        case UTF8_GETCHR(u8"荒"): return 683;
+        case UTF8_GETCHR(u8"废"): return 687;
+        case UTF8_GETCHR(u8"上"): return 691;
+        case UTF8_GETCHR(u8"锁"): return 695;
+        case UTF8_GETCHR(u8"跳"): return 699;
+
+        // Some misc number glyphs...
+        case UTF8_GETCHR(u8"五"): return 703;
+        case UTF8_GETCHR(u8"六"): return 707;
+        case UTF8_GETCHR(u8"七"): return 711;
+        case UTF8_GETCHR(u8"八"): return 715;
+        case UTF8_GETCHR(u8"九"): return 719;
+        case UTF8_GETCHR(u8"十"): return 723;
+
         // NOTE: finished all glyphes up to line 74
 
             // clang-format on
@@ -526,8 +542,39 @@ const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer)
             return "三";
         case 4:
             return "四";
+        case 5:
+            return "五";
+        case 6:
+            return "六";
+        case 7:
+            return "七";
+        case 8:
+            return "八";
+        case 9:
+            return "九";
+        case 10:
+            return "十";
+        case 11:
+            return "十一";
+        case 12:
+            return "十二";
+        case 13:
+            return "十三";
+        case 14:
+            return "十四";
+        case 15:
+            return "十五";
+        case 16:
+            return "十六";
+        case 17:
+            return "十七";
+        case 18:
+            return "十八";
+        case 19:
+            return "十九";
         }
     } else {
+        // Arabic numerals
         locale_num2str(num, buffer.data(), 10);
         return buffer.data();
     }

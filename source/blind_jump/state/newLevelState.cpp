@@ -90,11 +90,16 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ += delta;
 
             const auto max_j =
-                ((int)utf8::len(
+                std::max(((int)utf8::len(
                      locale_string(pfrm, zone.title_line_2)->c_str()) *
                  (bigfont ? 2 : 1)) /
                     2 +
-                1;
+                         1,
+                         ((int)utf8::len(
+                     locale_string(pfrm, zone.title_line_1)->c_str()) *
+                 (bigfont ? 2 : 1)) /
+                    2 +
+                1);
             const auto max_i = max_j * 8;
 
             const int i = ease_out(timer_, 0, max_i, seconds(1));

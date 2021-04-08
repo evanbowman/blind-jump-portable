@@ -71,6 +71,7 @@ public:
         flash_animate,
         wait,
         display,
+        exit_row2,
         exit,
         hidden
     } notification_status = NotificationStatus::hidden;

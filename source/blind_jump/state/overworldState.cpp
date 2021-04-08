@@ -24,6 +24,11 @@ void OverworldState::exit(Platform& pfrm, Game&, State& next_state)
     for (int i = 0; i < 32; ++i) {
         pfrm.set_tile(Layer::overlay, i, 0, 0);
     }
+    if (locale_requires_doublesize_font()) {
+        for (int i = 0; i < 32; ++i) {
+            pfrm.set_tile(Layer::overlay, i, 1, 0);
+        }
+    }
 
     time_remaining_text_.reset();
     time_remaining_icon_.reset();
@@ -584,13 +589,25 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
     case NotificationStatus::hidden:
         break;
 
-    case NotificationStatus::flash:
-        for (int x = 0; x < 32; ++x) {
-            pfrm.set_tile(Layer::overlay, x, 0, 108);
+    case NotificationStatus::flash: {
+        const bool bigfont = locale_requires_doublesize_font();
+
+        if (bigfont) {
+            for (int x = 0; x < 32; ++x) {
+                pfrm.set_tile(Layer::overlay, x, 0, 110);
+            }
+            for (int x = 0; x < 32; ++x) {
+                pfrm.set_tile(Layer::overlay, x, 1, 110);
+            }
+        } else {
+            for (int x = 0; x < 32; ++x) {
+                pfrm.set_tile(Layer::overlay, x, 0, 108);
+            }
         }
         notification_status = NotificationStatus::flash_animate;
         notification_text_timer = -1 * milliseconds(5);
         break;
+    }
 
     case NotificationStatus::flash_animate:
         notification_text_timer += delta;
@@ -638,7 +655,17 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         } else {
             notification_text_timer = 0;
-            notification_status = NotificationStatus::exit;
+
+            if (locale_requires_doublesize_font()) {
+                notification_status = NotificationStatus::exit_row2;
+
+                for (int x = 0; x < 32; ++x) {
+                    pfrm.set_tile(Layer::overlay, x, 1, 112);
+                }
+            } else {
+                notification_status = NotificationStatus::exit;
+            }
+
 
             for (int x = 0; x < 32; ++x) {
                 pfrm.set_tile(Layer::overlay, x, 0, 112);
@@ -646,9 +673,29 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         }
         break;
 
+    case NotificationStatus::exit_row2: {
+        notification_text_timer += delta;
+        if (notification_text_timer >
+            (locale_requires_doublesize_font() ? milliseconds(17) : milliseconds(34))) {
+            notification_text_timer = 0;
+
+            const auto tile = pfrm.get_tile(Layer::overlay, 0, 1);
+            if (tile < 120) {
+                for (int x = 0; x < 32; ++x) {
+                    pfrm.set_tile(Layer::overlay, x, 1, tile + 1);
+                }
+            } else {
+                notification_text_timer = 0;
+                notification_status = NotificationStatus::exit;
+            }
+        }
+        break;
+    }
+
     case NotificationStatus::exit: {
         notification_text_timer += delta;
-        if (notification_text_timer > milliseconds(34)) {
+        if (notification_text_timer >
+            (locale_requires_doublesize_font() ? milliseconds(17) : milliseconds(34))) {
             notification_text_timer = 0;
 
             const auto tile = pfrm.get_tile(Layer::overlay, 0, 0);
