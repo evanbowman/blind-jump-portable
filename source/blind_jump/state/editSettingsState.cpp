@@ -3,11 +3,11 @@
 
 
 EditSettingsState::EditSettingsState(DeferredState exit_state)
-    : exit_state_(exit_state), lines_{{{swap_action_keys_line_updater_},
+    : exit_state_(exit_state), lines_{{{language_line_updater_},
+                                       {swap_action_keys_line_updater_},
                                        {strafe_mode_line_updater_},
                                        {camera_mode_line_updater_},
                                        {difficulty_line_updater_},
-                                       {language_line_updater_},
                                        {contrast_line_updater_},
                                        {night_mode_line_updater_},
                                        {show_stats_line_updater_},
@@ -21,28 +21,51 @@ void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
 {
     auto str = locale_string(pfrm, strings[row]);
 
-    const int value_len = utf8::len(value);
-    const int field_len = utf8::len(str->c_str());
+    const bool bigfont = locale_requires_doublesize_font();
 
-    const auto margin = centered_text_margins(pfrm, value_len + field_len + 2);
+    const int value_len = utf8::len(value) * (bigfont ? 2 : 1);
+    const int field_len = utf8::len(str->c_str()) * (bigfont ? 2 : 1);
 
-    lines_[row].text_.emplace(pfrm, OverlayCoord{0, u8(4 + row * 2)});
+    auto margin = centered_text_margins(pfrm, value_len + field_len + 2);
 
-    left_text_margin(*lines_[row].text_, margin);
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
+    lines_[row].text_.emplace(pfrm, OverlayCoord{(u8)margin, u8(4 + row * (bigfont ? 3 : 2))}, font_conf);
+
     lines_[row].text_->append(str->c_str());
-    lines_[row].text_->append("  ");
+    if (bigfont) {
+        lines_[row].text_->append(" ");
+    } else {
+        lines_[row].text_->append("  ");
+    }
     lines_[row].text_->append(value);
 
     lines_[row].cursor_begin_ = margin + field_len;
     lines_[row].cursor_end_ = margin + field_len + 2 + value_len + 1;
+
+    if (bigfont) {
+        lines_[row].cursor_end_ = margin + field_len + 2 + value_len + 1;
+    }
 }
 
 
 void EditSettingsState::refresh(Platform& pfrm, Game& game)
 {
-    for (u32 i = 0; i < lines_.size(); ++i) {
-        draw_line(pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
+    const bool bigfont = locale_requires_doublesize_font();
+
+    pfrm.fill_overlay(0);
+
+    if (bigfont) {
+        for (u32 i = 0; i < 1; ++i) { // FIXME!
+            draw_line(pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
+        }
+    } else {
+        for (u32 i = 0; i < lines_.size(); ++i) {
+            draw_line(pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
+        }
     }
+
 }
 
 
@@ -74,21 +97,24 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         return exit_state_();
     }
 
+    const bool bigfont = locale_requires_doublesize_font();
 
     auto erase_selector = [&] {
         for (u32 i = 0; i < lines_.size(); ++i) {
             const auto& line = lines_[i];
-            pfrm.set_tile(
-                Layer::overlay, line.cursor_begin_, line.text_->coord().y, 0);
-            pfrm.set_tile(
-                Layer::overlay, line.cursor_end_, line.text_->coord().y, 0);
+            pfrm.set_tile(Layer::overlay, line.cursor_begin_, line.text_->coord().y + 1, 0);
+            pfrm.set_tile(Layer::overlay, line.cursor_end_, line.text_->coord().y + 1, 0);
+            pfrm.set_tile(Layer::overlay, line.cursor_begin_, line.text_->coord().y, 0);
+            pfrm.set_tile(Layer::overlay, line.cursor_end_, line.text_->coord().y, 0);
         }
     };
 
     if (pfrm.keyboard().down_transition<Key::down>()) {
-        if (select_row_ < static_cast<int>(lines_.size() - 1)) {
-            select_row_ += 1;
-            pfrm.speaker().play_sound("scroll", 1);
+        if (not locale_requires_doublesize_font()) { // FIXME
+            if (select_row_ < static_cast<int>(lines_.size() - 1)) {
+                select_row_ += 1;
+                pfrm.speaker().play_sound("scroll", 1);
+            }
         }
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
         if (select_row_ > 0) {
@@ -151,9 +177,9 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         const auto& line = lines_[select_row_];
 
         pfrm.set_tile(
-            Layer::overlay, line.cursor_begin_, line.text_->coord().y, left);
+                      Layer::overlay, line.cursor_begin_, line.text_->coord().y + (bigfont ? 1 : 0), left);
         pfrm.set_tile(
-            Layer::overlay, line.cursor_end_, line.text_->coord().y, right);
+                      Layer::overlay, line.cursor_end_, line.text_->coord().y + (bigfont ? 1 : 0), right);
     }
 
     return null_state();

@@ -3175,7 +3175,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     u8 buffer[tile_size] = {0};
                     memcpy16(buffer,
                              info.tile_data_ +
-                                 (mapping_info.offset_ * tile_size) /
+                             ((u32)mapping_info.offset_ * tile_size) /
                                      sizeof(decltype(info.tile_data_)),
                              tile_size / 2);
 

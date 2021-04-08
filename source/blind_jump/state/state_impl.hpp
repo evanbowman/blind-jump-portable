@@ -1284,11 +1284,11 @@ private:
     std::array<LineInfo, line_count_> lines_;
 
     static constexpr const LocaleString strings[line_count_] = {
+        LocaleString::settings_language,
         LocaleString::settings_swap_action_keys,
         LocaleString::settings_strafe_key,
         LocaleString::settings_camera,
         LocaleString::settings_difficulty,
-        LocaleString::settings_language,
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
         LocaleString::settings_show_stats,

@@ -92,6 +92,12 @@ static void print_double_char(Platform& pfrm,
         if (mapping_info) {
             auto info = *mapping_info;
 
+            if (info.offset_ == 71) {
+                info.offset_ = 743;
+            } else if (info.offset_ == 94) {
+                info.offset_ = 835;
+            }
+
             if (info.offset_ == 72) {
                 t0 = pfrm.map_glyph(c, info);
                 // Special case for space character

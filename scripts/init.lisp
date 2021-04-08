@@ -8,8 +8,7 @@
 (set 'languages
      '(null
        (english 1) ;; Language name, required font size (1:normal or 2:double)
-       (chinese 2)
-       (spanish 1)))
+       (chinese 2)))
 
 
 (if (equal (platform) 'Desktop)
@@ -53,7 +52,7 @@
   (lambda
     (if (all-true (not (peer-conn)) (bound 'swarm))
         (progn
-          (alert 136)
+          (alert 137)
           (set 'n (if (equal swarm 0) 10 5))
 
           (set 'temp

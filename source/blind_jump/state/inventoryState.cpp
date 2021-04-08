@@ -285,11 +285,16 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     auto label_str = locale_string(pfrm, LocaleString::items);
-    label_.emplace(
-        pfrm,
-        OverlayCoord{u8(screen_tiles.x - (utf8::len(label_str->c_str()) + 1)),
-                     1});
-    label_->assign(label_str->c_str());
+
+    const bool bigfont = locale_requires_doublesize_font();
+
+    if (not bigfont) {
+        label_.emplace(pfrm,
+                       OverlayCoord{u8(screen_tiles.x - (utf8::len(label_str->c_str()) + 1)),
+                           1});
+        label_->assign(label_str->c_str());
+
+    }
 
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 2; ++j) {

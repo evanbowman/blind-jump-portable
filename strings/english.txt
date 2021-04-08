@@ -100,7 +100,7 @@ yes
 no
 menu disabled
  ft
-launch: 
+
 Peer connected!
 Peer connection failed!
 Peer died!
@@ -140,8 +140,8 @@ Peer requires update!
 overall
 Peer used lethargy!
 english
-HEALTH AND SAFETY NOTICE:
-This software features flashing lights and colors, and may not be suitable for players with photosensitive epilepsy.
+
+
 chat: 
 Hello!
 Got any oranges?
