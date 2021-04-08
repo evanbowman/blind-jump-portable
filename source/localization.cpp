@@ -212,6 +212,13 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"籽"): return 499;
         // NOTE: All glyphs for the first 35 lines completed.
 
+        case UTF8_GETCHR(u8"仅"): return 503;
+        case UTF8_GETCHR(u8"能"): return 507;
+        case UTF8_GETCHR(u8"使"): return 511;
+        case UTF8_GETCHR(u8"用"): return 515;
+        case UTF8_GETCHR(u8"次"): return 519;
+
+
         default:
             if (cp == utf8::getc(u8"©")) {
                 return 185;

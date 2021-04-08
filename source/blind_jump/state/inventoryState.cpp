@@ -248,6 +248,10 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
 
         if (handler->single_use_) {
 
+            if (bigfont) {
+                text_loc.y += 1;
+            }
+
             item_description2_.emplace(pfrm,
                                        OverlayCoord{text_loc.x, u8(text_loc.y + 2)},
                                        font_conf);
