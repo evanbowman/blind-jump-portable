@@ -484,7 +484,7 @@ const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer)
     const char* lang_name =
         lang->expect<lisp::Cons>().car()->expect<lisp::Symbol>().name_;
 
-    if (str_cmp(lang_name, "chinese")) {
+    if (str_cmp(lang_name, "chinese") == 0) {
         switch (num) {
         default:
         case 1: return "一";
