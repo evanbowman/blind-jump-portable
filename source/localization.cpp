@@ -226,7 +226,40 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"了"): return 531;
         case UTF8_GETCHR(u8"离"): return 535;
         case UTF8_GETCHR(u8"们"): return 539;
-
+        case UTF8_GETCHR(u8"什"): return 543;
+        case UTF8_GETCHR(u8"么"): return 547;
+        case UTF8_GETCHR(u8"都"): return 551;
+        case UTF8_GETCHR(u8"没"): return 555;
+        case UTF8_GETCHR(u8"有"): return 559;
+        case UTF8_GETCHR(u8"库"): return 563;
+        case UTF8_GETCHR(u8"存"): return 567;
+        case UTF8_GETCHR(u8"已"): return 571;
+        case UTF8_GETCHR(u8"满"): return 575;
+        case UTF8_GETCHR(u8"休"): return 579;
+        case UTF8_GETCHR(u8"息"): return 583;
+        case UTF8_GETCHR(u8"分"): return 587;
+        case UTF8_GETCHR(u8"数"): return 591;
+        case UTF8_GETCHR(u8"高"): return 595;
+        case UTF8_GETCHR(u8"最"): return 599;
+        case UTF8_GETCHR(u8"时"): return 603;
+        case UTF8_GETCHR(u8"间"): return 607;
+        case UTF8_GETCHR(u8"返"): return 611;
+        case UTF8_GETCHR(u8"回"): return 615;
+        case UTF8_GETCHR(u8"联"): return 619;
+        case UTF8_GETCHR(u8"机"): return 623;
+        case UTF8_GETCHR(u8"设"): return 627;
+        case UTF8_GETCHR(u8"置"): return 631;
+        case UTF8_GETCHR(u8"控"): return 635;
+        case UTF8_GETCHR(u8"台"): return 639;
+        case UTF8_GETCHR(u8"退"): return 643;
+        case UTF8_GETCHR(u8"出"): return 647;
+        case UTF8_GETCHR(u8"并"): return 651;
+        case UTF8_GETCHR(u8"保"): return 655;
+        case UTF8_GETCHR(u8"咱"): return 659;
+        case UTF8_GETCHR(u8"见"): return 673;
+        case UTF8_GETCHR(u8"过"): return 677;
+        case UTF8_GETCHR(u8"会"): return 681;
+        // NOTE: finished all glyphes up to line 74
 
             // clang-format on
 
