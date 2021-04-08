@@ -145,7 +145,6 @@ Game::Game(Platform& pfrm)
     // }
 
 
-
     // NOTE: Because we're the initial state, unclear what to pass as a previous
     // state to the enter function, so, paradoxically, the initial state is it's
     // own parent.

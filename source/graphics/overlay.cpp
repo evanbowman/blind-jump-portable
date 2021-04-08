@@ -94,14 +94,23 @@ static void print_double_char(Platform& pfrm,
         if (mapping_info) {
             auto info = *mapping_info;
 
-            t0 = pfrm.map_glyph(c, info);
-
             if (info.offset_ == 72) {
+                t0 = pfrm.map_glyph(c, info);
                 // Special case for space character
-                t1 = 72;
-                t2 = 72;
-                t3 = 72;
+                t1 = t0;
+                t2 = t0;
+                t3 = t0;
+            } else if (info.offset_ == 65) {
+                // Special case for enlarged quote character
+                info.offset_ = 523;
+                t0 = pfrm.map_glyph(c, info);
+                info.offset_ = 524;
+                t1 = pfrm.map_glyph(c, info);
+                info.offset_ = 72; // space
+                t2 = pfrm.map_glyph(c, info);
+                t3 = pfrm.map_glyph(c, info);
             } else {
+                t0 = pfrm.map_glyph(c, info);
                 info.offset_++;
                 t1 = pfrm.map_glyph(c, info);
                 info.offset_++;

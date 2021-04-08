@@ -123,7 +123,7 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
             timer_ -= milliseconds(200);
 
             if (manhattan_length(target.get_position(), position_) <
-                (screen_size.x + screen_size.y) / 2 and
+                    (screen_size.x + screen_size.y) / 2 and
                 rng::choice<2>(rng::critical_state)) {
                 state_ = State::shoot_begin;
                 sprite_.set_texture_index(TextureMap::dasher_weapon1);

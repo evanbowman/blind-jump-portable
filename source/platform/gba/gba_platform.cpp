@@ -2971,7 +2971,6 @@ Platform::Platform()
     system_clock_.init(*this);
 
 
-
     irqInit(); // NOTE: Do not move these lines with respect to
                // unlock_gameboy_player(), or you could break the rumble
                // unlocking.

@@ -14,6 +14,8 @@
 #include <chrono>
 #include <memory>
 #include <png.h>
+#include <pspaudio.h>
+#include <pspaudiolib.h>
 #include <pspctrl.h>
 #include <pspdebug.h>
 #include <pspdisplay.h>
@@ -22,8 +24,6 @@
 #include <psprtc.h>
 #include <psputility.h>
 #include <stdio.h>
-#include <pspaudiolib.h>
-#include <pspaudio.h>
 
 
 extern "C" {
@@ -618,11 +618,13 @@ void Platform::load_overlay_texture(const char* name)
 
             auto set_pixel = [&](int x, int y) {
                 if (color == G2D_RGBA(0, 0, 16, 255)) {
-                    charset.pixels_[x % 16 + y * 16] = G2D_RGBA(255, 255, 255, 255);
+                    charset.pixels_[x % 16 + y * 16] =
+                        G2D_RGBA(255, 255, 255, 255);
                     charset2.pixels_[x % 16 + y * 16] = G2D_RGBA(0, 0, 0, 0);
                 } else {
                     charset.pixels_[x % 16 + y * 16] = G2D_RGBA(0, 0, 0, 0);
-                    charset2.pixels_[x % 16 + y * 16] = G2D_RGBA(255, 255, 255, 255);
+                    charset2.pixels_[x % 16 + y * 16] =
+                        G2D_RGBA(255, 255, 255, 255);
                 }
             };
 

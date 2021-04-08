@@ -1,7 +1,7 @@
 #pragma once
 
-#include "number/int.h"
 #include "number/endian.hpp"
+#include "number/int.h"
 #include "platform/scratch_buffer.hpp"
 
 
@@ -414,19 +414,19 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
     int offset = 0;
 
     while (true) {
-       switch (buffer.data_[offset]) {
+        switch (buffer.data_[offset]) {
         case Fatal::op():
             return nullptr;
 
-#define MATCH(NAME)                                              \
-            case NAME::op():                                     \
-                if (index == 0) {                                \
-                    return (Header*)(buffer.data_ + offset);     \
-                } else {                                         \
-                    index--;                                     \
-                    offset += sizeof(NAME);                      \
-                }                                                \
-                break;                                           \
+#define MATCH(NAME)                                                            \
+    case NAME::op():                                                           \
+        if (index == 0) {                                                      \
+            return (Header*)(buffer.data_ + offset);                           \
+        } else {                                                               \
+            index--;                                                           \
+            offset += sizeof(NAME);                                            \
+        }                                                                      \
+        break;
 
             MATCH(LoadVar)
             MATCH(PushSymbol)
@@ -456,6 +456,6 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
     }
     return nullptr;
 }
-}
+} // namespace instruction
 
-}
+} // namespace lisp

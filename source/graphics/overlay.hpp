@@ -32,7 +32,6 @@ struct FontConfiguration {
 
 class Text {
 public:
-
     Text(Platform& pfrm,
          const char* str,
          const OverlayCoord& coord,

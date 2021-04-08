@@ -7,14 +7,15 @@ class str_const {
 private:
     const char* const p_;
     const size_t sz_;
+
 public:
     template <size_t N>
-    constexpr str_const(const char(&a)[N]) :
-        p_(a), sz_(N - 1)
+    constexpr str_const(const char (&a)[N]) : p_(a), sz_(N - 1)
     {
     }
 
-    constexpr char operator[](std::size_t n) {
+    constexpr char operator[](std::size_t n)
+    {
         return n < sz_ ? p_[n] : '0';
     }
 };
@@ -23,21 +24,23 @@ public:
 // FIXME: This assumes little endian?
 // Needs to be a macro because there's no way to pass a str_const as a
 // constexpr parameter.
-#define UTF8_GETCHR(_STR_)                                                                     \
-    []() -> utf8::Codepoint {                                                                  \
-        if constexpr ((str_const(_STR_)[0] & 0x80) == 0) {                                     \
-            return str_const(_STR_)[0];                                                        \
-        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xC0) {                           \
-            return str_const(_STR_)[0] | ((u32)str_const(_STR_)[1]) << 8; \
-        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xE0) {                           \
-            return str_const(_STR_)[0] | ((u32)str_const(_STR_)[1]) << 8 | (u32)str_const(_STR_)[2] << 16; \
-        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xF0) {                           \
-            return str_const(_STR_)[0] | (u32)str_const(_STR_)[1] << 8 | (u32)str_const(_STR_)[2] << 16 | (u32)str_const(_STR_)[3] << 24; \
-        } else {                                                                               \
-            return 0;                                                                          \
-        }                                                                                      \
+#define UTF8_GETCHR(_STR_)                                                     \
+    []() -> utf8::Codepoint {                                                  \
+        if constexpr ((str_const(_STR_)[0] & 0x80) == 0) {                     \
+            return str_const(_STR_)[0];                                        \
+        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xC0) {           \
+            return str_const(_STR_)[0] | ((u32)str_const(_STR_)[1]) << 8;      \
+        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xE0) {           \
+            return str_const(_STR_)[0] | ((u32)str_const(_STR_)[1]) << 8 |     \
+                   (u32)str_const(_STR_)[2] << 16;                             \
+        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xF0) {           \
+            return str_const(_STR_)[0] | (u32)str_const(_STR_)[1] << 8 |       \
+                   (u32)str_const(_STR_)[2] << 16 |                            \
+                   (u32)str_const(_STR_)[3] << 24;                             \
+        } else {                                                               \
+            return 0;                                                          \
+        }                                                                      \
     }()
-
 
 
 std::optional<Platform::TextureMapping>
@@ -45,6 +48,7 @@ standard_texture_map(const utf8::Codepoint& cp)
 {
     auto mapping = [&]() -> std::optional<u16> {
         switch (cp) {
+        // clang-format off
         case UTF8_GETCHR(u8"0"): return 1;
         case UTF8_GETCHR(u8"1"): return 2;
         case UTF8_GETCHR(u8"2"): return 3;
@@ -217,7 +221,14 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"使"): return 511;
         case UTF8_GETCHR(u8"用"): return 515;
         case UTF8_GETCHR(u8"次"): return 519;
+        // Intentional gap.
+        case UTF8_GETCHR(u8"得"): return 527;
+        case UTF8_GETCHR(u8"了"): return 531;
+        case UTF8_GETCHR(u8"离"): return 535;
+        case UTF8_GETCHR(u8"们"): return 539;
 
+
+            // clang-format on
 
         default:
             if (cp == utf8::getc(u8"©")) {
@@ -462,6 +473,32 @@ void locale_set_language(int language_id)
 }
 
 
+// I had to add this code during chinese translation, for places where I needed
+// to use traditional chinese numbers rather than arabic numerals.
+const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer)
+{
+    auto languages = lisp::get_var("languages");
+
+    auto lang = lisp::get_list(languages, ::language_id);
+
+    const char* lang_name =
+        lang->expect<lisp::Cons>().car()->expect<lisp::Symbol>().name_;
+
+    if (str_cmp(lang_name, "chinese")) {
+        switch (num) {
+        default:
+        case 1: return "一";
+        case 2: return "二";
+        case 3: return "三";
+        case 4: return "四";
+        }
+    } else {
+        locale_num2str(num, buffer.data(), 10);
+        return buffer.data();
+    }
+}
+
+
 int locale_get_language()
 {
     return ::language_id;
@@ -485,8 +522,11 @@ bool locale_requires_doublesize_font()
     auto lang = lisp::get_list(languages, ::language_id);
 
     return lang->expect<lisp::Cons>()
-        .cdr()->expect<lisp::Cons>()
-        .car()->expect<lisp::Integer>().value_ == 2;
+               .cdr()
+               ->expect<lisp::Cons>()
+               .car()
+               ->expect<lisp::Integer>()
+               .value_ == 2;
 }
 
 
@@ -498,7 +538,8 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls)
 
     auto lang = lisp::get_list(languages, ::language_id);
 
-    StringBuffer<31> fname = lang->expect<lisp::Cons>().car()->expect<lisp::Symbol>().name_;
+    StringBuffer<31> fname =
+        lang->expect<lisp::Cons>().car()->expect<lisp::Symbol>().name_;
     fname += ".txt";
 
     if (auto data = pfrm.load_file_contents("strings", fname.c_str())) {

@@ -44,7 +44,12 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (draw_minimap(pfrm,
                          game,
                          Float(timer_) / map_enter_duration_,
-                         last_column_, 1, 0, 0, 0, false)) {
+                         last_column_,
+                         1,
+                         0,
+                         0,
+                         0,
+                         false)) {
             timer_ = 0;
             anim_state_ = AnimState::wp_text;
         }
@@ -79,7 +84,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             // sigh...
             if (locale_requires_doublesize_font()) {
                 set_tile(TileMap::width + 2, 4, 137, false);  // you
-                set_tile(TileMap::width + 2, 7, 135, false); // enemy
+                set_tile(TileMap::width + 2, 7, 135, false);  // enemy
                 set_tile(TileMap::width + 2, 10, 136, false); // transporter
                 set_tile(TileMap::width + 2, 13, 134, false); // item
                 set_tile(TileMap::width + 2, 16, 393, false); // shop
@@ -96,10 +101,10 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
                 for (size_t i = 0; i < legend_strings.size(); ++i) {
                     const u8 y = 4 + (i * 3);
                     legend_text_[i].emplace(
-                                            pfrm,
-                                            locale_string(pfrm, legend_strings[i])->c_str(),
-                                            OverlayCoord{TileMap::width + 5, y},
-                                            font_conf);
+                        pfrm,
+                        locale_string(pfrm, legend_strings[i])->c_str(),
+                        OverlayCoord{TileMap::width + 5, y},
+                        font_conf);
                 }
 
             } else {
@@ -118,11 +123,10 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
                 for (size_t i = 0; i < legend_strings.size(); ++i) {
                     const u8 y = 9 + (i * 2);
                     legend_text_[i].emplace(
-                                            pfrm,
-                                            locale_string(pfrm, legend_strings[i])->c_str(),
-                                            OverlayCoord{TileMap::width + 5, y});
+                        pfrm,
+                        locale_string(pfrm, legend_strings[i])->c_str(),
+                        OverlayCoord{TileMap::width + 5, y});
                 }
-
             }
 
             path_finder_.emplace(allocate_dynamic<IncrementalPathfinder>(
@@ -160,7 +164,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             }();
 
             draw_minimap(
-                 pfrm, game, 1.f, last_column_ = -1, 1, 0, 0, 0, false, path);
+                pfrm, game, 1.f, last_column_ = -1, 1, 0, 0, 0, false, path);
         }
 
         if (incomplete == false) {

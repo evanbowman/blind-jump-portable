@@ -243,8 +243,10 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
         item_description_.emplace(
             pfrm,
             locale_string(pfrm, handler->description_)->c_str(),
-            text_loc, font_conf);
-        item_description_->append(locale_string(pfrm, LocaleString::punctuation_period)->c_str());
+            text_loc,
+            font_conf);
+        item_description_->append(
+            locale_string(pfrm, LocaleString::punctuation_period)->c_str());
 
         if (handler->single_use_) {
 
@@ -252,9 +254,8 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
                 text_loc.y += 1;
             }
 
-            item_description2_.emplace(pfrm,
-                                       OverlayCoord{text_loc.x, u8(text_loc.y + 2)},
-                                       font_conf);
+            item_description2_.emplace(
+                pfrm, OverlayCoord{text_loc.x, u8(text_loc.y + 2)}, font_conf);
 
             item_description2_->assign(
                 locale_string(pfrm, LocaleString::single_use_warning)->c_str(),

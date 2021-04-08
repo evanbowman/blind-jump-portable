@@ -72,15 +72,15 @@ void on_enemy_destroyed(Platform& pfrm,
                         milliseconds(200),
                         [pos = position](Platform& pfrm, Game& game) {
                             if (length(game.details().get<Debris>()) < 8) {
-                                    game.details().spawn<Debris>(pos);
-                                    game.details().spawn<Debris>(pos);
-                                    game.details().spawn<Debris>(pos);
-                                    game.details().spawn<Debris>(pos);
-                                    game.details().spawn<Debris>(pos);
-                                } else {
-                                    game.details().spawn<Debris>(pos);
-                                    game.details().spawn<Debris>(pos);
-                                }
+                                game.details().spawn<Debris>(pos);
+                                game.details().spawn<Debris>(pos);
+                                game.details().spawn<Debris>(pos);
+                                game.details().spawn<Debris>(pos);
+                                game.details().spawn<Debris>(pos);
+                            } else {
+                                game.details().spawn<Debris>(pos);
+                                game.details().spawn<Debris>(pos);
+                            }
                         });
     }
 

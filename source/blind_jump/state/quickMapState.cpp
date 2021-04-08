@@ -92,11 +92,13 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             sidebar_->set_display_percentage(0.96f);
 
             if (resolution(pfrm.screen()) not_eq Resolution::r16_9) {
-                auto level_str = locale_string(pfrm, LocaleString::waypoint_text);
+                auto level_str =
+                    locale_string(pfrm, LocaleString::waypoint_text);
                 const auto text_len = utf8::len(level_str->c_str()) +
-                    integer_text_length(game.level());
+                                      integer_text_length(game.level());
 
-                level_text_.emplace(pfrm, OverlayCoord{u8((15 - text_len) / 2), 0});
+                level_text_.emplace(pfrm,
+                                    OverlayCoord{u8((15 - text_len) / 2), 0});
                 level_text_->assign(level_str->c_str());
                 level_text_->append(game.level());
             }
@@ -144,7 +146,8 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
                 offset = -1;
             }
 
-            draw_minimap(pfrm, game, 0.9f, last_map_column_, -1, offset, 1, 1, true);
+            draw_minimap(
+                pfrm, game, 0.9f, last_map_column_, -1, offset, 1, 1, true);
         } else {
 
             int offset = 0;
@@ -211,8 +214,16 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (resolution(pfrm.screen()) == Resolution::r16_9) {
                 offset = -1;
             }
-            draw_minimap(
-                 pfrm, game, 0.9f, last_map_column_, -1, offset, 1, 1, true, path);
+            draw_minimap(pfrm,
+                         game,
+                         0.9f,
+                         last_map_column_,
+                         -1,
+                         offset,
+                         1,
+                         1,
+                         true,
+                         path);
         }
 
         game.player().soft_update(pfrm, game, delta);

@@ -609,7 +609,8 @@ public:
 
         void printline_blocking(const char* text, bool show_prompt = true)
         {
-            while (not printline(text, show_prompt)) ;
+            while (not printline(text, show_prompt))
+                ;
         }
     };
 

@@ -605,7 +605,8 @@ bool draw_minimap(Platform& pfrm,
         if (y < y_skip_top or y >= TileMap::height - y_skip_bot) {
             return;
         }
-        const auto tile = pfrm.get_tile(Layer::overlay, x + x_start, y + y_start);
+        const auto tile =
+            pfrm.get_tile(Layer::overlay, x + x_start, y + y_start);
         if (dodge and (tile == 133 or tile == 132)) {
             // ...
         } else {

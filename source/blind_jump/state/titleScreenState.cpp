@@ -105,7 +105,8 @@ draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
 
     const bool bigfont = locale_requires_doublesize_font();
 
-    auto margin = centered_text_margins(pfrm, utf8::len(str->c_str()));
+    auto margin = centered_text_margins(
+        pfrm, utf8::len(str->c_str()));
 
     if (bigfont) {
         margin -= utf8::len(str->c_str()) / 2;
@@ -237,8 +238,10 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 const auto st = calc_screen_tiles(pfrm);
                 const u8 start_y = 2 - (bigfont ? 1 : 0);
 
-                sidebar_.emplace(
-                    pfrm, u8(st.x), u8(st.y - 5), OverlayCoord{u8(st.x), start_y});
+                sidebar_.emplace(pfrm,
+                                 u8(st.x),
+                                 u8(st.y - 5),
+                                 OverlayCoord{u8(st.x), start_y});
             }
         } else if (pfrm.keyboard().down_transition<Key::right>()) {
             if (cursor_index_ < 1) {
@@ -357,7 +360,8 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             FontConfiguration font_conf;
             font_conf.double_size_ = bigfont;
 
-            options_[0].emplace(pfrm, OverlayCoord{u8(spacing), start_y}, font_conf);
+            options_[0].emplace(
+                pfrm, OverlayCoord{u8(spacing), start_y}, font_conf);
 
             options_[0]->assign(opt_1->c_str(), [&]() -> Text::OptColors {
                 if (not game.persistent_data().clean_) {
@@ -372,10 +376,10 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 cursor_index_ = 1;
             }
 
-            options_[1].emplace(
-                pfrm,
-                opt_2->c_str(),
-                OverlayCoord{u8(spacing * 2 + len_1), start_y}, font_conf);
+            options_[1].emplace(pfrm,
+                                opt_2->c_str(),
+                                OverlayCoord{u8(spacing * 2 + len_1), start_y},
+                                font_conf);
 
 
             display_mode_ = DisplayMode::select;

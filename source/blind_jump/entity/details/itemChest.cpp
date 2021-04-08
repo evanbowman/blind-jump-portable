@@ -28,6 +28,9 @@ ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item, bool locked)
 }
 
 
+const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer);
+
+
 void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
 {
     const auto& player_pos = game.player().get_position();
@@ -65,9 +68,8 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                             locale_string(pfrm, LocaleString::locked)->c_str();
 
                         std::array<char, 40> buffer;
-                        locale_num2str(remaining, buffer.data(), 10);
 
-                        str += buffer.data();
+                        str += locale_repr_smallnum(remaining, buffer);
                         str += locale_string(
                                    pfrm,
                                    [&] {

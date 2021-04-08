@@ -614,10 +614,16 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (notification_text_timer <= 0) {
             notification_text_timer = seconds(3);
 
-            notification_text.emplace(pfrm, OverlayCoord{0, 0});
+            const bool bigfont = locale_requires_doublesize_font();
 
-            const auto margin =
-                centered_text_margins(pfrm, notification_str.length());
+            FontConfiguration font_conf;
+            font_conf.double_size_ = bigfont;
+
+            notification_text.emplace(pfrm, OverlayCoord{0, 0}, font_conf);
+
+            auto margin =
+                centered_text_margins(pfrm,
+                                      notification_str.length());
 
             left_text_margin(*notification_text, margin);
             notification_text->append(notification_str.c_str());

@@ -49,7 +49,8 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     const char* creator_str = "Evan Bowman";
 
     // Center horizontally, and place text vertically in top third of screen
-    const auto len = str_len(creator_str) + utf8::len(str_->c_str()) * (bigfont ? 2 : 1);
+    const auto len =
+        str_len(creator_str) + utf8::len(str_->c_str()) * (bigfont ? 2 : 1);
     pos.x -= len + 1;
     pos.x /= 2;
     pos.y *= 0.35f;

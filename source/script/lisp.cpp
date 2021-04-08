@@ -1,10 +1,10 @@
 #include "lisp.hpp"
 #include "bulkAllocator.hpp"
+#include "bytecode.hpp"
 #include "localization.hpp"
 #include "memory/buffer.hpp"
 #include "memory/pool.hpp"
 #include <complex>
-#include "bytecode.hpp"
 #if not defined(__GBA__) and not defined(__PSP__)
 #include <iostream>
 #endif
@@ -781,7 +781,8 @@ static void gc_mark_value(Value* value)
             gc_mark_value((dcompr(value->function_.lisp_impl_)));
         } else if (value->mode_bits_ ==
                    Function::ModeBits::lisp_bytecode_function) {
-            gc_mark_value((dcompr(value->function_.bytecode_impl_.data_buffer_)));
+            gc_mark_value(
+                (dcompr(value->function_.bytecode_impl_.data_buffer_)));
         }
         break;
 
@@ -2112,7 +2113,8 @@ void init(Platform& pfrm)
                         if (depth == 0) {
                             out += "RET\r\n";
                             auto pfrm = lisp::get_var("*pfrm*");
-                            if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+                            if (pfrm->type_ not_eq
+                                lisp::Value::Type::user_data) {
                                 return get_nil();
                             }
                             ((Platform*)pfrm->user_data_.obj_)
@@ -2129,11 +2131,11 @@ void init(Platform& pfrm)
                     }
 
                     default:
-                            ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
-                                ->remote_console()
-                                .printline(out.c_str(), false);
-                            ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
-                                ->sleep(80);
+                        ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
+                            ->remote_console()
+                            .printline(out.c_str(), false);
+                        ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
+                            ->sleep(80);
                         return get_nil();
                     }
                     out += "\r\n";
