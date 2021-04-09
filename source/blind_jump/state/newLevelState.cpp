@@ -2,6 +2,9 @@
 #include "state_impl.hpp"
 
 
+const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer);
+
+
 void NewLevelState::enter(Platform& pfrm, Game& game, State&)
 {
     pfrm.screen().fade(1.f);
@@ -75,10 +78,18 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                 pfrm.sleep(5);
 
             } else {
-                text_[0].emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
+                FontConfiguration font_conf;
+                font_conf.double_size_ = bigfont;
+
+                text_[0].emplace(pfrm,
+                                 OverlayCoord{1, u8(s_tiles.y - (bigfont ? 3 : 2))},
+                                 font_conf);
+
                 text_[0]->append(
                     locale_string(pfrm, LocaleString::waypoint_text)->c_str());
-                text_[0]->append(next_level_);
+
+                std::array<char, 40> buf;
+                text_[0]->append(locale_repr_smallnum(next_level_, buf));
             }
         }
         break;

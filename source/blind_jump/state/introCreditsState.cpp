@@ -42,6 +42,8 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 {
     pfrm.enable_glyph_mode(true);
 
+    game.scavenger().reset(); // Bugfix
+
     auto pos = (pfrm.screen().size() / u32(8)).cast<u8>();
 
     const bool bigfont = locale_requires_doublesize_font();

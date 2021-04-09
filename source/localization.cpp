@@ -663,6 +663,9 @@ const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer)
         lang->expect<lisp::Cons>().car()->expect<lisp::Symbol>().name_;
 
     if (str_cmp(lang_name, "chinese") == 0) {
+        // Yeah, this is lazy. I could write a string to
+        // number-to-unicode-string algorithm for chinese, but I don't feel like
+        // it right now.
         switch (num) {
         default:
         case 1:
@@ -703,6 +706,66 @@ const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer)
             return "十八";
         case 19:
             return "十九";
+        case 20:
+            return "二十";
+        case 21:
+            return "二十一";
+        case 22:
+            return "二十二";
+        case 23:
+            return "二十三";
+        case 24:
+            return "二十四";
+        case 25:
+            return "二十五";
+        case 26:
+            return "二十六";
+        case 27:
+            return "二十七";
+        case 28:
+            return "二十八";
+        case 29:
+            return "二十九";
+        case 30:
+            return "三十";
+        case 31:
+            return "三十一";
+        case 32:
+            return "三十二";
+        case 33:
+            return "三十三";
+        case 34:
+            return "三十四";
+        case 35:
+            return "三十五";
+        case 36:
+            return "三十六";
+        case 37:
+            return "三十七";
+        case 38:
+            return "三十八";
+        case 39:
+            return "三十九";
+        case 40:
+            return "四十";
+        case 41:
+            return "四十一";
+        case 42:
+            return "四十二";
+        case 43:
+            return "四十三";
+        case 44:
+            return "四十四";
+        case 45:
+            return "四十五";
+        case 46:
+            return "四十六";
+        case 47:
+            return "四十七";
+        case 48:
+            return "四十八";
+        case 49:
+            return "四十九";
         }
     } else {
         // Arabic numerals
