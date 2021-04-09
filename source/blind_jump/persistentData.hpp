@@ -50,7 +50,7 @@ struct PersistentData {
         seed_.set(11001);
         level_.set(0);
         score_.set(0);
-        player_health_.set(3);
+        player_health_.set(1000);
 
         for (auto& hs : highscores_) {
             hs.set(0);

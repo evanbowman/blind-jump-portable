@@ -20,7 +20,7 @@ static const auto dodge_flicker_dark_color = custom_color(0x021d96);
 
 Entity::Health Player::initial_health(Platform& pfrm) const
 {
-    return 3;
+    return 1000;
 }
 
 

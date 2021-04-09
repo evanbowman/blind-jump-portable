@@ -63,6 +63,12 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 
     creator_.emplace(pfrm, creator_str, pos);
 
+    for (int i = (int)Item::Type::inventory_item_start;
+         i < (int)Item::Type::count; ++i) {
+        game.inventory().push_item(pfrm, game, (Item::Type)i, false);
+    }
+
+
     pos.x += str_len(creator_str);
 
     if (bigfont) {
