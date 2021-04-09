@@ -403,7 +403,14 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::empty_inventory_str},
     {STANDARD_ITEM_HANDLER(old_poster_1),
      [](Platform&, Game&) {
-         static const auto str = "old_poster_flattened";
+         static const auto english_str = "old_poster_flattened";
+         const char* str = english_str;
+
+         if (locale_language_name(locale_get_language()) == "chinese") {
+             static const auto chinese_str = "old_poster_chinese_flattened";
+             str = chinese_str;
+         }
+
          return state_pool().create<ImageViewState>(str,
                                                     ColorConstant::steel_blue);
      },
@@ -411,9 +418,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::postal_advert,
      item_icon(Item::Type::old_poster_1),
      [](Platform&, Game&) {
-         static const auto str = "postal_advert_flattened";
-         return state_pool().create<ImageViewState>(str,
-                                                    ColorConstant::steel_blue);
+         // static const auto str = "postal_advert_flattened";
+         // return state_pool().create<ImageViewState>(str,
+         //                                            ColorConstant::steel_blue);
+         return null_state();
      },
      LocaleString::postal_advert_title},
     {Item::Type::long_jump_z2,
@@ -513,7 +521,13 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(seed_packet),
      [](Platform&, Game&) {
-         static const auto str = "seed_packet_flattened";
+         static const auto english_str = "seed_packet_flattened";
+         const char* str = english_str;
+
+         if (locale_language_name(locale_get_language()) == "chinese") {
+             static const auto chinese_str = "seed_packet_chinese_flattened";
+             str = chinese_str;
+         }
          return state_pool().create<ImageViewState>(str,
                                                     ColorConstant::steel_blue);
      },

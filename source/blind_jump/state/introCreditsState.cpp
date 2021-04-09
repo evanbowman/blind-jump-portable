@@ -65,7 +65,9 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 
     for (int i = (int)Item::Type::inventory_item_start;
          i < (int)Item::Type::count; ++i) {
-        game.inventory().push_item(pfrm, game, (Item::Type)i, false);
+        if (i not_eq (int)Item::Type::postal_advert) {
+            game.inventory().push_item(pfrm, game, (Item::Type)i, false);
+        }
     }
 
 

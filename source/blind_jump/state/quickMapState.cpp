@@ -43,6 +43,9 @@ void QuickMapState::exit(Platform& pfrm, Game& game, State& next_state)
 }
 
 
+const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer);
+
+
 StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     // We can end up with graphical glitches if we allow the notification bar to
@@ -92,15 +95,29 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             sidebar_->set_display_percentage(0.96f);
 
             if (resolution(pfrm.screen()) not_eq Resolution::r16_9) {
+
+                const bool bigfont = locale_requires_doublesize_font();
+
+                FontConfiguration font_conf;
+                font_conf.double_size_ = bigfont;
+
+
+                std::array<char, 40> buffer;
+                const char* level_num_str = locale_repr_smallnum(game.level(), buffer);
+
+
                 auto level_str =
                     locale_string(pfrm, LocaleString::waypoint_text);
-                const auto text_len = utf8::len(level_str->c_str()) +
-                                      integer_text_length(game.level());
+                const auto text_len = (utf8::len(level_str->c_str()) +
+                                       utf8::len(level_num_str)) * (bigfont ? 2 : 1);
 
                 level_text_.emplace(pfrm,
-                                    OverlayCoord{u8((15 - text_len) / 2), 0});
+                                    OverlayCoord{u8((15 - text_len) / 2),
+                                        0},
+                                    font_conf);
+
                 level_text_->assign(level_str->c_str());
-                level_text_->append(game.level());
+                level_text_->append(level_num_str);
             }
 
             restore_keystates = pfrm.keyboard().dump_state();
@@ -146,6 +163,11 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
                 offset = -1;
             }
 
+            const bool bigfont = locale_requires_doublesize_font();
+            if (bigfont) {
+                offset += 1;
+            }
+
             draw_minimap(
                 pfrm, game, 0.9f, last_map_column_, -1, offset, 1, 1, true);
         } else {
@@ -153,6 +175,11 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             int offset = 0;
             if (resolution(pfrm.screen()) == Resolution::r16_9) {
                 offset = -1;
+            }
+
+            const bool bigfont = locale_requires_doublesize_font();
+            if (bigfont) {
+                offset += 1;
             }
 
             draw_minimap(pfrm,
@@ -214,6 +241,12 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (resolution(pfrm.screen()) == Resolution::r16_9) {
                 offset = -1;
             }
+
+            const bool bigfont = locale_requires_doublesize_font();
+            if (bigfont) {
+                offset += 1;
+            }
+
             draw_minimap(pfrm,
                          game,
                          0.9f,

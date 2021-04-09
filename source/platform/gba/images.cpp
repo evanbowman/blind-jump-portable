@@ -83,9 +83,13 @@
 //;
 #include "data/old_poster_flattened.h"
 //;
+#include "data/old_poster_chinese_flattened.h"
+//;
 #include "data/blaster_info_flattened.h"
 //;
 #include "data/seed_packet_flattened.h"
+//;
+#include "data/seed_packet_chinese_flattened.h"
 //;
 #include "data/overlay_network_flattened.h"
 //
@@ -188,9 +192,13 @@ static const TextureData overlay_textures[] = {
 //;
     TEXTURE_INFO(old_poster_flattened),
 //;
+    TEXTURE_INFO(old_poster_chinese_flattened),
+//;
     TEXTURE_INFO(blaster_info_flattened),
 //;
     TEXTURE_INFO(seed_packet_flattened),
+//;
+    TEXTURE_INFO(seed_packet_chinese_flattened),
 //;
     TEXTURE_INFO(overlay_network_flattened),
 //
