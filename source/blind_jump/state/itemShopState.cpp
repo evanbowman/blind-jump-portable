@@ -261,24 +261,27 @@ void ItemShopState::show_label(Platform& pfrm,
 {
     const auto st = calc_screen_tiles(pfrm);
 
+    const bool bigfont = locale_requires_doublesize_font();
+
     u8 xoff = 0;
     if (anchor_right) {
-        xoff = st.x - (utf8::len(str) + (append_coin_icon ? 1 : 0));
+        xoff = st.x - (utf8::len(str) * (bigfont ? 2 : 1) + (append_coin_icon ? 1 : 0));
     }
 
     if (buy_sell_text_) {
+
         // Erase tiles, to make up for the difference in the width of the line
         // that sits atop of the text.
         const u32 extra = not append_coin_icon and coin_icon_ ? 1 : 0;
 
         if (anchor_right) {
-            for (u32 i = 0; i < buy_sell_text_->len() + extra; ++i) {
-                pfrm.set_tile(Layer::overlay, (st.x - 1) - i, st.y - 2, 0);
+            for (u32 i = 0; i < buy_sell_text_->len() * (bigfont ? 2 : 1) + extra; ++i) {
+                pfrm.set_tile(Layer::overlay, (st.x - 1) - i, st.y - (2 + (bigfont ? 1 : 0)), 0);
             }
         } else {
-            for (u32 i = utf8::len(str); i < buy_sell_text_->len() + extra;
+            for (u32 i = utf8::len(str); i < buy_sell_text_->len() * (bigfont ? 2 : 1) + extra;
                  ++i) {
-                pfrm.set_tile(Layer::overlay, xoff + i, st.y - 2, 0);
+                pfrm.set_tile(Layer::overlay, xoff + i, st.y - (2 + (bigfont ? 1 : 0)), 0);
             }
         }
 
@@ -294,11 +297,14 @@ void ItemShopState::show_label(Platform& pfrm,
             pfrm, 146, OverlayCoord{u8(xoff + utf8::len(str)), u8(st.y - 1)});
     }
 
-    buy_sell_text_.emplace(pfrm, OverlayCoord{xoff, u8(st.y - 1)});
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
+    buy_sell_text_.emplace(pfrm, OverlayCoord{xoff, u8(st.y - (1 + (bigfont ? 1 : 0)))}, font_conf);
     buy_sell_text_->assign(str);
 
-    for (u32 i = 0; i < utf8::len(str) + (append_coin_icon ? 1 : 0); ++i) {
-        pfrm.set_tile(Layer::overlay, xoff + i, st.y - 2, 425);
+    for (u32 i = 0; i < utf8::len(str) * (bigfont ? 2 : 1) + (append_coin_icon ? 1 : 0); ++i) {
+        pfrm.set_tile(Layer::overlay, xoff + i, st.y - (2 + (bigfont ? 1 : 0)), 425);
     }
 }
 
