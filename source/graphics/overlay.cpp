@@ -76,10 +76,10 @@ void Text::assign(int val, const OptColors& colors)
 Platform::TextureCpMapper locale_texture_map();
 
 
-static void print_double_char(Platform& pfrm,
-                              utf8::Codepoint c,
-                              const OverlayCoord& coord,
-                              const std::optional<FontColors>& colors = {})
+void print_double_char(Platform& pfrm,
+                       utf8::Codepoint c,
+                       const OverlayCoord& coord,
+                       const std::optional<FontColors>& colors = {})
 {
     if (c not_eq 0) {
         const auto mapping_info = locale_texture_map()(c);

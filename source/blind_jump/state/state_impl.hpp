@@ -978,6 +978,11 @@ private:
                       Microseconds delta,
                       bool sfx = true);
 
+    bool advance_asian_text(Platform& pfrm,
+                            Game& game,
+                            Microseconds delta,
+                            bool sfx);
+
     void init_text(Platform& pfrm, LocaleString str);
 
     enum class DisplayMode {
@@ -990,6 +995,11 @@ private:
         animate_out,
         clear,
     } display_mode_ = DisplayMode::animate_in;
+
+    // NOTE: We needed to add this code when we added support for
+    // Chinese. Chinese is not space-delimited like english, so we need
+    // completely different logic to print glyphs.
+    bool asian_language_ = false;
 };
 
 

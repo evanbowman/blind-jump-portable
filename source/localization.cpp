@@ -377,11 +377,34 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"血"): return 1075;
         case UTF8_GETCHR(u8"复"): return 1079;
         case UTF8_GETCHR(u8"活"): return 1083;
-
         case UTF8_GETCHR(u8"欢"): return 1087;
         case UTF8_GETCHR(u8"迎"): return 1091;
         case UTF8_GETCHR(u8"临"): return 1095;
         case UTF8_GETCHR(u8"本"): return 1099;
+        case UTF8_GETCHR(u8"飞"): return 1103;
+        case UTF8_GETCHR(u8"船"): return 1107;
+
+        case UTF8_GETCHR(u8"对"): return 1111;
+        case UTF8_GETCHR(u8"那"): return 1115;
+        case UTF8_GETCHR(u8"些"): return 1119;
+        case UTF8_GETCHR(u8"灾"): return 1123;
+        case UTF8_GETCHR(u8"难"): return 1127;
+        case UTF8_GETCHR(u8"去"): return 1131;
+        case UTF8_GETCHR(u8"纪"): return 1135;
+        case UTF8_GETCHR(u8"念"): return 1139;
+        case UTF8_GETCHR(u8"。"): return 1143;
+        case UTF8_GETCHR(u8"个"): return 1147;
+        case UTF8_GETCHR(u8"区"): return 1151;
+        case UTF8_GETCHR(u8"年"): return 1155;
+        case UTF8_GETCHR(u8"占"): return 1159;
+        case UTF8_GETCHR(u8"领"): return 1163;
+        case UTF8_GETCHR(u8"封"): return 1167;
+        case UTF8_GETCHR(u8"日"): return 1171;
+        case UTF8_GETCHR(u8"期"): return 1175;
+        case UTF8_GETCHR(u8"啊"): return 1179;
+        case UTF8_GETCHR(u8"事"): return 1183;
+        case UTF8_GETCHR(u8"是"): return 1187;
+        case UTF8_GETCHR(u8"前"): return 1191;
 
             // clang-format on
 
