@@ -200,10 +200,6 @@ bool DialogState::advance_asian_text(Platform& pfrm,
 }
 
 
-
-StringBuffer<31> locale_language_name(int language);
-
-
 void DialogState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
     OverworldState::enter(pfrm, game, prev_state);

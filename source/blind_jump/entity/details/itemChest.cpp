@@ -3,6 +3,7 @@
 #include "platform/platform.hpp"
 #include "state.hpp"
 #include "string.hpp"
+#include "localization.hpp"
 
 
 ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item, bool locked)
@@ -69,8 +70,15 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
 
                         std::array<char, 40> buffer;
 
-                        str += locale_repr_smallnum(remaining, buffer);
-                        str += locale_string(
+                        if (locale_language_name(locale_get_language()) == "chinese") {
+                            // Chinese grammer is a bit different, we need
+                            // to assemble the strings in a different order...
+                            str += locale_string(pfrm, LocaleString::enemies_remaining_singular)->c_str();
+                            str += locale_repr_smallnum(remaining, buffer);
+                            str += "个";
+                        } else {
+                            str += locale_repr_smallnum(remaining, buffer);
+                            str += locale_string(
                                    pfrm,
                                    [&] {
                                        if (remaining == 1) {
@@ -82,6 +90,8 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                                        }
                                    }())
                                    ->c_str();
+                        }
+
 
                         push_notification(pfrm, game.state(), str);
 
