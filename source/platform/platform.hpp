@@ -167,6 +167,11 @@ public:
     // tiles are overwritten by set_tile.
     void enable_glyph_mode(bool enabled);
 
+    // In this mode, the engine will use all of available overlay vram for
+    // rendering text glyphs. Added during chinese language localization,
+    // when we needed extra memory for displaying
+    void enable_expanded_glyph_mode(bool enabled);
+
 
     // NOTE: For the overlay and background, the tile layers consist of 32x32
     // tiles, where each tiles is 8x8 pixels. The overlay and the background

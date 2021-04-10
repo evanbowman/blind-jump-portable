@@ -27,12 +27,12 @@ void NotebookState::enter(Platform& pfrm, Game&, State&)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm);
-    text_->assign(str_->c_str(),
-                  {1, 2},
-                  OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
+    // text_->assign(str_->c_str(),
+    //               {1, 2},
+    //               OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
     page_number_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
 
-    // repaint_page(pfrm);
+    repaint_page(pfrm);
 }
 
 
@@ -51,6 +51,26 @@ void NotebookState::repaint_margin(Platform& pfrm)
 }
 
 
+void print_double_char(Platform& pfrm,
+                       utf8::Codepoint c,
+                       const OverlayCoord& coord,
+                       const std::optional<FontColors>& colors = {});
+
+
+static const int chinese_row_width = 14;
+static const int chinese_row_count = 5;
+
+static const int chinese_glyphs_per_page =
+    chinese_row_width * chinese_row_count;
+
+
+static int chinese_page_count(const char* str)
+{
+    const int len = utf8::len(str);
+    return len / chinese_glyphs_per_page + 1;
+}
+
+
 void NotebookState::repaint_page(Platform& pfrm)
 {
     const auto size = text_->size();
@@ -58,7 +78,35 @@ void NotebookState::repaint_page(Platform& pfrm)
     page_number_->erase();
     repaint_margin(pfrm);
     page_number_->assign(page_ + 1);
-    text_->assign(str_->c_str(), {1, 2}, size, page_ * (size.y / 2));
+
+    if (locale_language_name(locale_get_language()) == "chinese") {
+        OverlayCoord pos {1, 2};
+
+        const char* test_str =
+            "中文中文中文中文中文中文中文中文中文中文中文中文中文"
+            "中文中文中文中文中文中文中文中文中文中文中文中文中文"
+            "中文中文中文中文中文中文中文中文中文中文中文中文中文";
+
+        utf8::scan(
+                [&](const utf8::Codepoint& cp, const char*, int) {
+
+                    if (pos.x > chinese_row_width * 2) {
+                        pos.x = 1;
+                        pos.y += 3;
+                    }
+
+                    if (pos.y - 2 >= chinese_row_count * 3) {
+                        return;
+                    }
+
+                    print_double_char(pfrm, cp, pos);
+                    pos.x += 2;
+                },
+                test_str,
+                str_len(test_str));
+    } else {
+        text_->assign(str_->c_str(), {1, 2}, size, page_ * (size.y / 2));
+    }
 }
 
 
@@ -121,7 +169,16 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case DisplayMode::show:
         if (pfrm.keyboard().down_transition<Key::down>()) {
-            if (text_->parsed() not_eq utf8::len(str_->c_str())) {
+
+            auto has_more_pages = [&]() -> bool {
+                if (locale_language_name(locale_get_language()) == "chinese") {
+                    return page_ < chinese_page_count(str_->c_str()) - 1;
+                } else {
+                    return text_->parsed() not_eq utf8::len(str_->c_str());
+                }
+            };
+
+            if (has_more_pages()) {
                 page_ += 1;
                 timer_ = 0;
                 display_mode_ = DisplayMode::fade_out;

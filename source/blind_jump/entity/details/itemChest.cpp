@@ -71,11 +71,12 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                         std::array<char, 40> buffer;
 
                         if (locale_language_name(locale_get_language()) == "chinese") {
-                            // Chinese grammer is a bit different, we need
-                            // to assemble the strings in a different order...
-                            str += locale_string(pfrm, LocaleString::enemies_remaining_singular)->c_str();
+
                             str += locale_repr_smallnum(remaining, buffer);
-                            str += "个";
+                            str += "个"; // The translator told me that I need
+                                         // to put this here.
+
+                            str += locale_string(pfrm, LocaleString::enemies_remaining_singular)->c_str();
                         } else {
                             str += locale_repr_smallnum(remaining, buffer);
                             str += locale_string(

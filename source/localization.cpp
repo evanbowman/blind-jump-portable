@@ -415,7 +415,10 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"杀"): return 1219;
         case UTF8_GETCHR(u8"手"): return 1223;
         case UTF8_GETCHR(u8"枪"): return 1227;
-
+        case UTF8_GETCHR(u8"危"): return 1231;
+        case UTF8_GETCHR(u8"险"): return 1235;
+        case UTF8_GETCHR(u8"来"): return 1239;
+        case UTF8_GETCHR(u8"袭"): return 1243;
 
             // clang-format on
 
