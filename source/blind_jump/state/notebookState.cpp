@@ -1,7 +1,6 @@
 #include "state_impl.hpp"
+#include "localization.hpp"
 
-
-constexpr u16 notebook_margin_tile = 82;
 
 NotebookState::NotebookState(LocalizedText&& str)
     : str_(std::move(str)), page_(0)
@@ -27,12 +26,30 @@ void NotebookState::enter(Platform& pfrm, Game&, State&)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
     text_.emplace(pfrm);
-    // text_->assign(str_->c_str(),
-    //               {1, 2},
-    //               OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
+
     page_number_.emplace(pfrm, OverlayCoord{0, u8(screen_tiles.y - 1)});
 
-    repaint_page(pfrm);
+    if (locale_language_name(locale_get_language()) == "chinese") {
+        pfrm.enable_expanded_glyph_mode(true);
+        repaint_page(pfrm);
+    } else {
+        text_->assign(str_->c_str(),
+                      {1, 2},
+                      OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
+    }
+}
+
+
+Platform::TextureCpMapper locale_texture_map();
+
+
+static u16 get_whitespace_tile(Platform& pfrm)
+{
+    const auto mapping_info = locale_texture_map()(' ');
+    if (mapping_info) {
+        return pfrm.map_glyph(' ', *mapping_info);
+    }
+    return 0;
 }
 
 
@@ -40,12 +57,11 @@ void NotebookState::repaint_margin(Platform& pfrm)
 {
     auto screen_tiles = calc_screen_tiles(pfrm);
 
+    u16 notebook_margin_tile = get_whitespace_tile(pfrm);
+
     for (int x = 0; x < screen_tiles.x; ++x) {
         for (int y = 0; y < screen_tiles.y; ++y) {
-            if (x == 0 or y == 0 or y == 1 or x == screen_tiles.x - 1 or
-                y == screen_tiles.y - 2 or y == screen_tiles.y - 1) {
-                pfrm.set_tile(Layer::overlay, x, y, notebook_margin_tile);
-            }
+            pfrm.set_tile(Layer::overlay, x, y, notebook_margin_tile);
         }
     }
 }
@@ -82,13 +98,14 @@ void NotebookState::repaint_page(Platform& pfrm)
     if (locale_language_name(locale_get_language()) == "chinese") {
         OverlayCoord pos {1, 2};
 
-        const char* test_str =
-            "中文中文中文中文中文中文中文中文中文中文中文中文中文"
-            "中文中文中文中文中文中文中文中文中文中文中文中文中文"
-            "中文中文中文中文中文中文中文中文中文中文中文中文中文";
+        int seen_count = 0;
 
         utf8::scan(
                 [&](const utf8::Codepoint& cp, const char*, int) {
+
+                    if (seen_count++ < chinese_glyphs_per_page * page_) {
+                        return;
+                    }
 
                     if (pos.x > chinese_row_width * 2) {
                         pos.x = 1;
@@ -102,8 +119,8 @@ void NotebookState::repaint_page(Platform& pfrm)
                     print_double_char(pfrm, cp, pos);
                     pos.x += 2;
                 },
-                test_str,
-                str_len(test_str));
+                str_->c_str(),
+                str_len(str_->c_str()));
     } else {
         text_->assign(str_->c_str(), {1, 2}, size, page_ * (size.y / 2));
     }
@@ -113,6 +130,8 @@ void NotebookState::repaint_page(Platform& pfrm)
 void NotebookState::exit(Platform& pfrm, Game&, State&)
 {
     pfrm.sleep(1);
+
+    pfrm.enable_expanded_glyph_mode(false);
 
     pfrm.fill_overlay(0); // The TextView destructor cleans up anyway, but we
                           // have ways of clearing the screen faster than the

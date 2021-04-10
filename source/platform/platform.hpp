@@ -169,7 +169,7 @@ public:
 
     // In this mode, the engine will use all of available overlay vram for
     // rendering text glyphs. Added during chinese language localization,
-    // when we needed extra memory for displaying
+    // when we needed extra memory for displaying large amounts of text.
     void enable_expanded_glyph_mode(bool enabled);
 
 

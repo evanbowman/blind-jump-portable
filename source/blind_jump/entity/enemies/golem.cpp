@@ -55,7 +55,9 @@ void Golem::injured(Platform& pfrm, Game& game, Health amount)
 
 void Golem::on_collision(Platform& pfrm, Game& game, AlliedOrbShot&)
 {
-    injured(pfrm, game, 1);
+    if (not is_allied()) {
+        injured(pfrm, game, 1);
+    }
 }
 
 

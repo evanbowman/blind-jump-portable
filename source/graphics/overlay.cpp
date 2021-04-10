@@ -84,19 +84,34 @@ void print_double_char(Platform& pfrm,
     if (c not_eq 0) {
         const auto mapping_info = locale_texture_map()(c);
 
-        u16 t0 = 111;
-        u16 t1 = 111;
-        u16 t2 = 111;
-        u16 t3 = 111;
+        u16 t0 = 495;
+        u16 t1 = 495;
+        u16 t2 = 495;
+        u16 t3 = 495;
 
         if (mapping_info) {
             auto info = *mapping_info;
 
-            if (info.offset_ == 71) {
-                info.offset_ = 743;
-            } else if (info.offset_ == 94) {
-                info.offset_ = 835;
-            }
+            info.offset_ = [&]() -> decltype(info.offset_) {
+                switch (info.offset_) {
+                case 1: return 1763;
+                case 2: return 1767;
+                case 3: return 1771;
+                case 4: return 1775;
+                case 5: return 1779;
+                case 6: return 1783;
+                case 7: return 1787;
+                case 8: return 1791;
+                case 9: return 1795;
+                case 10: return 1799;
+                case 67: return 1755;
+                case 68: return 1759;
+                case 71: return 743;
+                case 94: return 835;
+                case 95: return 1259;
+                }
+                return info.offset_;
+            }();
 
             if (info.offset_ == 72) {
                 t0 = pfrm.map_glyph(c, info);
@@ -159,7 +174,7 @@ static void print_char(Platform& pfrm,
     if (c not_eq 0) {
         auto mapping_info = locale_texture_map()(c);
 
-        u16 t = 111;
+        u16 t = 495;
 
         if (mapping_info) {
             t = pfrm.map_glyph(c, *mapping_info);

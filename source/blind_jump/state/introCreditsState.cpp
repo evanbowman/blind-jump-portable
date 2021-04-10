@@ -70,7 +70,6 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
         }
     }
 
-
     pos.x += str_len(creator_str);
 
     if (bigfont) {
@@ -90,6 +89,13 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
                                    ColorConstant::rich_black});
 
 
+    // The translator for the chinese edition told me that I should put a "not
+    // for commercial use" logo in the game somewhere, to discourage piracy.
+    if (locale_language_name(locale_get_language()) == "chinese") {
+        const auto st = calc_screen_tiles(pfrm);
+        pfrm.set_tile(Layer::overlay, st.x / 2 - 1, st.y - 3, 377);
+        pfrm.set_tile(Layer::overlay, st.x / 2, st.y - 3, 378);
+    }
 
     center(pfrm);
     // pfrm.screen().fade(0.f);
@@ -108,6 +114,11 @@ void IntroCreditsState::exit(Platform& pfrm, Game& game, State&)
     version_.reset();
     translator_.reset();
     pfrm.set_overlay_origin(0, 0);
+
+    const auto st = calc_screen_tiles(pfrm);
+    pfrm.set_tile(Layer::overlay, st.x / 2 - 1, st.y - 3, 0);
+    pfrm.set_tile(Layer::overlay, st.x / 2, st.y - 3, 0);
+
 }
 
 

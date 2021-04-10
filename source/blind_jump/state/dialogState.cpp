@@ -122,7 +122,7 @@ bool DialogState::advance_text(Platform& pfrm,
 
         const auto mapping_info = locale_texture_map()(cp);
 
-        u16 t = 111; // bad glyph, FIXME: add a constant
+        u16 t = 495; // bad glyph, FIXME: add a constant
 
         if (mapping_info) {
             t = pfrm.map_glyph(cp, *mapping_info);

@@ -218,7 +218,9 @@ Enemy* SignalJammerSelectorState::make_selector_target(Platform& pfrm,
                               not std::is_same<VT, SnakeTail>() and
                               not std::is_same<VT, SnakeHead>() and
                               not std::is_same<VT, Gatekeeper>() and
-                              not std::is_same<VT, Wanderer>()) {
+                              not std::is_same<VT, Wanderer>() and
+                              not std::is_same<VT, Twin>() and
+                              not std::is_same<VT, InfestedCore>()) {
                     targets.push_back(element.get());
                     proxies.emplace_back(*element.get());
                 }

@@ -2814,11 +2814,35 @@ struct GlyphMapping {
 static constexpr const auto glyph_start_offset = 1;
 static constexpr const auto glyph_mapping_count = 78;
 
+
+static constexpr const auto glyph_expanded_count = 160;
+
+
+static int glyph_table_size = glyph_mapping_count;
+
+
+static const int font_color_index_tile = 81;
+
+
 struct GlyphTable {
-    GlyphMapping mappings_[glyph_mapping_count];
+    GlyphMapping mappings_[glyph_mapping_count + glyph_expanded_count];
 };
 
 static std::optional<DynamicMemory<GlyphTable>> glyph_table;
+
+
+void Platform::enable_expanded_glyph_mode(bool enabled)
+{
+    for (auto& gm : ::glyph_table->obj_->mappings_) {
+        gm.reference_count_ = -1;
+    }
+
+    if (enabled) {
+        glyph_table_size = glyph_mapping_count + glyph_expanded_count;
+    } else {
+        glyph_table_size = glyph_mapping_count;
+    }
+}
 
 
 static void audio_start()
@@ -3094,7 +3118,7 @@ void Platform::load_overlay_texture(const char* name)
 }
 
 
-static const TileDesc bad_glyph = 111;
+static const TileDesc bad_glyph = 495;
 
 
 // Rather than doing tons of extra work to keep the palettes
@@ -3104,7 +3128,7 @@ static const TileDesc bad_glyph = 111;
 static u8* font_index_tile()
 {
     return (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
-           ((81) * vram_tile_size());
+           ((font_color_index_tile) * vram_tile_size());
 }
 
 
@@ -3138,7 +3162,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
     //     return bad_glyph;
     // }
 
-    for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
+    for (TileDesc tile = 0; tile < glyph_table_size; ++tile) {
         auto& gm = ::glyph_table->obj_->mappings_[tile];
         if (gm.valid() and gm.mapper_offset_ == mapping_info.offset_) {
             return glyph_start_offset + tile;
@@ -3147,7 +3171,23 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
 
     for (auto& info : overlay_textures) {
         if (str_cmp(mapping_info.texture_name_, info.name_) == 0) {
-            for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
+            for (TileDesc t = 0; t < glyph_table_size; ++t) {
+
+                if (t == font_color_index_tile - 1) {
+                    // When I originally created the text mapping engine, I did
+                    // not expect to need to deal with languages with more than
+                    // 80 distinct font tiles onscreen at a time. So, I thought
+                    // it would be fine to put a metadata tile in index 81. But
+                    // while working on the Chinese localization, I discovered
+                    // that 80 tiles would not be nearly sufficient to display a
+                    // fullscreen block of chinese words. So I needed to build a
+                    // dynamically-expandable glyph table, which, when needed,
+                    // can expand to consume more of the available vram. So, we
+                    // need to skip over this metadata tile, to make sure that
+                    // we don't overwrite it when using a larger glyph array.
+                    continue;
+                }
+
                 auto& gm = ::glyph_table->obj_->mappings_[t];
                 if (not gm.valid()) {
                     gm.mapper_offset_ = mapping_info.offset_;
@@ -3217,7 +3257,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
 static bool is_glyph(u16 t)
 {
     return t >= glyph_start_offset and
-           t - glyph_start_offset < glyph_mapping_count;
+           t - glyph_start_offset < glyph_table_size;
 }
 
 
