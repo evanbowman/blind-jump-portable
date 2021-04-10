@@ -127,7 +127,7 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
             }
 
             if (bosses_remaining()) {
-                auto tc = to_tile_coord(boss_position_.cast<int>());
+                auto tc = to_tile_coord(boss_position_.cast<s32>());
 
                 if (not is_walkable(game.tiles().get_tile(tc.x, tc.y))) {
                     for (int i = tc.x - 1; i < tc.x + 1; ++i) {
@@ -140,7 +140,10 @@ BossDeathSequenceState::update(Platform& pfrm, Game& game, Microseconds delta)
                     }
                 }
 
-                game.transporter().set_position(to_world_coord(tc));
+                auto wc = to_world_coord(tc);
+                wc.x += 16;
+                wc.y += 16;
+                game.transporter().set_position(wc);
             } else {
                 create_item_chest(game,
                                   to_world_coord(Vec2<TIdx>{8, 10}),
