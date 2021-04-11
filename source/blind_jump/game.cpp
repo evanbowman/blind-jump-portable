@@ -128,19 +128,6 @@ Game::Game(Platform& pfrm)
     pfrm.load_overlay_texture("overlay");
 
 
-    // pfrm.enable_glyph_mode(true);
-
-    // Text::Configuration config;
-    // config.double_size_ = true;
-
-    // Text t(pfrm, "test", {1, 1}, config);
-
-    // while (true) {
-    //     pfrm.screen().clear();
-    //     pfrm.screen().display();
-    // }
-
-
     // NOTE: Because we're the initial state, unclear what to pass as a previous
     // state to the enter function, so, paradoxically, the initial state is it's
     // own parent.

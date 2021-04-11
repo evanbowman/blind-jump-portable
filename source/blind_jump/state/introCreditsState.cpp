@@ -63,13 +63,6 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 
     creator_.emplace(pfrm, creator_str, pos);
 
-    for (int i = (int)Item::Type::inventory_item_start;
-         i < (int)Item::Type::count; ++i) {
-        if (i not_eq (int)Item::Type::postal_advert) {
-            game.inventory().push_item(pfrm, game, (Item::Type)i, false);
-        }
-    }
-
     pos.x += str_len(creator_str);
 
     if (bigfont) {
@@ -80,8 +73,6 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
     font_conf.double_size_ = bigfont;
 
     text_.emplace(pfrm, str_->c_str(), pos, font_conf);
-
-
 
     // The translator for the chinese edition told me that I should put a "not
     // for commercial use" logo in the game somewhere, to discourage piracy.

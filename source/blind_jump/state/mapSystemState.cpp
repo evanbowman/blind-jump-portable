@@ -22,6 +22,9 @@ void MapSystemState::exit(Platform& pfrm, Game& game, State&)
 }
 
 
+const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer);
+
+
 StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     MenuState::update(pfrm, game, delta);
@@ -62,16 +65,26 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             anim_state_ = AnimState::legend;
 
+            const bool bigfont = locale_requires_doublesize_font();
+
+            FontConfiguration font_conf;
+            font_conf.double_size_ = bigfont;
+
             auto level_str = locale_string(pfrm, LocaleString::waypoint_text);
+
+            const u8 start_y = bigfont ? 0 : 1;
+
+            std::array<char, 40> buffer;
+            const char* level_num_str = locale_repr_smallnum(game.level(), buffer);
 
             level_text_.emplace(
                 pfrm,
                 OverlayCoord{
                     u8(screen_tiles.x - (1 + utf8::len(level_str->c_str()) +
-                                         integer_text_length(game.level()))),
-                    1});
+                                         utf8::len(level_num_str)) * (bigfont ? 2 : 1)),
+                    start_y}, font_conf);
             level_text_->assign(level_str->c_str());
-            level_text_->append(game.level());
+            level_text_->append(level_num_str);
         }
         break;
 
