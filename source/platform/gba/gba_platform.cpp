@@ -3089,9 +3089,15 @@ static u8* overlay_vram_tile_data(u16 tile_index)
 }
 
 
-// Clever pirates will ultimately find ways of removing the text, but we can at
-// least make things a bit more difficult. At least we can prevent stupid
+// Clever pirates will ultimately find ways of removing the text, but we can
+// still make things a bit more difficult. At least we can prevent clueless
 // unsophisticated pirates from selling the game.
+//
+// The translator for the chinese edition of the game told me that unless there
+// is some in-game text indicating that the game is freeware and not meant for
+// commercial use, it will be pirated and sold. I'm not too concerned about
+// people selling the game actually, it doesn't bother me, but I want to protect
+// ordinary folks who may be tricked into buying a free game.
 static int chinese_noncommercial_text_checksum()
 {
     int checksum = 0;
