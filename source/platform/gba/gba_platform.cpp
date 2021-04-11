@@ -3082,6 +3082,44 @@ void Platform::enable_glyph_mode(bool enabled)
 }
 
 
+static u8* overlay_vram_tile_data(u16 tile_index)
+{
+    return (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
+        ((tile_index) * vram_tile_size());
+}
+
+
+// Clever pirates will ultimately find ways of removing the text, but we can at
+// least make things a bit more difficult. At least we can prevent stupid
+// unsophisticated pirates from selling the game.
+static int chinese_noncommercial_text_checksum()
+{
+    int checksum = 0;
+
+    int last = 0;
+
+    for (int i = 368; i < 373; ++i) {
+        u8* t = overlay_vram_tile_data(i);
+
+        for (int j = 0; j < vram_tile_size(); ++j) {
+            checksum += t[j];
+        }
+        int result = checksum ^ last;
+
+        last = checksum;
+
+        checksum = result;
+    }
+
+    return checksum;
+}
+
+
+static volatile int chinese_checksum_1 = 900;
+static volatile int chinese_checksum_2 =  30;
+static volatile int chinese_checksum_3 =   8;
+
+
 void Platform::load_overlay_texture(const char* name)
 {
     for (auto& info : overlay_textures) {
@@ -3112,6 +3150,16 @@ void Platform::load_overlay_texture(const char* name)
                 for (auto& gm : ::glyph_table->obj_->mappings_) {
                     gm.reference_count_ = -1;
                 }
+            }
+        }
+    }
+
+    if (str_cmp(name, "overlay") == 0) {
+        int checksum = chinese_noncommercial_text_checksum();
+
+        if (checksum not_eq chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
+            while (true) {
+
             }
         }
     }

@@ -86,6 +86,15 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 
         translator_.emplace(pfrm, pos);
         translator_->assign(locale_string(pfrm, LocaleString::translator_name)->c_str());
+
+        pos.y += 4;
+        pos.x += 2;
+        pfrm.set_tile(Layer::overlay, pos.x + 1, pos.y, 368);
+        pfrm.set_tile(Layer::overlay, pos.x + 2, pos.y, 369);
+        pfrm.set_tile(Layer::overlay, pos.x + 3, pos.y, 370);
+        pfrm.set_tile(Layer::overlay, pos.x + 4, pos.y, 371);
+        pfrm.set_tile(Layer::overlay, pos.x + 5, pos.y, 372);
+
     } else {
         pos.y += 8;
         pos.x = 1;

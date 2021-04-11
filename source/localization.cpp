@@ -539,6 +539,8 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"它"): return 1743;
         case UTF8_GETCHR(u8"暂"): return 1747;
         case UTF8_GETCHR(u8"免"): return 1751;
+        // Intentional gap
+        case UTF8_GETCHR(u8"家"): return 1803;
 
             // clang-format on
 
