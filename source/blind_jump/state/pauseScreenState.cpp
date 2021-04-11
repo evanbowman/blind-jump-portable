@@ -37,9 +37,9 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
         switch (anim_index_) {
         default:
         case 0:
-            return {147, 148};
+            return {373, 374};
         case 1:
-            return {149, 150};
+            return {375, 376};
         }
     }();
 

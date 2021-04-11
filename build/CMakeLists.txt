@@ -223,6 +223,8 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/scottbuckley_computations.s
     ${DATA_DIR}/clair_de_lune.s
     ${DATA_DIR}/overlay.s
+    ${DATA_DIR}/death_text_english.s
+    ${DATA_DIR}/death_text_chinese.s
     ${DATA_DIR}/repl.s
     ${DATA_DIR}/overlay_cutscene.s
     ${DATA_DIR}/charset.s
@@ -534,6 +536,8 @@ if(GAMEBOY_ADVANCE)
     add_overlay(charset 0 0 NO NO)
     add_overlay(overlay_journal 0 0 NO NO)
     add_overlay(overlay_dialog 0 0 NO NO)
+    add_overlay(death_text_english 0 0 NO NO)
+    add_overlay(death_text_chinese 0 0 NO NO)
     add_overlay(old_poster 0 0 YES NO)
     add_overlay(old_poster_chinese 0 0 YES NO)
     add_overlay(blaster_info 0 0 YES NO)

@@ -21,10 +21,19 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         const auto image_width = 18;
 
+        int image_y = 3;
+
+        if (locale_language_name(locale_get_language()) == "chinese") {
+            pfrm.load_overlay_texture("death_text_chinese");
+            --image_y;
+        } else {
+            pfrm.load_overlay_texture("death_text_english");
+        }
+
         draw_image(pfrm,
                    450,
                    (screen_tiles.x - image_width) / 2,
-                   3,
+                   image_y,
                    image_width,
                    3,
                    Layer::overlay);

@@ -187,7 +187,8 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     case DisplayMode::show:
-        if (pfrm.keyboard().down_transition<Key::down>()) {
+        if (pfrm.keyboard().down_transition<Key::down>() or
+            pfrm.keyboard().down_transition<Key::right>()) {
 
             auto has_more_pages = [&]() -> bool {
                 if (locale_language_name(locale_get_language()) == "chinese") {
@@ -203,7 +204,8 @@ StatePtr NotebookState::update(Platform& pfrm, Game& game, Microseconds delta)
                 display_mode_ = DisplayMode::fade_out;
             }
 
-        } else if (pfrm.keyboard().down_transition<Key::up>()) {
+        } else if (pfrm.keyboard().down_transition<Key::up>() or
+                   pfrm.keyboard().down_transition<Key::left>()) {
             if (page_ > 0) {
                 page_ -= 1;
                 timer_ = 0;

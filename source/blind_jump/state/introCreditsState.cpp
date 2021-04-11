@@ -81,20 +81,27 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
 
     text_.emplace(pfrm, str_->c_str(), pos, font_conf);
 
-    pos.y += 8;
-    pos.x = 1;
-    translator_.emplace(pfrm, pos);
-    translator_->assign(locale_string(pfrm, LocaleString::translator_name)->c_str(),
-                        FontColors{ColorConstant::med_blue_gray,
-                                   ColorConstant::rich_black});
 
 
     // The translator for the chinese edition told me that I should put a "not
     // for commercial use" logo in the game somewhere, to discourage piracy.
     if (locale_language_name(locale_get_language()) == "chinese") {
-        const auto st = calc_screen_tiles(pfrm);
-        pfrm.set_tile(Layer::overlay, st.x / 2 - 1, st.y - 3, 377);
-        pfrm.set_tile(Layer::overlay, st.x / 2, st.y - 3, 378);
+
+        pos.y += 6;
+        pos.x = 9;
+
+        pfrm.set_tile(Layer::overlay, pos.x - 2, pos.y, 377);
+        pfrm.set_tile(Layer::overlay, pos.x - 1, pos.y, 378);
+
+        translator_.emplace(pfrm, pos);
+        translator_->assign(locale_string(pfrm, LocaleString::translator_name)->c_str());
+    } else {
+        pos.y += 8;
+        pos.x = 1;
+        translator_.emplace(pfrm, pos);
+        translator_->assign(locale_string(pfrm, LocaleString::translator_name)->c_str(),
+                            FontColors{ColorConstant::med_blue_gray,
+                                ColorConstant::rich_black});
     }
 
     center(pfrm);
@@ -170,6 +177,7 @@ IntroCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             creator_.reset();
             version_.reset();
             translator_.reset();
+            pfrm.fill_overlay(0);
             timer_ = 0;
 
             if (skip) {

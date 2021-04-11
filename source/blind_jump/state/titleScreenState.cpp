@@ -155,12 +155,12 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 return {left_x, right_x};
             };
             const auto c1 = get_coords(text);
-            if (pfrm.get_tile(Layer::overlay, c1.x, st.y - 2) == 149) {
-                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 147);
-                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 148);
+            if (pfrm.get_tile(Layer::overlay, c1.x, st.y - 2) == 375) {
+                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 373);
+                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 374);
             } else {
-                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 149);
-                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 150);
+                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 375);
+                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 376);
             }
 
             auto erase_coords = get_coords(*options_[!cursor_index_]);
