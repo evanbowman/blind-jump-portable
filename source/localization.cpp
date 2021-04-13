@@ -49,7 +49,6 @@ standard_texture_map(const utf8::Codepoint& cp)
 {
     auto mapping = [&]() -> std::optional<u16> {
         switch (cp) {
-        // clang-format off
         case UTF8_GETCHR(u8"0"): return 1;
         case UTF8_GETCHR(u8"1"): return 2;
         case UTF8_GETCHR(u8"2"): return 3;
@@ -134,6 +133,131 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8">"): return 104;
         case UTF8_GETCHR(u8"#"): return 105;
         case UTF8_GETCHR(u8"_"): return 186;
+
+        // A small number of tiny Chinese glyphs. We don't use too many, because
+        // they're difficult to read at this size.
+        case UTF8_GETCHR(u8"分"): return 1807;
+        case UTF8_GETCHR(u8"数"): return 1808;
+        case UTF8_GETCHR(u8"层"): return 1809;
+        case UTF8_GETCHR(u8"物"): return 1810;
+        case UTF8_GETCHR(u8"品"): return 1811;
+        case UTF8_GETCHR(u8"收"): return 1812;
+        case UTF8_GETCHR(u8"集"): return 1813;
+        case UTF8_GETCHR(u8"程"): return 1814;
+        case UTF8_GETCHR(u8"度"): return 1815;
+        case UTF8_GETCHR(u8"章"): return 1816;
+        case UTF8_GETCHR(u8"节"): return 1817;
+        case UTF8_GETCHR(u8"时"): return 1818;
+        case UTF8_GETCHR(u8"间"): return 1819;
+        case UTF8_GETCHR(u8"一"): return 1828;
+        case UTF8_GETCHR(u8"二"): return 1829;
+        case UTF8_GETCHR(u8"三"): return 1830;
+        case UTF8_GETCHR(u8"四"): return 1831;
+
+        default:
+            return std::nullopt;
+        }
+    }();
+    if (mapping) {
+        return Platform::TextureMapping{"charset", *mapping};
+    } else {
+        return {};
+    }
+}
+
+
+
+std::optional<Platform::TextureMapping>
+doublesize_texture_map(const utf8::Codepoint& cp)
+{
+    auto mapping = [&]() -> std::optional<u16> {
+        switch (cp) {
+            // FIXME: This initial block includes regular-sized glyphs.
+        case UTF8_GETCHR(u8"0"): return 1;
+        case UTF8_GETCHR(u8"1"): return 2;
+        case UTF8_GETCHR(u8"2"): return 3;
+        case UTF8_GETCHR(u8"3"): return 4;
+        case UTF8_GETCHR(u8"4"): return 5;
+        case UTF8_GETCHR(u8"5"): return 6;
+        case UTF8_GETCHR(u8"6"): return 7;
+        case UTF8_GETCHR(u8"7"): return 8;
+        case UTF8_GETCHR(u8"8"): return 9;
+        case UTF8_GETCHR(u8"9"): return 10;
+        case UTF8_GETCHR(u8"a"): return 11;
+        case UTF8_GETCHR(u8"b"): return 12;
+        case UTF8_GETCHR(u8"c"): return 13;
+        case UTF8_GETCHR(u8"d"): return 14;
+        case UTF8_GETCHR(u8"e"): return 15;
+        case UTF8_GETCHR(u8"f"): return 16;
+        case UTF8_GETCHR(u8"g"): return 17;
+        case UTF8_GETCHR(u8"h"): return 18;
+        case UTF8_GETCHR(u8"i"): return 19;
+        case UTF8_GETCHR(u8"j"): return 20;
+        case UTF8_GETCHR(u8"k"): return 21;
+        case UTF8_GETCHR(u8"l"): return 22;
+        case UTF8_GETCHR(u8"m"): return 23;
+        case UTF8_GETCHR(u8"n"): return 24;
+        case UTF8_GETCHR(u8"o"): return 25;
+        case UTF8_GETCHR(u8"p"): return 26;
+        case UTF8_GETCHR(u8"q"): return 27;
+        case UTF8_GETCHR(u8"r"): return 28;
+        case UTF8_GETCHR(u8"s"): return 29;
+        case UTF8_GETCHR(u8"t"): return 30;
+        case UTF8_GETCHR(u8"u"): return 31;
+        case UTF8_GETCHR(u8"v"): return 32;
+        case UTF8_GETCHR(u8"w"): return 33;
+        case UTF8_GETCHR(u8"x"): return 34;
+        case UTF8_GETCHR(u8"y"): return 35;
+        case UTF8_GETCHR(u8"z"): return 36;
+        case UTF8_GETCHR(u8"."): return 37;
+        case UTF8_GETCHR(u8","): return 38;
+        case UTF8_GETCHR(u8"A"): return 39;
+        case UTF8_GETCHR(u8"B"): return 40;
+        case UTF8_GETCHR(u8"C"): return 41;
+        case UTF8_GETCHR(u8"D"): return 42;
+        case UTF8_GETCHR(u8"E"): return 43;
+        case UTF8_GETCHR(u8"F"): return 44;
+        case UTF8_GETCHR(u8"G"): return 45;
+        case UTF8_GETCHR(u8"H"): return 46;
+        case UTF8_GETCHR(u8"I"): return 47;
+        case UTF8_GETCHR(u8"J"): return 48;
+        case UTF8_GETCHR(u8"K"): return 49;
+        case UTF8_GETCHR(u8"L"): return 50;
+        case UTF8_GETCHR(u8"M"): return 51;
+        case UTF8_GETCHR(u8"N"): return 52;
+        case UTF8_GETCHR(u8"O"): return 53;
+        case UTF8_GETCHR(u8"P"): return 54;
+        case UTF8_GETCHR(u8"Q"): return 55;
+        case UTF8_GETCHR(u8"R"): return 56;
+        case UTF8_GETCHR(u8"S"): return 57;
+        case UTF8_GETCHR(u8"T"): return 58;
+        case UTF8_GETCHR(u8"U"): return 59;
+        case UTF8_GETCHR(u8"V"): return 60;
+        case UTF8_GETCHR(u8"W"): return 61;
+        case UTF8_GETCHR(u8"X"): return 62;
+        case UTF8_GETCHR(u8"Y"): return 63;
+        case UTF8_GETCHR(u8"Z"): return 64;
+        case UTF8_GETCHR(u8"\""): return 65;
+        case UTF8_GETCHR(u8"'"): return 66;
+        case UTF8_GETCHR(u8"["): return 67;
+        case UTF8_GETCHR(u8"]"): return 68;
+        case UTF8_GETCHR(u8"("): return 69;
+        case UTF8_GETCHR(u8")"): return 70;
+        case UTF8_GETCHR(u8":"): return 71;
+        case UTF8_GETCHR(u8" "): return 72;
+        case UTF8_GETCHR(u8"!"): return 94;
+        case UTF8_GETCHR(u8"?"): return 95;
+        case UTF8_GETCHR(u8"+"): return 98;
+        case UTF8_GETCHR(u8"-"): return 99;
+        case UTF8_GETCHR(u8"/"): return 100;
+        case UTF8_GETCHR(u8"*"): return 101;
+        case UTF8_GETCHR(u8"="): return 102;
+        case UTF8_GETCHR(u8"<"): return 103;
+        case UTF8_GETCHR(u8">"): return 104;
+        case UTF8_GETCHR(u8"#"): return 105;
+        case UTF8_GETCHR(u8"_"): return 186;
+
+        case UTF8_GETCHR(u8"%"): return 1832;
 
         // Chinese Glyphs:
         case UTF8_GETCHR(u8"星"): return 187;
@@ -542,6 +666,9 @@ standard_texture_map(const utf8::Codepoint& cp)
         // Intentional gap
         case UTF8_GETCHR(u8"家"): return 1803;
 
+        case UTF8_GETCHR(u8"集"): return 1820;
+        case UTF8_GETCHR(u8"度"): return 1824;
+
             // clang-format on
 
         default:
@@ -778,6 +905,12 @@ static int language_id = 0;
 Platform::TextureCpMapper locale_texture_map()
 {
     return standard_texture_map;
+}
+
+
+Platform::TextureCpMapper locale_doublesize_texture_map()
+{
+    return doublesize_texture_map;
 }
 
 

@@ -74,6 +74,7 @@ void Text::assign(int val, const OptColors& colors)
 
 
 Platform::TextureCpMapper locale_texture_map();
+Platform::TextureCpMapper locale_doublesize_texture_map();
 
 
 void print_double_char(Platform& pfrm,
@@ -82,7 +83,7 @@ void print_double_char(Platform& pfrm,
                        const std::optional<FontColors>& colors = {})
 {
     if (c not_eq 0) {
-        const auto mapping_info = locale_texture_map()(c);
+        const auto mapping_info = locale_doublesize_texture_map()(c);
 
         u16 t0 = 495;
         u16 t1 = 495;
@@ -177,6 +178,13 @@ static void print_char(Platform& pfrm,
         u16 t = 495;
 
         if (mapping_info) {
+
+            switch (mapping_info->offset_) {
+
+
+            }
+
+
             t = pfrm.map_glyph(c, *mapping_info);
         }
 

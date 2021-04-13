@@ -141,11 +141,19 @@ void ScoreScreenState::repaint_stats(Platform& pfrm, Game& game)
         if (lines_.full()) {
             return;
         }
-        const auto margin = centered_text_margins(pfrm, str_len(str));
+
+        const bool bigfont = locale_requires_doublesize_font();
+        FontConfiguration font_conf;
+        font_conf.double_size_ = bigfont;
+
+
+        const auto margin = centered_text_margins(pfrm, utf8::len(str) * (bigfont ? 2 : 1));
         lines_.emplace_back(
             pfrm,
             Vec2<u8>{u8(margin),
-                     u8(metrics_y_offset_ + 8 + 2 * lines_.size())});
+                u8(metrics_y_offset_ + 8 + 2 * lines_.size() - (bigfont ? 1 : 0))},
+            font_conf);
+
         lines_.back().assign(str, metric_font_colors_);
     };
 
