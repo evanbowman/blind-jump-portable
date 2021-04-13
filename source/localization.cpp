@@ -153,6 +153,9 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"二"): return 1829;
         case UTF8_GETCHR(u8"三"): return 1830;
         case UTF8_GETCHR(u8"四"): return 1831;
+        case UTF8_GETCHR(u8"英"): return 1836;
+        case UTF8_GETCHR(u8"尺"): return 1837;
+
 
         default:
             return std::nullopt;
