@@ -93,27 +93,8 @@ void print_double_char(Platform& pfrm,
         if (mapping_info) {
             auto info = *mapping_info;
 
-            info.offset_ = [&]() -> decltype(info.offset_) {
-                switch (info.offset_) {
-                case 1: return 1763;
-                case 2: return 1767;
-                case 3: return 1771;
-                case 4: return 1775;
-                case 5: return 1779;
-                case 6: return 1783;
-                case 7: return 1787;
-                case 8: return 1791;
-                case 9: return 1795;
-                case 10: return 1799;
-                case 67: return 1755;
-                case 68: return 1759;
-                case 71: return 743;
-                case 94: return 835;
-                case 95: return 1259;
-                }
-                return info.offset_;
-            }();
-
+            // FIXME: these special cases should be handled in the texture map
+            // lookup.
             if (info.offset_ == 72) {
                 t0 = pfrm.map_glyph(c, info);
                 // Special case for space character
