@@ -3162,13 +3162,13 @@ void Platform::load_overlay_texture(const char* name)
     }
 
     if (str_cmp(name, "overlay") == 0) {
-        // int checksum = chinese_noncommercial_text_checksum();
+        int checksum = chinese_noncommercial_text_checksum();
 
-        // if (checksum not_eq chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
-        //     while (true) {
+        if (checksum not_eq chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
+            while (true) {
 
-        //     }
-        // }
+            }
+        }
     }
 }
 

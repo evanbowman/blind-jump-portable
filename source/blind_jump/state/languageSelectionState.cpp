@@ -121,6 +121,8 @@ StatePtr LanguageSelectionState::update(Platform& pfrm,
 
         locale_set_language(cursor_loc_ + 1);
 
+        game.persistent_data().settings_.language_.set(cursor_loc_ + 1);
+
         game.persistent_data().settings_.initial_lang_selected_ = true;
 
         return state_pool().create<TitleScreenState>();

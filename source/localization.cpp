@@ -199,8 +199,8 @@ doublesize_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8" "): return 72;
         case UTF8_GETCHR(u8"!"): return 835;
         case UTF8_GETCHR(u8"?"): return 1259;
-        case UTF8_GETCHR(u8"+"): return 98;
-        case UTF8_GETCHR(u8"-"): return 99;
+        case UTF8_GETCHR(u8"+"): return 1902;
+        case UTF8_GETCHR(u8"-"): return 1906;
         case UTF8_GETCHR(u8"/"): return 100;
         case UTF8_GETCHR(u8"*"): return 101;
         case UTF8_GETCHR(u8"="): return 102;
@@ -208,6 +208,10 @@ doublesize_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8">"): return 104;
         case UTF8_GETCHR(u8"#"): return 105;
         case UTF8_GETCHR(u8"_"): return 186;
+
+
+        case UTF8_GETCHR(u8"A"): return 1910;
+        case UTF8_GETCHR(u8"B"): return 1914;
 
 
         case UTF8_GETCHR(u8"%"): return 1832;
@@ -621,6 +625,29 @@ doublesize_texture_map(const utf8::Codepoint& cp)
 
         case UTF8_GETCHR(u8"集"): return 1820;
         case UTF8_GETCHR(u8"度"): return 1824;
+
+        case UTF8_GETCHR(u8"键"): return 1838;
+        case UTF8_GETCHR(u8"合"): return 1842;
+        case UTF8_GETCHR(u8"角"): return 1846;
+        case UTF8_GETCHR(u8"低"): return 1850;
+
+        case UTF8_GETCHR(u8"比"): return 1854;
+        case UTF8_GETCHR(u8"简"): return 1858;
+        case UTF8_GETCHR(u8"普"): return 1862;
+        case UTF8_GETCHR(u8"困"): return 1866;
+
+        case UTF8_GETCHR(u8"显"): return 1870;
+        case UTF8_GETCHR(u8"示"): return 1874;
+        case UTF8_GETCHR(u8"钟"): return 1878;
+
+        case UTF8_GETCHR(u8"启"): return 1882;
+        case UTF8_GETCHR(u8"震"): return 1886;
+
+        case UTF8_GETCHR(u8"夜"): return 1890;
+        case UTF8_GETCHR(u8"模"): return 1894;
+        case UTF8_GETCHR(u8"式"): return 1898;
+
+        case UTF8_GETCHR(u8"固"): return 1918;
 
             // clang-format on
 

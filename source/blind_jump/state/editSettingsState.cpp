@@ -10,7 +10,6 @@ EditSettingsState::EditSettingsState(DeferredState exit_state)
                                        {difficulty_line_updater_},
                                        {contrast_line_updater_},
                                        {night_mode_line_updater_},
-                                       {show_stats_line_updater_},
                                        {speedrun_clock_line_updater_},
                                        {rumble_enabled_line_updater_}}}
 {
@@ -54,10 +53,14 @@ void EditSettingsState::refresh(Platform& pfrm, Game& game)
 {
     const bool bigfont = locale_requires_doublesize_font();
 
+    for (auto& line : lines_) {
+        line.text_.reset();
+    }
+
     pfrm.fill_overlay(0);
 
     if (bigfont) {
-        for (u32 i = 0; i < 1; ++i) { // FIXME!
+        for (u32 i = 0; i < lines_.size(); ++i) { // FIXME!
             draw_line(pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
         }
     } else {
@@ -71,19 +74,21 @@ void EditSettingsState::refresh(Platform& pfrm, Game& game)
 
 void EditSettingsState::enter(Platform& pfrm, Game& game, State& prev_state)
 {
+    pfrm.enable_expanded_glyph_mode(true);
+
     refresh(pfrm, game);
 }
 
 
 void EditSettingsState::exit(Platform& pfrm, Game& game, State& next_state)
 {
-    for (auto& l : lines_) {
-        l.text_.reset();
-    }
+    // for (auto& l : lines_) {
+    //     l.text_.reset();
+    // }
 
-    pfrm.fill_overlay(0);
+    // pfrm.fill_overlay(0);
 
-    pfrm.set_overlay_origin(0, 0);
+    // pfrm.set_overlay_origin(0, 0);
 }
 
 
@@ -94,6 +99,23 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     if (pfrm.keyboard().down_transition(game.action2_key())) {
         pfrm.speaker().play_sound("select", 1);
+        exit_ = true;
+        pfrm.enable_expanded_glyph_mode(false);
+
+        for (auto& l : lines_) {
+            l.text_.reset();
+        }
+
+        pfrm.fill_overlay(0);
+
+        pfrm.set_overlay_origin(0, 0);
+
+        return null_state();
+    }
+
+    if (exit_) {
+        pfrm.load_overlay_texture("overlay");
+
         return exit_state_();
     }
 
@@ -110,12 +132,12 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     };
 
     if (pfrm.keyboard().down_transition<Key::down>()) {
-        if (not locale_requires_doublesize_font()) { // FIXME
+        // if (not locale_requires_doublesize_font()) { // FIXME
             if (select_row_ < static_cast<int>(lines_.size() - 1)) {
                 select_row_ += 1;
                 pfrm.speaker().play_sound("scroll", 1);
             }
-        }
+        // }
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
         if (select_row_ > 0) {
             select_row_ -= 1;
@@ -146,14 +168,27 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
         pfrm.speaker().play_sound("scroll", 1);
     }
 
-    const auto& line = lines_[select_row_];
-    const Float y_center = pfrm.screen().size().y / 2;
-    const Float y_line = line.text_->coord().y * 8;
-    const auto y_diff = (y_line - y_center) * 0.4f;
+    if (bigfont) {
+        const auto& line = lines_[select_row_];
+        const Float y_center = pfrm.screen().size().y / 2 - 48;
+        const Float y_line = line.text_->coord().y * 8;
+        const auto y_diff = (y_line - y_center) * 0.6f;
 
-    y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
+        y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
 
-    pfrm.set_overlay_origin(0, y_offset_);
+        pfrm.set_overlay_origin(0, y_offset_);
+
+    } else {
+        const auto& line = lines_[select_row_];
+        const Float y_center = pfrm.screen().size().y / 2;
+        const Float y_line = line.text_->coord().y * 8;
+        const auto y_diff = (y_line - y_center) * 0.4f;
+
+        y_offset_ = interpolate(Float(y_diff), y_offset_, delta * 0.00001f);
+
+        pfrm.set_overlay_origin(0, y_offset_);
+    }
+
 
     anim_timer_ += delta;
     if (anim_timer_ > milliseconds(75)) {

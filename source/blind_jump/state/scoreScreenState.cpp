@@ -208,7 +208,13 @@ void ScoreScreenState::repaint_stats(Platform& pfrm, Game& game)
 
         auto write_percentage = [&](LocaleString str, int zone) {
             StringBuffer<31> fmt = locale_string(pfrm, str)->c_str();
-            fmt.pop_back();
+
+            if (not (locale_language_name(locale_get_language()) == "chinese")) {
+                // No colon after the zone title in chinese text
+
+                fmt.pop_back();
+            }
+
             fmt += " ";
             print_metric(
                 fmt.c_str(),

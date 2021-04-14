@@ -1289,7 +1289,7 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 10;
+    static constexpr const int line_count_ = 9;
 
     std::array<LineInfo, line_count_> lines_;
 
@@ -1301,7 +1301,6 @@ private:
         LocaleString::settings_difficulty,
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
-        LocaleString::settings_show_stats,
         LocaleString::settings_speedrun_clock,
         LocaleString::settings_rumble_enabled};
 
@@ -1309,6 +1308,8 @@ private:
     int anim_index_ = 0;
     Microseconds anim_timer_ = 0;
     Float y_offset_ = 0;
+
+    bool exit_ = false;
 };
 
 
