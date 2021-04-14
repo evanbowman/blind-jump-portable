@@ -1526,6 +1526,23 @@ private:
 };
 
 
+class LanguageSelectionState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    Buffer<Text, 10> languages_;
+    int cursor_loc_ = 0;
+    Microseconds cursor_anim_timer_;
+    int anim_index_ = 0;
+    Float y_offset_ = 0;
+};
+
+
+
 void state_deleter(State* s);
 
 
@@ -1601,7 +1618,8 @@ using StatePoolInst = StatePool<ActiveState,
                                 SignalJammerSelectorState,
                                 HealthAndSafetyWarningState,
                                 MultiplayerReviveState,
-                                MultiplayerReviveWaitingState>;
+                                MultiplayerReviveWaitingState,
+                                LanguageSelectionState>;
 
 
 StatePoolInst& state_pool();

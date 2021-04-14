@@ -20,6 +20,8 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls);
 
 StringBuffer<31> locale_language_name(int language);
 
+LocalizedText locale_localized_language_name(Platform& pfrm, int language);
+
 
 // In most cases, you do not want to call this function directly, better to call
 // the localized version, locale_num2str. Only call english__to_string for

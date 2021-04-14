@@ -3098,6 +3098,7 @@ static u8* overlay_vram_tile_data(u16 tile_index)
 // commercial use, it will be pirated and sold. I'm not too concerned about
 // people selling the game actually, it doesn't bother me, but I want to protect
 // ordinary folks who may be tricked into buying a free game.
+[[maybe_unused]]
 static int chinese_noncommercial_text_checksum()
 {
     int checksum = 0;
@@ -3161,13 +3162,13 @@ void Platform::load_overlay_texture(const char* name)
     }
 
     if (str_cmp(name, "overlay") == 0) {
-        int checksum = chinese_noncommercial_text_checksum();
+        // int checksum = chinese_noncommercial_text_checksum();
 
-        if (checksum not_eq chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
-            while (true) {
+        // if (checksum not_eq chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
+        //     while (true) {
 
-            }
-        }
+        //     }
+        // }
     }
 }
 

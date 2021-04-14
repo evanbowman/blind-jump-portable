@@ -68,6 +68,11 @@ public:
         return coord_;
     }
 
+    const FontConfiguration& config() const
+    {
+        return config_;
+    }
+
 private:
     void resize(u32 len);
 

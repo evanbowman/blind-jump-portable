@@ -122,6 +122,7 @@ set(SOURCES
   ${SOURCE_DIR}/blind_jump/state/networkConnectWaitState.cpp
   ${SOURCE_DIR}/blind_jump/state/multiplayerReviveState.cpp
   ${SOURCE_DIR}/blind_jump/state/bossDeathSequenceState.cpp
+  ${SOURCE_DIR}/blind_jump/state/languageSelectionState.cpp
   ${SOURCE_DIR}/blind_jump/state/launchCutsceneState.cpp
   ${SOURCE_DIR}/blind_jump/state/endingCutsceneState.cpp
   ${SOURCE_DIR}/blind_jump/state/deathContinueState.cpp

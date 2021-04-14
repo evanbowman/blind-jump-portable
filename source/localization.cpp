@@ -1013,6 +1013,20 @@ StringBuffer<31> locale_language_name(int language)
 }
 
 
+LocalizedText locale_localized_language_name(Platform& pfrm, int language)
+{
+    const auto cached_lang = ::language_id;
+
+    ::language_id = language;
+
+    auto ret = locale_string(pfrm, LocaleString::language_name);
+
+    ::language_id = cached_lang;
+
+    return ret;
+}
+
+
 bool locale_requires_doublesize_font()
 {
     auto languages = lisp::get_var("languages");

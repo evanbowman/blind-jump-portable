@@ -710,13 +710,12 @@ bool draw_minimap(Platform& pfrm,
 
 StatePtr State::initial(Platform& pfrm, Game& game)
 {
-    // if (str_cmp("NintendoDS", pfrm.device_name().c_str()) == 0 or
-    //     game.persistent_data().displayed_health_warning_) {
+    pfrm.keyboard().poll();
 
-    return state_pool().create<TitleScreenState>();
-    // }
-
-    // game.persistent_data().displayed_health_warning_ = true;
-
-    // return state_pool().create<HealthAndSafetyWarningState>();
+    if (game.persistent_data().settings_.initial_lang_selected_ and not
+        pfrm.keyboard().pressed<Key::select>()) {
+        return state_pool().create<TitleScreenState>();
+    } else {
+        return state_pool().create<LanguageSelectionState>();
+    }
 }

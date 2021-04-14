@@ -36,5 +36,5 @@ struct Settings {
     ButtonMode button_mode_ = ButtonMode::strafe_combined;
     CameraMode camera_mode_ = CameraMode::tracking_weak;
 
-    u8 font_size = 1;
+    bool initial_lang_selected_ = false;
 };
