@@ -675,8 +675,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case NotificationStatus::exit_row2: {
         notification_text_timer += delta;
-        if (notification_text_timer >
-            (locale_requires_doublesize_font() ? milliseconds(17) : milliseconds(34))) {
+        if (notification_text_timer > (locale_requires_doublesize_font()
+                                           ? milliseconds(17)
+                                           : milliseconds(34))) {
             notification_text_timer = 0;
 
             const auto tile = pfrm.get_tile(Layer::overlay, 0, 1);
@@ -694,8 +695,9 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
     case NotificationStatus::exit: {
         notification_text_timer += delta;
-        if (notification_text_timer >
-            (locale_requires_doublesize_font() ? milliseconds(17) : milliseconds(34))) {
+        if (notification_text_timer > (locale_requires_doublesize_font()
+                                           ? milliseconds(17)
+                                           : milliseconds(34))) {
             notification_text_timer = 0;
 
             const auto tile = pfrm.get_tile(Layer::overlay, 0, 0);

@@ -85,7 +85,8 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
         pfrm.set_tile(Layer::overlay, pos.x - 1, pos.y, 378);
 
         translator_.emplace(pfrm, pos);
-        translator_->assign(locale_string(pfrm, LocaleString::translator_name)->c_str());
+        translator_->assign(
+            locale_string(pfrm, LocaleString::translator_name)->c_str());
 
         pos.y += 4;
         pos.x += 2;
@@ -99,9 +100,10 @@ void IntroCreditsState::enter(Platform& pfrm, Game& game, State&)
         pos.y += 8;
         pos.x = 1;
         translator_.emplace(pfrm, pos);
-        translator_->assign(locale_string(pfrm, LocaleString::translator_name)->c_str(),
-                            FontColors{ColorConstant::med_blue_gray,
-                                ColorConstant::rich_black});
+        translator_->assign(
+            locale_string(pfrm, LocaleString::translator_name)->c_str(),
+            FontColors{ColorConstant::med_blue_gray,
+                       ColorConstant::rich_black});
     }
 
     center(pfrm);
@@ -125,7 +127,6 @@ void IntroCreditsState::exit(Platform& pfrm, Game& game, State&)
     const auto st = calc_screen_tiles(pfrm);
     pfrm.set_tile(Layer::overlay, st.x / 2 - 1, st.y - 3, 0);
     pfrm.set_tile(Layer::overlay, st.x / 2, st.y - 3, 0);
-
 }
 
 

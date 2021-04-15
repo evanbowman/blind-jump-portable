@@ -1,5 +1,5 @@
-#include "state_impl.hpp"
 #include "localization.hpp"
+#include "state_impl.hpp"
 
 
 void DialogState::display_time_remaining(Platform&, Game&)

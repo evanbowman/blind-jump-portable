@@ -103,18 +103,18 @@ StatePtr QuickMapState::update(Platform& pfrm, Game& game, Microseconds delta)
 
 
                 std::array<char, 40> buffer;
-                const char* level_num_str = locale_repr_smallnum(game.level(), buffer);
+                const char* level_num_str =
+                    locale_repr_smallnum(game.level(), buffer);
 
 
                 auto level_str =
                     locale_string(pfrm, LocaleString::waypoint_text);
-                const auto text_len = (utf8::len(level_str->c_str()) +
-                                       utf8::len(level_num_str)) * (bigfont ? 2 : 1);
+                const auto text_len =
+                    (utf8::len(level_str->c_str()) + utf8::len(level_num_str)) *
+                    (bigfont ? 2 : 1);
 
-                level_text_.emplace(pfrm,
-                                    OverlayCoord{u8((15 - text_len) / 2),
-                                        0},
-                                    font_conf);
+                level_text_.emplace(
+                    pfrm, OverlayCoord{u8((15 - text_len) / 2), 0}, font_conf);
 
                 level_text_->assign(level_str->c_str());
                 level_text_->append(level_num_str);

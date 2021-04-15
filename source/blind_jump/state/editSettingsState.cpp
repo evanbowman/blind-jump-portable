@@ -30,7 +30,10 @@ void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
     FontConfiguration font_conf;
     font_conf.double_size_ = bigfont;
 
-    lines_[row].text_.emplace(pfrm, OverlayCoord{(u8)margin, u8(4 + row * (bigfont ? 3 : 2))}, font_conf);
+    lines_[row].text_.emplace(
+        pfrm,
+        OverlayCoord{(u8)margin, u8(4 + row * (bigfont ? 3 : 2))},
+        font_conf);
 
     lines_[row].text_->append(str->c_str());
     if (bigfont) {
@@ -61,14 +64,15 @@ void EditSettingsState::refresh(Platform& pfrm, Game& game)
 
     if (bigfont) {
         for (u32 i = 0; i < lines_.size(); ++i) { // FIXME!
-            draw_line(pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
+            draw_line(
+                pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
         }
     } else {
         for (u32 i = 0; i < lines_.size(); ++i) {
-            draw_line(pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
+            draw_line(
+                pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
         }
     }
-
 }
 
 
@@ -124,19 +128,25 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto erase_selector = [&] {
         for (u32 i = 0; i < lines_.size(); ++i) {
             const auto& line = lines_[i];
-            pfrm.set_tile(Layer::overlay, line.cursor_begin_, line.text_->coord().y + 1, 0);
-            pfrm.set_tile(Layer::overlay, line.cursor_end_, line.text_->coord().y + 1, 0);
-            pfrm.set_tile(Layer::overlay, line.cursor_begin_, line.text_->coord().y, 0);
-            pfrm.set_tile(Layer::overlay, line.cursor_end_, line.text_->coord().y, 0);
+            pfrm.set_tile(Layer::overlay,
+                          line.cursor_begin_,
+                          line.text_->coord().y + 1,
+                          0);
+            pfrm.set_tile(
+                Layer::overlay, line.cursor_end_, line.text_->coord().y + 1, 0);
+            pfrm.set_tile(
+                Layer::overlay, line.cursor_begin_, line.text_->coord().y, 0);
+            pfrm.set_tile(
+                Layer::overlay, line.cursor_end_, line.text_->coord().y, 0);
         }
     };
 
     if (pfrm.keyboard().down_transition<Key::down>()) {
         // if (not locale_requires_doublesize_font()) { // FIXME
-            if (select_row_ < static_cast<int>(lines_.size() - 1)) {
-                select_row_ += 1;
-                pfrm.speaker().play_sound("scroll", 1);
-            }
+        if (select_row_ < static_cast<int>(lines_.size() - 1)) {
+            select_row_ += 1;
+            pfrm.speaker().play_sound("scroll", 1);
+        }
         // }
     } else if (pfrm.keyboard().down_transition<Key::up>()) {
         if (select_row_ > 0) {
@@ -211,10 +221,14 @@ EditSettingsState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         const auto& line = lines_[select_row_];
 
-        pfrm.set_tile(
-                      Layer::overlay, line.cursor_begin_, line.text_->coord().y + (bigfont ? 1 : 0), left);
-        pfrm.set_tile(
-                      Layer::overlay, line.cursor_end_, line.text_->coord().y + (bigfont ? 1 : 0), right);
+        pfrm.set_tile(Layer::overlay,
+                      line.cursor_begin_,
+                      line.text_->coord().y + (bigfont ? 1 : 0),
+                      left);
+        pfrm.set_tile(Layer::overlay,
+                      line.cursor_end_,
+                      line.text_->coord().y + (bigfont ? 1 : 0),
+                      right);
     }
 
     return null_state();

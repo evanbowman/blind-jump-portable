@@ -5,7 +5,8 @@ void SignalJammerSelectorState::print(Platform& pfrm, const char* str)
 {
     const bool bigfont = locale_requires_doublesize_font();
 
-    auto margin = centered_text_margins(pfrm, utf8::len(str) * (bigfont ? 2 : 1));
+    auto margin =
+        centered_text_margins(pfrm, utf8::len(str) * (bigfont ? 2 : 1));
 
     if (bigfont) {
         margin /= 2;

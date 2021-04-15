@@ -161,8 +161,6 @@ static void print_char(Platform& pfrm,
         if (mapping_info) {
 
             switch (mapping_info->offset_) {
-
-
             }
 
 

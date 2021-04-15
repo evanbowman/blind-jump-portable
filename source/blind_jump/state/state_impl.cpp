@@ -712,8 +712,8 @@ StatePtr State::initial(Platform& pfrm, Game& game)
 {
     pfrm.keyboard().poll();
 
-    if (game.persistent_data().settings_.initial_lang_selected_ and not
-        pfrm.keyboard().pressed<Key::select>()) {
+    if (game.persistent_data().settings_.initial_lang_selected_ and
+        not pfrm.keyboard().pressed<Key::select>()) {
         return state_pool().create<TitleScreenState>();
     } else {
         return state_pool().create<LanguageSelectionState>();

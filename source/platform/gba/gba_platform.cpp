@@ -3085,7 +3085,7 @@ void Platform::enable_glyph_mode(bool enabled)
 static u8* overlay_vram_tile_data(u16 tile_index)
 {
     return (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
-        ((tile_index) * vram_tile_size());
+           ((tile_index)*vram_tile_size());
 }
 
 
@@ -3098,8 +3098,7 @@ static u8* overlay_vram_tile_data(u16 tile_index)
 // commercial use, it will be pirated and sold. I'm not too concerned about
 // people selling the game actually, it doesn't bother me, but I want to protect
 // ordinary folks who may be tricked into buying a free game.
-[[maybe_unused]]
-static int chinese_noncommercial_text_checksum()
+[[maybe_unused]] static int chinese_noncommercial_text_checksum()
 {
     int checksum = 0;
 
@@ -3123,8 +3122,8 @@ static int chinese_noncommercial_text_checksum()
 
 
 static volatile int chinese_checksum_1 = 900;
-static volatile int chinese_checksum_2 =  30;
-static volatile int chinese_checksum_3 =   8;
+static volatile int chinese_checksum_2 = 30;
+static volatile int chinese_checksum_3 = 8;
 
 
 void Platform::load_overlay_texture(const char* name)
@@ -3164,9 +3163,9 @@ void Platform::load_overlay_texture(const char* name)
     if (str_cmp(name, "overlay") == 0) {
         int checksum = chinese_noncommercial_text_checksum();
 
-        if (checksum not_eq chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
+        if (checksum not_eq
+            chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
             while (true) {
-
             }
         }
     }
@@ -3183,7 +3182,7 @@ static const TileDesc bad_glyph = 495;
 static u8* font_index_tile()
 {
     return (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
-           ((font_color_index_tile) * vram_tile_size());
+           ((font_color_index_tile)*vram_tile_size());
 }
 
 
@@ -3270,7 +3269,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     u8 buffer[tile_size] = {0};
                     memcpy16(buffer,
                              info.tile_data_ +
-                             ((u32)mapping_info.offset_ * tile_size) /
+                                 ((u32)mapping_info.offset_ * tile_size) /
                                      sizeof(decltype(info.tile_data_)),
                              tile_size / 2);
 

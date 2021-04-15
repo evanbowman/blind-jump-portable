@@ -52,20 +52,23 @@ void ItemShopState::enter(Platform& pfrm, Game& game, State& prev_state)
         margin /= 2;
     }
 
-    heading_text_.emplace(pfrm,
-                          OverlayCoord{0, u8(st.y - 2 * (bigfont ? 2 : 1))},
-                          font_conf);
+    heading_text_.emplace(
+        pfrm, OverlayCoord{0, u8(st.y - 2 * (bigfont ? 2 : 1))}, font_conf);
 
     left_text_margin(*heading_text_, margin);
     heading_text_->append(str->c_str());
     right_text_margin(*heading_text_, margin);
 
-    buy_sell_text_.emplace(pfrm, OverlayCoord{1, u8(st.y - 1 * (bigfont ? 2 : 1))}, font_conf);
+    buy_sell_text_.emplace(
+        pfrm, OverlayCoord{1, u8(st.y - 1 * (bigfont ? 2 : 1))}, font_conf);
     buy_sell_text_->assign(locale_string(pfrm, LocaleString::buy)->c_str());
 
     const auto fill_len =
-        st.x - (2 + utf8::len(locale_string(pfrm, LocaleString::buy)->c_str()) * (bigfont ? 2 : 1) +
-                utf8::len(locale_string(pfrm, LocaleString::sell)->c_str()) * (bigfont ? 2 : 1));
+        st.x - (2 +
+                utf8::len(locale_string(pfrm, LocaleString::buy)->c_str()) *
+                    (bigfont ? 2 : 1) +
+                utf8::len(locale_string(pfrm, LocaleString::sell)->c_str()) *
+                    (bigfont ? 2 : 1));
 
 
     for (u32 i = 0; i < fill_len / (bigfont ? 2 : 1); ++i) {
@@ -265,7 +268,8 @@ void ItemShopState::show_label(Platform& pfrm,
 
     u8 xoff = 0;
     if (anchor_right) {
-        xoff = st.x - (utf8::len(str) * (bigfont ? 2 : 1) + (append_coin_icon ? 1 : 0));
+        xoff = st.x - (utf8::len(str) * (bigfont ? 2 : 1) +
+                       (append_coin_icon ? 1 : 0));
     }
 
     if (buy_sell_text_) {
@@ -275,13 +279,22 @@ void ItemShopState::show_label(Platform& pfrm,
         const u32 extra = not append_coin_icon and coin_icon_ ? 1 : 0;
 
         if (anchor_right) {
-            for (u32 i = 0; i < buy_sell_text_->len() * (bigfont ? 2 : 1) + extra; ++i) {
-                pfrm.set_tile(Layer::overlay, (st.x - 1) - i, st.y - (2 + (bigfont ? 1 : 0)), 0);
+            for (u32 i = 0;
+                 i < buy_sell_text_->len() * (bigfont ? 2 : 1) + extra;
+                 ++i) {
+                pfrm.set_tile(Layer::overlay,
+                              (st.x - 1) - i,
+                              st.y - (2 + (bigfont ? 1 : 0)),
+                              0);
             }
         } else {
-            for (u32 i = utf8::len(str); i < buy_sell_text_->len() * (bigfont ? 2 : 1) + extra;
+            for (u32 i = utf8::len(str);
+                 i < buy_sell_text_->len() * (bigfont ? 2 : 1) + extra;
                  ++i) {
-                pfrm.set_tile(Layer::overlay, xoff + i, st.y - (2 + (bigfont ? 1 : 0)), 0);
+                pfrm.set_tile(Layer::overlay,
+                              xoff + i,
+                              st.y - (2 + (bigfont ? 1 : 0)),
+                              0);
             }
         }
 
@@ -300,11 +313,17 @@ void ItemShopState::show_label(Platform& pfrm,
     FontConfiguration font_conf;
     font_conf.double_size_ = bigfont;
 
-    buy_sell_text_.emplace(pfrm, OverlayCoord{xoff, u8(st.y - (1 + (bigfont ? 1 : 0)))}, font_conf);
+    buy_sell_text_.emplace(
+        pfrm,
+        OverlayCoord{xoff, u8(st.y - (1 + (bigfont ? 1 : 0)))},
+        font_conf);
     buy_sell_text_->assign(str);
 
-    for (u32 i = 0; i < utf8::len(str) * (bigfont ? 2 : 1) + (append_coin_icon ? 1 : 0); ++i) {
-        pfrm.set_tile(Layer::overlay, xoff + i, st.y - (2 + (bigfont ? 1 : 0)), 425);
+    for (u32 i = 0;
+         i < utf8::len(str) * (bigfont ? 2 : 1) + (append_coin_icon ? 1 : 0);
+         ++i) {
+        pfrm.set_tile(
+            Layer::overlay, xoff + i, st.y - (2 + (bigfont ? 1 : 0)), 425);
     }
 }
 
@@ -466,7 +485,6 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
             buy_sell_text_.reset();
 
             pfrm.fill_overlay(0);
-
         }
         break;
 

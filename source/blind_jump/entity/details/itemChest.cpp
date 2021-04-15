@@ -1,9 +1,9 @@
 #include "itemChest.hpp"
 #include "blind_jump/game.hpp"
+#include "localization.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"
 #include "string.hpp"
-#include "localization.hpp"
 
 
 ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item, bool locked)
@@ -70,27 +70,31 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
 
                         std::array<char, 40> buffer;
 
-                        if (locale_language_name(locale_get_language()) == "chinese") {
+                        if (locale_language_name(locale_get_language()) ==
+                            "chinese") {
 
                             str += locale_repr_smallnum(remaining, buffer);
                             str += "个"; // The translator told me that I need
                                          // to put this here.
 
-                            str += locale_string(pfrm, LocaleString::enemies_remaining_singular)->c_str();
+                            str += locale_string(
+                                       pfrm,
+                                       LocaleString::enemies_remaining_singular)
+                                       ->c_str();
                         } else {
                             str += locale_repr_smallnum(remaining, buffer);
                             str += locale_string(
-                                   pfrm,
-                                   [&] {
-                                       if (remaining == 1) {
-                                           return LocaleString::
-                                               enemies_remaining_singular;
-                                       } else {
-                                           return LocaleString::
-                                               enemies_remaining_plural;
-                                       }
-                                   }())
-                                   ->c_str();
+                                       pfrm,
+                                       [&] {
+                                           if (remaining == 1) {
+                                               return LocaleString::
+                                                   enemies_remaining_singular;
+                                           } else {
+                                               return LocaleString::
+                                                   enemies_remaining_plural;
+                                           }
+                                       }())
+                                       ->c_str();
                         }
 
 

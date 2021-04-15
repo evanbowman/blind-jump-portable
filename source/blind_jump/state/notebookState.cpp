@@ -1,5 +1,5 @@
-#include "state_impl.hpp"
 #include "localization.hpp"
+#include "state_impl.hpp"
 
 
 NotebookState::NotebookState(LocalizedText&& str)
@@ -33,9 +33,10 @@ void NotebookState::enter(Platform& pfrm, Game&, State&)
         pfrm.enable_expanded_glyph_mode(true);
         repaint_page(pfrm);
     } else {
-        text_->assign(str_->c_str(),
-                      {1, 2},
-                      OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
+        text_->assign(
+            str_->c_str(),
+            {1, 2},
+            OverlayCoord{u8(screen_tiles.x - 2), u8(screen_tiles.y - 4)});
     }
 }
 
@@ -96,31 +97,30 @@ void NotebookState::repaint_page(Platform& pfrm)
     page_number_->assign(page_ + 1);
 
     if (locale_language_name(locale_get_language()) == "chinese") {
-        OverlayCoord pos {1, 2};
+        OverlayCoord pos{1, 2};
 
         int seen_count = 0;
 
         utf8::scan(
-                [&](const utf8::Codepoint& cp, const char*, int) {
+            [&](const utf8::Codepoint& cp, const char*, int) {
+                if (seen_count++ < chinese_glyphs_per_page * page_) {
+                    return;
+                }
 
-                    if (seen_count++ < chinese_glyphs_per_page * page_) {
-                        return;
-                    }
+                if (pos.x > chinese_row_width * 2) {
+                    pos.x = 1;
+                    pos.y += 3;
+                }
 
-                    if (pos.x > chinese_row_width * 2) {
-                        pos.x = 1;
-                        pos.y += 3;
-                    }
+                if (pos.y - 2 >= chinese_row_count * 3) {
+                    return;
+                }
 
-                    if (pos.y - 2 >= chinese_row_count * 3) {
-                        return;
-                    }
-
-                    print_double_char(pfrm, cp, pos);
-                    pos.x += 2;
-                },
-                str_->c_str(),
-                str_len(str_->c_str()));
+                print_double_char(pfrm, cp, pos);
+                pos.x += 2;
+            },
+            str_->c_str(),
+            str_len(str_->c_str()));
     } else {
         text_->assign(str_->c_str(), {1, 2}, size, page_ * (size.y / 2));
     }

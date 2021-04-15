@@ -21,7 +21,19 @@ public:
 };
 
 
-// FIXME: This assumes little endian?
+#ifndef __BYTE_ORDER__
+#error "byte order must be defined"
+#endif
+
+
+// FIXME: assumes little endian? Does it matter though, which way we order
+// stuff, as long as it's consistent? Actually it does matter, considering
+// that we're byte-swapping stuff in unicode.hpp
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#error "TODO: fix the utf-8 decoding (below) for big endian"
+#endif
+
+
 // Needs to be a macro because there's no way to pass a str_const as a
 // constexpr parameter. Converts the first utf-8 codepoint in a string to a
 // 32-bit integer, for use in a giant switch statement (below).
@@ -30,17 +42,32 @@ public:
         if constexpr ((str_const(_STR_)[0] & 0x80) == 0) {                     \
             return str_const(_STR_)[0];                                        \
         } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xC0) {           \
-            return str_const(_STR_)[0] | ((u32)str_const(_STR_)[1]) << 8;      \
+            return (u32)(u8)str_const(_STR_)[0] |                              \
+                   (((u32)(u8)str_const(_STR_)[1]) << 8);                      \
         } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xE0) {           \
-            return str_const(_STR_)[0] | ((u32)str_const(_STR_)[1]) << 8 |     \
-                   (u32)str_const(_STR_)[2] << 16;                             \
+            return (u32)(u8)str_const(_STR_)[0] |                              \
+                   (((u32)(u8)str_const(_STR_)[1]) << 8) |                     \
+                   ((u32)(u8)str_const(_STR_)[2] << 16);                       \
         } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xF0) {           \
-            return str_const(_STR_)[0] | (u32)str_const(_STR_)[1] << 8 |       \
-                   (u32)str_const(_STR_)[2] << 16 |                            \
-                   (u32)str_const(_STR_)[3] << 24;                             \
+            return (u32)(u8)str_const(_STR_)[0] |                              \
+                   ((u32)(u8)str_const(_STR_)[1] << 8) |                       \
+                   ((u32)(u8)str_const(_STR_)[2] << 16) |                      \
+                   ((u32)(u8)str_const(_STR_)[3] << 24);                       \
         } else {                                                               \
             return 0;                                                          \
         }                                                                      \
+    }()
+
+
+template <u32 B, bool C> constexpr void my_assert()
+{
+    static_assert(C, "oh no");
+}
+
+#define UTF8_TESTCHR(_STR_)                                                    \
+    []() -> utf8::Codepoint {                                                  \
+        my_assert<(u32)(u8)str_const(_STR_)[0], false>();                      \
+        return 0;                                                              \
     }()
 
 
@@ -171,7 +198,6 @@ standard_texture_map(const utf8::Codepoint& cp)
         return {};
     }
 }
-
 
 
 std::optional<Platform::TextureMapping>

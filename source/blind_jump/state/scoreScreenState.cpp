@@ -147,12 +147,13 @@ void ScoreScreenState::repaint_stats(Platform& pfrm, Game& game)
         font_conf.double_size_ = bigfont;
 
 
-        const auto margin = centered_text_margins(pfrm, utf8::len(str) * (bigfont ? 2 : 1));
-        lines_.emplace_back(
-            pfrm,
-            Vec2<u8>{u8(margin),
-                u8(metrics_y_offset_ + 8 + 2 * lines_.size() - (bigfont ? 1 : 0))},
-            font_conf);
+        const auto margin =
+            centered_text_margins(pfrm, utf8::len(str) * (bigfont ? 2 : 1));
+        lines_.emplace_back(pfrm,
+                            Vec2<u8>{u8(margin),
+                                     u8(metrics_y_offset_ + 8 +
+                                        2 * lines_.size() - (bigfont ? 1 : 0))},
+                            font_conf);
 
         lines_.back().assign(str, metric_font_colors_);
     };
@@ -209,7 +210,7 @@ void ScoreScreenState::repaint_stats(Platform& pfrm, Game& game)
         auto write_percentage = [&](LocaleString str, int zone) {
             StringBuffer<31> fmt = locale_string(pfrm, str)->c_str();
 
-            if (not (locale_language_name(locale_get_language()) == "chinese")) {
+            if (not(locale_language_name(locale_get_language()) == "chinese")) {
                 // No colon after the zone title in chinese text
 
                 fmt.pop_back();

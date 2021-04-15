@@ -81,9 +81,10 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
                 FontConfiguration font_conf;
                 font_conf.double_size_ = bigfont;
 
-                text_[0].emplace(pfrm,
-                                 OverlayCoord{1, u8(s_tiles.y - (bigfont ? 3 : 2))},
-                                 font_conf);
+                text_[0].emplace(
+                    pfrm,
+                    OverlayCoord{1, u8(s_tiles.y - (bigfont ? 3 : 2))},
+                    font_conf);
 
                 text_[0]->append(
                     locale_string(pfrm, LocaleString::waypoint_text)->c_str());
@@ -102,15 +103,15 @@ StatePtr NewLevelState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             const auto max_j =
                 std::max(((int)utf8::len(
-                     locale_string(pfrm, zone.title_line_2)->c_str()) *
-                 (bigfont ? 2 : 1)) /
-                    2 +
-                         1,
+                              locale_string(pfrm, zone.title_line_2)->c_str()) *
+                          (bigfont ? 2 : 1)) /
+                                 2 +
+                             1,
                          ((int)utf8::len(
-                     locale_string(pfrm, zone.title_line_1)->c_str()) *
-                 (bigfont ? 2 : 1)) /
-                    2 +
-                1);
+                              locale_string(pfrm, zone.title_line_1)->c_str()) *
+                          (bigfont ? 2 : 1)) /
+                                 2 +
+                             1);
             const auto max_i = max_j * 8;
 
             const int i = ease_out(timer_, 0, max_i, seconds(1));

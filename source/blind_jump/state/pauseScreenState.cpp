@@ -9,9 +9,7 @@ void PauseScreenState::draw_cursor_image(Platform& pfrm,
     const bool bigfont = locale_requires_doublesize_font();
 
     const auto pos = target->coord();
-    pfrm.set_tile(Layer::overlay, pos.x - 2,
-                  pos.y + (bigfont ? 1 : 0),
-                  tile1);
+    pfrm.set_tile(Layer::overlay, pos.x - 2, pos.y + (bigfont ? 1 : 0), tile1);
     pfrm.set_tile(Layer::overlay,
                   pos.x + (target->len() * (bigfont ? 2 : 1)) + 1,
                   pos.y + (bigfont ? 1 : 0),

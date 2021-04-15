@@ -1,5 +1,5 @@
-#include "state_impl.hpp"
 #include "script/lisp.hpp"
+#include "state_impl.hpp"
 
 
 void LanguageSelectionState::enter(Platform& pfrm,
@@ -15,33 +15,30 @@ void LanguageSelectionState::enter(Platform& pfrm,
     cursor.y = 3;
 
     const auto colors =
-        Text::OptColors{{custom_color(0x193a77),
-            custom_color(0xffffff)}};
+        Text::OptColors{{custom_color(0x193a77), custom_color(0xffffff)}};
 
 
     for (int i = 1; i < lang_count; ++i) {
         auto lang = lisp::get_list(languages, i);
 
         const auto double_size = lang->expect<lisp::Cons>()
-            .cdr()
-            ->expect<lisp::Cons>()
-            .car()
-            ->expect<lisp::Integer>()
-            .value_ == 2;
+                                     .cdr()
+                                     ->expect<lisp::Cons>()
+                                     .car()
+                                     ->expect<lisp::Integer>()
+                                     .value_ == 2;
 
         auto lang_name = locale_localized_language_name(pfrm, i);
 
-        cursor.x = centered_text_margins(pfrm, utf8::len(lang_name->c_str()) * (double_size ? 2 : 1));
+        cursor.x = centered_text_margins(
+            pfrm, utf8::len(lang_name->c_str()) * (double_size ? 2 : 1));
 
         FontConfiguration font_conf;
         font_conf.double_size_ = double_size;
 
-        languages_.emplace_back(pfrm,
-                                cursor,
-                                font_conf);
+        languages_.emplace_back(pfrm, cursor, font_conf);
 
-        languages_.back().assign(lang_name->c_str(),
-                                 colors);
+        languages_.back().assign(lang_name->c_str(), colors);
 
         if (double_size) {
             cursor.y += 3;
@@ -49,13 +46,10 @@ void LanguageSelectionState::enter(Platform& pfrm,
             cursor.y += 2;
         }
     }
-
 }
 
 
-void LanguageSelectionState::exit(Platform& pfrm,
-                                  Game& game,
-                                  State& next_state)
+void LanguageSelectionState::exit(Platform& pfrm, Game& game, State& next_state)
 {
     languages_.clear();
 
@@ -63,17 +57,12 @@ void LanguageSelectionState::exit(Platform& pfrm,
 }
 
 
-void draw_cursor_image(Platform& pfrm,
-                       Text* target,
-                       int tile1,
-                       int tile2)
+void draw_cursor_image(Platform& pfrm, Text* target, int tile1, int tile2)
 {
     const bool bigfont = target->config().double_size_;
 
     const auto pos = target->coord();
-    pfrm.set_tile(Layer::overlay, pos.x - 2,
-                  pos.y + (bigfont ? 1 : 0),
-                  tile1);
+    pfrm.set_tile(Layer::overlay, pos.x - 2, pos.y + (bigfont ? 1 : 0), tile1);
 
     pfrm.set_tile(Layer::overlay,
                   pos.x + (target->len() * (bigfont ? 2 : 1)) + 1,
@@ -82,9 +71,8 @@ void draw_cursor_image(Platform& pfrm,
 }
 
 
-StatePtr LanguageSelectionState::update(Platform& pfrm,
-                                        Game& game,
-                                        Microseconds delta)
+StatePtr
+LanguageSelectionState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     auto [left, right] = [&]() -> Vec2<int> {
         switch (anim_index_) {
