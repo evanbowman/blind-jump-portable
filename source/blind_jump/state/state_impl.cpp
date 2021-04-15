@@ -2,6 +2,7 @@
 #include "bitvector.hpp"
 #include "globals.hpp"
 #include "number/random.hpp"
+#include "script/lisp.hpp"
 
 
 void State::enter(Platform&, Game&, State&)
@@ -712,7 +713,8 @@ StatePtr State::initial(Platform& pfrm, Game& game)
 {
     pfrm.keyboard().poll();
 
-    if (game.persistent_data().settings_.initial_lang_selected_ and
+    if (not (lisp::length(lisp::get_var("languages")) == 1) and
+        game.persistent_data().settings_.initial_lang_selected_ and
         not pfrm.keyboard().pressed<Key::select>()) {
         return state_pool().create<TitleScreenState>();
     } else {
