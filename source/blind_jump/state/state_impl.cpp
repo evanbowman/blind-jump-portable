@@ -713,9 +713,9 @@ StatePtr State::initial(Platform& pfrm, Game& game)
 {
     pfrm.keyboard().poll();
 
-    if (not (lisp::length(lisp::get_var("languages")) == 1) and
-        game.persistent_data().settings_.initial_lang_selected_ and
-        not pfrm.keyboard().pressed<Key::select>()) {
+    if (not (lisp::length(lisp::get_var("languages")) == 1) or
+        (game.persistent_data().settings_.initial_lang_selected_ and
+         not pfrm.keyboard().pressed<Key::select>())) {
         return state_pool().create<TitleScreenState>();
     } else {
         return state_pool().create<LanguageSelectionState>();
