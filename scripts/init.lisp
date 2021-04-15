@@ -6,8 +6,9 @@
 
 
 (set 'languages
-     ;; We don't support chinese text on the PSP yet.
-     (if (not (equal (platform) 'SonyPSP))
+     ;; We don't support chinese text on the Desktop or PSP yet.
+     (if (all-true (not (equal (platform) 'SonyPSP))
+                   (not (equal (platform) 'Desktop)))
          '(null
            (english 1) ;; (language-name preferred-font-size)
            (chinese 2))
