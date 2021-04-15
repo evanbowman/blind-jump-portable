@@ -149,7 +149,7 @@ AB按钮反转:
 这里可以回血!
 复活你的同伴?
 欢迎光临本店!
-"对那些在灾难中死去的人纪念。这个地区的传送点被机器人占领,并被封锁。日期——2081年3月5日"
+ "对那些在灾难中死去的人纪念。这个地区的传送点被机器人占领,并被封锁。日期——2081年3月5日"
 啊,那是100年前的事了..
 你的飞船...
 [2.11.2081] 我们最近一直遇到了奇怪的电波,但老板向我保证,从今以后都不会出再问题了.自从上次通讯中断后,机器人就一直在出毛病,我认为下次他们会暴动的...
@@ -158,3 +158,11 @@ AB按钮反转:
  传送门的电波现在基本是恒定的,我们已经失去了对这里的控制。我把消息传回地球,不知道他们多久才会收到,来处理这些破事... 不过,他们自己似乎也在处理的机器人暴动,所以我不确定他们多久才会派士兵到来.不过就在刚刚,我发明了一种信号干扰装置,它似乎能使机器暂时免受电波的影响...
 新的游戏
 继续开始
+
+EXTRASPACE_EXTRASPACE_EXTRASPACE_EXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACE
+I put all of these extra bytes at the bottom of the file, in case someone needs
+to edit the text by hot-patching the rom. If one needed to add a chinese word to
+one of the strings above, and the engine already knew how to render that word, a
+number of bytes could be removed from this extra padding, equal to the number of
+bytes in the utf-8 codepoint. Then, the codepoint could be added to one of the
+existing strings above. Kind of a delicate operation...
