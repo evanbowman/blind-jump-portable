@@ -66,13 +66,25 @@ void NewLevelIdleState::receive(const net_event::NewLevelSyncSeed& sync_seed,
 
 void NewLevelIdleState::display_text(Platform& pfrm, LocaleString ls)
 {
+    const bool bigfont = locale_requires_doublesize_font();
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
     const auto str = locale_string(pfrm, ls);
 
-    const auto margin = centered_text_margins(pfrm, utf8::len(str->c_str()));
+    auto margin = centered_text_margins(pfrm, utf8::len(str->c_str()));
+
+    if (bigfont) {
+        margin -= utf8::len(str->c_str()) / 2;
+    }
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    text_.emplace(pfrm, OverlayCoord{(u8)margin, (u8)(screen_tiles.y / 2 - 1)});
+    text_.emplace(pfrm,
+                  OverlayCoord{(u8)margin,
+                               (u8)(screen_tiles.y / 2 - (bigfont ? 2 : 1))},
+                  font_conf);
 
     text_->assign(str->c_str());
 }
