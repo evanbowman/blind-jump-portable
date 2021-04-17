@@ -87,7 +87,8 @@ void QuickChatState::update_text(Platform& pfrm, Game& game)
 
     auto str = locale_string(pfrm, chat_messages[msg_index_]);
 
-    text_.emplace(pfrm, OverlayCoord{2, u8(st.y - (bigfont ? 2 : 1))}, font_conf);
+    text_.emplace(
+        pfrm, OverlayCoord{2, u8(st.y - (bigfont ? 2 : 1))}, font_conf);
     text_->assign(": ");
     text_->append(str->c_str());
 

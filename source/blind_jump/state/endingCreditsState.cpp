@@ -167,20 +167,31 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                         lines_.clear();
                         pfrm.set_overlay_origin(0, 1);
 
-                        auto str = locale_string(pfrm, LocaleString::the_end_str);
+                        auto str =
+                            locale_string(pfrm, LocaleString::the_end_str);
 
                         const auto len = utf8::len(str->c_str());
 
                         const bool bigfont = locale_requires_doublesize_font();
+
+                        FontConfiguration font_conf;
+                        font_conf.double_size_ = bigfont;
+
                         if (bigfont) {
-                            const u8 left_margin = (screen_tiles.x - len) / 2;
-                            lines_.emplace_back(pfrm,
-                                                OverlayCoord{left_margin, u8(screen_tiles.y + 1)});
+                            const u8 left_margin =
+                                (screen_tiles.x - len * 2) / 2;
+                            lines_.emplace_back(
+                                pfrm,
+                                OverlayCoord{left_margin,
+                                             u8(screen_tiles.y + 1)},
+                                font_conf);
                         } else {
                             const u8 left_margin = (screen_tiles.x - len) / 2;
                             lines_.emplace_back(
-                                                pfrm,
-                                                OverlayCoord{left_margin, u8(screen_tiles.y + 1)});
+                                pfrm,
+                                OverlayCoord{left_margin,
+                                             u8(screen_tiles.y + 1)},
+                                font_conf);
                         }
 
                         lines_.back().assign(str->c_str());
@@ -206,14 +217,36 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
             if (scroll_ == 90) {
                 display_mode_ = DisplayMode::draw_image;
                 auto screen_tiles = calc_screen_tiles(pfrm);
-                const char* str = "THE END";
-                const auto len = utf8::len(str);
-                const u8 left_margin = (screen_tiles.x - len) / 2;
-                for (u32 i = 0; i < len; ++i) {
-                    pfrm.set_tile(Layer::overlay, left_margin + i, 9, 425);
+
+                auto str = locale_string(pfrm, LocaleString::the_end_str);
+
+                const auto len = utf8::len(str->c_str());
+
+                const bool bigfont = locale_requires_doublesize_font();
+
+                FontConfiguration font_conf;
+                font_conf.double_size_ = bigfont;
+
+                if (bigfont) {
+
+                    const u8 left_margin = (screen_tiles.x - len * 2) / 2;
+                    for (u32 i = 0; i < len * 2; ++i) {
+                        pfrm.set_tile(Layer::overlay, left_margin + i, 9, 425);
+                    }
+                    lines_.emplace_back(
+                        pfrm, OverlayCoord{left_margin, 10}, font_conf);
+
+                } else {
+
+                    const u8 left_margin = (screen_tiles.x - len) / 2;
+                    for (u32 i = 0; i < len; ++i) {
+                        pfrm.set_tile(Layer::overlay, left_margin + i, 9, 425);
+                    }
+                    lines_.emplace_back(
+                        pfrm, OverlayCoord{left_margin, 10}, font_conf);
                 }
-                lines_.emplace_back(pfrm, OverlayCoord{left_margin, 10});
-                lines_.back().assign(str);
+
+                lines_.back().assign(str->c_str());
             }
         }
         break;

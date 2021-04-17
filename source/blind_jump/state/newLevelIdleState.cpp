@@ -81,10 +81,10 @@ void NewLevelIdleState::display_text(Platform& pfrm, LocaleString ls)
 
     auto screen_tiles = calc_screen_tiles(pfrm);
 
-    text_.emplace(pfrm,
-                  OverlayCoord{(u8)margin,
-                               (u8)(screen_tiles.y / 2 - (bigfont ? 2 : 1))},
-                  font_conf);
+    text_.emplace(
+        pfrm,
+        OverlayCoord{(u8)margin, (u8)(screen_tiles.y / 2 - (bigfont ? 2 : 1))},
+        font_conf);
 
     text_->assign(str->c_str());
 }
