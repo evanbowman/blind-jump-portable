@@ -1,5 +1,6 @@
 #include "itemChest.hpp"
 #include "blind_jump/game.hpp"
+#include "localization.hpp"
 #include "platform/platform.hpp"
 #include "state.hpp"
 #include "string.hpp"
@@ -26,6 +27,9 @@ ItemChest::ItemChest(const Vec2<Float>& pos, Item::Type item, bool locked)
     shadow_.set_origin({8, 16});
     shadow_.set_position({pos.x, pos.y + 9});
 }
+
+
+const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer);
 
 
 void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
@@ -65,21 +69,34 @@ void ItemChest::update(Platform& pfrm, Game& game, Microseconds dt)
                             locale_string(pfrm, LocaleString::locked)->c_str();
 
                         std::array<char, 40> buffer;
-                        locale_num2str(remaining, buffer.data(), 10);
 
-                        str += buffer.data();
-                        str += locale_string(
-                                   pfrm,
-                                   [&] {
-                                       if (remaining == 1) {
-                                           return LocaleString::
-                                               enemies_remaining_singular;
-                                       } else {
-                                           return LocaleString::
-                                               enemies_remaining_plural;
-                                       }
-                                   }())
-                                   ->c_str();
+                        if (locale_language_name(locale_get_language()) ==
+                            "chinese") {
+
+                            str += locale_repr_smallnum(remaining, buffer);
+                            str += "个"; // The translator told me that I need
+                                         // to put this here.
+
+                            str += locale_string(
+                                       pfrm,
+                                       LocaleString::enemies_remaining_singular)
+                                       ->c_str();
+                        } else {
+                            str += locale_repr_smallnum(remaining, buffer);
+                            str += locale_string(
+                                       pfrm,
+                                       [&] {
+                                           if (remaining == 1) {
+                                               return LocaleString::
+                                                   enemies_remaining_singular;
+                                           } else {
+                                               return LocaleString::
+                                                   enemies_remaining_plural;
+                                           }
+                                       }())
+                                       ->c_str();
+                        }
+
 
                         push_notification(pfrm, game.state(), str);
 

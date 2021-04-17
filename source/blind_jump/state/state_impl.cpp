@@ -2,6 +2,7 @@
 #include "bitvector.hpp"
 #include "globals.hpp"
 #include "number/random.hpp"
+#include "script/lisp.hpp"
 
 
 void State::enter(Platform&, Game&, State&)
@@ -403,7 +404,14 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      LocaleString::empty_inventory_str},
     {STANDARD_ITEM_HANDLER(old_poster_1),
      [](Platform&, Game&) {
-         static const auto str = "old_poster_flattened";
+         static const auto english_str = "old_poster_flattened";
+         const char* str = english_str;
+
+         if (locale_language_name(locale_get_language()) == "chinese") {
+             static const auto chinese_str = "old_poster_chinese_flattened";
+             str = chinese_str;
+         }
+
          return state_pool().create<ImageViewState>(str,
                                                     ColorConstant::steel_blue);
      },
@@ -411,9 +419,10 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
     {Item::Type::postal_advert,
      item_icon(Item::Type::old_poster_1),
      [](Platform&, Game&) {
-         static const auto str = "postal_advert_flattened";
-         return state_pool().create<ImageViewState>(str,
-                                                    ColorConstant::steel_blue);
+         // static const auto str = "postal_advert_flattened";
+         // return state_pool().create<ImageViewState>(str,
+         //                                            ColorConstant::steel_blue);
+         return null_state();
      },
      LocaleString::postal_advert_title},
     {Item::Type::long_jump_z2,
@@ -513,7 +522,13 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(seed_packet),
      [](Platform&, Game&) {
-         static const auto str = "seed_packet_flattened";
+         static const auto english_str = "seed_packet_flattened";
+         const char* str = english_str;
+
+         if (locale_language_name(locale_get_language()) == "chinese") {
+             static const auto chinese_str = "seed_packet_chinese_flattened";
+             str = chinese_str;
+         }
          return state_pool().create<ImageViewState>(str,
                                                     ColorConstant::steel_blue);
      },
@@ -605,7 +620,8 @@ bool draw_minimap(Platform& pfrm,
         if (y < y_skip_top or y >= TileMap::height - y_skip_bot) {
             return;
         }
-        const auto tile = pfrm.get_tile(Layer::overlay, x + x_start, y + y_start);
+        const auto tile =
+            pfrm.get_tile(Layer::overlay, x + x_start, y + y_start);
         if (dodge and (tile == 133 or tile == 132)) {
             // ...
         } else {
@@ -695,13 +711,16 @@ bool draw_minimap(Platform& pfrm,
 
 StatePtr State::initial(Platform& pfrm, Game& game)
 {
-    // if (str_cmp("NintendoDS", pfrm.device_name().c_str()) == 0 or
-    //     game.persistent_data().displayed_health_warning_) {
+    pfrm.keyboard().poll();
 
-    return state_pool().create<TitleScreenState>();
-    // }
-
-    // game.persistent_data().displayed_health_warning_ = true;
-
-    // return state_pool().create<HealthAndSafetyWarningState>();
+    if (game.persistent_data().settings_.initial_lang_selected_ and
+        not pfrm.keyboard().pressed<Key::select>()) {
+        return state_pool().create<TitleScreenState>();
+    } else {
+        if (not (lisp::length(lisp::get_var("languages")) == 1)) {
+            return state_pool().create<LanguageSelectionState>();
+        } else {
+            return state_pool().create<TitleScreenState>();
+        }
+    }
 }

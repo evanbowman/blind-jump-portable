@@ -1,0 +1,168 @@
+
+
+制作
+: verkkarscd
+星际传送者
+你
+敌人
+传送点
+物品
+商店
+传送点
+章节一
+抵达
+章节二
+深处
+章节三
+荒废之处
+章节四
+月光之下
+空白
+曾经的海报
+工人笔记一
+工人笔记二
+工程师笔记一
+工程师笔记二
+手枪
+子弹连发器
+电磁放慢系统
+地图系统
+爆炸弹
+电磁干扰器
+种子袋
+导航册
+桔子
+桔子籽
+
+应急跳转装置 等级二
+应急跳转装置 等级三
+应急跳转装置 等级四
+应急跳转装置 回家
+哦,这个玩意?我不知道是什么.
+手枪的增压器,注意,近距离杀伤力巨大。
+我不确定这是什么,看起来像一个旧怀表. 非常不错的金属制品,似乎价值不菲....
+看起来像一个检测设备。地图系统会在你行走时生成地图,并为你指明最近的传送门的方向.
+小心这个子弹!这种子弹非常不稳定!!!
+一个奇怪的电磁发射器,可以尝试在一些机器附近使用。
+这是桔子!相传建造这些传送点的工人曾为坏血病发愁...
+传送点跳转装置,可以当做一种保险,可以跳转到下一传送点.
+仅能使用一次
+上锁,需要击杀
+让开,队友挡道了!
+敌人
+ 需要击杀敌人
+什么都没有
+得到了 "
+"
+库存已满
+物品
+本传送点已被解放
+分数 
+高分 
+最高得分
+时间
+物品收集程度 % 
+
+物品收集程度 %
+层数
+.
+返回
+联机
+设置
+控制台
+退出并保存
+咱们过会见...
+选择目标:
+不认路?没问题!传送门通过许多其他的传送点来计算到达目的地的路径。数以万计传送点被建造在环绕地球和月球的轨道上。由于传送点在轨道运行过程中不断地运动,路径不断地重新计算到达目的地的路径。你永远不会两次访问同一个传送点!由于传送门的不可预测性,传送门有时被称为"冒险者的大门"。
+显示信息: 
+语言: 
+对比度: 
+夜间模式: 
+AB按钮反转: 
+不使用
+难度选择: 
+简单
+普通
+困难
+活下去
+弄清自己几斤几两!
+躲避键: 
+分开
+合并
+日志报告: 
+显示计时钟: 
+视角设置: 
+固定
+视角 [低]
+视角 [高]
+启动震动: 
+确定
+不
+菜单已禁用
+ 米
+启动:
+队友已连接!
+联机失败!
+队友死了!
+队友生命变为了
+等待同步...
+正在同步游戏...
+ fps
+ tx
+ rx
+ tl
+ rl
+ sbr
+ lnsat
+需要:地图系统
+流浪者 被打败了
+守卫者 被摧毁
+打败了 双狼兄弟
+受干扰的机器已修复!
+传送门被摧毁
+传送点的队友在等待...
+测试
+信息
+警告
+错误
+检测到危险!
+购买物品
+出售物品
+购买, 价格: 
+出售, 价格: 
+物品信息
+流浪者商店
+购买
+卖出
+需要更新!
+一大波敌人来袭!
+队友需要更新!
+总体成绩
+队友使用了电磁放慢系统!
+中文
+安全注意事项:
+该软件具有杀马特配色和光污染,不适合患有光敏性癫痫的玩家。
+聊天: 
+同志你好!
+有桔子吗?
+我们出发!
+这里可以回血!
+复活你的同伴?
+欢迎光临本店!
+ "对那些在灾难中死去的人纪念。这个地区的传送点被机器人占领,并被封锁。日期——2081年3月5日"
+啊,那是100年前的事了..
+你的飞船...
+[2.11.2081] 我们最近一直遇到了奇怪的电波,但老板向我保证,从今以后都不会出再问题了.自从上次通讯中断后,机器人就一直在出毛病,我认为下次他们会暴动的...
+[3.7.2081]  当机器人向我们开火时,我很幸运在一些较近的传送点...但并非搜有人都那么幸运,为了躲避机器人,我从传送门逃了出来,但越走越远,灾难似乎越严重。倒霉的是,这里的全都是电视台的记者挡着...
+从传送门发出的电波似乎对机器有奇怪的影响,特别是空间站上的机器人。我们最近观察到一些收到干扰的机器会有暴力反应——这一切都开始失控了。在最后一次电波激增的时候,我透过降落处的遮掩瞥见了一个披着斗篷的人影。我们一直在想...可能...在这空间里,我们,也许,永远不应该打开这些传送门而看见这些的东西...
+ 传送门的电波现在基本是恒定的,我们已经失去了对这里的控制。我把消息传回地球,不知道他们多久才会收到,来处理这些破事... 不过,他们自己似乎也在处理的机器人暴动,所以我不确定他们多久才会派士兵到来.不过就在刚刚,我发明了一种信号干扰装置,它似乎能使机器暂时免受电波的影响...
+新的游戏
+继续开始
+
+EXTRASPACE_EXTRASPACE_EXTRASPACE_EXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACEEXTRASPACE_EXTRASPACE_EXTRASPACE
+I put all of these extra bytes at the bottom of the file, in case someone needs
+to edit the text by hot-patching the rom. If one needed to add a chinese word to
+one of the strings above, and the engine already knew how to render that word, a
+number of bytes could be removed from this extra padding, equal to the number of
+bytes in the utf-8 codepoint. Then, the codepoint could be added to one of the
+existing strings above. Kind of a delicate operation...

@@ -2796,7 +2796,7 @@ Platform::~Platform()
 
 
 struct GlyphMapping {
-    utf8::Codepoint character_;
+    u16 mapper_offset_;
 
     // -1 represents unassigned. Mapping a tile into memory sets the reference
     //  count to zero. When a call to Platform::set_tile reduces the reference
@@ -2814,11 +2814,35 @@ struct GlyphMapping {
 static constexpr const auto glyph_start_offset = 1;
 static constexpr const auto glyph_mapping_count = 78;
 
+
+static constexpr const auto glyph_expanded_count = 160;
+
+
+static int glyph_table_size = glyph_mapping_count;
+
+
+static const int font_color_index_tile = 81;
+
+
 struct GlyphTable {
-    GlyphMapping mappings_[glyph_mapping_count];
+    GlyphMapping mappings_[glyph_mapping_count + glyph_expanded_count];
 };
 
 static std::optional<DynamicMemory<GlyphTable>> glyph_table;
+
+
+void Platform::enable_expanded_glyph_mode(bool enabled)
+{
+    for (auto& gm : ::glyph_table->obj_->mappings_) {
+        gm.reference_count_ = -1;
+    }
+
+    if (enabled) {
+        glyph_table_size = glyph_mapping_count + glyph_expanded_count;
+    } else {
+        glyph_table_size = glyph_mapping_count;
+    }
+}
 
 
 static void audio_start()
@@ -2971,7 +2995,6 @@ Platform::Platform()
     system_clock_.init(*this);
 
 
-
     irqInit(); // NOTE: Do not move these lines with respect to
                // unlock_gameboy_player(), or you could break the rumble
                // unlocking.
@@ -3059,6 +3082,50 @@ void Platform::enable_glyph_mode(bool enabled)
 }
 
 
+static u8* overlay_vram_tile_data(u16 tile_index)
+{
+    return (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
+           ((tile_index)*vram_tile_size());
+}
+
+
+// Clever pirates will ultimately find ways of removing the text, but we can
+// still make things a bit more difficult. At least we can prevent clueless
+// unsophisticated pirates from selling the game.
+//
+// The translator for the chinese edition of the game told me that unless there
+// is some in-game text indicating that the game is freeware and not meant for
+// commercial use, it will be pirated and sold. I'm not too concerned about
+// people selling the game actually, it doesn't bother me, but I want to protect
+// ordinary folks who may be tricked into buying a free game.
+[[maybe_unused]] static int chinese_noncommercial_text_checksum()
+{
+    int checksum = 0;
+
+    int last = 0;
+
+    for (int i = 368; i < 373; ++i) {
+        u8* t = overlay_vram_tile_data(i);
+
+        for (int j = 0; j < vram_tile_size(); ++j) {
+            checksum += t[j];
+        }
+        int result = checksum ^ last;
+
+        last = checksum;
+
+        checksum = result;
+    }
+
+    return checksum;
+}
+
+
+static volatile int chinese_checksum_1 = 900;
+static volatile int chinese_checksum_2 = 30;
+static volatile int chinese_checksum_3 = 8;
+
+
 void Platform::load_overlay_texture(const char* name)
 {
     for (auto& info : overlay_textures) {
@@ -3092,10 +3159,20 @@ void Platform::load_overlay_texture(const char* name)
             }
         }
     }
+
+    if (str_cmp(name, "overlay") == 0) {
+        int checksum = chinese_noncommercial_text_checksum();
+
+        if (checksum not_eq
+            chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
+            while (true) {
+            }
+        }
+    }
 }
 
 
-static const TileDesc bad_glyph = 111;
+static const TileDesc bad_glyph = 495;
 
 
 // Rather than doing tons of extra work to keep the palettes
@@ -3105,7 +3182,7 @@ static const TileDesc bad_glyph = 111;
 static u8* font_index_tile()
 {
     return (u8*)&MEM_SCREENBLOCKS[sbb_overlay_texture][0] +
-           ((81) * vram_tile_size());
+           ((font_color_index_tile)*vram_tile_size());
 }
 
 
@@ -3127,31 +3204,47 @@ static FontColorIndices font_color_indices()
 // memory, we've only got 256K to work with, and the table is big enough as it
 // is.
 TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
-                             TextureCpMapper mapper)
+                             const TextureMapping& mapping_info)
 {
     if (not get_gflag(GlobalFlag::glyph_mode)) {
         return bad_glyph;
     }
 
-    for (TileDesc tile = 0; tile < glyph_mapping_count; ++tile) {
+    // const auto mapping_info = mapper(glyph);
+
+    // if (not mapping_info) {
+    //     return bad_glyph;
+    // }
+
+    for (TileDesc tile = 0; tile < glyph_table_size; ++tile) {
         auto& gm = ::glyph_table->obj_->mappings_[tile];
-        if (gm.valid() and gm.character_ == glyph) {
+        if (gm.valid() and gm.mapper_offset_ == mapping_info.offset_) {
             return glyph_start_offset + tile;
         }
     }
 
-    const auto mapping_info = mapper(glyph);
-
-    if (not mapping_info) {
-        return bad_glyph;
-    }
-
     for (auto& info : overlay_textures) {
-        if (str_cmp(mapping_info->texture_name_, info.name_) == 0) {
-            for (TileDesc t = 0; t < glyph_mapping_count; ++t) {
+        if (str_cmp(mapping_info.texture_name_, info.name_) == 0) {
+            for (TileDesc t = 0; t < glyph_table_size; ++t) {
+
+                if (t == font_color_index_tile - 1) {
+                    // When I originally created the text mapping engine, I did
+                    // not expect to need to deal with languages with more than
+                    // 80 distinct font tiles onscreen at a time. So, I thought
+                    // it would be fine to put a metadata tile in index 81. But
+                    // while working on the Chinese localization, I discovered
+                    // that 80 tiles would not be nearly sufficient to display a
+                    // fullscreen block of chinese words. So I needed to build a
+                    // dynamically-expandable glyph table, which, when needed,
+                    // can expand to consume more of the available vram. So, we
+                    // need to skip over this metadata tile, to make sure that
+                    // we don't overwrite it when using a larger glyph array.
+                    continue;
+                }
+
                 auto& gm = ::glyph_table->obj_->mappings_[t];
                 if (not gm.valid()) {
-                    gm.character_ = glyph;
+                    gm.mapper_offset_ = mapping_info.offset_;
                     gm.reference_count_ = 0;
 
                     // 8 x 8 x (4 bitsperpixel / 8 bitsperbyte)
@@ -3176,7 +3269,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
                     u8 buffer[tile_size] = {0};
                     memcpy16(buffer,
                              info.tile_data_ +
-                                 (mapping_info->offset_ * tile_size) /
+                                 ((u32)mapping_info.offset_ * tile_size) /
                                      sizeof(decltype(info.tile_data_)),
                              tile_size / 2);
 
@@ -3218,7 +3311,7 @@ TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
 static bool is_glyph(u16 t)
 {
     return t >= glyph_start_offset and
-           t - glyph_start_offset < glyph_mapping_count;
+           t - glyph_start_offset < glyph_table_size;
 }
 
 
@@ -3267,7 +3360,7 @@ static void set_overlay_tile(Platform& pfrm, u16 x, u16 y, u16 val, int palette)
 
                     if (gm.reference_count_ == 0) {
                         gm.reference_count_ = -1;
-                        gm.character_ = 0;
+                        gm.mapper_offset_ = 0;
                     }
                 } else {
                     error(pfrm,

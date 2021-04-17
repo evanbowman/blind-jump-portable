@@ -6,9 +6,14 @@ void PauseScreenState::draw_cursor_image(Platform& pfrm,
                                          int tile1,
                                          int tile2)
 {
+    const bool bigfont = locale_requires_doublesize_font();
+
     const auto pos = target->coord();
-    pfrm.set_tile(Layer::overlay, pos.x - 2, pos.y, tile1);
-    pfrm.set_tile(Layer::overlay, pos.x + target->len() + 1, pos.y, tile2);
+    pfrm.set_tile(Layer::overlay, pos.x - 2, pos.y + (bigfont ? 1 : 0), tile1);
+    pfrm.set_tile(Layer::overlay,
+                  pos.x + (target->len() * (bigfont ? 2 : 1)) + 1,
+                  pos.y + (bigfont ? 1 : 0),
+                  tile2);
 }
 
 
@@ -30,9 +35,9 @@ void PauseScreenState::draw_cursor(Platform& pfrm)
         switch (anim_index_) {
         default:
         case 0:
-            return {147, 148};
+            return {373, 374};
         case 1:
-            return {149, 150};
+            return {375, 376};
         }
     }();
 
@@ -74,13 +79,26 @@ void PauseScreenState::repaint_text(Platform& pfrm, Game& game)
 
     const u8 y = screen_tiles.y / 2;
 
+
+    const bool bigfont = locale_requires_doublesize_font();
+
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
+
     for (int i = 0; i < (int)strs_.size(); ++i) {
-        const auto len = utf8::len(locale_string(pfrm, strs_[i])->c_str());
+        const auto len = utf8::len(locale_string(pfrm, strs_[i])->c_str()) *
+                         (bigfont ? 2 : 1);
 
         const u8 text_x_loc = (screen_tiles.x - len) / 2;
 
         texts_.emplace_back(
-            pfrm, OverlayCoord{text_x_loc, u8(y - strs_.size() + i * 2)});
+            pfrm,
+            OverlayCoord{text_x_loc,
+                         u8(y - strs_.size() + i * (bigfont ? 3 : 2) +
+                            (bigfont ? -1 : 0))},
+            font_conf);
 
         if (strs_[i] == LocaleString::menu_connect_peer) {
             texts_.back().assign(locale_string(pfrm, strs_[i])->c_str(),

@@ -5,6 +5,7 @@ enum class LocaleString {
     empty,
     intro_text_1,
     intro_text_2,
+    translator_name,
     game_title,
     map_legend_1,
     map_legend_2,
@@ -102,7 +103,7 @@ enum class LocaleString {
     yes,
     no,
     menu_disabled,
-    distance_units_feet,
+    distance_units,
     launch,
     peer_connected,
     peer_connection_failed,
@@ -159,5 +160,7 @@ enum class LocaleString {
     worker_notebook_2_str,
     engineer_notebook_1_str,
     engineer_notebook_2_str,
+    newgame_str,
+    continue_str,
     count
 };

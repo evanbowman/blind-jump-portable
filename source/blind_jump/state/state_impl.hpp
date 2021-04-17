@@ -71,6 +71,7 @@ public:
         flash_animate,
         wait,
         display,
+        exit_row2,
         exit,
         hidden
     } notification_status = NotificationStatus::hidden;
@@ -704,7 +705,9 @@ private:
     void show_version(Platform& pfrm, Game& game);
 
     LocalizedText str_;
+    std::optional<Text> creator_;
     std::optional<Text> text_;
+    std::optional<Text> translator_;
     std::optional<Text> version_;
     Microseconds timer_ = 0;
 };
@@ -975,6 +978,11 @@ private:
                       Microseconds delta,
                       bool sfx = true);
 
+    bool advance_asian_text(Platform& pfrm,
+                            Game& game,
+                            Microseconds delta,
+                            bool sfx);
+
     void init_text(Platform& pfrm, LocaleString str);
 
     enum class DisplayMode {
@@ -987,6 +995,11 @@ private:
         animate_out,
         clear,
     } display_mode_ = DisplayMode::animate_in;
+
+    // NOTE: We needed to add this code when we added support for
+    // Chinese. Chinese is not space-delimited like english, so we need
+    // completely different logic to print glyphs.
+    bool asian_language_ = false;
 };
 
 
@@ -1276,19 +1289,18 @@ private:
         int cursor_end_ = 0;
     };
 
-    static constexpr const int line_count_ = 10;
+    static constexpr const int line_count_ = 9;
 
     std::array<LineInfo, line_count_> lines_;
 
     static constexpr const LocaleString strings[line_count_] = {
+        LocaleString::settings_language,
         LocaleString::settings_swap_action_keys,
         LocaleString::settings_strafe_key,
         LocaleString::settings_camera,
         LocaleString::settings_difficulty,
-        LocaleString::settings_language,
         LocaleString::settings_contrast,
         LocaleString::settings_night_mode,
-        LocaleString::settings_show_stats,
         LocaleString::settings_speedrun_clock,
         LocaleString::settings_rumble_enabled};
 
@@ -1296,6 +1308,8 @@ private:
     int anim_index_ = 0;
     Microseconds anim_timer_ = 0;
     Float y_offset_ = 0;
+
+    bool exit_ = false;
 };
 
 
@@ -1513,6 +1527,22 @@ private:
 };
 
 
+class LanguageSelectionState : public State {
+public:
+    void enter(Platform& pfrm, Game& game, State& prev_state) override;
+    void exit(Platform& pfrm, Game& game, State& next_state) override;
+
+    StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
+
+private:
+    Buffer<Text, 10> languages_;
+    int cursor_loc_ = 0;
+    Microseconds cursor_anim_timer_;
+    int anim_index_ = 0;
+    Float y_offset_ = 0;
+};
+
+
 void state_deleter(State* s);
 
 
@@ -1524,7 +1554,7 @@ public:
                       "State missing from state pool");
 
 #ifdef __GBA__
-        static_assert(std::max({sizeof(States)...}) < 720,
+        static_assert(std::max({sizeof(States)...}) < 780,
                       "Note: this is merely a warning. You are welcome to "
                       "increase the overall size of the state pool, just be "
                       "careful, as the state cells are already quite large, in"
@@ -1588,7 +1618,8 @@ using StatePoolInst = StatePool<ActiveState,
                                 SignalJammerSelectorState,
                                 HealthAndSafetyWarningState,
                                 MultiplayerReviveState,
-                                MultiplayerReviveWaitingState>;
+                                MultiplayerReviveWaitingState,
+                                LanguageSelectionState>;
 
 
 StatePoolInst& state_pool();

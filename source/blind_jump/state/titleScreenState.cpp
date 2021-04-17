@@ -18,14 +18,18 @@ static void swap_background(Platform& pfrm, const char* image)
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
-    draw_image(pfrm, 1, 0, 3, 30, 14, Layer::background);
+    const bool bigfont = locale_requires_doublesize_font();
+
+    int start_y = bigfont ? 2 : 3;
+
+    draw_image(pfrm, 1, 0, start_y, 30, 14, Layer::background);
 
     for (int i = 0; i < screen_tiles.x; ++i) {
-        pfrm.set_tile(Layer::background, i, 2, 9);
+        pfrm.set_tile(Layer::background, i, start_y - 1, 9);
     }
 
     for (int i = 11; i < 23; ++i) {
-        pfrm.set_tile(Layer::background, i, 3, 9);
+        pfrm.set_tile(Layer::background, i, start_y, 9);
     }
 
     for (int x = 0; x < TileMap::width; ++x) {
@@ -59,13 +63,22 @@ void TitleScreenState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
+    const bool bigfont = locale_requires_doublesize_font();
+
     for (int i = 0; i < screen_tiles.x; ++i) {
         pfrm.set_tile(Layer::overlay, i, 0, 112);
-        pfrm.set_tile(Layer::overlay, i, 1, 112);
+
+        if (not bigfont) {
+            pfrm.set_tile(Layer::overlay, i, 1, 112);
+        }
 
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 1, 112);
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 2, 112);
         pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
+
+        if (bigfont) {
+            pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 4, 112);
+        }
     }
 
     pfrm.screen().fade(1.f, fade_in_color(game));
@@ -89,9 +102,21 @@ static void
 draw_title(Platform& pfrm, Game& game, int sel, std::optional<Text>& title)
 {
     auto str = locale_string(pfrm, LocaleString::game_title);
-    const auto margin = centered_text_margins(pfrm, utf8::len(str->c_str()));
 
-    title.emplace(pfrm, OverlayCoord{u8(margin), 3});
+    const bool bigfont = locale_requires_doublesize_font();
+
+    auto margin = centered_text_margins(pfrm, utf8::len(str->c_str()));
+
+    if (bigfont) {
+        margin -= utf8::len(str->c_str()) / 2;
+    }
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
+    const u8 title_y = bigfont ? 2 : 3;
+
+    title.emplace(pfrm, OverlayCoord{u8(margin), title_y}, font_conf);
 
     const auto text_bg_color = [&] {
         if (game.level() == 0 or sel == 1) {
@@ -124,16 +149,18 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             auto& text = *options_[cursor_index_];
             auto get_coords = [&](Text& text) -> Vec2<u8> {
                 const u8 left_x = text.coord().x - 2;
-                const u8 right_x = text.coord().x + text.len() + 1;
+                const bool bigfont = locale_requires_doublesize_font();
+                const auto width = bigfont ? text.len() * 2 : text.len();
+                const u8 right_x = text.coord().x + width + 1;
                 return {left_x, right_x};
             };
             const auto c1 = get_coords(text);
-            if (pfrm.get_tile(Layer::overlay, c1.x, st.y - 2) == 149) {
-                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 147);
-                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 148);
+            if (pfrm.get_tile(Layer::overlay, c1.x, st.y - 2) == 375) {
+                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 373);
+                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 374);
             } else {
-                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 149);
-                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 150);
+                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 375);
+                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 376);
             }
 
             auto erase_coords = get_coords(*options_[!cursor_index_]);
@@ -151,6 +178,8 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         const auto screen_tiles = calc_screen_tiles(pfrm);
 
+        const bool bigfont = locale_requires_doublesize_font();
+
         for (int i = 0; i < screen_tiles.x; ++i) {
             pfrm.set_tile(Layer::overlay, i, 0, 112);
             pfrm.set_tile(Layer::overlay, i, 1, 112);
@@ -158,6 +187,10 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 1, 112);
             pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 2, 112);
             pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 3, 112);
+
+            if (bigfont) {
+                pfrm.set_tile(Layer::overlay, i, screen_tiles.y - 4, 112);
+            }
         }
     };
 
@@ -199,9 +232,15 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 timer_ = 0;
                 display_mode_ = DisplayMode::image_animate_out;
                 pfrm.speaker().play_sound("scroll", 1);
+
+                const bool bigfont = locale_requires_doublesize_font();
                 const auto st = calc_screen_tiles(pfrm);
-                sidebar_.emplace(
-                    pfrm, u8(st.x), u8(st.y - 5), OverlayCoord{u8(st.x), 2});
+                const u8 start_y = 2 - (bigfont ? 1 : 0);
+
+                sidebar_.emplace(pfrm,
+                                 u8(st.x),
+                                 u8(st.y - 5),
+                                 OverlayCoord{u8(st.x), start_y});
             }
         } else if (pfrm.keyboard().down_transition<Key::right>()) {
             if (cursor_index_ < 1) {
@@ -211,9 +250,13 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 timer_ = 0;
                 display_mode_ = DisplayMode::image_animate_out;
                 pfrm.speaker().play_sound("scroll", 1);
+
+                const bool bigfont = locale_requires_doublesize_font();
                 const auto st = calc_screen_tiles(pfrm);
+                const u8 start_y = 2 - (bigfont ? 1 : 0);
+
                 sidebar2_.emplace(
-                    pfrm, u8(st.x), u8(st.y - 5), OverlayCoord{0, 2});
+                    pfrm, u8(st.x), u8(st.y - 5), OverlayCoord{0, start_y});
             }
         } else if (pfrm.keyboard().down_transition<Key::select>()) {
             if (++bossrush_cheat_counter_ == 15) {
@@ -298,19 +341,28 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             draw_title(pfrm, game, cursor_index_, title_);
 
-            const char* opt_1 = "continue";
-            const char* opt_2 = "new game";
+            auto opt_1 = locale_string(pfrm, LocaleString::continue_str);
+            auto opt_2 = locale_string(pfrm, LocaleString::newgame_str);
 
-            const auto len_1 = utf8::len(opt_1);
-            const auto len_2 = utf8::len(opt_2);
+            const bool bigfont = locale_requires_doublesize_font();
+
+
+            const auto len_1 = utf8::len(opt_1->c_str()) * (bigfont ? 2 : 1);
+            const auto len_2 = utf8::len(opt_2->c_str()) * (bigfont ? 2 : 1);
 
             const auto st = calc_screen_tiles(pfrm);
 
             const auto spacing = (st.x - (len_1 + len_2)) / 3;
 
-            options_[0].emplace(pfrm, OverlayCoord{u8(spacing), u8(st.y - 2)});
+            const u8 start_y = bigfont ? st.y - 3 : st.y - 2;
 
-            options_[0]->assign(opt_1, [&]() -> Text::OptColors {
+            FontConfiguration font_conf;
+            font_conf.double_size_ = bigfont;
+
+            options_[0].emplace(
+                pfrm, OverlayCoord{u8(spacing), start_y}, font_conf);
+
+            options_[0]->assign(opt_1->c_str(), [&]() -> Text::OptColors {
                 if (not game.persistent_data().clean_) {
                     return std::nullopt;
                 } else {
@@ -323,10 +375,10 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 cursor_index_ = 1;
             }
 
-            options_[1].emplace(
-                pfrm,
-                opt_2,
-                OverlayCoord{u8(spacing * 2 + len_1), u8(st.y - 2)});
+            options_[1].emplace(pfrm,
+                                opt_2->c_str(),
+                                OverlayCoord{u8(spacing * 2 + len_1), start_y},
+                                font_conf);
 
 
             display_mode_ = DisplayMode::select;

@@ -22,6 +22,9 @@ void MapSystemState::exit(Platform& pfrm, Game& game, State&)
 }
 
 
+const char* locale_repr_smallnum(u8 num, std::array<char, 40>& buffer);
+
+
 StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 {
     MenuState::update(pfrm, game, delta);
@@ -44,7 +47,12 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
         if (draw_minimap(pfrm,
                          game,
                          Float(timer_) / map_enter_duration_,
-                         last_column_)) {
+                         last_column_,
+                         1,
+                         0,
+                         0,
+                         0,
+                         false)) {
             timer_ = 0;
             anim_state_ = AnimState::wp_text;
         }
@@ -57,16 +65,30 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             anim_state_ = AnimState::legend;
 
+            const bool bigfont = locale_requires_doublesize_font();
+
+            FontConfiguration font_conf;
+            font_conf.double_size_ = bigfont;
+
             auto level_str = locale_string(pfrm, LocaleString::waypoint_text);
+
+            const u8 start_y = bigfont ? 0 : 1;
+
+            std::array<char, 40> buffer;
+            const char* level_num_str =
+                locale_repr_smallnum(game.level(), buffer);
 
             level_text_.emplace(
                 pfrm,
-                OverlayCoord{
-                    u8(screen_tiles.x - (1 + utf8::len(level_str->c_str()) +
-                                         integer_text_length(game.level()))),
-                    1});
+                OverlayCoord{u8(screen_tiles.x -
+                                std::min((size_t)12,
+                                         (1 + utf8::len(level_str->c_str()) +
+                                          utf8::len(level_num_str)) *
+                                             (bigfont ? 2 : 1))),
+                             start_y},
+                font_conf);
             level_text_->assign(level_str->c_str());
-            level_text_->append(game.level());
+            level_text_->append(level_num_str);
         }
         break;
 
@@ -76,24 +98,52 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             timer_ = 0;
             anim_state_ = AnimState::path_wait;
 
-            set_tile(TileMap::width + 2, 9, 137, false);  // you
-            set_tile(TileMap::width + 2, 11, 135, false); // enemy
-            set_tile(TileMap::width + 2, 13, 136, false); // transporter
-            set_tile(TileMap::width + 2, 15, 134, false); // item
-            set_tile(TileMap::width + 2, 17, 393, false); // shop
+            // sigh...
+            if (locale_requires_doublesize_font()) {
+                set_tile(TileMap::width + 2, 4, 137, false);  // you
+                set_tile(TileMap::width + 2, 7, 135, false);  // enemy
+                set_tile(TileMap::width + 2, 10, 136, false); // transporter
+                set_tile(TileMap::width + 2, 13, 134, false); // item
+                set_tile(TileMap::width + 2, 16, 393, false); // shop
 
-            legend_border_.emplace(pfrm,
-                                   OverlayCoord{11, 11},
-                                   OverlayCoord{TileMap::width + 2, 8},
-                                   false,
-                                   8);
+                legend_border_.emplace(pfrm,
+                                       OverlayCoord{11, 16},
+                                       OverlayCoord{TileMap::width + 2, 3},
+                                       false,
+                                       8);
 
-            for (size_t i = 0; i < legend_strings.size(); ++i) {
-                const u8 y = 9 + (i * 2);
-                legend_text_[i].emplace(
-                    pfrm,
-                    locale_string(pfrm, legend_strings[i])->c_str(),
-                    OverlayCoord{TileMap::width + 5, y});
+                FontConfiguration font_conf;
+                font_conf.double_size_ = locale_requires_doublesize_font();
+
+                for (size_t i = 0; i < legend_strings.size(); ++i) {
+                    const u8 y = 4 + (i * 3);
+                    legend_text_[i].emplace(
+                        pfrm,
+                        locale_string(pfrm, legend_strings[i])->c_str(),
+                        OverlayCoord{TileMap::width + 5, y},
+                        font_conf);
+                }
+
+            } else {
+                set_tile(TileMap::width + 2, 9, 137, false);  // you
+                set_tile(TileMap::width + 2, 11, 135, false); // enemy
+                set_tile(TileMap::width + 2, 13, 136, false); // transporter
+                set_tile(TileMap::width + 2, 15, 134, false); // item
+                set_tile(TileMap::width + 2, 17, 393, false); // shop
+
+                legend_border_.emplace(pfrm,
+                                       OverlayCoord{11, 11},
+                                       OverlayCoord{TileMap::width + 2, 8},
+                                       false,
+                                       8);
+
+                for (size_t i = 0; i < legend_strings.size(); ++i) {
+                    const u8 y = 9 + (i * 2);
+                    legend_text_[i].emplace(
+                        pfrm,
+                        locale_string(pfrm, legend_strings[i])->c_str(),
+                        OverlayCoord{TileMap::width + 5, y});
+                }
             }
 
             path_finder_.emplace(allocate_dynamic<IncrementalPathfinder>(
@@ -131,7 +181,7 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
             }();
 
             draw_minimap(
-                 pfrm, game, 1.f, last_column_ = -1, 1, 0, 0, 0, false, path);
+                pfrm, game, 1.f, last_column_ = -1, 1, 0, 0, 0, false, path);
         }
 
         if (incomplete == false) {

@@ -499,7 +499,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
     }();
 
 
-    const auto wc = check_wall_collisions(game.tiles(), *this);
+    auto wc = check_wall_collisions(game.tiles(), *this);
 
     int collision_count = 0;
     if (wc.up) {

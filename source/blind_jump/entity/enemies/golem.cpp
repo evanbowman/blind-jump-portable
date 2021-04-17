@@ -55,7 +55,9 @@ void Golem::injured(Platform& pfrm, Game& game, Health amount)
 
 void Golem::on_collision(Platform& pfrm, Game& game, AlliedOrbShot&)
 {
-    injured(pfrm, game, 1);
+    if (not is_allied()) {
+        injured(pfrm, game, 1);
+    }
 }
 
 
@@ -202,20 +204,20 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
             get_target(game).get_position(), target_, dt * 0.000012f);
 
         if (timer_ > [&] {
-            switch (game.difficulty()) {
-            case Settings::Difficulty::easy:
-                return milliseconds(70);
+                switch (game.difficulty()) {
+                case Settings::Difficulty::easy:
+                    return milliseconds(70);
 
-            case Settings::Difficulty::count:
-            case Settings::Difficulty::normal:
-                break;
+                case Settings::Difficulty::count:
+                case Settings::Difficulty::normal:
+                    break;
 
-            case Settings::Difficulty::survival:
-            case Settings::Difficulty::hard:
+                case Settings::Difficulty::survival:
+                case Settings::Difficulty::hard:
+                    return milliseconds(70);
+                }
                 return milliseconds(70);
-            }
-            return milliseconds(70);
-        }()) {
+            }()) {
             timer_ = 0;
 
             Float shot_speed = 0.00019f;

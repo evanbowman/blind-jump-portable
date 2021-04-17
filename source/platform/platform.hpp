@@ -124,7 +124,8 @@ public:
         std::optional<TextureMapping> (*)(const utf8::Codepoint&);
 
     // Map a glyph into the vram space reserved for the overlay tile layer.
-    TileDesc map_glyph(const utf8::Codepoint& glyph, TextureCpMapper);
+    TileDesc map_glyph(const utf8::Codepoint& glyph,
+                       const TextureMapping& mapping);
 
 
     static constexpr const int dynamic_texture_count = 6;
@@ -165,6 +166,11 @@ public:
     // In glyph mode, the platform will automatically unmap glyphs when their
     // tiles are overwritten by set_tile.
     void enable_glyph_mode(bool enabled);
+
+    // In this mode, the engine will use all of available overlay vram for
+    // rendering text glyphs. Added during chinese language localization,
+    // when we needed extra memory for displaying large amounts of text.
+    void enable_expanded_glyph_mode(bool enabled);
 
 
     // NOTE: For the overlay and background, the tile layers consist of 32x32
@@ -608,7 +614,8 @@ public:
 
         void printline_blocking(const char* text, bool show_prompt = true)
         {
-            while (not printline(text, show_prompt)) ;
+            while (not printline(text, show_prompt))
+                ;
         }
     };
 

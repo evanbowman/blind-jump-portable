@@ -145,10 +145,28 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
             altitude_update_ = 30;
 
             const auto units =
-                locale_string(pfrm, LocaleString::distance_units_feet);
+                locale_string(pfrm, LocaleString::distance_units);
+
+            const bool lang_english =
+                (locale_language_name(locale_get_language()) == "english");
+
+            static const auto metric_conversion{0.3048f};
+
+            // Ok, I know, not all english speakers use British Imperial
+            // Units. Distance units should probably be in the init.lisp
+            // script, alongside the language definitions. But, we certainly
+            // don't plan on maintaining two separate language definition
+            // files for English just so that we can give
+            // non-American-english speakers metric units. And we certainly
+            // aren't going to assume that Americans know what a meter
+            // is. I've lived in America my whole live, and I know for a
+            // fact that many Americans will not know what they're looking
+            // at if they see a number with an 'm' unit after it.
+            const auto altitude =
+                lang_english ? altitude_ : altitude_ * metric_conversion;
 
             auto len =
-                integer_text_length(altitude_) + utf8::len(units->c_str());
+                integer_text_length(altitude) + utf8::len(units->c_str());
 
             if (not altitude_text_ or
                 (altitude_text_ and altitude_text_->len() not_eq len)) {
@@ -157,7 +175,9 @@ LaunchCutsceneState::update(Platform& pfrm, Game& game, Microseconds delta)
                     OverlayCoord{u8((screen_tiles.x - len) / 2),
                                  u8(screen_tiles.y - 2)});
             }
-            altitude_text_->assign(altitude_);
+
+            altitude_text_->assign(altitude);
+
             altitude_text_->append(units->c_str());
         }
     }

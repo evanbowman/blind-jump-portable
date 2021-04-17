@@ -145,7 +145,9 @@ public:
     sf::Texture background_texture_;
     sf::Shader color_shader_;
 
-    std::map<utf8::Codepoint, TileDesc> glyph_table_;
+    using GlyphOffset = int;
+
+    std::map<GlyphOffset, TileDesc> glyph_table_;
     TileDesc next_glyph_ = glyph_region_start;
 
     Vec2<Float> overlay_origin_;
@@ -1746,27 +1748,28 @@ void Platform::enable_glyph_mode(bool enabled)
 
 
 TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
-                             TextureCpMapper mapper)
+                             const TextureMapping& mapping)
 {
     auto& glyphs = ::platform->data()->glyph_table_;
 
-    if (auto mapping = mapper(glyph)) {
-
-        auto found = glyphs.find(glyph);
-        if (found not_eq glyphs.end()) {
-            return found->second;
-        } else {
-            const auto loc = ::platform->data()->next_glyph_++;
-            glyphs[glyph] = loc;
-
-            // std::lock_guard<std::mutex> guard(glyph_requests_mutex);
-            glyph_requests.push({loc, *mapping});
-
-            return loc;
-        }
+    auto found = glyphs.find(mapping.offset_);
+    if (found not_eq glyphs.end()) {
+        return found->second;
     } else {
-        return 111;
+        const auto loc = ::platform->data()->next_glyph_++;
+        glyphs[mapping.offset_] = loc;
+
+        // std::lock_guard<std::mutex> guard(glyph_requests_mutex);
+        glyph_requests.push({loc, mapping});
+
+        return loc;
     }
+}
+
+
+void Platform::enable_expanded_glyph_mode(bool enabled)
+{
+    // No need to do anything here.
 }
 
 

@@ -3,11 +3,19 @@
 
 void SignalJammerSelectorState::print(Platform& pfrm, const char* str)
 {
-    const auto margin = centered_text_margins(pfrm, utf8::len(str));
+    const bool bigfont = locale_requires_doublesize_font();
 
-    // const auto s_tiles = calc_screen_tiles(pfrm);
+    auto margin =
+        centered_text_margins(pfrm, utf8::len(str) * (bigfont ? 2 : 1));
 
-    text_.emplace(pfrm, OverlayCoord{});
+    if (bigfont) {
+        margin /= 2;
+    }
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
+    text_.emplace(pfrm, OverlayCoord{}, font_conf);
 
     left_text_margin(*text_, margin);
     text_->append(str);
@@ -218,7 +226,9 @@ Enemy* SignalJammerSelectorState::make_selector_target(Platform& pfrm,
                               not std::is_same<VT, SnakeTail>() and
                               not std::is_same<VT, SnakeHead>() and
                               not std::is_same<VT, Gatekeeper>() and
-                              not std::is_same<VT, Wanderer>()) {
+                              not std::is_same<VT, Wanderer>() and
+                              not std::is_same<VT, Twin>() and
+                              not std::is_same<VT, InfestedCore>()) {
                     targets.push_back(element.get());
                     proxies.emplace_back(*element.get());
                 }

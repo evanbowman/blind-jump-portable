@@ -20,10 +20,27 @@
 using OverlayCoord = Vec2<u8>;
 
 
+struct FontConfiguration {
+
+    // Double-sized text configuration added during chinese language
+    // localization, when we determined that chinese glyphs would not be
+    // legible at 8x8 sizes. When set to true, the text engine will use four
+    // tiles per glyph, i.e. each glyph will be 16x16.
+    bool double_size_ = false;
+};
+
+
 class Text {
 public:
-    Text(Platform& pfrm, const char* str, const OverlayCoord& coord);
-    Text(Platform& pfrm, const OverlayCoord& coord);
+    Text(Platform& pfrm,
+         const char* str,
+         const OverlayCoord& coord,
+         const FontConfiguration& config = {});
+
+    Text(Platform& pfrm,
+         const OverlayCoord& coord,
+         const FontConfiguration& config = {});
+
     Text(const Text&) = delete;
     Text(Text&&);
 
@@ -51,12 +68,18 @@ public:
         return coord_;
     }
 
+    const FontConfiguration& config() const
+    {
+        return config_;
+    }
+
 private:
     void resize(u32 len);
 
     Platform& pfrm_;
     const OverlayCoord coord_;
     Length len_;
+    const FontConfiguration config_;
 };
 
 

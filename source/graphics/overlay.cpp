@@ -13,23 +13,37 @@ u32 integer_text_length(int n)
 }
 
 
-Text::Text(Platform& pfrm, const char* str, const OverlayCoord& coord)
-    : pfrm_(pfrm), coord_(coord), len_(0)
+Text::Text(Platform& pfrm,
+           const char* str,
+           const OverlayCoord& coord,
+           const FontConfiguration& config)
+    : pfrm_(pfrm), coord_(coord), len_(0), config_(config)
 {
     this->assign(str);
 }
 
 
-Text::Text(Platform& pfrm, const OverlayCoord& coord)
-    : pfrm_(pfrm), coord_(coord), len_(0)
+Text::Text(Platform& pfrm,
+           const OverlayCoord& coord,
+           const FontConfiguration& config)
+    : pfrm_(pfrm), coord_(coord), len_(0), config_(config)
 {
 }
 
 
 void Text::erase()
 {
-    for (int i = 0; i < len_; ++i) {
-        pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y, 0);
+    if (not config_.double_size_) {
+        for (int i = 0; i < len_; ++i) {
+            pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y, 0);
+        }
+    } else {
+        for (int i = 0; i < len_ * 2; ++i) {
+            pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y, 0);
+        }
+        for (int i = 0; i < len_ * 2; ++i) {
+            pfrm_.set_tile(Layer::overlay, coord_.x + i, coord_.y + 1, 0);
+        }
     }
 
     len_ = 0;
@@ -37,7 +51,8 @@ void Text::erase()
 
 
 Text::Text(Text&& from)
-    : pfrm_(from.pfrm_), coord_(from.coord_), len_(from.len_)
+    : pfrm_(from.pfrm_), coord_(from.coord_), len_(from.len_),
+      config_(from.config_)
 {
     from.len_ = 0;
 }
@@ -59,6 +74,78 @@ void Text::assign(int val, const OptColors& colors)
 
 
 Platform::TextureCpMapper locale_texture_map();
+Platform::TextureCpMapper locale_doublesize_texture_map();
+
+
+void print_double_char(Platform& pfrm,
+                       utf8::Codepoint c,
+                       const OverlayCoord& coord,
+                       const std::optional<FontColors>& colors = {})
+{
+    if (c not_eq 0) {
+        const auto mapping_info = locale_doublesize_texture_map()(c);
+
+        u16 t0 = 495;
+        u16 t1 = 495;
+        u16 t2 = 495;
+        u16 t3 = 495;
+
+        if (mapping_info) {
+            auto info = *mapping_info;
+
+            // FIXME: these special cases should be handled in the texture map
+            // lookup.
+            if (info.offset_ == 72) {
+                t0 = pfrm.map_glyph(c, info);
+                // Special case for space character
+                t1 = t0;
+                t2 = t0;
+                t3 = t0;
+            } else if (info.offset_ == 65) {
+                // Special case for enlarged quote character
+                info.offset_ = 523;
+                t0 = pfrm.map_glyph(c, info);
+                info.offset_ = 524;
+                t1 = pfrm.map_glyph(c, info);
+                info.offset_ = 72; // space
+                t2 = pfrm.map_glyph(c, info);
+                t3 = pfrm.map_glyph(c, info);
+            } else if (info.offset_ == 38 or info.offset_ == 37) {
+                // Special case for period, comma
+                t2 = pfrm.map_glyph(c, info);
+                info.offset_ = 72; // space
+                t0 = pfrm.map_glyph(c, info);
+                t1 = pfrm.map_glyph(c, info);
+                t3 = pfrm.map_glyph(c, info);
+            } else {
+                t0 = pfrm.map_glyph(c, info);
+                info.offset_++;
+                t1 = pfrm.map_glyph(c, info);
+                info.offset_++;
+                t2 = pfrm.map_glyph(c, info);
+                info.offset_++;
+                t3 = pfrm.map_glyph(c, info);
+            }
+        }
+
+        if (not colors) {
+            pfrm.set_tile(Layer::overlay, coord.x, coord.y, t0);
+            pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y, t1);
+            pfrm.set_tile(Layer::overlay, coord.x, coord.y + 1, t2);
+            pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y + 1, t3);
+        } else {
+            pfrm.set_tile(coord.x, coord.y, t0, *colors);
+            pfrm.set_tile(coord.x + 1, coord.y, t1, *colors);
+            pfrm.set_tile(coord.x, coord.y + 1, t2, *colors);
+            pfrm.set_tile(coord.x + 1, coord.y + 1, t3, *colors);
+        }
+    } else {
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y, 0);
+        pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y, 0);
+        pfrm.set_tile(Layer::overlay, coord.x, coord.y + 1, 0);
+        pfrm.set_tile(Layer::overlay, coord.x + 1, coord.y + 1, 0);
+    }
+}
 
 
 static void print_char(Platform& pfrm,
@@ -67,7 +154,18 @@ static void print_char(Platform& pfrm,
                        const std::optional<FontColors>& colors = {})
 {
     if (c not_eq 0) {
-        const auto t = pfrm.map_glyph(c, locale_texture_map());
+        auto mapping_info = locale_texture_map()(c);
+
+        u16 t = 495;
+
+        if (mapping_info) {
+
+            switch (mapping_info->offset_) {
+            }
+
+
+            t = pfrm.map_glyph(c, *mapping_info);
+        }
 
         if (not colors) {
             pfrm.set_tile(Layer::overlay, coord.x, coord.y, t);
@@ -104,16 +202,30 @@ void Text::append(const char* str, const OptColors& colors)
         return;
     }
 
-    auto write_pos = static_cast<u8>(coord_.x + len_);
+    if (config_.double_size_) {
+        auto write_pos = static_cast<u8>(coord_.x + len_ * 2);
 
-    utf8::scan(
-        [&](const utf8::Codepoint& cp, const char* raw, int) {
-            print_char(pfrm_, cp, {write_pos, coord_.y}, colors);
-            ++write_pos;
-            ++len_;
-        },
-        str,
-        str_len(str));
+        utf8::scan(
+            [&](const utf8::Codepoint& cp, const char* raw, int) {
+                print_double_char(pfrm_, cp, {write_pos, coord_.y}, colors);
+                write_pos += 2;
+                ++len_;
+            },
+            str,
+            str_len(str));
+
+    } else {
+        auto write_pos = static_cast<u8>(coord_.x + len_);
+
+        utf8::scan(
+            [&](const utf8::Codepoint& cp, const char* raw, int) {
+                print_char(pfrm_, cp, {write_pos, coord_.y}, colors);
+                ++write_pos;
+                ++len_;
+            },
+            str,
+            str_len(str));
+    }
 }
 
 

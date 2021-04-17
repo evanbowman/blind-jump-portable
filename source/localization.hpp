@@ -11,10 +11,16 @@ void locale_set_language(int language_id);
 void locale_set_language_english();
 int locale_get_language();
 
+bool locale_requires_doublesize_font();
 
 using LocalizedStrBuffer = StringBuffer<1987>;
 using LocalizedText = DynamicMemory<LocalizedStrBuffer>;
 LocalizedText locale_string(Platform& pfrm, LocaleString ls);
+
+
+StringBuffer<31> locale_language_name(int language);
+
+LocalizedText locale_localized_language_name(Platform& pfrm, int language);
 
 
 // In most cases, you do not want to call this function directly, better to call

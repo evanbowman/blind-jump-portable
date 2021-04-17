@@ -1,3 +1,4 @@
+#include "localization.hpp"
 #include "state_impl.hpp"
 
 
@@ -57,6 +58,10 @@ bool DialogState::advance_text(Platform& pfrm,
                                Microseconds delta,
                                bool sfx)
 {
+    if (asian_language_) {
+        return advance_asian_text(pfrm, game, delta, sfx);
+    }
+
     const auto delay = milliseconds(80);
 
     text_state_.timer_ += delta;
@@ -115,11 +120,72 @@ bool DialogState::advance_text(Platform& pfrm,
         int bytes_consumed = 0;
         const auto cp = utf8::getc(text_state_.current_word_, &bytes_consumed);
 
-        const auto t = pfrm.map_glyph(cp, locale_texture_map());
+        const auto mapping_info = locale_texture_map()(cp);
+
+        u16 t = 495; // bad glyph, FIXME: add a constant
+
+        if (mapping_info) {
+            t = pfrm.map_glyph(cp, *mapping_info);
+        }
+
         const int y_offset = text_state_.line_ == 0 ? 4 : 2;
         const int x_offset = text_state_.pos_ + 1;
 
         pfrm.set_tile(Layer::overlay, x_offset, st.y - y_offset, t);
+
+        text_state_.current_word_remaining_--;
+        text_state_.current_word_ += bytes_consumed;
+        text_state_.pos_++;
+
+        if (*text_state_.current_word_ == '\0') {
+            display_mode_ = DisplayMode::key_released_check2;
+        }
+    }
+
+    return true;
+}
+
+
+void print_double_char(Platform& pfrm,
+                       utf8::Codepoint c,
+                       const OverlayCoord& coord,
+                       const std::optional<FontColors>& colors = {});
+
+
+bool DialogState::advance_asian_text(Platform& pfrm,
+                                     Game& game,
+                                     Microseconds delta,
+                                     bool sfx)
+{
+    const auto delay = milliseconds(80);
+
+    text_state_.timer_ += delta;
+
+    if (text_state_.timer_ > delay) {
+        text_state_.timer_ = 0;
+
+        if (sfx) {
+            pfrm.speaker().play_sound("msg", 5);
+        }
+
+        // At this point, we know the length of the next space-delimited word in
+        // the string. Now we can print stuff...
+
+        const auto st = calc_screen_tiles(pfrm);
+        static const auto margin_sum = 2;
+        const auto text_box_width = st.x - margin_sum;
+        const auto remaining = (text_box_width - text_state_.pos_ * 2);
+
+        if (remaining == 0) {
+            return false;
+        }
+
+        int bytes_consumed = 0;
+        const auto cp = utf8::getc(text_state_.current_word_, &bytes_consumed);
+
+        const int x_offset = text_state_.pos_ * 2 + 1;
+
+        print_double_char(pfrm, cp, {u8(x_offset), u8(st.y - 4)});
 
         text_state_.current_word_remaining_--;
         text_state_.current_word_ += bytes_consumed;
@@ -139,6 +205,10 @@ void DialogState::enter(Platform& pfrm, Game& game, State& prev_state)
     OverworldState::enter(pfrm, game, prev_state);
 
     pfrm.load_overlay_texture("overlay_dialog");
+
+    asian_language_ =
+        (locale_language_name(locale_get_language()) == "chinese");
+
 
     init_text(pfrm, text_[0]); // TODO: implement chains of dialog messages,
                                // rather than just printing the first one in the
@@ -178,7 +248,9 @@ StatePtr DialogState::update(Platform& pfrm, Game& game, Microseconds delta)
         break;
 
     case DisplayMode::busy: {
+
         const bool text_busy = advance_text(pfrm, game, delta);
+
         if (not text_busy) {
             display_mode_ = DisplayMode::key_released_check1;
         } else {

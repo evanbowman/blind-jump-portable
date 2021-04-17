@@ -26,7 +26,8 @@ static Instruction* append(ScratchBuffer& buffer, int& write_pos)
         // not check the return value yet. Now, a lambda that takes up 2kb of
         // bytecode seems highly unlikely in the first place, but you never know
         // I guess...
-        while (true) ;
+        while (true)
+            ;
     }
 
     auto result = (Instruction*)(buffer.data_ + write_pos);
@@ -36,9 +37,7 @@ static Instruction* append(ScratchBuffer& buffer, int& write_pos)
 }
 
 
-int compile_quoted(ScratchBuffer& buffer,
-                   int write_pos,
-                   Value* code)
+int compile_quoted(ScratchBuffer& buffer, int write_pos, Value* code)
 {
     if (code->type_ == Value::Type::integer) {
         write_pos = compile_impl(buffer, write_pos, code, 0);
@@ -95,8 +94,8 @@ int compile_impl(ScratchBuffer& buffer,
         } else if (code->integer_.value_ < 127 and
                    code->integer_.value_ > -127) {
 
-            append<instruction::PushSmallInteger>(buffer, write_pos)
-                ->value_ = code->integer_.value_;
+            append<instruction::PushSmallInteger>(buffer, write_pos)->value_ =
+                code->integer_.value_;
 
         } else {
             append<instruction::PushInteger>(buffer, write_pos)
@@ -162,11 +161,8 @@ int compile_impl(ScratchBuffer& buffer,
 
             auto lambda = append<instruction::PushLambda>(buffer, write_pos);
 
-            write_pos =
-                compile_impl(buffer,
-                             write_pos,
-                             lat->cons_.car(),
-                             jump_offset + write_pos);
+            write_pos = compile_impl(
+                buffer, write_pos, lat->cons_.car(), jump_offset + write_pos);
 
             append<instruction::Ret>(buffer, write_pos);
 
@@ -175,9 +171,7 @@ int compile_impl(ScratchBuffer& buffer,
         } else if (fn->type_ == Value::Type::symbol and
                    str_cmp(fn->symbol_.name_, "'") == 0) {
 
-            write_pos = compile_quoted(buffer,
-                                       write_pos,
-                                       lat->cons_.cdr());
+            write_pos = compile_quoted(buffer, write_pos, lat->cons_.cdr());
         } else {
             u8 argc = 0;
 
@@ -189,8 +183,8 @@ int compile_impl(ScratchBuffer& buffer,
                     break;
                 }
 
-                write_pos = compile_impl(buffer, write_pos, lat->cons_.car(),
-                                         jump_offset);
+                write_pos = compile_impl(
+                    buffer, write_pos, lat->cons_.car(), jump_offset);
 
                 lat = lat->cons_.cdr();
 
@@ -204,20 +198,17 @@ int compile_impl(ScratchBuffer& buffer,
             }
 
             if (fn->type_ == Value::Type::symbol and
-                str_cmp(fn->symbol_.name_, "cons") == 0 and
-                argc == 2) {
+                str_cmp(fn->symbol_.name_, "cons") == 0 and argc == 2) {
 
                 append<instruction::MakePair>(buffer, write_pos);
 
             } else if (fn->type_ == Value::Type::symbol and
-                       str_cmp(fn->symbol_.name_, "car") == 0 and
-                       argc == 1) {
+                       str_cmp(fn->symbol_.name_, "car") == 0 and argc == 1) {
 
                 append<instruction::First>(buffer, write_pos);
 
             } else if (fn->type_ == Value::Type::symbol and
-                       str_cmp(fn->symbol_.name_, "cdr") == 0 and
-                       argc == 1) {
+                       str_cmp(fn->symbol_.name_, "cdr") == 0 and argc == 1) {
 
                 append<instruction::Rest>(buffer, write_pos);
 
@@ -239,7 +230,8 @@ int compile_impl(ScratchBuffer& buffer,
                     break;
 
                 default:
-                    append<instruction::Funcall>(buffer, write_pos)->argc_ = argc;
+                    append<instruction::Funcall>(buffer, write_pos)->argc_ =
+                        argc;
                     break;
                 }
             }
@@ -324,7 +316,10 @@ public:
 
                             Dup d;
                             d.header_.op_ = Dup::op();
-                            replace(code_buffer, *(PushSmallInteger*)inst, d, code_size);
+                            replace(code_buffer,
+                                    *(PushSmallInteger*)inst,
+                                    d,
+                                    code_size);
                             goto TOP;
                         }
                     } else if (prev->op_ == Dup::op()) {
@@ -339,7 +334,10 @@ public:
 
                                     Dup d;
                                     d.header_.op_ = Dup::op();
-                                    replace(code_buffer, *(PushSmallInteger*)inst, d, code_size);
+                                    replace(code_buffer,
+                                            *(PushSmallInteger*)inst,
+                                            d,
+                                            code_size);
                                     // code_size -= sizeof(PushSmallInteger) - sizeof(Dup);
                                     goto TOP;
                                 }
@@ -362,7 +360,8 @@ public:
 
                             Dup d;
                             d.header_.op_ = Dup::op();
-                            replace(code_buffer, *(PushInteger*)inst, d, code_size);
+                            replace(
+                                code_buffer, *(PushInteger*)inst, d, code_size);
                             goto TOP;
                         }
                     } else if (prev->op_ == Dup::op()) {
@@ -377,7 +376,10 @@ public:
 
                                     Dup d;
                                     d.header_.op_ = Dup::op();
-                                    replace(code_buffer, *(PushInteger*)inst, d, code_size);
+                                    replace(code_buffer,
+                                            *(PushInteger*)inst,
+                                            d,
+                                            code_size);
                                     goto TOP;
                                 }
                             } else {
@@ -423,9 +425,8 @@ public:
     // We have just inserted/removed an instruction, and now need to scan
     // through the bytecode, and adjust the offsets of local jumps within the
     // lambda definition.
-    void fixup_jumps(ScratchBuffer& code_buffer,
-                     int inflection_point,
-                     int size_diff)
+    void
+    fixup_jumps(ScratchBuffer& code_buffer, int inflection_point, int size_diff)
     {
         int index = 0;
         int depth = 0;
@@ -533,8 +534,7 @@ void compile(Platform& pfrm, Value* code)
             append<instruction::Pop>(*buffer, write_pos);
         }
 
-        write_pos =
-            compile_impl(*buffer, write_pos, lat->cons_.car(), 0);
+        write_pos = compile_impl(*buffer, write_pos, lat->cons_.car(), 0);
 
         lat = lat->cons_.cdr();
     }

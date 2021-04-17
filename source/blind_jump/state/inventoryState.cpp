@@ -228,18 +228,34 @@ void InventoryState::update_item_description(Platform& pfrm, Game& game)
     const auto item =
         game.inventory().get_item(page_, selector_coord_.x, selector_coord_.y);
 
-    constexpr static const OverlayCoord text_loc{3, 15};
+    OverlayCoord text_loc{3, 15};
+
+    const bool bigfont = locale_requires_doublesize_font();
+
+    if (bigfont) {
+        text_loc.y -= 1;
+    }
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
 
     if (auto handler = inventory_item_handler(item)) {
         item_description_.emplace(
             pfrm,
             locale_string(pfrm, handler->description_)->c_str(),
-            text_loc);
-        item_description_->append(".");
+            text_loc,
+            font_conf);
+        // item_description_->append(
+        //     locale_string(pfrm, LocaleString::punctuation_period)->c_str());
 
         if (handler->single_use_) {
+
+            if (bigfont) {
+                text_loc.y += 1;
+            }
+
             item_description2_.emplace(
-                pfrm, OverlayCoord{text_loc.x, text_loc.y + 2});
+                pfrm, OverlayCoord{text_loc.x, u8(text_loc.y + 2)}, font_conf);
 
             item_description2_->assign(
                 locale_string(pfrm, LocaleString::single_use_warning)->c_str(),
@@ -269,11 +285,16 @@ void InventoryState::display_items(Platform& pfrm, Game& game)
     auto screen_tiles = calc_screen_tiles(pfrm);
 
     auto label_str = locale_string(pfrm, LocaleString::items);
-    label_.emplace(
-        pfrm,
-        OverlayCoord{u8(screen_tiles.x - (utf8::len(label_str->c_str()) + 1)),
-                     1});
-    label_->assign(label_str->c_str());
+
+    const bool bigfont = locale_requires_doublesize_font();
+
+    if (not bigfont) {
+        label_.emplace(
+            pfrm,
+            OverlayCoord{
+                u8(screen_tiles.x - (utf8::len(label_str->c_str()) + 1)), 1});
+        label_->assign(label_str->c_str());
+    }
 
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 2; ++j) {

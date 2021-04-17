@@ -70,14 +70,24 @@ void QuickChatState::update_text(Platform& pfrm, Game& game)
 
     text_.reset();
 
+    const bool bigfont = locale_requires_doublesize_font();
+
     for (int i = 0; i < st.x; ++i) {
-        pfrm.set_tile(Layer::overlay, i, st.y - 2, 425);
+        if (bigfont) {
+            pfrm.set_tile(Layer::overlay, i, st.y - 3, 425);
+            pfrm.set_tile(Layer::overlay, i, st.y - 2, 112);
+        } else {
+            pfrm.set_tile(Layer::overlay, i, st.y - 2, 425);
+        }
         pfrm.set_tile(Layer::overlay, i, st.y - 1, 112);
     }
 
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
     auto str = locale_string(pfrm, chat_messages[msg_index_]);
 
-    text_.emplace(pfrm, OverlayCoord{2, u8(st.y - 1)});
+    text_.emplace(pfrm, OverlayCoord{2, u8(st.y - (bigfont ? 2 : 1))}, font_conf);
     text_->assign(": ");
     text_->append(str->c_str());
 

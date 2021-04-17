@@ -17,8 +17,14 @@ void GoodbyeState::enter(Platform& pfrm, Game& game, State& prev_state)
 
     rng::critical_state = game.persistent_data().seed_.get();
 
+    const bool bigfont = locale_requires_doublesize_font();
+
+    FontConfiguration font_conf;
+    font_conf.double_size_ = bigfont;
+
     const auto s_tiles = calc_screen_tiles(pfrm);
-    text_.emplace(pfrm, OverlayCoord{1, u8(s_tiles.y - 2)});
+    text_.emplace(
+        pfrm, OverlayCoord{1, u8(s_tiles.y - (bigfont ? 3 : 2))}, font_conf);
     text_->append(locale_string(pfrm, LocaleString::goodbye_text)->c_str());
 }
 
