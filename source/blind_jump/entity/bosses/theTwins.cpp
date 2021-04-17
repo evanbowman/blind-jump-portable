@@ -883,7 +883,9 @@ void Twin::on_death(Platform& pf, Game& game)
             Item::Type::heart);
     }
 
-    push_notification(pf, game.state(), "Twin defeated...");
+    if (locale_language_name(locale_get_language()) == "english") {
+        push_notification(pf, game.state(), "Twin defeated...");
+    }
 
     game.on_timeout(pf, milliseconds(180), [this](Platform& pf, Game& game) {
         big_explosion(pf, game, {position_.x + 30, position_.y - 30});

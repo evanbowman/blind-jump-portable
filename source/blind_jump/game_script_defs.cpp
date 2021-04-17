@@ -421,6 +421,19 @@ void Game::init_script(Platform& pfrm)
                                       rng::utility_state));
                   }));
 
+    lisp::set_var("toggle-stats", lisp::make_function([](int argc) {
+                      if (auto game = interp_get_game()) {
+                          bool& show =
+                              game->persistent_data().settings_.show_stats_;
+
+                          show = not show;
+
+                          return lisp::make_integer(show);
+                      }
+
+                      return L_NIL;
+                  }));
+
     lisp::set_var(
         "pattern-replace-tile", lisp::make_function([](int argc) {
             L_EXPECT_ARGC(argc, 2);
