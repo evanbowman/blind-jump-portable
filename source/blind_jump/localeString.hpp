@@ -103,7 +103,7 @@ enum class LocaleString {
     yes,
     no,
     menu_disabled,
-    distance_units_feet,
+    distance_units,
     launch,
     peer_connected,
     peer_connection_failed,
