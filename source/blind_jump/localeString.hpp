@@ -162,5 +162,6 @@ enum class LocaleString {
     engineer_notebook_2_str,
     newgame_str,
     continue_str,
+    the_end_str,
     count
 };

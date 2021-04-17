@@ -158,3 +158,4 @@ Power surges emanating from the hyperspace gates seem to have an unusual effect 
 The power surges from the jump gates are more-or-less constant now, and we've lost control of everything. I sent word back to Earth, that someone needs to be sent out here, to deal the causes of these fluctuations... they're dealing with their own mechanized revolt, though, so I'm not sure how soon they'll send a  soldier. In the meantime, I've invented a signal jamming device, which seems to render the machines immune to the power surges...
 new game
 continue
+THE END

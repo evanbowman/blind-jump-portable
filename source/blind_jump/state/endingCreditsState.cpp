@@ -16,8 +16,6 @@ void EndingCreditsState::enter(Platform& pfrm, Game& game, State&)
     game.on_timeout(pfrm, milliseconds(500), [](Platform& pfrm, Game&) {
         pfrm.speaker().play_music("clair_de_lune", 0);
     });
-
-    locale_set_language(1);
 }
 
 
@@ -26,8 +24,6 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
     lines_.clear();
     pfrm.set_overlay_origin(0, 0);
     pfrm.speaker().stop_music();
-
-    locale_set_language(game.persistent_data().settings_.language_.get());
 
     pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, false, false);
     pfrm.fill_overlay(0);
@@ -171,13 +167,23 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                         lines_.clear();
                         pfrm.set_overlay_origin(0, 1);
 
-                        const char* str = "THE END";
-                        const auto len = utf8::len(str);
-                        const u8 left_margin = (screen_tiles.x - len) / 2;
-                        lines_.emplace_back(
-                            pfrm,
-                            OverlayCoord{left_margin, u8(screen_tiles.y + 1)});
-                        lines_.back().assign(str);
+                        auto str = locale_string(pfrm, LocaleString::the_end_str);
+
+                        const auto len = utf8::len(str->c_str());
+
+                        const bool bigfont = locale_requires_doublesize_font();
+                        if (bigfont) {
+                            const u8 left_margin = (screen_tiles.x - len) / 2;
+                            lines_.emplace_back(pfrm,
+                                                OverlayCoord{left_margin, u8(screen_tiles.y + 1)});
+                        } else {
+                            const u8 left_margin = (screen_tiles.x - len) / 2;
+                            lines_.emplace_back(
+                                                pfrm,
+                                                OverlayCoord{left_margin, u8(screen_tiles.y + 1)});
+                        }
+
+                        lines_.back().assign(str->c_str());
                     }
                 }
             }
