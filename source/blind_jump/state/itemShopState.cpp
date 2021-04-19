@@ -600,7 +600,8 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
                 pfrm.speaker().play_sound("scroll", 1);
                 show_buy_option_label(pfrm, game);
             }
-        } else if (pfrm.keyboard().down_transition<Key::left>()) {
+        } else if (pfrm.keyboard().down_transition<Key::left>() or
+                   pfrm.keyboard().down_transition(game.persistent_data().settings_.action1_key_)) {
             if (selector_x_ > 1) {
                 --selector_x_;
                 pfrm.speaker().play_sound("scroll", 1);
@@ -701,6 +702,9 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
                 const auto c = OverlayCoord{6, u8(2 + selector_pos_ * 5)};
                 buy_options_bar_.emplace(pfrm, 10, 6, c);
             }
+        } else if (pfrm.keyboard().down_transition(game.persistent_data().settings_.action1_key_)) {
+            timer_ = 0;
+            display_mode_ = DisplayMode::exit_left;
         } else if (pfrm.keyboard().down_transition<Key::down>()) {
             if (selector_pos_ < 2) {
                 ++selector_pos_;
@@ -822,7 +826,8 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
                 pfrm.speaker().play_sound("scroll", 1);
                 show_sell_option_label(pfrm, game);
             }
-        } else if (pfrm.keyboard().down_transition<Key::right>()) {
+        } else if (pfrm.keyboard().down_transition<Key::right>() or
+                   pfrm.keyboard().down_transition(game.persistent_data().settings_.action1_key_)) {
             if (selector_x_ > 1) {
                 --selector_x_;
                 pfrm.speaker().play_sound("scroll", 1);
@@ -945,6 +950,9 @@ StatePtr ItemShopState::update(Platform& pfrm, Game& game, Microseconds delta)
                 10,
                 6,
                 OverlayCoord{u8(st.x - 6), u8(2 + selector_pos_ * 5)});
+        } else if (pfrm.keyboard().down_transition(game.persistent_data().settings_.action1_key_)) {
+            timer_ = 0;
+            display_mode_ = DisplayMode::exit_left;
         } else if (pfrm.keyboard().down_transition<Key::down>()) {
             if (selector_pos_ < 2) {
                 ++selector_pos_;
