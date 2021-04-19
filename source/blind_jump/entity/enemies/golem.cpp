@@ -261,8 +261,10 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
         // Some glitches at low framerates cause the character to jump off the
         // screen due to the kickback deceleration at high deltas.
         if (dt < seconds(1) / 20) {
-            position_.x += speed_.x * dt * kickback_rate;
-            position_.y += speed_.y * dt * kickback_rate;
+            if (not is_boss_level(game.level())) {
+                position_.x += speed_.x * dt * kickback_rate;
+                position_.y += speed_.y * dt * kickback_rate;
+            }
         }
         break;
 
@@ -271,8 +273,10 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
         speed_ = interpolate(Vec2<Float>{0, 0}, speed_, dt * 0.00005f);
         check_wall();
         if (dt < seconds(1) / 20) {
-            position_.x += speed_.x * dt * kickback_rate;
-            position_.y += speed_.y * dt * kickback_rate;
+            if (not is_boss_level(game.level())) {
+                position_.x += speed_.x * dt * kickback_rate;
+                position_.y += speed_.y * dt * kickback_rate;
+            }
         }
 
         if (timer_ > seconds(1)) {
