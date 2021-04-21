@@ -155,6 +155,12 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
     }
 
     if (pfrm.keyboard().down_transition<quick_map_key>()) {
+        if (game.persistent_data().settings_.button_mode_ ==
+            Settings::ButtonMode::strafe_combined or
+            (not pfrm.keyboard().pressed<Key::left>() and
+             not pfrm.keyboard().pressed<Key::right>() and
+             not pfrm.keyboard().pressed<Key::up>() and
+             not pfrm.keyboard().pressed<Key::down>())) {
         if (game.inventory().item_count(Item::Type::map_system) not_eq 0) {
             // TODO: add a specific sound for opening the map
             pfrm.speaker().play_sound("openbag", 2);
@@ -165,6 +171,7 @@ StatePtr ActiveState::update(Platform& pfrm, Game& game, Microseconds delta)
                 pfrm,
                 game.state(),
                 locale_string(pfrm, LocaleString::map_required)->c_str());
+        }
         }
     }
 

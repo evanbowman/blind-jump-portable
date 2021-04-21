@@ -686,9 +686,12 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             dodges_ = std::min(dodges_ + 1, max_dodges);
         }
 
-        if (game.persistent_data().settings_.button_mode_ ==
-                Settings::ButtonMode::strafe_combined and
-            pfrm.keyboard().down_transition(game.action2_key()) and
+        if (((game.persistent_data().settings_.button_mode_ ==
+             Settings::ButtonMode::strafe_combined and
+             pfrm.keyboard().down_transition(game.action2_key())) or
+             (game.persistent_data().settings_.button_mode_ ==
+              Settings::ButtonMode::strafe_separate and
+              pfrm.keyboard().down_transition<Key::alt_1>())) and
             (left or right or up or down) and
             length(game.effects().get<DialogBubble>()) == 0 and dodges_ > 0) {
             dodges_ -= 1;

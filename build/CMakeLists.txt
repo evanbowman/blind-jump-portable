@@ -569,7 +569,7 @@ if(GAMEBOY_ADVANCE)
     # NOTE: using DrillDozer's ROM id code for testing purposes, because many
     # emulator developers do not give you the option to manually override which
     # gamepacks support gpio rumble. BlindJump's actual ROM code was originally CBJE.
-    COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump -cV49E -r0 -mEB BlindJump.gba)
+    COMMAND ${DEVKITPRO}/tools/bin/gbafix -tBlindJump  -r0 -mEB BlindJump.gba)
 
   target_compile_options(BlindJump PRIVATE
     -D__GBA__)
