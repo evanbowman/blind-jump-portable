@@ -11,9 +11,11 @@
                    (not (equal (platform) 'Desktop)))
          '(null
            (english 1) ;; (language-name preferred-font-size)
-           (chinese 2))
+           (chinese 2)
+           (russian 1))
          '(null
-           (english 1))))
+           (english 1)
+           (russian 1))))
 
 
 
