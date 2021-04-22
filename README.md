@@ -100,7 +100,7 @@ To enable, press the start button on both devices, and then select the "Connect 
 
 With the title screen open, press select fifteen times, and the game will enter a boss-rush mode. Note that entering boss-rush mode is equivalent to starting a new game, and you will lose any items that you may have collected.
 
-Technically, you may also enter boss-rush mode at any time, by opening the script console (see below), and executing the command: `(set #debug-mode 7)`. The next transporter will then take the player to a boss.
+Technically, you may also enter boss-rush mode at any time, by opening the script console (see below), and executing the command: `(set 'debug-mode 7)`. The next transporter will then take the player to a boss.
 
 #### Script Console
 
