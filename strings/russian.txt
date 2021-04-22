@@ -139,7 +139,7 @@ Swarm approaching!
 Peer requires update!
 overall
 Peer used lethargy!
-РУССКИЙ
+русский
 
 
 chat: 
