@@ -41,7 +41,8 @@ public:
     []() -> utf8::Codepoint {                                                  \
         if constexpr ((str_const(_STR_)[0] & 0x80) == 0) {                     \
             return str_const(_STR_)[0];                                        \
-        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xC0) {           \
+        } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xC0 ||           \
+                             (str_const(_STR_)[0] & 0xf0) == 0xD0) {           \
             return (u32)(u8)str_const(_STR_)[0] |                              \
                    (((u32)(u8)str_const(_STR_)[1]) << 8);                      \
         } else if constexpr ((str_const(_STR_)[0] & 0xf0) == 0xE0) {           \
@@ -163,6 +164,40 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8">"): return 104;
         case UTF8_GETCHR(u8"#"): return 105;
         case UTF8_GETCHR(u8"_"): return 186;
+
+        // Cyrillic Characters
+        case UTF8_GETCHR(u8"А"): return 2085;
+        case UTF8_GETCHR(u8"Б"): return 2086;
+        case UTF8_GETCHR(u8"В"): return 2087;
+        case UTF8_GETCHR(u8"Г"): return 2088;
+        case UTF8_GETCHR(u8"Д"): return 2089;
+        case UTF8_GETCHR(u8"Е"): return 2090;
+        case UTF8_GETCHR(u8"Ж"): return 2091;
+        case UTF8_GETCHR(u8"З"): return 2092;
+        case UTF8_GETCHR(u8"И"): return 2093;
+        case UTF8_GETCHR(u8"Й"): return 2094;
+        case UTF8_GETCHR(u8"К"): return 2095;
+        case UTF8_GETCHR(u8"Л"): return 2096;
+        case UTF8_GETCHR(u8"М"): return 2097;
+        case UTF8_GETCHR(u8"Н"): return 2098;
+        case UTF8_GETCHR(u8"О"): return 2099;
+        case UTF8_GETCHR(u8"П"): return 2100;
+        case UTF8_GETCHR(u8"Р"): return 2101;
+        case UTF8_GETCHR(u8"С"): return 2102;
+        case UTF8_GETCHR(u8"Т"): return 2103;
+        case UTF8_GETCHR(u8"У"): return 2104;
+        case UTF8_GETCHR(u8"Ф"): return 2105;
+        case UTF8_GETCHR(u8"Х"): return 2106;
+        case UTF8_GETCHR(u8"Ц"): return 2107;
+        case UTF8_GETCHR(u8"Ч"): return 2108;
+        case UTF8_GETCHR(u8"Ш"): return 2109;
+        case UTF8_GETCHR(u8"Щ"): return 2110;
+        case UTF8_GETCHR(u8"Ъ"): return 2111;
+        case UTF8_GETCHR(u8"Ы"): return 2112;
+        case UTF8_GETCHR(u8"Ь"): return 2113;
+        case UTF8_GETCHR(u8"Э"): return 2114;
+        case UTF8_GETCHR(u8"Ю"): return 2115;
+        case UTF8_GETCHR(u8"Я"): return 2116;
 
         // A small number of tiny Chinese glyphs. We don't use too many, because
         // they're difficult to read at this size.
