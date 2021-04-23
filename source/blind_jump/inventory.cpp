@@ -27,7 +27,7 @@ void Inventory::push_item(Platform& pfrm,
 
             if (notify) {
 
-                auto description = [&]() -> StringBuffer<32> {
+                auto description = [&]() -> StringBuffer<48> {
                     if (insert == Item::Type::null) {
                         // Technically, the description for null is Empty, but that
                         // doesn't make sense contextually, so lets use this text
