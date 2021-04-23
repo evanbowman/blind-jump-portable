@@ -230,6 +230,7 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"э"): return 2146;
         case UTF8_GETCHR(u8"ю"): return 2147;
         case UTF8_GETCHR(u8"я"): return 2148;
+        case UTF8_GETCHR(u8"ё"): return 87;
 
 
         // A small number of tiny Chinese glyphs. We don't use too many, because

@@ -115,18 +115,7 @@ inline size_t len(const char* data)
 // small chunks of codepoints from the encoded string.
 //
 class BufferedStr {
-    // public:
-    //     using Utf8Index = int;
-    //     using RawIndex = int;
-
-    //     enum {
-    //         table_size = 8
-    //     };
-
-    //     using LookupTable = std::array<std::pair<Utf8Index, RawIndex>, table_size>;
-
 private:
-    // LookupTable lookup_table_;
 
     const char* const str_;
 
@@ -135,39 +124,10 @@ private:
     int index_start_;
     int str_len_;
 
-    // inline void populate_table()
-    // {
-    //     const auto len = utf8::len(str_);
-
-    //     const auto block_size = len / table_size;
-
-    //     int i = 0;
-    //     utf8::scan([block_size, &i, this](const utf8::Codepoint&, const char*, int index) {
-    //                    if (i > 0 and i % block_size == 0) {
-    //                        lookup_table_[i / block_size] = {i, index};
-    //                    }
-    //                    i++;
-    //                },
-    //         str_,
-    //         str_len_);
-    // }
-
     inline void load_chunk(int index)
     {
-        size_t start_offset = 0;
         int i = 0;
-        // for (auto& elem : reversed(lookup_table_)) {
-        //     if (elem.first <= index) {
-        //         start_offset = elem.second;
-        //         i = elem.first;
-        //     }
-        // }
         size_t stop_offset = str_len_;
-        // for (auto& elem : lookup_table_) {
-        //     if (elem.first > index + index_count_) {
-        //         stop_offset = elem.second;
-        //     }
-        // }
 
         utf8::scan(
             [this, &i, &index](const utf8::Codepoint& cp, const char*, int) {
@@ -176,8 +136,8 @@ private:
                 }
                 i++;
             },
-            str_ + start_offset,
-            stop_offset - start_offset);
+            str_,
+            stop_offset);
 
         index_start_ = index;
     }

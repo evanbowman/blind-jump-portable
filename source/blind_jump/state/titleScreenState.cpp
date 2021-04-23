@@ -375,9 +375,20 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 cursor_index_ = 1;
             }
 
+            u8 bugfix_for_long_russian_text = 0;
+            if (len_1 + len_2 == 20) {
+                // The newgame and continue text in russian take up all
+                // available characters, we need to throw in this little bugfix
+                // to adjust the balance of the text, so that the arrow icons
+                // that wrap the text do not overlap and create issues.
+                bugfix_for_long_russian_text = 1;
+            }
+
             options_[1].emplace(pfrm,
                                 opt_2->c_str(),
-                                OverlayCoord{u8(spacing * 2 + len_1), start_y},
+                                OverlayCoord{u8(spacing * 2 + len_1
+                                                + bugfix_for_long_russian_text),
+                                    start_y},
                                 font_conf);
 
 
