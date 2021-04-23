@@ -43,7 +43,7 @@ public:
 StatePtr null_state();
 
 
-using NotificationStr = StringBuffer<40>;
+using NotificationStr = StringBuffer<70>;
 void push_notification(Platform& pfrm,
                        State* state,
                        const NotificationStr& string);
