@@ -8,7 +8,7 @@
 выход
 предмет
 магазин
-путевая точка 
+точка пути
 часть I:
 прибытие
 часть II:
@@ -56,7 +56,7 @@
 "
 Инвентарь уже полон
 предметы
-путевая точка очищена
+точка пути очищена
 очки 
 лучший результат 
 наилучшие результаты
@@ -66,47 +66,47 @@
 предметов собрано %
 путевых точек 
 .
-Resume
-Connect Peer
-Settings
-Script Console
-Save and Quit
-See you later...
-Choose a target:
-No road map? No problem! The hyperspace gate network calculates a path to your destination by routing your journey through a sequence of waypoints. Tens of thousands of waypoints were contructed in orbit around Earth and its moon. Because the waypoints are constantly in motion during orbit, the gate network continually recalculates the path to your destination. You'll never visit the same waypoints twice! Due to the unpredictable nature of the hyperspace gates, passing through a gate is sometimes referred to as a blind jump.
-Show Stats: 
-Language: 
-Contrast: 
-Night Mode: 
-Swap A/B: 
-default
-Difficulty: 
-easy
-normal
-hard
-survival
-level must be clear!
-Strafe Key: 
-separate
-combined
-Log Severity:
-Show Speedrun Clock: 
-Camera: 
-fixed
-tracking (low)
-tracking (high)
-Rumble Enabled: 
-yes
-no
-menu disabled
- ft
+Продолжить
+Подключить напарника
+Настройки
+Консоль
+Сохранить и выйти
+До встречи...
+Выберите цель:
+Нету путеводителя? Не страшно! Гиперсеть расчитает путь к вашей цели через цепочку путевых точек. Десятки тысяч этих точек были размещены на орбите Земли и её спутника. Из-за постоянного движения по орбите сеть вынуждена всё время перестраивать маршрут к цели, следя за тем, что бы вы на своём пути никогда не посетили одну и ту же точку дважды. Такое непостоянство маршрута и дало название проходу через врата - слепой прыжок.
+Показать статистику: 
+Язык: 
+Контраст: 
+Ночной режим: 
+Поменять местами A/B: 
+по-умолчанию
+Сложность: 
+лёгкая
+средняя
+сложная
+выживание
+надо очистить уровень!
+Стрельба в движении: 
+раздельно
+вместе
+Уровень логирования:
+Показать игровое время: 
+Камера: 
+неподвижная
+следящая (низко)
+следящая (высоко)
+Вибрация включена: 
+да
+нет
+меню отключено
+ футы
 
-Peer connected!
-Peer connection failed!
-Peer died!
-Peer health changed to 
-Waiting for Peers...
-Synchronizing Games...
+Напарник подключен!
+Напарник не смог подключиться!
+Напарник погиб!
+Здоровье напарника стало 
+Ожидание напарника...
+Синхронизация...
  fps
  tx
  rx
@@ -114,31 +114,31 @@ Synchronizing Games...
  rl
  sbr
  lnsat
-required: Map system
-The Wanderer Defeated
-Gatekeeper Destroyed
-Defeated the Twins
-Infested Conduit Cleansed!
-Hyperspace Network Destroyed
-Peer waiting in gate...
+необходимо: система карт
+Бродяга побеждён
+Хранитель врат разрушен
+Близнецы побеждены
+Заражённый канал очищен!
+Гиперсеть уничтожена
+Напарник ожидает во вратах...
 debug
 info
 warning
 error
-Power Surge detected!
-Buy items
-Sell items
-Buy, price: 
-Sell, price: 
-Item info
-Scavenger's shop
-buy
-sell
-Update required!
-Swarm approaching!
-Peer requires update!
-overall
-Peer used lethargy!
+Замечен всплеск энергии!
+Купить вещи
+Продать вещи
+Цена покупки: 
+Цена продажи: 
+Информация о предмете
+Барахолка
+купить
+продать
+Необходимо улучшение!
+Приближается рой!
+Напарнику нужно улучшение!
+всего
+Напарник использовал летаргию!
 русский
 
 
