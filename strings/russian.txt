@@ -34,37 +34,37 @@
 Апельсин (+1 здоровье)
 Семена апельсина
 
-Long jump drive (pt. II)
-Long jump drive (pt. III)
-Long jump drive (pt. IV)
-Long jump drive (home)
-Oh, that old thing? Eh, I have no use for it.
-A turbo charger for a blaster, heh, quite destructive at close range.
-I'm not so sure what this thing does, it looks like an old pocket watch. Very fine metalwork though, worth a lot of money...
-Looks like a piece of surveying equipment. These map system devices will build a map as you walk, and point you in the direction of the nearest hyperspace gate.
-Ack! Be careful with those! Those shells are highly unstable!!!
-A fancy radio transmitter, try using it near some machines.
-An orange! Legend has it that the workers who built these waypoints were out here for months at a time... wouldn't want to get scurvy!
-A portable hyperspace gate generator... think of it as... a sort of insurance policy if you're knocked out.
-(SINGLE USE)
-locked, 
-blocked, Peer is in the way!
- enemy left
- enemies left
-Nothing
-got "
+Привод дальнего прыжка (ч.II)
+Привод дальнего прыжка (ч.III)
+Привод дальнего прыжка (ч.IV)
+Привод дальнего прыжка (дом)
+Хм, это старьё? Бесполезно, мне не нужно.
+Турбо зарядка для бластера, хэх, достаточно разрушительна в ближнем бою.
+Не уверен, что понимаю, что эта штука делает. Похожа на старые карманные часы. Очень тонкая работа и, кстати, стоит кучу денег...
+Выглядит как какое-то картографическое приспособление. Такие устройства на ходу строят карту окружающего мира и могут указать направление на ближайшие врата.
+Эй! Осторожнее! Эти заряды крайне нестабильные!!!
+Забавный передатчик, попробуйте использовать его рядом с какой-либо машиной.
+Апельсин! Легенды говорят, что смены у рабочих, строивших путевые точки, длились месяцами... и только этим они спасались от цинги.
+Портативный генератор врат... Считайте, что это... Что-то вроде страховки на случай если дела пойдут совсем плохо.
+(ОДНОРАЗОВЫЙ)
+закрыто, 
+не пройти, напарник мешает!
+ враг остался
+ врагов осталось
+Ничего
+взяли "
 "
-Inventory full
-items
-waypoint clear
-score 
-highscore 
-highscores
-time
-items collected % 
+Инвентарь уже полон
+предметы
+путевая точка очищена
+очки 
+лучший результат 
+наилучшие результаты
+время
+предметов собрано % 
 
-items collected %
-waypoints 
+предметов собрано %
+путевых точек 
 .
 Resume
 Connect Peer
