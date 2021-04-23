@@ -1,38 +1,38 @@
 
 
- presents
+ представляет
 
-BLIND JUMP
-you
-enemy
-exit
-item
-shop
-waypoint 
-part I:
-the arrival 
-part II:
-the descent 
-part III:
-into the waste
-part IV:
-by moonlight
-Empty
-Old poster (1)
-Worker's notebook (1/2)
-Worker's notebook (2/2)
-Engineer's notebook (1/2)
-Engineer's notebook (2/2)
-Blaster
-Accelerator (60 shots)
-Lethargy (18 sec)
-Map system
-Explosive rounds (2)
-Signal jammer
-Seed packet
-Navigation pamphlet
-Orange (+1 hp)
-Orange seeds
+СЛЕПОЙ ПРЫЖОК
+вы
+враг
+выход
+предмет
+магазин
+путевая точка 
+часть I:
+прибытие
+часть II:
+спуск
+часть III:
+в пустошь
+часть IV:
+в свете луны
+Пусто
+Старый плакат (1)
+Записная книжка рабочего (1/2)
+Записная книжка рабочего (2/2)
+Дневник инженера (1/2)
+Дневник инженера (2/2)
+Бластер
+Ускоритель (60 зарядов)
+Летаргия (18 сек)
+Система карт
+Разрывные заряды (2)
+Глушилка сигнала
+Пакет семян
+Навигационный памфлет
+Апельсин (+1 здоровье)
+Семена апельсина
 
 Long jump drive (pt. II)
 Long jump drive (pt. III)
