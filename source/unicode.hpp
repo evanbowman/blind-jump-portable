@@ -116,7 +116,6 @@ inline size_t len(const char* data)
 //
 class BufferedStr {
 private:
-
     const char* const str_;
 
     static constexpr const int index_count_ = 300;

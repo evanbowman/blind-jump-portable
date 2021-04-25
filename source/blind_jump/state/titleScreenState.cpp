@@ -386,9 +386,9 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             options_[1].emplace(pfrm,
                                 opt_2->c_str(),
-                                OverlayCoord{u8(spacing * 2 + len_1
-                                                + bugfix_for_long_russian_text),
-                                    start_y},
+                                OverlayCoord{u8(spacing * 2 + len_1 +
+                                                bugfix_for_long_russian_text),
+                                             start_y},
                                 font_conf);
 
 
