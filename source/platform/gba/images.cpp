@@ -85,6 +85,8 @@
 //;
 #include "data/death_text_chinese.h"
 //;
+#include "data/death_text_russian.h"
+//;
 #include "data/old_poster_flattened.h"
 //;
 #include "data/old_poster_chinese_flattened.h"
@@ -197,6 +199,8 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(death_text_english),
 //;
     TEXTURE_INFO(death_text_chinese),
+//;
+    TEXTURE_INFO(death_text_russian),
 //;
     TEXTURE_INFO(old_poster_flattened),
 //;

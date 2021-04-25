@@ -200,7 +200,7 @@ public:
     void load_sprite_texture(const char* name);
     void load_tile0_texture(const char* name);
     void load_tile1_texture(const char* name);
-    void load_overlay_texture(const char* name);
+    bool load_overlay_texture(const char* name);
 
     // Sleep halts the game for an amount of time equal to some number
     // of game updates. Given that the game should be running at

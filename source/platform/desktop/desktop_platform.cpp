@@ -1671,8 +1671,15 @@ void Platform::load_tile1_texture(const char* name)
 }
 
 
-void Platform::load_overlay_texture(const char* name)
+bool Platform::load_overlay_texture(const char* name)
 {
+    auto image_folder = resource_path() + ("images" PATH_DELIMITER);
+
+    std::ifstream f(image_folder + name + ".txt");
+    if (not f.good()) {
+        return false;
+    }
+
     {
         // std::lock_guard<std::mutex> guard(texture_swap_mutex);
         texture_swap_requests.push({TextureSwap::overlay, name});
@@ -1684,6 +1691,8 @@ void Platform::load_overlay_texture(const char* name)
     }
     ::platform->data()->glyph_table_.clear();
     ::platform->data()->next_glyph_ = glyph_region_start;
+
+    return true;
 }
 
 

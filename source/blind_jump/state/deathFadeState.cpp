@@ -23,20 +23,36 @@ StatePtr DeathFadeState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         int image_y = 3;
 
-        if (locale_language_name(locale_get_language()) == "chinese") {
-            pfrm.load_overlay_texture("death_text_chinese");
-            --image_y;
-        } else {
+        StringBuffer<48> death_text_overlay("death_text_");
+        death_text_overlay += locale_language_name(locale_get_language());
+
+        if (not pfrm.load_overlay_texture(death_text_overlay.c_str())) {
             pfrm.load_overlay_texture("death_text_english");
         }
 
-        draw_image(pfrm,
-                   450,
-                   (screen_tiles.x - image_width) / 2,
-                   image_y,
-                   image_width,
-                   3,
-                   Layer::overlay);
+        if (locale_language_name(locale_get_language()) == "russian") {
+            // FIXME: go back into the other image files, and change the text,
+            // so that, all of the death text images are the same size. Because
+            // I'm lazy, I just added a special case for Russian text. I'll fix
+            // the other image files later.
+            const auto image_width = 20;
+            draw_image(pfrm,
+                       444,
+                       (screen_tiles.x - image_width) / 2,
+                       image_y,
+                       image_width,
+                       3,
+                       Layer::overlay);
+        } else {
+            draw_image(pfrm,
+                       450,
+                       (screen_tiles.x - image_width) / 2,
+                       image_y,
+                       image_width,
+                       3,
+                       Layer::overlay);
+        }
+
 
         if (pfrm.network_peer().is_connected()) {
             if (game.peer()) {
