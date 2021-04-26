@@ -403,16 +403,16 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      [](Platform&, Game&) { return null_state(); },
      LocaleString::empty_inventory_str},
     {STANDARD_ITEM_HANDLER(old_poster_1),
-     [](Platform&, Game&) {
-         static const auto english_str = "old_poster_flattened";
-         const char* str = english_str;
+     [](Platform& pfrm, Game&) {
+         StringBuffer<48> seed_packet_texture = "old_poster_";
+         seed_packet_texture += locale_language_name(locale_get_language());
+         seed_packet_texture += "_flattened";
 
-         if (locale_language_name(locale_get_language()) == "chinese") {
-             static const auto chinese_str = "old_poster_chinese_flattened";
-             str = chinese_str;
+         if (not pfrm.overlay_texture_exists(seed_packet_texture.c_str())) {
+             seed_packet_texture = "old_poster_flattened";
          }
 
-         return state_pool().create<ImageViewState>(str,
+         return state_pool().create<ImageViewState>(seed_packet_texture.c_str(),
                                                     ColorConstant::steel_blue);
      },
      LocaleString::old_poster_title},
@@ -521,15 +521,16 @@ constexpr static const InventoryItemHandler inventory_handlers[] = {
      {LocaleString::sc_dialog_explosive_rounds, LocaleString::empty},
      InventoryItemHandler::yes},
     {STANDARD_ITEM_HANDLER(seed_packet),
-     [](Platform&, Game&) {
-         static const auto english_str = "seed_packet_flattened";
-         const char* str = english_str;
+     [](Platform& pfrm, Game&) {
+         StringBuffer<48> seed_packet_texture = "seed_packet_";
+         seed_packet_texture += locale_language_name(locale_get_language());
+         seed_packet_texture += "_flattened";
 
-         if (locale_language_name(locale_get_language()) == "chinese") {
-             static const auto chinese_str = "seed_packet_chinese_flattened";
-             str = chinese_str;
+         if (not pfrm.overlay_texture_exists(seed_packet_texture.c_str())) {
+             seed_packet_texture = "seed_packet_flattened";
          }
-         return state_pool().create<ImageViewState>(str,
+
+         return state_pool().create<ImageViewState>(seed_packet_texture.c_str(),
                                                     ColorConstant::steel_blue);
      },
      LocaleString::seed_packet_title},

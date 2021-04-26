@@ -97,6 +97,8 @@
 //;
 #include "data/seed_packet_chinese_flattened.h"
 //;
+#include "data/seed_packet_russian_flattened.h"
+//;
 #include "data/overlay_network_flattened.h"
 //
 
@@ -211,6 +213,8 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(seed_packet_flattened),
 //;
     TEXTURE_INFO(seed_packet_chinese_flattened),
+//;
+    TEXTURE_INFO(seed_packet_russian_flattened),
 //;
     TEXTURE_INFO(overlay_network_flattened),
 //

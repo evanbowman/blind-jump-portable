@@ -202,6 +202,8 @@ public:
     void load_tile1_texture(const char* name);
     bool load_overlay_texture(const char* name);
 
+    bool overlay_texture_exists(const char* name);
+
     // Sleep halts the game for an amount of time equal to some number
     // of game updates. Given that the game should be running at
     // 60fps, one update equals 1/60 of a second.

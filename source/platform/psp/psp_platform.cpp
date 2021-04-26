@@ -552,6 +552,12 @@ static g2dColor default_text_foreground_color;
 static g2dColor default_text_background_color;
 
 
+bool Platform::overlay_texture_exists(const char* name)
+{
+    return find_image(name);
+}
+
+
 bool Platform::load_overlay_texture(const char* name)
 {
     StringBuffer<64> str_name = name;

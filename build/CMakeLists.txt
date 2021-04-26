@@ -290,6 +290,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/blaster_info_flattened.s
     ${DATA_DIR}/seed_packet_flattened.s
     ${DATA_DIR}/seed_packet_chinese_flattened.s
+    ${DATA_DIR}/seed_packet_russian_flattened.s
     ${DATA_DIR}/overlay_network_flattened.s)
 else()
   set(SOURCES
@@ -548,6 +549,7 @@ if(GAMEBOY_ADVANCE)
     add_overlay(blaster_info 0 0 YES NO)
     add_overlay(seed_packet 0 0 YES NO)
     add_overlay(seed_packet_chinese 0 0 YES NO)
+    add_overlay(seed_packet_russian 0 0 YES NO)
     add_overlay(overlay_network 0 0 YES NO)
 
     configure_file(images.cpp.in ${SOURCE_DIR}/platform/gba/images.cpp)

@@ -3126,6 +3126,19 @@ static volatile int chinese_checksum_2 = 30;
 static volatile int chinese_checksum_3 = 8;
 
 
+bool Platform::overlay_texture_exists(const char* name)
+{
+    for (auto& info : overlay_textures) {
+
+        if (str_cmp(name, info.name_) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool Platform::load_overlay_texture(const char* name)
 {
     for (auto& info : overlay_textures) {

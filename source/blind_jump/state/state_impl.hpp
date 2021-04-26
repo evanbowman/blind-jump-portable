@@ -551,7 +551,8 @@ private:
 
 class ImageViewState : public MenuState {
 public:
-    ImageViewState(const char* image_name, ColorConstant background_color);
+    ImageViewState(const StringBuffer<48>& image_name,
+                   ColorConstant background_color);
 
     void enter(Platform& pfrm, Game& game, State& prev_state) override;
     void exit(Platform& pfrm, Game& game, State& next_state) override;
@@ -559,7 +560,7 @@ public:
     StatePtr update(Platform& pfrm, Game& game, Microseconds delta) override;
 
 private:
-    const char* image_name_;
+    StringBuffer<48> image_name_;
     ColorConstant background_color_;
 };
 

@@ -1,7 +1,7 @@
 #include "state_impl.hpp"
 
 
-ImageViewState::ImageViewState(const char* image_name,
+ImageViewState::ImageViewState(const StringBuffer<48>& image_name,
                                ColorConstant background_color)
     : image_name_(image_name), background_color_(background_color)
 {
@@ -26,7 +26,7 @@ void ImageViewState::enter(Platform& pfrm, Game& game, State&)
 
     pfrm.sleep(1);
     pfrm.screen().fade(1.f, background_color_);
-    pfrm.load_overlay_texture(image_name_);
+    pfrm.load_overlay_texture(image_name_.c_str());
 
     const auto screen_tiles = calc_screen_tiles(pfrm);
 
