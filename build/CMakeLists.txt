@@ -287,6 +287,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/spritesheet_boss3.s
     ${DATA_DIR}/old_poster_flattened.s
     ${DATA_DIR}/old_poster_chinese_flattened.s
+    ${DATA_DIR}/old_poster_russian_flattened.s
     ${DATA_DIR}/blaster_info_flattened.s
     ${DATA_DIR}/seed_packet_flattened.s
     ${DATA_DIR}/seed_packet_chinese_flattened.s
@@ -546,6 +547,7 @@ if(GAMEBOY_ADVANCE)
     add_overlay(death_text_russian 0 0 NO NO)
     add_overlay(old_poster 0 0 YES NO)
     add_overlay(old_poster_chinese 0 0 YES NO)
+    add_overlay(old_poster_russian 0 0 YES NO)
     add_overlay(blaster_info 0 0 YES NO)
     add_overlay(seed_packet 0 0 YES NO)
     add_overlay(seed_packet_chinese 0 0 YES NO)
