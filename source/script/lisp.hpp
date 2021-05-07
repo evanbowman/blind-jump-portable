@@ -313,6 +313,7 @@ int length(Value* lat);
 void push_op(Value* operand);
 Value* get_op(u32 operand_number);
 void pop_op();
+Value* get_arg(u16 arg);
 
 
 template <typename F> void foreach (Value* list, F && fn)

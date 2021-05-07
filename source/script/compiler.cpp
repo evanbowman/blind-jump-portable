@@ -212,6 +212,11 @@ int compile_impl(ScratchBuffer& buffer,
 
                 append<instruction::Rest>(buffer, write_pos);
 
+            } else if (fn->type_ == Value::Type::symbol and
+                       str_cmp(fn->symbol_.name_, "arg") == 0 and argc == 1) {
+
+                append<instruction::Arg>(buffer, write_pos);
+
             } else {
 
                 write_pos = compile_impl(buffer, write_pos, fn, jump_offset);

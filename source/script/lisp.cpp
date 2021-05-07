@@ -2055,6 +2055,11 @@ void init(Platform& pfrm)
                         ++depth;
                         break;
 
+                    case Arg::op():
+                        out += Arg::name();
+                        i += sizeof(Arg);
+                        break;
+
                     case Funcall::op():
                         out += "FUNCALL(";
                         out += to_string<10>(*(data->data_ + i + 1));

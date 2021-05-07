@@ -148,6 +148,15 @@ void vm_execute(Value* code_buffer, int start_offset)
             break;
         }
 
+        case Arg::op(): {
+            read<Arg>(code, pc);
+            auto arg_num = get_op(0);
+            auto arg = get_arg(arg_num->integer_.value_);
+            pop_op();
+            push_op(arg);
+            break;
+        }
+
         case MakePair::op(): {
             read<MakePair>(code, pc);
             auto car = get_op(1);
