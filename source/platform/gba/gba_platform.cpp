@@ -969,9 +969,7 @@ void Platform::push_task(Task* task)
     task->running_ = true;
 
     if (not task_queue_.push_back(task)) {
-        error(*this, "failed to enqueue task");
-        while (true)
-            ;
+        fatal("failed to enqueue task");
     }
 }
 
@@ -3165,8 +3163,7 @@ void Platform::load_overlay_texture(const char* name)
 
         if (checksum not_eq
             chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
-            while (true) {
-            }
+            while (true) ;
         }
     }
 }
@@ -3742,8 +3739,7 @@ static bool multiplayer_busy()
 bool Platform::NetworkPeer::send_message(const Message& message)
 {
     if (message.length_ > sizeof(TxInfo::data_)) {
-        while (true)
-            ; // error!
+        ::platform->fatal("invalid network packet size");
     }
 
     if (not is_connected()) {
@@ -3926,10 +3922,7 @@ void Platform::NetworkPeer::poll_consume(u32 size)
     if (mc.poller_current_message) {
         mc.rx_message_pool.post(mc.poller_current_message);
     } else {
-        while (true)
-            ;   // How do we even end up in this scenario?! We only write
-                // to poller_current_message if rx_ring_pop returns a
-                // valid pointer...
+        ::platform->fatal("logic error in net poll");
     }
     mc.poller_current_message = nullptr;
 }

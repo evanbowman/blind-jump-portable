@@ -310,8 +310,7 @@ StatePtr QuickSelectInventoryState::update(Platform& pfrm,
                                 done = true;
 
                                 if (item not_eq items_[selector_pos_]) {
-                                    while (true)
-                                        ;
+                                    pfrm.fatal("quick sel inv logic err");
                                 }
                             }
                             // NOTE: boss level spritesheets do not necessarily

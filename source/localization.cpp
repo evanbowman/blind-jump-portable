@@ -1157,9 +1157,7 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls)
         while (index not_eq target_line) {
             while (*data not_eq '\n') {
                 if (*data == '\0') {
-                    error(pfrm, "blah");
-                    while (true)
-                        ; // FIXME: raise error...
+                    pfrm.fatal("null byte in localized text");
                 }
                 ++data;
             }
@@ -1175,9 +1173,7 @@ LocalizedText locale_string(Platform& pfrm, LocaleString ls)
 
         return result;
     } else {
-        error(pfrm, "strings file for language does not exist");
-        while (true)
-            ;
+        pfrm.fatal("missing strings file for language");
     }
 }
 

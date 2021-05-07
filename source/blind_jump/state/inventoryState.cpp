@@ -22,8 +22,7 @@ LocalizedText item_description(Platform& pfrm, Item::Type type)
         return locale_string(pfrm, handler->description_);
 
     } else {
-        while (true)
-            ;
+        pfrm.fatal("corrupt item memory");
     }
 }
 

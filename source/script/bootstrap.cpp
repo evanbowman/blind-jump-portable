@@ -40,6 +40,13 @@ ScratchBufferPtr Platform::make_scratch_buffer()
 }
 
 
+void Platform::fatal(const char* msg)
+{
+    std::cerr << "fatal error: " << msg << std::endl;
+    exit(EXIT_FAILURE);
+}
+
+
 int Platform::scratch_buffers_remaining()
 {
     return scratch_buffer_count - scratch_buffers_in_use;
