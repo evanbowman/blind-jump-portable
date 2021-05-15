@@ -687,10 +687,10 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         }
 
         if (((game.persistent_data().settings_.button_mode_ ==
-             Settings::ButtonMode::strafe_combined and
-             pfrm.keyboard().down_transition(game.action2_key())) or
+                  Settings::ButtonMode::strafe_combined and
+              pfrm.keyboard().down_transition(game.action2_key())) or
              (game.persistent_data().settings_.button_mode_ ==
-              Settings::ButtonMode::strafe_separate and
+                  Settings::ButtonMode::strafe_separate and
               pfrm.keyboard().down_transition<Key::alt_1>())) and
             (left or right or up or down) and
             length(game.effects().get<DialogBubble>()) == 0 and dodges_ > 0) {

@@ -293,6 +293,7 @@ void TextView::assign(const char* str,
     size_ = size;
 
     const auto len = str_len(str);
+    const auto ulen = utf8::len(str);
     utf8::BufferedStr ustr(str, len);
 
     auto cursor = coord;
@@ -307,7 +308,7 @@ void TextView::assign(const char* str,
     };
 
     size_t i;
-    for (i = 0; i < len; ++i) {
+    for (i = 0; i < ulen; ++i) {
 
         if (cursor.x == coord.x + size.x) {
             if (ustr.get(i) not_eq ' ') {

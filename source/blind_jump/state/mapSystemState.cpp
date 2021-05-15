@@ -80,7 +80,10 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             level_text_.emplace(
                 pfrm,
-                OverlayCoord{u8(screen_tiles.x -
+                OverlayCoord{(utf8::len(level_str->c_str()) +
+                              utf8::len(level_num_str) == 13) ?
+                    u8(screen_tiles.x - 13) :
+                    u8(screen_tiles.x -
                                 std::min((size_t)12,
                                          (1 + utf8::len(level_str->c_str()) +
                                           utf8::len(level_num_str)) *

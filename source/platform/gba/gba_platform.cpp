@@ -3124,7 +3124,20 @@ static volatile int chinese_checksum_2 = 30;
 static volatile int chinese_checksum_3 = 8;
 
 
-void Platform::load_overlay_texture(const char* name)
+bool Platform::overlay_texture_exists(const char* name)
+{
+    for (auto& info : overlay_textures) {
+
+        if (str_cmp(name, info.name_) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+bool Platform::load_overlay_texture(const char* name)
 {
     for (auto& info : overlay_textures) {
 
@@ -3155,17 +3168,22 @@ void Platform::load_overlay_texture(const char* name)
                     gm.reference_count_ = -1;
                 }
             }
+
+            if (str_cmp(name, "overlay") == 0) {
+                int checksum = chinese_noncommercial_text_checksum();
+
+                if (checksum not_eq
+                    chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
+                    while (true) {
+                    }
+                }
+            }
+
+            return true;
         }
     }
 
-    if (str_cmp(name, "overlay") == 0) {
-        int checksum = chinese_noncommercial_text_checksum();
-
-        if (checksum not_eq
-            chinese_checksum_1 + chinese_checksum_2 + chinese_checksum_3) {
-            while (true) ;
-        }
-    }
+    return false;
 }
 
 

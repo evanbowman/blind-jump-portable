@@ -215,6 +215,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/file_english.cpp
     ${DATA_DIR}/file_spanish.cpp
     ${DATA_DIR}/file_chinese.cpp
+    ${DATA_DIR}/file_russian.cpp
     ${DATA_DIR}/scottbuckley_omega.s
     ${DATA_DIR}/music_waves.s
     ${DATA_DIR}/music_murmuration.s
@@ -226,6 +227,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/overlay.s
     ${DATA_DIR}/death_text_english.s
     ${DATA_DIR}/death_text_chinese.s
+    ${DATA_DIR}/death_text_russian.s
     ${DATA_DIR}/repl.s
     ${DATA_DIR}/overlay_cutscene.s
     ${DATA_DIR}/charset.s
@@ -285,9 +287,11 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/spritesheet_boss3.s
     ${DATA_DIR}/old_poster_flattened.s
     ${DATA_DIR}/old_poster_chinese_flattened.s
+    ${DATA_DIR}/old_poster_russian_flattened.s
     ${DATA_DIR}/blaster_info_flattened.s
     ${DATA_DIR}/seed_packet_flattened.s
     ${DATA_DIR}/seed_packet_chinese_flattened.s
+    ${DATA_DIR}/seed_packet_russian_flattened.s
     ${DATA_DIR}/overlay_network_flattened.s)
 else()
   set(SOURCES
@@ -497,6 +501,7 @@ if(GAMEBOY_ADVANCE)
   add_file(strings english txt)
   add_file(strings spanish txt)
   add_file(strings chinese txt)
+  add_file(strings russian txt)
 
   if(GBA_AUTOBUILD_CONF)
     configure_file(files.cpp.in ${SOURCE_DIR}/platform/gba/files.cpp)
@@ -539,11 +544,14 @@ if(GAMEBOY_ADVANCE)
     add_overlay(overlay_dialog 0 0 NO NO)
     add_overlay(death_text_english 0 0 NO NO)
     add_overlay(death_text_chinese 0 0 NO NO)
+    add_overlay(death_text_russian 0 0 NO NO)
     add_overlay(old_poster 0 0 YES NO)
     add_overlay(old_poster_chinese 0 0 YES NO)
+    add_overlay(old_poster_russian 0 0 YES NO)
     add_overlay(blaster_info 0 0 YES NO)
     add_overlay(seed_packet 0 0 YES NO)
     add_overlay(seed_packet_chinese 0 0 YES NO)
+    add_overlay(seed_packet_russian 0 0 YES NO)
     add_overlay(overlay_network 0 0 YES NO)
 
     configure_file(images.cpp.in ${SOURCE_DIR}/platform/gba/images.cpp)

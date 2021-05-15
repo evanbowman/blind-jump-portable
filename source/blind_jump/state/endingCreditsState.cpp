@@ -59,7 +59,7 @@ static const std::array<const char*, 33> credits_lines = {
     "Translations",
     "Chinese%verkkarscd",
     "",
-    "(Seeking translations)",
+    "Russian%Павел Полстюк",
     "",
     "",
     "Special Thanks",

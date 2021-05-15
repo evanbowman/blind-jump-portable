@@ -552,13 +552,19 @@ static g2dColor default_text_foreground_color;
 static g2dColor default_text_background_color;
 
 
-void Platform::load_overlay_texture(const char* name)
+bool Platform::overlay_texture_exists(const char* name)
+{
+    return find_image(name);
+}
+
+
+bool Platform::load_overlay_texture(const char* name)
 {
     StringBuffer<64> str_name = name;
 
     auto img_data = find_image(name);
     if (not img_data) {
-        return;
+        return false;
     }
 
     static const auto line_height = 8;
@@ -634,6 +640,8 @@ void Platform::load_overlay_texture(const char* name)
             set_pixel((x * 2) + 1, (y * 2) + 1);
         }
     }
+
+    return true;
 }
 
 
