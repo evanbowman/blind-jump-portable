@@ -657,6 +657,16 @@ static const long hextable[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 
+long hexdec(unsigned const char* hex)
+{
+    long ret = 0;
+    while (*hex && ret >= 0) {
+        ret = (ret << 4) | hextable[*hex++];
+    }
+    return ret;
+}
+
+
 bool is_executing()
 {
     if (bound_context) {
@@ -1081,6 +1091,13 @@ static u32 read_number(const char* code)
 
     while (true) {
         switch (code[i]) {
+        case 'x':
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
         case '0':
         case '1':
         case '2':
@@ -1100,12 +1117,18 @@ static u32 read_number(const char* code)
     }
 
 FINAL:
-    s32 result = 0;
-    for (u32 i = 0; i < num_str.length(); ++i) {
-        result = result * 10 + (num_str[i] - '0');
+
+    if (num_str.length() > 1 and num_str[1] == 'x') {
+        lisp::push_op(lisp::make_integer(hexdec((const u8*)num_str.begin() + 2)));
+    } else {
+        s32 result = 0;
+        for (u32 i = 0; i < num_str.length(); ++i) {
+            result = result * 10 + (num_str[i] - '0');
+        }
+
+        lisp::push_op(lisp::make_integer(result));
     }
 
-    lisp::push_op(lisp::make_integer(result));
     return i;
 }
 
@@ -2053,6 +2076,11 @@ void init(Platform& pfrm)
                         out += ")";
                         i += 3;
                         ++depth;
+                        break;
+
+                    case Arg::op():
+                        out += Arg::name();
+                        i += sizeof(Arg);
                         break;
 
                     case Funcall::op():

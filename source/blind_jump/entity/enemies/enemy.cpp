@@ -49,7 +49,10 @@ const Entity& Enemy::get_target(Game& game)
             using VT = typename T::ValueType::element_type;
 
             if (not std::is_same<VT, SnakeBody>() and
-                not std::is_same<VT, SnakeHead>()) {
+                not std::is_same<VT, SnakeHead>() and
+                // Do not include infested core, as enemies only spawn while the
+                // cores are shielded.
+                not std::is_same<VT, InfestedCore>()) {
 
                 for (auto& enemy : buf) {
                     if (result == nullptr and not enemy->is_allied()) {

@@ -76,9 +76,11 @@ Blind Jump is a simple action/adventure game, featuring procedurally generated l
 
 ### Controls
 
-On the the directional buttons or analog stick to move, the A/X button to shoot, and the B/O button to interact with things and to select items and options in the game's menus. If you hold the A button while walking, you will shoot repeatedly, and also the player will strafe.
+On the the directional buttons or analog stick to move, the B/X button to shoot, and the A/O button to interact with things and to select items and options in the game's menus. If you hold the B button while walking, you will shoot repeatedly, and also the player will strafe. Tap A while walking to dodge.
 
 Hold the right shoulder button, or the left shoulder button, to open up a quick item selector menu, or a minimap, respectively.
+
+Some people prefer to have the strafe and shoot mapped to different keys. For an alternate button mapping, where A=strafe, B=shoot, and Left_Bumper=dodge, switch the strafe key setting to separate in the settings menu.
 
 <img src="imgs_for_readme/item_quick_select.gif"/>
 <img src="imgs_for_readme/quick_map.gif"/>
@@ -98,7 +100,7 @@ To enable, press the start button on both devices, and then select the "Connect 
 
 With the title screen open, press select fifteen times, and the game will enter a boss-rush mode. Note that entering boss-rush mode is equivalent to starting a new game, and you will lose any items that you may have collected.
 
-Technically, you may also enter boss-rush mode at any time, by opening the script console (see below), and executing the command: `(set #debug-mode 7)`. The next transporter will then take the player to a boss.
+Technically, you may also enter boss-rush mode at any time, by opening the script console (see below), and executing the command: `(set 'debug-mode 7)`. The next transporter will then take the player to a boss.
 
 #### Script Console
 

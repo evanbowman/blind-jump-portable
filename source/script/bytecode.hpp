@@ -408,6 +408,21 @@ struct Rest {
 };
 
 
+struct Arg {
+    Header header_;
+
+    static const char* name()
+    {
+        return "ARGN";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 27;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -452,6 +467,7 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(MakePair)
             MATCH(First)
             MATCH(Rest)
+            MATCH(Arg)
         }
     }
     return nullptr;

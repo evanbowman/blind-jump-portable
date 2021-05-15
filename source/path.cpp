@@ -15,16 +15,12 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
     static_assert(sizeof(PathVertexData*) <= 8,
                   "What computer are you running this on?");
 
-
     if (not priority_q_) {
-        error(pfrm,
-              "failed to alloc priority q (does not fit in scratch buffer");
-        while (true)
-            ;
+        pfrm.fatal("failed to alloc priority q");
     }
 
     if (not map_matrix_) {
-        error(pfrm, "failed to alloc map matrix");
+        pfrm.fatal("failed to alloc map matrix");
         while (true)
             ;
     } else {
@@ -37,9 +33,7 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
 
     if (pfrm.scratch_buffers_remaining() <
         vertex_scratch_buffers + result_scratch_buffers + 1) {
-        error(pfrm, "not enough memory to compute path...");
-        while (true)
-            ;
+        pfrm.fatal("cannot alloc vertex buffer");
     }
 
     bool error_state = false;
@@ -84,9 +78,7 @@ IncrementalPathfinder::IncrementalPathfinder(Platform& pfrm,
     }();
 
     if (not start_v) {
-        error(pfrm, "start node does not exist in vertex set");
-        while (true)
-            ;
+        pfrm.fatal("start node not in vertex set");
     }
 
     sort_q();

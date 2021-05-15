@@ -133,8 +133,7 @@ void ItemShopState::exit(Platform& pfrm, Game& game, State& next_state)
 void ItemShopState::show_buy_icons(Platform& pfrm, Game& game)
 {
     if (not game.scavenger()) {
-        while (true)
-            ; // LOGIC ERROR
+        pfrm.fatal("in shop, but scavenger missing??");
     }
 
     buy_item_icons_.clear();
