@@ -35,7 +35,9 @@ StatePtr InventoryState::update(Platform& pfrm, Game& game, Microseconds delta)
         return state_pool().create<ActiveState>();
     }
 
-    if (pfrm.keyboard().down_transition<Key::start>()) {
+    if (pfrm.keyboard().down_transition<Key::start>() and
+        not is_boss_level(game.level())) {
+
         if (restore_keystates) {
             restore_keystates->set(static_cast<int>(inventory_key), false);
             restore_keystates->set(static_cast<int>(Key::start), true);
