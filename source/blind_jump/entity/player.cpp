@@ -104,7 +104,12 @@ void Player::on_collision(Platform& pf, Game& game, Compactor& compactor)
         game.camera().shake();
     }
 
-    Player::injured(pf, game, Health(2));
+    if (game.difficulty() == Settings::Difficulty::easy) {
+        Player::injured(pf, game, Health(1));
+    } else {
+        Player::injured(pf, game, Health(2));
+    }
+
     game.rumble(pf, milliseconds(430));
 }
 
@@ -148,7 +153,11 @@ void Player::on_collision(Platform& pf, Game& game, Wanderer&)
 
 void Player::on_collision(Platform& pf, Game& game, SnakeHead&)
 {
-    Player::injured(pf, game, Health(2));
+    if (game.difficulty() == Settings::Difficulty::easy) {
+        Player::injured(pf, game, Health(1));
+    } else {
+        Player::injured(pf, game, Health(2));
+    }
     game.rumble(pf, milliseconds(390));
 }
 

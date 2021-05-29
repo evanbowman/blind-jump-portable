@@ -108,7 +108,7 @@ void Twin::Helper::update(Platform& pf,
     case Helper::State::recharge:
         if (timer_ > [&] {
                 if (game.difficulty() == Settings::Difficulty::easy) {
-                    return seconds(2);
+                    return seconds(2) + milliseconds(250);
                 } else {
                     return seconds(1) + milliseconds(500);
                 }
@@ -204,7 +204,7 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         if (second_form()) {
             switch (game.difficulty()) {
             case Settings::Difficulty::easy:
-                return 0.000037f;
+                return 0.000035f;
 
             case Settings::Difficulty::count:
             case Settings::Difficulty::normal:
@@ -218,7 +218,7 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
         } else {
             switch (game.difficulty()) {
             case Settings::Difficulty::easy:
-                return 0.0000325f;
+                return 0.0000305f;
 
             case Settings::Difficulty::count:
             case Settings::Difficulty::normal:
@@ -235,7 +235,7 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
     const Float mode2_move_rate = [&] {
         switch (game.difficulty()) {
         case Settings::Difficulty::easy:
-            return 0.0000415f;
+            return 0.0000405f;
 
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
@@ -362,6 +362,8 @@ void Twin::update(Platform& pf, Game& game, Microseconds dt)
 
         if (alt_timer_ > [&] {
                 if (game.difficulty() == Settings::Difficulty::easy) {
+                    return milliseconds(800);
+                } else if (game.difficulty() == Settings::Difficulty::normal) {
                     return milliseconds(640);
                 } else {
                     return milliseconds(520);

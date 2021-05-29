@@ -313,7 +313,7 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
         timer_ += dt;
         if (timer_ > [&] {
                 if (game.difficulty() == Settings::Difficulty::easy) {
-                    return milliseconds(250);
+                    return milliseconds(300);
                 } else {
                     return milliseconds(200);
                 }
@@ -321,10 +321,20 @@ void Scarecrow::update(Platform& pfrm, Game& game, Microseconds dt)
             timer_ = 0;
             if (visible()) {
                 pfrm.speaker().play_sound("laser1", 4, position_);
-                if (not is_allied() and game.level() > boss_1_level) {
+
+                const auto conglomerate_shot_level = [&] {
+                    if (game.difficulty() == Settings::Difficulty::easy) {
+                        return boss_2_level;
+                    } else {
+                        return boss_1_level;
+                    }
+                }();
+
+                if (not is_allied() and
+                    game.level() > conglomerate_shot_level) {
                     Float shot_speed = 0.00011f;
                     if (game.difficulty() == Settings::Difficulty::easy) {
-                        shot_speed = 0.00009f;
+                        shot_speed = 0.00008f;
                     }
                     game.effects().spawn<ConglomerateShot>(
                         position_,

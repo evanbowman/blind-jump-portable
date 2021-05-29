@@ -225,7 +225,7 @@ void Golem::update(Platform& pfrm, Game& game, Microseconds dt)
             const auto max_count = [&] {
                 switch (game.difficulty()) {
                 case Settings::Difficulty::easy:
-                    shot_speed = 0.00016f;
+                    shot_speed = 0.00014f;
                     return 3;
 
                 case Settings::Difficulty::count:

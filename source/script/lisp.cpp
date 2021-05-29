@@ -1119,7 +1119,8 @@ static u32 read_number(const char* code)
 FINAL:
 
     if (num_str.length() > 1 and num_str[1] == 'x') {
-        lisp::push_op(lisp::make_integer(hexdec((const u8*)num_str.begin() + 2)));
+        lisp::push_op(
+            lisp::make_integer(hexdec((const u8*)num_str.begin() + 2)));
     } else {
         s32 result = 0;
         for (u32 i = 0; i < num_str.length(); ++i) {

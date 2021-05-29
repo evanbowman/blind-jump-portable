@@ -28,7 +28,7 @@ static Float shot_speed(Game& game)
 {
     switch (game.difficulty()) {
     case Settings::Difficulty::easy:
-        return 0.000122f;
+        return 0.000112f;
 
     case Settings::Difficulty::count:
     case Settings::Difficulty::normal:
@@ -154,7 +154,17 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
     case State::shot1:
         if (timer_ > milliseconds(50)) {
             timer_ -= milliseconds(50);
-            state_ = State::shot2;
+
+            if (game.difficulty() == Settings::Difficulty::easy and
+                game.level() <= boss_0_level) {
+                state_ = State::pause;
+            } else {
+                if (game.difficulty() == Settings::Difficulty::easy) {
+                    // Space out the attacks a bit more in easy mode.
+                    timer_ = 50;
+                }
+                state_ = State::shot2;
+            }
 
             pf.speaker().play_sound("laser1", 4, position_);
             this->shoot(
@@ -170,7 +180,15 @@ void Dasher::update(Platform& pf, Game& game, Microseconds dt)
         const auto t = milliseconds(game.level() > boss_0_level ? 150 : 230);
         if (timer_ > t) {
             timer_ -= t;
-            if (game.level() > boss_0_level) {
+
+            if (game.difficulty() == Settings::Difficulty::easy and
+                game.level() <= boss_1_level) {
+                state_ = State::pause;
+            } else if (game.level() > boss_0_level) {
+                if (game.difficulty() == Settings::Difficulty::easy) {
+                    // Space out the attacks a bit more in easy mode.
+                    timer_ = 50;
+                }
                 state_ = State::shot3;
             } else {
                 state_ = State::pause;

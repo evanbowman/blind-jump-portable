@@ -2541,6 +2541,8 @@ COLD bool Game::respawn_entities(Platform& pfrm)
 
     const int max_hearts = [&] {
         switch (difficulty()) {
+        case Settings::Difficulty::easy:
+            return 3;
         case Settings::Difficulty::survival:
         case Settings::Difficulty::hard:
             return 0;

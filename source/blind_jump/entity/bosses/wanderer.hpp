@@ -71,8 +71,7 @@ private:
         final_form
     } state_ = State::sleep;
 
-    bool second_form() const;
-    bool third_form() const;
+    bool second_form(Game& game) const;
 
     Sprite head_;
     Microseconds timer_;

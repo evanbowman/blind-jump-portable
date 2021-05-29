@@ -189,7 +189,7 @@ void Drone::update(Platform& pfrm, Game& game, Microseconds dt)
             step_vector_ = direction(position_, player_pos) *
                            (game.difficulty() not_eq Settings::Difficulty::easy
                                 ? 0.00015f
-                                : 0.000128f);
+                                : 0.000118f);
         }
         break;
 

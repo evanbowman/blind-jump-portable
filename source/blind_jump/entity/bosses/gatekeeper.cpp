@@ -12,7 +12,7 @@ public:
     {
         switch (game.difficulty()) {
         case Settings::Difficulty::easy:
-            reload_ += milliseconds(550);
+            reload_ += milliseconds(600);
             break;
 
         case Settings::Difficulty::count:
@@ -51,7 +51,7 @@ public:
                 shot_count_ = 0;
                 switch (game.difficulty()) {
                 case Settings::Difficulty::easy:
-                    reload_ = milliseconds(1800);
+                    reload_ = milliseconds(1900);
                     break;
 
                 case Settings::Difficulty::count:
@@ -105,7 +105,7 @@ public:
             const auto interval = [&] {
                 switch (game.difficulty()) {
                 case Settings::Difficulty::easy:
-                    return 30;
+                    return 35;
 
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::normal:
@@ -217,7 +217,11 @@ void Gatekeeper::update(Platform& pfrm, Game& game, Microseconds dt)
     Enemy::update(pfrm, game, dt);
 
     static constexpr const Microseconds jump_duration = milliseconds(500);
-    static constexpr const Float movement_rate = 0.000033f;
+
+    Float movement_rate = 0.000033f;
+    if (game.difficulty() == Settings::Difficulty::easy) {
+        movement_rate = 0.000026f;
+    }
 
     charge_timer_ += dt;
 

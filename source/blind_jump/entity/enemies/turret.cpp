@@ -24,7 +24,7 @@ static Microseconds pause_after_open(Game& game, Level level)
     if (level < boss_0_level) {
         switch (game.difficulty()) {
         case Settings::Difficulty::easy:
-            return milliseconds(345);
+            return milliseconds(375);
 
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
@@ -37,7 +37,7 @@ static Microseconds pause_after_open(Game& game, Level level)
     } else if (level < boss_1_level) {
         switch (game.difficulty()) {
         case Settings::Difficulty::easy:
-            return milliseconds(311);
+            return milliseconds(341);
 
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:
@@ -50,7 +50,7 @@ static Microseconds pause_after_open(Game& game, Level level)
     } else {
         switch (game.difficulty()) {
         case Settings::Difficulty::easy:
-            return milliseconds(301);
+            return milliseconds(311);
 
         case Settings::Difficulty::count:
         case Settings::Difficulty::normal:

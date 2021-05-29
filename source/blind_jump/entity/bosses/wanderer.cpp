@@ -12,6 +12,16 @@ static const char* boss_music = "omega";
 static const Entity::Health initial_health = 100;
 
 
+static Entity::Health get_initial_health(Game& game)
+{
+    if (game.difficulty() == Settings::Difficulty::easy) {
+        return 70;
+    } else {
+        return 100;
+    }
+}
+
+
 Wanderer::Wanderer(const Vec2<Float>& position)
     : Enemy(initial_health, position, {{16, 38}, {8, 24}}), timer_(0),
       timer2_(0), chase_player_(0), dashes_remaining_(0), bullet_spread_gap_(0)
@@ -35,15 +45,9 @@ Wanderer::Wanderer(const Vec2<Float>& position)
 }
 
 
-bool Wanderer::second_form() const
+bool Wanderer::second_form(Game& game) const
 {
-    return get_health() < 58;
-}
-
-
-bool Wanderer::third_form() const
-{
-    return get_health() < 20;
+    return get_health() < get_initial_health(game) - 42;
 }
 
 
@@ -93,8 +97,8 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
     };
 
     const auto dash_duration =
-        second_form() ? milliseconds(500) : milliseconds(650);
-    const float movement_rate = second_form() ? 0.000029f : 0.000022f;
+        second_form(game) ? milliseconds(500) : milliseconds(650);
+    const float movement_rate = second_form(game) ? 0.000029f : 0.000022f;
 
     constexpr Angle scattershot_inflection = 90;
 
@@ -117,10 +121,15 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                 state_ = State::still;
                 timer_ = 0;
 
+                set_health(get_initial_health(game));
+
                 pf.speaker().play_music(boss_music, 0);
 
-                show_boss_health(
-                    pf, game, 0, Float(get_health()) / initial_health);
+                show_boss_health(pf,
+                                 game,
+                                 0,
+                                 Float(get_health()) /
+                                     get_initial_health(game));
             }
         }
         break;
@@ -163,7 +172,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
 
             } else {
                 state_ = State::prep_dash;
-                if (second_form()) {
+                if (second_form(game)) {
                     if (rng::choice<3>(rng::critical_state) == 0) {
                         chase_player_ = 3;
                     }
@@ -191,7 +200,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
 
                 if (distance(position_, target.get_position()) > 80 and
                     rng::choice<2>(rng::critical_state) and
-                    get_health() < initial_health - 10) {
+                    get_health() < get_initial_health(game) - 10) {
                     state_ = State::big_laser_shooting;
                     sprite_.set_mix({ColorConstant::electric_blue, 0});
                     head_.set_mix({ColorConstant::electric_blue, 0});
@@ -229,7 +238,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
         if (timer_ > [&] {
                 switch (game.difficulty()) {
                 case Settings::Difficulty::easy:
-                    if (second_form()) {
+                    if (second_form(game)) {
                         return milliseconds(100);
                     } else {
                         return milliseconds(130);
@@ -238,7 +247,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
 
                 case Settings::Difficulty::count:
                 case Settings::Difficulty::normal:
-                    if (second_form()) {
+                    if (second_form(game)) {
                         return milliseconds(82);
                     } else {
                         return milliseconds(90);
@@ -247,7 +256,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
 
                 case Settings::Difficulty::survival:
                 case Settings::Difficulty::hard:
-                    if (second_form()) {
+                    if (second_form(game)) {
                         return milliseconds(66);
                     } else {
                         return milliseconds(70);
@@ -291,7 +300,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
         }
         break;
 
-    case State::big_laser1:
+    case State::big_laser1: {
         face_player();
 
         timer_ += dt;
@@ -313,28 +322,54 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
             game.rumble(pf, milliseconds(100));
             medium_explosion(pf, game, position_ + shoot_offset());
 
+            Float speed = 0.00028f;
+            if (game.difficulty() == Settings::Difficulty::easy) {
+                speed = 0.000215f;
+            }
+
             game.effects().spawn<WandererBigLaser>(
                 position_ + shoot_offset(),
                 rng::sample<8>(target.get_position(), rng::critical_state),
-                0.00028f);
+                speed);
+
             timer_ = 0;
             state_ = State::big_laser2;
         }
         break;
+    }
 
-    case State::big_laser2:
+    case State::big_laser2: {
         face_player();
 
+        Float speed = 0.00021f;
+        if (game.difficulty() == Settings::Difficulty::easy) {
+            speed = 0.00016f;
+        }
+
+        const auto wait_time = [&]() {
+            if (game.difficulty() == Settings::Difficulty::easy) {
+                return milliseconds(240);
+            } else {
+                return milliseconds(180);
+            }
+        }();
+
         timer_ += dt;
-        if (timer_ > milliseconds(180)) {
+        if (timer_ > wait_time) {
             game.effects().spawn<WandererBigLaser>(
                 position_ + shoot_offset(),
                 rng::sample<12>(target.get_position(), rng::critical_state),
-                0.00021f);
+                speed);
             timer_ = 0;
-            state_ = State::big_laser3;
+
+            if (game.difficulty() == Settings::Difficulty::easy) {
+                state_ = State::done_shooting;
+            } else {
+                state_ = State::big_laser3;
+            }
         }
         break;
+    }
 
     case State::final_form:
         break;
@@ -428,7 +463,7 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
                         (float(sine(dir)) / INT16_MAX)};
                 speed_ = 5.f * unit;
 
-                if ((not second_form() and
+                if ((not second_form(game) and
                      rng::choice<3>(rng::critical_state) == 0) or
                     (chase_player_ and chase)) {
                     if (chase_player_) {
@@ -510,7 +545,11 @@ void Wanderer::update(Platform& pf, Game& game, Microseconds dt)
 
 void Wanderer::injured(Platform& pf, Game& game, Health amount)
 {
-    const bool was_second_form = second_form();
+    if (state_ == State::sleep) {
+        return;
+    }
+
+    const bool was_second_form = second_form(game);
 
     if (sprite_.get_mix().amount_ < 180) {
         pf.sleep(2);
@@ -524,7 +563,7 @@ void Wanderer::injured(Platform& pf, Game& game, Health amount)
         pf.speaker().play_sound("click", 1, position_);
     }
 
-    if (not was_second_form and second_form()) {
+    if (not was_second_form and second_form(game)) {
         game.camera().shake();
 
         medium_explosion(pf, game, position_);
@@ -539,7 +578,8 @@ void Wanderer::injured(Platform& pf, Game& game, Health amount)
         head_.set_mix({c, 255});
     }
 
-    show_boss_health(pf, game, 0, Float(get_health()) / initial_health);
+    show_boss_health(
+        pf, game, 0, Float(get_health()) / get_initial_health(game));
 }
 
 

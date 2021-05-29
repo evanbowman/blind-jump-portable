@@ -80,15 +80,16 @@ StatePtr MapSystemState::update(Platform& pfrm, Game& game, Microseconds delta)
 
             level_text_.emplace(
                 pfrm,
-                OverlayCoord{(utf8::len(level_str->c_str()) +
-                              utf8::len(level_num_str) == 13) ?
-                    u8(screen_tiles.x - 13) :
-                    u8(screen_tiles.x -
-                                std::min((size_t)12,
-                                         (1 + utf8::len(level_str->c_str()) +
-                                          utf8::len(level_num_str)) *
-                                             (bigfont ? 2 : 1))),
-                             start_y},
+                OverlayCoord{
+                    (utf8::len(level_str->c_str()) + utf8::len(level_num_str) ==
+                     13)
+                        ? u8(screen_tiles.x - 13)
+                        : u8(screen_tiles.x -
+                             std::min((size_t)12,
+                                      (1 + utf8::len(level_str->c_str()) +
+                                       utf8::len(level_num_str)) *
+                                          (bigfont ? 2 : 1))),
+                    start_y},
                 font_conf);
             level_text_->assign(level_str->c_str());
             level_text_->append(level_num_str);
