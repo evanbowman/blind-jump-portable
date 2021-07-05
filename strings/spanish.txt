@@ -1,32 +1,32 @@
 
 
-presenta
+ presenta
 
 BLIND JUMP
 tú
 enemigo
 salida
-artículo
+ítem
 tienda
 waypoint 
 parte I:
-el arribo 
+la llegada 
 parte II:
 el descenso 
 parte III:
 hacia el páramo
 parte IV:
 en la luz de la luna
-Vacía
+Vacío
 Póster viejo (1)
-Cuaderno (1/2)
-Cuaderno (2/2)
-Cuaderno (1/2)
-Cuaderno (2/2)
+Cuaderno de Trabajo (1/2)
+Cuaderno de Trabajo (2/2)
+Cuaderno de Ingeniería (1/2)
+Cuaderno de Ingeniería (2/2)
 Pistola
 Acelerador (60 balas)
 Letargo (18 seg)
-Sistema de mapa
+Sistema de navegación
 Balas explosivos (2)
 Bloqueador de señales
 Paquete de semillas
@@ -34,79 +34,79 @@ Folleto de navegación
 Naranja (+1 hp)
 Semillas de naranja
 
-Long jump drive (pt. II)
-Long jump drive (pt. III)
-Long jump drive (pt. IV)
-Long jump drive (home)
-Oh, that old thing? Eh, I have no use for it.
-A turbo charger for a blaster, heh, quite destructive at close range.
-I'm not so sure what this thing does, it looks like an old pocket watch. Very fine metalwork though, worth a lot of money...
-Looks like a piece of surveying equipment. These map system devices will build a map as you walk, and point you in the direction of the nearest hyperspace gate.
-Ack! Be careful with those! Those shells are highly unstable!!!
-A fancy radio transmitter, try using it near some machines.
-An orange! Legend has it that the workers who built these waypoints were out here for months at a time... wouldn't want to get scurvy!
-A portable hyperspace gate generator... think of it as... a sort of insurance policy if you're knocked out.
+Unidad de salto (pt. II)
+Unidad de salto (pt. III)
+Unidad de salto (pt. IV)
+Unidad de salto (a casa)
+¿Este cacharro? No me sirve para nada.
+Un turbo cargador de pistola, ja, bastante destructivo a corto alcance.
+No estoy seguro de para qué es esto, luce como un viejo reloj de bolsillo. Tiene un acabado muy elegante, debe valer bastante dinero...
+Parece una herramienta de topografía. Este sistema de navegación creará un mapa conforme caminas, y te mostrará la dirección hacia el portal hiperespacial más cercano.
+Oye! ¡Ten mucho cuidado con eso! ¡¡¡Esas cubiertas son demasiado inestables!!!
+Un radio transmisor muy sofisticado, intenta usarlo cerca de alguna máquina.
+¡Una naranja! La leyenda dice que quienes construyeron todos todos estos waypoits estuvieron aquí por meses... ¡No querrás contraer escorbuto!
+Un generador de portales hiperespaciales de bolsillo... considéralo como... un seguro en caso de que te derroten.
 (DE UN SOLO USO)
 cerrado, 
-blocked, Peer is in the way!
+bloqueado, ¡Tu compañero está en camino!
  enemigo restante
  enemigos restantes
 Nada
 hallas "
 "
-Inventory full
-artículos
+Inventario lleno
+ítems
 waypoint completado
 puntuación 
 puntuación alta 
 puntuaciónes altas
 tiempo
-items collected % 
+ítems encontrados % 
 
-items collected %
+ítems encontrados %
 waypoints 
 .
 Reanudar
-Connectar el Par
-Configuración
-Script Console
-Guardar y Abandonar
+Conectar Compañero
+Ajustes
+Consola
+Guardar y Salir
 Hasta luego...
-Choose a target:
-No road map? No problem! The hyperspace gate network calculates a path to your destination by routing your journey through a sequence of waypoints. Tens of thousands of waypoints were contructed in orbit around Earth and its moon. Because the waypoints are constantly in motion during orbit, the gate network continually recalculates the path to your destination. You'll never visit the same waypoints twice! Due to the unpredictable nature of the hyperspace gates, passing through a gate is sometimes referred to as a blind jump.
+Elegir objetivo:
+¿Sin mapa? ¡No hay problema! La red de portales hiperespaciales calcula la ruta más cercana a su destino transfiriéndole por una secuencia de waypoints. Cientos de miles de waypoints se construyeron en orbita alrededor de la Tierra y su Luna. Ya que estos waypoints están en constante movimiento en orbita, la red de portales continua recalculando la ruta a su destino. ¡Núnca visitara el mismo waypoitn dos veces! Debido a la naturaleza impredecible de los portales hiperespaciales, cruzar un portal se conoce por algunos como un salto a ciegas.
 Mostrar estadísticas: 
 Idioma: 
 Contraste: 
 Modo Nocturno: 
-Transponer A/B: 
+Intercambiar A/B: 
 por defecto
 Dificultad:
 fácil
 normal
 difícil
-sobrevivencia
-level must be clear!
-Strafe Key:
-separate
-combined
-Log Severity:
-Show Timer:
-Camera: 
-fixed
-tracking (low)
-tracking (high)
-Rumble Enabled: 
+supervivencia
+¡debes terminar el nivel!
+Botón de Esquivar:
+separado
+combinado
+Nivel de Bitácora:
+Mostrar cronómetro: 
+Cámara: 
+centrado
+seguimiento (bajo)
+seguimeinto (alto)
+Vibración: 
 sí
 no
-menu disabled
+menu deshabilitado
  ft
-lanzar: 
-Peer connected!
-Peer connection failed!
-Peer died!
-Peer health changed to 
-Waiting for Peers...
-Synchronizing Games...
+iniciar: 
+¡Compañero conectado!
+¡Error conectando con compañero!
+¡Compañero muerto!
+La salud de tu compañero cambió a 
+Esperando por compañeros...
+Sincronizando partida...
  fps
  tx
  rx
@@ -114,48 +114,48 @@ Synchronizing Games...
  rl
  sbr
  lnsat
-necesario: Sistema de mapa
-The Wanderer Defeated
-Gatekeeper Destroyed
-Defeated the Twins
-Infested Conduit Cleansed!
-Power Surges Eliminated!
-Peer waiting in gate...
+necesario: Sistema de navegación
+La Vagabunda Derrotada
+Guardián Destruido
+Gemelos Vencidos
+¡Conducto Infestado Reparado!
+¡Red hiperespacial Destruida!
+Compañero esperando en portal...
 debug
 info
 warning
 error
-Power Surge detected!
-Buy items
-Sell items
-Buy, price: 
-Sell, price: 
-Item info
-Scavenger's shop
-buy
-sell
-Update required!
-Swarm approaching!
-Peer requires update!
-overall
-Peer used lethargy!
+¡Sobrecarga de de Energía detectada!
+Comprar ítems
+Vender ítems
+Comprar, precio: 
+Vender, precio: 
+Información de ítem
+Tienda del Carroñero
+comprar
+vender
+¡Se necesita actualización!
+¡Se acerca un enjambre!
+¡Compañero requiere actualización!
+resumen
+¡Compañero usó letargo!
 español
-HEALTH AND SAFETY NOTICE:
-This software features flashing lights and colors, and may not be suitable for players with photosensitive epilepsy.
+AVISO DE SALUD:
+Este software presenta luces y colores intermitentes, y puede que no sea adecuado para jugadores con epilepsia fotosensible.
 charlar: 
 ¡Hola!
 ¿Tienes naranjas?
 ¡Adelante!
 ¡Hallé salud aquí!
-Revive peer?
-Welcome to my shop!
-"This memorial to those who perished during the calamity. The waypoints in this area were overrun by the machines, and sealed off. Date--5.3.2081."
-Wow, that was 100 years ago...
-Your ship...
-[2.11.2081]  We've been experiencing strange power surges lately on the station, but the director reassured me that everthing will run smoothly from now on. The robots have been acting up ever since the last communications blackout though, I'm afraid next time they'll go mad...
-[3.7.2081]  I was lucky to be on some of the near-earth waypoints when the robots turned on us... a lot of people aparantly weren't so fortunate. To escape the machines, I fled through the warp gates, but the carnage seems to be even worse the further I go. Some of the stations out here seem to have been more populated, unfortunately.
-Power surges emanating from the hyperspace gates seem to have an unusual effect on machinery, especially the robots on the stations. We've observed some unfortunate violent reactions from the machines recently--this is all starting to get out of control. During the last power surge, I thought that I glimpsed the sillouette of a large, cloaked figure through the veil of the jump gate. We long suspected that there was something... else... out there in hyperspace, something that we, perhaps, should never have disturbed by opening these gates...
-The power surges from the jump gates are more-or-less constant now, and we've lost control of everything. I sent word back to Earth, that someone needs to be sent out here, to deal the causes of these fluctuations... they're dealing with their own mechanized revolt, though, so I'm not sure how soon they'll send a  soldier. In the meantime, I've invented a signal jamming device, which seems to render the machines immune to the power surges...
-new game
-continue
-THE END
+¿Revivir compañero?
+¡Bienvenido a mi tienda!
+"En memoria de quienes perdieron la vida durante la tragedia. Los waypoints en esta area fueron invadidos por las máquinas y sellados. Fecha--5.3.2081."
+Vaya, eso fue hace 100 años...
+Tu nave...
+[2.11.2081]  Hemos estado experimentando sobrecargas de energía muy extrañas durante los últimos días, el director me aseguró que todo va a estar bajo control a partir de ahora. Sin embargo, los robots han estado actuando raro desde el último apagón de comunicaciones, temo que la próxima vez se vuelvan locos...
+[3.7.2081]  Tuve suerte de estar en un waypoint cercano a la Tierra cuando los robots se volvieron contra nosotros... aparentemente muchos no tuvieron la misma suerte. Para escapar de las máquinas huí a través de un portal de curvatura, pero la carnicería se ve aún peor cuanto más avanzo. Algunas de las estaciones parecen haber estado más pobladas, desafortunadamente.
+Parece que las sobrecargas de energía que emanan de los portales hiperespaciales tienen un efecto inusual en las máquinas, especialmente en los robots de las estaciones. Hemos estado observando desafortunadas reacciones violentas por parte de las máquinas--todo estó se está saliendo de control. Durante la última sobrecarga, creí haber visto la siluata de una muy grande y encapuchada figura cruzando el portal de salto. Durante mucho tiempo hemos sospechado que había... algo... ahí afuera, en el hiperespacio, algo que, tal vez, no debímos haber perturbado al abrir estos portales.
+Las sobrecargas de energía en los portales de salto ya son más o menos constantes, hemos perdido el control de todo. Envíe un reporte a la Tierra, deberían mandar a alguien, para encargarse de las causas de estas fluctuaciones... es cierto, ellos están enfrentando su propia revuelta mecánica, así que no estoy seguro de qué tan pronto enviarán algún soldado. Mientras tanto, he inventado un dispositivo de interferencia, que parece lograr que las máquinas sean inmunes a estas sobrecargas de energía...
+nueva partida
+continuar
+EL FIN
