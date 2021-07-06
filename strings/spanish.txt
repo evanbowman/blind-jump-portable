@@ -19,10 +19,10 @@ parte IV:
 en la luz de la luna
 Vacío
 Póster viejo (1)
-Cuaderno de Trabajo (1/2)
-Cuaderno de Trabajo (2/2)
-Cuaderno de Ingeniería (1/2)
-Cuaderno de Ingeniería (2/2)
+Cuaderno del Operador (1/2)
+Cuaderno del Operador (2/2)
+Cuaderno de la Ingeniera (1/2)
+Cuaderno de la Ingeniera (2/2)
 Pistola
 Acelerador (60 balas)
 Letargo (18 seg)
@@ -42,7 +42,7 @@ Unidad de salto (a casa)
 Un turbo cargador de pistola, ja, bastante destructivo a corto alcance.
 No estoy seguro de para qué es esto, luce como un viejo reloj de bolsillo. Tiene un acabado muy elegante, debe valer bastante dinero...
 Parece una herramienta de topografía. Este sistema de navegación creará un mapa conforme caminas, y te mostrará la dirección hacia el portal hiperespacial más cercano.
-Oye! ¡Ten mucho cuidado con eso! ¡¡¡Esas cubiertas son demasiado inestables!!!
+¡Oye! ¡Ten mucho cuidado con eso! ¡¡¡Esas cubiertas son demasiado inestables!!!
 Un radio transmisor muy sofisticado, intenta usarlo cerca de alguna máquina.
 ¡Una naranja! La leyenda dice que quienes construyeron todos todos estos waypoits estuvieron aquí por meses... ¡No querrás contraer escorbuto!
 Un generador de portales hiperespaciales de bolsillo... considéralo como... un seguro en caso de que te derroten.
@@ -115,7 +115,7 @@ Sincronizando partida...
  sbr
  lnsat
 necesario: Sistema de navegación
-La Vagabunda Derrotada
+El Vagabundo Derrotado
 Guardián Destruido
 Gemelos Vencidos
 ¡Conducto Infestado Reparado!
@@ -125,7 +125,7 @@ debug
 info
 warning
 error
-¡Sobrecarga de de Energía detectada!
+¡Sobrecarga de Energía detectada!
 Comprar ítems
 Vender ítems
 Comprar, precio: 
@@ -154,8 +154,8 @@ Vaya, eso fue hace 100 años...
 Tu nave...
 [2.11.2081]  Hemos estado experimentando sobrecargas de energía muy extrañas durante los últimos días, el director me aseguró que todo va a estar bajo control a partir de ahora. Sin embargo, los robots han estado actuando raro desde el último apagón de comunicaciones, temo que la próxima vez se vuelvan locos...
 [3.7.2081]  Tuve suerte de estar en un waypoint cercano a la Tierra cuando los robots se volvieron contra nosotros... aparentemente muchos no tuvieron la misma suerte. Para escapar de las máquinas huí a través de un portal de curvatura, pero la carnicería se ve aún peor cuanto más avanzo. Algunas de las estaciones parecen haber estado más pobladas, desafortunadamente.
-Parece que las sobrecargas de energía que emanan de los portales hiperespaciales tienen un efecto inusual en las máquinas, especialmente en los robots de las estaciones. Hemos estado observando desafortunadas reacciones violentas por parte de las máquinas--todo estó se está saliendo de control. Durante la última sobrecarga, creí haber visto la siluata de una muy grande y encapuchada figura cruzando el portal de salto. Durante mucho tiempo hemos sospechado que había... algo... ahí afuera, en el hiperespacio, algo que, tal vez, no debímos haber perturbado al abrir estos portales.
-Las sobrecargas de energía en los portales de salto ya son más o menos constantes, hemos perdido el control de todo. Envíe un reporte a la Tierra, deberían mandar a alguien, para encargarse de las causas de estas fluctuaciones... es cierto, ellos están enfrentando su propia revuelta mecánica, así que no estoy seguro de qué tan pronto enviarán algún soldado. Mientras tanto, he inventado un dispositivo de interferencia, que parece lograr que las máquinas sean inmunes a estas sobrecargas de energía...
+Parece que las sobrecargas de energía que emanan de los portales hiperespaciales tienen un efecto inusual en las máquinas, especialmente en los robots de las estaciones. Hemos estado observando desafortunadas reacciones violentas por parte de las máquinas--todo estó se está saliendo de control. Durante la última sobrecarga, creí haber visto la siluata de una figura muy grande y encapuchada cruzando el portal de salto. Durante mucho tiempo hemos sospechado que había... algo... ahí afuera, en el hiperespacio, algo que, tal vez, no debímos haber perturbado al abrir estos portales.
+Las sobrecargas de energía en los portales de salto ya son más o menos constantes, hemos perdido el control de todo. Envíe un reporte a la Tierra, deberían mandar a alguien, para encargarse de las causas de estas fluctuaciones... es cierto que, ellos están enfrentando su propia revuelta mecánica, así que no estoy seguro de qué tan pronto enviarán algún soldado. Mientras tanto, he inventado un dispositivo de interferencia, que parece lograr que las máquinas sean inmunes a estas sobrecargas de energía...
 nueva partida
 continuar
 EL FIN
