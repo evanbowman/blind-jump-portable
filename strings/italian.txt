@@ -99,7 +99,7 @@ Rimbombo Attivato:
 si
 no
 menu disabilitato
- ft
+ m
 
 Compare collegato!
 Connessione compare fallita!
@@ -139,7 +139,7 @@ Sciame in avvicinamento!
 Il compare richiede un aggiornamento!
 globale
 Compare utilizza ibernazione!
-inglese
+italiana
 
 
 chat: 
