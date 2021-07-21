@@ -154,18 +154,21 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 const u8 right_x = text.coord().x + width + 1;
                 return {left_x, right_x};
             };
+
+            cursor_anim_ = not cursor_anim_;
+
+            auto erase_coords = get_coords(*options_[!cursor_index_]);
+            pfrm.set_tile(Layer::overlay, erase_coords.x, st.y - 2, 112);
+            pfrm.set_tile(Layer::overlay, erase_coords.y, st.y - 2, 112);
+
             const auto c1 = get_coords(text);
-            if (pfrm.get_tile(Layer::overlay, c1.x, st.y - 2) == 375) {
+            if (cursor_anim_) {
                 pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 373);
                 pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 374);
             } else {
                 pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 375);
                 pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 376);
             }
-
-            auto erase_coords = get_coords(*options_[!cursor_index_]);
-            pfrm.set_tile(Layer::overlay, erase_coords.x, st.y - 2, 112);
-            pfrm.set_tile(Layer::overlay, erase_coords.y, st.y - 2, 112);
         }
     };
 

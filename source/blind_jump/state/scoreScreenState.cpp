@@ -115,11 +115,20 @@ void ScoreScreenState::repaint_stats(Platform& pfrm, Game& game)
 
         lines_.back().append(str, colors);
 
-        const auto iters = screen_tiles.x - (utf8::len(str) + 6 +
-                                             text.length() + utf8::len(suffix));
+        const auto l = utf8::len(str) + 6 +
+            text.length() + utf8::len(suffix);
+
+        const auto iters = [&] {
+            if (l > screen_tiles.x) {
+                return 0;
+            } else {
+                return (int)(screen_tiles.x - l);
+            }
+        }();
 
 
-        for (u32 i = 0; i < iters; ++i) {
+
+        for (int i = 0; i < iters; ++i) {
             lines_.back().append(dot->c_str(), colors);
         }
 

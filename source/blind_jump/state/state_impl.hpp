@@ -206,6 +206,8 @@ private:
 
     Microseconds timer_ = 0;
     u8 cursor_index_ = 0;
+
+    bool cursor_anim_ = false;
 };
 
 
