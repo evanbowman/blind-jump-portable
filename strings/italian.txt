@@ -8,7 +8,7 @@ nemico
 esci
 oggetto
 negozio
-punto di incontro 
+livello 
 parte I:
 l'arrivo
 parte II:
@@ -44,7 +44,7 @@ Non sono così sicuro di cosa faccia questa cosa, sembra un vecchio orologio da 
 Sembra uno strumento di rilevamento. Questi dispositivi del sistema di mappe costruiranno una mappa mentre cammini e ti indirizzeranno nella direzione del cancello iperspaziale più vicino.
 Ack! Stai attento con quelli! Quelle custodie sono altamente instabili!!!
 Un sofisticato trasmettitore radio, prova a usarlo vicino ad alcune macchine.
-Un'arancia! La leggenda narra che gli operai che hanno costruito questi punti di incontro siano stati qui per mesi alla volta... non volevano lo scorbuto!
+Un'arancia! La leggenda narra che gli operai che hanno costruito questi livelli siano stati qui per mesi alla volta... non volevano lo scorbuto!
 Un generatore portatile di porte iperspaziali... pensalo come... una sorta di polizza assicurativa se sei stordito.
 (USA E GETTA)
 bloccato, 
@@ -55,16 +55,16 @@ Niente
 ho "
 "
 Inventorio pieno
-articoli
-punto di incontro libero
+oggetti
+livello libero
 punteggio 
 punteggio alto 
 punteggio alti
 tempo
-articoli collezionati % 
+oggetti % 
 
-articoli collezionati %
-punti di incontro 
+oggetti %
+livelli
 .
 Riprendi
 Connetti compare
@@ -73,7 +73,7 @@ Script Console
 Salva e esci
 Ci vediamo più tardi...
 Scegli un obiettivo:
-Nessuna mappa stradale? Nessun problema! La rete di porte iperspaziali calcola un percorso verso la tua destinazione per il tuo viaggio attraverso una sequenza di punti di incontro. Decine di migliaia di punti di incontro sono stati costruiti in orbita attorno alla Terra e alla sua luna. Poiché i punti di incontro sono costantemente in movimento durante l'orbita, la rete di porte ricalcola continuamente il percorso verso la destinazione. Non visiterai mai due volte gli stessi punti di incontro! A causa della natura imprevedibile dei cancelli dell'iperspazio, il passaggio attraverso un cancello viene talvolta definito salto alla cieca.
+Nessuna mappa stradale? Nessun problema! La rete di porte iperspaziali calcola un percorso verso la tua destinazione per il tuo viaggio attraverso una sequenza di livelli. Decine di migliaia di livelli sono stati costruiti in orbita attorno alla Terra e alla sua luna. Poiché sono costantemente in movimento durante l'orbita, la rete di porte ricalcola continuamente il percorso verso la destinazione. Non visiterai mai due volte gli stessi livelli! A causa della natura imprevedibile dei cancelli dell'iperspazio, il passaggio attraverso un cancello viene talvolta definito salto alla cieca.
 Vedi statistiche: 
 Lingua: 
 Contrasto: 
@@ -149,7 +149,7 @@ Andiamo!
 Ho trovato della salute qui!
 Rianimare il compare?
 Benvenuto nel mio negozio!
-"Questo memoriale è per chi morì durante la calamità. I punti di incontro in quest'area sono stati invasi dalle macchine e sigillati. Data: 5.3.2081."
+"Questo memoriale è per chi morì durante la calamità. I livelli in quest'area sono stati invasi dalle macchine e sigillati. Data: 5.3.2081."
 Wow, è stato 100 anni fa...
 La tua nave...
 [2.11.2081] Ultimamente abbiamo avuto degli strani sbalzi di corrente sulla stazione, ma il direttore mi ha rassicurato che tutto andrà per il meglio d'ora in poi. I robot si sono comportati male sin dall'ultimo blackout delle comunicazioni, temo che la prossima volta diventeranno matti...
