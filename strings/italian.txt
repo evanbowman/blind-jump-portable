@@ -1,0 +1,161 @@
+
+
+ presenta
+
+BLIND JUMP
+tu
+nemico
+esci
+oggetto
+negozio
+livello 
+parte I:
+l'arrivo
+parte II:
+la discesa 
+parte III:
+nei rifiuti
+part IV:
+chairo di luna
+Vuoto
+Vecchio poster (1)
+Note dell'operaio (1/2)
+Note dell'operaio (2/2)
+Note dell'ingegnerie (1/2)
+Note dell'ingegnerie (2/2)
+Blaster
+Acceleratore (60 colpi)
+Ibernazione (18 sec)
+Sistema di mappe
+Proiettili esplosivi (2)
+Disturbatore di segnale
+Pacchetto di semi
+Opuscolo di navigazione
+Arancia (+1 hp)
+Semi di Arancia
+
+Guida per il salto in lungo (pt. II)
+Guida per il salto in lungo (pt. III)
+Guida per il salto in lungo (pt. IV)
+Guida per il salto in lungo (home)
+Oh, quella vecchia cosa? Eh, non mi serve.
+Un turbocompressore per un blaster, eh, abbastanza distruttivo a distanza ravvicinata.
+Non sono così sicuro di cosa faccia questa cosa, sembra un vecchio orologio da tasca. Il metallo è lavorato in modo fine, vale un sacco di soldi...
+Sembra uno strumento di rilevamento. Questi dispositivi del sistema di mappe costruiranno una mappa mentre cammini e ti indirizzeranno nella direzione del cancello iperspaziale più vicino.
+Ack! Stai attento con quelli! Quelle custodie sono altamente instabili!!!
+Un sofisticato trasmettitore radio, prova a usarlo vicino ad alcune macchine.
+Un'arancia! La leggenda narra che gli operai che hanno costruito questi livelli siano stati qui per mesi alla volta... non volevano lo scorbuto!
+Un generatore portatile di porte iperspaziali... pensalo come... una sorta di polizza assicurativa se sei stordito.
+(USA E GETTA)
+bloccato, 
+bloccato, il Compare è in arrivo!
+ nemico rimasto
+ nemici rimasti
+Niente
+ho "
+"
+Inventorio pieno
+oggetti
+livello libero
+punteggio 
+punteggio alto 
+punteggio alti
+tempo
+oggetti % 
+
+oggetti %
+livelli
+.
+Riprendi
+Connetti compare
+Impostazioni
+Script Console
+Salva e esci
+Ci vediamo più tardi...
+Scegli un obiettivo:
+Nessuna mappa stradale? Nessun problema! La rete di porte iperspaziali calcola un percorso verso la tua destinazione per il tuo viaggio attraverso una sequenza di livelli. Decine di migliaia di livelli sono stati costruiti in orbita attorno alla Terra e alla sua luna. Poiché sono costantemente in movimento durante l'orbita, la rete di porte ricalcola continuamente il percorso verso la destinazione. Non visiterai mai due volte gli stessi livelli! A causa della natura imprevedibile dei cancelli dell'iperspazio, il passaggio attraverso un cancello viene talvolta definito salto alla cieca.
+Vedi statistiche: 
+Lingua: 
+Contrasto: 
+Modalità notturna: 
+Inverti A/B: 
+predefinito
+Difficultà: 
+facile
+normale
+difficile
+sopravvivenza
+il livello deve essere pulito!
+Tasto Sparo: 
+separati
+combinati
+Registro Severità:
+Mostra Speedrun Clock: 
+Camera: 
+fissa
+tracciamento (basso)
+tracciamento (alto)
+Rimbombo Attivato: 
+si
+no
+menu disabilitato
+ m
+
+Compare collegato!
+Connessione compare fallita!
+Compare morto!
+Salute del compare cambiata in
+In attesa di compari...
+Sincronizzazione partita...
+ fps
+ tx
+ rx
+ tl
+ rl
+ sbr
+ lnsat
+richiesto: sistema Mappa
+Il viandante sconfitto
+Guardiano distrutto
+Hai sconfitto i gemelli
+Condotto infestato ripulito!
+Rete iperspaziale distrutta
+Compari in attesa alla porta...
+debug
+info
+avviso
+errore
+Sovraccarico rilevato!
+Acquista oggetti
+Vendere oggetti
+Acquista, prezzo:
+Prezzo di vendita:
+Informazioni sull'articolo
+Negozio dello spazzino
+acquistare
+vendere
+Aggiornamento richiesto!
+Sciame in avvicinamento!
+Il compare richiede un aggiornamento!
+globale
+Compare utilizza ibernazione!
+italiano
+
+
+chat: 
+Ciao!
+Hai delle arance?
+Andiamo!
+Ho trovato della salute qui!
+Rianimare il compare?
+Benvenuto nel mio negozio!
+"Questo memoriale è per chi morì durante la calamità. I livelli in quest'area sono stati invasi dalle macchine e sigillati. Data: 5.3.2081."
+Wow, è stato 100 anni fa...
+La tua nave...
+[2.11.2081] Ultimamente abbiamo avuto degli strani sbalzi di corrente sulla stazione, ma il direttore mi ha rassicurato che tutto andrà per il meglio d'ora in poi. I robot si sono comportati male sin dall'ultimo blackout delle comunicazioni, temo che la prossima volta diventeranno matti...
+[3.7.2081] Sono stato fortunato ad essere vicino a dei punti di incontro per la terra quando i robot si sono rivoltati... molte persone non sono state altrettanto fortunate. Per sfuggire alle macchine, sono fuggito attraverso i cancelli di curvatura, ma la carneficina sembra essere ancora peggiore man mano che vado avanti. Alcune delle stazioni qui fuori sembrano essere state più popolate, sfortunatamente.
+Le sovratensioni provenienti dai cancelli iperspaziali sembrano avere un effetto insolito sui macchinari, in particolare sui robot delle stazioni. Di recente abbiamo osservato alcune sfortunate reazioni violente da parte delle macchine: tutto sta iniziando a sfuggire al controllo. Durante l'ultima ondata di corrente, ho pensato di aver intravisto la sillouette di una grande figura ammantata attraverso il velo del cancello di salto. Sospettavamo da tempo che ci fosse qualcos'altro... là fuori nell'iperspazio, qualcosa che forse non avremmo mai dovuto disturbare aprendo questi cancelli...
+I picchi di corrente dai cancelli di salto sono più o meno costanti ora e abbiamo perso il controllo di tutto. Ho detto alla Terra che qualcuno deve essere mandato qui, per affrontare le cause di queste fluttuazioni... hanno a che fare con la rivolta meccanizzata, quindi non sono sicuro di quanto presto manderanno un soldato. Nel frattempo, ho inventato un dispositivo di disturbo del segnale, che sembra rendere le macchine immuni agli sbalzi di tensione...
+nuona partita
+continua
+FINE
