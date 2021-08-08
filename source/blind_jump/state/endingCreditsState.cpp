@@ -25,6 +25,8 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
     pfrm.set_overlay_origin(0, 0);
     pfrm.speaker().stop_music();
 
+    game.camera().set_position(pfrm, {0, 0});
+
     pfrm.screen().fade(1.f, ColorConstant::rich_black, {}, false, false);
     pfrm.fill_overlay(0);
 }
@@ -34,12 +36,8 @@ void EndingCreditsState::exit(Platform& pfrm, Game& game, State&)
 // such that the surrounding text is aligned to either edge of the screen.
 //
 // FIXME: localize the credits? Nah...
-static const std::array<const char*, 33> credits_lines = {
-    "Artwork and Source Code by",
-    "Evan Bowman",
-    "",
-    "",
-    "Story",
+static const std::array<const char*, 32> credits_lines = {
+    "Artwork, Design, and Code",
     "Evan Bowman",
     "",
     "",
@@ -60,6 +58,9 @@ static const std::array<const char*, 33> credits_lines = {
     "Chinese%verkkarscd",
     "",
     "Russian%Павел Полстюк",
+    "",
+    "Italian%Mte90",
+    "(Daniele Scasciafratte)",
     "",
     "",
     "Special Thanks",
@@ -186,7 +187,7 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
                                              u8(screen_tiles.y + 1)},
                                 font_conf);
                         } else {
-                            const u8 left_margin = (screen_tiles.x - len) / 2;
+                            u8 left_margin = (screen_tiles.x - len) / 2;
                             lines_.emplace_back(
                                 pfrm,
                                 OverlayCoord{left_margin,
@@ -255,7 +256,13 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
         display_mode_ = DisplayMode::fade_show_image;
         timer_ = 0;
         pfrm.set_overlay_origin(0, 0);
-        game.camera().set_position(pfrm, {0, 0});
+        if (utf8::len(locale_string(pfrm, LocaleString::the_end_str)->c_str())
+            % 2 == 0) {
+            game.camera().set_position(pfrm, {-16, 0});
+        } else {
+            game.camera().set_position(pfrm, {0, 0});
+        }
+
 
         for (int x = 0; x < 16; ++x) {
             for (int y = 0; y < 20; ++y) {

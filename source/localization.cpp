@@ -813,8 +813,8 @@ doublesize_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"弄"): return 2075;
         case UTF8_GETCHR(u8"几"): return 2079;
         case UTF8_GETCHR(u8"斤"): return 2083;
-        case UTF8_GETCHR(u8"结"): return 2087;
-        case UTF8_GETCHR(u8"束"): return 2091;
+        case UTF8_GETCHR(u8"结"): return 2155;
+        case UTF8_GETCHR(u8"束"): return 2151;
 
             // clang-format on
 
