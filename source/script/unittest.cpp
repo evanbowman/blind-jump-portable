@@ -117,29 +117,6 @@ int main(int argc, char** argv)
 
     lisp::init(pfrm);
 
-    // if (argc == 1) {
-    //     auto lat = lisp::make_list(9);
-
-    //     lisp::set_var("L", lat);
-    //     lisp::set_list(lat, 4, lisp::make_integer(12));
-
-    //     print(lisp::get_list(lisp::get_var("L"), 4));
-
-    //     intern_test();
-    //     function_test();
-    //     arithmetic_test();
-
-    //     return 0;
-    // }
-    // TODO: real argument parsing...
-
-    std::ifstream t("file.txt");
-    std::string str((std::istreambuf_iterator<char>(t)),
-                    std::istreambuf_iterator<char>());
-
-    lisp::dostring(str.c_str());
-
-
     std::string line;
     std::cout << ">> ";
     while (std::getline(std::cin, line)) {

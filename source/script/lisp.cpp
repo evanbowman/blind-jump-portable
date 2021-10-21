@@ -5,8 +5,11 @@
 #include "memory/buffer.hpp"
 #include "memory/pool.hpp"
 #include <complex>
-#if not defined(__GBA__) and not defined(__PSP__)
-#include <iostream>
+#include "listBuilder.hpp"
+#ifdef __GBA__
+#define HEAP_DATA  __attribute__((section(".ewram")))
+#else
+#define HEAP_DATA
 #endif
 
 
@@ -30,44 +33,62 @@ static int run_gc();
 static const u32 string_intern_table_size = 1999;
 
 
+#define VALUE_POOL_SIZE 8000
+
+
+static HEAP_DATA Value value_pool_data[VALUE_POOL_SIZE];
+static Value* value_pool = nullptr;
+
+
+void value_pool_init()
+{
+    for (int i = 0; i < VALUE_POOL_SIZE; ++i) {
+        Value* v = value_pool_data + i;
+
+        v->alive_ = false;
+        v->mark_bit_ = false;
+        v->type_ = Value::Type::heap_node;
+
+        v->heap_node_.next_ = value_pool;
+        value_pool = v;
+    }
+}
+
+
+Value* value_pool_alloc()
+{
+    if (value_pool) {
+        auto ret = value_pool;
+        value_pool = ret->heap_node_.next_;
+        return (Value*)ret;
+    }
+    return nullptr;
+}
+
+
+void value_pool_free(Value* value)
+{
+    value->type_ = Value::Type::heap_node;
+    value->alive_ = false;
+    value->mark_bit_ = false;
+
+    value->heap_node_.next_ = value_pool;
+    value_pool = value;
+}
+
+
+
 struct Context {
-    using ValuePool = ObjectPool<Value, 166>;
     using OperandStack = Buffer<CompressedPtr, 994>;
+
     using Globals = std::array<Variable, 249>;
     using Interns = char[string_intern_table_size];
-    u16 arguments_break_loc_;
-
-    Value* nil_ = nullptr;
-    Value* oom_ = nullptr;
-
-    int string_intern_pos_ = 0;
-
-    int eval_depth_ = 0;
-
-    int interp_entry_count_ = 0;
-
-    const IntegralConstant* constants_ = nullptr;
-    u16 constants_count_ = 0;
 
     Context(Platform& pfrm)
-        : value_pools_{allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm),
-                       allocate_dynamic<ValuePool>(pfrm)},
-          operand_stack_(allocate_dynamic<OperandStack>(pfrm)),
+        : operand_stack_(allocate_dynamic<OperandStack>(pfrm)),
           globals_(allocate_dynamic<Globals>(pfrm)),
-          interns_(allocate_dynamic<Interns>(pfrm))
+          interns_(allocate_dynamic<Interns>(pfrm)), pfrm_(pfrm)
     {
-        for (auto& pl : value_pools_) {
-            if (not pl) {
-                while (true)
-                    ; // FIXME: raise error
-            }
-        }
-
         if (not operand_stack_ or not globals_ or not interns_) {
 
             while (true)
@@ -75,15 +96,24 @@ struct Context {
         }
     }
 
-    // We're allocating 10k bytes toward lisp values. Because our simplistic
-    // allocation strategy cannot support sizes other than 2k, we need to split
-    // our memory for lisp values into regions.
-    static constexpr const int value_pool_count = 7;
-    DynamicMemory<ValuePool> value_pools_[value_pool_count];
-
     DynamicMemory<OperandStack> operand_stack_;
     DynamicMemory<Globals> globals_;
     DynamicMemory<Interns> interns_;
+
+    u16 arguments_break_loc_;
+
+    Value* nil_ = nullptr;
+    Value* oom_ = nullptr;
+    Value* string_buffer_ = nullptr;
+
+    const IntegralConstant* constants_ = nullptr;
+    u16 constants_count_ = 0;
+
+    int string_intern_pos_ = 0;
+    int eval_depth_ = 0;
+    int interp_entry_count_ = 0;
+
+    Platform& pfrm_;
 };
 
 
@@ -209,38 +239,27 @@ const char* intern(const char* string)
 
 CompressedPtr compr(Value* val)
 {
-    for (int pool_id = 0; pool_id < Context::value_pool_count; ++pool_id) {
-        auto& cells = bound_context->value_pools_[pool_id]->cells();
-        if ((char*)val >= (char*)cells.data() and
-            (char*) val < (char*)(cells.data() + cells.size())) {
+    CompressedPtr result;
 
-            static_assert((1 << CompressedPtr::source_pool_bits) - 1 >=
-                              Context::value_pool_count - 1,
-                          "Source pool bits in compressed ptr insufficient "
-                          "to address all value pools");
+#ifdef USE_COMPRESSED_PTRS
+    static_assert(sizeof(Value) % 2 == 0);
+    result.offset_ = ((u8*)val - (u8*)value_pool_data) / sizeof(Value);
+#else
+    result.ptr_ = val;
+#endif
 
-            static_assert((1 << CompressedPtr::offset_bits) - 1 >=
-                              sizeof(Context::ValuePool::Cells),
-                          "Compressed pointer offset insufficient to address "
-                          "all memory in value pool");
-
-            CompressedPtr result;
-            result.source_pool_ = pool_id;
-            result.offset_ = (char*)val - (char*)cells.data();
-
-            return result;
-        }
-    }
-
-    while (true)
-        ; // Attempt to compress invalid pointer
+    return result;
 }
 
 
 Value* dcompr(CompressedPtr ptr)
 {
-    auto& cells = bound_context->value_pools_[ptr.source_pool_]->cells();
-    return (Value*)((char*)cells.data() + ptr.offset_);
+#ifdef USE_COMPRESSED_PTRS
+    auto ret = (Value*)(((ptr.offset_ * sizeof(Value)) + (u8*)value_pool_data));
+    return ret;
+#else
+    return ptr.ptr_;
+#endif // USE_COMPRESSED_PTRS
 }
 
 
@@ -269,19 +288,15 @@ static Value* alloc_value()
         return val;
     };
 
-    for (auto& pl : bound_context->value_pools_) {
-        if (not pl->empty()) {
-            return init_val(pl->get());
-        }
+    if (auto val = value_pool_alloc()) {
+        return init_val(val);
     }
 
     run_gc();
 
     // Hopefully, we've freed up enough memory...
-    for (auto& pl : bound_context->value_pools_) {
-        if (not pl->empty()) {
-            return init_val(pl->get());
-        }
+    if (auto val = value_pool_alloc()) {
+        return init_val(val);
     }
 
     return nullptr;
@@ -304,7 +319,8 @@ static Value* make_lisp_function(Value* impl)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::function;
-        val->function_.lisp_impl_ = compr(impl);
+        val->function_.lisp_impl_.code_ = compr(impl);
+        val->function_.lisp_impl_.docstring_ = compr(get_nil());
         val->mode_bits_ = Function::ModeBits::lisp_function;
         return val;
     }
@@ -365,11 +381,12 @@ Value* make_list(u32 length)
 }
 
 
-Value* make_error(Error::Code error_code)
+Value* make_error(Error::Code error_code, Value* context)
 {
     if (auto val = alloc_value()) {
         val->type_ = Value::Type::error;
         val->error_.code_ = error_code;
+        val->error_.context_ = compr(context);
         return val;
     }
     return bound_context->oom_;
@@ -435,6 +452,82 @@ Value* make_databuffer(Platform& pfrm)
 }
 
 
+void live_values(::Function<24, void(Value&)> callback);
+
+
+Value* make_string(Platform& pfrm, const char* string)
+{
+    auto len = str_len(string);
+
+    Value* existing_buffer = nullptr;
+    decltype(len) free = 0;
+
+    if (bound_context->string_buffer_ not_eq L_NIL) {
+        auto buffer = bound_context->string_buffer_;
+        free = 0;
+        for (int i = SCRATCH_BUFFER_SIZE - 1; i > 0; --i) {
+            if (buffer->data_buffer_.value()->data_[i] == '\0') {
+                ++free;
+            } else {
+                break;
+            }
+        }
+        if (free > len + 1) { // +1 for null term, > for other null term
+            existing_buffer = buffer;
+        } else {
+            bound_context->string_buffer_ = L_NIL;
+        }
+    }
+
+
+    if (existing_buffer) {
+        const auto offset = (SCRATCH_BUFFER_SIZE - free) + 1;
+
+        auto write_ptr = existing_buffer->data_buffer_.value()->data_ + offset;
+
+        while (*string) {
+            *write_ptr++ = *string++;
+        }
+
+        if (auto val = alloc_value()) {
+            val->type_ = Value::Type::string;
+            val->string_.data_buffer_ = compr(existing_buffer);
+            val->string_.offset_ = offset;
+            return val;
+        } else {
+            return bound_context->oom_;
+        }
+    } else {
+        auto buffer = make_databuffer(pfrm);
+
+        if (buffer == bound_context->oom_) {
+            return bound_context->oom_;
+        }
+
+        Protected p(buffer);
+        bound_context->string_buffer_ = buffer;
+
+        for (int i = 0; i < SCRATCH_BUFFER_SIZE; ++i) {
+            buffer->data_buffer_.value()->data_[i] = '\0';
+        }
+        auto write_ptr = buffer->data_buffer_.value()->data_;
+
+        while (*string) {
+            *write_ptr++ = *string++;
+        }
+
+        if (auto val = alloc_value()) {
+            val->type_ = Value::Type::string;
+            val->string_.data_buffer_ = compr(buffer);
+            val->string_.offset_ = 0;
+            return val;
+        } else {
+            return bound_context->oom_;
+        }
+    }
+}
+
+
 void set_list(Value* list, u32 position, Value* value)
 {
     while (position--) {
@@ -481,10 +574,14 @@ void pop_op()
 
 void push_op(Value* operand)
 {
+#ifdef UNHOSTED
     if (not bound_context->operand_stack_->push_back(compr(operand))) {
         while (true)
             ; // TODO: raise error
     }
+#else
+    bound_context->operand_stack_->push_back(compr(operand));
+#endif
 }
 
 
@@ -521,11 +618,13 @@ void funcall(Value* obj, u8 argc)
         }
     };
 
+
+
     switch (obj->type_) {
     case Value::Type::function: {
         if (bound_context->operand_stack_->size() < argc) {
             pop_args();
-            push_op(make_error(Error::Code::invalid_argc));
+            push_op(make_error(Error::Code::invalid_argc, obj));
             return;
         }
 
@@ -540,7 +639,7 @@ void funcall(Value* obj, u8 argc)
         case Function::ModeBits::lisp_function: {
             auto& ctx = *bound_context;
             const auto break_loc = ctx.operand_stack_->size() - 1;
-            auto expression_list = dcompr(obj->function_.lisp_impl_);
+            auto expression_list = dcompr(obj->function_.lisp_impl_.code_);
             auto result = get_nil();
             push_op(result);
             while (expression_list not_eq get_nil()) {
@@ -576,17 +675,19 @@ void funcall(Value* obj, u8 argc)
     }
 
     default:
-        push_op(make_error(Error::Code::value_not_callable));
+        push_op(make_error(Error::Code::value_not_callable, L_NIL));
         break;
     }
 }
 
 
-Value* set_var(const char* name, Value* value)
+// These functions aren't _that_ fast. But they replace older functions which
+// did a string compare, rather than using the intern'd string pointer.
+Value* __set_var_fast(const char* name, Value* value)
 {
     auto& globals = *bound_context->globals_;
     for (u32 i = 0; i < globals.size(); ++i) {
-        if (str_cmp(name, globals[i].name_) == 0) {
+        if (name == globals[i].name_) {
             std::swap(globals[i], globals[0]);
             globals[0].value_ = value;
             return get_nil();
@@ -601,15 +702,15 @@ Value* set_var(const char* name, Value* value)
         }
     }
 
-    return make_error(Error::Code::symbol_table_exhausted);
+    return make_error(Error::Code::symbol_table_exhausted, L_NIL);
 }
 
 
-Value* get_var(const char* name)
+Value* __get_var_fast(const char* name)
 {
     auto& globals = *bound_context->globals_;
     for (u32 i = 0; i < globals.size(); ++i) {
-        if (str_cmp(name, globals[i].name_) == 0) {
+        if (name == globals[i].name_) {
             std::swap(globals[i], globals[0]);
             return globals[0].value_;
         }
@@ -622,7 +723,24 @@ Value* get_var(const char* name)
         }
     }
 
-    return make_error(Error::Code::undefined_variable_access);
+    StringBuffer<31> hint("[var: ");
+    hint += name;
+    hint += "]";
+
+    return make_error(Error::Code::undefined_variable_access,
+                      make_string(bound_context->pfrm_, hint.c_str()));
+}
+
+
+Value* get_var(Symbol& symbol)
+{
+    return __get_var_fast(symbol.name_);
+}
+
+
+Value* set_var(Symbol& symbol, Value* val)
+{
+    return __set_var_fast(symbol.name_, val);
 }
 
 
@@ -677,11 +795,17 @@ bool is_executing()
 }
 
 
-void dostring(const char* code)
+Value* dostring(const char* code, ::Function<16, void(Value&)> on_error)
 {
+    if (code == nullptr) {
+        on_error(*L_NIL);
+    }
+
     ++bound_context->interp_entry_count_;
 
     int i = 0;
+
+    Protected result(get_nil());
 
     while (true) {
         i += read(code + i);
@@ -691,19 +815,55 @@ void dostring(const char* code)
             break;
         }
         eval(reader_result);
-        pop_op(); // reader result
+        auto expr_result = get_op(0);
+        result.set(expr_result);
         pop_op(); // expression result
+        pop_op(); // reader result
+
+        if (expr_result->type_ == Value::Type::error) {
+            push_op(expr_result);
+            on_error(*expr_result);
+            pop_op();
+            break;
+        }
     }
 
     --bound_context->interp_entry_count_;
+
+    return result;
 }
 
 
-void format_impl(Value* value, Printer& p)
+void format_impl(Value* value, Printer& p, int depth)
 {
+    bool prefix_quote = false;
+
     switch ((lisp::Value::Type)value->type_) {
+    case lisp::Value::Type::heap_node:
+        // We should never reach here.
+        while (true) ;
+        break;
+
     case lisp::Value::Type::nil:
-        p.put_str("nil");
+        if (depth == 0) {
+            p.put_str("'()");
+        } else {
+            p.put_str("()");
+        }
+
+        break;
+
+    case lisp::Value::Type::__reserved:
+        break;
+
+    case lisp::Value::Type::character:
+        // TODO...
+        break;
+
+    case lisp::Value::Type::string:
+        p.put_str("\"");
+        p.put_str(value->string_.value());
+        p.put_str("\"");
         break;
 
     case lisp::Value::Type::symbol:
@@ -716,21 +876,28 @@ void format_impl(Value* value, Printer& p)
     }
 
     case lisp::Value::Type::cons:
+        if (depth == 0 and not prefix_quote) {
+            p.put_str("'");
+            prefix_quote = true;
+        }
         p.put_str("(");
-        format_impl(value->cons_.car(), p);
-        if (value->cons_.cdr()->type_ not_eq Value::Type::cons) {
+        format_impl(value->cons_.car(), p, depth + 1);
+        if (value->cons_.cdr()->type_ == Value::Type::nil) {
+            // ...
+        } else if (value->cons_.cdr()->type_ not_eq Value::Type::cons) {
             p.put_str(" . ");
-            format_impl(value->cons_.cdr(), p);
+            format_impl(value->cons_.cdr(), p, depth + 1);
         } else {
             auto current = value;
             while (true) {
                 if (current->cons_.cdr()->type_ == Value::Type::cons) {
                     p.put_str(" ");
-                    format_impl(current->cons_.cdr()->cons_.car(), p);
+                    format_impl(
+                        current->cons_.cdr()->cons_.car(), p, depth + 1);
                     current = current->cons_.cdr();
                 } else if (current->cons_.cdr() not_eq get_nil()) {
                     p.put_str(" ");
-                    format_impl(current->cons_.cdr(), p);
+                    format_impl(current->cons_.cdr(), p, depth + 1);
                     break;
                 } else {
                     break;
@@ -749,8 +916,11 @@ void format_impl(Value* value, Printer& p)
         break;
 
     case lisp::Value::Type::error:
-        p.put_str("ERR: ");
+        p.put_str("[ERR: ");
         p.put_str(lisp::Error::get_string(value->error_.code_));
+        p.put_str(" : ");
+        format_impl(dcompr(value->error_.context_), p, 0);
+        p.put_str("]");
         break;
 
     case lisp::Value::Type::data_buffer:
@@ -763,9 +933,16 @@ void format_impl(Value* value, Printer& p)
 }
 
 
+const char* String::value()
+{
+    return dcompr(data_buffer_)->data_buffer_.value()->data_ + offset_;
+}
+
+
+
 void format(Value* value, Printer& p)
 {
-    format_impl(value, p);
+    format_impl(value, p, 0);
 }
 
 
@@ -788,12 +965,21 @@ static void gc_mark_value(Value* value)
     switch (value->type_) {
     case Value::Type::function:
         if (value->mode_bits_ == Function::ModeBits::lisp_function) {
-            gc_mark_value((dcompr(value->function_.lisp_impl_)));
+            gc_mark_value((dcompr(value->function_.lisp_impl_.code_)));
+            gc_mark_value((dcompr(value->function_.lisp_impl_.docstring_)));
         } else if (value->mode_bits_ ==
                    Function::ModeBits::lisp_bytecode_function) {
             gc_mark_value(
                 (dcompr(value->function_.bytecode_impl_.data_buffer_)));
         }
+        break;
+
+    case Value::Type::string:
+        gc_mark_value(dcompr(value->string_.data_buffer_));
+        break;
+
+    case Value::Type::error:
+        gc_mark_value(dcompr(value->error_.context_));
         break;
 
     case Value::Type::cons:
@@ -852,7 +1038,10 @@ Protected::~Protected()
 static void gc_mark()
 {
     gc_mark_value(bound_context->nil_);
-    gc_mark_value(bound_context->oom_);
+
+    if (bound_context->oom_) {
+        gc_mark_value(bound_context->oom_);
+    }
 
     auto& ctx = bound_context;
 
@@ -887,6 +1076,7 @@ static void invoke_finalizer(Value* value)
 {
     // NOTE: This ordering should match the Value::Type enum.
     static const std::array<FinalizerTableEntry, Value::Type::count> table = {
+        HeapNode::finalizer,
         Nil::finalizer,
         Integer::finalizer,
         Cons::finalizer,
@@ -895,6 +1085,9 @@ static void invoke_finalizer(Value* value)
         Symbol::finalizer,
         UserData::finalizer,
         DataBuffer::finalizer,
+        String::finalizer,
+        Character::finalizer,
+        __Reserved::finalizer,
     };
 
     table[value->type_].fn_(value);
@@ -910,34 +1103,40 @@ void DataBuffer::finalizer(Value* buffer)
 
 static int gc_sweep()
 {
-    int collect_count = 0;
-    for (auto& pl : bound_context->value_pools_) {
-        pl->scan_cells([&pl, &collect_count](Value* val) {
-            if (val->alive_) {
-                if (val->mark_bit_) {
-                    val->mark_bit_ = false;
-                } else {
-                    // This value should be unreachable, let's collect it.
-                    val->alive_ = false;
-                    invoke_finalizer(val);
-                    pl->post(val);
-                    ++collect_count;
-                }
-            }
-        });
+    if (not bound_context->string_buffer_->mark_bit_) {
+        bound_context->string_buffer_ = L_NIL;
     }
+
+    int collect_count = 0;
+
+    for (int i = 0; i < VALUE_POOL_SIZE; ++i) {
+
+        Value* val = &value_pool_data[i];
+
+        if (val->alive_) {
+            if (val->mark_bit_) {
+                val->mark_bit_ = false;
+            } else {
+                invoke_finalizer(val);
+                value_pool_free(val);
+                ++collect_count;
+            }
+        }
+    }
+
     return collect_count;
 }
 
 
 void live_values(::Function<24, void(Value&)> callback)
 {
-    for (auto& pl : bound_context->value_pools_) {
-        pl->scan_cells([&callback](Value* val) {
-            if (val->alive_) {
-                callback(*val);
-            }
-        });
+    for (int i = 0; i < VALUE_POOL_SIZE; ++i) {
+
+        Value* val = &value_pool_data[i];
+
+        if (val->alive_) {
+            callback(*val);
+        }
     }
 }
 
@@ -993,6 +1192,8 @@ static u32 read_list(const char* code)
     auto result = get_nil();
     push_op(get_nil());
 
+    bool dotted_pair = false;
+
     while (true) {
         switch (code[i]) {
         case '\r':
@@ -1000,6 +1201,20 @@ static u32 read_list(const char* code)
         case '\t':
         case ' ':
             ++i;
+            break;
+
+        case '.':
+            i += 1;
+            if (dotted_pair or result == get_nil()) {
+                push_op(lisp::make_error(Error::Code::mismatched_parentheses,
+                                         L_NIL));
+                return i;
+            } else {
+                dotted_pair = true;
+                i += read(code + i);
+                result->cons_.set_cdr(get_op(0));
+                pop_op();
+            }
             break;
 
         case ';':
@@ -1018,11 +1233,17 @@ static u32 read_list(const char* code)
 
         case '\0':
             pop_op();
-            push_op(lisp::make_error(Error::Code::mismatched_parentheses));
+            push_op(
+                lisp::make_error(Error::Code::mismatched_parentheses, L_NIL));
             return i;
             break;
 
         default:
+            if (dotted_pair) {
+                push_op(lisp::make_error(Error::Code::mismatched_parentheses,
+                                         L_NIL));
+                return i;
+            }
             i += read(code + i);
 
             if (result == get_nil()) {
@@ -1039,6 +1260,33 @@ static u32 read_list(const char* code)
             break;
         }
     }
+}
+
+
+static u32 read_string(const char* code)
+{
+    auto temp = bound_context->pfrm_.make_scratch_buffer();
+    auto write = temp->data_;
+
+    int i = 0;
+    while (*code not_eq '"') {
+        if (*code == '\0' or i == SCRATCH_BUFFER_SIZE - 1) {
+            // FIXME: correct error code.
+            push_op(
+                lisp::make_error(Error::Code::mismatched_parentheses, L_NIL));
+        }
+        *(write++) = *(code++);
+        i++;
+    }
+
+    if (*code == '"') {
+        ++i;
+        ++code;
+    }
+
+    push_op(make_string(bound_context->pfrm_, temp->data_));
+
+    return i;
 }
 
 
@@ -1184,6 +1432,11 @@ u32 read(const char* code)
             ++i;
             break;
 
+        case '"':
+            pop_op(); // nil
+            i += read_string(code + i + 1);
+            return i + 1;
+
         default:
             pop_op(); // nil
             i += read_symbol(code + i);
@@ -1211,10 +1464,104 @@ u32 read(const char* code)
 }
 
 
+static void eval_let(Value* code)
+{
+    // Overview:
+    // Push the previous values of all of the let binding vars onto the stack.
+    // Overwrite the current contents of the global vars. Pop the previous
+    // contents off of the operand stack, and re-assign the var to the stashed
+    // value.
+
+    if (code->type_ not_eq Value::Type::cons) {
+        push_op(lisp::make_error(Error::Code::mismatched_parentheses, L_NIL));
+        return;
+    }
+
+    Value* bindings = code->cons_.car();
+
+    Protected result(get_nil());
+
+    int stashed_vars = 0;
+
+    foreach (bindings, [&](Value* val) {
+        if (result not_eq get_nil()) {
+            return;
+        }
+        if (val->type_ == Value::Type::cons) {
+            auto sym = val->cons_.car();
+            auto bind = val->cons_.cdr();
+            if (sym->type_ == Value::Type::symbol and
+                bind->type_ == Value::Type::cons) {
+                auto prev = get_var(sym->symbol_);
+
+                push_op(prev);
+                ++stashed_vars;
+
+                eval(bind->cons_.car());
+
+                set_var(sym->symbol_, get_op(0));
+                pop_op();
+
+            } else {
+                result = lisp::make_error(Error::Code::mismatched_parentheses,
+                                          L_NIL);
+            }
+        } else {
+            result =
+                lisp::make_error(Error::Code::mismatched_parentheses, L_NIL);
+        }
+    })
+        ;
+
+    auto clear_stash = [&] {
+        for (int i = 0; i < stashed_vars; ++i) {
+            pop_op();
+        }
+    };
+
+    if (result not_eq get_nil()) {
+        clear_stash();
+        push_op(result);
+        return;
+    }
+
+    foreach (code->cons_.cdr(), [&](Value* val) {
+        eval(val);
+        result.set(get_op(0));
+        pop_op();
+    })
+        ;
+
+    int i = 0;
+    foreach (bindings, [&i, stashed_vars](Value* val) {
+        auto value = get_op((stashed_vars - 1) - i);
+
+        auto sym = val->cons_.car();
+
+        if (value->type_ not_eq Value::Type::error) {
+            set_var(sym->symbol_, value);
+        } else {
+            for (auto& var : *bound_context->globals_) {
+                if (str_cmp(sym->symbol_.name_, var.name_) == 0) {
+                    var.value_ = get_nil();
+                    var.name_ = "";
+                    break;
+                }
+            }
+        }
+        ++i;
+    })
+        ;
+
+    clear_stash();
+    push_op(result);
+}
+
+
 static void eval_if(Value* code)
 {
     if (code->type_ not_eq Value::Type::cons) {
-        push_op(lisp::make_error(Error::Code::mismatched_parentheses));
+        push_op(lisp::make_error(Error::Code::mismatched_parentheses, L_NIL));
         return;
     }
 
@@ -1248,7 +1595,7 @@ static void eval_if(Value* code)
 static void eval_while(Value* code)
 {
     if (code->type_ not_eq Value::Type::cons) {
-        push_op(lisp::make_error(Error::Code::mismatched_parentheses));
+        push_op(lisp::make_error(Error::Code::mismatched_parentheses, L_NIL));
         return;
     }
 
@@ -1291,7 +1638,7 @@ void eval(Value* code)
 
     if (code->type_ == Value::Type::symbol) {
         pop_op();
-        push_op(get_var(code->symbol_.name_));
+        push_op(get_var(code->symbol_));
     } else if (code->type_ == Value::Type::cons) {
         auto form = code->cons_.car();
         if (form->type_ == Value::Type::symbol) {
@@ -1324,6 +1671,14 @@ void eval(Value* code)
                 push_op(code->cons_.cdr());
                 --bound_context->interp_entry_count_;
                 return;
+            } else if (str_cmp(form->symbol_.name_, "let") == 0) {
+                eval_let(code->cons_.cdr());
+                auto result = get_op(0);
+                pop_op();
+                pop_op();
+                push_op(result);
+                --bound_context->interp_entry_count_;
+                return;
             }
         }
 
@@ -1348,7 +1703,7 @@ void eval(Value* code)
             if (arg_list->type_ not_eq Value::Type::cons) {
                 clear_args();
                 pop_op();
-                push_op(make_error(Error::Code::value_not_callable));
+                push_op(make_error(Error::Code::value_not_callable, arg_list));
                 --bound_context->interp_entry_count_;
                 return;
             }
@@ -1361,6 +1716,10 @@ void eval(Value* code)
 
         funcall(function, argc);
         auto result = get_op(0);
+        if (result->type_ == Value::Type::error and
+            dcompr(result->error_.context_) == L_NIL) {
+            result->error_.context_ = compr(code);
+        }
         pop_op(); // result
         pop_op(); // protected expr (see top)
         push_op(result);
@@ -1370,32 +1729,38 @@ void eval(Value* code)
 }
 
 
+Platform* interp_get_pfrm()
+{
+    return &bound_context->pfrm_;
+}
+
+
 void init(Platform& pfrm)
 {
-    bound_context.emplace(pfrm);
-
-    // We cannot be sure that the memory will be zero-initialized, so make sure
-    // that all of the alive bits in the value pool entries are zero. This needs
-    // to be done at least once, otherwise, gc will not work correctly.
-    for (auto& pl : bound_context->value_pools_) {
-        pl->scan_cells([](Value* val) {
-            val->alive_ = false;
-            val->mark_bit_ = false;
-        });
+    if (bound_context) {
+        return;
     }
 
+    bound_context.emplace(pfrm);
+
+    value_pool_init();
     bound_context->nil_ = alloc_value();
     bound_context->nil_->type_ = Value::Type::nil;
 
+    puts("create oom");
     bound_context->oom_ = alloc_value();
     bound_context->oom_->type_ = Value::Type::error;
     bound_context->oom_->error_.code_ = Error::Code::out_of_memory;
+    bound_context->oom_->error_.context_ = compr(bound_context->nil_);
+
+    bound_context->string_buffer_ = bound_context->nil_;
 
     for (auto& var : *bound_context->globals_) {
         var.value_ = get_nil();
     }
 
     if (dcompr(compr(get_nil())) not_eq get_nil()) {
+        puts("pointer compression test failed");
         error(pfrm, "pointer compression test failed");
         while (true)
             ;
@@ -1409,14 +1774,24 @@ void init(Platform& pfrm)
                 L_EXPECT_ARGC(argc, 2);
                 L_EXPECT_OP(1, symbol);
 
-                const char* name = get_op(1)->symbol_.name_;
-                lisp::set_var(name, get_op(0));
+                lisp::set_var(get_op(1)->symbol_, get_op(0));
 
                 return L_NIL;
             }));
 
     set_var("cons", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
+                auto car = get_op(1);
+                auto cdr = get_op(0);
+
+                if (car->type_ == lisp::Value::Type::error) {
+                    return car;
+                }
+
+                if (cdr->type_ == lisp::Value::Type::error) {
+                    return cdr;
+                }
+
                 return make_cons(get_op(1), get_op(0));
             }));
 
@@ -1435,7 +1810,11 @@ void init(Platform& pfrm)
     set_var("list", make_function([](int argc) {
                 auto lat = make_list(argc);
                 for (int i = 0; i < argc; ++i) {
-                    set_list(lat, i, get_op((argc - 1) - i));
+                    auto val = get_op((argc - 1) - i);
+                    if (val->type_ == Value::Type::error) {
+                        return val;
+                    }
+                    set_list(lat, i, val);
                 }
                 return lat;
             }));
@@ -1511,6 +1890,10 @@ void init(Platform& pfrm)
                 case Value::Type::user_data:
                     return get_op(0)->user_data_.obj_ ==
                            get_op(1)->user_data_.obj_;
+
+                case Value::Type::string:
+                    return str_cmp(get_op(0)->string_.value(),
+                                   get_op(1)->string_.value()) == 0;
                 }
                 return false;
             }());
@@ -1527,7 +1910,8 @@ void init(Platform& pfrm)
                 int apply_argc = 0;
                 while (lat not_eq get_nil()) {
                     if (lat->type_ not_eq Value::Type::cons) {
-                        return make_error(Error::Code::invalid_argument_type);
+                        return make_error(Error::Code::invalid_argument_type,
+                                          lat);
                     }
                     ++apply_argc;
                     push_op(lat->cons_.car());
@@ -1564,7 +1948,8 @@ void init(Platform& pfrm)
                 const int count = get_op(1)->integer_.value_;
                 push_op(result);
                 for (int i = 0; i < count; ++i) {
-                    funcall(fn, 0);
+                    push_op(make_integer(i));
+                    funcall(fn, 1);
                     set_list(result, i, get_op(0));
                     pop_op(); // result from funcall
                 }
@@ -1574,6 +1959,11 @@ void init(Platform& pfrm)
 
     set_var("length", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 1);
+
+                if (get_op(0)->type_ == Value::Type::nil) {
+                    return make_integer(0);
+                }
+
                 L_EXPECT_OP(0, cons);
 
                 return make_integer(length(get_op(0)));
@@ -1630,17 +2020,22 @@ void init(Platform& pfrm)
             }));
 
     set_var("interp-stat", make_function([](int argc) {
-                auto lat = make_list(4);
                 auto& ctx = bound_context;
+
                 int values_remaining = 0;
-                for (auto& pl : ctx->value_pools_) {
-                    values_remaining += pl->remaining();
+                Value* current = value_pool;
+                while (current) {
+                    ++values_remaining;
+                    current = current->heap_node_.next_;
                 }
 
-                push_op(lat); // for the gc
+                ListBuilder lat;
 
                 auto make_stat = [&](const char* name, int value) {
                     auto c = make_cons(get_nil(), get_nil());
+                    if (c == bound_context->oom_) {
+                        return c;
+                    }
                     push_op(c); // gc protect
 
                     c->cons_.set_car(
@@ -1651,25 +2046,23 @@ void init(Platform& pfrm)
                     return c;
                 };
 
-                set_list(lat, 0, make_stat("vals-left", values_remaining));
-                set_list(lat,
-                         1,
-                         make_stat("interned-bytes", ctx->string_intern_pos_));
-                set_list(lat,
-                         2,
-                         make_stat("stack-used", ctx->operand_stack_->size()));
-                set_list(lat, 3, make_stat("vars", [&] {
-                             int symb_tab_used = 0;
-                             for (u32 i = 0; i < ctx->globals_->size(); ++i) {
-                                 if (str_cmp("", (*ctx->globals_)[i].name_)) {
-                                     ++symb_tab_used;
-                                 }
-                             }
-                             return symb_tab_used;
-                         }()));
-                pop_op(); // lat
+                lat.push_front(make_stat("vars", [&] {
+                    int symb_tab_used = 0;
+                    for (u32 i = 0; i < ctx->globals_->size(); ++i) {
+                        if (str_cmp("", (*ctx->globals_)[i].name_)) {
+                            ++symb_tab_used;
+                        }
+                    }
+                    return symb_tab_used;
+                }()));
 
-                return lat;
+                lat.push_front(
+                    make_stat("stack-used", ctx->operand_stack_->size()));
+                lat.push_front(
+                    make_stat("interned-bytes", ctx->string_intern_pos_));
+                lat.push_front(make_stat("vals-left", values_remaining));
+
+                return lat.result();
             }));
 
     set_var("range", make_function([](int argc) {
@@ -1695,7 +2088,8 @@ void init(Platform& pfrm)
                     end = get_op(1)->integer_.value_;
                     incr = get_op(0)->integer_.value_;
                 } else {
-                    return lisp::make_error(lisp::Error::Code::invalid_argc);
+                    return lisp::make_error(lisp::Error::Code::invalid_argc,
+                                            L_NIL);
                 }
 
                 if (incr == 0) {
@@ -1728,6 +2122,34 @@ void init(Platform& pfrm)
                 return get_nil();
             }));
 
+
+    set_var("symbol", make_function([](int argc) {
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, string);
+
+                return make_symbol(get_op(0)->string_.value());
+            }));
+
+
+    set_var("string", make_function([](int argc) {
+                EvalBuffer b;
+                EvalPrinter p(b);
+
+                for (int i = argc - 1; i > -1; --i) {
+                    auto val = get_op(i);
+                    if (val->type_ == Value::Type::string) {
+                        p.put_str(val->string_.value());
+                    } else {
+                        format_impl(val, p, 0);
+                    }
+                }
+
+                if (auto pfrm = interp_get_pfrm()) {
+                    return make_string(*pfrm, b.c_str());
+                }
+                return L_NIL;
+            }));
+
     set_var("bound", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, symbol);
@@ -1741,6 +2163,51 @@ void init(Platform& pfrm)
                 return make_integer(0);
             }));
 
+
+    set_var("filter", make_function([](int argc) {
+                L_EXPECT_ARGC(argc, 2);
+                L_EXPECT_OP(0, cons);
+                L_EXPECT_OP(1, function);
+
+                auto fn = get_op(1);
+                Value* result = make_cons(L_NIL, L_NIL);
+                auto prev = result;
+                auto current = result;
+
+                foreach (get_op(0), [&](Value* val) {
+                    push_op(result); // gc protect
+
+                    push_op(val);
+                    funcall(fn, 1);
+                    auto funcall_result = get_op(0);
+
+                    if (is_boolean_true(funcall_result)) {
+                        current->cons_.set_car(val);
+                        auto next = make_cons(L_NIL, L_NIL);
+                        if (next == bound_context->oom_) {
+                            current = result;
+                            return;
+                        }
+                        current->cons_.set_cdr(next);
+                        prev = current;
+                        current = next;
+                    }
+                    pop_op(); // funcall result
+
+                    pop_op(); // gc unprotect
+                })
+                    ;
+
+                if (current == result) {
+                    return L_NIL;
+                }
+
+                prev->cons_.set_cdr(L_NIL);
+
+                return result;
+            }));
+
+
     set_var(
         "map", make_function([](int argc) {
             if (argc < 2) {
@@ -1749,7 +2216,7 @@ void init(Platform& pfrm)
             if (lisp::get_op(argc - 1)->type_ not_eq Value::Type::function and
                 lisp::get_op(argc - 1)->type_ not_eq Value::Type::cons) {
                 return lisp::make_error(
-                    lisp::Error::Code::invalid_argument_type);
+                    lisp::Error::Code::invalid_argument_type, L_NIL);
             }
 
             // I've never seen map used with so many input lists, but who knows,
@@ -1804,6 +2271,21 @@ void init(Platform& pfrm)
 
             return result;
         }));
+
+    set_var("reverse", make_function([](int argc) {
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, cons);
+
+                Value* result = get_nil();
+                foreach (get_op(0), [&](Value* car) {
+                    push_op(result);
+                    result = make_cons(car, result);
+                    pop_op();
+                })
+                    ;
+
+                return result;
+            }));
 
     set_var("select", make_function([](int argc) {
                 L_EXPECT_ARGC(argc, 2);
@@ -1892,9 +2374,21 @@ void init(Platform& pfrm)
             }));
 #endif // __GBA__
 
+
+    set_var("read", make_function([](int argc) {
+                L_EXPECT_ARGC(argc, 1);
+                L_EXPECT_OP(0, string);
+                read(get_op(0)->string_.value());
+                auto result = get_op(0);
+                pop_op();
+                return result;
+            }));
+
+
     set_var("eval", make_function([](int argc) {
                 if (argc < 1) {
-                    return lisp::make_error(lisp::Error::Code::invalid_argc);
+                    return lisp::make_error(lisp::Error::Code::invalid_argc,
+                                            L_NIL);
                 }
 
                 eval(get_op(0));
@@ -1905,10 +2399,7 @@ void init(Platform& pfrm)
             }));
 
     set_var("env", make_function([](int argc) {
-                auto pfrm = lisp::get_var("*pfrm*");
-                if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
-                    return get_nil();
-                }
+                auto pfrm = interp_get_pfrm();
 
                 Value* result = make_cons(get_nil(), get_nil());
                 push_op(result); // protect from the gc
@@ -1918,8 +2409,10 @@ void init(Platform& pfrm)
                 get_env([&current, pfrm](const char* str) {
                     current->cons_.set_car(intern_to_symbol(str));
                     auto next = make_cons(get_nil(), get_nil());
-                    current->cons_.set_cdr(next);
-                    current = next;
+                    if (next not_eq bound_context->oom_) {
+                        current->cons_.set_cdr(next);
+                        current = next;
+                    }
                 });
 
                 pop_op(); // result
@@ -1928,18 +2421,15 @@ void init(Platform& pfrm)
             }));
 
     set_var("compile", make_function([](int argc) {
-                auto pfrm = lisp::get_var("*pfrm*");
-                if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
-                    return get_nil();
-                }
+                auto pfrm = interp_get_pfrm();
 
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, function);
 
                 if (get_op(0)->mode_bits_ ==
                     Function::ModeBits::lisp_function) {
-                    compile(*(Platform*)pfrm->user_data_.obj_,
-                            dcompr(get_op(0)->function_.lisp_impl_));
+                    compile(*pfrm, dcompr(get_op(0)
+                                          ->function_.lisp_impl_.code_));
                     auto ret = get_op(0);
                     pop_op();
                     return ret;
@@ -2141,14 +2631,9 @@ void init(Platform& pfrm)
                     case Ret::op(): {
                         if (depth == 0) {
                             out += "RET\r\n";
-                            auto pfrm = lisp::get_var("*pfrm*");
-                            if (pfrm->type_ not_eq
-                                lisp::Value::Type::user_data) {
-                                return get_nil();
-                            }
-                            ((Platform*)pfrm->user_data_.obj_)
-                                ->remote_console()
-                                .printline(out.c_str(), false);
+                            auto pfrm = interp_get_pfrm();
+                            pfrm->remote_console().printline(out.c_str(),
+                                                             false);
                             ((Platform*)pfrm)->sleep(80);
                             return get_nil();
                         } else {
@@ -2160,16 +2645,27 @@ void init(Platform& pfrm)
                     }
 
                     default:
-                        ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
-                            ->remote_console()
-                            .printline(out.c_str(), false);
-                        ((Platform*)lisp::get_var("*pfrm*")->user_data_.obj_)
-                            ->sleep(80);
+                        interp_get_pfrm()->remote_console().printline(
+                            out.c_str(), false);
+                        interp_get_pfrm()->sleep(80);
                         return get_nil();
                     }
                     out += "\r\n";
                 }
                 return get_nil();
+            } else if (get_op(0)->mode_bits_ ==
+                       Function::ModeBits::lisp_function) {
+                auto expression_list =
+                    dcompr(get_op(0)->function_.lisp_impl_.code_);
+
+                DefaultPrinter p;
+                format(expression_list, p);
+
+                interp_get_pfrm()->remote_console().printline(
+                            p.fmt_.c_str(), false);
+                interp_get_pfrm()->sleep(80);
+                return get_nil();
+
             } else {
                 return get_nil();
             }

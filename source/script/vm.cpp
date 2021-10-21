@@ -24,6 +24,11 @@ Instruction* read(ScratchBuffer& buffer, int& pc)
 }
 
 
+Value* __get_var_fast(const char* symbol_str);
+void __set_var_fast(const char* symbol_str, Value* value);
+
+
+
 void vm_execute(Value* code_buffer, int start_offset)
 {
     int pc = start_offset;
@@ -67,7 +72,8 @@ void vm_execute(Value* code_buffer, int start_offset)
 
         case LoadVar::op(): {
             auto inst = read<LoadVar>(code, pc);
-            push_op(get_var(symbol_from_offset(inst->name_offset_.get())));
+            push_op(
+                __get_var_fast(symbol_from_offset(inst->name_offset_.get())));
             break;
         }
 
@@ -175,7 +181,7 @@ void vm_execute(Value* code_buffer, int start_offset)
             if (arg->type_ == Value::Type::cons) {
                 push_op(arg->cons_.car());
             } else {
-                push_op(make_error(Error::Code::invalid_argument_type));
+                push_op(make_error(Error::Code::invalid_argument_type, L_NIL));
             }
             break;
         }
@@ -187,7 +193,7 @@ void vm_execute(Value* code_buffer, int start_offset)
             if (arg->type_ == Value::Type::cons) {
                 push_op(arg->cons_.cdr());
             } else {
-                push_op(make_error(Error::Code::invalid_argument_type));
+                push_op(make_error(Error::Code::invalid_argument_type, L_NIL));
             }
             break;
         }

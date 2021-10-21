@@ -217,6 +217,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/file_chinese.cpp
     ${DATA_DIR}/file_italian.cpp
     ${DATA_DIR}/file_russian.cpp
+    ${DATA_DIR}/file_french.cpp
     ${DATA_DIR}/scottbuckley_omega.s
     ${DATA_DIR}/music_waves.s
     ${DATA_DIR}/music_murmuration.s
@@ -507,6 +508,7 @@ if(GAMEBOY_ADVANCE)
   add_file(strings chinese txt)
   add_file(strings russian txt)
   add_file(strings italian txt)
+  add_file(strings french txt)
 
   if(GBA_AUTOBUILD_CONF)
     configure_file(files.cpp.in ${SOURCE_DIR}/platform/gba/files.cpp)

@@ -332,9 +332,15 @@ using Margin = u16;
 
 inline Margin centered_text_margins(Platform& pfrm, u16 text_length)
 {
-    const auto width = calc_screen_tiles(pfrm).x;
+    const int width = calc_screen_tiles(pfrm).x;
 
-    return (width - text_length) / 2;
+    auto result = (width - text_length) / 2;
+
+    if (result < 0) {
+        return 0;
+    }
+
+    return result;
 }
 
 
