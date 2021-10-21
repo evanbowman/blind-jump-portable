@@ -56,8 +56,9 @@ struct Symbol {
     enum class ModeBits {
         requires_intern,
         // If you create a symbol, while promising that the string pointer is
-        // stable, the string will _not_ be interned. This uses less memory, but
-        // should be used very carefully, and ONLY WITH STRING LITERALS.
+        // stable, the interpreter assumes that the string was previously
+        // inserted into the string intern table. It will not perform the
+        // slow lookup into the string intern memory region.
         stable_pointer,
     };
 
@@ -254,6 +255,7 @@ struct HeapNode {
 
     static void finalizer(Value*)
     {
+        // Should be unreachable.
         while (true) ;
     }
 };
@@ -261,7 +263,11 @@ struct HeapNode {
 
 struct Value {
     enum Type {
+        // When a Value is deallocated, it is converted into a HeapNode, and
+        // inserted into a freelist. Therefore, we need no extra space to
+        // maintain the freelist.
         heap_node,
+
         nil,
         integer,
         cons,
@@ -402,8 +408,8 @@ Value* get_arg(u16 arg);
 void funcall(Value* fn, u8 argc);
 
 
-Value* set_var(Symbol& sym, Value* value);
-Value* get_var(Symbol& sym);
+Value* set_var(Value* sym, Value* value);
+Value* get_var(Value* sym);
 
 
 // Provided for convenience.
@@ -414,7 +420,7 @@ inline Value* set_var(const char* name, Value* value)
         return var_sym;
     }
 
-    return set_var(var_sym->symbol_, value);
+    return set_var(var_sym, value);
 }
 
 
@@ -425,7 +431,7 @@ inline Value* get_var(const char* name)
         return var_sym;
     }
 
-    return get_var(var_sym->symbol_);
+    return get_var(var_sym);
 }
 
 
@@ -505,6 +511,15 @@ class Protected {
 public:
     Protected(Value* val);
 
+    Protected& operator=(Value* val)
+    {
+        val_ = val;
+        return *this;
+    }
+
+    Protected(const Protected&) = delete;
+    Protected(Protected&&) = delete;
+
     ~Protected();
 
     void set(Value* val)
@@ -523,6 +538,11 @@ public:
     }
 
     operator Value*()
+    {
+        return val_;
+    }
+
+    Value* operator->()
     {
         return val_;
     }

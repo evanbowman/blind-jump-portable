@@ -33,7 +33,7 @@ static int run_gc();
 static const u32 string_intern_table_size = 1999;
 
 
-#define VALUE_POOL_SIZE 8000
+#define VALUE_POOL_SIZE 9000
 
 
 static HEAP_DATA Value value_pool_data[VALUE_POOL_SIZE];
@@ -81,15 +81,13 @@ void value_pool_free(Value* value)
 struct Context {
     using OperandStack = Buffer<CompressedPtr, 994>;
 
-    using Globals = std::array<Variable, 249>;
     using Interns = char[string_intern_table_size];
 
     Context(Platform& pfrm)
         : operand_stack_(allocate_dynamic<OperandStack>(pfrm)),
-          globals_(allocate_dynamic<Globals>(pfrm)),
           interns_(allocate_dynamic<Interns>(pfrm)), pfrm_(pfrm)
     {
-        if (not operand_stack_ or not globals_ or not interns_) {
+        if (not operand_stack_ or not interns_) {
 
             while (true)
                 ; // FIXME: raise error
@@ -97,7 +95,6 @@ struct Context {
     }
 
     DynamicMemory<OperandStack> operand_stack_;
-    DynamicMemory<Globals> globals_;
     DynamicMemory<Interns> interns_;
 
     u16 arguments_break_loc_;
@@ -105,6 +102,8 @@ struct Context {
     Value* nil_ = nullptr;
     Value* oom_ = nullptr;
     Value* string_buffer_ = nullptr;
+    Value* globals_tree_ = nullptr;
+
 
     const IntegralConstant* constants_ = nullptr;
     u16 constants_count_ = 0;
@@ -118,6 +117,232 @@ struct Context {
 
 
 static std::optional<Context> bound_context;
+
+
+// Globals tree node:
+// ((key . value) . (left-child . right-child))
+//
+// i.e.: Each global variable binding uses three cons cells.
+
+
+static void globals_tree_insert(Value* key, Value* value)
+{
+    auto& ctx = *bound_context;
+
+    Protected new_kvp(make_cons(key, value));
+
+    if (ctx.globals_tree_ == get_nil()) {
+        // The empty set of left/right children
+        push_op(make_cons(get_nil(), get_nil()));
+
+        auto new_tree = make_cons(new_kvp, get_op(0));
+        pop_op();
+
+        ctx.globals_tree_ = new_tree;
+
+    } else {
+        // Ok, if the tree exists, now we need to scan the tree, looking for the
+        // key. If it exists, replace the existing value with our new
+        // value. Otherwise, insert key at the terminal point.
+
+        Protected current(ctx.globals_tree_);
+        Protected prev(ctx.globals_tree_);
+        bool insert_left = true;
+
+        while (current not_eq get_nil()) {
+
+            auto current_key = current->cons_.car()->cons_.car();
+
+            if (current_key->symbol_.name_ == key->symbol_.name_) {
+                // The key alreay exists, overwrite the previous value.
+                current->cons_.car()->cons_.set_cdr(value);
+                return;
+
+            } else {
+                prev = (Value*)current;
+
+                if (current_key->symbol_.name_ < key->symbol_.name_) {
+                    // Continue loop through left subtree
+                    insert_left = true;
+                    current = current->cons_.cdr()->cons_.car();
+                } else {
+                    // Continue loop through right subtree
+                    insert_left = false;
+                    current = current->cons_.cdr()->cons_.cdr();
+                }
+            }
+        }
+
+        if (insert_left) {
+            push_op(make_cons(get_nil(), get_nil()));
+
+            auto new_tree = make_cons(new_kvp, get_op(0));
+            pop_op();
+
+            prev->cons_.cdr()->cons_.set_car(new_tree);
+
+        } else {
+            push_op(make_cons(get_nil(), get_nil()));
+
+            auto new_tree = make_cons(new_kvp, get_op(0));
+            pop_op();
+
+            prev->cons_.cdr()->cons_.set_cdr(new_tree);
+        }
+    }
+}
+
+
+using GlobalsTreeVisitor = ::Function<24, void(Value&)>;
+
+
+static Value* left_subtree(Value* tree)
+{
+    return tree->cons_.cdr()->cons_.car();
+}
+
+
+static Value* right_subtree(Value* tree)
+{
+    return tree->cons_.cdr()->cons_.cdr();
+}
+
+
+static void set_right_subtree(Value* tree, Value* value)
+{
+    tree->cons_.cdr()->cons_.set_cdr(value);
+}
+
+
+// Invokes callback with (key . value) for each global var definition.
+static void globals_tree_traverse(Value* root, GlobalsTreeVisitor callback)
+{
+    if (root == get_nil()) {
+        return;
+    }
+
+    auto current = root;
+    auto prev = get_nil();
+
+    while (current not_eq get_nil()) {
+
+        if (left_subtree(current) == get_nil()) {
+            callback(*current->cons_.car());
+            current = right_subtree(current);
+        } else {
+            prev = left_subtree(current);
+
+            while (right_subtree(prev) not_eq get_nil() and
+                   right_subtree(prev) not_eq current) {
+                prev = right_subtree(prev);
+            }
+
+            if (right_subtree(prev) == get_nil()) {
+                set_right_subtree(prev, current);
+                current = left_subtree(current);
+            } else {
+                set_right_subtree(prev, get_nil());
+                callback(*current->cons_.car());
+                current = right_subtree(current);
+            }
+        }
+    }
+}
+
+
+static void globals_tree_erase(Value* key)
+{
+    auto& ctx = *bound_context;
+
+    if (ctx.globals_tree_ == get_nil()) {
+        return;
+    }
+
+    auto current = ctx.globals_tree_;
+    auto prev = current;
+    bool erase_left = true;
+
+    while (current not_eq get_nil()) {
+
+        auto current_key = current->cons_.car()->cons_.car();
+
+        if (current_key->symbol_.name_ == key->symbol_.name_) {
+
+            Protected erased(current);
+
+            if (current == prev) {
+                ctx.globals_tree_ = get_nil();
+            } else {
+                if (erase_left) {
+                    prev->cons_.cdr()->cons_.set_car(get_nil());
+                } else {
+                    prev->cons_.cdr()->cons_.set_cdr(get_nil());
+                }
+            }
+
+            auto reattach_child = [](Value& kvp) {
+                globals_tree_insert(kvp.cons_.car(), kvp.cons_.cdr());
+            };
+
+            auto left_child = erased->cons_.cdr()->cons_.car();
+            if (left_child not_eq get_nil()) {
+                globals_tree_traverse(left_child, reattach_child);
+            }
+
+            auto right_child = erased->cons_.cdr()->cons_.cdr();
+            if (right_child not_eq get_nil()) {
+                globals_tree_traverse(right_child, reattach_child);
+            }
+
+            return;
+        }
+
+        prev = current;
+
+        if (current_key->symbol_.name_ < key->symbol_.name_) {
+            erase_left = true;
+            current = current->cons_.cdr()->cons_.car();
+        } else {
+            erase_left = false;
+            current = current->cons_.cdr()->cons_.cdr();
+        }
+    }
+}
+
+
+static Value* globals_tree_find(Value* key)
+{
+    auto& ctx = *bound_context;
+
+    if (ctx.globals_tree_ == get_nil()) {
+        return get_nil();
+    }
+
+    auto current = ctx.globals_tree_;
+
+    while (current not_eq get_nil()) {
+
+        auto current_key = current->cons_.car()->cons_.car();
+
+        if (current_key->symbol_.name_ == key->symbol_.name_) {
+            return current->cons_.car()->cons_.cdr();
+        }
+
+        if (current_key->symbol_.name_ < key->symbol_.name_) {
+            current = current->cons_.cdr()->cons_.car();
+        } else {
+            current = current->cons_.cdr()->cons_.cdr();
+        }
+    }
+
+    StringBuffer<31> hint("[var: ");
+    hint += key->symbol_.name_;
+    hint += "]";
+
+    return make_error(Error::Code::undefined_variable_access,
+                      make_string(bound_context->pfrm_, hint.c_str()));
+}
+
 
 
 void set_constants(const IntegralConstant* constants, u16 count)
@@ -177,11 +402,10 @@ void get_env(::Function<24, void(const char*)> callback)
 {
     auto& ctx = bound_context;
 
-    for (u32 i = 0; i < ctx->globals_->size(); ++i) {
-        if (str_cmp("", (*ctx->globals_)[i].name_)) {
-            callback((const char*)(*ctx->globals_)[i].name_);
-        }
-    }
+    globals_tree_traverse(ctx->globals_tree_,
+                          [&callback] (Value& val) {
+                              callback((const char*)val.cons_.car()->symbol_.name_);
+                          });
 
     for (u16 i = 0; i < bound_context->constants_count_; ++i) {
         callback((const char*)bound_context->constants_[i].name_);
@@ -301,6 +525,7 @@ static Value* alloc_value()
 
     return nullptr;
 }
+
 
 
 Value* make_function(Function::CPP_Impl impl)
@@ -681,66 +906,34 @@ void funcall(Value* obj, u8 argc)
 }
 
 
-// These functions aren't _that_ fast. But they replace older functions which
-// did a string compare, rather than using the intern'd string pointer.
-Value* __set_var_fast(const char* name, Value* value)
+Value* get_var_stable(const char* intern_str)
 {
-    auto& globals = *bound_context->globals_;
-    for (u32 i = 0; i < globals.size(); ++i) {
-        if (name == globals[i].name_) {
-            std::swap(globals[i], globals[0]);
-            globals[0].value_ = value;
-            return get_nil();
-        }
-    }
-
-    for (auto& var : *bound_context->globals_) {
-        if (str_cmp(var.name_, "") == 0) {
-            var.name_ = intern(name);
-            var.value_ = value;
-            return get_nil();
-        }
-    }
-
-    return make_error(Error::Code::symbol_table_exhausted, L_NIL);
+    return get_var(make_symbol(intern_str, Symbol::ModeBits::stable_pointer));
 }
 
 
-Value* __get_var_fast(const char* name)
+Value* get_var(Value* symbol)
 {
-    auto& globals = *bound_context->globals_;
-    for (u32 i = 0; i < globals.size(); ++i) {
-        if (name == globals[i].name_) {
-            std::swap(globals[i], globals[0]);
-            return globals[0].value_;
+    auto found = globals_tree_find(symbol);
+
+    if (found->type_ not_eq Value::Type::error) {
+        return found;
+    } else {
+        for (u16 i = 0; i < bound_context->constants_count_; ++i) {
+            const auto& k = bound_context->constants_[i];
+            if (str_cmp(k.name_, symbol->symbol_.name_) == 0) {
+                return lisp::make_integer(k.value_);
+            }
         }
+        return found;
     }
-
-    for (u16 i = 0; i < bound_context->constants_count_; ++i) {
-        const auto& k = bound_context->constants_[i];
-        if (str_cmp(k.name_, name) == 0) {
-            return lisp::make_integer(k.value_);
-        }
-    }
-
-    StringBuffer<31> hint("[var: ");
-    hint += name;
-    hint += "]";
-
-    return make_error(Error::Code::undefined_variable_access,
-                      make_string(bound_context->pfrm_, hint.c_str()));
 }
 
 
-Value* get_var(Symbol& symbol)
+Value* set_var(Value* symbol, Value* val)
 {
-    return __get_var_fast(symbol.name_);
-}
-
-
-Value* set_var(Symbol& symbol, Value* val)
-{
-    return __set_var_fast(symbol.name_, val);
+    globals_tree_insert(symbol, val);
+    return get_nil();
 }
 
 
@@ -1049,9 +1242,8 @@ static void gc_mark()
         gc_mark_value(dcompr(elem));
     }
 
-    for (auto& var : *ctx->globals_) {
-        gc_mark_value(var.value_);
-    }
+    // TODO: non-recursive traversal
+    gc_mark_value(ctx->globals_tree_);
 
     auto p_list = __protected_values;
     while (p_list) {
@@ -1492,14 +1684,14 @@ static void eval_let(Value* code)
             auto bind = val->cons_.cdr();
             if (sym->type_ == Value::Type::symbol and
                 bind->type_ == Value::Type::cons) {
-                auto prev = get_var(sym->symbol_);
+                auto prev = get_var(sym);
 
                 push_op(prev);
                 ++stashed_vars;
 
                 eval(bind->cons_.car());
 
-                set_var(sym->symbol_, get_op(0));
+                set_var(sym, get_op(0));
                 pop_op();
 
             } else {
@@ -1539,15 +1731,9 @@ static void eval_let(Value* code)
         auto sym = val->cons_.car();
 
         if (value->type_ not_eq Value::Type::error) {
-            set_var(sym->symbol_, value);
+            set_var(sym, value);
         } else {
-            for (auto& var : *bound_context->globals_) {
-                if (str_cmp(sym->symbol_.name_, var.name_) == 0) {
-                    var.value_ = get_nil();
-                    var.name_ = "";
-                    break;
-                }
-            }
+            globals_tree_erase(sym);
         }
         ++i;
     })
@@ -1638,7 +1824,7 @@ void eval(Value* code)
 
     if (code->type_ == Value::Type::symbol) {
         pop_op();
-        push_op(get_var(code->symbol_));
+        push_op(get_var(code));
     } else if (code->type_ == Value::Type::cons) {
         auto form = code->cons_.car();
         if (form->type_ == Value::Type::symbol) {
@@ -1746,8 +1932,14 @@ void init(Platform& pfrm)
     value_pool_init();
     bound_context->nil_ = alloc_value();
     bound_context->nil_->type_ = Value::Type::nil;
+    bound_context->globals_tree_ = bound_context->nil_;
 
-    puts("create oom");
+    // globals_tree_insert(&make_symbol("hi")->symbol_, make_integer(0));
+    // globals_tree_insert(&make_symbol("foo")->symbol_, make_integer(0));
+    // globals_tree_insert(&make_symbol("gar")->symbol_, make_integer(2));
+    // globals_tree_insert(&make_symbol("bar")->symbol_, make_integer(0));
+    // globals_tree_insert(&make_symbol("foo")->symbol_, make_integer(1));
+
     bound_context->oom_ = alloc_value();
     bound_context->oom_->type_ = Value::Type::error;
     bound_context->oom_->error_.code_ = Error::Code::out_of_memory;
@@ -1755,12 +1947,7 @@ void init(Platform& pfrm)
 
     bound_context->string_buffer_ = bound_context->nil_;
 
-    for (auto& var : *bound_context->globals_) {
-        var.value_ = get_nil();
-    }
-
     if (dcompr(compr(get_nil())) not_eq get_nil()) {
-        puts("pointer compression test failed");
         error(pfrm, "pointer compression test failed");
         while (true)
             ;
@@ -1774,7 +1961,7 @@ void init(Platform& pfrm)
                 L_EXPECT_ARGC(argc, 2);
                 L_EXPECT_OP(1, symbol);
 
-                lisp::set_var(get_op(1)->symbol_, get_op(0));
+                lisp::set_var(get_op(1), get_op(0));
 
                 return L_NIL;
             }));
@@ -2048,11 +2235,10 @@ void init(Platform& pfrm)
 
                 lat.push_front(make_stat("vars", [&] {
                     int symb_tab_used = 0;
-                    for (u32 i = 0; i < ctx->globals_->size(); ++i) {
-                        if (str_cmp("", (*ctx->globals_)[i].name_)) {
-                            ++symb_tab_used;
-                        }
-                    }
+                    globals_tree_traverse(ctx->globals_tree_,
+                                          [&symb_tab_used](Value&) {
+                                              ++symb_tab_used;
+                                          });
                     return symb_tab_used;
                 }()));
 
@@ -2111,13 +2297,7 @@ void init(Platform& pfrm)
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, symbol);
 
-                for (auto& var : *bound_context->globals_) {
-                    if (str_cmp(get_op(0)->symbol_.name_, var.name_) == 0) {
-                        var.value_ = get_nil();
-                        var.name_ = "";
-                        return get_nil();
-                    }
-                }
+                globals_tree_erase(get_op(0));
 
                 return get_nil();
             }));
@@ -2154,13 +2334,10 @@ void init(Platform& pfrm)
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, symbol);
 
-                for (auto& var : *bound_context->globals_) {
-                    if (str_cmp(get_op(0)->symbol_.name_, var.name_) == 0) {
-                        return make_integer(1);
-                    }
-                }
-
-                return make_integer(0);
+                auto found = globals_tree_find(get_op(0));
+                return make_integer(found not_eq get_nil() and
+                                    found->type_
+                                    not_eq lisp::Value::Type::error);
             }));
 
 
@@ -2670,6 +2847,14 @@ void init(Platform& pfrm)
                 return get_nil();
             }
         }));
+
+
+    // globals_tree_traverse(bound_context->globals_tree_,
+    //                       [](Value& val) {
+    //                           DefaultPrinter p;
+    //                           lisp::format(&val, p);
+    //                           std::cout << p.fmt_.c_str() << std::endl;
+    //                       });
 }
 
 

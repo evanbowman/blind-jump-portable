@@ -15,6 +15,9 @@ const char* symbol_from_offset(u16 offset);
 Value* make_bytecode_function(Value* buffer);
 
 
+Value* get_var_stable(const char* intern_str);
+
+
 template <typename Instruction>
 Instruction* read(ScratchBuffer& buffer, int& pc)
 {
@@ -22,11 +25,6 @@ Instruction* read(ScratchBuffer& buffer, int& pc)
     pc += sizeof(Instruction);
     return result;
 }
-
-
-Value* __get_var_fast(const char* symbol_str);
-void __set_var_fast(const char* symbol_str, Value* value);
-
 
 
 void vm_execute(Value* code_buffer, int start_offset)
@@ -73,7 +71,7 @@ void vm_execute(Value* code_buffer, int start_offset)
         case LoadVar::op(): {
             auto inst = read<LoadVar>(code, pc);
             push_op(
-                __get_var_fast(symbol_from_offset(inst->name_offset_.get())));
+                get_var_stable(symbol_from_offset(inst->name_offset_.get())));
             break;
         }
 
