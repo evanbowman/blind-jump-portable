@@ -98,6 +98,7 @@ struct Context {
     DynamicMemory<Interns> interns_;
 
     u16 arguments_break_loc_;
+    u8 current_fn_argc_;
 
     Value* nil_ = nullptr;
     Value* oom_ = nullptr;
@@ -414,11 +415,12 @@ void get_env(::Function<24, void(const char*)> callback)
 
 
 // Only meant to be called by lisp functions
-Value* get_arg(u16 arg)
+Value* get_arg(u16 n)
 {
     auto br = bound_context->arguments_break_loc_;
-    if (br + arg < bound_context->operand_stack_->size()) {
-        return dcompr((*bound_context->operand_stack_)[br - arg]);
+    auto argc = bound_context->current_fn_argc_;
+    if (br + n < bound_context->operand_stack_->size()) {
+        return dcompr((*bound_context->operand_stack_)[br - ((argc - 1) - n)]);
     } else {
         return get_nil();
     }
@@ -873,6 +875,7 @@ void funcall(Value* obj, u8 argc)
                 }
                 pop_op(); // result
                 ctx.arguments_break_loc_ = break_loc;
+                ctx.current_fn_argc_ = argc;
                 eval(expression_list->cons_.car()); // new result
                 expression_list = expression_list->cons_.cdr();
             }
@@ -887,6 +890,7 @@ void funcall(Value* obj, u8 argc)
             auto& ctx = *bound_context;
             const auto break_loc = ctx.operand_stack_->size() - 1;
             ctx.arguments_break_loc_ = break_loc;
+            ctx.current_fn_argc_ = argc;
             vm_execute(dcompr(obj->function_.bytecode_impl_.data_buffer_),
                        obj->function_.bytecode_impl_.bc_offset_);
             auto result = get_op(0);

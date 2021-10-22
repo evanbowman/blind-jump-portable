@@ -55,7 +55,7 @@
 (set 'add-hook
      (compile (lambda
                 ;; (add-hook hooks-sym hook)
-                (set (arg 1) (cons (arg 0) (eval (arg 1)))))))
+                (set (arg 0) (cons (arg 1) (eval (arg 0)))))))
 
 
 (add-hook
