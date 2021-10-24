@@ -98,7 +98,7 @@ struct Context {
     DynamicMemory<Interns> interns_;
 
     u16 arguments_break_loc_;
-    u8 current_fn_argc_;
+    u8 current_fn_argc_ = 0;
     Value* this_ = nullptr;
 
 
@@ -848,14 +848,20 @@ void funcall(Value* obj, u8 argc)
         }
     };
 
+    // NOTE: The callee must be somewhere on the operand stack, so it's safe
+    // to store this unprotected var here.
+    Value* prev_this = get_this();
 
+    auto& ctx = *bound_context;
+    auto prev_arguments_break_loc = ctx.arguments_break_loc_;
+    auto prev_argc = ctx.current_fn_argc_;
 
     switch (obj->type_) {
     case Value::Type::function: {
         if (bound_context->operand_stack_->size() < argc) {
             pop_args();
             push_op(make_error(Error::Code::invalid_argc, obj));
-            return;
+            break;
         }
 
         switch (obj->mode_bits_) {
@@ -913,7 +919,15 @@ void funcall(Value* obj, u8 argc)
         break;
     }
 
-    bound_context->this_ = get_nil();
+    bound_context->this_ = prev_this;
+    ctx.arguments_break_loc_ = prev_arguments_break_loc;
+    ctx.current_fn_argc_ = prev_argc;
+}
+
+
+Value* get_this()
+{
+    return bound_context->this_;
 }
 
 
@@ -2565,6 +2579,10 @@ void init(Platform& pfrm)
                 return bound_context->this_;
             }));
 
+    set_var("argc", make_function([](int argc) {
+                return make_integer(bound_context->current_fn_argc_);
+            }));
+
     set_var("env", make_function([](int argc) {
                 auto pfrm = interp_get_pfrm();
 
@@ -2746,6 +2764,21 @@ void init(Platform& pfrm)
                         out += to_string<10>(*(data->data_ + i + 1));
                         out += ")";
                         i += 2;
+                        break;
+
+                    case TailCall1::op():
+                        out += TailCall1::name();
+                        ++i;
+                        break;
+
+                    case TailCall2::op():
+                        out += TailCall2::name();
+                        ++i;
+                        break;
+
+                    case TailCall3::op():
+                        out += TailCall3::name();
+                        ++i;
                         break;
 
                     case Funcall::op():

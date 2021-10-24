@@ -121,11 +121,68 @@ void vm_execute(Value* code_buffer, int start_offset)
         }
 
         case TailCall::op(): {
-            // TODO: perform TCO.
+
             Protected fn(get_op(0));
-            auto argc = read<TailCall>(code, pc)->argc_;
-            pop_op();
-            funcall(fn, argc);
+
+            if (fn == get_this()) {
+                // TODO: perform TCO...
+                while (true) {
+                    // ...
+                }
+            } else {
+                auto argc = read<TailCall>(code, pc)->argc_;
+                pop_op();
+                funcall(fn, argc);
+            }
+
+            break;
+        }
+
+        case TailCall1::op(): {
+            read<TailCall1>(code, pc);
+            Protected fn(get_op(0));
+
+            if (fn == get_this()) {
+                // TODO: perform TCO...
+                while (true) {
+                    // ...
+                }
+            } else {
+                pop_op();
+                funcall(fn, 1);
+            }
+            break;
+        }
+
+        case TailCall2::op(): {
+            read<TailCall2>(code, pc);
+            Protected fn(get_op(0));
+
+            if (fn == get_this()) {
+                // TODO: perform TCO...
+                while (true) {
+                    // ...
+                }
+            } else {
+                pop_op();
+                funcall(fn, 2);
+            }
+            break;
+        }
+
+        case TailCall3::op(): {
+            read<TailCall3>(code, pc);
+            Protected fn(get_op(0));
+
+            if (fn == get_this()) {
+                // TODO: perform TCO...
+                while (true) {
+                    // ...
+                }
+            } else {
+                pop_op();
+                funcall(fn, 3);
+            }
             break;
         }
 

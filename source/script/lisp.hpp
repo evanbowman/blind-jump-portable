@@ -397,6 +397,9 @@ void pop_op();
 Value* get_arg(u16 arg);
 
 
+Value* get_this();
+
+
 // Arguments should be pushed onto the operand stack prior to the function
 // call. The interpreter will consume the arguments, leaving the result on top
 // of the operand stack. i.e., use get_op(0) to read the result. Remember to

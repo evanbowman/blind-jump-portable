@@ -439,6 +439,51 @@ struct TailCall {
 };
 
 
+struct TailCall1 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "TAILCALL1";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 29;
+    }
+};
+
+
+struct TailCall2 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "TAILCALL2";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 30;
+    }
+};
+
+
+struct TailCall3 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "TAILCALL3";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 31;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -472,8 +517,11 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(SmallJumpIfFalse)
             MATCH(SmallJump)
             MATCH(PushLambda)
-            MATCH(Funcall)
             MATCH(TailCall)
+            MATCH(TailCall1)
+            MATCH(TailCall2)
+            MATCH(TailCall3)
+            MATCH(Funcall)
             MATCH(Funcall1)
             MATCH(Funcall2)
             MATCH(Funcall3)

@@ -255,8 +255,24 @@ int compile_impl(ScratchBuffer& buffer,
                 write_pos = compile_impl(buffer, write_pos, fn, jump_offset, false);
 
                 if (tail_expr) {
-                    append<instruction::TailCall>(buffer, write_pos)->argc_ =
-                        argc;
+                    switch (argc) {
+                    case 1:
+                        append<instruction::TailCall1>(buffer, write_pos);
+                        break;
+
+                    case 2:
+                        append<instruction::TailCall2>(buffer, write_pos);
+                        break;
+
+                    case 3:
+                        append<instruction::TailCall3>(buffer, write_pos);
+                        break;
+
+                    default:
+                        append<instruction::TailCall>(buffer, write_pos)->argc_
+                            = argc;
+                        break;
+                    }
                 } else {
                     switch (argc) {
                     case 1:
