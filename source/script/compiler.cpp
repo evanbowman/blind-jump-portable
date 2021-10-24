@@ -200,7 +200,10 @@ int compile_impl(ScratchBuffer& buffer,
 
             auto lambda = append<instruction::PushLambda>(buffer, write_pos);
 
-            write_pos = compile_lambda(buffer, write_pos, lat, jump_offset + write_pos);
+            // TODO: compile multiple nested expressions! FIXME... pretty broken.
+            write_pos = compile_impl(buffer, write_pos, lat->cons_.car(), jump_offset + write_pos, false);
+
+            append<instruction::Ret>(buffer, write_pos);
 
             lambda->lambda_end_.set(write_pos - jump_offset);
 
