@@ -423,6 +423,22 @@ struct Arg {
 };
 
 
+struct TailCall {
+    Header header_;
+    u8 argc_;
+
+    static const char* name()
+    {
+        return "TAILCALL";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 28;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -457,6 +473,7 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(SmallJump)
             MATCH(PushLambda)
             MATCH(Funcall)
+            MATCH(TailCall)
             MATCH(Funcall1)
             MATCH(Funcall2)
             MATCH(Funcall3)

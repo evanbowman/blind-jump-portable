@@ -676,9 +676,9 @@ public:
 
     Platform(const Platform&) = delete;
     ~Platform();
+    Platform();
 
 private:
-    Platform();
 
     friend int main(int argc, char** argv);
 

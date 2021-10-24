@@ -120,6 +120,15 @@ void vm_execute(Value* code_buffer, int start_offset)
             break;
         }
 
+        case TailCall::op(): {
+            // TODO: perform TCO.
+            Protected fn(get_op(0));
+            auto argc = read<TailCall>(code, pc)->argc_;
+            pop_op();
+            funcall(fn, argc);
+            break;
+        }
+
         case Funcall::op(): {
             Protected fn(get_op(0));
             auto argc = read<Funcall>(code, pc)->argc_;

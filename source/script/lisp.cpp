@@ -99,6 +99,8 @@ struct Context {
 
     u16 arguments_break_loc_;
     u8 current_fn_argc_;
+    Value* this_ = nullptr;
+
 
     Value* nil_ = nullptr;
     Value* oom_ = nullptr;
@@ -194,7 +196,7 @@ static void globals_tree_insert(Value* key, Value* value)
 }
 
 
-using GlobalsTreeVisitor = ::Function<24, void(Value&)>;
+using GlobalsTreeVisitor = ::Function<24, void(Value&, Value&)>;
 
 
 static Value* left_subtree(Value* tree)
@@ -216,6 +218,7 @@ static void set_right_subtree(Value* tree, Value* value)
 
 
 // Invokes callback with (key . value) for each global var definition.
+// In place traversal, using Morris algorithm.
 static void globals_tree_traverse(Value* root, GlobalsTreeVisitor callback)
 {
     if (root == get_nil()) {
@@ -228,7 +231,7 @@ static void globals_tree_traverse(Value* root, GlobalsTreeVisitor callback)
     while (current not_eq get_nil()) {
 
         if (left_subtree(current) == get_nil()) {
-            callback(*current->cons_.car());
+            callback(*current->cons_.car(), *current);
             current = right_subtree(current);
         } else {
             prev = left_subtree(current);
@@ -243,7 +246,7 @@ static void globals_tree_traverse(Value* root, GlobalsTreeVisitor callback)
                 current = left_subtree(current);
             } else {
                 set_right_subtree(prev, get_nil());
-                callback(*current->cons_.car());
+                callback(*current->cons_.car(), *current);
                 current = right_subtree(current);
             }
         }
@@ -281,7 +284,7 @@ static void globals_tree_erase(Value* key)
                 }
             }
 
-            auto reattach_child = [](Value& kvp) {
+            auto reattach_child = [](Value& kvp, Value&) {
                 globals_tree_insert(kvp.cons_.car(), kvp.cons_.cdr());
             };
 
@@ -404,7 +407,7 @@ void get_env(::Function<24, void(const char*)> callback)
     auto& ctx = bound_context;
 
     globals_tree_traverse(ctx->globals_tree_,
-                          [&callback] (Value& val) {
+                          [&callback] (Value& val, Value&) {
                               callback((const char*)val.cons_.car()->symbol_.name_);
                           });
 
@@ -876,6 +879,7 @@ void funcall(Value* obj, u8 argc)
                 pop_op(); // result
                 ctx.arguments_break_loc_ = break_loc;
                 ctx.current_fn_argc_ = argc;
+                ctx.this_ = obj;
                 eval(expression_list->cons_.car()); // new result
                 expression_list = expression_list->cons_.cdr();
             }
@@ -891,6 +895,7 @@ void funcall(Value* obj, u8 argc)
             const auto break_loc = ctx.operand_stack_->size() - 1;
             ctx.arguments_break_loc_ = break_loc;
             ctx.current_fn_argc_ = argc;
+            ctx.this_ = obj;
             vm_execute(dcompr(obj->function_.bytecode_impl_.data_buffer_),
                        obj->function_.bytecode_impl_.bc_offset_);
             auto result = get_op(0);
@@ -907,6 +912,8 @@ void funcall(Value* obj, u8 argc)
         push_op(make_error(Error::Code::value_not_callable, L_NIL));
         break;
     }
+
+    bound_context->this_ = get_nil();
 }
 
 
@@ -1246,8 +1253,14 @@ static void gc_mark()
         gc_mark_value(dcompr(elem));
     }
 
-    // TODO: non-recursive traversal
-    gc_mark_value(ctx->globals_tree_);
+    globals_tree_traverse(ctx->globals_tree_,
+                          [](Value& car, Value& node) {
+                              node.mark_bit_ = true;
+                              node.cons_.cdr()->mark_bit_ = true;
+                              gc_mark_value(&car);
+                          });
+
+    gc_mark_value(ctx->this_);
 
     auto p_list = __protected_values;
     while (p_list) {
@@ -1782,34 +1795,6 @@ static void eval_if(Value* code)
 }
 
 
-static void eval_while(Value* code)
-{
-    if (code->type_ not_eq Value::Type::cons) {
-        push_op(lisp::make_error(Error::Code::mismatched_parentheses, L_NIL));
-        return;
-    }
-
-    auto cond = code->cons_.car();
-
-    // result
-    push_op(get_nil());
-
-    while (true) {
-        eval(cond);
-
-        if (not is_boolean_true(get_op(0))) {
-            pop_op(); // cond
-            break;
-        }
-
-        pop_op(); // cond
-
-        pop_op();                // previous result
-        eval(code->cons_.cdr()); // new result at top of stack
-    }
-}
-
-
 static void eval_lambda(Value* code)
 {
     // todo: argument list...
@@ -1837,14 +1822,6 @@ void eval(Value* code)
                 auto result = get_op(0);
                 pop_op(); // result
                 pop_op(); // code
-                push_op(result);
-                --bound_context->interp_entry_count_;
-                return;
-            } else if (str_cmp(form->symbol_.name_, "while") == 0) {
-                eval_while(code->cons_.cdr());
-                auto result = get_op(0);
-                pop_op();
-                pop_op();
                 push_op(result);
                 --bound_context->interp_entry_count_;
                 return;
@@ -1937,6 +1914,7 @@ void init(Platform& pfrm)
     bound_context->nil_ = alloc_value();
     bound_context->nil_->type_ = Value::Type::nil;
     bound_context->globals_tree_ = bound_context->nil_;
+    bound_context->this_ = bound_context->nil_;
 
     // globals_tree_insert(&make_symbol("hi")->symbol_, make_integer(0));
     // globals_tree_insert(&make_symbol("foo")->symbol_, make_integer(0));
@@ -2240,7 +2218,7 @@ void init(Platform& pfrm)
                 lat.push_front(make_stat("vars", [&] {
                     int symb_tab_used = 0;
                     globals_tree_traverse(ctx->globals_tree_,
-                                          [&symb_tab_used](Value&) {
+                                          [&symb_tab_used](Value&, Value&) {
                                               ++symb_tab_used;
                                           });
                     return symb_tab_used;
@@ -2579,6 +2557,14 @@ void init(Platform& pfrm)
                 return result;
             }));
 
+    set_var("globals", make_function([](int argc) {
+                return bound_context->globals_tree_;
+            }));
+
+    set_var("this", make_function([](int argc) {
+                return bound_context->this_;
+            }));
+
     set_var("env", make_function([](int argc) {
                 auto pfrm = interp_get_pfrm();
 
@@ -2660,8 +2646,7 @@ void init(Platform& pfrm)
                     case LoadVar::op():
                         i += 1;
                         out += "LOAD_VAR(";
-                        out += to_string<10>(
-                            ((HostInteger<s16>*)(data->data_ + i))->get());
+                        out += symbol_from_offset(((HostInteger<s16>*)(data->data_ + i))->get());
                         out += ")";
                         i += 2;
                         break;
@@ -2753,6 +2738,14 @@ void init(Platform& pfrm)
                     case Arg::op():
                         out += Arg::name();
                         i += sizeof(Arg);
+                        break;
+
+                    case TailCall::op():
+                        out += TailCall::name();
+                        out += "(";
+                        out += to_string<10>(*(data->data_ + i + 1));
+                        out += ")";
+                        i += 2;
                         break;
 
                     case Funcall::op():
@@ -2851,14 +2844,6 @@ void init(Platform& pfrm)
                 return get_nil();
             }
         }));
-
-
-    // globals_tree_traverse(bound_context->globals_tree_,
-    //                       [](Value& val) {
-    //                           DefaultPrinter p;
-    //                           lisp::format(&val, p);
-    //                           std::cout << p.fmt_.c_str() << std::endl;
-    //                       });
 }
 
 

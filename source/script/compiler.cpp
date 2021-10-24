@@ -15,7 +15,8 @@ u16 symbol_offset(const char* symbol);
 int compile_impl(ScratchBuffer& buffer,
                  int write_pos,
                  Value* code,
-                 int jump_offset);
+                 int jump_offset,
+                 bool tail_expr);
 
 
 template <typename Instruction>
@@ -37,10 +38,43 @@ static Instruction* append(ScratchBuffer& buffer, int& write_pos)
 }
 
 
-int compile_quoted(ScratchBuffer& buffer, int write_pos, Value* code)
+int compile_lambda(ScratchBuffer& buffer,
+                   int write_pos,
+                   Value* code,
+                   int jump_offset)
+{
+    auto lat = code;
+    while (lat not_eq get_nil()) {
+        if (lat->type_ not_eq Value::Type::cons) {
+            // error...
+            break;
+        }
+
+        if (write_pos not_eq 0) {
+            append<instruction::Pop>(buffer, write_pos);
+        }
+
+        bool tail_expr = lat->cons_.cdr() == get_nil();
+
+        write_pos = compile_impl(buffer,
+                                 write_pos,
+                                 lat->cons_.car(),
+                                 jump_offset,
+                                 tail_expr);
+
+        lat = lat->cons_.cdr();
+    }
+
+    append<instruction::Ret>(buffer, write_pos);
+
+    return write_pos;
+}
+
+
+int compile_quoted(ScratchBuffer& buffer, int write_pos, Value* code, bool tail_expr)
 {
     if (code->type_ == Value::Type::integer) {
-        write_pos = compile_impl(buffer, write_pos, code, 0);
+        write_pos = compile_impl(buffer, write_pos, code, 0, tail_expr);
     } else if (code->type_ == Value::Type::symbol) {
         auto inst = append<instruction::PushSymbol>(buffer, write_pos);
         inst->name_offset_.set(symbol_offset(code->symbol_.name_));
@@ -53,7 +87,7 @@ int compile_quoted(ScratchBuffer& buffer, int write_pos, Value* code)
                 // ...
                 break;
             }
-            write_pos = compile_quoted(buffer, write_pos, code->cons_.car());
+            write_pos = compile_quoted(buffer, write_pos, code->cons_.car(), tail_expr);
 
             code = code->cons_.cdr();
 
@@ -77,7 +111,8 @@ int compile_quoted(ScratchBuffer& buffer, int write_pos, Value* code)
 int compile_impl(ScratchBuffer& buffer,
                  int write_pos,
                  Value* code,
-                 int jump_offset)
+                 int jump_offset,
+                 bool tail_expr)
 {
     if (code->type_ == Value::Type::nil) {
 
@@ -122,7 +157,7 @@ int compile_impl(ScratchBuffer& buffer,
             }
 
             write_pos =
-                compile_impl(buffer, write_pos, lat->cons_.car(), jump_offset);
+                compile_impl(buffer, write_pos, lat->cons_.car(), jump_offset, false);
 
             auto jne = append<instruction::JumpIfFalse>(buffer, write_pos);
 
@@ -138,14 +173,14 @@ int compile_impl(ScratchBuffer& buffer,
             }
 
             write_pos =
-                compile_impl(buffer, write_pos, true_branch, jump_offset);
+                compile_impl(buffer, write_pos, true_branch, jump_offset, tail_expr);
 
             auto jmp = append<instruction::Jump>(buffer, write_pos);
 
             jne->offset_.set(write_pos - jump_offset);
 
             write_pos =
-                compile_impl(buffer, write_pos, false_branch, jump_offset);
+                compile_impl(buffer, write_pos, false_branch, jump_offset, tail_expr);
 
             jmp->offset_.set(write_pos - jump_offset);
 
@@ -161,22 +196,20 @@ int compile_impl(ScratchBuffer& buffer,
 
             auto lambda = append<instruction::PushLambda>(buffer, write_pos);
 
-            write_pos = compile_impl(
-                buffer, write_pos, lat->cons_.car(), jump_offset + write_pos);
-
-            append<instruction::Ret>(buffer, write_pos);
+            write_pos = compile_lambda(buffer, write_pos, lat, jump_offset + write_pos);
 
             lambda->lambda_end_.set(write_pos - jump_offset);
 
         } else if (fn->type_ == Value::Type::symbol and
                    str_cmp(fn->symbol_.name_, "'") == 0) {
 
-            write_pos = compile_quoted(buffer, write_pos, lat->cons_.cdr());
+            write_pos = compile_quoted(buffer, write_pos, lat->cons_.cdr(), tail_expr);
         } else {
             u8 argc = 0;
 
             lat = lat->cons_.cdr();
 
+            // Compile each function arument
             while (lat not_eq get_nil()) {
                 if (lat->type_ not_eq Value::Type::cons) {
                     // ...
@@ -184,7 +217,7 @@ int compile_impl(ScratchBuffer& buffer,
                 }
 
                 write_pos = compile_impl(
-                    buffer, write_pos, lat->cons_.car(), jump_offset);
+                    buffer, write_pos, lat->cons_.car(), jump_offset, false);
 
                 lat = lat->cons_.cdr();
 
@@ -219,25 +252,30 @@ int compile_impl(ScratchBuffer& buffer,
 
             } else {
 
-                write_pos = compile_impl(buffer, write_pos, fn, jump_offset);
+                write_pos = compile_impl(buffer, write_pos, fn, jump_offset, false);
 
-                switch (argc) {
-                case 1:
-                    append<instruction::Funcall1>(buffer, write_pos);
-                    break;
-
-                case 2:
-                    append<instruction::Funcall2>(buffer, write_pos);
-                    break;
-
-                case 3:
-                    append<instruction::Funcall3>(buffer, write_pos);
-                    break;
-
-                default:
-                    append<instruction::Funcall>(buffer, write_pos)->argc_ =
+                if (tail_expr) {
+                    append<instruction::TailCall>(buffer, write_pos)->argc_ =
                         argc;
-                    break;
+                } else {
+                    switch (argc) {
+                    case 1:
+                        append<instruction::Funcall1>(buffer, write_pos);
+                        break;
+
+                    case 2:
+                        append<instruction::Funcall2>(buffer, write_pos);
+                        break;
+
+                    case 3:
+                        append<instruction::Funcall3>(buffer, write_pos);
+                        break;
+
+                    default:
+                        append<instruction::Funcall>(buffer, write_pos)->argc_ =
+                            argc;
+                        break;
+                    }
                 }
             }
         }
@@ -528,23 +566,7 @@ void compile(Platform& pfrm, Value* code)
 
     int write_pos = 0;
 
-    auto lat = code;
-    while (lat not_eq get_nil()) {
-        if (lat->type_ not_eq Value::Type::cons) {
-            // error...
-            break;
-        }
-
-        if (write_pos not_eq 0) {
-            append<instruction::Pop>(*buffer, write_pos);
-        }
-
-        write_pos = compile_impl(*buffer, write_pos, lat->cons_.car(), 0);
-
-        lat = lat->cons_.cdr();
-    }
-
-    append<instruction::Ret>(*buffer, write_pos);
+    write_pos = compile_lambda(*buffer, write_pos, code, 0);
 
     write_pos = PeepholeOptimizer().run(
         *dcompr(fn->function_.bytecode_impl_.data_buffer_)
