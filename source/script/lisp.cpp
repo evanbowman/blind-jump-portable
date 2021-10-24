@@ -925,6 +925,12 @@ void funcall(Value* obj, u8 argc)
 }
 
 
+u8 get_argc()
+{
+    return bound_context->current_fn_argc_;
+}
+
+
 Value* get_this()
 {
     return bound_context->this_;
@@ -1930,12 +1936,6 @@ void init(Platform& pfrm)
     bound_context->globals_tree_ = bound_context->nil_;
     bound_context->this_ = bound_context->nil_;
 
-    // globals_tree_insert(&make_symbol("hi")->symbol_, make_integer(0));
-    // globals_tree_insert(&make_symbol("foo")->symbol_, make_integer(0));
-    // globals_tree_insert(&make_symbol("gar")->symbol_, make_integer(2));
-    // globals_tree_insert(&make_symbol("bar")->symbol_, make_integer(0));
-    // globals_tree_insert(&make_symbol("foo")->symbol_, make_integer(1));
-
     bound_context->oom_ = alloc_value();
     bound_context->oom_->type_ = Value::Type::error;
     bound_context->oom_->error_.code_ = Error::Code::out_of_memory;
@@ -2751,6 +2751,11 @@ void init(Platform& pfrm)
                         out += ")";
                         i += 3;
                         ++depth;
+                        break;
+
+                    case PushThis::op():
+                        out += PushThis::name();
+                        i += sizeof(PushThis);
                         break;
 
                     case Arg::op():

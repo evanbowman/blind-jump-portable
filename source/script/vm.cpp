@@ -27,7 +27,7 @@ Instruction* read(ScratchBuffer& buffer, int& pc)
 }
 
 
-void vm_execute(Value* code_buffer, int start_offset)
+void vm_execute(Value* code_buffer, const int start_offset)
 {
     int pc = start_offset;
 
@@ -35,6 +35,7 @@ void vm_execute(Value* code_buffer, int start_offset)
 
     using namespace instruction;
 
+ TOP:
     while (true) {
 
         switch ((Opcode)code.data_[pc]) {
@@ -124,13 +125,34 @@ void vm_execute(Value* code_buffer, int start_offset)
 
             Protected fn(get_op(0));
 
+            auto argc = read<TailCall>(code, pc)->argc_;
+
+
             if (fn == get_this()) {
-                // TODO: perform TCO...
-                while (true) {
-                    // ...
+                pop_op(); // function on stack
+
+                if (get_argc() not_eq argc) {
+                    // TODO: raise error: attempted recursive call with
+                    // different number of args than current function.
+                    // Actually...
+                    // The isn't really anything preventing a variadic function
+                    // from being executed recursively with a different number
+                    // of args, right? So maybe shouldn't be isn't an error...
+                    while (true) ;
                 }
+
+                if (argc == 0) {
+                    pc = start_offset;
+                    goto TOP;
+                } else {
+                    // TODO: perform TCO for N-arg function
+                    while (true) {
+                        // ...
+                    }
+                }
+
             } else {
-                auto argc = read<TailCall>(code, pc)->argc_;
+
                 pop_op();
                 funcall(fn, argc);
             }
@@ -143,10 +165,23 @@ void vm_execute(Value* code_buffer, int start_offset)
             Protected fn(get_op(0));
 
             if (fn == get_this()) {
-                // TODO: perform TCO...
-                while (true) {
-                    // ...
+                auto arg = get_op(1);
+
+                if (get_argc() not_eq 1) {
+                    // TODO: raise error: attempted recursive call with
+                    // different number of args than current function.
+                    while (true) ;
                 }
+
+                pop_op(); // function on stack
+                pop_op(); // argument
+                pop_op(); // previous arg
+
+                push_op(arg);
+
+                pc = start_offset;
+                goto TOP;
+
             } else {
                 pop_op();
                 funcall(fn, 1);
@@ -159,10 +194,27 @@ void vm_execute(Value* code_buffer, int start_offset)
             Protected fn(get_op(0));
 
             if (fn == get_this()) {
-                // TODO: perform TCO...
-                while (true) {
-                    // ...
+                auto arg0 = get_op(1);
+                auto arg1 = get_op(2);
+
+                if (get_argc() not_eq 2) {
+                    // TODO: raise error: attempted recursive call with
+                    // different number of args than current function.
+                    while (true) ;
                 }
+
+                pop_op(); // function on stack
+                pop_op(); // arg
+                pop_op(); // arg
+                pop_op(); // prev arg
+                pop_op(); // prev arg
+
+                push_op(arg1);
+                push_op(arg0);
+
+                pc = start_offset;
+                goto TOP;
+
             } else {
                 pop_op();
                 funcall(fn, 2);
@@ -175,10 +227,29 @@ void vm_execute(Value* code_buffer, int start_offset)
             Protected fn(get_op(0));
 
             if (fn == get_this()) {
-                // TODO: perform TCO...
-                while (true) {
-                    // ...
+                auto arg0 = get_op(1);
+                auto arg1 = get_op(2);
+                auto arg2 = get_op(3);
+
+                if (get_argc() not_eq 3) {
+                    while (true) ;
                 }
+
+                pop_op(); // function on stack
+                pop_op(); // arg
+                pop_op(); // arg
+                pop_op(); // arg
+                pop_op(); // prev arg
+                pop_op(); // prev arg
+                pop_op(); // prev arg
+
+                push_op(arg2);
+                push_op(arg1);
+                push_op(arg0);
+
+                pc = start_offset;
+                goto TOP;
+
             } else {
                 pop_op();
                 funcall(fn, 3);
@@ -291,6 +362,12 @@ void vm_execute(Value* code_buffer, int start_offset)
                 pop_op();
             }
             push_op(lat);
+            break;
+        }
+
+        case PushThis::op(): {
+            push_op(get_this());
+            read<PushThis>(code, pc);
             break;
         }
 

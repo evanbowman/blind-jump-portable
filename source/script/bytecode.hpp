@@ -484,6 +484,21 @@ struct TailCall3 {
 };
 
 
+struct PushThis {
+    Header header_;
+
+    static const char* name()
+    {
+        return "PUSH_THIS";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 32;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -533,6 +548,7 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(First)
             MATCH(Rest)
             MATCH(Arg)
+            MATCH(PushThis)
         }
     }
     return nullptr;

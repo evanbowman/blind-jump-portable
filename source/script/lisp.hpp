@@ -398,6 +398,7 @@ Value* get_arg(u16 arg);
 
 
 Value* get_this();
+u8 get_argc();
 
 
 // Arguments should be pushed onto the operand stack prior to the function
@@ -510,6 +511,8 @@ public:
 void format(Value* value, Printer& p);
 
 
+// Protected objects will not be collected until the Protected wrapper goes out
+// of scope.
 class Protected {
 public:
     Protected(Value* val);

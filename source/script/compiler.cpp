@@ -148,6 +148,10 @@ int compile_impl(ScratchBuffer& buffer,
         auto fn = lat->cons_.car();
 
         if (fn->type_ == Value::Type::symbol and
+            str_cmp(fn->symbol_.name_, "let") == 0) {
+
+            while (true) ; // TODO: implement compilation for let
+        } else if (fn->type_ == Value::Type::symbol and
             str_cmp(fn->symbol_.name_, "if") == 0) {
 
             lat = lat->cons_.cdr();
@@ -249,6 +253,10 @@ int compile_impl(ScratchBuffer& buffer,
                        str_cmp(fn->symbol_.name_, "arg") == 0 and argc == 1) {
 
                 append<instruction::Arg>(buffer, write_pos);
+
+            } else if (fn->type_ == Value::Type::symbol and
+                       str_cmp(fn->symbol_.name_, "this") == 0 and argc == 0) {
+                append<instruction::PushThis>(buffer, write_pos);
 
             } else {
 
