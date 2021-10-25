@@ -145,6 +145,8 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
     auto animate_selector = [&] {
         if (timer_ > milliseconds(75)) {
             timer_ = 0;
+
+
             const auto st = calc_screen_tiles(pfrm);
             auto& text = *options_[cursor_index_];
             auto get_coords = [&](Text& text) -> Vec2<u8> {
@@ -158,16 +160,43 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
             cursor_anim_ = not cursor_anim_;
 
             auto erase_coords = get_coords(*options_[!cursor_index_]);
-            pfrm.set_tile(Layer::overlay, erase_coords.x, st.y - 2, 112);
-            pfrm.set_tile(Layer::overlay, erase_coords.y, st.y - 2, 112);
 
-            const auto c1 = get_coords(text);
-            if (cursor_anim_) {
-                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 373);
-                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 374);
+            if (options_[0]->len() + options_[1]->len() == 24) {
+                // UI adjustment required by the French translation. 24 chars
+                // leaves two-tile margins around each menu option
+                // string. Use different graphics for the selector icons to make
+                // things look nicer.
+                pfrm.set_tile(Layer::overlay, erase_coords.x, st.y - 2, 112);
+                pfrm.set_tile(Layer::overlay, erase_coords.y, st.y - 2, 112);
+                pfrm.set_tile(Layer::overlay, erase_coords.x + 1, st.y - 2, 112);
+                pfrm.set_tile(Layer::overlay, erase_coords.y - 1, st.y - 2, 112);
+
+                const auto c1 = get_coords(text);
+                if (cursor_anim_) {
+                    pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 450);
+                    pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 453);
+
+                    pfrm.set_tile(Layer::overlay, c1.x + 1, st.y - 2, 451);
+                    pfrm.set_tile(Layer::overlay, c1.y - 1, st.y - 2, 452);
+                } else {
+                    pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 454);
+                    pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 457);
+
+                    pfrm.set_tile(Layer::overlay, c1.x + 1, st.y - 2, 455);
+                    pfrm.set_tile(Layer::overlay, c1.y - 1, st.y - 2, 456);
+                }
             } else {
-                pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 375);
-                pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 376);
+                pfrm.set_tile(Layer::overlay, erase_coords.x, st.y - 2, 112);
+                pfrm.set_tile(Layer::overlay, erase_coords.y, st.y - 2, 112);
+
+                const auto c1 = get_coords(text);
+                if (cursor_anim_) {
+                    pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 373);
+                    pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 374);
+                } else {
+                    pfrm.set_tile(Layer::overlay, c1.x, st.y - 2, 375);
+                    pfrm.set_tile(Layer::overlay, c1.y, st.y - 2, 376);
+                }
             }
         }
     };
