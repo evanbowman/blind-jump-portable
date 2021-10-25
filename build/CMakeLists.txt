@@ -231,6 +231,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/death_text_chinese.s
     ${DATA_DIR}/death_text_russian.s
     ${DATA_DIR}/death_text_italian.s
+    ${DATA_DIR}/death_text_french.s
     ${DATA_DIR}/repl.s
     ${DATA_DIR}/overlay_cutscene.s
     ${DATA_DIR}/charset.s
@@ -289,15 +290,16 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/spritesheet_boss2_final.s
     ${DATA_DIR}/spritesheet_boss3.s
     ${DATA_DIR}/old_poster_flattened.s
-    ${DATA_DIR}/old_poster_french_flattened.s
     ${DATA_DIR}/old_poster_chinese_flattened.s
     ${DATA_DIR}/old_poster_russian_flattened.s
     ${DATA_DIR}/old_poster_italian_flattened.s
+    ${DATA_DIR}/old_poster_french_flattened.s
     ${DATA_DIR}/blaster_info_flattened.s
     ${DATA_DIR}/seed_packet_flattened.s
     ${DATA_DIR}/seed_packet_chinese_flattened.s
     ${DATA_DIR}/seed_packet_russian_flattened.s
     ${DATA_DIR}/seed_packet_italian_flattened.s
+    ${DATA_DIR}/seed_packet_french_flattened.s
     ${DATA_DIR}/overlay_network_flattened.s)
 else()
   set(SOURCES
@@ -554,16 +556,18 @@ if(GAMEBOY_ADVANCE)
     add_overlay(death_text_chinese 0 0 NO NO)
     add_overlay(death_text_russian 0 0 NO NO)
     add_overlay(death_text_italian 0 0 NO NO)
+    add_overlay(death_text_french 0 0 NO NO)
     add_overlay(old_poster 0 0 YES NO)
-    add_overlay(old_poster_french 0 0 YES NO)
     add_overlay(old_poster_chinese 0 0 YES NO)
     add_overlay(old_poster_russian 0 0 YES NO)
     add_overlay(old_poster_italian 0 0 YES NO)
+    add_overlay(old_poster_french 0 0 YES NO)
     add_overlay(blaster_info 0 0 YES NO)
     add_overlay(seed_packet 0 0 YES NO)
     add_overlay(seed_packet_chinese 0 0 YES NO)
     add_overlay(seed_packet_russian 0 0 YES NO)
     add_overlay(seed_packet_italian 0 0 YES NO)
+    add_overlay(seed_packet_french 0 0 YES NO)
     add_overlay(overlay_network 0 0 YES NO)
 
     configure_file(images.cpp.in ${SOURCE_DIR}/platform/gba/images.cpp)
