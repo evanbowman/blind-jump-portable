@@ -54,6 +54,9 @@ void EditSettingsState::draw_line(Platform& pfrm, int row, const char* value)
 
 void EditSettingsState::refresh(Platform& pfrm, Game& game)
 {
+    pfrm.sleep(1);
+    pfrm.screen().fade(0.98f, ColorConstant::rich_black, {}, true, true);
+
     const bool bigfont = locale_requires_doublesize_font();
 
     for (auto& line : lines_) {
@@ -73,6 +76,9 @@ void EditSettingsState::refresh(Platform& pfrm, Game& game)
                 pfrm, i, lines_[i].updater_.update(pfrm, game, 0).c_str());
         }
     }
+
+    pfrm.sleep(1);
+    pfrm.screen().fade(1.f);
 }
 
 
