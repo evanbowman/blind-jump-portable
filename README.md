@@ -484,4 +484,40 @@ Compiles a lisp function to bytecode, and returns the new function. Bytecode fun
 Disassemble a bytecode function, allowing you to inspect the bytecode. By default, writes the output to UART, you you will not see anything if you run this function in the on-screen script console.
 
 
-#####
+#### A little example
+Here's a concise little implemenation of merge sort, using the language features described above.
+```lisp
+(set 'bisect-impl
+     (compile
+      (lambda
+        (if (not $1)
+            (cons (reverse $2) $0)
+          (if (not (cdr $1))
+              (cons (reverse $2) $0)
+            ((this)
+             (cdr $0)
+             (cdr (cdr $1))
+             (cons (car $0) $2)))))))
+
+(set 'bisect (lambda (bisect-impl $0 $0 '())))
+
+(set 'merge
+     (compile
+      (lambda
+        (if (not $0)
+            $1
+          (if (not $1)
+              $0
+            (if (< (car $0) (car $1))
+                (cons (car $0) ((this) (cdr $0) $1))
+              (cons (car $1) ((this) $0 (cdr $1)))))))))
+
+
+(set 'sort
+     (lambda
+       (if (not (cdr $0))
+           $0
+         (let ((temp (bisect $0)))
+           (merge (sort (car temp))
+                  (sort (cdr temp)))))))
+```
