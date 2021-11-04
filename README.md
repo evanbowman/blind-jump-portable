@@ -316,6 +316,8 @@ For example:
 ```
 (set 'a 10) ;; a now holds 10.
 ```
+You may be wondering why `set` accepts a symbol as an argument. I did not implement `set` as a macro or a special form, but instead, as a regular function. The whole dialect only has three special forms, `lambda`, `if`, and `let`. I implemented everything else as a builtin function, so unlike other lisp dialects, you need to specify a quoted symbol when assigning a variable.
+
 #### cons
 `(cons <first> <second>)`
 Construct a pair, from parameters `<first>` and `<second>`.
