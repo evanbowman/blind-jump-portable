@@ -7,7 +7,7 @@ toi
 ennemi
 sortie
 objet
-marchant
+magasin
 étape 
 partie I :
 l'arrivée 
@@ -68,7 +68,7 @@ objets obtenus %
 .
 Continuer
 Connexion Coéquipier
-Paramètres
+Options
 Console et Script
 Sauvegarder et Quitter
 A plus tard...
@@ -158,4 +158,4 @@ Les surtensions venant des portes d'hyperespace semblent avoir un effet néfaste
 Les surtensions des portes sont plus ou moins quotidiennes maintenant, et nous avons totalement perdu le contrôle. J'ai envoyé un message sur Terre, quelqu'un doit être envoyé ici pour éliminer la source de ces fluctuations... Etant donné qu'ils doivent déjà s'occuper de leur propre révolte des machines, je ne suis pas sûr qu'ils envoient un soldat de sitôt. En attendant, j'ai mis au point un brouilleur de signal qui semble immuniser les robots des surtensions...
 nouvelle partie
 continuer
-LA FIN
+FIN

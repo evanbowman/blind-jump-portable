@@ -78,7 +78,55 @@
           (unbind 'swarm))))))
 
 
+(set 'append-impl
+     (compile
+      (lambda
+        (if (arg 0)
+            ((this) (cdr (arg 0)) (cons (car (arg 0)) (arg 1)))
+          (arg 1)))))
 
+
+(set 'append
+     ;; (append <list 1> <list 2>)
+     (lambda (append-impl (reverse (arg 0)) (arg 1))))
+
+
+(set 'bisect-impl
+     (compile
+      (lambda
+        (if (not $1)
+            (cons (reverse $2) $0)
+          (if (not (cdr $1))
+              (cons (reverse $2) $0)
+            ((this)
+             (cdr $0)
+             (cdr (cdr $1))
+             (cons (car $0) $2)))))))
+
+
+(set 'bisect (lambda (bisect-impl $0 $0 '())))
+
+
+(set 'merge
+     (compile
+      (lambda
+        (if (not $0)
+            $1
+          (if (not $1)
+              $0
+            (if (< (car $0) (car $1))
+                (cons (car $0) ((this) (cdr $0) $1))
+              (cons (car $1) ((this) $0 (cdr $1)))))))))
+
+
+
+(set 'sort
+     (lambda
+       (if (not (cdr $0))
+           $0
+         (let ((temp (bisect $0)))
+           (merge (sort (car temp))
+                  (sort (cdr temp)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

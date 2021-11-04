@@ -383,7 +383,7 @@ struct First {
 
     static const char* name()
     {
-        return "FIRST";
+        return "CAR";
     }
 
     static constexpr Opcode op()
@@ -398,7 +398,7 @@ struct Rest {
 
     static const char* name()
     {
-        return "REST";
+        return "CDR";
     }
 
     static constexpr Opcode op()
@@ -499,6 +499,51 @@ struct PushThis {
 };
 
 
+struct Arg0 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "ARG0";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 33;
+    }
+};
+
+
+struct Arg1 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "ARG1";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 34;
+    }
+};
+
+
+struct Arg2 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "ARG2";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 35;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -548,6 +593,9 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(First)
             MATCH(Rest)
             MATCH(Arg)
+            MATCH(Arg0)
+            MATCH(Arg1)
+            MATCH(Arg2)
             MATCH(PushThis)
         }
     }

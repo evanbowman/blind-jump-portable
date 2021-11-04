@@ -417,12 +417,11 @@ void get_env(::Function<24, void(const char*)> callback)
 }
 
 
-// Only meant to be called by lisp functions
 Value* get_arg(u16 n)
 {
     auto br = bound_context->arguments_break_loc_;
     auto argc = bound_context->current_fn_argc_;
-    if (br + n < bound_context->operand_stack_->size()) {
+    if (br >= ((argc - 1) - n)) {
         return dcompr((*bound_context->operand_stack_)[br - ((argc - 1) - n)]);
     } else {
         return get_nil();
@@ -945,6 +944,15 @@ Value* get_var_stable(const char* intern_str)
 
 Value* get_var(Value* symbol)
 {
+    if (symbol->symbol_.name_[0] == '$') {
+        s32 argn = 0;
+        for (u32 i = 1; symbol->symbol_.name_[i] not_eq '\0'; ++i) {
+            argn = argn * 10 + (symbol->symbol_.name_[i] - '0');
+        }
+
+        return get_arg(argn);
+    }
+
     auto found = globals_tree_find(symbol);
 
     if (found->type_ not_eq Value::Type::error) {
@@ -2239,10 +2247,22 @@ void init(Platform& pfrm)
                 }()));
 
                 lat.push_front(
-                    make_stat("stack-used", ctx->operand_stack_->size()));
+                    make_stat("stk", ctx->operand_stack_->size()));
                 lat.push_front(
-                    make_stat("interned-bytes", ctx->string_intern_pos_));
-                lat.push_front(make_stat("vals-left", values_remaining));
+                    make_stat("internb", ctx->string_intern_pos_));
+                lat.push_front(make_stat("free", values_remaining));
+
+                int databuffers = 0;
+
+                for (int i = 0; i < VALUE_POOL_SIZE; ++i) {
+                    Value* val = &value_pool_data[i];
+                    if (val->alive_ and
+                        val->type_ == Value::Type::data_buffer) {
+                        ++databuffers;
+                    }
+                }
+
+                lat.push_front(make_stat("sbr", databuffers));
 
                 return lat.result();
             }));
@@ -2580,6 +2600,8 @@ void init(Platform& pfrm)
             }));
 
     set_var("argc", make_function([](int argc) {
+                // NOTE: This works because native functions do not assign
+                // current_fn_argc_.
                 return make_integer(bound_context->current_fn_argc_);
             }));
 
@@ -2761,6 +2783,21 @@ void init(Platform& pfrm)
                     case Arg::op():
                         out += Arg::name();
                         i += sizeof(Arg);
+                        break;
+
+                    case Arg0::op():
+                        out += Arg0::name();
+                        i += sizeof(Arg0);
+                        break;
+
+                    case Arg1::op():
+                        out += Arg1::name();
+                        i += sizeof(Arg1);
+                        break;
+
+                    case Arg2::op():
+                        out += Arg2::name();
+                        i += sizeof(Arg2);
                         break;
 
                     case TailCall::op():

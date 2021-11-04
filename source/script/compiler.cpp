@@ -138,8 +138,36 @@ int compile_impl(ScratchBuffer& buffer,
         }
     } else if (code->type_ == Value::Type::symbol) {
 
-        append<instruction::LoadVar>(buffer, write_pos)
-            ->name_offset_.set(symbol_offset(code->symbol_.name_));
+        if (code->symbol_.name_[0] == '$') {
+            s32 argn = 0;
+            for (u32 i = 1; code->symbol_.name_[i] not_eq '\0'; ++i) {
+                argn = argn * 10 + (code->symbol_.name_[i] - '0');
+            }
+
+            switch (argn) {
+            case 0:
+                append<instruction::Arg0>(buffer, write_pos);
+                break;
+
+            case 1:
+                append<instruction::Arg1>(buffer, write_pos);
+                break;
+
+            case 2:
+                append<instruction::Arg2>(buffer, write_pos);
+                break;
+
+            default:
+                append<instruction::PushSmallInteger>(buffer, write_pos)
+                    ->value_ = argn;
+                append<instruction::Arg>(buffer, write_pos);
+                break;
+            }
+
+        } else {
+            append<instruction::LoadVar>(buffer, write_pos)
+                ->name_offset_.set(symbol_offset(code->symbol_.name_));
+        }
 
     } else if (code->type_ == Value::Type::cons) {
 
@@ -420,6 +448,14 @@ public:
                 ++index;
                 break;
             }
+
+            // case SmallJump::op(): {
+            //     // A jump to a return instruction can be replaced with a return
+            //     // instruction.
+
+            //     ++index;
+            //     break;
+            // }
 
             case PushInteger::op(): {
                 if (index > 0) {
