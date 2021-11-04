@@ -483,6 +483,58 @@ Compiles a lisp function to bytecode, and returns the new function. Bytecode fun
 `(disassemble <lambda>)`
 Disassemble a bytecode function, allowing you to inspect the bytecode. By default, writes the output to UART, you you will not see anything if you run this function in the on-screen script console.
 
+[Contents↑](#contents)
+
+#### Engine API Functions
+
+##### make-enemy
+`(make-enement <integer:enemy-type> <integer:x> <integer:y>)`
+Create enemy at x, y. See enemy- variables in the autocomplete window for available options.
+
+##### level
+`(level <integer>)`
+When invoked with an integer parameter, sets the current level number. When invoked with no parameters, returns the current level number.
+
+##### add-items
+`(add-items ...)`
+Adds each parameter to the inventory.
+```
+(add-items item-accelerator item-lethargy)
+
+(apply add-items (range 0 30)) ;; add item ids from range 0 to 30 to the inventory.
+```
+
+##### get-hp
+`(get-hp <entity>)`
+Return health for an entity. (NOTE: call `(enemies)` to list enemy ids, or specify `player`).
+
+##### set-hp
+`(set-hp <entity> <integer>)`
+Set entity's health to `<integer>`.
+
+##### kill
+`(kill <entity>)`
+Set an entity's health to zero.
+
+##### get-pos
+`(get-pos <entity>)`
+Return a pair of `'(x . y)`, representing an entity's position.
+
+##### set-pos
+`(set-pos <entity> <integer> <integer>)`
+Set an entity's position.
+
+##### enemies
+`(enemies)`
+Return a list of all enemies in the game.
+```
+;; For example
+(map kill (enemies)) ;; kill all enemies
+(map get-pos (enemies)) ;; get positions for all enemies
+```
+
+[Contents↑](#contents)
+
 
 #### A little example
 Here's a concise little implemenation of merge sort, using the language features described above.
@@ -521,3 +573,4 @@ Here's a concise little implemenation of merge sort, using the language features
            (merge (sort (car temp))
                   (sort (cdr temp)))))))
 ```
+[Contents↑](#contents)
