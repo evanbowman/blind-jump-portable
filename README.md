@@ -40,6 +40,9 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Feedback](#feedback)
    * [Licence](#licence)
    * [LISP](#lisp)
+      * [Library](#library)
+      * [API](#api)
+      * [Example](#example)
 <!--te-->
 
 ## Introduction
@@ -298,7 +301,7 @@ A sequence of characters. Declare a string with by enclosing characters in quote
 
 Declare a symbol by prefixing a word with the quote character, `'abc`. 
 
-#### Builtin Functions
+### Library
 
 Blind Jump LISP provides two sets of functions:
 * Builtin library functions
@@ -306,60 +309,60 @@ Blind Jump LISP provides two sets of functions:
 
 The builtin library functions implement useful generic algorithms, while the engine API functions provide methods for altering game state. Often, you'll find yourself using the builtin library functions in conjunction with the engine API functions. First, we'll cover the builtin library functions.
 
-##### set
+#### set
 `(set <symbol> <value>)`
 Set a global variable described by `<symbol>` to `<value>`. 
 For example:
 ```
 (set 'a 10) ;; a now holds 10.
 ```
-##### cons
+#### cons
 `(cons <first> <second>)`
 Construct a pair, from parameters `<first>` and `<second>`.
 ```
 (cons 1 'fish) ;; -> '(1 . fish)
 ```
-##### car
+#### car
 `(car <pair>)`
 Retrieve the first element in a cons pair.
 ```
 (car '(1 . fish)) ;; -> 1
 ```
-##### cdr
+#### cdr
 `(cdr <pair>)`
 Retrieve the second element in a cons pair.
 ```
 (cdr '(1 . fish)) ;; -> 'fish
 ```
 
-##### list
+#### list
 `(list ...)`
 Construct a list containing all parameters passed to the list function.
 ```
 (list 1 2 3 4) ;; -> '(1 2 3 4)
 ```
 
-##### arg
+#### arg
 `(arg <integer>)`
 Retrieve an arument passed to the current function.
 
-##### progn
+#### progn
 `(progn ...)`
 Return the value of the last parameter passed to progn.
 
-##### not
+#### not
 `(not <value>)`
 Return `1` if `<value>` is `0` or `nil`. Return `0` otherwise.
 
-##### equal
+#### equal
 `(equal <value> <value)`
 Return `1` if both parameters are equivalent. Return `0` otherwise.
 
-##### +
+#### +
 `(+ ...)`
 Add all integers passed to `+`.
 
-##### apply
+#### apply
 `(apply <function> <list>)`
 Invoke `<function>`, passing each argument in `<list>` as a parameter to `<function>`.
 ```
@@ -367,7 +370,7 @@ Invoke `<function>`, passing each argument in `<list>` as a parameter to `<funct
 (apply cons '(1 2)) ;; '(1 . 2)
 ```
 
-##### fill
+#### fill
 `(fill <integer> <value>)`
 Create a list with `<integer>` repetitions of `<value>`.
 ```
@@ -375,71 +378,71 @@ Create a list with `<integer>` repetitions of `<value>`.
 (fill 4 'cat) ;; -> '(cat cat cat cat)
 ```
 
-##### gen
+#### gen
 `(gen <integer> <function>)`
 Generate a list of `<integer>` numbers, by invoking `<function>` on each number from `0` to `<integer>`.
 ```
 (gen 5 (lambda (* 2 $0)) ;; -> '(0 2 4 6 8)
 ```
 
-#####  length
+####  length
 `(length <list>)`
 Returns the length of a list.
 ```
 (length (list 0 0)) ;; -> 2
 ```
 
-##### <
+#### <
 `(< <integer_1> <integer_2>)`
 Return `1` if `<integer_1>` < `<integer_2>`. Return `0` otherwise.
 
-##### >
+#### >
 See `<`
 
-##### -
+#### -
 `(- <integer> <integer>)`
 Subtract two integers.
 
-##### * 
+#### * 
 `(* ...)`
 Multiply all integer arguments together.
 
-##### /
+#### /
 `(/ <integer> <integer>)`
 Divide two integers.
 
-##### interp-stat
+#### interp-stat
 `(interp-stat)`
 Return a lisp representing the LISP interpreter's internal state variables.
 
-##### range
+#### range
 `(range <integer:begin> <integer:end> <integer:incr>)`
 Generate a list of integers from begin to end, incrementing by incr.
 
-##### unbind
+#### unbind
 `(unbind <symbol>)`
 Delete a global varaible. Be careful!
 
-##### symbol
+#### symbol
 `(symbol <string>)`
 Create a symbol from a string.
 
-##### string
+#### string
 `(string ...)`
 Create a string by converting all arguments to strings and concatenating them.
 
-##### bound
+#### bound
 `(bound <symbol>)`
 Return `1` if a variable exists for a symbol, `0` otherwise.
 
-##### filter
+#### filter
 `(filter <function> <list>)`
 Return the subset of `<list>` where `<function>` returns 1 when invoked with elements of `<list>`.
 ```
 (filter (lambda (< $0 5)) '(1 2 3 4 5 6 7 8)) ;; '(1 2 3 4)
 ```
 
-##### map
+#### map
 `(map <function> <list>)`
 Return a list representing the result of calling `<function>` for each element of `<list>`.
 ```
@@ -450,19 +453,19 @@ NOTE: You may pass multiple lists to map, and multiple elements, one from each l
 (map (lambda (+ $0 $1)) (range 0 10) (range 10 20)) ;; '(10 12 14 16 18 20 22 24 26 28)
 ```
 
-##### reverse
+#### reverse
 `(reverse <list>)`
 Reverse a list.
 
-##### gc
+#### gc
 `(gc)`
 Manually run the garbage collector. If you do not know what garbage collection is, do not worry about this function, as it runs automatically anyway.
 
-##### get
+#### get
 `(get <list> <integer>)`
 Retrieve element from `<list>` at index `<integer>`.
 
-##### eval
+#### eval
 `(eval <list>)`
 Evaluate data as code.
 ```
@@ -471,31 +474,31 @@ Evaluate data as code.
 (eval (list '+ 1 2 3)) ;; 6
 ```
 
-##### this
+#### this
 `(this)`
 Return the currently executing function. Only makes sense to call `this` within a lambda.
 
-##### compile
+#### compile
 `(compile <lambda>)`
 Compiles a lisp function to bytecode, and returns the new function. Bytecode functions run faster and take up less space than lisp functions.
 
-##### disassemble
+#### disassemble
 `(disassemble <lambda>)`
 Disassemble a bytecode function, allowing you to inspect the bytecode. By default, writes the output to UART, you you will not see anything if you run this function in the on-screen script console.
 
 [Contents↑](#contents)
 
-#### Engine API Functions
+### API
 
-##### make-enemy
+#### make-enemy
 `(make-enement <integer:enemy-type> <integer:x> <integer:y>)`
 Create enemy at x, y. See enemy- variables in the autocomplete window for available options.
 
-##### level
+#### level
 `(level <integer>)`
 When invoked with an integer parameter, sets the current level number. When invoked with no parameters, returns the current level number.
 
-##### add-items
+#### add-items
 `(add-items ...)`
 Adds each parameter to the inventory.
 ```
@@ -504,27 +507,27 @@ Adds each parameter to the inventory.
 (apply add-items (range 0 30)) ;; add item ids from range 0 to 30 to the inventory.
 ```
 
-##### get-hp
+#### get-hp
 `(get-hp <entity>)`
 Return health for an entity. (NOTE: call `(enemies)` to list enemy ids, or specify `player`).
 
-##### set-hp
+#### set-hp
 `(set-hp <entity> <integer>)`
 Set entity's health to `<integer>`.
 
-##### kill
+#### kill
 `(kill <entity>)`
 Set an entity's health to zero.
 
-##### get-pos
+#### get-pos
 `(get-pos <entity>)`
 Return a pair of `'(x . y)`, representing an entity's position.
 
-##### set-pos
+#### set-pos
 `(set-pos <entity> <integer> <integer>)`
 Set an entity's position.
 
-##### enemies
+#### enemies
 `(enemies)`
 Return a list of all enemies in the game.
 ```
@@ -536,7 +539,7 @@ Return a list of all enemies in the game.
 [Contents↑](#contents)
 
 
-#### A little example
+### Example
 Here's a concise little implemenation of merge sort, using the language features described above.
 ```lisp
 (set 'bisect-impl
