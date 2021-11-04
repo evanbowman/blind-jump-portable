@@ -204,6 +204,11 @@ All of images and character designs belong to Evan Bowman, and should not be use
 
 BlindJump uses a custom LISP dialect for lightweight scripting. In the settings menu, the game allows you to launch a repl while the game is running, to manipulate game state (for gameboy builds, the game will render an onscreen keyboard and console, for desktop builds, the game will pause, and read from the command line). See below for a brief overview of the language. If you've used Scheme, many things will feel familiar, although you'll also find some notable differences.
 
+* LISP-1
+* Supports Tail Call Optimization (for compiled bytecode)
+* Dynamically scoped
+* Includes a bytecode compiler, with a small set of optimization passes
+
 ### Language
 
 #### S-Expressions
