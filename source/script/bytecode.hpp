@@ -544,6 +544,27 @@ struct Arg2 {
 };
 
 
+// By convention, we distinguish between a return from the end of a function,
+// and a return from the middle of a function. Both opcodes do the same thing,
+// but we want to be able to determine where a function ends, mostly because a
+// unique terminating opcode at the very end of a function makes the
+// disassembler easier to write, otherwise, we'd need to store the bytecode
+// length.
+struct EarlyRet {
+    Header header_;
+
+    static const char* name()
+    {
+        return "RET";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 36;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -588,6 +609,7 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(PushList)
             MATCH(Pop)
             MATCH(Ret)
+            MATCH(EarlyRet)
             MATCH(Dup)
             MATCH(MakePair)
             MATCH(First)

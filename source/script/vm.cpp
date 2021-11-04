@@ -35,7 +35,7 @@ void vm_execute(Value* code_buffer, const int start_offset)
 
     using namespace instruction;
 
- TOP:
+TOP:
     while (true) {
 
         switch ((Opcode)code.data_[pc]) {
@@ -138,7 +138,8 @@ void vm_execute(Value* code_buffer, const int start_offset)
                     // The isn't really anything preventing a variadic function
                     // from being executed recursively with a different number
                     // of args, right? So maybe shouldn't be isn't an error...
-                    while (true) ;
+                    while (true)
+                        ;
                 }
 
                 if (argc == 0) {
@@ -170,7 +171,8 @@ void vm_execute(Value* code_buffer, const int start_offset)
                 if (get_argc() not_eq 1) {
                     // TODO: raise error: attempted recursive call with
                     // different number of args than current function.
-                    while (true) ;
+                    while (true)
+                        ;
                 }
 
                 pop_op(); // function on stack
@@ -200,7 +202,8 @@ void vm_execute(Value* code_buffer, const int start_offset)
                 if (get_argc() not_eq 2) {
                     // TODO: raise error: attempted recursive call with
                     // different number of args than current function.
-                    while (true) ;
+                    while (true)
+                        ;
                 }
 
                 pop_op(); // function on stack
@@ -232,7 +235,8 @@ void vm_execute(Value* code_buffer, const int start_offset)
                 auto arg2 = get_op(3);
 
                 if (get_argc() not_eq 3) {
-                    while (true) ;
+                    while (true)
+                        ;
                 }
 
                 pop_op(); // function on stack
@@ -356,6 +360,7 @@ void vm_execute(Value* code_buffer, const int start_offset)
             pop_op();
             break;
 
+        case EarlyRet::op():
         case Ret::op():
             return;
 

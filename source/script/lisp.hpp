@@ -13,11 +13,9 @@
 #endif
 
 
-
 #ifndef UNHOSTED
 #define POOL_USE_HEAP
 #endif
-
 
 
 #include "function.hpp"
@@ -25,8 +23,6 @@
 #include "platform/scratch_buffer.hpp"
 #include "string.hpp"
 #include "unicode.hpp"
-
-
 
 
 class Platform;
@@ -174,7 +170,6 @@ struct DataBuffer {
 };
 
 
-
 struct String {
     CompressedPtr data_buffer_;
     u16 offset_;
@@ -185,7 +180,6 @@ struct String {
     {
     }
 };
-
 
 
 struct Error {
@@ -256,7 +250,8 @@ struct HeapNode {
     static void finalizer(Value*)
     {
         // Should be unreachable.
-        while (true) ;
+        while (true)
+            ;
     }
 };
 
@@ -505,7 +500,6 @@ public:
 
     StringBuffer<1024> fmt_;
 };
-
 
 
 void format(Value* value, Printer& p);

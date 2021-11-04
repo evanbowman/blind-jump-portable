@@ -7,7 +7,6 @@
 namespace lisp {
 
 
-
 class ListBuilder {
 public:
     ListBuilder() : head_(get_nil())
@@ -50,7 +49,6 @@ private:
     Protected head_;
     Value* tail_ = nullptr;
 };
-
 
 
 } // namespace lisp
