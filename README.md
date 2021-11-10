@@ -204,6 +204,11 @@ All of images and character designs belong to Evan Bowman, and should not be use
 
 BlindJump uses a custom LISP dialect for lightweight scripting. In the settings menu, the game allows you to launch a repl while the game is running, to manipulate game state (for gameboy builds, the game will render an onscreen keyboard and console, for desktop builds, the game will pause, and read from the command line). See below for a brief overview of the language. If you've used Scheme, many things will feel familiar, although you'll also find some notable differences.
 
+* LISP-1
+* Supports Tail Call Optimization (for compiled bytecode)
+* Dynamically scoped
+* Includes a bytecode compiler, with a small set of optimization passes
+
 ### Language
 
 #### S-Expressions
@@ -216,11 +221,11 @@ Like All LISP languages, our interpreter represents code using a notation called
 () ;; So is this.
 ```
 When you enter an S-Expression, the first element in the list will be interpreted as a function, and the remaining elements will be supplied to the function as arguments.
-```
+```LISP
 (+ 1 2 3) ;; Result: 6
 ```
 In some scenarios, you do not want an S-Expression to be evaluated as a function. For example, you may simply want a list of data. To prevent evaluation of an S-Expression, prefix the expression with a `'` character.
-```
+```LISP
 ;; NOTE: without the quote character, the interpreter would have tried to call a function called dog,
 ;; with the arguments cat and 3.
 '(dog cat 3) ;; Result: '(dog cat 3).
@@ -229,12 +234,12 @@ In some scenarios, you do not want an S-Expression to be evaluated as a function
 #### Variables
 
 To declare a variable, use the `set` function, along with a variable name symbol, followed by a value:
-```
+```LISP
 (set 'i 5)
 ```
 Now, variable `i` stores the value `5`, so `5` will be substituted wherever you type the variable `i`:
 
-```
+```LISP
 (+ i i) ; -> 10
 ```
 
@@ -249,36 +254,36 @@ A 32 bit signed integer. For example; `0`, `1`, or `2`. Due to the way that our 
 
 ##### Cons Pair
 Arguably the most important data type in our language. Implements a pair of two values. To create a pair, invoke the `cons` function, with two arguments:
-```
+```LISP
 (cons 1 2) ;; -> '(1 . 2)
 ```
 LISP interpreters represent lists as chains of cons pairs, terminated by nil. For example:
-```
+```LISP
 (cons 1 (cons 2 (cons 3 nil))) ;; -> '(1 2 3)
 ```
 Or more simply, you could just use the `list` function:
-```
+```LISP
 (list 1 2 3) ;; -> '(1 2 3)
 ```
 
 ##### Functions (lambdas)
 A function, or lambda, contains re-usable code, to be executed later. To declare a lambda, use the `lambda` keyword:
-```
+```LISP
 (lambda
   (cons 1 2))
 ```
 You may want to store the lambda in a variable, so that you can use it later:
-```
+```LISP
 (set 'my-function 
   (lambda
     (cons 1 2)))
 ```
 Now, when you invoke my-function, the code you wrote within the lambda expression will be evaluated:
-```
+```LISP
 (my-function) ;; -> '(1 . 2)
 ```
 But for a function to be really useful, you'll want to be able to pass parameters to it. Within a function, you may refer to function arguments with the $ character, followed by the argument number, starting from zero. For example:
-```
+```LISP
 (set 'temp
   (lambda
     (cons $0 $1)))
@@ -288,7 +293,7 @@ But for a function to be really useful, you'll want to be able to pass parameter
 You may also refer to an argument with the `arg` function, e.g. `(arg 0)` or `(arg 5)`. To ask the interpreter how many arguments the user passed to the current function, you may use the `argc` function.
 
 To refer to the current function, invoke the `this` function.
-```
+```LISP
 ((lambda) ((this))) ;; Endless loop, because the function repeatedly invokes itself.
 ```
 (above snippet): In mathematical theory, we call a function defined in terms of itself a recursive function. After cons pairs, you might call recursion the second most import concept in understanding LISP.
@@ -313,32 +318,34 @@ The builtin library functions implement useful generic algorithms, while the eng
 `(set <symbol> <value>)`
 Set a global variable described by `<symbol>` to `<value>`. 
 For example:
-```
+```LISP
 (set 'a 10) ;; a now holds 10.
 ```
+You may be wondering why `set` accepts a symbol as an argument. I did not implement `set` as a macro or a special form, but instead, as a regular function. The whole dialect only has three special forms, `lambda`, `if`, and `let`. I implemented everything else as a builtin function, so unlike other lisp dialects, you need to specify a quoted symbol when assigning a variable.
+
 #### cons
 `(cons <first> <second>)`
 Construct a pair, from parameters `<first>` and `<second>`.
-```
+```LISP
 (cons 1 'fish) ;; -> '(1 . fish)
 ```
 #### car
 `(car <pair>)`
 Retrieve the first element in a cons pair.
-```
+```LISP
 (car '(1 . fish)) ;; -> 1
 ```
 #### cdr
 `(cdr <pair>)`
 Retrieve the second element in a cons pair.
-```
+```LISP
 (cdr '(1 . fish)) ;; -> 'fish
 ```
 
 #### list
 `(list ...)`
 Construct a list containing all parameters passed to the list function.
-```
+```LISP
 (list 1 2 3 4) ;; -> '(1 2 3 4)
 ```
 
@@ -365,7 +372,7 @@ Add all integers passed to `+`.
 #### apply
 `(apply <function> <list>)`
 Invoke `<function>`, passing each argument in `<list>` as a parameter to `<function>`.
-```
+```LISP
 (apply + '(1 2 3 4 5)) ;; -> 15
 (apply cons '(1 2)) ;; '(1 . 2)
 ```
@@ -373,7 +380,7 @@ Invoke `<function>`, passing each argument in `<list>` as a parameter to `<funct
 #### fill
 `(fill <integer> <value>)`
 Create a list with `<integer>` repetitions of `<value>`.
-```
+```LISP
 (fill 6 5) ;; -> '(5 5 5 5 5 5)
 (fill 4 'cat) ;; -> '(cat cat cat cat)
 ```
@@ -381,14 +388,14 @@ Create a list with `<integer>` repetitions of `<value>`.
 #### gen
 `(gen <integer> <function>)`
 Generate a list of `<integer>` numbers, by invoking `<function>` on each number from `0` to `<integer>`.
-```
+```LISP
 (gen 5 (lambda (* 2 $0)) ;; -> '(0 2 4 6 8)
 ```
 
 ####  length
 `(length <list>)`
 Returns the length of a list.
-```
+```LISP
 (length (list 0 0)) ;; -> 2
 ```
 
@@ -438,18 +445,18 @@ Return `1` if a variable exists for a symbol, `0` otherwise.
 #### filter
 `(filter <function> <list>)`
 Return the subset of `<list>` where `<function>` returns 1 when invoked with elements of `<list>`.
-```
+```LISP
 (filter (lambda (< $0 5)) '(1 2 3 4 5 6 7 8)) ;; '(1 2 3 4)
 ```
 
 #### map
 `(map <function> <list>)`
 Return a list representing the result of calling `<function>` for each element of `<list>`.
-```
+```LISP
 (map (lambda (+ $0 3)) (range 0 10)) ;; '(3 4 5 6 7 8 9 10 11 12)
 ```
 NOTE: You may pass multiple lists to map, and multiple elements, one from each list, will be passed to `<function>`
-```
+```LISP
 (map (lambda (+ $0 $1)) (range 0 10) (range 10 20)) ;; '(10 12 14 16 18 20 22 24 26 28)
 ```
 
@@ -468,7 +475,7 @@ Retrieve element from `<list>` at index `<integer>`.
 #### eval
 `(eval <list>)`
 Evaluate data as code.
-```
+```LISP
 (eval '(+ 1 2 3)) ;; 6
 
 (eval (list '+ 1 2 3)) ;; 6
@@ -501,7 +508,7 @@ When invoked with an integer parameter, sets the current level number. When invo
 #### add-items
 `(add-items ...)`
 Adds each parameter to the inventory.
-```
+```LISP
 (add-items item-accelerator item-lethargy)
 
 (apply add-items (range 0 30)) ;; add item ids from range 0 to 30 to the inventory.
@@ -530,7 +537,7 @@ Set an entity's position.
 #### enemies
 `(enemies)`
 Return a list of all enemies in the game.
-```
+```LISP
 ;; For example
 (map kill (enemies)) ;; kill all enemies
 (map get-pos (enemies)) ;; get positions for all enemies
