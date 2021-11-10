@@ -111,11 +111,53 @@ void do_tests()
 }
 
 
+const char* utilities =
+    "(set 'bisect-impl\n"
+"     (compile\n"
+"      (lambda\n"
+"        (if (not $1)\n"
+"            (cons (reverse $2) $0)\n"
+"          (if (not (cdr $1))\n"
+"              (cons (reverse $2) $0)\n"
+"            ((this)\n"
+"             (cdr $0)\n"
+"             (cdr (cdr $1))\n"
+"             (cons (car $0) $2)))))))\n"
+"\n"
+"\n"
+"(set 'bisect (lambda (bisect-impl $0 $0 '())))\n"
+"\n"
+"\n"
+"(set 'merge\n"
+"     (compile\n"
+"      (lambda\n"
+"        (if (not $0)\n"
+"            $1\n"
+"          (if (not $1)\n"
+"              $0\n"
+"            (if (< (car $0) (car $1))\n"
+"                (cons (car $0) ((this) (cdr $0) $1))\n"
+"              (cons (car $1) ((this) $0 (cdr $1)))))))))\n"
+"\n"
+"\n"
+"\n"
+"(set 'sort\n"
+"     (lambda\n"
+"       (if (not (cdr $0))\n"
+"           $0\n"
+"         (let ((temp (bisect $0)))\n"
+"           (merge (sort (car temp))\n"
+"                  (sort (cdr temp)))))))\n"
+"";
+
+
 int main(int argc, char** argv)
 {
     Platform pfrm;
 
     lisp::init(pfrm);
+
+    lisp::dostring(utilities, [](lisp::Value& err) {});
 
     std::string line;
     std::cout << ">> ";

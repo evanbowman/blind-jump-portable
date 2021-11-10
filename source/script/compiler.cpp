@@ -296,6 +296,9 @@ int compile_impl(ScratchBuffer& buffer,
                        str_cmp(fn->symbol_.name_, "this") == 0 and argc == 0) {
                 append<instruction::PushThis>(buffer, write_pos);
 
+            } else if (fn->type_ == Value::Type::symbol and
+                       str_cmp(fn->symbol_.name_, "not") == 0 and argc == 1) {
+                append<instruction::Not>(buffer, write_pos);
             } else {
 
                 write_pos =

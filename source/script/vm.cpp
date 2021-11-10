@@ -82,6 +82,14 @@ TOP:
             break;
         }
 
+        case Not::op(): {
+            read<Not>(code, pc);
+            auto input = get_op(0);
+            pop_op();
+            push_op(make_integer(not is_boolean_true(input)));
+            break;
+        }
+
         case PushNil::op():
             read<PushNil>(code, pc);
             push_op(get_nil());
@@ -147,9 +155,7 @@ TOP:
                     goto TOP;
                 } else {
                     // TODO: perform TCO for N-arg function
-                    while (true) {
-                        // ...
-                    }
+                    funcall(fn, argc);
                 }
 
             } else {

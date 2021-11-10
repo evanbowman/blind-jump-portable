@@ -25,4 +25,4 @@
     (unbind 'swarm))
 
 
-(map (lambda ((arg 0))) post-levelgen-hooks)
+(map (lambda ($0)) post-levelgen-hooks)

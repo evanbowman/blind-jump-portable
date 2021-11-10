@@ -32,4 +32,4 @@
                        (level boss-3-level)))))))
 
 
-(map (lambda ((arg 0))) pre-levelgen-hooks)
+(map (lambda ($0)) pre-levelgen-hooks)

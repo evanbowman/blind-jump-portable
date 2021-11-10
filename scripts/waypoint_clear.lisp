@@ -3,4 +3,4 @@
 ;;;
 
 
-(map (lambda ((arg 0))) waypoint-clear-hooks)
+(map (lambda ($0)) waypoint-clear-hooks)

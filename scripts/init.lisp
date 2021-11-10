@@ -55,7 +55,7 @@
 (set 'add-hook
      (compile (lambda
                 ;; (add-hook hooks-sym hook)
-                (set (arg 0) (cons (arg 1) (eval (arg 0)))))))
+                (set $0 (cons $1 (eval $0))))))
 
 
 (add-hook
@@ -70,7 +70,7 @@
           (set 'temp
                (lambda (map
                         +
-                        (fill n (- ((arg 0) (get-pos gate)) 15))
+                        (fill n (- ($0 (get-pos gate)) 15))
                         (gen n (lambda (cr-choice 15))))))
 
           (map make-enemy (fill n swarm) (temp car) (temp cdr))
@@ -81,14 +81,14 @@
 (set 'append-impl
      (compile
       (lambda
-        (if (arg 0)
-            ((this) (cdr (arg 0)) (cons (car (arg 0)) (arg 1)))
-          (arg 1)))))
+        (if $0
+            ((this) (cdr $0) (cons (car $0) $1))
+          $1))))
 
 
 (set 'append
      ;; (append <list 1> <list 2>)
-     (lambda (append-impl (reverse (arg 0)) (arg 1))))
+     (lambda (append-impl (reverse $0) $1)))
 
 
 (set 'bisect-impl

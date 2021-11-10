@@ -2853,6 +2853,11 @@ void init(Platform& pfrm)
                         i += 1;
                         break;
 
+                    case Not::op():
+                        out += Not::name();
+                        i += sizeof(Not);
+                        break;
+
                     case First::op():
                         out += First::name();
                         i += sizeof(First);

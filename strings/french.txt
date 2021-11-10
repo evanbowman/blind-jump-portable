@@ -79,7 +79,7 @@ Langue :
 Contraste : 
 Mode Nuit : 
 Permuter A/B : 
-défault
+défaut
 Difficulté : 
 facile
 normale
@@ -90,7 +90,7 @@ Touche Visée :
 séparée
 combinée
 Log Severity :
-Montrer Chrono : 
+Afficher Temps : 
 Caméra : 
 fixe
 suivi (faible)

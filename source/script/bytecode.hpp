@@ -565,6 +565,22 @@ struct EarlyRet {
 };
 
 
+struct Not {
+    Header header_;
+
+    static const char* name()
+    {
+        return "NOT";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 37;
+    }
+};
+
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -619,6 +635,7 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(Arg1)
             MATCH(Arg2)
             MATCH(PushThis)
+            MATCH(Not)
         }
     }
     return nullptr;
