@@ -12,7 +12,7 @@ bool is_boolean_true(Value* val);
 const char* symbol_from_offset(u16 offset);
 
 
-Value* make_bytecode_function(Value* buffer);
+Value* make_bytecode_function(Value* bytecode);
 
 
 Value* get_var_stable(const char* intern_str);
@@ -372,11 +372,18 @@ TOP:
 
         case PushLambda::op(): {
             auto inst = read<PushLambda>(code, pc);
-            auto fn = make_bytecode_function(code_buffer);
-            if (fn->type_ == lisp::Value::Type::function) {
-                fn->function_.bytecode_impl_.bc_offset_ = pc;
+            auto offset = make_integer(pc);
+            if (offset->type_ == lisp::Value::Type::integer) {
+                auto bytecode = make_cons(offset, code_buffer);
+                if (bytecode->type_ == lisp::Value::Type::cons) {
+                    auto fn = make_bytecode_function(bytecode);
+                    push_op(fn);
+                } else {
+                    push_op(bytecode);
+                }
+            } else {
+                push_op(offset);
             }
-            push_op(fn);
             pc = start_offset + inst->lambda_end_.get();
             break;
         }

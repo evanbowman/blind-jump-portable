@@ -131,13 +131,16 @@ struct Function {
     using CPP_Impl = Value* (*)(int);
 
     struct Bytecode {
-        u16 bc_offset_;
-        CompressedPtr data_buffer_;
+        CompressedPtr bytecode_; // (integeroffset . databuffer)
+        CompressedPtr lexical_bindings_;
+
+        Value* bytecode_offset() const;
+        Value* databuffer() const;
     };
 
     struct LispFunction {
         CompressedPtr code_;
-        CompressedPtr docstring_;
+        CompressedPtr lexical_bindings_;
     };
 
     union {
@@ -455,9 +458,6 @@ Value* dostring(const char* code, ::Function<16, void(Value&)> on_error);
 
 
 bool is_executing();
-
-
-int paren_balance(const char* ptr);
 
 
 const char* intern(const char* string);

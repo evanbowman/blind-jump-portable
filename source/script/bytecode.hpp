@@ -580,7 +580,6 @@ struct Not {
 };
 
 
-
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {

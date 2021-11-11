@@ -6,7 +6,7 @@
 namespace lisp {
 
 
-Value* make_bytecode_function(Value* buffer);
+Value* make_bytecode_function(Value* bytecode);
 
 
 u16 symbol_offset(const char* symbol);
@@ -625,21 +625,25 @@ void compile(Platform& pfrm, Value* code)
 {
     // We will be rendering all of our compiled code into this buffer.
     push_op(make_databuffer(pfrm));
-
     if (get_op(0)->type_ not_eq Value::Type::data_buffer) {
+        return;
+    }
+
+    push_op(make_cons(make_integer(0), get_op(0)));
+    if (get_op(0)->type_ not_eq Value::Type::cons) {
         return;
     }
 
     auto fn = make_bytecode_function(get_op(0));
     if (fn->type_ not_eq Value::Type::function) {
         pop_op();
+        pop_op();
         auto err = fn;
         push_op(err);
         return;
     }
 
-    fn->function_.bytecode_impl_.bc_offset_ = 0;
-
+    pop_op();
     auto buffer = get_op(0)->data_buffer_.value();
     pop_op();
     push_op(fn);
@@ -651,8 +655,7 @@ void compile(Platform& pfrm, Value* code)
     write_pos = compile_lambda(*buffer, write_pos, code, 0);
 
     write_pos = PeepholeOptimizer().run(
-        *dcompr(fn->function_.bytecode_impl_.data_buffer_)
-             ->data_buffer_.value(),
+        *fn->function_.bytecode_impl_.databuffer()->data_buffer_.value(),
         write_pos);
 
     // std::cout << "compilation finished, bytes used: " << write_pos << std::endl;
@@ -674,7 +677,7 @@ void compile(Platform& pfrm, Value* code)
         if (fn not_eq &val and val.type_ == Value::Type::function and
             val.mode_bits_ == Function::ModeBits::lisp_bytecode_function) {
 
-            auto buf = dcompr(val.function_.bytecode_impl_.data_buffer_);
+            auto buf = val.function_.bytecode_impl_.databuffer();
             int used = SCRATCH_BUFFER_SIZE - 1;
             for (; used > 0; --used) {
                 if ((Opcode)buf->data_buffer_.value()->data_[used] not_eq
@@ -694,15 +697,16 @@ void compile(Platform& pfrm, Value* code)
                 //           << " bytes to dest buffer offset "
                 //           << used;
 
-                auto src_buffer =
-                    dcompr(fn->function_.bytecode_impl_.data_buffer_);
+                auto src_buffer = fn->function_.bytecode_impl_.databuffer();
                 for (int i = 0; i < bytes_used; ++i) {
                     buf->data_buffer_.value()->data_[used + i] =
                         src_buffer->data_buffer_.value()->data_[i];
                 }
 
-                fn->function_.bytecode_impl_.bc_offset_ = used;
-                fn->function_.bytecode_impl_.data_buffer_ = compr(buf);
+                Protected used_bytes(make_integer(used));
+
+                fn->function_.bytecode_impl_.bytecode_ =
+                    compr(make_cons(used_bytes, buf));
             }
         }
     });

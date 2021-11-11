@@ -78,33 +78,28 @@
           (unbind 'swarm))))))
 
 
-(set 'append-impl
-     (compile
-      (lambda
-        (if $0
-            ((this) (cdr $0) (cons (car $0) $1))
-          $1))))
-
-
 (set 'append
-     ;; (append <list 1> <list 2>)
-     (lambda (append-impl (reverse $0) $1)))
+     (let ((impl (compile
+                  (lambda
+                    (if $0
+                        ((this) (cdr $0) (cons (car $0) $1))
+                      $1)))))
+       ;; (append <list 1> <list 2>)
+       (lambda (impl (reverse $0) $1))))
 
 
-(set 'bisect-impl
-     (compile
-      (lambda
-        (if (not $1)
-            (cons (reverse $2) $0)
-          (if (not (cdr $1))
-              (cons (reverse $2) $0)
-            ((this)
-             (cdr $0)
-             (cdr (cdr $1))
-             (cons (car $0) $2)))))))
-
-
-(set 'bisect (lambda (bisect-impl $0 $0 '())))
+(set 'bisect
+     (let ((impl (compile
+                  (lambda
+                    (if (not $1)
+                        (cons (reverse $2) $0)
+                      (if (not (cdr $1))
+                          (cons (reverse $2) $0)
+                        ((this)
+                         (cdr $0)
+                         (cdr (cdr $1))
+                         (cons (car $0) $2))))))))
+       (lambda (impl $0 $0 '()))))
 
 
 (set 'merge

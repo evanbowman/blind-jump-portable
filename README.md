@@ -206,7 +206,7 @@ BlindJump uses a custom LISP dialect for lightweight scripting. In the settings 
 
 * LISP-1
 * Supports Tail Call Optimization (for compiled bytecode)
-* Dynamically scoped
+* Lexically scoped
 * Includes a bytecode compiler, with a small set of optimization passes
 
 ### Language
