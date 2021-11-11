@@ -89,6 +89,8 @@
 //;
 #include "data/death_text_italian.h"
 //;
+#include "data/death_text_french.h"
+//;
 #include "data/old_poster_flattened.h"
 //;
 #include "data/old_poster_chinese_flattened.h"
@@ -96,6 +98,8 @@
 #include "data/old_poster_russian_flattened.h"
 //;
 #include "data/old_poster_italian_flattened.h"
+//;
+#include "data/old_poster_french_flattened.h"
 //;
 #include "data/blaster_info_flattened.h"
 //;
@@ -106,6 +110,8 @@
 #include "data/seed_packet_russian_flattened.h"
 //;
 #include "data/seed_packet_italian_flattened.h"
+//;
+#include "data/seed_packet_french_flattened.h"
 //;
 #include "data/overlay_network_flattened.h"
 //
@@ -214,6 +220,8 @@ static const TextureData overlay_textures[] = {
 //;
     TEXTURE_INFO(death_text_italian),
 //;
+    TEXTURE_INFO(death_text_french),
+//;
     TEXTURE_INFO(old_poster_flattened),
 //;
     TEXTURE_INFO(old_poster_chinese_flattened),
@@ -221,6 +229,8 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(old_poster_russian_flattened),
 //;
     TEXTURE_INFO(old_poster_italian_flattened),
+//;
+    TEXTURE_INFO(old_poster_french_flattened),
 //;
     TEXTURE_INFO(blaster_info_flattened),
 //;
@@ -231,6 +241,8 @@ static const TextureData overlay_textures[] = {
     TEXTURE_INFO(seed_packet_russian_flattened),
 //;
     TEXTURE_INFO(seed_packet_italian_flattened),
+//;
+    TEXTURE_INFO(seed_packet_french_flattened),
 //;
     TEXTURE_INFO(overlay_network_flattened),
 //

@@ -15,5 +15,5 @@ struct ScratchBuffer {
     char data_[SCRATCH_BUFFER_SIZE];
 };
 
-static constexpr const int scratch_buffer_count = 100;
+static constexpr const int scratch_buffer_count = 90;
 using ScratchBufferPtr = Rc<ScratchBuffer, scratch_buffer_count>;

@@ -580,7 +580,12 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
 
         if (not pfrm.network_peer().is_connected()) {
             lisp::dostring(
-                pfrm.load_file_contents("scripts", "waypoint_clear.lisp"));
+                       pfrm.load_file_contents("scripts", "waypoint_clear.lisp"),
+                       [&pfrm](lisp::Value& err) {
+                           lisp::DefaultPrinter p;
+                           lisp::format(&err, p);
+                           pfrm.fatal(p.fmt_.c_str());
+                       });
         }
     }
 

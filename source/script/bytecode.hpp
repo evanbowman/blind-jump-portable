@@ -383,7 +383,7 @@ struct First {
 
     static const char* name()
     {
-        return "FIRST";
+        return "CAR";
     }
 
     static constexpr Opcode op()
@@ -398,7 +398,7 @@ struct Rest {
 
     static const char* name()
     {
-        return "REST";
+        return "CDR";
     }
 
     static constexpr Opcode op()
@@ -419,6 +419,228 @@ struct Arg {
     static constexpr Opcode op()
     {
         return 27;
+    }
+};
+
+
+struct TailCall {
+    Header header_;
+    u8 argc_;
+
+    static const char* name()
+    {
+        return "TAILCALL";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 28;
+    }
+};
+
+
+struct TailCall1 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "TAILCALL1";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 29;
+    }
+};
+
+
+struct TailCall2 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "TAILCALL2";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 30;
+    }
+};
+
+
+struct TailCall3 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "TAILCALL3";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 31;
+    }
+};
+
+
+struct PushThis {
+    Header header_;
+
+    static const char* name()
+    {
+        return "PUSH_THIS";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 32;
+    }
+};
+
+
+struct Arg0 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "ARG0";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 33;
+    }
+};
+
+
+struct Arg1 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "ARG1";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 34;
+    }
+};
+
+
+struct Arg2 {
+    Header header_;
+
+    static const char* name()
+    {
+        return "ARG2";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 35;
+    }
+};
+
+
+// By convention, we distinguish between a return from the end of a function,
+// and a return from the middle of a function. Both opcodes do the same thing,
+// but we want to be able to determine where a function ends, mostly because a
+// unique terminating opcode at the very end of a function makes the
+// disassembler easier to write, otherwise, we'd need to store the bytecode
+// length.
+struct EarlyRet {
+    Header header_;
+
+    static const char* name()
+    {
+        return "RET";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 36;
+    }
+};
+
+
+struct Not {
+    Header header_;
+
+    static const char* name()
+    {
+        return "NOT";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 37;
+    }
+};
+
+
+struct LexicalDef {
+    Header header_;
+    host_u16 name_offset_;
+    u8 slot_;
+
+    static const char* name()
+    {
+        return "LEXICAL_DEF";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 38;
+    }
+};
+
+
+struct LexicalFramePush {
+    Header header_;
+    u8 slots_;
+
+    static const char* name()
+    {
+        return "LEXICAL_FRAME_PUSH";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 39;
+    }
+};
+
+
+struct LexicalFramePop {
+    Header header_;
+
+    static const char* name()
+    {
+        return "LEXICAL_FRAME_POP";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 40;
+    }
+};
+
+
+struct LexicalVarLoad {
+    Header header_;
+    u8 frame_;
+    u8 slot_;
+
+    static const char* name()
+    {
+        return "LEXICAL_VAR_LOAD";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 41;
     }
 };
 
@@ -456,6 +678,10 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(SmallJumpIfFalse)
             MATCH(SmallJump)
             MATCH(PushLambda)
+            MATCH(TailCall)
+            MATCH(TailCall1)
+            MATCH(TailCall2)
+            MATCH(TailCall3)
             MATCH(Funcall)
             MATCH(Funcall1)
             MATCH(Funcall2)
@@ -463,11 +689,17 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(PushList)
             MATCH(Pop)
             MATCH(Ret)
+            MATCH(EarlyRet)
             MATCH(Dup)
             MATCH(MakePair)
             MATCH(First)
             MATCH(Rest)
             MATCH(Arg)
+            MATCH(Arg0)
+            MATCH(Arg1)
+            MATCH(Arg2)
+            MATCH(PushThis)
+            MATCH(Not)
         }
     }
     return nullptr;

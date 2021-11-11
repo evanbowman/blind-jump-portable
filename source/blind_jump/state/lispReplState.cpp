@@ -2,6 +2,21 @@
 #include "state_impl.hpp"
 
 
+static int paren_balance(const char* ptr)
+{
+    int balance = 0;
+    while (*ptr not_eq '\0') {
+        if (*ptr == '(') {
+            ++balance;
+        } else if (*ptr == ')') {
+            --balance;
+        }
+        ++ptr;
+    }
+    return balance;
+}
+
+
 // Inspired by the dvorak keyboard layout, redesigned for use with a gameboy
 // dpad. Optimized for the smallest horizontal _and_ vertical travel between key
 // presses.
@@ -41,7 +56,7 @@ void LispReplState::repaint_entry(Platform& pfrm, bool show_cursor)
         std::max(0, (int)command_.length() - (screen_tiles.x - 1));
 
 
-    const int balance = lisp::paren_balance(command_.c_str());
+    const int balance = paren_balance(command_.c_str());
     if (balance < 0 and command_.length() and
         command_[command_.length() - 1] == ')') {
         // Give a hint to the user, that he/she entered too many closing parens.

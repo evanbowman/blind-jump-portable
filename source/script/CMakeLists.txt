@@ -18,3 +18,9 @@ add_executable(LISP
   unittest.cpp
   compiler.cpp
   bootstrap.cpp)
+
+
+# Uncomment for emscripten
+# to setup builds: `emcmake cmake` in this directory.
+# target_link_options(LISP PRIVATE
+#        -sEXPORTED_FUNCTIONS=['_init','_parseline','ccall','_malloc','stackAlloc','allocate','ccall'])

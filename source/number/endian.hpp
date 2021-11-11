@@ -1,6 +1,7 @@
 #pragma once
 
 #include "numeric.hpp"
+#include <string.h>
 
 // Because most processors are little endian, I am using little endian byte
 // order for binary encoded data.
@@ -43,16 +44,6 @@ inline bool is_little_endian()
     return ((u8*)&i)[0] == 0x0f;
 }
 #endif
-
-extern "C" {
-using size_t = decltype(sizeof(int)); // If only I wasn't too lazy to look up
-                                      // which header it's defined in
-#ifdef __APPLE__
-void* memcpy(void* destination, const void* source, size_t num);
-#else
-void* memcpy(void* destination, const void* source, size_t num) noexcept;
-#endif
-}
 
 
 template <typename T> T to_host_order(T value);

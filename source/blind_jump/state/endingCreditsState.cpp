@@ -62,11 +62,11 @@ static const std::array<const char*, 32> credits_lines = {
     "Italian%Mte90",
     "(Daniele Scasciafratte)",
     "",
+    "French%Alexandre Bordat"
+    "",
     "",
     "Special Thanks",
-    "Jasper Vijn (Tonc)",
     "The DevkitARM Project",
-    "freesound.org"
     "",
     ""};
 

@@ -12,7 +12,10 @@ bool is_boolean_true(Value* val);
 const char* symbol_from_offset(u16 offset);
 
 
-Value* make_bytecode_function(Value* buffer);
+Value* make_bytecode_function(Value* bytecode);
+
+
+Value* get_var_stable(const char* intern_str);
 
 
 template <typename Instruction>
@@ -24,7 +27,7 @@ Instruction* read(ScratchBuffer& buffer, int& pc)
 }
 
 
-void vm_execute(Value* code_buffer, int start_offset)
+void vm_execute(Value* code_buffer, const int start_offset)
 {
     int pc = start_offset;
 
@@ -32,6 +35,7 @@ void vm_execute(Value* code_buffer, int start_offset)
 
     using namespace instruction;
 
+TOP:
     while (true) {
 
         switch ((Opcode)code.data_[pc]) {
@@ -67,13 +71,22 @@ void vm_execute(Value* code_buffer, int start_offset)
 
         case LoadVar::op(): {
             auto inst = read<LoadVar>(code, pc);
-            push_op(get_var(symbol_from_offset(inst->name_offset_.get())));
+            push_op(
+                get_var_stable(symbol_from_offset(inst->name_offset_.get())));
             break;
         }
 
         case Dup::op(): {
             read<Dup>(code, pc);
             push_op(get_op(0));
+            break;
+        }
+
+        case Not::op(): {
+            read<Not>(code, pc);
+            auto input = get_op(0);
+            pop_op();
+            push_op(make_integer(not is_boolean_true(input)));
             break;
         }
 
@@ -113,6 +126,144 @@ void vm_execute(Value* code_buffer, int start_offset)
             auto inst = read<PushSymbol>(code, pc);
             push_op(make_symbol(symbol_from_offset(inst->name_offset_.get()),
                                 Symbol::ModeBits::stable_pointer));
+            break;
+        }
+
+        case TailCall::op(): {
+
+            Protected fn(get_op(0));
+
+            auto argc = read<TailCall>(code, pc)->argc_;
+
+
+            if (fn == get_this()) {
+                pop_op(); // function on stack
+
+                if (get_argc() not_eq argc) {
+                    // TODO: raise error: attempted recursive call with
+                    // different number of args than current function.
+                    // Actually...
+                    // The isn't really anything preventing a variadic function
+                    // from being executed recursively with a different number
+                    // of args, right? So maybe shouldn't be isn't an error...
+                    while (true)
+                        ;
+                }
+
+                if (argc == 0) {
+                    pc = start_offset;
+                    goto TOP;
+                } else {
+                    // TODO: perform TCO for N-arg function
+                    funcall(fn, argc);
+                }
+
+            } else {
+
+                pop_op();
+                funcall(fn, argc);
+            }
+
+            break;
+        }
+
+        case TailCall1::op(): {
+            read<TailCall1>(code, pc);
+            Protected fn(get_op(0));
+
+            if (fn == get_this()) {
+                auto arg = get_op(1);
+
+                if (get_argc() not_eq 1) {
+                    // TODO: raise error: attempted recursive call with
+                    // different number of args than current function.
+                    while (true)
+                        ;
+                }
+
+                pop_op(); // function on stack
+                pop_op(); // argument
+                pop_op(); // previous arg
+
+                push_op(arg);
+
+                pc = start_offset;
+                goto TOP;
+
+            } else {
+                pop_op();
+                funcall(fn, 1);
+            }
+            break;
+        }
+
+        case TailCall2::op(): {
+            read<TailCall2>(code, pc);
+            Protected fn(get_op(0));
+
+            if (fn == get_this()) {
+                auto arg0 = get_op(1);
+                auto arg1 = get_op(2);
+
+                if (get_argc() not_eq 2) {
+                    // TODO: raise error: attempted recursive call with
+                    // different number of args than current function.
+                    while (true)
+                        ;
+                }
+
+                pop_op(); // function on stack
+                pop_op(); // arg
+                pop_op(); // arg
+                pop_op(); // prev arg
+                pop_op(); // prev arg
+
+                push_op(arg1);
+                push_op(arg0);
+
+                pc = start_offset;
+                goto TOP;
+
+            } else {
+                pop_op();
+                funcall(fn, 2);
+            }
+            break;
+        }
+
+        case TailCall3::op(): {
+            read<TailCall3>(code, pc);
+            Protected fn(get_op(0));
+
+            if (fn == get_this()) {
+                auto arg0 = get_op(1);
+                auto arg1 = get_op(2);
+                auto arg2 = get_op(3);
+
+                if (get_argc() not_eq 3) {
+                    while (true)
+                        ;
+                }
+
+                pop_op(); // function on stack
+                pop_op(); // arg
+                pop_op(); // arg
+                pop_op(); // arg
+                pop_op(); // prev arg
+                pop_op(); // prev arg
+                pop_op(); // prev arg
+
+                push_op(arg2);
+                push_op(arg1);
+                push_op(arg0);
+
+                pc = start_offset;
+                goto TOP;
+
+            } else {
+                pop_op();
+                funcall(fn, 3);
+            }
             break;
         }
 
@@ -157,6 +308,24 @@ void vm_execute(Value* code_buffer, int start_offset)
             break;
         }
 
+        case Arg0::op(): {
+            read<Arg0>(code, pc);
+            push_op(get_arg(0));
+            break;
+        }
+
+        case Arg1::op(): {
+            read<Arg1>(code, pc);
+            push_op(get_arg(1));
+            break;
+        }
+
+        case Arg2::op(): {
+            read<Arg2>(code, pc);
+            push_op(get_arg(2));
+            break;
+        }
+
         case MakePair::op(): {
             read<MakePair>(code, pc);
             auto car = get_op(1);
@@ -175,7 +344,7 @@ void vm_execute(Value* code_buffer, int start_offset)
             if (arg->type_ == Value::Type::cons) {
                 push_op(arg->cons_.car());
             } else {
-                push_op(make_error(Error::Code::invalid_argument_type));
+                push_op(make_error(Error::Code::invalid_argument_type, L_NIL));
             }
             break;
         }
@@ -187,7 +356,7 @@ void vm_execute(Value* code_buffer, int start_offset)
             if (arg->type_ == Value::Type::cons) {
                 push_op(arg->cons_.cdr());
             } else {
-                push_op(make_error(Error::Code::invalid_argument_type));
+                push_op(make_error(Error::Code::invalid_argument_type, L_NIL));
             }
             break;
         }
@@ -197,16 +366,24 @@ void vm_execute(Value* code_buffer, int start_offset)
             pop_op();
             break;
 
+        case EarlyRet::op():
         case Ret::op():
             return;
 
         case PushLambda::op(): {
             auto inst = read<PushLambda>(code, pc);
-            auto fn = make_bytecode_function(code_buffer);
-            if (fn->type_ == lisp::Value::Type::function) {
-                fn->function_.bytecode_impl_.bc_offset_ = pc;
+            auto offset = make_integer(pc);
+            if (offset->type_ == lisp::Value::Type::integer) {
+                auto bytecode = make_cons(offset, code_buffer);
+                if (bytecode->type_ == lisp::Value::Type::cons) {
+                    auto fn = make_bytecode_function(bytecode);
+                    push_op(fn);
+                } else {
+                    push_op(bytecode);
+                }
+            } else {
+                push_op(offset);
             }
-            push_op(fn);
             pc = start_offset + inst->lambda_end_.get();
             break;
         }
@@ -221,6 +398,12 @@ void vm_execute(Value* code_buffer, int start_offset)
                 pop_op();
             }
             push_op(lat);
+            break;
+        }
+
+        case PushThis::op(): {
+            push_op(get_this());
+            read<PushThis>(code, pc);
             break;
         }
 

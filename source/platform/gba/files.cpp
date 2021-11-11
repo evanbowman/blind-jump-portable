@@ -17,6 +17,8 @@ extern const unsigned char file_chinese[];
 extern const unsigned char file_russian[];
 //;
 extern const unsigned char file_italian[];
+//;
+extern const unsigned char file_french[];
 //
 
 static const struct {
@@ -42,5 +44,7 @@ static const struct {
     {"strings", "russian.txt", file_russian},
 //;
     {"strings", "italian.txt", file_italian},
+//;
+    {"strings", "french.txt", file_french},
 //
 };

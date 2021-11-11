@@ -13,10 +13,13 @@
            (english 1) ;; (language-name preferred-font-size)
            (chinese 2)
            (russian 1)
-           (italian 1))
+           (italian 1)
+           (french 1))
          '(null
            (english 1)
-           (russian 1))))
+           (russian 1)
+           (italian 1)
+           (french 1))))
 
 
 
@@ -52,7 +55,7 @@
 (set 'add-hook
      (compile (lambda
                 ;; (add-hook hooks-sym hook)
-                (set (arg 1) (cons (arg 0) (eval (arg 1)))))))
+                (set $0 (cons $1 (eval $0))))))
 
 
 (add-hook
@@ -67,7 +70,7 @@
           (set 'temp
                (lambda (map
                         +
-                        (fill n (- ((arg 0) (get-pos gate)) 15))
+                        (fill n (- ($0 (get-pos gate)) 15))
                         (gen n (lambda (cr-choice 15))))))
 
           (map make-enemy (fill n swarm) (temp car) (temp cdr))
@@ -75,7 +78,50 @@
           (unbind 'swarm))))))
 
 
+(set 'append
+     (let ((impl (compile
+                  (lambda
+                    (if $0
+                        ((this) (cdr $0) (cons (car $0) $1))
+                      $1)))))
+       ;; (append <list 1> <list 2>)
+       (lambda (impl (reverse $0) $1))))
 
+
+(set 'bisect
+     (let ((impl (compile
+                  (lambda
+                    (if (not $1)
+                        (cons (reverse $2) $0)
+                      (if (not (cdr $1))
+                          (cons (reverse $2) $0)
+                        ((this)
+                         (cdr $0)
+                         (cdr (cdr $1))
+                         (cons (car $0) $2))))))))
+       (lambda (impl $0 $0 '()))))
+
+
+(set 'merge
+     (compile
+      (lambda
+        (if (not $0)
+            $1
+          (if (not $1)
+              $0
+            (if (< (car $0) (car $1))
+                (cons (car $0) ((this) (cdr $0) $1))
+              (cons (car $1) ((this) $0 (cdr $1)))))))))
+
+
+
+(set 'sort
+     (lambda
+       (if (not (cdr $0))
+           $0
+         (let ((temp (bisect $0)))
+           (merge (sort (car temp))
+                  (sort (cdr temp)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

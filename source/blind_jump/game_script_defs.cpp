@@ -189,11 +189,13 @@ void Game::init_script(Platform& pfrm)
                 return L_NIL;
             }
 
+            auto pfrm = interp_get_pfrm();
+
             for (int i = 0; i < argc; ++i) {
 
                 if (lisp::get_op(i)->type_ not_eq lisp::Value::Type::integer) {
                     const auto err = lisp::Error::Code::invalid_argument_type;
-                    return lisp::make_error(err);
+                    return lisp::make_error(err, lisp::make_string(*pfrm, "arg not integer"));
                 }
 
                 auto entity =
@@ -332,8 +334,14 @@ void Game::init_script(Platform& pfrm)
 
     lisp::set_var(
         "enable-feature", lisp::make_function([](int argc) {
+            auto pfrm = interp_get_pfrm();
+            if (not pfrm) {
+                return L_NIL;
+            }
+
             if (argc < 1 or argc > 2) {
-                return lisp::make_error(lisp::Error::Code::invalid_argc);
+                return lisp::make_error(lisp::Error::Code::invalid_argc,
+                                        lisp::make_string(*pfrm, "arg not integer"));
             }
 
             lisp::Value* sym;
@@ -346,11 +354,6 @@ void Game::init_script(Platform& pfrm)
             } else {
                 L_EXPECT_OP(0, integer);
                 sym = lisp::get_op(0);
-            }
-
-            auto pfrm = interp_get_pfrm();
-            if (not pfrm) {
-                return L_NIL;
             }
 
             ((Platform*)pfrm)->enable_feature(sym->symbol_.name_, param);

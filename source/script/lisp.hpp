@@ -1,9 +1,28 @@
 #pragma once
 
+
+#ifdef __GBA__
+// If defined, the system will use fixed pools, and will never call malloc.
+#define UNHOSTED
+#endif
+#define UNHOSTED
+
+
+#ifdef UNHOSTED
+#define USE_COMPRESSED_PTRS
+#endif
+
+
+#ifndef UNHOSTED
+#define POOL_USE_HEAP
+#endif
+
+
 #include "function.hpp"
 #include "number/numeric.hpp"
 #include "platform/scratch_buffer.hpp"
 #include "string.hpp"
+#include "unicode.hpp"
 
 
 class Platform;
@@ -33,8 +52,9 @@ struct Symbol {
     enum class ModeBits {
         requires_intern,
         // If you create a symbol, while promising that the string pointer is
-        // stable, the string will _not_ be interned. This uses less memory, but
-        // should be used very carefully, and ONLY WITH STRING LITERALS.
+        // stable, the interpreter assumes that the string was previously
+        // inserted into the string intern table. It will not perform the
+        // slow lookup into the string intern memory region.
         stable_pointer,
     };
 
@@ -53,20 +73,21 @@ struct Integer {
 };
 
 
-// NOTE: using compressed pointers significantly reduces the amount of memory
-// used for cons cells. This lisp interpreter runs with intentionally limited
-// memory, so we don't need a huge address space. We use four bits to represent
-// the pool that a value was allocated from, and twelve bits to represent the
-// byte offset into that memory pool. This gives us fifteen possible memory pools,
-// and a max offset of 4095 bytes.
+struct Character {
+    utf8::Codepoint cp;
+
+    static void finalizer(Value*)
+    {
+    }
+};
+
+
 struct CompressedPtr {
-    static constexpr const int source_pool_bits = 4;
-    static constexpr const int offset_bits = 12;
-
-    static_assert(source_pool_bits + offset_bits == 16);
-
-    u16 source_pool_ : source_pool_bits;
-    u16 offset_ : offset_bits;
+#ifdef USE_COMPRESSED_PTRS
+    u16 offset_;
+#else
+    void* ptr_;
+#endif // USE_COMPRESSED_PTRS
 };
 
 
@@ -110,13 +131,21 @@ struct Function {
     using CPP_Impl = Value* (*)(int);
 
     struct Bytecode {
-        u16 bc_offset_;
-        CompressedPtr data_buffer_;
+        CompressedPtr bytecode_; // (integeroffset . databuffer)
+        CompressedPtr lexical_bindings_;
+
+        Value* bytecode_offset() const;
+        Value* databuffer() const;
+    };
+
+    struct LispFunction {
+        CompressedPtr code_;
+        CompressedPtr lexical_bindings_;
     };
 
     union {
         CPP_Impl cpp_impl_;
-        CompressedPtr lisp_impl_;
+        LispFunction lisp_impl_;
         Bytecode bytecode_impl_;
     };
 
@@ -144,8 +173,20 @@ struct DataBuffer {
 };
 
 
+struct String {
+    CompressedPtr data_buffer_;
+    u16 offset_;
+
+    const char* value();
+
+    static void finalizer(Value*)
+    {
+    }
+};
+
+
 struct Error {
-    enum class Code {
+    enum class Code : u8 {
         value_not_callable,
         invalid_argc,
         symbol_table_exhausted,
@@ -155,6 +196,8 @@ struct Error {
         set_in_expression_context,
         mismatched_parentheses,
     } code_;
+
+    CompressedPtr context_;
 
     static const char* get_string(Code c)
     {
@@ -194,8 +237,35 @@ struct UserData {
 };
 
 
+struct __Reserved {
+
+    // Reserved for future use
+
+    static void finalizer(Value*)
+    {
+    }
+};
+
+
+struct HeapNode {
+    Value* next_;
+
+    static void finalizer(Value*)
+    {
+        // Should be unreachable.
+        while (true)
+            ;
+    }
+};
+
+
 struct Value {
     enum Type {
+        // When a Value is deallocated, it is converted into a HeapNode, and
+        // inserted into a freelist. Therefore, we need no extra space to
+        // maintain the freelist.
+        heap_node,
+
         nil,
         integer,
         cons,
@@ -204,6 +274,9 @@ struct Value {
         symbol,
         user_data,
         data_buffer,
+        string,
+        character,
+        __reserved,
         count,
     };
     u8 type_ : 4;
@@ -213,6 +286,7 @@ struct Value {
     u8 mode_bits_ : 2;
 
     union {
+        HeapNode heap_node_;
         Nil nil_;
         Integer integer_;
         Cons cons_;
@@ -221,6 +295,9 @@ struct Value {
         Symbol symbol_;
         UserData user_data_;
         DataBuffer data_buffer_;
+        String string_;
+        Character character_;
+        __Reserved __reserved_;
     };
 
     template <typename T> T& expect()
@@ -288,11 +365,13 @@ Value* make_function(Function::CPP_Impl impl);
 Value* make_cons(Value* car, Value* cdr);
 Value* make_integer(s32 value);
 Value* make_list(u32 length);
-Value* make_error(Error::Code error_code);
+Value* make_error(Error::Code error_code, Value* context);
 Value* make_userdata(void* obj);
 Value* make_symbol(const char* name,
                    Symbol::ModeBits mode = Symbol::ModeBits::requires_intern);
 Value* make_databuffer(Platform& pfrm);
+Value* make_string(Platform& pfrm, const char* str);
+Value* make_character(Platform& pfrm, utf8::Codepoint cp);
 
 
 void get_interns(::Function<24, void(const char*)> callback);
@@ -316,23 +395,8 @@ void pop_op();
 Value* get_arg(u16 arg);
 
 
-template <typename F> void foreach (Value* list, F && fn)
-{
-    push_op(list);
-
-    while (true) {
-
-        if (list->type_ not_eq Value::Type::cons) {
-            break;
-        } else {
-            fn(list->cons_.car());
-        }
-
-        list = list->cons_.cdr();
-    }
-
-    pop_op();
-}
+Value* get_this();
+u8 get_argc();
 
 
 // Arguments should be pushed onto the operand stack prior to the function
@@ -346,8 +410,31 @@ template <typename F> void foreach (Value* list, F && fn)
 void funcall(Value* fn, u8 argc);
 
 
-Value* set_var(const char* name, Value* value);
-Value* get_var(const char* name);
+Value* set_var(Value* sym, Value* value);
+Value* get_var(Value* sym);
+
+
+// Provided for convenience.
+inline Value* set_var(const char* name, Value* value)
+{
+    auto var_sym = make_symbol(name);
+    if (var_sym->type_ not_eq Value::Type::symbol) {
+        return var_sym;
+    }
+
+    return set_var(var_sym, value);
+}
+
+
+inline Value* get_var(const char* name)
+{
+    auto var_sym = make_symbol(name);
+    if (var_sym->type_ not_eq Value::Type::symbol) {
+        return var_sym;
+    }
+
+    return get_var(var_sym);
+}
 
 
 template <typename T> T& loadv(const char* name)
@@ -366,31 +453,33 @@ void eval(Value* code);
 void compile(Platform& pfrm, Value* code);
 
 
-void dostring(const char* code);
+// Returns the result of the last expression in the string.
+Value* dostring(const char* code, ::Function<16, void(Value&)> on_error);
 
 
 bool is_executing();
-
-
-int paren_balance(const char* ptr);
 
 
 const char* intern(const char* string);
 
 
 #define L_EXPECT_OP(OFFSET, TYPE)                                              \
-    if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) {        \
+    if (lisp::Value::Type::TYPE not_eq lisp::Value::Type::error and            \
+        lisp::get_op((OFFSET))->type_ == lisp::Value::Type::error) {           \
+        return lisp::get_op((OFFSET));                                         \
+    } else if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) { \
         if (lisp::get_op((OFFSET)) == L_NIL) {                                 \
             return lisp::get_op((OFFSET));                                     \
         } else {                                                               \
-            return lisp::make_error(lisp::Error::Code::invalid_argument_type); \
+            return lisp::make_error(lisp::Error::Code::invalid_argument_type,  \
+                                    L_NIL);                                    \
         }                                                                      \
     }
 
 
 #define L_EXPECT_ARGC(ARGC, EXPECTED)                                          \
     if (ARGC not_eq EXPECTED)                                                  \
-        return lisp::make_error(lisp::Error::Code::invalid_argc);
+        return lisp::make_error(lisp::Error::Code::invalid_argc, L_NIL);
 
 
 class Printer {
@@ -402,14 +491,41 @@ public:
 };
 
 
+class DefaultPrinter : public lisp::Printer {
+public:
+    void put_str(const char* str) override
+    {
+        fmt_ += str;
+    }
+
+    StringBuffer<1024> fmt_;
+};
+
+
 void format(Value* value, Printer& p);
 
 
+// Protected objects will not be collected until the Protected wrapper goes out
+// of scope.
 class Protected {
 public:
     Protected(Value* val);
 
+    Protected& operator=(Value* val)
+    {
+        val_ = val;
+        return *this;
+    }
+
+    Protected(const Protected&) = delete;
+    Protected(Protected&&) = delete;
+
     ~Protected();
+
+    void set(Value* val)
+    {
+        val_ = val;
+    }
 
     Protected* next() const
     {
@@ -426,11 +542,33 @@ public:
         return val_;
     }
 
+    Value* operator->()
+    {
+        return val_;
+    }
+
 protected:
     Value* val_;
     Protected* prev_;
     Protected* next_;
 };
+
+
+template <typename F> void foreach (Value* list, F && fn)
+{
+    Protected p(list);
+
+    while (true) {
+
+        if (list->type_ not_eq Value::Type::cons) {
+            break;
+        } else {
+            fn(list->cons_.car());
+        }
+
+        list = list->cons_.cdr();
+    }
+}
 
 
 } // namespace lisp

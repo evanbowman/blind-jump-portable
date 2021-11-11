@@ -1,0 +1,161 @@
+
+
+ présente
+
+BLIND JUMP
+toi
+ennemi
+sortie
+objet
+magasin
+étape 
+partie I :
+l'arrivée 
+partie II :
+la descente 
+partie III :
+dans les égouts
+partie IV :
+au clair de lune
+Vide
+Vieux poster (1)
+Notes ouvrier (1/2)
+Notes ouvrier (2/2)
+Notes ingénieur (1/2)
+Notes ingénieur (2/2)
+Blaster
+Rafale (60 coups)
+Léthargie (18 sec)
+Système de Carte
+Balles explosives (2)
+Brouilleur de signal
+Sachet de graines
+Dépliant trajet
+Orange (+1 pv)
+Graines d'orange
+
+Portail (pt. II)
+Portail (pt. III)
+Portail (pt. IV)
+Portail (origine)
+Oh, cette vieille chose ? Je n'en ai aucune utilité.
+Un chargeur en rafale pour blaster, plutôt destructif à courte portée, hein.
+Je ne suis pas sûr de ce que fait ce truc, on dirait une vieille montre de poche. Beau travail d'orfèvre, ça vaut beaucoup d'argent...
+On dirait une pièce d'équipement de surveillance. Ces systèmes de carte dévoileront le terrain pendant que tu marches, et te montreront le chemin vers la porte la plus proche.
+Aïe ! Fais attention ! Ces douilles sont très instables !!!
+Une radio sophistiquée, essaye de l'utiliser à proximité des machines.
+Une orange ! La légende raconte que les ouvriers qui bâtirent ces points d'étape étaient envoyés ici pendant des mois... Un bon remède contre le scorbute !
+Un générateur de porte d'hyperespace portatif... Considère-le comme... Une sorte de garantie si jamais tu es KO.
+(USAGE UNIQUE)
+verrouillé, reste 
+bloqué, Coéquipier est sur ton chemin !
+ ennemi
+ ennemis
+Rien
+reçu "
+"
+Inventaire plein
+objets
+étape terminée
+score 
+record 
+records
+temps
+objets obtenus % 
+
+objets obtenus %
+étapes 
+.
+Continuer
+Connexion Coéquipier
+Options
+Console et Script
+Sauvegarder et Quitter
+A plus tard...
+Choisis une cible :
+Pas d'itinéraire ? Pas de problèmes ! Le réseau des portes d'hyperespace calcule l'itinéraire vers ta destination en te faisant passer par différentes étapes. Des dizaines de milliers de points d'étape ont été construits en orbite autour de la Terre et de sa lune. Les points d'étape étant constamment en mouvement sur une orbite, le réseau des portes recalcule en continu le meilleur itinéraire vers ta destination. Tu ne visiteras jamais la même étape deux fois ! Vue la nature imprévisible des portes d'hyperespace, franchir une de ces portes s'apparente à un saut à l'aveugle.
+Montrer Stats : 
+Langue : 
+Contraste : 
+Mode Nuit : 
+Permuter A/B : 
+défaut
+Difficulté : 
+facile
+normale
+difficile
+survie
+le niveau doit être terminé !
+Touche Visée : 
+séparée
+combinée
+Log Severity :
+Afficher Temps : 
+Caméra : 
+fixe
+suivi (faible)
+suivi (fort)
+Vibrations Actives : 
+oui
+non
+menu désactivé
+ m
+
+Coéquipier connecté !
+Echec connexion Coéquipier !
+Coéquipier est mort !
+Vie de Coéquipier a changé à
+Attente de Coéquipiers...
+Synchronisation des Jeux..
+ fps
+ tx
+ rx
+ tl
+ rl
+ sbr
+ lnsat
+nécessite : Système de Carte
+Le Vagabond a été vaincu
+Le Portier a été détruit
+Les Jumeaux ont été vaincus
+Conduit Infesté Purifié !
+Réseau d'Hyperespace Détruit
+Coéquipier en attente à la porte...
+debug
+info
+avertissement
+erreur
+Surtension détectée !
+Acheter des objets
+Vendre des objets
+Achat, prix : 
+Vente, prix : 
+Description
+Le magasin du Recycleur
+achète
+vends
+Mise à jour requise !
+Essaim en approche !
+Coéquipier a besoin d'une mise à jour !
+synthèse
+Coéquipier a utilisé léthargie !
+français
+
+
+chat : 
+Salut !
+T'as des oranges ?
+C'est parti !
+Il y a de la vie par ici !
+Revivre coéquipier ?
+Bienvenue dans mon magasin !
+« Ce mémoriel est dédié à ceux qui ont péri pendant la calamité. Les points d'étape de cette zone avaient été envahis par les machines, avant d'être condamnés. Date--3.5.2081. »
+Wow, c'était il y a 100 ans...
+Ton vaisseau...
+[11.2.2081]  Nous faisons face à d'étranges surtensions dernièrement sur la station, mais le directeur m'a garanti que tout irait bien à partir de maintenant. Les robots ont un comportement bizarre depuis la dernière fois que les communications ont été interrompues. J'ai peur que la prochaine fois ils deviennent fous...
+[7.3.2081]  J'ai eu de la chance d'être sur un des points d'étape près de la Terre quand les robots se sont retournés contre nous... Visiblement nous n'avons pas été nombreux à avoir cette chance. Pour échapper aux machines, je me suis enfui à travers les portes, plus j'avance et plus le carnage a été dévastateur. Malheureusement certaines stations de ce côté étaient bien peuplées.
+Les surtensions venant des portes d'hyperespace semblent avoir un effet néfaste sur les machines, notamment sur les robots des stations. Nous avons observé de violentes réactions des machines récemment -- tout commence à partir en vrille. Lors de la dernière surtension, j'ai cru voir la silhouette d'un être imposant portant une cape. Nous avons longtemps suspecté la présence d'autre... Chose... Là-bas dans l'hyperespace, quelque chose que nous, peut-être, n'aurions jamais dû déranger en ouvrant ces portes...
+Les surtensions des portes sont plus ou moins quotidiennes maintenant, et nous avons totalement perdu le contrôle. J'ai envoyé un message sur Terre, quelqu'un doit être envoyé ici pour éliminer la source de ces fluctuations... Etant donné qu'ils doivent déjà s'occuper de leur propre révolte des machines, je ne suis pas sûr qu'ils envoient un soldat de sitôt. En attendant, j'ai mis au point un brouilleur de signal qui semble immuniser les robots des surtensions...
+nouvelle partie
+continuer
+FIN

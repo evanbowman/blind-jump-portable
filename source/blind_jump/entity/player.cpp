@@ -733,7 +733,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
             r_speed_ *= 3;
             u_speed_ *= 3;
             d_speed_ *= 3;
-            pfrm.sleep(9);
+            pfrm.sleep(4);
             game.camera().shake(8);
             pfrm.speaker().play_sound("dodge", 1);
             //sprite_.set_mix({current_zone(game).energy_glow_color_, 255});
