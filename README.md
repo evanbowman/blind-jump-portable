@@ -201,9 +201,11 @@ Most of the code in this project is available under the MIT licence. The Gameboy
 
 All of images and character designs belong to Evan Bowman, and should not be used for commercial purposes without permission. The music belongs to various composers. Most of the music tracks are Creative Commons and merely require attribution (see the game's ending credits), but a few of the music tracks may not allow distribution in a commercial context. These tracks would need to be replaced, if copies of the game were to be sold.
 
-## LISP (Blind Jump Symbolic Expression Evaluator)
+## LISP
 
-BlindJump uses a custom LISP dialect for lightweight scripting. In the settings menu, the game allows you to launch a repl while the game is running, to manipulate game state (for gameboy builds, the game will render an onscreen keyboard and console, for desktop builds, the game will pause, and read from the command line). See below for a brief overview of the language. If you've used Scheme, many things will feel familiar, although you'll also find some notable differences.
+(Blind Jump Symbolic Expression Evaluator)
+
+BlindJump uses a custom LISP dialect for lightweight scripting. In the settings menu, the game allows you to launch a repl while the game is running, to manipulate game state (for gameboy builds, the game will render an onscreen keyboard and console, for desktop builds, the game will pause, and read from the command line). See below for a brief overview of the language. If you've used Scheme, many things will feel familiar.
 
 * LISP-1
 * Supports Tail Call Optimization (for compiled bytecode)
