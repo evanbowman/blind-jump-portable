@@ -14,31 +14,30 @@
 
 # Blind Jump (portable)
 
-[Français](README_french.txt)
 
-You should find this readme mosty up-to-date, but as the game is under active development, everything is subject to change, and sometimes edits to the readme lag significantly behind changes to the game itself.
+Ce fichier devrait être à jour, mais comme le jeu est en cours de développement, tout est susceptible d'être modifié. La mise à jour de ce fichier peut parfois être très en retard par rapport aux changements apportés au jeu lui-même.
 
-<b>Game Preview GIF</b>
+<b>GIF d'aperçu du jeu</b>
 
 
 <img src="imgs_for_readme/header.gif"/>
 
 ## Contents
 <!--ts-->
-   * [Contents](#contents)
+   * [Contenu](#contents)
    * [Introduction](#introduction)
    * [Gameplay](#gameplay)
-      * [Controls](#controls)
-      * [Multiplayer](#multiplayer)
+      * [Commandes](#controls)
+      * [Multijoueur](#multiplayer)
       * [Secrets](#secrets)
-   * [Implementation](#implementation)
-   * [Building](#building)
-   * [Contributing](#contributing)
-      * [Music](#music)
-   * [Localization](#localization)
-   * [Security](#security)
-   * [Downloads](#downloads)
-   * [Feedback](#feedback)
+   * [Implémentation](#implementation)
+   * [Synthèse](#building)
+   * [Contribuer](#contributing)
+      * [Musique](#music)
+   * [Traduction](#localization)
+   * [Sécurité](#security)
+   * [Téléchargements](#downloads)
+   * [Commentaires](#feedback)
    * [Licence](#licence)
    * [LISP](#lisp)
       * [Library](#library)
@@ -52,7 +51,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
   <img src="imgs_for_readme/s8.png"/>
 </p>
 
-Blind Jump is a simple action/adventure game, featuring procedurally generated level maps, collectible items, fluid animation, and meticulously designed color palettes. Evan Bowman started the project in late 2015 while in college, and resumed work on the code after a several year long hiatus, during which he was teaching himself oil painting. Originally developed for macOS, the game was rebuilt from scratch during the 2020 pandemic, with a new custom engine. Blind Jump now compiles for various other platforms, including Linux, Windows, Nintendo Gameboy Advance, and Sony PlayStation Portable.
+Blind Jump est un jeu d'action/aventure simple, comportant des cartes générées de manière procédurale, des objets à collectionner, une animation fluide et des palettes de couleurs choisies méticuleusement. Vous êtes appelé à reprendre la main sur des stations en orbite autour de la Terre qui ont été décimées sans prévenir... Evan Bowman a commencé le projet à la fin de l'année 2015 alors qu'il était à l'université, et a repris le travail sur le code après une pause de plusieurs années (au cours de laquelle il apprenait la peinture à l'huile par lui-même). Développé à l'origine pour macOS, le jeu a été reconstruit de zéro pendant la pandémie de 2020, avec un nouveau moteur personnalisé. Blind Jump peut désormais être compilé pour diverses autres plateformes, notamment Linux, Windows, Nintendo Gameboy Advance et Sony PlayStation Portable.
 
 <p align="center">
   <img src="imgs_for_readme/s1.png"/>
@@ -74,69 +73,69 @@ Blind Jump is a simple action/adventure game, featuring procedurally generated l
   <img src="imgs_for_readme/s4.png"/>
 </p>
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
 ## Gameplay
 
-### Controls
+### Commandes
 
-Use the directional buttons or the analog stick to move, the B/X button to shoot, and the A/O button to interact with things and to select items and options in the game's menus. If you hold the B button while walking, you will shoot repeatedly, and also the player will strafe. Tap A while walking to dodge.
+Utilisez la croix directionnelle ou le stick analogique pour vous déplacer, le bouton B/X pour tirer et le bouton A/O pour interagir avec les objets et pour sélectionner des éléments et des options dans les menus du jeu. Si vous maintenez le bouton B enfoncé tout en marchant, vous tirerez de manière répétée et le joueur pourra également faire des pas de côté. Appuyez sur A en marchant pour esquiver.
 
-Hold the right shoulder button, or the left shoulder button, to open up a quick item selector menu, or a minimap, respectively.
+On peut également changer les commandes dans le menu Options pour permettre de séparer le pas de côté et le tir. En choisissant « Touche Visée : séparée » : A=esquive, B=tir, et Bouton L=pas de côté. 
 
-Some people prefer to have the strafe and shoot mapped to different keys. For an alternate button mapping, where A=strafe, B=shoot, and Left_Bumper=dodge, switch the strafe key setting to separate in the settings menu.
+Maintenez le bouton R enfoncé pour ouvrir un menu de sélection rapide d’objets, ou le bouton L enfoncé pour ouvrir une carte mini map. Dans le cas où le bouton L est assigné au pas de côté, la carte est accessible par le menu Select.
 
 <img src="imgs_for_readme/item_quick_select.gif"/>
 <img src="imgs_for_readme/quick_map.gif"/>
 
-To access all for your items, press select. Press start for more options.
+Pour accéder à votre inventaire, appuyez sur Select. Appuyez sur Start pour accéder aux options.
 
-### Multiplayer
+### Multijoueur
 
 <img src="imgs_for_readme/multiplayer_connect.gif"/>
 
-The GBA edition of the game supports multiplayer over the gameboy advance's serial port. While certainly incomplete, you should find the multiplayer mode to be more-or-less playable. The PSP edition does not support multiplayer at this time.
-To enable, press the start button on both devices, and then select the "Connect Peer" option within twenty seconds. You need to be on the very first level to connect a peer, otherwise the option will be grayed-out. If running on an actual GAMBOY ADVANCE, you may need to select "Connect Peer" on the device plugged into the gray end of the link cable first, followed by the device connected to the smaller purple end of the link cable. This is a known issue, and I am still working on resolving this, at time of writing.
+L'édition GBA du jeu prend en charge le multijoueur via le port série de la Gameboy Advance. Le mode multijoueur devrait être plus ou moins jouable bien qu’il soit encore expérimental. L'édition PSP ne supporte pas le multijoueur pour le moment.
+Pour l'activer, appuyez sur Start sur les deux appareils, puis sélectionnez l'option "Connexion Coéquipier" dans les vingt secondes. Vous devez être au tout premier niveau pour connecter un coéquipier, sinon l'option sera grisée et inaccessible. Attention, si vous utilisez un câble officier Gameboy Advance, il se peut que vous deviez d’abord sélectionner l’option « Connexion Coéquipier » sur la console connectée à l’extrémité grise, puis ensuite sur la console connectée à l’extrémité violette. Je suis toujours en train de travailler sur ce problème. 
 
 ### Secrets
 
-#### Boss Rush Mode
+#### Mode Boss Rush
 
-With the title screen open, press select fifteen times, and the game will enter a boss-rush mode. Note that entering boss-rush mode is equivalent to starting a new game, and you will lose any items that you may have collected.
+Au niveau de l’écran titre, appuyez quinze fois sur la touche Select pour entrer dans le mode Boss Rush. Notez que lancer le mode Boss Rush équivaut à commencer une nouvelle partie, et vous perdrez tous les objets que vous avez pu ramasser.
 
-Technically, you may also enter boss-rush mode at any time, by opening the script console (see below), and executing the command: `(set 'debug-mode 7)`. The next transporter will then take the player to a boss.
+Techniquement, vous pouvez aussi passer en mode boss-rush à tout moment, en ouvrant la console de script (voir ci-dessous), et en exécutant la commande : (set 'debug-mode 7). La prochaine porte emmènera alors le joueur vers un boss.
 
-#### Script Console
+#### Console de Script
 
-Open the pause screen, and press the left bumper repeatedly, and a menu option for a script console will appear in the pause menu. The console gives you access to the game's lisp interpreter, allowing you to manipulate certain variables, add items, jump to levels, etc. See [LISP](#lisp) for more info about the lisp dialect. Press A to enter text, and B for backspace (B will also exit the console if the text entry is empty). Press start to enter a command, and press L to open a list of variable autocomplete options. If the completion list is open, you may press A to select a completion, or B to cancel out of the autocomplete. The intrepreter will highlight excessive closing parentheses in red, making it easier to keep track of parens for really long lines where you cannot see the beginning of the command.
+Mettez le jeu en pause (Start), et appuyez sur le bouton L à plusieurs reprises : une nouvelle entrée apparaît dans le menu permettant de lancer la console de script. La console vous donne accès à l'interpréteur LISP du jeu, ce qui vous permet de manipuler certaines variables, d'ajouter des objets, de sauter des niveaux, etc. Voir [LISP](#lisp) pour plus d'informations sur le dialecte lisp. Appuyez sur A pour saisir du texte, et sur B pour le retour arrière (B quittera également la console si l'entrée de texte est vide). Appuyez sur Start pour entrer une commande, et sur L pour ouvrir une liste d'options de complétion automatique des variables. Si la liste de complétion est ouverte, vous pouvez appuyer sur A pour sélectionner une complétion, ou sur B pour annuler la complétion automatique. L'interpréteur met en évidence les parenthèses fermantes excessives en rouge, ce qui facilite le suivi des parenthèses pour les lignes très longues où vous ne pouvez pas voir le début de la commande.
 
 <img src="imgs_for_readme/console.gif"/>
 
-#### UART Interface
+#### Interface UART
 
-In addition to providing an on-screen script console, the Blind Jump GBA edition also supports a scripting interface via UART. To connect your personal computer to the Gameboy Advance's serial port, you will need to splice an RS232 cable into a Gameboy Advance link cable, such that:
+En plus de fournir une console de script à l'écran, l'édition GBA de Blind Jump supporte également une interface de script via UART. Pour connecter votre ordinateur personnel au port série de la Gameboy Advance, vous devrez raccorder un câble RS232 à un cable link de la Gameboy Advance, de la manière suivante :
 ```
 SO  --------> 5 RxD
 SI  <-------- 4 TxD
 GND <-------> 1 GND
 ```
 
-Connect the two devices, set your PC's baud rate the standard 9600 Hz, and turn on the gameboy advance. If you've never used a UART console, try picocom, which is known to work.
+Connectez les deux appareils, réglez le débit en bauds de votre PC sur le standard 9600 Hz, et allumez la Gameboy Advance. Si vous n'avez jamais utilisé une console UART, essayez picocom, qui fonctionne bien.
 
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
-## Implementation
+## Implémentation
 
-This repository contains a substantial re-write of the original BlindJump code. In the current iteration, the core parts of the code have no external dependencies, and target a [theoretically] platform-neutral hardware abstraction layer. This embedded version of BlindJump runs on Gameboy Advance, PSP, and has partial support for Desktop OSs via SFML. When porting the game to a new platform, one only needs to re-implement the Platform class in source/platform/.
+Ce dépôt contient une réécriture substantielle du code original de BlindJump. Dans l'itération actuelle, les parties centrales du code n'ont pas de dépendances externes, et visent une couche d'abstraction matérielle [théoriquement] indépendante de la plate-forme. Cette version embarquée de BlindJump fonctionne sur Gameboy Advance, PSP, et a un support partiel pour les OS de bureau via SFML. Lors du portage du jeu sur une nouvelle plateforme, il suffit de réimplémenter la classe Platform dans source/platform/. 
 
-The game is written almost entirely in C++, along with a small amount of C, a custom dialect of LISP, as well as a teeny bit of ARM assembly.
+Le jeu est écrit presque entièrement en C++, avec une petite quantité de C, un dialecte personnalisé de LISP, ainsi qu'un tout petit peu d'assembleur ARM.
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
-## Building
+## Synthèse
 
-The project should be pretty easy to compile, but if you have trouble, please try using the attached docker container before emailing me with operating system questions.
+Le projet devrait être assez facile à compiler, mais si vous avez des difficultés, essayez d'utiliser le conteneur docker ci-joint avant de m'envoyer un mail avec des questions sur le système d'exploitation.
 ```
 docker pull ubuntu:18.04
 sudo docker build -t blind_jump_build .
@@ -144,62 +143,62 @@ sudo docker run -it blind_jump_build
 make
 ```
 
-NOTE: you can also get a containerized build environment from the link below, although you'll have to remember to run `git pull` when entering the container, because I built the container with a frozen version of the repository. If this is inconvenient for you, feel free to build the container yourself using the steps above.
+NOTE : vous pouvez également obtenir un environnement de construction conteneurisé à partir du lien ci-dessous, bien que vous deviez vous rappeler d'exécuter `git pull` lorsque vous entrez dans le conteneur, puisque j'ai construit le conteneur avec une version gelée du référentiel. Si cela n'est pas pratique pour vous, n'hésitez pas à construire le conteneur vous-même en suivant les étapes ci-dessus.
 
 https://hub.docker.com/r/evanbowman/blind_jump_build
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
-## Contributing
+## Contribuer
 
-The best way to help this project along, would be to download and play the game. All suggestions for improvements are welcome.
+La meilleure façon d'aider ce projet est de télécharger le jeu et d'y jouer. Toutes les suggestions d'amélioration sont les bienvenues.
 
-### Music
+### Musique
 
-Because adding new music to the GBA version of the game is tedious/complicated, we should take a moment to describe the methodology for formatting and compiling sound files. The Gameboy Advance hardware more-or-less requires digital audio data to be formatted as 8-bit signed wav files. To add new sound files to the project, the data will need to be converted to headerless 8-bit signed PCM, at 16kHz. Then, the data will need to be converted to an ASM file, and compiled into the project. Evan Bowman hacked together a tool for this, available here: https://github.com/evanbowman/raw_to_asm. The raw_to_asm tool should be run from the BlindJump project root. The music/sound file should be exported to the required raw format, with a .raw extension, and placed in the sounds/ directory. Then, you should run raw_to_asm, with the name of the sound file, minus the .raw extension (`raw_to_asm music`, where music.raw exists in sounds). The program will write header and source files containing an assembler representation of the music data to the source/data/ directory. You will need to add the new source file to CMakeLists.txt, and add some new declarations for the sound or music data to gba_platform.cpp. Also, remember that GBA cartridges should be no larger than 32mb
+L'ajout de nouvelles musiques à la version GBA du jeu étant fastidieux/compliqué, il faut bien comprendre la méthodologie de formatage et de compilation des fichiers audio. Le matériel de la Gameboy Advance exige plus ou moins que les données audio numériques soient formatées sous forme de fichiers wav 8 bits signés. Pour ajouter de nouveaux fichiers sonores au projet, les données devront être converties en PCM 8 bits signé sans en-tête, à 16 kHz. Ensuite, les données devront être converties en un fichier ASM, et compilées dans le projet. Evan Bowman a créé un outil pour cela, disponible ici : https://github.com/evanbowman/raw_to_asm. L'outil raw_to_asm doit être lancé depuis la racine du projet BlindJump. Le fichier musical/son doit être exporté au format brut requis, avec une extension .raw, et placé dans le répertoire sounds/. Ensuite, vous devez exécuter raw_to_asm, avec le nom du fichier son, moins l'extension .raw (`raw_to_asm music`, où music.raw existe dans sounds). Le programme écrira les fichiers d'en-tête et source contenant une représentation en assembleur des données musicales dans le répertoire source/data/. Vous devrez ajouter le nouveau fichier source à CMakeLists.txt, et ajouter de nouvelles déclarations pour les données sonores ou musicales à gba_platform.cpp. Rappelez-vous également que les cartouches GBA ne doivent pas dépasser 32 Mo.
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
-## Localization
+## Traduction
 
-The BlindJump text engine supports localized character sets via utf-8 encoding; however, the game does not include every possible utf-8 codepoint in its character map (see the charset image in images/). BlindJump currently supports alpha-numeric glyphs for English, a few hundred glyphs for Chinese words, some extended glyphs for Italian and French, Cyrillic characters for Russian, and a minimal Japanese Katakana charset (including accent marks). To add a new language to the game, you would need make a couple of changes:
-1) Create a new file, <language_name>.txt, in the strings/ directory. For the sake of simplicity, you may want to just make a copy of one of the existing files in the strings/ folder.
-2) Define a translation, by translating each string in the newly created file to the desired language. Make sure you test the translation thoroughly by actually playing the game, to verify that you are not accidentally using strings that are too long, which may cause graphical glitches. Remember that the Gameboy Advance can display 30 characters horizontally, so for any strings that the game's UI does not reflow onto the next line, your translated text may be either truncated, or in some cases, the game will write an error to the logs indicating that the program was unable to display the excessively long text, and halt execution (freeze).
-3) Next, find the definition of the `languages` list variable in scripts/init.lisp, and add a symbol corresponding to the name of the newly added language file (minus the .txt extension, see init.lisp for examples).
-4) Lastly, you will need to explicitly link your strings file to the build system in CMakeLists.txt. Because the Gameboy Advance version of the game does not run in hosted environments, there is no filesystem, so the build system needs to know about your file, in order to copy its contents into the ROM.
+Le moteur de texte de BlindJump supporte tous types de caractères via l'encodage utf-8 ; cependant, le jeu n'inclut pas tous les codes utf-8 possibles dans sa carte de caractères (voir l'image charset dans images/). BlindJump supporte actuellement les glyphes alpha-numériques pour l'anglais, quelques centaines de glyphes pour les mots chinois, quelques glyphes étendus pour l'italien et le français, les caractères cyrilliques pour le russe, et un jeu de caractères Katakana japonais minimal (y compris les marques d'accent). Pour ajouter une nouvelle langue au jeu, vous devez effectuer quelques modifications :
+1) Créez un nouveau fichier, <nom_de_la_langue>.txt, dans le répertoire strings/. Par souci de simplicité, vous pouvez vous contenter de faire une copie de l'un des fichiers existants dans le dossier strings/.
+2) Ecrivez votre traduction, en traduisant chaque ligne du fichier nouvellement créé dans la langue souhaitée. Veillez à tester la traduction en jouant au jeu, afin de vérifier que les lignes de texte ne sont pas trop longues, ce qui pourrait provoquer des problèmes graphiques. Rappelez-vous que la Gameboy Advance peut afficher 30 caractères horizontalement : pour toute chaîne de caractères que l'interface utilisateur du jeu ne fait pas passer à la ligne suivante, votre texte traduit peut être tronqué, ou dans certains cas, le jeu écrira une erreur dans les logs indiquant que le programme n'a pas pu afficher le texte excessivement long, et arrêtera l'exécution (freeze).
+3) Ensuite, trouvez la définition de la liste de variables `languages` dans scripts/init.lisp, et ajoutez un symbole correspondant au nom du fichier de langue nouvellement ajouté (sans l'extension .txt, voir init.lisp pour des exemples).
+4) Enfin, vous devrez lier explicitement votre fichier de chaînes au système de construction dans CMakeLists.txt. Etant donné que la version Gameboy Advance du jeu ne fonctionne pas dans des environnements hébergés, il n'y a pas de système de fichiers, donc le système de construction doit connaître votre fichier, afin de copier son contenu dans la ROM.
 
-Currently, Blind Jump includes built-in support for the following languages:
-* English
-* Chinese
-* Russian
-* Italian
-* French
+Blind Jump est aujourd’hui jouable dans les langues suivantes :
+* Anglais
+* Chinois
+* Russe
+* Italien
+* Français
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
-## Security
+## Sécurité
 
-I periodically submit all of this project's source code to the Coverity static analyzer, which checks for buffer overruns, memory corruption, etc. Currently, BlindJump is 100% defect free. Let's keep it that way.
+Je soumets périodiquement tout le code source de ce projet à l'analyseur statique Coverity, qui vérifie les dépassements de tampon, la corruption de mémoire, etc. Actuellement, BlindJump est 100% sans défaut. Continuons dans cette voie.
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
-## Downloads
+## Téléchargements
 
-See the [releases section](https://github.com/evanbowman/blind-jump-portable/releases) of this github remote repo, where you may download the Gameboy Advance ROM directly (files with a .gba extension), and play the game with a flash cartridge (e.g. Everdrive). You could also use an emulator, although I personally prefer to play gameboy advance games on the actual device. You will find ROMs attached to each release, going all the way back to 2019, so you could also download earlier ROMs to see how the project changed as new code was introduced. I used the Linux/Windows/Mac versions of the game during development, but the desktop releases have fallen a bit out of date and may no longer work. I have not put much effort into maintaining the Desktop PC build targets, as gba emulators exist for so many different platforms, making the GBA rom very portable on its own.
+Voir la [section releases](https://github.com/evanbowman/blind-jump-portable/releases) de ce repo github, où vous pouvez télécharger la ROM Gameboy Advance directement (fichiers avec une extension .gba), et lancer le jeu à l'aide d'une flashcart (par exemple Everdrive). Vous pouvez également utiliser un émulateur, bien que je préfère personnellement jouer aux jeux Gameboy Advance sur la console elle-même. Vous trouverez des ROMs jointes à chaque version, remontant jusqu'en 2019, donc vous pourriez aussi télécharger des ROMs antérieures pour voir comment le projet a évolué au fur et à mesure des ajouts. J'ai utilisé les versions Linux/Windows/Mac du jeu pendant le développement, mais les versions de bureau sont tombées un peu en désuétude et peuvent ne plus fonctionner. Je n'ai pas fait beaucoup d'efforts pour maintenir les cibles de construction pour PC de bureau, car il existe des émulateurs GBA pour de nombreuses plates-formes différentes, ce qui rend la rom GBA très portable en soi.
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
-## Feedback
+## Commentaires
 
-Have an opinion about the game, or suggestions for improvements? I encourage you to create an issue, or to leave a comment over [here](https://evanbowman.itch.io/blindjump).
+Vous avez une opinion sur le jeu, ou des suggestions d'amélioration ? Je vous encourage à créer un problème, ou à laisser un commentaire [ici](https://evanbowman.itch.io/blindjump).
 
-[Contents↑](#contents)
+[Contenu↑](#contents)
 
 ## Licence
 
-Most of the code in this project is available under the MIT licence. The Gameboy Advance and PlayStation Portable builds of the project reference code from external/libgba and glib2d (respectively), which are GPL projects. Consequently, the Gameboy Advance and PSP builds must be distributed under the terms of the GPL licence. The game is already open source, so this makes little difference, just worth mentioning, for people reading the code. As the Desktop builds of the project do not reference the gpl'd code in any way, the desktop builds are not GPL.
+La plupart du code de ce projet est disponible sous la licence MIT. Les versions Gameboy Advance et PlayStation Portable du projet font référence au code de external/libgba et glib2d (respectivement), qui sont des projets GPL. Par conséquent, les builds Gameboy Advance et PSP doivent être distribués sous les termes de la licence GPL. Le jeu est déjà open source, donc ça ne fait pas beaucoup de différence mais vaut la peine d’être mentionné pour ceux qui veulent s’amuser avec le code. Comme les versions de bureau du projet ne font pas référence au code GPL de quelque manière que ce soit, elles ne sont pas sous licence GPL.
 
-All of images and character designs belong to Evan Bowman, and should not be used for commercial purposes without permission. The music belongs to various composers. Most of the music tracks are Creative Commons and merely require attribution (see the game's ending credits), but a few of the music tracks may not allow distribution in a commercial context. These tracks would need to be replaced, if copies of the game were to be sold.
+Toutes les images et tous les dessins de personnages appartiennent à Evan Bowman, et ne doivent pas être utilisés à des fins commerciales sans autorisation. La musique appartient à divers compositeurs. La plupart des pistes musicales sont sous licence Creative Commons et nécessitent simplement une attribution (voir le générique de fin du jeu), mais quelques pistes musicales peuvent ne pas permettre une distribution dans un contexte commercial. Ces pistes devront être remplacées si des copies du jeu sont vendues.
 
 ## LISP
 
@@ -207,10 +206,8 @@ BlindJump uses a custom LISP dialect for lightweight scripting. In the settings 
 
 * LISP-1
 * Supports Tail Call Optimization (for compiled bytecode)
-* Lexically scoped
+* Dynamically scoped
 * Includes a bytecode compiler, with a small set of optimization passes
-
-If you just want to try out the interpreter, see [here](http://evanbowman.github.io/portfolio-index.html#lisp).
 
 ### Language
 
@@ -585,19 +582,5 @@ Here's a concise little implemenation of merge sort, using the language features
          (let ((temp (bisect $0)))
            (merge (sort (car temp))
                   (sort (cdr temp)))))))
-```
-Another example, to demonstrate the flexibility of our expression evaluator. Here, we define cons, car, and cdr as higher-order functions:
-```lisp
-(set 'mcons
-     (lambda
-       (let ((car $0) (cdr $1))
-         ($0 car cdr))))
-
-(set 'mcar (lambda ($0 (lambda $0))))
-
-(set 'mcdr (lambda ($0 (lambda $1))))
-
-(mcar (mcons 1 2)) ;; -> 1
-
 ```
 [Contents↑](#contents)
