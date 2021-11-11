@@ -32,9 +32,9 @@ public:
             push_front(val);
         } else {
             Protected protected_val(val);
-            if (tail_->type_ == Value::Type::cons) {
+            if (tail_->type() == Value::Type::cons) {
                 auto new_tail = make_cons(val, L_NIL);
-                tail_->cons_.set_cdr(new_tail);
+                tail_->cons().set_cdr(new_tail);
                 tail_ = new_tail;
             }
         }

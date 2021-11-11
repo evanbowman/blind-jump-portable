@@ -7,20 +7,20 @@
 static Game* interp_get_game()
 {
     auto game = lisp::get_var("*game*");
-    if (game->type_ not_eq lisp::Value::Type::user_data) {
+    if (game->type() not_eq lisp::Value::Type::user_data) {
         return nullptr;
     }
-    return (Game*)game->user_data_.obj_;
+    return (Game*)game->user_data().obj_;
 }
 
 
 static Platform* interp_get_pfrm()
 {
     auto pfrm = lisp::get_var("*pfrm*");
-    if (pfrm->type_ not_eq lisp::Value::Type::user_data) {
+    if (pfrm->type() not_eq lisp::Value::Type::user_data) {
         return nullptr;
     }
-    return (Platform*)pfrm->user_data_.obj_;
+    return (Platform*)pfrm->user_data().obj_;
 }
 
 
@@ -40,8 +40,8 @@ void Game::init_script(Platform& pfrm)
             L_EXPECT_OP(1, integer);
             L_EXPECT_OP(2, integer);
 
-            const Vec2<Float> pos{Float(lisp::get_op(1)->integer_.value_),
-                                  Float(lisp::get_op(0)->integer_.value_)};
+            const Vec2<Float> pos{Float(lisp::get_op(1)->integer().value_),
+                                  Float(lisp::get_op(0)->integer().value_)};
 
             if (auto game = interp_get_game()) {
                 int index = 0;
@@ -50,7 +50,7 @@ void Game::init_script(Platform& pfrm)
                         typename std::remove_reference<decltype(buf)>::type;
                     using VT = typename T::ValueType::element_type;
 
-                    if (index == lisp::get_op(2)->integer_.value_) {
+                    if (index == lisp::get_op(2)->integer().value_) {
                         // Sigh... Some special cases here. Some enemies have
                         // slightly different constructors, so we need to handle a
                         // couple enemies in specific ways.
@@ -83,7 +83,7 @@ void Game::init_script(Platform& pfrm)
                       L_EXPECT_OP(0, integer);
 
                       Entity e;
-                      e.override_id(lisp::get_op(0)->integer_.value_);
+                      e.override_id(lisp::get_op(0)->integer().value_);
 
                       return L_NIL;
                   }));
@@ -93,8 +93,7 @@ void Game::init_script(Platform& pfrm)
                           if (argc == 1) {
                               L_EXPECT_OP(0, integer);
 
-                              game->persistent_data().level_.set(
-                                  lisp::get_op(0)->integer_.value_);
+                              game->persistent_data().level_.set(lisp::get_op(0)->integer().value_);
 
                           } else {
                               return lisp::make_integer(
@@ -108,7 +107,7 @@ void Game::init_script(Platform& pfrm)
                       if (auto game = interp_get_game()) {
                           for (int i = 0; i < argc; ++i) {
                               const auto item = static_cast<Item::Type>(
-                                  lisp::get_op(i)->integer_.value_);
+                                                                        lisp::get_op(i)->integer().value_);
 
                               if (auto pfrm = interp_get_pfrm()) {
                                   game->inventory().push_item(
@@ -130,7 +129,7 @@ void Game::init_script(Platform& pfrm)
                       }
 
                       auto entity = get_entity_by_id(
-                          *game, lisp::get_op(0)->integer_.value_);
+                                                     *game, lisp::get_op(0)->integer().value_);
                       if (entity) {
                           return lisp::make_integer(entity->get_health());
                       }
@@ -149,9 +148,9 @@ void Game::init_script(Platform& pfrm)
                       }
 
                       auto entity = get_entity_by_id(
-                          *game, lisp::get_op(1)->integer_.value_);
+                                                     *game, lisp::get_op(1)->integer().value_);
                       if (entity) {
-                          entity->set_health(lisp::get_op(0)->integer_.value_);
+                          entity->set_health(lisp::get_op(0)->integer().value_);
                       }
 
                       return L_NIL;
@@ -174,7 +173,7 @@ void Game::init_script(Platform& pfrm)
                       NotificationStr str =
                           locale_string(
                               *pfrm,
-                              (LocaleString)lisp::get_op(0)->integer_.value_)
+                              (LocaleString)lisp::get_op(0)->integer().value_)
                               ->c_str();
 
                       push_notification(*pfrm, game->state(), str);
@@ -193,14 +192,14 @@ void Game::init_script(Platform& pfrm)
 
             for (int i = 0; i < argc; ++i) {
 
-                if (lisp::get_op(i)->type_ not_eq lisp::Value::Type::integer) {
+                if (lisp::get_op(i)->type() not_eq lisp::Value::Type::integer) {
                     const auto err = lisp::Error::Code::invalid_argument_type;
                     return lisp::make_error(
                         err, lisp::make_string(*pfrm, "arg not integer"));
                 }
 
                 auto entity =
-                    get_entity_by_id(*game, lisp::get_op(i)->integer_.value_);
+                    get_entity_by_id(*game, lisp::get_op(i)->integer().value_);
 
                 if (entity) {
                     entity->set_health(0);
@@ -220,7 +219,7 @@ void Game::init_script(Platform& pfrm)
                       }
 
                       auto entity = get_entity_by_id(
-                          *game, lisp::get_op(0)->integer_.value_);
+                                                     *game, lisp::get_op(0)->integer().value_);
                       if (not entity) {
                           return L_NIL;
                       }
@@ -243,14 +242,14 @@ void Game::init_script(Platform& pfrm)
             }
 
             auto entity =
-                get_entity_by_id(*game, lisp::get_op(2)->integer_.value_);
+                get_entity_by_id(*game, lisp::get_op(2)->integer().value_);
 
             if (not entity) {
                 return L_NIL;
             }
 
-            entity->set_position({Float(lisp::get_op(1)->integer_.value_),
-                                  Float(lisp::get_op(0)->integer_.value_)});
+            entity->set_position({Float(lisp::get_op(1)->integer().value_),
+                    Float(lisp::get_op(0)->integer().value_)});
 
             return L_NIL;
         }));
@@ -263,24 +262,24 @@ void Game::init_script(Platform& pfrm)
 
             lisp::Protected x(lisp::make_integer([] {
                 if (rng::choice<2>(rng::critical_state)) {
-                    return lisp::get_op(1)->cons_.car()->integer_.value_ +
-                           rng::choice(lisp::get_op(0)->integer_.value_,
+                    return lisp::get_op(1)->cons().car()->integer().value_ +
+                        rng::choice(lisp::get_op(0)->integer().value_,
                                        rng::critical_state);
                 } else {
-                    return lisp::get_op(1)->cons_.car()->integer_.value_ -
-                           rng::choice(lisp::get_op(0)->integer_.value_,
+                    return lisp::get_op(1)->cons().car()->integer().value_ -
+                        rng::choice(lisp::get_op(0)->integer().value_,
                                        rng::critical_state);
                 }
             }()));
 
             lisp::Protected y(lisp::make_integer([] {
                 if (rng::choice<2>(rng::critical_state)) {
-                    return lisp::get_op(1)->cons_.cdr()->integer_.value_ +
-                           rng::choice(lisp::get_op(0)->integer_.value_,
+                    return lisp::get_op(1)->cons().cdr()->integer().value_ +
+                        rng::choice(lisp::get_op(0)->integer().value_,
                                        rng::critical_state);
                 } else {
-                    return lisp::get_op(1)->cons_.cdr()->integer_.value_ -
-                           rng::choice(lisp::get_op(0)->integer_.value_,
+                    return lisp::get_op(1)->cons().cdr()->integer().value_ -
+                        rng::choice(lisp::get_op(0)->integer().value_,
                                        rng::critical_state);
                 }
             }()));
@@ -304,7 +303,7 @@ void Game::init_script(Platform& pfrm)
                     lisp::pop_op(); // lat
 
                     lisp::push_op(lat);
-                    lat->cons_.set_car(lisp::make_integer(enemy->id()));
+                    lat->cons().set_car(lisp::make_integer(enemy->id()));
                     lisp::pop_op(); // lat
                 }
             });
@@ -327,7 +326,7 @@ void Game::init_script(Platform& pfrm)
                           L_EXPECT_OP(0, integer);
 
                           auto val = static_cast<Severity>(
-                              lisp::get_op(0)->integer_.value_);
+                                                           lisp::get_op(0)->integer().value_);
                           game->persistent_data().settings_.log_severity_ = val;
                       }
 
@@ -347,13 +346,13 @@ void Game::init_script(Platform& pfrm)
                       }
 
                       pfrm->keyboard().register_controller(
-                          {lisp::get_op(6)->integer_.value_,
-                           lisp::get_op(5)->integer_.value_,
-                           lisp::get_op(4)->integer_.value_,
-                           lisp::get_op(3)->integer_.value_,
-                           lisp::get_op(2)->integer_.value_,
-                           lisp::get_op(1)->integer_.value_,
-                           lisp::get_op(0)->integer_.value_});
+                                                           {lisp::get_op(6)->integer().value_,
+                                                            lisp::get_op(5)->integer().value_,
+                                                            lisp::get_op(4)->integer().value_,
+                                                            lisp::get_op(3)->integer().value_,
+                                                            lisp::get_op(2)->integer().value_,
+                                                            lisp::get_op(1)->integer().value_,
+                                                            lisp::get_op(0)->integer().value_});
 
                       return L_NIL;
                   }));
@@ -385,13 +384,13 @@ void Game::init_script(Platform& pfrm)
                 L_EXPECT_OP(1, symbol);
                 L_EXPECT_OP(0, integer);
                 sym = lisp::get_op(1);
-                param = lisp::get_op(0)->integer_.value_;
+                param = lisp::get_op(0)->integer().value_;
             } else {
                 L_EXPECT_OP(0, integer);
                 sym = lisp::get_op(0);
             }
 
-            ((Platform*)pfrm)->enable_feature(sym->symbol_.name_, param);
+            ((Platform*)pfrm)->enable_feature(sym->symbol().name_, param);
 
             return L_NIL;
         }));
@@ -407,10 +406,10 @@ void Game::init_script(Platform& pfrm)
                           return L_NIL;
                       }
 
-                      pfrm->set_tile((Layer)lisp::get_op(3)->integer_.value_,
-                                     lisp::get_op(2)->integer_.value_,
-                                     lisp::get_op(1)->integer_.value_,
-                                     lisp::get_op(0)->integer_.value_);
+                      pfrm->set_tile((Layer)lisp::get_op(3)->integer().value_,
+                                     lisp::get_op(2)->integer().value_,
+                                     lisp::get_op(1)->integer().value_,
+                                     lisp::get_op(0)->integer().value_);
 
                       return L_NIL;
                   }));
@@ -427,9 +426,9 @@ void Game::init_script(Platform& pfrm)
                       }
 
                       auto tile = pfrm->get_tile(
-                          (Layer)lisp::get_op(2)->integer_.value_,
-                          lisp::get_op(1)->integer_.value_,
-                          lisp::get_op(0)->integer_.value_);
+                                                 (Layer)lisp::get_op(2)->integer().value_,
+                                                 lisp::get_op(1)->integer().value_,
+                                                 lisp::get_op(0)->integer().value_);
 
                       return lisp::make_integer(tile);
                   }));
@@ -447,7 +446,7 @@ void Game::init_script(Platform& pfrm)
                       L_EXPECT_ARGC(argc, 1);
                       L_EXPECT_OP(0, integer);
                       return lisp::make_integer(
-                          rng::choice(lisp::get_op(0)->integer_.value_,
+                                                rng::choice(lisp::get_op(0)->integer().value_,
                                       rng::critical_state));
                   }));
 
@@ -455,7 +454,7 @@ void Game::init_script(Platform& pfrm)
                       L_EXPECT_ARGC(argc, 1);
                       L_EXPECT_OP(0, integer);
                       return lisp::make_integer(
-                          rng::choice(lisp::get_op(0)->integer_.value_,
+                                                rng::choice(lisp::get_op(0)->integer().value_,
                                       rng::utility_state));
                   }));
 
@@ -481,24 +480,24 @@ void Game::init_script(Platform& pfrm)
 
             auto row = lisp::get_op(0);
             for (int y = 0; y < 3; ++y) {
-                if (row->type_ not_eq lisp::Value::Type::cons) {
+                if (row->type() not_eq lisp::Value::Type::cons) {
                     while (true)
                         ;
                 }
 
-                auto cell = row->cons_.car();
+                auto cell = row->cons().car();
                 for (int x = 0; x < 3; ++x) {
-                    if (cell->type_ not_eq lisp::Value::Type::cons) {
+                    if (cell->type() not_eq lisp::Value::Type::cons) {
                         while (true)
                             ;
                     }
 
-                    filter[x][y] = cell->cons_.car();
+                    filter[x][y] = cell->cons().car();
 
-                    cell = cell->cons_.cdr();
+                    cell = cell->cons().cdr();
                 }
 
-                row = row->cons_.cdr();
+                row = row->cons().cdr();
             }
 
             auto pfrm = interp_get_pfrm();
@@ -515,33 +514,33 @@ void Game::init_script(Platform& pfrm)
                             int filter_y = yy + 1;
 
                             auto fval = filter[filter_x][filter_y];
-                            if (fval->type_ == lisp::Value::Type::integer) {
-                                if (fval->integer_.value_ not_eq
+                            if (fval->type() == lisp::Value::Type::integer) {
+                                if (fval->integer().value_ not_eq
                                     (int) pfrm->get_tile(
                                         Layer::map_0, x + xx, y + yy)) {
                                     match = false;
                                     goto DONE;
                                 }
-                            } else if (fval->type_ == lisp::Value::Type::cons) {
+                            } else if (fval->type() == lisp::Value::Type::cons) {
                                 bool submatch = false;
                                 while (fval not_eq L_NIL) {
-                                    if (fval->type_ not_eq
+                                    if (fval->type() not_eq
                                         lisp::Value::Type::cons) {
                                         return L_NIL;
                                     }
 
-                                    if (fval->cons_.car()->type_ not_eq
+                                    if (fval->cons().car()->type() not_eq
                                         lisp::Value::Type::integer) {
                                         return L_NIL;
                                     }
 
-                                    if (fval->cons_.car()->integer_.value_ ==
+                                    if (fval->cons().car()->integer().value_ ==
                                         (int)pfrm->get_tile(
                                             Layer::map_0, x + xx, y + yy)) {
                                         submatch = true;
                                     }
 
-                                    fval = fval->cons_.cdr();
+                                    fval = fval->cons().cdr();
                                 }
                                 if (not submatch) {
                                     match = false;
@@ -555,7 +554,7 @@ void Game::init_script(Platform& pfrm)
                         pfrm->set_tile(Layer::map_0,
                                        x,
                                        y,
-                                       lisp::get_op(1)->integer_.value_);
+                                       lisp::get_op(1)->integer().value_);
                     }
                 }
             }

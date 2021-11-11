@@ -432,7 +432,7 @@ HOT void Game::render(Platform& pfrm)
 
 static void cell_automata_advance(TileMap& map, TileMap& maptemp)
 {
-    auto& thresh = lisp::loadv<lisp::Cons>("cell-thresh");
+    auto& thresh = lisp::get_var("cell-thresh")->expect<lisp::Cons>();
 
     // At the start, whether each tile is filled or unfilled is completely
     // random. The cell_automata_advance function causes each tile to
@@ -454,13 +454,13 @@ static void cell_automata_advance(TileMap& map, TileMap& maptemp)
         collect(x, y - 1);
         collect(x, y + 1);
         if (tile == Tile::none) {
-            if (count < thresh.cdr()->expect<lisp::Integer>().value_) {
+            if (count < thresh.cdr()->integer().value_) {
                 maptemp.set_tile(x, y, Tile::plate);
             } else {
                 maptemp.set_tile(x, y, Tile::none);
             }
         } else {
-            if (count > thresh.car()->expect<lisp::Integer>().value_) {
+            if (count > thresh.car()->integer().value_) {
                 maptemp.set_tile(x, y, Tile::none);
             } else {
                 maptemp.set_tile(x, y, Tile::plate);
@@ -947,21 +947,21 @@ bool operator==(const ZoneInfo& lhs, const ZoneInfo& rhs)
 static bool contains(lisp::Value* tiles_list, u8 t)
 {
     while (tiles_list not_eq L_NIL) {
-        if (tiles_list->type_ not_eq lisp::Value::Type::cons) {
+        if (tiles_list->type() not_eq lisp::Value::Type::cons) {
             while (true)
                 ; // TODO: raise error...
         }
 
-        if (tiles_list->cons_.car()->type_ not_eq lisp::Value::Type::integer) {
+        if (tiles_list->cons().car()->type() not_eq lisp::Value::Type::integer) {
             while (true)
                 ; // TODO: raise error
         }
 
-        if (static_cast<int>(t) == tiles_list->cons_.car()->integer_.value_) {
+        if (static_cast<int>(t) == tiles_list->cons().car()->integer().value_) {
             return true;
         }
 
-        tiles_list = tiles_list->cons_.cdr();
+        tiles_list = tiles_list->cons().cdr();
     }
 
     return false;
@@ -1144,7 +1144,7 @@ COLD void Game::seed_map(Platform& pfrm, TileMap& workspace)
         int count;
 
         const auto cell_iters =
-            lisp::get_var("cell-iters")->expect<lisp::Integer>().value_;
+            lisp::get_var("cell-iters")->integer().value_;
 
         do {
             count = 0;
@@ -1438,7 +1438,7 @@ COLD void Game::regenerate_map(Platform& pfrm)
         pfrm.fatal("failed to alloc map1 workspace");
     }
 
-    const auto cell_iters = lisp::loadv<lisp::Integer>("cell-iters").value_;
+    const auto cell_iters = lisp::get_var("cell-iters")->integer().value_;
 
     for (int i = 0; i < cell_iters; ++i) {
         cell_automata_advance(*grass_overlay, *temporary);

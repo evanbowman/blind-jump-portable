@@ -39,7 +39,47 @@ void init(Platform& pfrm);
 struct Value;
 
 
+struct ValueHeader {
+    enum Type {
+        // When a Value is deallocated, it is converted into a HeapNode, and
+        // inserted into a freelist. Therefore, we need no extra space to
+        // maintain the freelist.
+        heap_node,
+
+        nil,
+        integer,
+        cons,
+        function,
+        error,
+        symbol,
+        user_data,
+        data_buffer,
+        string,
+        character,
+        __reserved,
+        count,
+    };
+    u8 type_ : 4;
+
+    bool alive_ : 1;
+    bool mark_bit_ : 1;
+    u8 mode_bits_ : 2;
+
+    Type type() const
+    {
+        return (Type)type_;
+    }
+};
+
+
 struct Nil {
+    ValueHeader hdr_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::nil;
+    }
+
     static void finalizer(Value*)
     {
     }
@@ -47,7 +87,13 @@ struct Nil {
 
 
 struct Symbol {
+    ValueHeader hdr_;
     const char* name_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::symbol;
+    }
 
     enum class ModeBits {
         requires_intern,
@@ -65,7 +111,13 @@ struct Symbol {
 
 
 struct Integer {
+    ValueHeader hdr_;
     s32 value_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::integer;
+    }
 
     static void finalizer(Value*)
     {
@@ -74,7 +126,13 @@ struct Integer {
 
 
 struct Character {
+    ValueHeader hdr_;
     utf8::Codepoint cp;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::character;
+    }
 
     static void finalizer(Value*)
     {
@@ -96,6 +154,12 @@ Value* dcompr(CompressedPtr ptr);
 
 
 struct Cons {
+    ValueHeader hdr_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::cons;
+    }
 
     inline Value* car()
     {
@@ -104,7 +168,7 @@ struct Cons {
 
     inline Value* cdr()
     {
-        return dcompr(cdr_);
+        return cdr_;
     }
 
     void set_car(Value* val)
@@ -114,7 +178,7 @@ struct Cons {
 
     void set_cdr(Value* val)
     {
-        cdr_ = compr(val);
+        cdr_ = val;
     }
 
     static void finalizer(Value*)
@@ -122,12 +186,24 @@ struct Cons {
     }
 
 private:
+    // NOTE: we want all values in our interpreter to take up eight bytes or
+    // less on a 32-bit system. We compress the car pointer, and use a full
+    // 32-bit pointer for the cdr. If we need to compress one of the pointers,
+    // we might as well optimize the cdr, as there are cases where you just want
+    // to iterate to a certain point in a list and do not care what the car is.
     CompressedPtr car_;
-    CompressedPtr cdr_;
+    Value* cdr_;
 };
 
 
 struct Function {
+    ValueHeader hdr_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::function;
+    }
+
     using CPP_Impl = Value* (*)(int);
 
     struct Bytecode {
@@ -162,6 +238,13 @@ struct Function {
 
 
 struct DataBuffer {
+    ValueHeader hdr_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::data_buffer;
+    }
+
     alignas(ScratchBufferPtr) u8 sbr_mem_[sizeof(ScratchBufferPtr)];
 
     ScratchBufferPtr value()
@@ -174,8 +257,14 @@ struct DataBuffer {
 
 
 struct String {
+    ValueHeader hdr_;
     CompressedPtr data_buffer_;
     u16 offset_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::string;
+    }
 
     const char* value();
 
@@ -186,6 +275,13 @@ struct String {
 
 
 struct Error {
+    ValueHeader hdr_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::error;
+    }
+
     enum class Code : u8 {
         value_not_callable,
         invalid_argc,
@@ -229,7 +325,13 @@ struct Error {
 
 
 struct UserData {
+    ValueHeader hdr_;
     void* obj_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::user_data;
+    }
 
     static void finalizer(Value*)
     {
@@ -238,6 +340,12 @@ struct UserData {
 
 
 struct __Reserved {
+    ValueHeader hdr_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::__reserved;
+    }
 
     // Reserved for future use
 
@@ -248,7 +356,13 @@ struct __Reserved {
 
 
 struct HeapNode {
+    ValueHeader hdr_;
     Value* next_;
+
+    static ValueHeader::Type type()
+    {
+        return ValueHeader::Type::heap_node;
+    }
 
     static void finalizer(Value*)
     {
@@ -259,140 +373,83 @@ struct HeapNode {
 };
 
 
-// struct ValueHeader {
-//     enum Type {
-//         // When a Value is deallocated, it is converted into a HeapNode, and
-//         // inserted into a freelist. Therefore, we need no extra space to
-//         // maintain the freelist.
-//         heap_node,
-
-//         nil,
-//         integer,
-//         cons,
-//         function,
-//         error,
-//         symbol,
-//         user_data,
-//         data_buffer,
-//         string,
-//         character,
-//         __reserved,
-//         count,
-//     };
-//     u8 type_ : 4;
-
-//     bool alive_ : 1;
-//     bool mark_bit_ : 1;
-//     u8 mode_bits_ : 2;
-// };
-
-
-//  struct Temp {
-//      ValueHeader hdr_;
-//      CompressedPtr car_;
-//      Value* cdr_;
-//  };
-
-
-// static_assert(sizeof(Temp) == 8);
-
-
 struct Value {
-    enum Type {
-        // When a Value is deallocated, it is converted into a HeapNode, and
-        // inserted into a freelist. Therefore, we need no extra space to
-        // maintain the freelist.
-        heap_node,
+    ValueHeader hdr_;
 
-        nil,
-        integer,
-        cons,
-        function,
-        error,
-        symbol,
-        user_data,
-        data_buffer,
-        string,
-        character,
-        __reserved,
-        count,
-    };
-    u8 type_ : 4;
+    using Type = ValueHeader::Type;
 
-    bool alive_ : 1;
-    bool mark_bit_ : 1;
-    u8 mode_bits_ : 2;
-
-    union {
-        HeapNode heap_node_;
-        Nil nil_;
-        Integer integer_;
-        Cons cons_;
-        Function function_;
-        Error error_;
-        Symbol symbol_;
-        UserData user_data_;
-        DataBuffer data_buffer_;
-        String string_;
-        Character character_;
-        __Reserved __reserved_;
-    };
-
-    template <typename T> T& expect()
+    Type type() const
     {
-        if constexpr (std::is_same<T, Integer>()) {
-            if (type_ == Type::integer) {
-                return integer_;
-            } else {
-                while (true)
-                    ; // TODO: fatal error...
-            }
-        } else if constexpr (std::is_same<T, Cons>()) {
-            if (type_ == Type::cons) {
-                return cons_;
-            } else {
-                while (true)
-                    ;
-            }
-        } else if constexpr (std::is_same<T, Function>()) {
-            if (type_ == Type::function) {
-                return function_;
-            } else {
-                while (true)
-                    ;
-            }
-        } else if constexpr (std::is_same<T, Error>()) {
-            if (type_ == Type::error) {
-                return error_;
-            } else {
-                while (true)
-                    ;
-            }
-        } else if constexpr (std::is_same<T, Symbol>()) {
-            if (type_ == Type::symbol) {
-                return symbol_;
-            } else {
-                while (true)
-                    ;
-            }
-        } else if constexpr (std::is_same<T, UserData>()) {
-            if (type_ == Type::user_data) {
-                return user_data_;
-            } else {
-                while (true)
-                    ;
-            }
-        } else {
-            // TODO: how to put a static assert here?
-            return nullptr;
-        }
+        return hdr_.type();
     }
+
+    HeapNode& heap_node()
+    {
+        return *reinterpret_cast<HeapNode*>(this);
+    }
+
+    Nil& nil()
+    {
+        return *reinterpret_cast<Nil*>(this);
+    }
+
+    Integer& integer()
+    {
+        return *reinterpret_cast<Integer*>(this);
+    }
+
+    Cons& cons()
+    {
+        return *reinterpret_cast<Cons*>(this);
+    }
+
+    Function& function()
+    {
+        return *reinterpret_cast<Function*>(this);
+    }
+
+    Error& error()
+    {
+        return *reinterpret_cast<Error*>(this);
+    }
+
+    Symbol& symbol()
+    {
+        return *reinterpret_cast<Symbol*>(this);
+    }
+
+    UserData& user_data()
+    {
+        return *reinterpret_cast<UserData*>(this);
+    }
+
+    DataBuffer& data_buffer()
+    {
+        return *reinterpret_cast<DataBuffer*>(this);
+    }
+
+    String& string()
+    {
+        return *reinterpret_cast<String*>(this);
+    }
+
+    Character& character()
+    {
+        return *reinterpret_cast<Character*>(this);
+    }
+
+    template <typename T>
+    T& expect()
+    {
+        if (this->type() == T::type()) {
+            return *reinterpret_cast<T*>(this);
+        }
+
+        while (true) ;
+    }
+
 };
 
-
-#ifdef __GBA__
-static_assert(sizeof(Value) == 8);
-#endif
 
 struct IntegralConstant {
     const char* const name_;
@@ -460,7 +517,7 @@ Value* get_var(Value* sym);
 inline Value* set_var(const char* name, Value* value)
 {
     auto var_sym = make_symbol(name);
-    if (var_sym->type_ not_eq Value::Type::symbol) {
+    if (var_sym->type() not_eq Value::Type::symbol) {
         return var_sym;
     }
 
@@ -471,17 +528,11 @@ inline Value* set_var(const char* name, Value* value)
 inline Value* get_var(const char* name)
 {
     auto var_sym = make_symbol(name);
-    if (var_sym->type_ not_eq Value::Type::symbol) {
+    if (var_sym->type() not_eq Value::Type::symbol) {
         return var_sym;
     }
 
     return get_var(var_sym);
-}
-
-
-template <typename T> T& loadv(const char* name)
-{
-    return get_var(name)->expect<T>();
 }
 
 
@@ -507,9 +558,9 @@ const char* intern(const char* string);
 
 #define L_EXPECT_OP(OFFSET, TYPE)                                              \
     if (lisp::Value::Type::TYPE not_eq lisp::Value::Type::error and            \
-        lisp::get_op((OFFSET))->type_ == lisp::Value::Type::error) {           \
+        lisp::get_op((OFFSET))->type() == lisp::Value::Type::error) { \
         return lisp::get_op((OFFSET));                                         \
-    } else if (lisp::get_op((OFFSET))->type_ not_eq lisp::Value::Type::TYPE) { \
+    } else if (lisp::get_op((OFFSET))->type() not_eq lisp::Value::Type::TYPE) { \
         if (lisp::get_op((OFFSET)) == L_NIL) {                                 \
             return lisp::get_op((OFFSET));                                     \
         } else {                                                               \
@@ -602,13 +653,13 @@ template <typename F> void foreach (Value* list, F && fn)
 
     while (true) {
 
-        if (list->type_ not_eq Value::Type::cons) {
+        if (list->type() not_eq Value::Type::cons) {
             break;
         } else {
-            fn(list->cons_.car());
+            fn(list->cons().car());
         }
 
-        list = list->cons_.cdr();
+        list = list->cons().cdr();
     }
 }
 

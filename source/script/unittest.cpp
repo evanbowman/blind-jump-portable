@@ -14,7 +14,7 @@ static lisp::Value* function_test()
                 L_EXPECT_ARGC(argc, 1);
                 L_EXPECT_OP(0, integer);
 
-                return make_integer(get_op(0)->integer_.value_ * 2);
+                return make_integer(get_op(0)->integer().value_ * 2);
             }));
 
     push_op(make_integer(48));
@@ -22,7 +22,7 @@ static lisp::Value* function_test()
 
     L_EXPECT_OP(0, integer);
 
-    if (get_op(0)->integer_.value_ not_eq 48 * 2) {
+    if (get_op(0)->integer().value_ not_eq 48 * 2) {
         std::cout << "funcall test result check failed!" << std::endl;
         return L_NIL;
     }
@@ -51,7 +51,7 @@ static lisp::Value* arithmetic_test()
 
     L_EXPECT_OP(0, integer);
 
-    if (get_op(0)->integer_.value_ not_eq 48 - 96) {
+    if (get_op(0)->integer().value_ not_eq 48 - 96) {
         std::cout << "bad arithmetic!" << std::endl;
         return L_NIL;
     }

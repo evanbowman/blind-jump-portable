@@ -36,7 +36,7 @@ void vm_execute(Platform& pfrm, Value* code_buffer, const int start_offset)
 {
     int pc = start_offset;
 
-    auto& code = *code_buffer->data_buffer_.value();
+    auto& code = *code_buffer->data_buffer().value();
 
     int nested_scope = 0;
 
@@ -171,6 +171,7 @@ TOP:
                     // The isn't really anything preventing a variadic function
                     // from being executed recursively with a different number
                     // of args, right? So maybe shouldn't be isn't an error...
+                    puts("here");
                     while (true)
                         ;
                 }
@@ -331,7 +332,7 @@ TOP:
         case Arg::op(): {
             read<Arg>(code, pc);
             auto arg_num = get_op(0);
-            auto arg = get_arg(arg_num->integer_.value_);
+            auto arg = get_arg(arg_num->integer().value_);
             pop_op();
             push_op(arg);
             break;
@@ -370,8 +371,8 @@ TOP:
             read<First>(code, pc);
             auto arg = get_op(0);
             pop_op();
-            if (arg->type_ == Value::Type::cons) {
-                push_op(arg->cons_.car());
+            if (arg->type() == Value::Type::cons) {
+                push_op(arg->cons().car());
             } else {
                 push_op(make_error(Error::Code::invalid_argument_type, L_NIL));
             }
@@ -382,8 +383,8 @@ TOP:
             read<Rest>(code, pc);
             auto arg = get_op(0);
             pop_op();
-            if (arg->type_ == Value::Type::cons) {
-                push_op(arg->cons_.cdr());
+            if (arg->type() == Value::Type::cons) {
+                push_op(arg->cons().cdr());
             } else {
                 push_op(make_error(Error::Code::invalid_argument_type, L_NIL));
             }
@@ -402,9 +403,9 @@ TOP:
         case PushLambda::op(): {
             auto inst = read<PushLambda>(code, pc);
             auto offset = make_integer(pc);
-            if (offset->type_ == lisp::Value::Type::integer) {
+            if (offset->type() == lisp::Value::Type::integer) {
                 auto bytecode = make_cons(offset, code_buffer);
-                if (bytecode->type_ == lisp::Value::Type::cons) {
+                if (bytecode->type() == lisp::Value::Type::cons) {
                     auto fn = make_bytecode_function(bytecode);
                     push_op(fn);
                 } else {
