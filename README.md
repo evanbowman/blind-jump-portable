@@ -583,4 +583,18 @@ Here's a concise little implemenation of merge sort, using the language features
            (merge (sort (car temp))
                   (sort (cdr temp)))))))
 ```
+Another example, to demonstrate the flexibility of our expression evaluator. Here, we define cons, car, and cdr as higher-order functions:
+```lisp
+(set 'mcons
+     (lambda
+       (let ((car $0) (cdr $1))
+         ($0 car cdr))))
+
+(set 'mcar (lambda ($0 (lambda $0))))
+
+(set 'mcdr (lambda ($0 (lambda $1))))
+
+(mcar (mcons 1 2)) ;; -> 1
+
+```
 [Contents↑](#contents)
