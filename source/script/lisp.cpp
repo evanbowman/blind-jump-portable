@@ -848,6 +848,26 @@ Value* get_op(u32 offset)
 }
 
 
+void lexical_frame_push()
+{
+    bound_context->lexical_bindings_ =
+        make_cons(get_nil(), bound_context->lexical_bindings_);
+}
+
+
+void lexical_frame_pop()
+{
+    bound_context->lexical_bindings_ =
+        bound_context->lexical_bindings_->cons_.cdr();
+}
+
+
+void lexical_frame_store(Value* kvp)
+{
+    bound_context->lexical_bindings_->cons_.set_car(make_cons(kvp, bound_context->lexical_bindings_->cons_.car()));
+}
+
+
 void vm_execute(Value* code, int start_offset);
 
 
@@ -1511,6 +1531,7 @@ static u32 read_list(const char* code)
             }
             break;
 
+        case ']':
         case ')':
             ++i;
             return i;
@@ -1587,6 +1608,8 @@ static u32 read_symbol(const char* code)
 
     while (true) {
         switch (code[i]) {
+        case '[':
+        case ']':
         case '(':
         case ')':
         case ' ':
@@ -1677,6 +1700,7 @@ u32 read(const char* code)
         case '\0':
             return i;
 
+        case '[':
         case '(':
             ++i;
             pop_op(); // nil
@@ -2893,6 +2917,30 @@ void init(Platform& pfrm)
                     case EarlyRet::op():
                         out += EarlyRet::name();
                         i += sizeof(EarlyRet);
+                        break;
+
+                    case LexicalDef::op():
+                        out += LexicalDef::name();
+                        out += "(";
+                        out += symbol_from_offset(
+                            ((HostInteger<s16>*)(data->data_ + i + 1))->get());
+                        out += ")";
+                        i += sizeof(LexicalDef);
+                        break;
+
+                    case LexicalFramePush::op():
+                        out += LexicalFramePush::name();
+                        i += sizeof(LexicalFramePush);
+                        break;
+
+                    case LexicalFramePop::op():
+                        out += LexicalFramePop::name();
+                        i += sizeof(LexicalFramePop);
+                        break;
+
+                    case LexicalVarLoad::op():
+                        out += LexicalVarLoad::name();
+                        i += sizeof(LexicalVarLoad);
                         break;
 
                     case Ret::op(): {

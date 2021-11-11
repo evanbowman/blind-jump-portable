@@ -18,6 +18,11 @@ Value* make_bytecode_function(Value* bytecode);
 Value* get_var_stable(const char* intern_str);
 
 
+void lexical_frame_push();
+void lexical_frame_pop();
+void lexical_frame_store(Value* kvp);
+
+
 template <typename Instruction>
 Instruction* read(ScratchBuffer& buffer, int& pc)
 {
@@ -32,6 +37,18 @@ void vm_execute(Value* code_buffer, const int start_offset)
     int pc = start_offset;
 
     auto& code = *code_buffer->data_buffer_.value();
+
+    int nested_scope = 0;
+
+    // If we are within a let expression, and we want to optimize out a
+    // recursive tail call, we need to unwind all frames of the lexical scope,
+    // because we will never return from the optimized out function call and hit
+    // the LEXICAL_FRAME_POP instruction after the tailcall instruciton.
+    auto unwind_lexical_scope = [&nested_scope] {
+        while (nested_scope--) {
+            lexical_frame_pop();
+        }
+    };
 
     using namespace instruction;
 
@@ -151,6 +168,7 @@ TOP:
                 }
 
                 if (argc == 0) {
+                    unwind_lexical_scope();
                     pc = start_offset;
                     goto TOP;
                 } else {
@@ -187,6 +205,7 @@ TOP:
 
                 push_op(arg);
 
+                unwind_lexical_scope();
                 pc = start_offset;
                 goto TOP;
 
@@ -221,6 +240,7 @@ TOP:
                 push_op(arg1);
                 push_op(arg0);
 
+                unwind_lexical_scope();
                 pc = start_offset;
                 goto TOP;
 
@@ -257,6 +277,7 @@ TOP:
                 push_op(arg1);
                 push_op(arg0);
 
+                unwind_lexical_scope();
                 pc = start_offset;
                 goto TOP;
 
@@ -404,6 +425,35 @@ TOP:
         case PushThis::op(): {
             push_op(get_this());
             read<PushThis>(code, pc);
+            break;
+        }
+
+        case LexicalDef::op(): {
+            auto inst = read<LexicalDef>(code, pc);
+            Protected sym(make_symbol(symbol_from_offset(inst->name_offset_.get()),
+                                      Symbol::ModeBits::stable_pointer));
+
+            // pair of (sym . value)
+            auto pair = make_cons(sym, get_op(0));
+            pop_op(); // pop value
+            push_op(pair); // store pair
+
+            lexical_frame_store(pair);
+            pop_op();
+            break;
+        }
+
+        case LexicalFramePush::op(): {
+            read<LexicalFramePush>(code, pc);
+            lexical_frame_push();
+            ++nested_scope;
+            break;
+        }
+
+        case LexicalFramePop::op(): {
+            read<LexicalFramePop>(code, pc);
+            lexical_frame_pop();
+            --nested_scope;
             break;
         }
 

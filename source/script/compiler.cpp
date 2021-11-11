@@ -43,6 +43,8 @@ int compile_lambda(ScratchBuffer& buffer,
                    Value* code,
                    int jump_offset)
 {
+    bool first = true;
+
     auto lat = code;
     while (lat not_eq get_nil()) {
         if (lat->type_ not_eq Value::Type::cons) {
@@ -50,8 +52,10 @@ int compile_lambda(ScratchBuffer& buffer,
             break;
         }
 
-        if (write_pos not_eq 0) {
+        if (not first) {
             append<instruction::Pop>(buffer, write_pos);
+        } else {
+            first = false;
         }
 
         bool tail_expr = lat->cons_.cdr() == get_nil();
@@ -115,11 +119,47 @@ int compile_let(ScratchBuffer& buffer,
                 int jump_offset,
                 bool tail_expr)
 {
-    while (true) {
-        // ...
+    if (code->type_ not_eq Value::Type::cons) {
+        while (true) ;
+        // TODO: raise error
     }
 
-    return 0;
+    append<instruction::LexicalFramePush>(buffer, write_pos);
+
+    foreach(code->cons_.car(), [&](Value* val) {
+        if (val->type_ == Value::Type::cons) {
+            auto sym = val->cons_.car();
+            auto bind = val->cons_.cdr();
+            if (sym->type_ == Value::Type::symbol and
+                bind->type_ == Value::Type::cons) {
+
+                write_pos = compile_impl(buffer,
+                                         write_pos,
+                                         bind->cons_.car(),
+                                         jump_offset,
+                                         false);
+
+                auto inst = append<instruction::LexicalDef>(buffer, write_pos);
+                inst->name_offset_.set(symbol_offset(sym->symbol_.name_));
+            }
+        }
+    });
+
+    code = code->cons_.cdr();
+
+    while (code not_eq get_nil()) {
+
+        bool tail = tail_expr and code->cons_.cdr() == get_nil();
+
+        write_pos = compile_impl(
+            buffer, write_pos, code->cons_.car(), jump_offset, tail);
+
+        code = code->cons_.cdr();
+    }
+
+    append<instruction::LexicalFramePop>(buffer, write_pos);
+
+    return write_pos;
 }
 
 
@@ -195,7 +235,7 @@ int compile_impl(ScratchBuffer& buffer,
 
             write_pos = compile_let(buffer,
                                     write_pos,
-                                    lat->cons_.car(),
+                                    lat->cons_.cdr(),
                                     jump_offset,
                                     tail_expr);
 

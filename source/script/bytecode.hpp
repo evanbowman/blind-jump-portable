@@ -583,7 +583,6 @@ struct Not {
 struct LexicalDef {
     Header header_;
     host_u16 name_offset_;
-    u8 slot_;
 
     static const char* name()
     {
@@ -599,7 +598,6 @@ struct LexicalDef {
 
 struct LexicalFramePush {
     Header header_;
-    u8 slots_;
 
     static const char* name()
     {
@@ -700,6 +698,10 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(Arg2)
             MATCH(PushThis)
             MATCH(Not)
+            MATCH(LexicalDef)
+            MATCH(LexicalFramePush)
+            MATCH(LexicalFramePop)
+            MATCH(LexicalVarLoad)
         }
     }
     return nullptr;
