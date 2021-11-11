@@ -45,8 +45,9 @@ void vm_execute(Platform& pfrm, Value* code_buffer, const int start_offset)
     // because we will never return from the optimized out function call and hit
     // the LEXICAL_FRAME_POP instruction after the tailcall instruciton.
     auto unwind_lexical_scope = [&nested_scope] {
-        while (nested_scope--) {
+        while (nested_scope) {
             lexical_frame_pop();
+            --nested_scope;
         }
     };
 
