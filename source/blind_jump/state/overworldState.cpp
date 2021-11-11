@@ -579,13 +579,16 @@ StatePtr OverworldState::update(Platform& pfrm, Game& game, Microseconds delta)
         push_notification(pfrm, game.state(), str);
 
         if (not pfrm.network_peer().is_connected()) {
+            auto start = pfrm.delta_clock().sample();
             lisp::dostring(
-                       pfrm.load_file_contents("scripts", "waypoint_clear.lisp"),
-                       [&pfrm](lisp::Value& err) {
-                           lisp::DefaultPrinter p;
-                           lisp::format(&err, p);
-                           pfrm.fatal(p.fmt_.c_str());
-                       });
+                pfrm.load_file_contents("scripts", "waypoint_clear.lisp"),
+                [&pfrm](lisp::Value& err) {
+                    lisp::DefaultPrinter p;
+                    lisp::format(&err, p);
+                    pfrm.fatal(p.fmt_.c_str());
+                });
+            auto stop = pfrm.delta_clock().sample();
+            info(pfrm, (to_string<32>(stop - start) + " delay").c_str());
         }
     }
 

@@ -21,8 +21,8 @@
 ;; The only way that we could end up in this scenario, is if we previously died
 ;; on a swarm level.
 (if (all-true (equal (level) 0)
-              (bound 'swarm))
-    (unbind 'swarm))
+              (> swarm -1))
+    (set 'swarm -1))
 
 
 (map (lambda ($0)) post-levelgen-hooks)

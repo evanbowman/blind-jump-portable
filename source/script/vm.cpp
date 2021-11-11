@@ -32,7 +32,7 @@ Instruction* read(ScratchBuffer& buffer, int& pc)
 }
 
 
-void vm_execute(Value* code_buffer, const int start_offset)
+void vm_execute(Platform& pfrm, Value* code_buffer, const int start_offset)
 {
     int pc = start_offset;
 
@@ -143,6 +143,13 @@ TOP:
             auto inst = read<PushSymbol>(code, pc);
             push_op(make_symbol(symbol_from_offset(inst->name_offset_.get()),
                                 Symbol::ModeBits::stable_pointer));
+            break;
+        }
+
+        case PushString::op(): {
+            auto inst = read<PushString>(code, pc);
+            push_op(make_string(pfrm, code.data_ + pc));
+            pc += inst->length_;
             break;
         }
 
@@ -430,12 +437,13 @@ TOP:
 
         case LexicalDef::op(): {
             auto inst = read<LexicalDef>(code, pc);
-            Protected sym(make_symbol(symbol_from_offset(inst->name_offset_.get()),
-                                      Symbol::ModeBits::stable_pointer));
+            Protected sym(
+                make_symbol(symbol_from_offset(inst->name_offset_.get()),
+                            Symbol::ModeBits::stable_pointer));
 
             // pair of (sym . value)
             auto pair = make_cons(sym, get_op(0));
-            pop_op(); // pop value
+            pop_op();      // pop value
             push_op(pair); // store pair
 
             lexical_frame_store(pair);

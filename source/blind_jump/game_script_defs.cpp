@@ -195,7 +195,8 @@ void Game::init_script(Platform& pfrm)
 
                 if (lisp::get_op(i)->type_ not_eq lisp::Value::Type::integer) {
                     const auto err = lisp::Error::Code::invalid_argument_type;
-                    return lisp::make_error(err, lisp::make_string(*pfrm, "arg not integer"));
+                    return lisp::make_error(
+                        err, lisp::make_string(*pfrm, "arg not integer"));
                 }
 
                 auto entity =
@@ -252,6 +253,39 @@ void Game::init_script(Platform& pfrm)
                                   Float(lisp::get_op(0)->integer_.value_)});
 
             return L_NIL;
+        }));
+
+    lisp::set_var(
+        "scatter", lisp::make_function([](int argc) {
+            L_EXPECT_ARGC(argc, 2);
+            L_EXPECT_OP(0, integer);
+            L_EXPECT_OP(1, cons);
+
+            lisp::Protected x(lisp::make_integer([] {
+                if (rng::choice<2>(rng::critical_state)) {
+                    return lisp::get_op(1)->cons_.car()->integer_.value_ +
+                           rng::choice(lisp::get_op(0)->integer_.value_,
+                                       rng::critical_state);
+                } else {
+                    return lisp::get_op(1)->cons_.car()->integer_.value_ -
+                           rng::choice(lisp::get_op(0)->integer_.value_,
+                                       rng::critical_state);
+                }
+            }()));
+
+            lisp::Protected y(lisp::make_integer([] {
+                if (rng::choice<2>(rng::critical_state)) {
+                    return lisp::get_op(1)->cons_.cdr()->integer_.value_ +
+                           rng::choice(lisp::get_op(0)->integer_.value_,
+                                       rng::critical_state);
+                } else {
+                    return lisp::get_op(1)->cons_.cdr()->integer_.value_ -
+                           rng::choice(lisp::get_op(0)->integer_.value_,
+                                       rng::critical_state);
+                }
+            }()));
+
+            return make_cons(x, y);
         }));
 
     lisp::set_var(
@@ -340,8 +374,9 @@ void Game::init_script(Platform& pfrm)
             }
 
             if (argc < 1 or argc > 2) {
-                return lisp::make_error(lisp::Error::Code::invalid_argc,
-                                        lisp::make_string(*pfrm, "arg not integer"));
+                return lisp::make_error(
+                    lisp::Error::Code::invalid_argc,
+                    lisp::make_string(*pfrm, "arg not integer"));
             }
 
             lisp::Value* sym;

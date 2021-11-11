@@ -113,18 +113,18 @@ Game::Game(Platform& pfrm)
 
     if (auto eval_opt = pfrm.get_opt('e')) {
         lisp::dostring(eval_opt, [&pfrm](lisp::Value& err) {
-                        lisp::DefaultPrinter p;
-                        lisp::format(&err, p);
-                        pfrm.fatal(p.fmt_.c_str());
-                    });
+            lisp::DefaultPrinter p;
+            lisp::format(&err, p);
+            pfrm.fatal(p.fmt_.c_str());
+        });
     }
 
     lisp::dostring(pfrm.load_file_contents("scripts", "init.lisp"),
                    [&pfrm](lisp::Value& err) {
-                        lisp::DefaultPrinter p;
-                        lisp::format(&err, p);
-                        pfrm.fatal(p.fmt_.c_str());
-                    });
+                       lisp::DefaultPrinter p;
+                       lisp::format(&err, p);
+                       pfrm.fatal(p.fmt_.c_str());
+                   });
 
     pfrm.logger().set_threshold(persistent_data_.settings_.log_severity_);
 
@@ -1000,10 +1000,10 @@ COLD void Game::next_level(Platform& pfrm, std::optional<Level> set_level)
 
     lisp::dostring(pfrm.load_file_contents("scripts", "pre_levelgen.lisp"),
                    [&pfrm](lisp::Value& err) {
-                        lisp::DefaultPrinter p;
-                        lisp::format(&err, p);
-                        pfrm.fatal(p.fmt_.c_str());
-                    });
+                       lisp::DefaultPrinter p;
+                       lisp::format(&err, p);
+                       pfrm.fatal(p.fmt_.c_str());
+                   });
 
     pfrm.load_tile0_texture(current_zone(*this).tileset0_name_);
     pfrm.load_tile1_texture(current_zone(*this).tileset1_name_);
@@ -1037,10 +1037,10 @@ RETRY:
 
     lisp::dostring(pfrm.load_file_contents("scripts", "post_levelgen.lisp"),
                    [&pfrm](lisp::Value& err) {
-                        lisp::DefaultPrinter p;
-                        lisp::format(&err, p);
-                        pfrm.fatal(p.fmt_.c_str());
-                    });
+                       lisp::DefaultPrinter p;
+                       lisp::format(&err, p);
+                       pfrm.fatal(p.fmt_.c_str());
+                   });
 
     // We're doing this to speed up collision checking with walls. While it
     // might be nice to have more info about the tilemap, it's costly to check

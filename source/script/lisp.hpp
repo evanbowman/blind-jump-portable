@@ -259,6 +259,44 @@ struct HeapNode {
 };
 
 
+// struct ValueHeader {
+//     enum Type {
+//         // When a Value is deallocated, it is converted into a HeapNode, and
+//         // inserted into a freelist. Therefore, we need no extra space to
+//         // maintain the freelist.
+//         heap_node,
+
+//         nil,
+//         integer,
+//         cons,
+//         function,
+//         error,
+//         symbol,
+//         user_data,
+//         data_buffer,
+//         string,
+//         character,
+//         __reserved,
+//         count,
+//     };
+//     u8 type_ : 4;
+
+//     bool alive_ : 1;
+//     bool mark_bit_ : 1;
+//     u8 mode_bits_ : 2;
+// };
+
+
+//  struct Temp {
+//      ValueHeader hdr_;
+//      CompressedPtr car_;
+//      Value* cdr_;
+//  };
+
+
+// static_assert(sizeof(Temp) == 8);
+
+
 struct Value {
     enum Type {
         // When a Value is deallocated, it is converted into a HeapNode, and
@@ -351,6 +389,10 @@ struct Value {
     }
 };
 
+
+#ifdef __GBA__
+static_assert(sizeof(Value) == 8);
+#endif
 
 struct IntegralConstant {
     const char* const name_;

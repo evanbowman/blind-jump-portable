@@ -643,6 +643,23 @@ struct LexicalVarLoad {
 };
 
 
+struct PushString {
+    Header header_;
+    u8 length_;
+    // u8 bytes_[length_];
+
+    static const char* name()
+    {
+        return "PUSH_STRING";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 42;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -652,6 +669,16 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
         switch (buffer.data_[offset]) {
         case Fatal::op():
             return nullptr;
+
+        case PushString::op():
+            if (index == 0) {
+                return (Header*)(buffer.data_ + offset);
+            } else {
+                index--;
+                offset += sizeof(PushString) +
+                          ((PushString*)buffer.data_ + offset)->length_;
+            }
+            break;
 
 #define MATCH(NAME)                                                            \
     case NAME::op():                                                           \

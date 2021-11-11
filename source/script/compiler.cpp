@@ -120,30 +120,29 @@ int compile_let(ScratchBuffer& buffer,
                 bool tail_expr)
 {
     if (code->type_ not_eq Value::Type::cons) {
-        while (true) ;
+        while (true)
+            ;
         // TODO: raise error
     }
 
     append<instruction::LexicalFramePush>(buffer, write_pos);
 
-    foreach(code->cons_.car(), [&](Value* val) {
+    foreach (code->cons_.car(), [&](Value* val) {
         if (val->type_ == Value::Type::cons) {
             auto sym = val->cons_.car();
             auto bind = val->cons_.cdr();
             if (sym->type_ == Value::Type::symbol and
                 bind->type_ == Value::Type::cons) {
 
-                write_pos = compile_impl(buffer,
-                                         write_pos,
-                                         bind->cons_.car(),
-                                         jump_offset,
-                                         false);
+                write_pos = compile_impl(
+                    buffer, write_pos, bind->cons_.car(), jump_offset, false);
 
                 auto inst = append<instruction::LexicalDef>(buffer, write_pos);
                 inst->name_offset_.set(symbol_offset(sym->symbol_.name_));
             }
         }
-    });
+    })
+        ;
 
     code = code->cons_.cdr();
 
@@ -191,6 +190,22 @@ int compile_impl(ScratchBuffer& buffer,
             append<instruction::PushInteger>(buffer, write_pos)
                 ->value_.set(code->integer_.value_);
         }
+    } else if (code->type_ == Value::Type::string) {
+        const auto str = code->string_.value();
+        const auto len = str_len(str);
+        append<instruction::PushString>(buffer, write_pos)->length_ = len + 1;
+
+        if (write_pos + len + 1 >= SCRATCH_BUFFER_SIZE) {
+            while (true)
+                ;
+        }
+
+        for (u32 i = 0; i < len; ++i) {
+            *(buffer.data_ + write_pos++) = str[i];
+        }
+
+        *(buffer.data_ + write_pos++) = '\0';
+
     } else if (code->type_ == Value::Type::symbol) {
 
         if (code->symbol_.name_[0] == '$') {
@@ -233,11 +248,8 @@ int compile_impl(ScratchBuffer& buffer,
         if (fn->type_ == Value::Type::symbol and
             str_cmp(fn->symbol_.name_, "let") == 0) {
 
-            write_pos = compile_let(buffer,
-                                    write_pos,
-                                    lat->cons_.cdr(),
-                                    jump_offset,
-                                    tail_expr);
+            write_pos = compile_let(
+                buffer, write_pos, lat->cons_.cdr(), jump_offset, tail_expr);
 
         } else if (fn->type_ == Value::Type::symbol and
                    str_cmp(fn->symbol_.name_, "if") == 0) {

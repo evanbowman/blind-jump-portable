@@ -162,7 +162,9 @@ void push_notification(Platform& pfrm,
                        State* state,
                        const NotificationStr& string)
 {
-    pfrm.sleep(3);
+    if (not lisp::is_executing()) {
+        pfrm.sleep(3);
+    }
 
     if (auto os = dynamic_cast<OverworldState*>(state)) {
         os->notification_status = OverworldState::NotificationStatus::flash;

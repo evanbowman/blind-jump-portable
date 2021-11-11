@@ -162,6 +162,13 @@ public:
         return *this;
     }
 
+    StringBuffer operator+(const char* str)
+    {
+        StringBuffer result = *this;
+        result += str;
+        return result;
+    }
+
     template <u32 OtherCapacity>
     StringBuffer& operator+=(const StringBuffer<OtherCapacity>& other)
     {

@@ -168,8 +168,10 @@ TitleScreenState::update(Platform& pfrm, Game& game, Microseconds delta)
                 // things look nicer.
                 pfrm.set_tile(Layer::overlay, erase_coords.x, st.y - 2, 112);
                 pfrm.set_tile(Layer::overlay, erase_coords.y, st.y - 2, 112);
-                pfrm.set_tile(Layer::overlay, erase_coords.x + 1, st.y - 2, 112);
-                pfrm.set_tile(Layer::overlay, erase_coords.y - 1, st.y - 2, 112);
+                pfrm.set_tile(
+                    Layer::overlay, erase_coords.x + 1, st.y - 2, 112);
+                pfrm.set_tile(
+                    Layer::overlay, erase_coords.y - 1, st.y - 2, 112);
 
                 const auto c1 = get_coords(text);
                 if (cursor_anim_) {

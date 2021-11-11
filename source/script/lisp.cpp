@@ -78,7 +78,7 @@ void value_pool_free(Value* value)
 
 
 struct Context {
-    using OperandStack = Buffer<CompressedPtr, 994>;
+    using OperandStack = Buffer<Value*, 497>;
 
     using Interns = char[string_intern_table_size];
 
@@ -421,7 +421,7 @@ Value* get_arg(u16 n)
     auto br = bound_context->arguments_break_loc_;
     auto argc = bound_context->current_fn_argc_;
     if (br >= ((argc - 1) - n)) {
-        return dcompr((*bound_context->operand_stack_)[br - ((argc - 1) - n)]);
+        return (*bound_context->operand_stack_)[br - ((argc - 1) - n)];
     } else {
         return get_nil();
     }
@@ -819,12 +819,12 @@ void pop_op()
 void push_op(Value* operand)
 {
 #ifdef UNHOSTED
-    if (not bound_context->operand_stack_->push_back(compr(operand))) {
+    if (not bound_context->operand_stack_->push_back(operand)) {
         while (true)
             ; // TODO: raise error
     }
 #else
-    bound_context->operand_stack_->push_back(compr(operand));
+    bound_context->operand_stack_->push_back(operand);
 #endif
 }
 
@@ -833,7 +833,7 @@ void insert_op(u32 offset, Value* operand)
 {
     auto& stack = bound_context->operand_stack_;
     auto pos = stack->end() - offset;
-    stack->insert(pos, compr(operand));
+    stack->insert(pos, operand);
 }
 
 
@@ -844,7 +844,7 @@ Value* get_op(u32 offset)
         return get_nil(); // TODO: raise error
     }
 
-    return dcompr((*stack)[(stack.obj_->size() - 1) - offset]);
+    return (*stack)[(stack.obj_->size() - 1) - offset];
 }
 
 
@@ -864,11 +864,12 @@ void lexical_frame_pop()
 
 void lexical_frame_store(Value* kvp)
 {
-    bound_context->lexical_bindings_->cons_.set_car(make_cons(kvp, bound_context->lexical_bindings_->cons_.car()));
+    bound_context->lexical_bindings_->cons_.set_car(
+        make_cons(kvp, bound_context->lexical_bindings_->cons_.car()));
 }
 
 
-void vm_execute(Value* code, int start_offset);
+void vm_execute(Platform& pfrm, Value* code, int start_offset);
 
 
 // The function arguments should be sitting at the top of the operand stack
@@ -943,7 +944,8 @@ void funcall(Value* obj, u8 argc)
             ctx.lexical_bindings_ =
                 dcompr(obj->function_.lisp_impl_.lexical_bindings_);
 
-            vm_execute(obj->function_.bytecode_impl_.databuffer(),
+            vm_execute(bound_context->pfrm_,
+                       obj->function_.bytecode_impl_.databuffer(),
                        obj->function_.bytecode_impl_.bytecode_offset()
                            ->integer_.value_);
 
@@ -1346,7 +1348,7 @@ static void gc_mark()
     auto& ctx = bound_context;
 
     for (auto elem : *ctx->operand_stack_) {
-        gc_mark_value(dcompr(elem));
+        gc_mark_value(elem);
     }
 
     globals_tree_traverse(ctx->globals_tree_, [](Value& car, Value& node) {
@@ -1718,6 +1720,18 @@ u32 read(const char* code)
             }
             break;
 
+        case '-':
+            if (code[i + 1] >= '0' and code[i + 1] <= '9') {
+                ++i;
+                pop_op(); // nil
+                i += read_number(code + i);
+                get_op(0)->integer_.value_ *= -1;
+                return i;
+            } else {
+                goto READ_SYMBOL;
+            }
+            break;
+
         case '0':
         case '1':
         case '2':
@@ -1745,6 +1759,7 @@ u32 read(const char* code)
             i += read_string(code + i + 1);
             return i + 1;
 
+        READ_SYMBOL:
         default:
             pop_op(); // nil
             i += read_symbol(code + i);
@@ -2384,9 +2399,9 @@ void init(Platform& pfrm)
             }));
 
     set_var("type", make_function([](int argc) {
-        L_EXPECT_ARGC(argc, 1);
-        return make_symbol([] {
-            // clang-format off
+                L_EXPECT_ARGC(argc, 1);
+                return make_symbol([] {
+                    // clang-format off
             switch (get_op(0)->type_) {
             case Value::Type::nil: return "nil";
             case Value::Type::integer: return "integer";
@@ -2403,10 +2418,10 @@ void init(Platform& pfrm)
             case Value::Type::heap_node:
                 break;
             }
-            // clang-format on
-            return "???";
-        }());
-    }));
+                    // clang-format on
+                    return "???";
+                }());
+            }));
 
 
     set_var("string", make_function([](int argc) {
@@ -2731,6 +2746,17 @@ void init(Platform& pfrm)
                         out += ")";
                         i += 2;
                         break;
+
+                    case PushString::op(): {
+                        i += 1;
+                        out += PushString::name();
+                        out += "(\"";
+                        u8 len = *(data->data_ + (i++));
+                        out += data->data_ + i;
+                        out += "\")";
+                        i += len;
+                        break;
+                    }
 
                     case PushNil::op():
                         out += "PUSH_NIL";

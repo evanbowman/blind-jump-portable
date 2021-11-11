@@ -58,24 +58,27 @@
                 (set $0 (cons $1 (eval $0))))))
 
 
+(set 'swarm -1)
+
 (add-hook
  'waypoint-clear-hooks
  (compile
   (lambda
-    (if (all-true (not (peer-conn)) (bound 'swarm))
+    (if (all-true (not (peer-conn)) (> swarm -1))
         (progn
+          ;; send notification, swarm approaching
           (alert 137)
-          (set 'n (if (equal swarm 0) 10 5))
 
-          (set 'temp
-               (lambda (map
-                        +
-                        (fill n (- ($0 (get-pos gate)) 15))
-                        (gen n (lambda (cr-choice 15))))))
+          (let ((swarm swarm)
+                (temp (get-pos gate)))
+            ((lambda
+               (if $0
+                   (let ((temp (scatter temp 15)))
+                     (make-enemy swarm (car temp) (cdr temp))
+                     ((this) (- $0 1)))))
+             (if (equal swarm 0) 10 5)))
 
-          (map make-enemy (fill n swarm) (temp car) (temp cdr))
-
-          (unbind 'swarm))))))
+          (set 'swarm -1))))))
 
 
 (set 'append

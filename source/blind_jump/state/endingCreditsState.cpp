@@ -256,8 +256,9 @@ EndingCreditsState::update(Platform& pfrm, Game& game, Microseconds delta)
         display_mode_ = DisplayMode::fade_show_image;
         timer_ = 0;
         pfrm.set_overlay_origin(0, 0);
-        if (utf8::len(locale_string(pfrm, LocaleString::the_end_str)->c_str())
-            % 2 == 0) {
+        if (utf8::len(locale_string(pfrm, LocaleString::the_end_str)->c_str()) %
+                2 ==
+            0) {
             game.camera().set_position(pfrm, {-16, 0});
         } else {
             game.camera().set_position(pfrm, {0, 0});

@@ -679,7 +679,6 @@ public:
     Platform();
 
 private:
-
     friend int main(int argc, char** argv);
 
     SystemClock system_clock_;
