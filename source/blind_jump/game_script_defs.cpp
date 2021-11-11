@@ -311,6 +311,34 @@ void Game::init_script(Platform& pfrm)
             return lat;
         }));
 
+    lisp::set_var("log", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, string);
+
+        auto pfrm = interp_get_pfrm();
+        if (not pfrm) {
+            return L_NIL;
+        }
+
+        info(*pfrm, lisp::get_op(0)->string().value());
+
+        return L_NIL;
+    }));
+
+    lisp::set_var("add-score", lisp::make_function([](int argc) {
+        L_EXPECT_ARGC(argc, 1);
+        L_EXPECT_OP(0, integer);
+
+        auto game = interp_get_game();
+        if (not game) {
+            return L_NIL;
+        }
+
+        game->score() += lisp::get_op(0)->integer().value_;
+
+        return lisp::make_integer(game->score());
+    }));
+
     lisp::set_var("log-severity", lisp::make_function([](int argc) {
                       auto game = interp_get_game();
                       if (not game) {

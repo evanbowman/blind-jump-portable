@@ -2014,15 +2014,15 @@ static void mgba_log(const char* msg)
 
 void Platform::Logger::log(Severity level, const char* msg)
 {
-    // if (static_cast<int>(level) < static_cast<int>(::log_threshold)) {
-    //     return;
-    // }
+    if (static_cast<int>(level) < static_cast<int>(::log_threshold)) {
+        return;
+    }
 
-    // // We don't want to wear out the flash chip! The code below still works on
-    // // flash though, if you just comment out the if statement below.
-    // if (get_gflag(GlobalFlag::save_using_flash)) {
-    //     return;
-    // }
+    // We don't want to wear out the flash chip! The code below still works on
+    // flash though, if you just comment out the if statement below.
+    if (get_gflag(GlobalFlag::save_using_flash)) {
+        return;
+    }
 
     std::array<char, 256> buffer;
 

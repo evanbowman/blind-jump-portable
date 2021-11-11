@@ -539,6 +539,14 @@ Return a pair of `'(x . y)`, representing an entity's position.
 `(set-pos <entity> <integer> <integer>)`
 Set an entity's position.
 
+#### add-score
+`(add-score <integer>)`
+Add score. Returns the new score. `(add-score 0)` to get the current score.
+
+#### toggle-stats
+`(toggle-stats)`
+Toggle the engine status hud. Displays an estimated framerate and other stuff.
+
 #### enemies
 `(enemies)`
 Return a list of all enemies in the game.
