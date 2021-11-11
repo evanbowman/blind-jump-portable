@@ -503,7 +503,7 @@ Disassemble a bytecode function, allowing you to inspect the bytecode. By defaul
 ### API
 
 #### make-enemy
-`(make-enement <integer:enemy-type> <integer:x> <integer:y>)`
+`(make-enemy <integer:enemy-type> <integer:x> <integer:y>)`
 Create enemy at x, y. See enemy- variables in the autocomplete window for available options.
 
 #### level
