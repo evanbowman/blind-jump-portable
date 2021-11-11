@@ -209,6 +209,8 @@ BlindJump uses a custom LISP dialect for lightweight scripting. In the settings 
 * Lexically scoped
 * Includes a bytecode compiler, with a small set of optimization passes
 
+If you just want to try out the interpreter, see [here](http://evanbowman.github.io/portfolio-index.html#lisp).
+
 ### Language
 
 #### S-Expressions
