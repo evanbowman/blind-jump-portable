@@ -580,6 +580,71 @@ struct Not {
 };
 
 
+struct LexicalDef {
+    Header header_;
+    host_u16 name_offset_;
+    u8 slot_;
+
+    static const char* name()
+    {
+        return "LEXICAL_DEF";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 38;
+    }
+};
+
+
+struct LexicalFramePush {
+    Header header_;
+    u8 slots_;
+
+    static const char* name()
+    {
+        return "LEXICAL_FRAME_PUSH";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 39;
+    }
+};
+
+
+struct LexicalFramePop {
+    Header header_;
+
+    static const char* name()
+    {
+        return "LEXICAL_FRAME_POP";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 40;
+    }
+};
+
+
+struct LexicalVarLoad {
+    Header header_;
+    u8 frame_;
+    u8 slot_;
+
+    static const char* name()
+    {
+        return "LEXICAL_VAR_LOAD";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 41;
+    }
+};
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {

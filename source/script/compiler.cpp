@@ -109,6 +109,20 @@ int compile_quoted(ScratchBuffer& buffer,
 }
 
 
+int compile_let(ScratchBuffer& buffer,
+                int write_pos,
+                Value* code,
+                int jump_offset,
+                bool tail_expr)
+{
+    while (true) {
+        // ...
+    }
+
+    return 0;
+}
+
+
 int compile_impl(ScratchBuffer& buffer,
                  int write_pos,
                  Value* code,
@@ -179,8 +193,12 @@ int compile_impl(ScratchBuffer& buffer,
         if (fn->type_ == Value::Type::symbol and
             str_cmp(fn->symbol_.name_, "let") == 0) {
 
-            while (true)
-                ; // TODO: implement compilation for let
+            write_pos = compile_let(buffer,
+                                    write_pos,
+                                    lat->cons_.car(),
+                                    jump_offset,
+                                    tail_expr);
+
         } else if (fn->type_ == Value::Type::symbol and
                    str_cmp(fn->symbol_.name_, "if") == 0) {
 
