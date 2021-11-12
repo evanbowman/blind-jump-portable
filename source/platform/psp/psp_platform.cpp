@@ -548,6 +548,12 @@ void Platform::enable_glyph_mode(bool enabled)
 }
 
 
+void Platform::enable_expanded_glyph_mode(bool enabled)
+{
+    // unsupported
+}
+
+
 static g2dColor default_text_foreground_color;
 static g2dColor default_text_background_color;
 
@@ -815,19 +821,13 @@ const char* Platform::load_file_contents(const char* folder,
 
 
 TileDesc Platform::map_glyph(const utf8::Codepoint& glyph,
-                             TextureCpMapper mapper)
+                             const TextureMapping& mapping_info)
 {
     if (not ::glyph_mode) {
         return 111;
     }
 
-    const auto mapping_info = mapper(glyph);
-
-    if (not mapping_info) {
-        return 111;
-    }
-
-    return mapping_info->offset_ | (1 << 15);
+    return mapping_info.offset_ | (1 << 15);
 }
 
 
@@ -981,6 +981,18 @@ Microseconds Platform::DeltaClock::reset()
     const auto result = (::last_clock - prev) - slept_ticks;
 
     ::slept_ticks = 0;
+
+    return result;
+}
+
+
+Platform::DeltaClock::TimePoint Platform::DeltaClock::sample() const
+{
+    const auto prev = ::last_clock;
+    sceRtcGetCurrentTick(&::last_clock);
+
+    auto result = ::last_clock - prev;
+    ::last_clock = prev;
 
     return result;
 }
@@ -1673,7 +1685,7 @@ Platform::Logger::Logger()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool Platform::RemoteConsole::printline(const char* line)
+bool Platform::RemoteConsole::printline(const char* line, bool show_prompt)
 {
     //    pspDebugScreenPrintf(line);
     return false;

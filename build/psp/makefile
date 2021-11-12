@@ -72,6 +72,7 @@ OBJS =  $(SRC)/platform/psp/psp_platform.o \
 	$(SRC)/blind_jump/state/networkConnectWaitState.o \
 	$(SRC)/blind_jump/state/multiplayerReviveState.o \
 	$(SRC)/blind_jump/state/bossDeathSequenceState.o \
+	$(SRC)/blind_jump/state/languageSelectionState.o \
 	$(SRC)/blind_jump/state/launchCutsceneState.o \
 	$(SRC)/blind_jump/state/endingCutsceneState.o \
 	$(SRC)/blind_jump/state/deathContinueState.o \
@@ -112,6 +113,10 @@ OBJS =  $(SRC)/platform/psp/psp_platform.o \
 	$(SRC)/data/file_waypoint_clear.o \
 	$(SRC)/data/file_english.o \
 	$(SRC)/data/file_spanish.o \
+	$(SRC)/data/file_russian.o \
+	$(SRC)/data/file_chinese.o \
+	$(SRC)/data/file_italian.o \
+	$(SRC)/data/file_french.o \
 	$(shell cat ./objnames.img.txt)
 
 
