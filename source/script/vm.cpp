@@ -171,7 +171,6 @@ TOP:
                     // The isn't really anything preventing a variadic function
                     // from being executed recursively with a different number
                     // of args, right? So maybe shouldn't be isn't an error...
-                    puts("here");
                     while (true)
                         ;
                 }
