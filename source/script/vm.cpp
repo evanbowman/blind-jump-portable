@@ -59,7 +59,7 @@ TOP:
         switch ((Opcode)code.data_[pc]) {
         case JumpIfFalse::op(): {
             auto inst = read<JumpIfFalse>(code, pc);
-            if (not is_boolean_true(get_op(0))) {
+            if (not is_boolean_true(get_op0())) {
                 pc = start_offset + inst->offset_.get();
             }
             pop_op();
@@ -74,7 +74,7 @@ TOP:
 
         case SmallJumpIfFalse::op(): {
             auto inst = read<SmallJumpIfFalse>(code, pc);
-            if (not is_boolean_true(get_op(0))) {
+            if (not is_boolean_true(get_op0())) {
                 pc = start_offset + inst->offset_;
             }
             pop_op();
@@ -96,13 +96,13 @@ TOP:
 
         case Dup::op(): {
             read<Dup>(code, pc);
-            push_op(get_op(0));
+            push_op(get_op0());
             break;
         }
 
         case Not::op(): {
             read<Not>(code, pc);
-            auto input = get_op(0);
+            auto input = get_op0();
             pop_op();
             push_op(make_integer(not is_boolean_true(input)));
             break;
@@ -156,7 +156,7 @@ TOP:
 
         case TailCall::op(): {
 
-            Protected fn(get_op(0));
+            Protected fn(get_op0());
 
             auto argc = read<TailCall>(code, pc)->argc_;
 
@@ -195,10 +195,10 @@ TOP:
 
         case TailCall1::op(): {
             read<TailCall1>(code, pc);
-            Protected fn(get_op(0));
+            Protected fn(get_op0());
 
             if (fn == get_this()) {
-                auto arg = get_op(1);
+                auto arg = get_op1();
 
                 if (get_argc() not_eq 1) {
                     // TODO: raise error: attempted recursive call with
@@ -226,10 +226,10 @@ TOP:
 
         case TailCall2::op(): {
             read<TailCall2>(code, pc);
-            Protected fn(get_op(0));
+            Protected fn(get_op0());
 
             if (fn == get_this()) {
-                auto arg0 = get_op(1);
+                auto arg0 = get_op1();
                 auto arg1 = get_op(2);
 
                 if (get_argc() not_eq 2) {
@@ -261,10 +261,10 @@ TOP:
 
         case TailCall3::op(): {
             read<TailCall3>(code, pc);
-            Protected fn(get_op(0));
+            Protected fn(get_op0());
 
             if (fn == get_this()) {
-                auto arg0 = get_op(1);
+                auto arg0 = get_op1();
                 auto arg1 = get_op(2);
                 auto arg2 = get_op(3);
 
@@ -297,7 +297,7 @@ TOP:
         }
 
         case Funcall::op(): {
-            Protected fn(get_op(0));
+            Protected fn(get_op0());
             auto argc = read<Funcall>(code, pc)->argc_;
             pop_op();
             funcall(fn, argc);
@@ -306,7 +306,7 @@ TOP:
 
         case Funcall1::op(): {
             read<Funcall1>(code, pc);
-            Protected fn(get_op(0));
+            Protected fn(get_op0());
             pop_op();
             funcall(fn, 1);
             break;
@@ -314,7 +314,7 @@ TOP:
 
         case Funcall2::op(): {
             read<Funcall2>(code, pc);
-            Protected fn(get_op(0));
+            Protected fn(get_op0());
             pop_op();
             funcall(fn, 2);
             break;
@@ -322,7 +322,7 @@ TOP:
 
         case Funcall3::op(): {
             read<Funcall3>(code, pc);
-            Protected fn(get_op(0));
+            Protected fn(get_op0());
             pop_op();
             funcall(fn, 3);
             break;
@@ -330,7 +330,7 @@ TOP:
 
         case Arg::op(): {
             read<Arg>(code, pc);
-            auto arg_num = get_op(0);
+            auto arg_num = get_op0();
             auto arg = get_arg(arg_num->integer().value_);
             pop_op();
             push_op(arg);
@@ -357,8 +357,8 @@ TOP:
 
         case MakePair::op(): {
             read<MakePair>(code, pc);
-            auto car = get_op(1);
-            auto cdr = get_op(0);
+            auto car = get_op1();
+            auto cdr = get_op0();
             auto cons = make_cons(car, cdr);
             pop_op();
             pop_op();
@@ -368,7 +368,7 @@ TOP:
 
         case First::op(): {
             read<First>(code, pc);
-            auto arg = get_op(0);
+            auto arg = get_op0();
             pop_op();
             if (arg->type() == Value::Type::cons) {
                 push_op(arg->cons().car());
@@ -380,7 +380,7 @@ TOP:
 
         case Rest::op(): {
             read<Rest>(code, pc);
-            auto arg = get_op(0);
+            auto arg = get_op0();
             pop_op();
             if (arg->type() == Value::Type::cons) {
                 push_op(arg->cons().cdr());
@@ -443,7 +443,7 @@ TOP:
                             Symbol::ModeBits::stable_pointer));
 
             // pair of (sym . value)
-            auto pair = make_cons(sym, get_op(0));
+            auto pair = make_cons(sym, get_op0());
             pop_op();      // pop value
             push_op(pair); // store pair
 

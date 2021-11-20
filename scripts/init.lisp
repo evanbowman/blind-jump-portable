@@ -1,4 +1,43 @@
 
+(macro or (expr)
+ (if expr
+     `(if ,(car expr)
+          1
+        ,(if (cdr expr)
+             (cons 'or (cdr expr))
+           0))
+   0))
+
+
+(macro and (expr)
+ (if expr
+     `(if (not ,(car expr))
+          0
+        ,(if (cdr expr)
+             (cons 'and (cdr expr))
+           1))
+   1))
+
+
+;; Because we're running lisp in an embedded system (a gameboy) with limited
+;; memory, we need to be really careful about symbol table usage, which is why,
+;; traditionally, we only support numbered arguments for lambdas. But this
+;; function macro allows you to declare functions with named arguments:
+(macro fn (args body)
+ (if (not args)
+     `(lambda ,@body)
+   `(lambda
+     (let ,((lambda
+             (if (not $0)
+                 $1
+               ((this)
+                (cdr $0)
+                (cons (list (car $0) (symbol (string "$" $2))) $1)
+                (+ $2 1))))
+            args nil 0)
+       ,@body))))
+
+
 ;; For our onscreen keyboard, which does not include +, *, or /
 (set 'add +)
 (set 'mul *)
@@ -7,8 +46,8 @@
 
 (set 'languages
      ;; We don't support chinese text on the Desktop or PSP yet.
-     (if (all-true (not (equal (platform) 'SonyPSP))
-                   (not (equal (platform) 'Desktop)))
+     (if (and (not (equal (platform) 'SonyPSP))
+              (not (equal (platform) 'Desktop)))
          '(null
            (english 1) ;; (language-name preferred-font-size)
            (chinese 2)
@@ -64,7 +103,7 @@
  'waypoint-clear-hooks
  (compile
   (lambda
-    (if (all-true (not (peer-conn)) (> swarm -1))
+    (if (and (not (peer-conn)) (> swarm -1))
         (progn
           ;; send notification, swarm approaching
           (alert 137)

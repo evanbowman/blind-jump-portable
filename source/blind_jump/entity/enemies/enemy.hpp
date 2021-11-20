@@ -3,6 +3,7 @@
 #include "blind_jump/entity/entity.hpp"
 #include "blind_jump/network_event.hpp"
 #include "collision.hpp"
+#include "script/lisp.hpp"
 
 
 class Player;

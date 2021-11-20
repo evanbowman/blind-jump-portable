@@ -19,6 +19,7 @@
 
 
 #include "function.hpp"
+#include "module.hpp"
 #include "number/numeric.hpp"
 #include "platform/scratch_buffer.hpp"
 #include "string.hpp"
@@ -291,6 +292,7 @@ struct Error {
         out_of_memory,
         set_in_expression_context,
         mismatched_parentheses,
+        invalid_syntax,
     } code_;
 
     CompressedPtr context_;
@@ -314,6 +316,8 @@ struct Error {
             return "\'set\' in expr context";
         case Code::mismatched_parentheses:
             return "mismatched parentheses";
+        case Code::invalid_syntax:
+            return "invalid syntax";
         }
         return "Unknown error";
     }
@@ -438,16 +442,15 @@ struct Value {
         return *reinterpret_cast<Character*>(this);
     }
 
-    template <typename T>
-    T& expect()
+    template <typename T> T& expect()
     {
         if (this->type() == T::type()) {
             return *reinterpret_cast<T*>(this);
         }
 
-        while (true) ;
+        while (true)
+            ;
     }
-
 };
 
 
@@ -490,6 +493,8 @@ int length(Value* lat);
 // order, and read in REVERSE ORDER.
 void push_op(Value* operand);
 Value* get_op(u32 operand_number);
+Value* get_op0();
+Value* get_op1();
 void pop_op();
 Value* get_arg(u16 arg);
 
@@ -540,10 +545,16 @@ inline Value* get_var(const char* name)
 u32 read(const char* code);
 
 
+// Result on operand stack.
 void eval(Value* code);
 
 
+// Parameter should be a function. Result on operand stack.
 void compile(Platform& pfrm, Value* code);
+
+
+// Load code from a portable bytecode module. Result on operand stack.
+void load_module(Module* module);
 
 
 // Returns the result of the last expression in the string.
@@ -558,9 +569,10 @@ const char* intern(const char* string);
 
 #define L_EXPECT_OP(OFFSET, TYPE)                                              \
     if (lisp::Value::Type::TYPE not_eq lisp::Value::Type::error and            \
-        lisp::get_op((OFFSET))->type() == lisp::Value::Type::error) { \
+        lisp::get_op((OFFSET))->type() == lisp::Value::Type::error) {          \
         return lisp::get_op((OFFSET));                                         \
-    } else if (lisp::get_op((OFFSET))->type() not_eq lisp::Value::Type::TYPE) { \
+    } else if (lisp::get_op((OFFSET))->type() not_eq                           \
+               lisp::Value::Type::TYPE) {                                      \
         if (lisp::get_op((OFFSET)) == L_NIL) {                                 \
             return lisp::get_op((OFFSET));                                     \
         } else {                                                               \
@@ -598,11 +610,44 @@ public:
 void format(Value* value, Printer& p);
 
 
+
 // Protected objects will not be collected until the Protected wrapper goes out
 // of scope.
-class Protected {
+class ProtectedBase {
 public:
-    Protected(Value* val);
+    ProtectedBase();
+
+    ProtectedBase(const ProtectedBase&) = delete;
+    ProtectedBase(ProtectedBase&&) = delete;
+
+    virtual ~ProtectedBase();
+
+    virtual void gc_mark() = 0;
+
+    ProtectedBase* next() const
+    {
+        return next_;
+    }
+
+    ProtectedBase* prev() const
+    {
+        return prev_;
+    }
+
+protected:
+    ProtectedBase* prev_;
+    ProtectedBase* next_;
+};
+
+
+
+class Protected : public ProtectedBase {
+public:
+    Protected(Value* val) : val_(val)
+    {
+    }
+
+    void gc_mark() override;
 
     Protected& operator=(Value* val)
     {
@@ -610,24 +655,9 @@ public:
         return *this;
     }
 
-    Protected(const Protected&) = delete;
-    Protected(Protected&&) = delete;
-
-    ~Protected();
-
     void set(Value* val)
     {
         val_ = val;
-    }
-
-    Protected* next() const
-    {
-        return next_;
-    }
-
-    Protected* prev() const
-    {
-        return prev_;
     }
 
     operator Value*()
@@ -642,9 +672,8 @@ public:
 
 protected:
     Value* val_;
-    Protected* prev_;
-    Protected* next_;
 };
+
 
 
 template <typename F> void foreach (Value* list, F && fn)

@@ -660,6 +660,57 @@ struct PushString {
 };
 
 
+// NOTE: These relocatable instructions exist for portable bytecode. The
+// non-relocatable versions of these instructions refer to an index in the
+// interpreter's string intern table. We cannot assume anything about the
+// ordering of the string intern table in the interpreter that ultimately loads
+// the bytecode, so instead, we ship a symbol table along with the portable
+// bytecode. When first seeing this instruction, the VM loads the symbol string
+// from the bytecode's symbol table, and searches the host interpreter's symbol
+// table for the symbol string. The vm then swaps the relocatable instruction
+// for the non-relocatable version, using the symbol offset into the host symbol
+// table. Loading relocatable symbols is a bit slow the first time, but
+// optimized out after the first load.
+struct LoadVarRelocatable : public LoadVar {
+    static const char* name()
+    {
+        return "LOAD_VAR_RELOCATABLE";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 43;
+    }
+}; static_assert(sizeof(LoadVarRelocatable) == sizeof(LoadVar));
+
+
+struct PushSymbolRelocatable : public PushSymbol {
+    static const char* name()
+    {
+        return "PUSH_SYMBOL_RELOCATABLE";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 44;
+    }
+}; static_assert(sizeof(PushSymbolRelocatable) == sizeof(PushSymbol));
+
+
+struct LexicalDefRelocatable : public LexicalDef {
+    static const char* name()
+    {
+        return "LEXICAL_DEF_RELOCATABLE";
+    }
+
+    static constexpr Opcode op()
+    {
+        return 45;
+    }
+}; static_assert(sizeof(LexicalDefRelocatable) == sizeof(LexicalDef));
+
+
+
 // Just a utility intended for the compiler, not to be used by the vm.
 inline Header* load_instruction(ScratchBuffer& buffer, int index)
 {
@@ -676,7 +727,7 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             } else {
                 index--;
                 offset += sizeof(PushString) +
-                          ((PushString*)buffer.data_ + offset)->length_;
+                    ((PushString*)(buffer.data_ + offset))->length_;
             }
             break;
 
@@ -691,7 +742,9 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
         break;
 
             MATCH(LoadVar)
+            MATCH(LoadVarRelocatable)
             MATCH(PushSymbol)
+            MATCH(PushSymbolRelocatable)
             MATCH(PushNil)
             MATCH(Push0)
             MATCH(Push1)
@@ -726,6 +779,7 @@ inline Header* load_instruction(ScratchBuffer& buffer, int index)
             MATCH(PushThis)
             MATCH(Not)
             MATCH(LexicalDef)
+            MATCH(LexicalDefRelocatable)
             MATCH(LexicalFramePush)
             MATCH(LexicalFramePop)
             MATCH(LexicalVarLoad)

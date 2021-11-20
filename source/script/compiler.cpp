@@ -61,7 +61,7 @@ int compile_lambda(ScratchBuffer& buffer,
         bool tail_expr = lat->cons().cdr() == get_nil();
 
         write_pos = compile_impl(
-                                 buffer, write_pos, lat->cons().car(), jump_offset, tail_expr);
+            buffer, write_pos, lat->cons().car(), jump_offset, tail_expr);
 
         lat = lat->cons().cdr();
     }
@@ -91,8 +91,8 @@ int compile_quoted(ScratchBuffer& buffer,
                 // ...
                 break;
             }
-            write_pos =
-                compile_quoted(buffer, write_pos, code->cons().car(), tail_expr);
+            write_pos = compile_quoted(
+                buffer, write_pos, code->cons().car(), tail_expr);
 
             code = code->cons().cdr();
 
@@ -128,14 +128,14 @@ int compile_let(ScratchBuffer& buffer,
     append<instruction::LexicalFramePush>(buffer, write_pos);
 
     foreach (code->cons().car(), [&](Value* val) {
-            if (val->type() == Value::Type::cons) {
-                auto sym = val->cons().car();
-                auto bind = val->cons().cdr();
-                if (sym->type() == Value::Type::symbol and
-                    bind->type() == Value::Type::cons) {
+        if (val->type() == Value::Type::cons) {
+            auto sym = val->cons().car();
+            auto bind = val->cons().cdr();
+            if (sym->type() == Value::Type::symbol and
+                bind->type() == Value::Type::cons) {
 
                 write_pos = compile_impl(
-                                         buffer, write_pos, bind->cons().car(), jump_offset, false);
+                    buffer, write_pos, bind->cons().car(), jump_offset, false);
 
                 auto inst = append<instruction::LexicalDef>(buffer, write_pos);
                 inst->name_offset_.set(symbol_offset(sym->symbol().name_));
@@ -151,7 +151,7 @@ int compile_let(ScratchBuffer& buffer,
         bool tail = tail_expr and code->cons().cdr() == get_nil();
 
         write_pos = compile_impl(
-                                 buffer, write_pos, code->cons().car(), jump_offset, tail);
+            buffer, write_pos, code->cons().car(), jump_offset, tail);
 
         code = code->cons().cdr();
     }
@@ -208,7 +208,8 @@ int compile_impl(ScratchBuffer& buffer,
 
     } else if (code->type() == Value::Type::symbol) {
 
-        if (code->symbol().name_[0] == '$') {
+        if (code->symbol().name_[0] == '$' and
+            code->symbol().name_[1] not_eq 'V') {
             s32 argn = 0;
             for (u32 i = 1; code->symbol().name_[i] not_eq '\0'; ++i) {
                 argn = argn * 10 + (code->symbol().name_[i] - '0');
@@ -249,7 +250,7 @@ int compile_impl(ScratchBuffer& buffer,
             str_cmp(fn->symbol().name_, "let") == 0) {
 
             write_pos = compile_let(
-                                    buffer, write_pos, lat->cons().cdr(), jump_offset, tail_expr);
+                buffer, write_pos, lat->cons().cdr(), jump_offset, tail_expr);
 
         } else if (fn->type() == Value::Type::symbol and
                    str_cmp(fn->symbol().name_, "if") == 0) {
@@ -261,7 +262,7 @@ int compile_impl(ScratchBuffer& buffer,
             }
 
             write_pos = compile_impl(
-                                     buffer, write_pos, lat->cons().car(), jump_offset, false);
+                buffer, write_pos, lat->cons().car(), jump_offset, false);
 
             auto jne = append<instruction::JumpIfFalse>(buffer, write_pos);
 
@@ -271,8 +272,10 @@ int compile_impl(ScratchBuffer& buffer,
             if (lat->cons().cdr()->type() == Value::Type::cons) {
                 true_branch = lat->cons().cdr()->cons().car();
 
-                if (lat->cons().cdr()->cons().cdr()->type() == Value::Type::cons) {
-                    false_branch = lat->cons().cdr()->cons().cdr()->cons().car();
+                if (lat->cons().cdr()->cons().cdr()->type() ==
+                    Value::Type::cons) {
+                    false_branch =
+                        lat->cons().cdr()->cons().cdr()->cons().car();
                 }
             }
 
@@ -316,6 +319,11 @@ int compile_impl(ScratchBuffer& buffer,
 
             write_pos =
                 compile_quoted(buffer, write_pos, lat->cons().cdr(), tail_expr);
+        } else if (fn->type() == Value::Type::symbol and
+                   str_cmp(fn->symbol().name_, "`") == 0) {
+            while (true)
+                ;
+            // TODO: Implement quasiquote for compiled code.
         } else {
             u8 argc = 0;
 
@@ -329,7 +337,7 @@ int compile_impl(ScratchBuffer& buffer,
                 }
 
                 write_pos = compile_impl(
-                                         buffer, write_pos, lat->cons().car(), jump_offset, false);
+                    buffer, write_pos, lat->cons().car(), jump_offset, false);
 
                 lat = lat->cons().cdr();
 
@@ -647,6 +655,14 @@ public:
                 ++index;
                 break;
 
+            case Ret::op():
+                if (depth == 0) {
+                    return;
+                }
+                --depth;
+                ++index;
+                break;
+
             case Jump::op():
                 if (((Jump*)inst)->offset_.get() > inflection_point) {
                     auto offset = ((Jump*)inst)->offset_.get();
@@ -682,9 +698,6 @@ public:
             default:
                 ++index;
                 break;
-
-            case Ret::op():
-                return;
             }
         }
     }
@@ -725,10 +738,11 @@ void compile(Platform& pfrm, Value* code)
     write_pos = compile_lambda(*buffer, write_pos, code, 0);
 
     write_pos = PeepholeOptimizer().run(
-                                        *fn->function().bytecode_impl_.databuffer()->data_buffer().value(),
+        *fn->function().bytecode_impl_.databuffer()->data_buffer().value(),
         write_pos);
 
-    // std::cout << "compilation finished, bytes used: " << write_pos << std::endl;
+    // std::cout << "compilation finished, bytes used: " << write_pos <<
+    // std::endl;
 
     // OK, so now, we've successfully compiled our function into the scratch
     // buffer. But, what about all the extra space in the buffer!? So we're

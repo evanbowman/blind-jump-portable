@@ -159,26 +159,31 @@ int main(int argc, char** argv)
 
     lisp::dostring(utilities, [](lisp::Value& err) {});
 
-    std::string line;
-    std::cout << ">> ";
-    while (std::getline(std::cin, line)) {
+    const char* prompt = ">> ";
 
-        lisp::read(line.c_str());
-        Printer p;
-        auto result = lisp::get_op(0);
-        // format(result, p);
-        // std::cout << std::endl;
-        lisp::pop_op();
-        lisp::eval(result);
-        result = lisp::get_op(0);
-        lisp::pop_op();
-        format(result, p);
-        // std::cout << "stack size: "
-        //           << lisp::bound_context->operand_stack_.size()
-        //           << ", object pool: "
-        //           << lisp::bound_context->memory_.remaining()
-        //           << ", intern mem: " << lisp::bound_context->string_intern_pos_
-        //           << std::endl;
-        std::cout << std::endl << ">> ";
+    std::string line;
+    std::cout << prompt;
+    while (std::getline(std::cin, line)) {
+        if (not line.empty()) {
+            lisp::read(line.c_str());
+            Printer p;
+            auto result = lisp::get_op(0);
+            // format(result, p);
+            // std::cout << std::endl;
+            lisp::pop_op();
+            lisp::eval(result);
+            result = lisp::get_op(0);
+            lisp::pop_op();
+            format(result, p);
+            // std::cout << "stack size: "
+            //           << lisp::bound_context->operand_stack_.size()
+            //           << ", object pool: "
+            //           << lisp::bound_context->memory_.remaining()
+            //           << ", intern mem: " << lisp::bound_context->string_intern_pos_
+            //           << std::endl;
+            std::cout << std::endl << prompt;
+        } else {
+            std::cout << prompt;
+        }
     }
 }
