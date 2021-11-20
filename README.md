@@ -298,7 +298,7 @@ But for a function to be really useful, you'll want to be able to pass parameter
 ```
 You may also refer to an argument with the `arg` function, e.g. `(arg 0)` or `(arg 5)`. To ask the interpreter how many arguments the user passed to the current function, you may use the `argc` function.
 
-Note: maybe you find numbered arguments unpleasent. The gba has limited memory for interned symbol strings, so I chose to support numbered function arguments by default. If, instead, you want functions with named arguments, see [macros](#macros).
+Note: The gba has limited memory for interned symbol strings, so I chose to support numbered function arguments by default. If, instead, you want functions with named arguments, see [macros](#macros).
 
 
 To refer to the current function, invoke the `this` function.
