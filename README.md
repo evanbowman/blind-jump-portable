@@ -41,6 +41,7 @@ You should find this readme mosty up-to-date, but as the game is under active de
    * [Feedback](#feedback)
    * [Licence](#licence)
    * [LISP](#lisp)
+      * [Macros](#macros)
       * [Library](#library)
       * [API](#api)
       * [Example](#example)
@@ -297,6 +298,9 @@ But for a function to be really useful, you'll want to be able to pass parameter
 ```
 You may also refer to an argument with the `arg` function, e.g. `(arg 0)` or `(arg 5)`. To ask the interpreter how many arguments the user passed to the current function, you may use the `argc` function.
 
+Note: maybe you find numbered arguments unpleasent. The gba has limited memory for interned symbol strings, so I chose to support numbered function arguments by default. If, instead, you want functions with named arguments, see [macros](#macros).
+
+
 To refer to the current function, invoke the `this` function.
 ```LISP
 ((lambda) ((this))) ;; Endless loop, because the function repeatedly invokes itself.
@@ -310,6 +314,48 @@ A sequence of characters. Declare a string with by enclosing characters in quote
 ##### Symbols
 
 Declare a symbol by prefixing a word with the quote character, `'abc`. 
+
+### Macros
+
+Blind Jump's lisp interpreter, like most lisp dialects, features powerful macros, allowing users to transform the language in profound ways.
+Practically any of the unusual choices that I made for this lisp dialect may be painted over with macros. For example, maybe you do not like the numbered argument syntax. The interpreter includes the `fn` macro below, which adds functions with named arguments to the language. Like common-lisp, we use quasiquote along with unquote and unquote splicing to implement macros.
+
+```lisp
+(macro fn (args body)
+ (if (not args)
+     `(lambda ,@body)
+   `(lambda
+     (let ,((lambda
+             (if (not $0)
+                 $1
+               ((this)
+                (cdr $0)
+                (cons (list (car $0) (symbol (string "$" $2))) $1)
+                (+ $2 1))))
+            args nil 0)
+       ,@body))))
+       
+;; An old-style function that accepts two parameters:
+(lambda
+  (+ $0 $1))
+  
+;; Using the fn macro:
+(fn (a b)
+  (+ a b))
+```
+Some of the language's syntax, in fact, is implemented with macros. For example, the short-circuit or expression:
+```lisp
+(macro or (expr)
+ (if expr
+     `(if ,(car expr)
+          1
+        ,(if (cdr expr)
+             (cons 'or (cdr expr))
+           0))
+   0))
+```
+
+
 
 ### Library
 
