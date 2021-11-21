@@ -354,7 +354,7 @@ Some of the language's syntax, in fact, is implemented with macros. For example,
            0))
    0))
 ```
-
+Important: This lisp environment expands all macros while reading expressions. `read` will perform macro expansion.
 
 
 ### Library
