@@ -354,7 +354,7 @@ Some of the language's syntax, in fact, is implemented with macros. For example,
            0))
    0))
 ```
-Important: This lisp environment expands all macros while reading expressions. `read` will perform macro expansion.
+Important: This lisp environment expands all macros while reading expressions. `read` will perform macro expansion. Partly due to performance concerns on the gba, so that we do not need to parse expressions twice and reallocate duplicate copies of lisp code, as our lists are immutable. The reader expands macros immediately after reading strings into lisp data. As a consequence, macros that instantiate other macros _must be declared before the macros that they depend on_, otherwise, the reader will eagerly expand macros while parsing the definitions of other macros.
 
 
 ### Library
