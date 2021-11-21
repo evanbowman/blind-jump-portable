@@ -346,15 +346,13 @@ Practically any of the unusual choices that I made for this lisp dialect may be 
 Some of the language's syntax, in fact, is implemented with macros. For example, the short-circuit or expression:
 ```lisp
 (macro or (expr)
- (if expr
-     `(if ,(car expr)
-          1
-        ,(if (cdr expr)
-             (cons 'or (cdr expr))
-           0))
-   0))
+ `(if ,(car expr)
+      1
+    ,(if (cdr expr)
+         (cons 'or (cdr expr))
+       0)))
 ```
-Important: This lisp environment expands all macros while reading expressions. `read` will perform macro expansion. Partly due to performance concerns on the gba, so that we do not need to parse expressions twice and reallocate duplicate copies of lisp code, as our lists are immutable. The reader expands macros immediately after reading strings into lisp data. As a consequence, macros that instantiate other macros _must be declared before the macros that they depend on_, otherwise, the reader will eagerly expand macros while parsing the definitions of other macros.
+Important: This lisp environment expands all macros while reading expressions. `read` will perform macro expansion. Partly due to performance concerns on the gba, so that we do not need to parse expressions twice and reallocate duplicate copies of lisp code, as our lists are immutable. The reader expands macros immediately after reading strings into lisp data. As a consequence, macros that instantiate other macros _must be declared before the macros that they depend on_, otherwise, the reader will eagerly expand macros while parsing the definitions of other macros. As demonstrated above, macros can safely instantiate themselves recursively, one just needs to be careful about the order in which macros are declared (if the body of macro A references macro B, A should usually be declared before B).
 
 
 ### Library
