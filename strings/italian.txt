@@ -26,7 +26,7 @@ Note dell'ingegnere (2/2)
 Blaster
 Acceleratore (60 colpi)
 Ibernazione (18 sec)
-Sistema mappa
+Sistema di mappa
 Proiettili esplosivi (2)
 Disturbatore di segnale
 Pacchetto di semi
@@ -42,9 +42,9 @@ Oh, quella vecchia cosa? Eh, non me ne faccio niente.
 Un turbocompressore per un blaster, heh, piuttosto distruttivo a distanza ravvicinata.
 Non sono così sicuro di cosa faccia questa cosa, sembra un vecchio orologio da taschino. Però il metallo è lavorato in modo fine, vale un sacco di soldi...
 Sembra uno strumento di rilevamento. Questi dispositivi del sistema di mappa costruiranno la mappa man mano che cammini e ti indirizzeranno verso il portale iperspaziale più vicino.
-Argh! Stai attento con quelli! Quelle custodie sono altamente instabili!!!
+Argh! Stai attento con quelli! Quelle munizioni sono altamente instabili!!!
 Un sofisticato trasmettitore radio, prova a usarlo vicino a qualche macchina.
-Un'arancia! La leggenda narra che gli operai che hanno costruito questi livelli siano stati qui per mesi interi alla volta... non volevano lo scorbuto!
+Un'arancia! La leggenda narra che gli operai che hanno costruito questi livelli siano stati qui per mesi interi... non volevano lo scorbuto!
 Un generatore portatile di portali iperspaziali... vedilo come... una sorta di polizza assicurativa se sei esausto.
 (USA E GETTA)
 bloccato, 
@@ -71,9 +71,9 @@ Connetti Compagno
 Impostazioni
 Script Console
 Salva ed esci
-Ci vediamo più tardi...
+A più tardi...
 Scegli un obiettivo:
-Nessuna mappa stradale? Nessun problema! La rete di portali iperspaziali calcola un percorso verso la tua destinazione per il tuo viaggio attraverso una sequenza di livelli. Decine di migliaia di livelli sono stati costruiti in orbita attorno alla Terra e alla sua luna. Poiché sono costantemente in movimento durante l'orbita, la rete di portali ricalcola continuamente il percorso verso la destinazione. Non visiterai mai due volte gli stessi livelli! A causa della natura imprevedibile dei portali iperspaziali, il passaggio attraverso un portale viene talvolta definito salto alla cieca.
+Non trovi la strada? Nessun problema! La rete di portali iperspaziali calcola un percorso verso la tua destinazione per il tuo viaggio attraverso una sequenza di livelli. Decine di migliaia di livelli sono stati costruiti in orbita attorno alla Terra e alla sua luna. Poiché sono costantemente in movimento durante l'orbita, la rete di portali ricalcola continuamente il percorso verso la destinazione. Non visiterai mai due volte gli stessi livelli! A causa della natura imprevedibile dei portali iperspaziali, il passaggio attraverso un portale viene talvolta definito salto alla cieca.
 Vedi statistiche: 
 Lingua: 
 Contrasto: 
@@ -85,7 +85,7 @@ facile
 normale
 difficile
 sopravvivenza
-il livello deve essere completato!
+il livello dev'essere completato!
 Tasto Fuoco: 
 separati
 combinati
@@ -120,7 +120,7 @@ Hai distrutto il Guardiano
 Hai sconfitto i Gemelli
 Condotto Infestato ripulito!
 Rete Iperspaziale distrutta
-Compari in attesa alla porta...
+Compagni in attesa al portale...
 debug
 info
 avviso
@@ -131,14 +131,14 @@ Vendere oggetti
 Acquista, prezzo: 
 Vendi, prezzo: 
 Informazioni sull'articolo
-Negozio del necrofago
+Negozio del Necrofago
 acquistare
 vendere
 Aggiornamento richiesto!
 Sciame in avvicinamento!
-Il compagno richiede un aggiornamento!
+Il Compagno richiede un aggiornamento!
 globale
-Compagno ha utilizzato Ibernazione!
+Il Compagno ha utilizzato Ibernazione!
 italiano
 
 
@@ -153,9 +153,9 @@ Benvenuto nel mio negozio!
 Wow, è stato 100 anni fa...
 La tua nave...
 [2.11.2081] Ultimamente abbiamo avuto degli strani sbalzi di tensione sulla stazione, ma il direttore mi ha rassicurato che tutto andrà per il meglio d'ora in poi. I robot hanno iniziato a comportarsi in modo strano dall'ultimo blackout delle comunicazioni, temo che la prossima volta impazziranno...
-[3.7.2081] Sono stato fortunato ad essere su uno dei livelli vicini alla terra quando i robot si sono rivoltati... molte persone non sono state altrettanto fortunate. Per sfuggire alle macchine, sono fuggito attraverso i portali iperspaziali, ma la carneficina sembra peggiorare man mano che vado avanti. Alcune delle stazioni qui fuori sembrano aver avuto una popolazione più numerosa, purtroppo.
-Gli sbalzi di tensione provenienti dai portali iperspaziali sembrano avere un effetto insolito sui macchinari, in particolare sui robot delle stazioni. Di recente abbiamo osservato alcune sfortunate reazioni violente da parte delle macchine: la situazione sta iniziando a sfuggire di mano. Durante l'ultimo sbalzo di tensione, credo di aver intravisto la sillouette di una grande figura ammantata attraverso la superficie del portale. Per molto tempo abbiamo avuto il sospetto che ci fosse qualcosa... qualcos'altro... là fuori nell'iperspazio, qualcosa che, forse, non avremmo mai dovuto disturbare aprendo questi portali...
-Gli sbalzi di tensione dei portali sono ormai diventati ordinari, e abbiamo perso il controllo di ogni cosa. Ho provato a contattare la Terra, chiedendo che qualcuno fosse mandato qui, per affrontare le cause di questi sbalzi... ma anche loro stanno affrontando una rivolta delle macchine, e non sono sicuro di quanto presto potranno inviare un soldato. Nel frattempo, ho inventato un dispositivo di disturbo del segnale, che sembra rendere le macchine immuni agli sbalzi di tensione...
+[3.7.2081] Sono stato fortunato ad essere su uno dei livelli vicini alla terra quando i robot si sono rivoltati... molte persone non sono state altrettanto fortunate. Per sfuggire alle macchine, sono scappato attraverso i portali iperspaziali, ma la carneficina sembra peggiorare man mano che vado avanti. Alcune delle stazioni qui fuori sembrano aver avuto una popolazione più numerosa, purtroppo.
+Gli sbalzi di tensione provenienti dai portali iperspaziali sembrano avere un effetto insolito sui macchinari, in particolare sui robot delle stazioni. Di recente abbiamo osservato alcune sfortunate reazioni violente da parte delle macchine: la situazione sta iniziando a sfuggire di mano. Durante l'ultimo sbalzo di tensione, credo di aver intravisto, attraverso la superficie del portale, la sagoma di una grande figura ammantata. Per molto tempo abbiamo avuto il sospetto che ci fosse qualcosa... qualcos'altro... là fuori nell'iperspazio, qualcosa che, forse, non avremmo mai dovuto disturbare aprendo questi portali...
+Gli sbalzi di tensione dei portali sono ormai diventati ordinari, e abbiamo perso il controllo di ogni cosa. Ho provato a contattare la Terra, chiedendo che qualcuno venisse mandato qui, per affrontare le cause di questi sbalzi... ma anche loro stanno affrontando la rivolta delle macchine, e non sono sicuro di quanto presto potranno inviare un soldato. Nel frattempo, ho inventato un dispositivo di disturbo del segnale, che sembra rendere le macchine immuni agli sbalzi di tensione...
 nuova partita
 continua
 FINE
