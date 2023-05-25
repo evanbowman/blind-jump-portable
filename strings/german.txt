@@ -5,7 +5,7 @@
 BLIND JUMP
 Du
 Gegner
-Verlassen
+Ausgang
 Gegenstand
 Laden
 Wegpunkt 
