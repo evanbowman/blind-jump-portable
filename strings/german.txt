@@ -47,13 +47,13 @@ Ein schickes Funksignalgerät, versuche es in der Nähe von Maschinen zu benutze
 Eine Orange! Die Legende besagt, dass die Arbeiter, die diese Wegpunkte gebaut haben, monatelang hier draußen waren... man möchte keine Skorbut bekommen!
 Ein tragbarer Hyperraumtor-Generator... betrachte es als... eine Art Versicherung, falls du bewusstlos wirst.
 (EINMALIG)
-verschlossen,
+Verschlossen,
 blockiert, Mitspieler steht im Weg!
  Gegner übrig
  Gegner übrig
 Nichts
-Du erhältst "
 "
+" erhalten
 Inventar voll
 Gegenstände
 Wegpunkt frei
