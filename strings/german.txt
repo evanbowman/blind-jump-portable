@@ -74,7 +74,6 @@ Speichern und Beenden
 Bis später...
 Ziel auswählen:
 Keine Straßenkarte? Kein Problem! Das Hyperraumtor-Netzwerk berechnet einen Pfad zu deinem Ziel, indem es deine Reise durch eine Abfolge von Wegpunkten führt. Zigtausende von Wegpunkten wurden in der Umlaufbahn der Erde und ihres Mondes errichtet. Da sich die Wegpunkte während des Orbits ständig bewegen, berechnet das Tor-Netzwerk kontinuierlich den Pfad zu deinem Ziel neu. Du wirst niemals dieselben Wegpunkte zweimal besuchen! Aufgrund der unberechenbaren Natur der Hyperraumtore wird das Durchqueren eines Tores manchmal als Blind Jump bezeichnet.
-Show Stats: 
 Statistiken anzeigen: 
 Sprache: 
 Kontrast: 
