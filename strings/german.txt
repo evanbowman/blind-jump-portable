@@ -6,7 +6,7 @@ BLIND JUMP
 Du
 Gegner
 Ausgang
-Gegenstand
+Item
 Laden
 Wegpunkt 
 Teil I:
@@ -55,15 +55,15 @@ Nichts
 "
 " erhalten
 Inventar voll
-Gegenstände
+Items
 Wegpunkt frei
 Punktzahl 
 Bestpunktzahl 
 Bestenliste
 Zeit
-% der gesammelten Gegenstände 
+% gesammelter Items 
 
-% der gesammelten Gegenstände
+% gesammelter Items
 Wegpunkte 
 .
 Fortsetzen
@@ -125,11 +125,11 @@ Info
 Warnung
 Fehler
 Stromschwankung erkannt!
-Gegenstände kaufen
-Gegenstände verkaufen
+Item kaufen
+Item verkaufen
 Kaufen, Preis: 
 Verkaufen, Preis: 
-Informationen über Gegenstand
+Iteminformationen
 Laden des Schrottsammlers
 kaufen 
 verkaufen
