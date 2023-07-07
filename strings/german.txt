@@ -1,0 +1,161 @@
+
+
+ präsentiert
+
+BLIND JUMP
+Du
+Gegner
+Ausgang
+Item
+Laden
+Wegpunkt 
+Teil I:
+Die Ankunft 
+Teil II:
+Der Abstieg 
+Teil III:
+In die Einöde
+Teil IV:
+Im Mondschein
+Leer
+Altes Plakat (1)
+Arbeiter-Notizbuch (1/2)
+Arbeiter-Notizbuch (2/2)
+Ingenieur-Notizbuch (1/2)
+Ingenieur-Notizbuch (2/2)
+Blaster
+Beschleuniger (60 Schüsse)
+Trägheit (18 Sek.)
+Kartensystem
+Explosive Munition (2)
+Signalstörer
+Samenpaket
+Navigationsbroschüre
+Orange (+1 HP)
+Orangensamen
+
+Langsprungantrieb (Teil II)
+Langsprungantrieb (Teil III)
+Langsprungantrieb (Teil IV)
+Langsprungantrieb (Zuhause)
+Oh, das alte Ding? Tja, ich habe keine Verwendung dafür.
+Ein Turbolader für einen Blaster, huh, ziemlich zerstörerisch auf kurze Distanz.
+Ich bin mir nicht sicher, was dieses Ding macht, es sieht aus wie eine alte Taschenuhr. Sehr feine Metallarbeit jedoch, wertvoll...
+Sieht aus wie ein Stück Vermessungsausrüstung. Diese Kartensystemgeräte erstellen eine Karte, während du gehst, und zeigen dir die Richtung zum nächstgelegenen Hyperraumtor an.
+Vorsicht damit! Diese Patronen sind hoch instabil!!!
+Ein schickes Funksignalgerät, versuche es in der Nähe von Maschinen zu benutzen.
+Eine Orange! Die Legende besagt, dass die Arbeiter, die diese Wegpunkte gebaut haben, monatelang hier draußen waren... man möchte keine Skorbut bekommen!
+Ein tragbarer Hyperraumtor-Generator... betrachte es als... eine Art Versicherung, falls du bewusstlos wirst.
+(EINMALIG)
+Verschlossen,
+blockiert, Mitspieler steht im Weg!
+ Gegner übrig
+ Gegner übrig
+Nichts
+"
+" erhalten
+Inventar voll
+Items
+Wegpunkt frei
+Punktzahl 
+Bestpunktzahl 
+Bestenliste
+Zeit
+% gesammelter Items 
+
+% gesammelter Items
+Wegpunkte 
+.
+Fortsetzen
+Mitspieler verbinden
+Einstellungen
+Skriptkonsole
+Speichern und Beenden
+Bis später...
+Ziel auswählen:
+Keine Straßenkarte? Kein Problem! Das Hyperraumtor-Netzwerk berechnet einen Pfad zu deinem Ziel, indem es deine Reise durch eine Abfolge von Wegpunkten führt. Zigtausende von Wegpunkten wurden in der Umlaufbahn der Erde und ihres Mondes errichtet. Da sich die Wegpunkte während des Orbits ständig bewegen, berechnet das Tor-Netzwerk kontinuierlich den Pfad zu deinem Ziel neu. Du wirst niemals dieselben Wegpunkte zweimal besuchen! Aufgrund der unberechenbaren Natur der Hyperraumtore wird das Durchqueren eines Tores manchmal als Blind Jump bezeichnet.
+Statistiken anzeigen: 
+Sprache: 
+Kontrast: 
+Nachtmodus:
+A/B Tauschen:
+Standard
+Schwierigkeit: 
+Leicht
+Normal
+Schwer
+Überleben
+Das Level muss eindeutig sein!
+Schusstaste: 
+Getrennt
+Kombiniert
+Protokollschweregrad:
+Stopuhr anzeigen: 
+Kamera: 
+Fixiert
+Verfolgen (gering)
+Verfolgen (hoch)
+Rumble aktivieren: 
+Ja
+Nein
+Menü deaktiviert
+ ft
+
+Mitspieler verbunden!
+Verbindung fehlgeschlagen!
+Mitspieler gestorben!
+Mitspielergesundheit geändert auf 
+Warten auf Mitspieler...
+Spiele werden synchronisiert...
+ fps
+ tx
+ rx
+ tl
+ rl
+ sbr
+ lnsat
+Erforderlich: Kartensystem
+Wanderer besiegt
+Torwächter zerstört
+Zwillinge besiegt
+Verseuchter Kanal gereinigt!
+Hyperraum-Netzwerk zerstört
+Mitspieler wartet im Tor...
+Debug
+Info
+Warnung
+Fehler
+Stromschwankung erkannt!
+Item kaufen
+Item verkaufen
+Kaufen, Preis: 
+Verkaufen, Preis: 
+Iteminformationen
+Laden des Schrottsammlers
+kaufen 
+verkaufen
+Update erforderlich!
+Schwarm rückt näher!
+Mitspieler erfordert Update!
+gesamt
+Mitspieler verwendet Trägheit!
+Deutsch
+
+
+Chat:
+Hallo!
+Hast du irgendwelche Orangen?
+Los geht's!
+Hier drüben gibt es Gesundheit!
+Peer wiederbeleben?
+Willkommen in meinem Laden!
+"Dieses Denkmal für diejenigen, die während der Katastrophe ums Leben kamen. Die Wegpunkte in diesem Bereich wurden von den Maschinen überrollt und versiegelt. Datum - 5.3.2081."
+Wow, das war vor 100 Jahren...
+Dein Schiff...
+[2.11.2081]  In letzter Zeit haben wir hier auf der Station seltsame Stromschwankungen erlebt, aber der Direktor hat mich versichert, dass alles ab jetzt reibungslos abläuft. Seit der letzten Kommunikationssperre verhalten sich die Roboter jedoch eigenartig, ich befürchte, dass sie beim nächsten Mal durchdrehen werden...
+[3.7.2081]  Ich hatte Glück, dass ich mich während des Angriffs der Roboter auf einigen der nahegelegenen Wegpunkte befand... vielen Menschen ist das anscheinend nicht so ergangen. Um den Maschinen zu entkommen, bin ich durch die Warp-Gates geflohen, aber je weiter ich gehe, desto schlimmer wird das Gemetzel. Einige der Stationen hier draußen scheinen stärker bevölkert gewesen zu sein, leider.
+Die Stromschwankungen, die von den Hyperraumtoren ausgehen, haben eine ungewöhnliche Wirkung auf die Maschinen, insbesondere auf die Roboter auf den Stationen. Wir haben kürzlich einige bedauerliche gewaltsame Reaktionen der Maschinen beobachtet - das Ganze gerät langsam außer Kontrolle. Während der letzten Stromschwankung meinte ich, die Silhouette einer großen, verhüllten Gestalt durch den Schleier des Sprungtors zu erkennen. Wir haben schon lange vermutet, dass da draußen im Hyperraum etwas... anderes... ist, etwas, das wir vielleicht nie hätten stören sollen, indem wir diese Tore geöffnet haben...
+Die Stromschwankungen der Sprungtore sind mittlerweile mehr oder weniger konstant, und wir haben die Kontrolle über alles verloren. Ich habe eine Nachricht zurück zur Erde geschickt, dass jemand hierher geschickt werden muss, um die Ursachen für diese Schwankungen zu bekämpfen... sie haben jedoch ihre eigene mechanisierte Revolte zu bewältigen, daher bin ich mir nicht sicher, wie bald sie einen Soldaten schicken werden. In der Zwischenzeit habe ich ein Signalstörsystem erfunden, das die Maschinen gegenüber den Stromschwankungen immun zu machen scheint...
+Neues Spiel
+Fortsetzen
+DAS ENDE
