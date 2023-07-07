@@ -77,7 +77,8 @@ Keine Straßenkarte? Kein Problem! Das Hyperraumtor-Netzwerk berechnet einen Pfa
 Statistiken anzeigen: 
 Sprache: 
 Kontrast: 
-A/B Tauschen: 
+Nachtmodus:
+A/B Tauschen:
 Standard
 Schwierigkeit: 
 Leicht
