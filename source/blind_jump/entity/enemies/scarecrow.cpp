@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "graphics/overlay.hpp"
 #include "number/random.hpp"
+#include <limits>
 
 
 static const Float long_jump_speed(0.00015f);

@@ -284,7 +284,9 @@ standard_texture_map(const utf8::Codepoint& cp)
         case UTF8_GETCHR(u8"¡"): return 96;
         case UTF8_GETCHR(u8"¿"): return 97;
         case UTF8_GETCHR(u8"ì"): return 2150;
-
+        case UTF8_GETCHR(u8"ä"): return 2162;
+        case UTF8_GETCHR(u8"Ü"): return 2163;
+        case UTF8_GETCHR(u8"ß"): return 2164;
 
             // clang-format on
 

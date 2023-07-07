@@ -678,19 +678,7 @@ void Player::update(Platform& pfrm, Game& game, Microseconds dt)
         if (not input.pressed(game.action1_key())) {
             dodge_timer_ += dt;
         }
-        if (dodge_timer_ >= [&] {
-                switch (game.persistent_data().settings_.difficulty_) {
-                case Settings::Difficulty::easy:
-                    return milliseconds(500);
-                case Settings::Difficulty::count:
-                case Settings::Difficulty::normal:
-                    break;
-                case Settings::Difficulty::hard:
-                case Settings::Difficulty::survival:
-                    return seconds(2);
-                }
-                return seconds(1); // + milliseconds(500);
-            }()) {
+        if (dodge_timer_ >= milliseconds(300)) {
             dodge_timer_ = 0;
             dodges_ = std::min(dodges_ + 1, max_dodges);
         }
@@ -1070,9 +1058,9 @@ void Player::footstep(Platform& pf)
 void Blaster::shoot(Platform& pf, Game& game)
 {
     if (reload_ <= 0) {
-        int max_lasers = 2;
+        int max_lasers = 4;
         int expl_rounds = 0;
-        Microseconds reload_interval = milliseconds(250);
+        Microseconds reload_interval = milliseconds(280);
 
         Buffer<Powerup*, Powerup::max_> applied_powerups;
 
@@ -1083,7 +1071,7 @@ void Blaster::shoot(Platform& pf, Game& game)
         };
 
         if (auto p = get_powerup(game, Powerup::Type::accelerator)) {
-            max_lasers = 3;
+            max_lasers = 5;
             reload_interval = milliseconds(150);
             applied_powerups.push_back(p);
         }

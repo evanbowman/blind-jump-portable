@@ -111,6 +111,10 @@ void memcpy16(void* dst, const void* src, uint hwcount);
 }
 
 
+__attribute__((section(".iwram"), long_call)) void
+audio_update_fast_isr();
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Tile Memory Layout:
@@ -2634,33 +2638,33 @@ Platform::Speaker::Speaker()
 
 // Simpler mixer, without stereo sound or volume modulation, for multiplayer
 // games.
-static void audio_update_fast_isr()
-{
-    alignas(4) AudioSample mixing_buffer[4];
+// static void audio_update_fast_isr()
+// {
+//     alignas(4) AudioSample mixing_buffer[4];
 
-    // NOTE: audio tracks in ROM should therefore have four byte alignment!
-    *((u32*)mixing_buffer) =
-        ((u32*)(snd_ctx.music_track))[snd_ctx.music_track_pos++];
+//     // NOTE: audio tracks in ROM should therefore have four byte alignment!
+//     *((u32*)mixing_buffer) =
+//         ((u32*)(snd_ctx.music_track))[snd_ctx.music_track_pos++];
 
-    if (UNLIKELY(snd_ctx.music_track_pos > snd_ctx.music_track_length)) {
-        snd_ctx.music_track_pos = 0;
-    }
+//     if (UNLIKELY(snd_ctx.music_track_pos > snd_ctx.music_track_length)) {
+//         snd_ctx.music_track_pos = 0;
+//     }
 
-    for (auto it = snd_ctx.active_sounds.begin();
-         it not_eq snd_ctx.active_sounds.end();) {
-        if (UNLIKELY(it->position_ + 4 >= it->length_)) {
-            it = snd_ctx.active_sounds.erase(it);
-        } else {
-            for (int i = 0; i < 4; ++i) {
-                mixing_buffer[i] += (u8)it->data_[it->position_];
-                ++it->position_;
-            }
-            ++it;
-        }
-    }
+//     for (auto it = snd_ctx.active_sounds.begin();
+//          it not_eq snd_ctx.active_sounds.end();) {
+//         if (UNLIKELY(it->position_ + 4 >= it->length_)) {
+//             it = snd_ctx.active_sounds.erase(it);
+//         } else {
+//             for (int i = 0; i < 4; ++i) {
+//                 mixing_buffer[i] += (u8)it->data_[it->position_];
+//                 ++it->position_;
+//             }
+//             ++it;
+//         }
+//     }
 
-    REG_SGFIFOA = *((u32*)mixing_buffer);
-}
+//     REG_SGFIFOA = *((u32*)mixing_buffer);
+// }
 
 
 void Platform::soft_exit()
@@ -2862,9 +2866,9 @@ static void audio_start()
     irqSet(IRQ_TIMER1, audio_update_fast_isr);
 
     REG_TM0CNT_L = 0xffff;
-    REG_TM1CNT_L = 0xffff - 3; // I think that this is correct, but I'm not
+    REG_TM1CNT_L = 0xffff - 7; // I think that this is correct, but I'm not
                                // certain... so we want to play four samples at
-                               // a time, which means that by subtracting three
+                               // a time, which means that by subtracting seven
                                // from the initial count, the timer will
                                // overflow at the correct rate, right?
 
@@ -2986,6 +2990,9 @@ Platform::Platform()
         REG_WAITCNT = 0b0000001100010111;
         info(*this, "enabled optimized waitstates...");
     }
+
+    REG_WAITCNT = 0b0000000000011011;
+    REG_WAITCNT |= 1 << 14;
 
     // NOTE: initializing the system clock is easier before interrupts are
     // enabled, because the system clock pulls data from the gpio port on the
@@ -3344,7 +3351,7 @@ void Platform::fill_overlay(u16 tile)
     u32* const mem = (u32*)overlay_back_buffer;
     overlay_back_buffer_changed = true;
 
-    for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u32); ++i) {
+    for (unsigned i = 0; i < (sizeof(ScreenBlock) / (sizeof(u32))); ++i) {
         mem[i] = fill_word;
     }
 

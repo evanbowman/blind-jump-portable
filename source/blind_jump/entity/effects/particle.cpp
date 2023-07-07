@@ -1,5 +1,6 @@
 #include "particle.hpp"
 #include "number/random.hpp"
+#include <limits>
 
 
 Particle::Particle(const Vec2<Float>& position,

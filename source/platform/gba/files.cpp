@@ -19,6 +19,8 @@ extern const unsigned char file_russian[];
 extern const unsigned char file_italian[];
 //;
 extern const unsigned char file_french[];
+//;
+extern const unsigned char file_german[];
 //
 
 static const struct {
@@ -28,23 +30,25 @@ static const struct {
 } files[] = {
 
     {"scripts", "init.lisp", file_init},
-    //;
+//;
     {"scripts", "pre_levelgen.lisp", file_pre_levelgen},
-    //;
+//;
     {"scripts", "post_levelgen.lisp", file_post_levelgen},
-    //;
+//;
     {"scripts", "waypoint_clear.lisp", file_waypoint_clear},
-    //;
+//;
     {"strings", "english.txt", file_english},
-    //;
+//;
     {"strings", "spanish.txt", file_spanish},
-    //;
+//;
     {"strings", "chinese.txt", file_chinese},
-    //;
+//;
     {"strings", "russian.txt", file_russian},
-    //;
+//;
     {"strings", "italian.txt", file_italian},
-    //;
+//;
     {"strings", "french.txt", file_french},
-    //
+//;
+    {"strings", "german.txt", file_german},
+//
 };

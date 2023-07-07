@@ -3,6 +3,7 @@
 #include "number/random.hpp"
 #include "platform/platform.hpp"
 #include "wallCollision.hpp"
+#include <limits>
 
 
 Item::Item(const Vec2<Float>& pos, Platform&, Type type)
