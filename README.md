@@ -175,6 +175,7 @@ Currently, Blind Jump includes built-in support for the following languages:
 * Russian
 * Italian
 * French
+* German
 
 [Contents↑](#contents)
 

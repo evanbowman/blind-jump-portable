@@ -218,6 +218,7 @@ if(GAMEBOY_ADVANCE)
     ${DATA_DIR}/file_italian.cpp
     ${DATA_DIR}/file_russian.cpp
     ${DATA_DIR}/file_french.cpp
+    ${DATA_DIR}/file_german.cpp
     ${DATA_DIR}/scottbuckley_omega.s
     ${DATA_DIR}/music_waves.s
     ${DATA_DIR}/music_murmuration.s
@@ -416,10 +417,9 @@ endfunction()
 if(APPLE OR UNIX OR GAMEBOY_ADVANCE)
 
   set(SHARED_COMPILE_OPTIONS
-    -g
+    -g3
     -Os
     -Wall
-    -Werror
     -pedantic
     -nostdlib
     -ffast-math
@@ -512,6 +512,7 @@ if(GAMEBOY_ADVANCE)
   add_file(strings russian txt)
   add_file(strings italian txt)
   add_file(strings french txt)
+  add_file(strings german txt)
 
   if(GBA_AUTOBUILD_CONF)
     configure_file(files.cpp.in ${SOURCE_DIR}/platform/gba/files.cpp)

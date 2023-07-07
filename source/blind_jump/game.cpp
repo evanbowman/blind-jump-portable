@@ -1831,7 +1831,7 @@ void spawn_entity(Platform& pf,
 COLD static void
 spawn_compactors(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
 {
-    if (game.level() > boss_0_level + 4 and game.level() < boss_2_level) {
+    if (game.level() > boss_0_level + 3 and game.level() < boss_2_level) {
         const int count = std::min(u32([&] {
                                        if (free_spots.size() < 65) {
                                            return 2;
@@ -1957,7 +1957,7 @@ spawn_enemies(Platform& pfrm, Game& game, MapCoordBuf& free_spots)
          [](Level l) { return l > boss_0_level + 4; },
          1,
          [](Level l) -> bool {
-             if (l < boss_1_level and l > boss_0_level + 4) {
+             if (l < boss_1_level and l > boss_0_level + 2) {
                  return rng::choice<6>(rng::critical_state);
              } else if (l < boss_2_level) {
                  return rng::choice<4>(rng::critical_state);
