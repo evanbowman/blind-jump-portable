@@ -1,5 +1,6 @@
 #include "camera.hpp"
 #include "platform/platform.hpp"
+#include <limits>
 
 
 void Camera::update(Platform& pfrm,

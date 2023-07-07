@@ -3,6 +3,7 @@
 #include "blind_jump/game.hpp"
 #include "boss.hpp"
 #include "number/random.hpp"
+#include <limits>
 
 
 class ScattershotAttackPattern : public GatekeeperShield::AttackPattern {

@@ -2242,7 +2242,7 @@ static const AudioTrack* get_sound(const char* name)
 Microseconds Platform::Speaker::track_length(const char* name)
 {
     if (const auto music = find_music(name)) {
-        return (music->length_ * sizeof(u32)) / 0.016f;
+        return (music->length_ * (sizeof(u32))) / 0.016f;
     }
 
     if (const auto sound = get_sound(name)) {
@@ -3344,7 +3344,7 @@ void Platform::fill_overlay(u16 tile)
     u32* const mem = (u32*)overlay_back_buffer;
     overlay_back_buffer_changed = true;
 
-    for (unsigned i = 0; i < sizeof(ScreenBlock) / sizeof(u32); ++i) {
+    for (unsigned i = 0; i < sizeof(ScreenBlock) / (sizeof(u32)); ++i) {
         mem[i] = fill_word;
     }
 

@@ -1,5 +1,6 @@
 #include "debris.hpp"
 #include "number/random.hpp"
+#include <limits>
 
 
 Debris::Debris(const Vec2<Float>& position) : timer_(0)
