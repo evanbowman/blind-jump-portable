@@ -1,6 +1,7 @@
 #include "number/random.hpp"
 #include "platform/platform.hpp"
 #include "script/lisp.hpp"
+#include <limits>
 
 
 ////////////////////////////////////////////////////////////////////////////////

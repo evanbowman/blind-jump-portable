@@ -2246,7 +2246,7 @@ static const AudioTrack* get_sound(const char* name)
 Microseconds Platform::Speaker::track_length(const char* name)
 {
     if (const auto music = find_music(name)) {
-        return (music->length_ * sizeof(u32)) / 0.016f;
+        return (music->length_ * (sizeof(u32))) / 0.016f;
     }
 
     if (const auto sound = get_sound(name)) {

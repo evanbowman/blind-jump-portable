@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
+#include <limits>
 
 
 bool within_view_frustum(const Platform::Screen& screen,
